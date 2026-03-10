@@ -56,15 +56,15 @@ export function Navbars() {
           </div>
         </NavbarBrand>
 
-        {/* Right side — user or login */}
+        {/* Right side — show admin dropdown if logged in, nothing if not */}
         <div className="flex md:order-2">
-          {users?.email ? (
+          {users?.email && users?.role === "ADMIN" ? (
             <div className="flex items-center space-x-3">
               <div className="hidden lg:block text-right">
                 <p className="text-white text-sm font-semibold">
-                  {users?.name || "User"}
+                  {users?.name || "Admin"}
                 </p>
-                <p className="text-gray-500 text-xs">{users?.role || "USER"}</p>
+                <p className="text-gray-500 text-xs">{users?.role}</p>
               </div>
 
               <Dropdown
@@ -75,15 +75,13 @@ export function Navbars() {
                     {users?.userImg ? (
                       <img
                         src={users?.userImg}
-                        alt="User"
+                        alt="Admin"
                         className="w-10 h-10 rounded-full border-2 border-gray-700 group-hover:border-blue-500 transition-all duration-200 shadow-lg"
                       />
                     ) : (
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center border-2 border-gray-700 group-hover:border-blue-400 transition-all duration-200 shadow-lg">
                         <span className="text-white font-bold text-sm">
-                          {users?.username?.charAt(0)?.toUpperCase() ||
-                            users?.email?.charAt(0)?.toUpperCase() ||
-                            "U"}
+                          {users?.email?.charAt(0)?.toUpperCase() || "A"}
                         </span>
                       </div>
                     )}
@@ -94,35 +92,26 @@ export function Navbars() {
               >
                 <DropdownHeader className="bg-gray-800/50">
                   <div className="flex items-center space-x-3 py-2">
-                    {users?.userImg ? (
-                      <img src={users?.userImg} alt="User" className="w-8 h-8 rounded-full" />
-                    ) : (
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold text-xs">
-                          {users?.name?.charAt(0)?.toUpperCase() ||
-                            users?.username?.charAt(0)?.toUpperCase() ||
-                            users?.email?.charAt(0)?.toUpperCase() ||
-                            "U"}
-                        </span>
-                      </div>
-                    )}
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-xs">
+                        {users?.email?.charAt(0)?.toUpperCase() || "A"}
+                      </span>
+                    </div>
                     <div>
                       <span className="block text-white font-semibold text-sm">
-                        {users?.email || "User"}
+                        {users?.email}
                       </span>
                       <span className="block text-gray-400 text-xs">{users?.role}</span>
                     </div>
                   </div>
                 </DropdownHeader>
 
-                {users?.role === "ADMIN" && (
-                  <DropdownItem className="hover:bg-gray-700 text-gray-300 hover:text-white">
-                    <Link to="/dashboard" className="flex items-center space-x-2 w-full">
-                      <FaTachometerAlt className="text-blue-400" />
-                      <span>Admin Dashboard</span>
-                    </Link>
-                  </DropdownItem>
-                )}
+                <DropdownItem className="hover:bg-gray-700 text-gray-300 hover:text-white">
+                  <Link to="/dashboard" className="flex items-center space-x-2 w-full">
+                    <FaTachometerAlt className="text-blue-400" />
+                    <span>Admin Dashboard</span>
+                  </Link>
+                </DropdownItem>
 
                 <DropdownItem className="hover:bg-gray-700 text-gray-300 hover:text-white">
                   <Link to="/dashboard/settings" className="flex items-center space-x-2 w-full">
@@ -165,26 +154,13 @@ export function Navbars() {
                 </DropdownItem>
               </Dropdown>
             </div>
-          ) : (
-            <div className="flex gap-3">
-              <Link to="/login">
-                <button className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg transition-all duration-200 text-sm">
-                  Login
-                </button>
-              </Link>
-              <Link to="/register">
-                <button className="border border-gray-600 hover:border-blue-500 text-gray-300 hover:text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
-                  Register
-                </button>
-              </Link>
-            </div>
-          )}
+          ) : null /* No login/register buttons for students */ }
           <NavbarToggle />
         </div>
 
         {/* Nav Links */}
         <NavbarCollapse>
-          <div className="flex flex-col md:flex-row md:items-center md:gap-10">
+          <div className="flex flex-col md:flex-row md:items-center md:gap-12">
             <NavbarLink
               href="/"
               className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap"
@@ -196,12 +172,6 @@ export function Navbars() {
               className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap"
             >
               Report Lost Item
-            </NavbarLink>
-            <NavbarLink
-              href="/reportFoundItem"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap"
-            >
-              Submit Found Item
             </NavbarLink>
             <NavbarLink
               href="/lostItems"

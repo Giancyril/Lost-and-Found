@@ -69,27 +69,19 @@ const ReportLostItem = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2 mb-4">
 
-                {/* Item Name */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Item Name
                   </label>
                   <input
-                    {...register("lostItemName", {
-                      required: "Item name is required",
-                    })}
+                    {...register("lostItemName", { required: "Item name is required" })}
                     type="text"
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                     placeholder="e.g. Black laptop, Blue water bottle"
                   />
-                  {errors.lostItemName && (
-                    <p className="text-red-400 text-xs mt-1">
-                      {errors.lostItemName?.message as string}
-                    </p>
-                  )}
+                  {errors.lostItemName && <p className="text-red-400 text-xs mt-1">{errors.lostItemName?.message as string}</p>}
                 </div>
 
-                {/* Description */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Item Description
@@ -98,18 +90,11 @@ const ReportLostItem = () => {
                     type="text"
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                     placeholder="Describe the item — color, brand, size, markings"
-                    {...register("description", {
-                      required: "Description is required",
-                    })}
+                    {...register("description", { required: "Description is required" })}
                   />
-                  {errors.description && (
-                    <p className="text-red-400 text-xs mt-1">
-                      {errors.description?.message as string}
-                    </p>
-                  )}
+                  {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description?.message as string}</p>}
                 </div>
 
-                {/* Image URL */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Image URL
@@ -118,18 +103,11 @@ const ReportLostItem = () => {
                     type="text"
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                     placeholder="Paste an image link (optional)"
-                    {...register("imgUrl", {
-                      required: "Image URL is required",
-                    })}
+                    {...register("imgUrl", { required: "Image URL is required" })}
                   />
-                  {errors.imgUrl && (
-                    <p className="text-red-400 text-xs mt-1">
-                      {errors.imgUrl?.message as string}
-                    </p>
-                  )}
+                  {errors.imgUrl && <p className="text-red-400 text-xs mt-1">{errors.imgUrl?.message as string}</p>}
                 </div>
 
-                {/* Location */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Last Seen Location
@@ -138,18 +116,11 @@ const ReportLostItem = () => {
                     type="text"
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                     placeholder="e.g. Library, Canteen, Room 205"
-                    {...register("location", {
-                      required: "Location is required",
-                    })}
+                    {...register("location", { required: "Location is required" })}
                   />
-                  {errors.location && (
-                    <p className="text-red-400 text-xs mt-1">
-                      {errors.location?.message as string}
-                    </p>
-                  )}
+                  {errors.location && <p className="text-red-400 text-xs mt-1">{errors.location?.message as string}</p>}
                 </div>
 
-                {/* Date Lost */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Date Lost
@@ -168,7 +139,6 @@ const ReportLostItem = () => {
                   />
                 </div>
 
-                {/* Category */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Item Category
@@ -178,23 +148,13 @@ const ReportLostItem = () => {
                       className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer text-sm"
                       value={selectedMenucategoryId}
                       onChange={(e) => {
-                        const selectedCategory = Category?.data?.find(
-                          (cat: any) => cat.id === e.target.value
-                        );
-                        if (selectedCategory) {
-                          handleMenuChange(selectedCategory.name, selectedCategory.id);
-                        }
+                        const selectedCategory = Category?.data?.find((cat: any) => cat.id === e.target.value);
+                        if (selectedCategory) handleMenuChange(selectedCategory.name, selectedCategory.id);
                       }}
                     >
-                      <option value="" disabled className="text-gray-500">
-                        Select a category
-                      </option>
+                      <option value="" disabled className="text-gray-500">Select a category</option>
                       {Category?.data?.map((category: any) => (
-                        <option
-                          key={category?.id}
-                          value={category?.id}
-                          className="text-white bg-gray-800"
-                        >
+                        <option key={category?.id} value={category?.id} className="text-white bg-gray-800">
                           {category?.name}
                         </option>
                       ))}
@@ -205,18 +165,13 @@ const ReportLostItem = () => {
                       </svg>
                     </div>
                   </div>
-                  {!selectedMenu && (
-                    <p className="text-red-400 text-xs mt-1">Category is required</p>
-                  )}
+                  {!selectedMenu && <p className="text-red-400 text-xs mt-1">Category is required</p>}
                 </div>
 
               </div>
 
-              {/* Submit */}
               {isLoading ? (
-                <div className="flex justify-center py-2">
-                  <Spinner size="lg" />
-                </div>
+                <div className="flex justify-center py-2"><Spinner size="lg" /></div>
               ) : (
                 <button
                   type="submit"
@@ -229,12 +184,7 @@ const ReportLostItem = () => {
           </div>
         </div>
       </section>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        style={{ top: "70px" }}
-        theme="dark"
-      />
+      <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
     </>
   );
 };

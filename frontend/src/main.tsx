@@ -3,9 +3,8 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import Providers from "./providers/Providers.tsx";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import Home from "./pages/home/Home.tsx";
-import Register from "./pages/register/Register.tsx";
 import Login from "./pages/login/Login.tsx";
 import FoundItemsPage from "./pages/foundItems/FoundItems.tsx";
 import SingleFoundItem from "./pages/foundItems/SingleFoundItem.tsx";
@@ -36,8 +35,9 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
+        // Redirect /register to home — registration is disabled
         path: "/register",
-        element: <Register />,
+        element: <Navigate to="/" replace />,
       },
       {
         path: "/login",
