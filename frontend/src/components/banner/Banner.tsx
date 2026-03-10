@@ -1,0 +1,204 @@
+import { useState, useEffect } from "react";
+import { useGetLostItemsQuery, useGetFoundItemsQuery } from "../../redux/api/api";
+
+const Banner = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const { data: lostItems } = useGetLostItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
+  const { data: foundItems } = useGetFoundItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
+
+  const slides = [
+    {
+      badge: "SAS Lost & Found Portal",
+      title: "SAS Lost & Found",
+      subtitle: "Management System",
+      description:
+        "The official lost and found platform for SAS students, staff, and faculty. Report missing belongings or help return found items quickly and securely within our school community.",
+      primaryButton: { text: "Report a Lost Item", href: "/reportlostItem" },
+      secondaryButton: { text: "Report a Found Item", href: "/reportFoundItem" },
+    },
+    {
+      badge: "Found something on campus?",
+      title: "Help a Fellow",
+      subtitle: "SAS Member",
+      description:
+        "If you've found something on school grounds, please report it here. Your act of honesty helps reunite students and staff with their belongings and strengthens our school community.",
+      primaryButton: { text: "Report Found Item", href: "/reportFoundItem" },
+      secondaryButton: { text: "Browse Lost Items", href: "/lostItems" },
+    },
+    {
+      badge: "Track your reports anytime",
+      title: "Stay Updated on",
+      subtitle: "Your Reports",
+      description:
+        "Monitor the status of your lost item reports and claim requests in real time. Our school-wide tracking system ensures you're notified the moment your item is located.",
+      primaryButton: { text: "View My Items", href: "/dashboard/myFoundItems" },
+      secondaryButton: { text: "Browse Found Items", href: "/foundItems" },
+    },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  const s = slides[currentSlide];
+
+  return (
+    <section className="relative flex items-center justify-center h-[calc(100vh-64px)] overflow-hidden bg-gray-950">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-gray-950 to-gray-900" />
+        <div
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.05) 60px, rgba(255,255,255,0.05) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.05) 60px, rgba(255,255,255,0.05) 61px)`,
+          }}
+        />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 px-4 sm:px-6 lg:px-16 mx-auto max-w-7xl w-full">
+        <div className="grid lg:grid-cols-2 gap-12 items-start">
+
+          {/* Left content */}
+          <div key={currentSlide} className="flex flex-col justify-center pt-8">
+            <div className="inline-flex items-center gap-2 py-1.5 px-4 mb-6 text-xs font-semibold bg-blue-600/20 border border-blue-500/30 rounded-full text-blue-300 uppercase tracking-widest w-fit">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+              {s.badge}
+            </div>
+
+            <h1 className="mb-4 text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white">
+              {s.title}
+              <br />
+              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
+                {s.subtitle}
+              </span>
+            </h1>
+
+            <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 mb-6 rounded-full" />
+
+            <p className="mb-8 text-base lg:text-lg font-light text-gray-400 max-w-lg leading-relaxed">
+              {s.description}
+            </p>
+
+            <div className="flex flex-row gap-4 mb-8">
+              <a
+                href={s.primaryButton.href}
+                className="inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold py-3.5 px-7 rounded-lg transition-all duration-300 hover:-translate-y-0.5"
+              >
+                {s.primaryButton.text}
+              </a>
+              <a
+                href={s.secondaryButton.href}
+                className="inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold py-3.5 px-7 rounded-lg transition-all duration-300 hover:-translate-y-0.5"
+              >
+                {s.secondaryButton.text}
+              </a>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentSlide(i)}
+                  className={`transition-all duration-300 rounded-full ${
+                    i === currentSlide ? "w-8 h-2 bg-blue-400" : "w-2 h-2 bg-gray-600 hover:bg-gray-400"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Right visual panel */}
+          <div className="hidden lg:flex flex-col gap-4 pt-8">
+
+            {/* Recent Lost Items */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-white font-semibold text-sm flex items-center gap-2">
+                  📋 Recent Lost Items
+                </p>
+                <a href="/lostItems" className="text-blue-400 text-xs hover:text-blue-300 transition-colors">
+                  View all →
+                </a>
+              </div>
+              {lostItems?.data?.length > 0 ? (
+                <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                  {lostItems.data.map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="text-white text-xs font-medium truncate">{item.lostItemName}</p>
+                        <p className="text-gray-500 text-xs truncate">
+                          {item.date?.split("T")[0]} · {item.location}
+                        </p>
+                      </div>
+                      <span className="ml-2 shrink-0 text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full border border-yellow-500/20">
+                        {item.isFound ? "✓ Found" : "Pending"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-xs text-center py-3">No lost items reported yet.</p>
+              )}
+            </div>
+
+            {/* Recent Found Items */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-white font-semibold text-sm flex items-center gap-2">
+                  ✅ Recent Found Items
+                </p>
+                <a href="/foundItems" className="text-green-400 text-xs hover:text-green-300 transition-colors">
+                  View all →
+                </a>
+              </div>
+              {foundItems?.data?.length > 0 ? (
+                <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                  {foundItems.data.map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="text-white text-xs font-medium truncate">
+                          {item.foundItemName || item.lostItemName || item.name}
+                        </p>
+                        <p className="text-gray-500 text-xs truncate">
+                          {item.date?.split("T")[0]} · {item.location}
+                        </p>
+                      </div>
+                      <span className="ml-2 shrink-0 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20">
+                        Submitted
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-xs text-center py-3">No found items submitted yet.</p>
+              )}
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                [lostItems?.meta?.total != null ? `${lostItems.meta.total}` : "0", "Lost Reports"],
+                [foundItems?.meta?.total != null ? `${foundItems.meta.total}` : "0", "Found Reports"],
+                ["24h", "Avg. Resolution"],
+              ].map(([num, label]) => (
+                <div key={label} className="bg-white/5 border border-white/10 rounded-xl p-4 text-center backdrop-blur-sm">
+                  <p className="text-blue-400 font-black text-xl">{num}</p>
+                  <p className="text-gray-500 text-xs mt-1">{label}</p>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Banner;
