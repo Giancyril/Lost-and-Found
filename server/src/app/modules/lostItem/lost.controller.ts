@@ -10,7 +10,6 @@ const toggleFoundStatus = async (req: Request, res: Response) => {
     const message = result.isFound
       ? "Item marked as found successfully"
       : "Item marked as not found successfully";
-
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
@@ -26,10 +25,13 @@ const toggleFoundStatus = async (req: Request, res: Response) => {
     });
   }
 };
+
 const createLostItem = async (req: Request, res: Response) => {
   try {
     const item = req.body;
-    const result = await lostTItemServices.createLostItem(req.user.id, item);
+    // userId is optional — students report lost items without accounts
+    const userId = req.user?.id;
+    const result = await lostTItemServices.createLostItem(userId, item);
     sendResponse(res, {
       statusCode: StatusCodes.CREATED,
       success: true,
@@ -68,9 +70,7 @@ const getLostItem = async (req: Request, res: Response) => {
 const getSingleLostItem = async (req: Request, res: Response) => {
   try {
     const id: any = req?.params.id;
-    // console.log(id)
     const result = await lostTItemServices.getSingleLostItem(id);
-
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
@@ -146,6 +146,7 @@ const deleteMyLostItem = async (req: Request, res: Response) => {
     });
   }
 };
+
 export const lostItemController = {
   toggleFoundStatus,
   createLostItem,
@@ -153,5 +154,5 @@ export const lostItemController = {
   getSingleLostItem,
   getMyLostItem,
   editMyLostItem,
-  deleteMyLostItem
+  deleteMyLostItem,
 };

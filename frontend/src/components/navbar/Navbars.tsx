@@ -46,7 +46,7 @@ export function Navbars() {
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
             <div className="hidden sm:block">
-              <span className="whitespace-nowrap text-base font-black text-white tracking-tight">
+              <span className="whitespace-nowrap text-base font-black text-white tracking-widest">
                 NBSC SAS
               </span>
               <p className="text-gray-500 text-xs font-medium tracking-wide">
@@ -195,7 +195,7 @@ export function Navbars() {
               href="#aboutUs"
               className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap"
             >
-              About SAS L&F
+              About
             </NavbarLink>
           </div>
         </NavbarCollapse>

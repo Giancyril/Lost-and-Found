@@ -2,43 +2,49 @@ import { FaPlus, FaMinus } from "react-icons/fa";
 import { useState } from "react";
 
 interface FaqItem {
-  id?: string;
   question: string;
   answer: string;
 }
 
 const Faq = () => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-  //   const { data: faqsData, isLoading } = useGetFaqsQuery({});
 
   const toggleFaq = (index: number) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  const defaultFaqs: FaqItem[] = [
+  const faqs: FaqItem[] = [
+    {
+      question: "Do I need an account to use this system?",
+      answer:
+        "No account is needed. Students and visitors can freely browse the Lost Items Board and Found Items Board without logging in. Only SAS staff have login access to manage the system.",
+    },
     {
       question: "How do I report a lost item?",
       answer:
-        "Simply navigate to the 'Report Lost Item' page, fill out the detailed form with information about your lost item, including description, location, and date. Our system will help track and notify you when a matching item is found.",
+        "Click 'Report Lost Item' in the navigation bar and fill out the form with details about your missing item description, location, date, and category. Once submitted, it will appear on the Lost Items Board for others to see.",
     },
     {
-      question: "How can I search for my lost item?",
+      question: "I found an item on campus. What should I do?",
       answer:
-        "Use our advanced search feature to look for items by category, location, date, or keywords. You can filter results to find items that match your lost belongings.",
+        "You have two options: browse the Lost Items Board to see if the item matches a report, then click 'I Found This Item' on that listing or bring the item directly to the SAS Office and our staff will log it into the system.",
     },
     {
-      question: "What happens when I find an item that might be mine?",
+      question: "How do I claim a found item?",
       answer:
-        "When you spot an item that could be yours, you can submit a claim request with verification details. Our system will help verify ownership before arranging the return.",
+        "Visit the SAS Office in person with a valid ID and proof of ownership (e.g. description of unique markings, purchase receipt, photos). Our staff will verify your claim and process the release of the item.",
     },
     {
-      question: "How secure is my personal information?",
+      question: "What are the SAS Office hours?",
       answer:
-        "We prioritize the security of your personal information. We use advanced encryption and strict data protection measures to ensure your data is safe and confidential.",
+        "The Student Affairs Office is open Monday to Friday, 8:00 AM to 5:00 PM. Please visit during office hours to report, submit, or claim items.",
+    },
+    {
+      question: "How do I use Smart Search?",
+      answer:
+        "Smart Search uses AI to help you find matching items based on your description. Simply describe what you lost or found in natural language and the system will surface the most relevant results from both boards.",
     },
   ];
-
-  const faqs: FaqItem[] = defaultFaqs;
 
   return (
     <div className="py-16 lg:py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-black">
@@ -53,8 +59,7 @@ const Faq = () => {
               </span>
             </h2>
             <p className="text-gray-300 text-lg">
-              Find answers to common questions about our lost and found
-              management system.
+              Everything you need to know about the NBSC SAS Lost & Found system.
             </p>
           </div>
 
@@ -69,9 +74,7 @@ const Faq = () => {
                   onClick={() => toggleFaq(index)}
                   aria-expanded={expandedIndex === index}
                 >
-                  <span className="flex-1 text-white text-left">
-                    {faq.question}
-                  </span>
+                  <span className="flex-1 text-white text-left">{faq.question}</span>
                   <div className="text-blue-400">
                     {expandedIndex === index ? <FaMinus /> : <FaPlus />}
                   </div>
@@ -83,14 +86,10 @@ const Faq = () => {
                 >
                   <div
                     className={`px-6 pb-6 leading-relaxed transform transition-transform duration-500 ${
-                      expandedIndex === index
-                        ? "translate-y-0"
-                        : "-translate-y-4"
+                      expandedIndex === index ? "translate-y-0" : "-translate-y-4"
                     }`}
                   >
-                    <div className="text-gray-300 leading-relaxed">
-                      {faq.answer}
-                    </div>
+                    <div className="text-gray-300 leading-relaxed">{faq.answer}</div>
                   </div>
                 </div>
               </li>

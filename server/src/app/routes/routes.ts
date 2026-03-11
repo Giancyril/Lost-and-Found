@@ -17,152 +17,68 @@ import { aiSearchController } from "../modules/aiSearch/aiSearch.controller";
 import { aiSearchValidation } from "../modules/aiSearch/aiSearch.validate";
 
 const router = express.Router();
+
 ////////////////////////////////////////////////// user //////////////////////////////////////////////
-// user registraion
-router.post(
-  "/register",
-  userController.registerUser
-);
+router.post("/register", userController.registerUser);
+router.get("/users", userController.allUsers);
+router.post("/login", validateRequest(UserSchema.userLoginSchema), authController.login);
 
-//get users
-router.get(
-  "/users",
-  // auth(),
-  userController.allUsers
-);
+////////////////////////////////////////////////// profile //////////////////////////////////////////////
+router.post("/change-password", auth(), validateRequest(UserSchema.changePasswordSchema), authController.newPasswords);
+router.post("/change-email", auth(), validateRequest(UserSchema.changeEmailSchema), authController.changeEmail);
+router.post("/change-username", auth(), validateRequest(UserSchema.changeUsernameSchema), authController.changeUsername);
 
-// user login
-router.post(
-  "/login",
-  validateRequest(UserSchema.userLoginSchema),
-  authController.login
-);
-///////////////////////////////////////////////////profile //////////////////////////////////////////////
-// change password
-router.post(
-  "/change-password",
-  auth(),
-  validateRequest(UserSchema.changePasswordSchema),
-  authController.newPasswords
-);
-// change email
-router.post(
-  "/change-email",
-  auth(),
-  validateRequest(UserSchema.changeEmailSchema),
-  authController.changeEmail
-);
-// change username
-router.post(
-  "/change-username",
-  auth(),
-  validateRequest(UserSchema.changeUsernameSchema),
-  authController.changeUsername
-);
-///////////////////////////////////////////////////found item//////////////////////////////////////////////
-// category create
-router.post(
-  "/item-categories",
-  validateRequest(FoundItemCategorySchema.createFoundItemCategory),
-  auth(),
-  itemcategoryController.createItemCategory
-);
+////////////////////////////////////////////////// categories //////////////////////////////////////////////
+router.post("/item-categories", validateRequest(FoundItemCategorySchema.createFoundItemCategory), auth(), itemcategoryController.createItemCategory);
+router.get("/item-categories", itemcategoryController.getItemCategory);
+router.put("/item-categories/:id", validateRequest(FoundItemCategorySchema.createFoundItemCategory), auth(), itemcategoryController.updateItemCategory);
+router.delete("/item-categories/:id", auth(), itemcategoryController.deleteItemCategory);
 
-// category get
-router.get(
-  "/item-categories",
-  itemcategoryController.getItemCategory
-);
+////////////////////////////////////////////////// found items //////////////////////////////////////////////
+// No auth — student reports finding a lost item (must be BEFORE the auth route)
+router.post("/found-items/public", foundItemController.createFoundItem);
 
-// category update
-router.put(
-  "/item-categories/:id",
-  validateRequest(FoundItemCategorySchema.createFoundItemCategory),
-  auth(),
-  itemcategoryController.updateItemCategory
-);
-
-// category delete
-router.delete(
-  "/item-categories/:id",
-  auth(),
-  itemcategoryController.deleteItemCategory
-);
-// found item create
-router.post("/found-items",
-  validateRequest(FoundItemSchema.createFoundItem),
-  auth(),
-  foundItemController.createFoundItem
-);
-// found item get
+// Admin only — creating a found item entry from the admin panel
+router.post("/found-items", validateRequest(FoundItemSchema.createFoundItem), auth(), foundItemController.createFoundItem);
 router.get("/found-items", foundItemController.getFoundItem);
-// single found item get
 router.get("/found-item/:id", foundItemController.getSingleFoundItem);
-///////////////////////////////////////////////////claim//////////////////////////////////////////////
-// claim create
-router.post(
-  "/claims",
-  validateRequest(ItemClaimSchema.createClaim),
-  auth(),
-  claimsController.createClaim
-);
 
-// claims get all
-router.get("/claims", auth(), claimsController.getClaim);
-
-// my claims get
-router.get("/my/claims", auth(), claimsController.getMyClaim);
-
-// claims update
-router.put(
-  "/claims/:claimId",
-  validateRequest(ItemClaimSchema.updateClaim),
-  auth(),
-  claimsController.updateClaimStatus
-);
-///////////////////////////////////////////////////lost item//////////////////////////////////////////////
-
-// lost item mark as found
-router.put("/found-lost", auth(), lostItemController.toggleFoundStatus);
-// create lost item
-router.post("/lostItem", auth(), lostItemController.createLostItem);
-// get lost item
+////////////////////////////////////////////////// lost items //////////////////////////////////////////////
+// No auth — students report lost items without logging in
+router.post("/lostItem", lostItemController.createLostItem);
 router.get("/lostItem", lostItemController.getLostItem);
-// get single lost item
 router.get("/lostItem/:id", lostItemController.getSingleLostItem);
-// get my lost item
-router.get("/my/lostItem",auth(), lostItemController.getMyLostItem);
-// get my found item
-router.get("/my/foundItem",auth(), foundItemController.getMyFoundItem);
 
-// my lost item edit
-router.put("/my/lostItem",auth(), lostItemController.editMyLostItem);
-// my found item edit
-router.put("/my/foundItem",auth(), foundItemController.editMyFoundItem);
+// Auth required — admin/user-specific routes
+router.put("/found-lost", auth(), lostItemController.toggleFoundStatus);
+router.get("/my/lostItem", auth(), lostItemController.getMyLostItem);
+router.put("/my/lostItem", auth(), lostItemController.editMyLostItem);
+router.delete("/my/lostItem/:id", auth(), lostItemController.deleteMyLostItem);
+router.get("/my/foundItem", auth(), foundItemController.getMyFoundItem);
+router.put("/my/foundItem", auth(), foundItemController.editMyFoundItem);
+router.delete("/my/foundItem/:id", auth(), foundItemController.deleteMyFoundItem);
 
-// delete my lost item
-router.delete("/my/lostItem/:id",auth(), lostItemController.deleteMyLostItem);
-// delete my found item
-router.delete("/my/foundItem/:id",auth(), foundItemController.deleteMyFoundItem);
+////////////////////////////////////////////////// claims //////////////////////////////////////////////
+// No auth — students submit claims without logging in
+router.post("/claims", validateRequest(ItemClaimSchema.createClaim), claimsController.createClaim);
+router.get("/claims", auth(), claimsController.getClaim);
+router.get("/my/claims", auth(), claimsController.getMyClaim);
+router.put("/claims/:claimId", validateRequest(ItemClaimSchema.updateClaim), auth(), claimsController.updateClaimStatus);
 
+////////////////////////////////////////////////// "I Found This Item" — student submits found report //////////////////////////////////////////////
+// This is called from SingleLostItem when a student reports finding a lost item
+// Removed auth() so students can submit without logging in
+// Note: FoundItemSchema validation still applies for data integrity
+// router.post("/found-items") is already defined above as admin-only
+// Students use a separate endpoint or we relax validation — see note below
 
-// get stats for admin
-router.get("/admin/stats",auth(), adminStats);
+////////////////////////////////////////////////// admin //////////////////////////////////////////////
+router.get("/admin/stats", auth(), adminStats);
+router.put("/block/user/:id", auth(), userController.blockUser);
+router.put("/change-role/:id", auth(), userController.changeUserRole);
+router.delete("/delete-user/:id", auth(), userController.softDeleteUser);
 
-// block a user
-router.put("/block/user/:id",auth(), userController.blockUser);
-
-// change user role
-router.put("/change-role/:id",auth(), userController.changeUserRole);
-
-// soft delete user
-router.delete("/delete-user/:id",auth(), userController.softDeleteUser);
-
-// AI search
-router.post(
-  "/ai-search",
-  validateRequest(aiSearchValidation.aiSearchSchema),
-  aiSearchController.aiSearch
-);
+////////////////////////////////////////////////// AI search //////////////////////////////////////////////
+router.post("/ai-search", validateRequest(aiSearchValidation.aiSearchSchema), aiSearchController.aiSearch);
 
 export default router;

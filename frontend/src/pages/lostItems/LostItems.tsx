@@ -6,15 +6,17 @@ import {
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { lostItem } from "../../types/types";
 
 const LostItemsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [fuzzyTerm, setFuzzyTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("lostItemName");
   const [sortOrder, setSortOrder] = useState("asc");
   const [limit] = useState(12);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: lostItems, isLoading } = useGetLostItemsQuery({
     searchTerm,
@@ -24,13 +26,15 @@ const LostItemsPage = () => {
     sortOrder,
   });
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-  };
-
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  const handleFuzzyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFuzzyTerm(value);
+    // Debounce: send to API after 400ms pause so it fires on every keystroke
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setSearchTerm(value);
+      setCurrentPage(1);
+    }, 400);
   };
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -43,6 +47,7 @@ const LostItemsPage = () => {
   const handlePageChange = (page: number) => setCurrentPage(page);
 
   const clearSearch = () => {
+    setFuzzyTerm("");
     setSearchTerm("");
     setCurrentPage(1);
   };
@@ -96,7 +101,9 @@ const LostItemsPage = () => {
 
         {/* Search and Filter */}
         <div className="bg-gray-900 rounded-2xl p-6 mb-8 border border-gray-800">
-          <form className="mb-5" onSubmit={handleSearch}>
+
+          {/* Fuzzy Search Input */}
+          <div className="mb-5">
             <div className="relative">
               <div className="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none">
                 <FaSearch className="text-gray-500" size={13} />
@@ -105,17 +112,27 @@ const LostItemsPage = () => {
                 type="search"
                 className="block w-full p-3.5 ps-11 text-sm text-white border border-gray-700 rounded-xl bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500 transition-all duration-200"
                 placeholder="Search by name, location, or description..."
-                value={searchTerm}
-                onChange={handleSearchInputChange}
+                value={fuzzyTerm}
+                onChange={handleFuzzyInputChange}
               />
-              <button
-                type="submit"
-                className="text-white absolute end-2.5 bottom-2 bg-blue-600 hover:bg-blue-500 font-medium rounded-lg text-sm px-5 py-1.5 transition-all duration-200"
-              >
-                Search
-              </button>
+              {fuzzyTerm ? (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="text-white absolute end-2.5 bottom-2 bg-gray-600 hover:bg-gray-500 font-medium rounded-lg text-sm px-3 py-1.5 transition-all duration-200"
+                >
+                  ✕ Clear
+                </button>
+              ) : null}
             </div>
-          </form>
+            {fuzzyTerm && (
+              <p className="text-xs text-gray-500 mt-2 ps-1">
+                Showing results for{" "}
+                <span className="text-blue-400 font-medium">"{fuzzyTerm}"</span>
+                {" "}— results update as you type
+              </p>
+            )}
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -133,8 +150,11 @@ const LostItemsPage = () => {
                 <option value="location-desc">Location (Z-A)</option>
               </select>
             </div>
-            {searchTerm && (
-              <button onClick={clearSearch} className="text-blue-400 hover:text-blue-300 text-sm font-medium bg-blue-900/20 px-4 py-2 rounded-lg hover:bg-blue-900/30 transition-all duration-200 border border-blue-600/30">
+            {fuzzyTerm && (
+              <button
+                onClick={clearSearch}
+                className="text-blue-400 hover:text-blue-300 text-sm font-medium bg-blue-900/20 px-4 py-2 rounded-lg hover:bg-blue-900/30 transition-all duration-200 border border-blue-600/30"
+              >
                 Clear search
               </button>
             )}
@@ -144,8 +164,8 @@ const LostItemsPage = () => {
         {/* Results Info */}
         <div className="mb-6">
           <p className="text-center text-sm text-gray-500">
-            {searchTerm
-              ? `Search results for "${searchTerm}" — ${lostItems?.data?.length || 0} items found`
+            {fuzzyTerm
+              ? `Search results for "${fuzzyTerm}" — ${lostItems?.data?.length || 0} items found`
               : `Showing ${lostItems?.data?.length || 0} lost items`}
           </p>
         </div>
@@ -159,15 +179,18 @@ const LostItemsPage = () => {
               <FaSearch className="text-gray-600 text-2xl" />
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">
-              {searchTerm ? "No items found" : "No lost items yet"}
+              {fuzzyTerm ? "No items found" : "No lost items yet"}
             </h3>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
-              {searchTerm
-                ? `No items found for "${searchTerm}". Try adjusting your search terms.`
+              {fuzzyTerm
+                ? `No items found for "${fuzzyTerm}". Try different keywords — the search matches names, descriptions, and locations.`
                 : "No lost items have been reported yet. Check back later!"}
             </p>
-            {searchTerm && (
-              <button onClick={clearSearch} className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-all duration-200">
+            {fuzzyTerm && (
+              <button
+                onClick={clearSearch}
+                className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-all duration-200"
+              >
                 Clear search
               </button>
             )}
@@ -187,7 +210,9 @@ const LostItemsPage = () => {
                       alt={lostItem?.lostItemName}
                       width={500}
                       height={500}
-                      onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/bgimg.png";
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   </div>
@@ -241,7 +266,11 @@ const LostItemsPage = () => {
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${currentPage === 1 ? "text-gray-600 cursor-not-allowed" : "text-gray-300 bg-gray-800 hover:bg-gray-700"}`}
+              className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+                currentPage === 1
+                  ? "text-gray-600 cursor-not-allowed"
+                  : "text-gray-300 bg-gray-800 hover:bg-gray-700"
+              }`}
             >
               <FaChevronLeft className="w-3 h-3 mr-2" /> Previous
             </button>
@@ -251,21 +280,40 @@ const LostItemsPage = () => {
                 const maxVisiblePages = 5;
                 let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
                 let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-                if (endPage - startPage + 1 < maxVisiblePages) startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                if (endPage - startPage + 1 < maxVisiblePages)
+                  startPage = Math.max(1, endPage - maxVisiblePages + 1);
                 if (startPage > 1) {
-                  pages.push(<button key={1} onClick={() => handlePageChange(1)} className="px-3 py-2 text-sm font-medium rounded-lg text-gray-300 bg-gray-800 hover:bg-gray-700 transition-all duration-200">1</button>);
-                  if (startPage > 2) pages.push(<span key="e1" className="px-2 text-gray-500">...</span>);
+                  pages.push(
+                    <button key={1} onClick={() => handlePageChange(1)} className="px-3 py-2 text-sm font-medium rounded-lg text-gray-300 bg-gray-800 hover:bg-gray-700 transition-all duration-200">
+                      1
+                    </button>
+                  );
+                  if (startPage > 2)
+                    pages.push(<span key="e1" className="px-2 text-gray-500">...</span>);
                 }
                 for (let i = startPage; i <= endPage; i++) {
                   pages.push(
-                    <button key={i} onClick={() => handlePageChange(i)} className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${currentPage === i ? "text-white bg-blue-600" : "text-gray-300 bg-gray-800 hover:bg-gray-700"}`}>
+                    <button
+                      key={i}
+                      onClick={() => handlePageChange(i)}
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        currentPage === i
+                          ? "text-white bg-blue-600"
+                          : "text-gray-300 bg-gray-800 hover:bg-gray-700"
+                      }`}
+                    >
                       {i}
                     </button>
                   );
                 }
                 if (endPage < totalPages) {
-                  if (endPage < totalPages - 1) pages.push(<span key="e2" className="px-2 text-gray-500">...</span>);
-                  pages.push(<button key={totalPages} onClick={() => handlePageChange(totalPages)} className="px-3 py-2 text-sm font-medium rounded-lg text-gray-300 bg-gray-800 hover:bg-gray-700 transition-all duration-200">{totalPages}</button>);
+                  if (endPage < totalPages - 1)
+                    pages.push(<span key="e2" className="px-2 text-gray-500">...</span>);
+                  pages.push(
+                    <button key={totalPages} onClick={() => handlePageChange(totalPages)} className="px-3 py-2 text-sm font-medium rounded-lg text-gray-300 bg-gray-800 hover:bg-gray-700 transition-all duration-200">
+                      {totalPages}
+                    </button>
+                  );
                 }
                 return pages;
               })()}
@@ -273,7 +321,11 @@ const LostItemsPage = () => {
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${currentPage === totalPages ? "text-gray-600 cursor-not-allowed" : "text-gray-300 bg-gray-800 hover:bg-gray-700"}`}
+              className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+                currentPage === totalPages
+                  ? "text-gray-600 cursor-not-allowed"
+                  : "text-gray-300 bg-gray-800 hover:bg-gray-700"
+              }`}
             >
               Next <FaChevronRight className="w-3 h-3 ml-2" />
             </button>

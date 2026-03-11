@@ -15,16 +15,112 @@ import {
   FaTag,
   FaTimes,
   FaBoxOpen,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 
+// ─── Image Carousel ────────────────────────────────────────────────────────────
+function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  const prev = () => setActiveIdx((i) => (i === 0 ? images.length - 1 : i - 1));
+  const next = () => setActiveIdx((i) => (i === images.length - 1 ? 0 : i + 1));
+
+  if (images.length === 0) {
+    return (
+      <div className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex items-center justify-center min-h-80">
+        <img src="/bgimg.png" alt={alt} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
+
+  if (images.length === 1) {
+    return (
+      <div className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+        <img
+          src={images[0]}
+          alt={alt}
+          className="w-full min-h-80 object-cover"
+          onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="relative rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 group">
+        <img
+          src={images[activeIdx]}
+          alt={`${alt} — photo ${activeIdx + 1}`}
+          className="w-full min-h-80 max-h-[480px] object-cover transition-all duration-300"
+          onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+        />
+        <button
+          onClick={prev}
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 backdrop-blur-sm border border-white/10"
+        >
+          <FaChevronLeft size={13} />
+        </button>
+        <button
+          onClick={next}
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 backdrop-blur-sm border border-white/10"
+        >
+          <FaChevronRight size={13} />
+        </button>
+        <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full border border-white/10">
+          {activeIdx + 1} / {images.length}
+        </div>
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {images.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveIdx(idx)}
+              className={`h-1.5 rounded-full transition-all duration-200 ${
+                idx === activeIdx ? "bg-white w-4" : "bg-white/40 hover:bg-white/70 w-1.5"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {images.map((src, idx) => (
+          <button
+            key={idx}
+            onClick={() => setActiveIdx(idx)}
+            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+              idx === activeIdx
+                ? "border-blue-500 ring-2 ring-blue-500/30"
+                : "border-gray-700 hover:border-gray-500 opacity-60 hover:opacity-100"
+            }`}
+          >
+            <img
+              src={src}
+              alt={`Thumbnail ${idx + 1}`}
+              className="w-full h-full object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 const SingleLostItem = () => {
   const { lostItem: lostItemId }: any = useParams();
-  const { data: singleLostItem, isLoading } = useGetSingleLostItemQuery(lostItemId);
+  const { data: singleLostItem, isLoading, refetch } = useGetSingleLostItemQuery(lostItemId);
   const [createFoundItem, { isLoading: submitLoading }] = useCreateFoundItemMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [foundDate, setFoundDate] = useState(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Track if user already reported this item as found — persists across refreshes via localStorage
+  const storageKey = `reported_found_${lostItemId}`;
+  const [reportedFound, setReportedFound] = useState<boolean>(
+    () => localStorage.getItem(storageKey) === "true"
+  );
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
@@ -34,11 +130,12 @@ const SingleLostItem = () => {
       const foundData = {
         foundItemName: lostItem?.lostItemName,
         description: data.description,
-        img: lostItem?.img || data.imgUrl,
+        img: lostItem?.img || "",
         location: data.location,
         date: foundDate,
         claimProcess: "Visit the SAS office with valid ID to claim this item.",
         categoryId: lostItem?.category?.id,
+        lostItemId: lostItemId, // tells backend to flip isFound=true on the original lost item
       };
       const res: any = await createFoundItem(foundData);
       if (res?.data?.success == false) {
@@ -46,6 +143,9 @@ const SingleLostItem = () => {
       } else {
         toast.success("Thank you! The item has been reported as found.");
         setIsModalOpen(false);
+        setReportedFound(true);
+        localStorage.setItem(storageKey, "true"); // persist across refreshes
+        refetch();
         reset();
       }
     } catch (err) {
@@ -89,6 +189,15 @@ const SingleLostItem = () => {
 
   const { lostItemName, date, isFound, img, description, location, user, category } = lostItem;
 
+  // isFound from backend OR reportedFound from this session
+  const alreadyFound = isFound || reportedFound;
+
+  const imageList: string[] = Array.isArray(lostItem.images) && lostItem.images.length > 0
+    ? lostItem.images.map((i: any) => (typeof i === "string" ? i : i?.url ?? i?.src ?? ""))
+    : img
+    ? [img]
+    : [];
+
   return (
     <>
       <div className="min-h-screen bg-gray-950">
@@ -109,7 +218,7 @@ const SingleLostItem = () => {
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">Lost item details and information</p>
               </div>
-              {isFound ? (
+              {alreadyFound ? (
                 <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 text-green-400 border border-green-600/30">
                   ✓ Found
                 </span>
@@ -126,20 +235,10 @@ const SingleLostItem = () => {
         <div className="w-full px-6 sm:px-10 lg:px-16 py-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
 
-            {/* Image */}
-            <div className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
-              <img
-                src={img}
-                alt={lostItemName}
-                className="w-full h-full min-h-80 object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-              />
-            </div>
+            <ImageCarousel images={imageList} alt={lostItemName} />
 
-            {/* Details */}
             <div className="space-y-5">
 
-              {/* Description */}
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
                 <p className="text-gray-400 leading-relaxed text-sm">
@@ -147,7 +246,6 @@ const SingleLostItem = () => {
                 </p>
               </div>
 
-              {/* Details Grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
                   <div className="flex items-center gap-2 text-blue-400 mb-2">
@@ -184,27 +282,40 @@ const SingleLostItem = () => {
                 </div>
               </div>
 
-              {/* Action */}
+              {/* Found This Item section */}
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2">
                   Found This Item?
                 </h3>
-                <p className="text-gray-500 text-sm mb-4 leading-relaxed">
-                  If you found this item, click below to let the owner know. Fill in where and when you found it.
-                </p>
 
-                {!isFound ? (
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm flex items-center justify-center gap-2"
-                  >
-                    <FaBoxOpen size={13} />
-                    I Found This Item
-                  </button>
-                ) : (
-                  <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3 text-center">
-                    <p className="text-green-400 text-sm font-medium">This item has been marked as found!</p>
+                {alreadyFound ? (
+                  /* After submit or if already marked found by backend */
+                  <div className="bg-green-900/20 border border-green-600/30 rounded-xl p-4 flex items-start gap-3">
+                    <span className="text-green-400 text-xl mt-0.5">✓</span>
+                    <div>
+                      <p className="text-green-400 text-sm font-semibold">
+                        {reportedFound ? "Thank you for reporting this!" : "This item has been marked as found!"}
+                      </p>
+                      <p className="text-green-400/70 text-xs mt-1 leading-relaxed">
+                        {reportedFound
+                          ? "Your report has been submitted. The SAS Office will contact the owner."
+                          : "Someone has already reported finding this item."}
+                      </p>
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    <p className="text-gray-500 text-sm mb-4 leading-relaxed">
+                      If you found this item, click below to let the owner know. Fill in where and when you found it.
+                    </p>
+                    <button
+                      onClick={() => setIsModalOpen(true)}
+                      className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm flex items-center justify-center gap-2"
+                    >
+                      <FaBoxOpen size={13} />
+                      I Found This Item
+                    </button>
+                  </>
                 )}
               </div>
 
@@ -217,23 +328,20 @@ const SingleLostItem = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="relative w-full max-w-lg bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">
-
-            {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
               <div>
                 <h3 className="text-base font-bold text-white">I Found This Item</h3>
-                <p className="text-gray-500 text-xs mt-0.5">Tell us where and when you found <span className="text-white">{lostItemName}</span></p>
+                <p className="text-gray-500 text-xs mt-0.5">
+                  Tell us where and when you found <span className="text-white">{lostItemName}</span>
+                </p>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white transition-colors duration-200 ml-4">
                 <FaTimes size={15} />
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="px-6 py-5">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-
-                {/* Where found */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Where Did You Find It?
@@ -247,7 +355,6 @@ const SingleLostItem = () => {
                   {errors.location && <p className="text-red-400 text-xs mt-1">{errors.location.message as string}</p>}
                 </div>
 
-                {/* Date found */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Date You Found It
@@ -265,7 +372,6 @@ const SingleLostItem = () => {
                   />
                 </div>
 
-                {/* Additional details */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Additional Details
@@ -278,7 +384,6 @@ const SingleLostItem = () => {
                   />
                 </div>
 
-                {/* Buttons */}
                 <div className="flex gap-3 pt-1">
                   <button
                     type="button"

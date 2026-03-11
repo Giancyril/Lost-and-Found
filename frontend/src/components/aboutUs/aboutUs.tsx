@@ -12,13 +12,13 @@ const AboutUs = () => {
             <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-6">
               Built for the{" "}
               <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                SAS Community
+                SAS 
               </span>
             </h2>
             <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 mb-6 rounded-full" />
 
             <p className="text-gray-400 text-base leading-relaxed mb-6">
-              The <strong className="text-white">SAS Lost & Found Management System</strong> is the official platform designed exclusively for students, teachers, and staff of our school. It provides a safe, organized, and transparent way to report, track, and recover lost items within campus premises.
+              The <strong className="text-white">SAS Lost & Found Management System</strong> is designed exclusively for students, teachers, and staff of our school. It provides a safe, organized, and transparent way to report, track, and recover lost items within campus premises.
             </p>
             <p className="text-gray-400 text-base leading-relaxed mb-8">
               We believe that a well-managed lost and found system reflects the integrity and care of our school community. Every item reported and returned strengthens the trust and responsibility we hold for one another as part of SAS.
@@ -28,7 +28,7 @@ const AboutUs = () => {
               {[
                 { icon: "🎒", title: "For Students", desc: "Easily report or claim lost items from classrooms, hallways, or school grounds." },
                 { icon: "👨‍🏫", title: "For Teachers & Staff", desc: "Manage found items and coordinate with the admin office through one central system." },
-                { icon: "🏫", title: "School-Wide Coverage", desc: "Covers all campus areas including classrooms, gym, cafeteria, and library." },
+                { icon: "🏫", title: "School-Wide Coverage", desc: "Covers all campus areas including classrooms, field, cafeteria, and library." },
               ].map((item) => (
                 <div key={item.title} className="flex items-start gap-4 bg-gray-900 border border-gray-800 rounded-xl p-4">
                   <div className="text-2xl mt-0.5">{item.icon}</div>
@@ -50,7 +50,7 @@ const AboutUs = () => {
                 <h3 className="text-white font-bold text-lg">Our Mission</h3>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed">
-                To provide SAS with a reliable, school-appropriate lost and found system that promotes honesty, responsibility, and respect for each other's belongings — core values at the heart of our school culture.
+                To provide SAS with a reliable, school-appropriate lost and found system that promotes honesty, responsibility, and respect for each other's belongings core values at the heart of our school culture.
               </p>
             </div>
 

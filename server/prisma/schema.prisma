@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-name   String @default("")
+  name      String      @default("")
   id        String      @id @default(uuid())
   username  String      @unique
   email     String      @unique
@@ -22,7 +22,6 @@ name   String @default("")
   userImg   String      @default("")
   isDeleted Boolean     @default(false)
   deletedAt DateTime?
-  // profile   UserProfile?
   LostItem  LostItem[]
 
   @@map("users")
@@ -40,64 +39,63 @@ model ItemCategory {
 }
 
 model FoundItem {
-  id            String             @id @default(uuid())
-  userId        String
-  img           String             @default("")
-  user          User               @relation(fields: [userId], references: [id])
+  id            String        @id @default(uuid())
+  userId        String?       // optional — student submissions have no user account
+  img           String        @default("")
+  user          User?         @relation(fields: [userId], references: [id])
   categoryId    String
   category      ItemCategory? @relation(fields: [categoryId], references: [id])
   foundItemName String
   description   String
   location      String
-  date          DateTime           @default(now())
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  date          DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   claim         Claim[]
-  claimProcess  String             @default("")
-  isClaimed     Boolean            @default(false)
-  isDeleted     Boolean            @default(false)
+  claimProcess  String        @default("")
+  isClaimed     Boolean       @default(false)
+  isDeleted     Boolean       @default(false)
   deletedAt     DateTime?
 
   @@map("foundItems")
 }
 
 model LostItem {
-  id           String             @id @default(uuid())
-  userId       String
+  id           String        @id @default(uuid())
+  userId       String?       // optional — students report lost items without accounts
   lostItemName String
   categoryId   String
-  img          String             @default("")
+  img          String        @default("")
   description  String
   location     String
   date         DateTime
   category     ItemCategory? @relation(fields: [categoryId], references: [id])
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  isFound      Boolean            @default(false)
-  isDeleted    Boolean            @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  isFound      Boolean       @default(false)
+  isDeleted    Boolean       @default(false)
   deletedAt    DateTime?
-  user         User               @relation(fields: [userId], references: [id])
+  user         User?         @relation(fields: [userId], references: [id])
 
   @@map("lostItems")
 }
 
 model Claim {
-  id                     String    @id @default(uuid())
-  userId                 String
+  id                     String        @id @default(uuid())
+  userId                 String?       // optional — students submit claims without accounts
   foundItemId            String
-  isDeleted    Boolean            @default(false)
-  deletedAt    DateTime?
-  status                 status    @default(PENDING)
+  isDeleted              Boolean       @default(false)
+  deletedAt              DateTime?
+  status                 status        @default(PENDING)
   distinguishingFeatures String?
   lostDate               DateTime
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  user                   User      @relation(fields: [userId], references: [id])
-  foundItem              FoundItem @relation(fields: [foundItemId], references: [id])
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  user                   User?         @relation(fields: [userId], references: [id])
+  foundItem              FoundItem     @relation(fields: [foundItemId], references: [id])
 
   @@map("claims")
 }
-
 
 enum status {
   PENDING

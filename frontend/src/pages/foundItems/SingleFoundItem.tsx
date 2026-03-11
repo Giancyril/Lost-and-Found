@@ -1,6 +1,7 @@
 import {
   useGetSingleFoundItemQuery,
   useCreateClaimMutation,
+  useUpdateClaimStatusMutation,
 } from "../../redux/api/api";
 import { Spinner } from "flowbite-react";
 import { useState } from "react";
@@ -16,6 +17,7 @@ import {
   FaTag,
   FaTimes,
   FaBuilding,
+  FaCheckCircle,
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
 
@@ -25,8 +27,9 @@ const SingleFoundItem = () => {
   const users: any = useUserVerification();
   const isAdmin = users?.role === "ADMIN";
 
-  const { data: singleFoundItem, isLoading } = useGetSingleFoundItemQuery(foundItemId!);
+  const { data: singleFoundItem, isLoading, refetch } = useGetSingleFoundItemQuery(foundItemId!);
   const [createClaim, { isLoading: claimLoading }] = useCreateClaimMutation();
+  const [updateClaimStatus] = useUpdateClaimStatusMutation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
 
@@ -40,13 +43,24 @@ const SingleFoundItem = () => {
         distinguishingFeatures: data.distinguishingFeatures,
         lostDate: new Date(data.lostDate).toISOString(),
       };
-      const res = await createClaim(claimData);
-      if (res.data?.success) {
-        toast.success("Claim submitted successfully!");
+      const res: any = await createClaim(claimData);
+
+      if (res?.data?.success) {
+        // After creating the claim, immediately mark it as APPROVED/accepted
+        // so the item shows as claimed and the admin action is complete
+        if (res?.data?.data?.id) {
+          await updateClaimStatus({
+            claimId: res.data.data.id,
+            status: "APPROVED",
+            note: `Claim verified by admin. Proof: ${data.distinguishingFeatures}`,
+          });
+        }
+        toast.success("Claim processed and marked as approved!");
         setIsClaimModalOpen(false);
         reset();
+        refetch(); // refresh so isClaimed updates immediately
       } else {
-        toast.error("Failed to submit claim. Please try again.");
+        toast.error("Failed to process claim. Please try again.");
       }
     } catch (error) {
       toast.error("An unexpected error occurred.");
@@ -102,6 +116,9 @@ const SingleFoundItem = () => {
     );
   }
 
+  // isClaimed drives ALL status displays across this page and the cards
+  const isClaimed = foundItemData?.isClaimed;
+
   return (
     <>
       <div className="min-h-screen bg-gray-950">
@@ -122,9 +139,10 @@ const SingleFoundItem = () => {
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">Found item details</p>
               </div>
-              {foundItemData?.isClaimed ? (
-                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 text-green-400 border border-green-600/30">
-                  ✓ Claimed
+              {/* Status badge — Claimed vs Available */}
+              {isClaimed ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 text-green-400 border border-green-600/30">
+                  <FaCheckCircle size={10} /> Claimed
                 </span>
               ) : (
                 <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-600/30">
@@ -168,7 +186,11 @@ const SingleFoundItem = () => {
                     <span className="text-xs font-bold uppercase tracking-widest">Date Found</span>
                   </div>
                   <p className="text-gray-300 text-sm">
-                    {foundItemData?.date ? new Date(foundItemData.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified"}
+                    {foundItemData?.date
+                      ? new Date(foundItemData.date).toLocaleDateString("en-US", {
+                          year: "numeric", month: "long", day: "numeric",
+                        })
+                      : "Not specified"}
                   </p>
                 </div>
 
@@ -199,14 +221,23 @@ const SingleFoundItem = () => {
 
               {/* Claim Section */}
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
-                <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2">How to Claim</h3>
+                <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2">
+                  {isClaimed ? "Claim Status" : "How to Claim"}
+                </h3>
 
-                {foundItemData?.isClaimed ? (
-                  <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3 text-center">
-                    <p className="text-green-400 text-sm font-medium">This item has already been claimed.</p>
+                {isClaimed ? (
+                  /* Already claimed — shown to everyone */
+                  <div className="bg-green-900/20 border border-green-600/30 rounded-xl p-4 flex items-start gap-3">
+                    <FaCheckCircle className="text-green-400 mt-0.5 shrink-0 text-lg" />
+                    <div>
+                      <p className="text-green-400 text-sm font-semibold">Item Successfully Claimed</p>
+                      <p className="text-green-400/70 text-xs mt-1 leading-relaxed">
+                        This item has been verified and returned to its owner. It is no longer available for claim.
+                      </p>
+                    </div>
                   </div>
                 ) : isAdmin ? (
-                  /* Admin: show claim button */
+                  /* Admin: show Process Claim button */
                   <>
                     <p className="text-gray-500 text-sm mb-4 leading-relaxed">
                       {foundItemData?.claimProcess || "Verify ownership before processing the claim."}
@@ -237,34 +268,44 @@ const SingleFoundItem = () => {
         </div>
       </div>
 
-      {/* Claim Modal — admin only */}
+      {/* Process Claim Modal — admin only */}
       {isClaimModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
               <div>
                 <h3 className="text-base font-bold text-white">Process Claim</h3>
-                <p className="text-gray-500 text-xs mt-0.5">Verify and log the claim</p>
+                <p className="text-gray-500 text-xs mt-0.5">Verify ownership and mark item as claimed</p>
               </div>
-              <button onClick={() => setIsClaimModalOpen(false)} className="text-gray-500 hover:text-white transition-colors duration-200 ml-4">
+              <button
+                onClick={() => { setIsClaimModalOpen(false); reset(); }}
+                className="text-gray-500 hover:text-white transition-colors duration-200 ml-4"
+              >
                 <FaTimes size={15} />
               </button>
             </div>
 
             <div className="px-6 py-5">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
                 <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date Item Was Lost</label>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
+                    Date Item Was Lost
+                  </label>
                   <input
                     type="date"
                     {...register("lostDate", { required: "Please provide the date" })}
                     className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all duration-200"
                   />
-                  {errors.lostDate && <p className="text-red-400 text-xs mt-1">{errors.lostDate.message as string}</p>}
+                  {errors.lostDate && (
+                    <p className="text-red-400 text-xs mt-1">{errors.lostDate.message as string}</p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Proof of Ownership</label>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
+                    Proof of Ownership
+                  </label>
                   <textarea
                     rows={4}
                     placeholder="Describe identifying details provided by the student (sticker, initials, serial number, etc.)"
@@ -274,13 +315,22 @@ const SingleFoundItem = () => {
                     })}
                     className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all duration-200 resize-none placeholder-gray-600"
                   />
-                  {errors.distinguishingFeatures && <p className="text-red-400 text-xs mt-1">{errors.distinguishingFeatures.message as string}</p>}
+                  {errors.distinguishingFeatures && (
+                    <p className="text-red-400 text-xs mt-1">{errors.distinguishingFeatures.message as string}</p>
+                  )}
+                </div>
+
+                {/* What happens on confirm */}
+                <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
+                  <p className="text-blue-300 text-xs leading-relaxed">
+                    ℹ️ Confirming this claim will mark the item as <strong>Claimed</strong> and it will no longer appear as available on the Found Items board.
+                  </p>
                 </div>
 
                 <div className="flex gap-3 pt-1">
                   <button
                     type="button"
-                    onClick={() => setIsClaimModalOpen(false)}
+                    onClick={() => { setIsClaimModalOpen(false); reset(); }}
                     className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium transition-all duration-200"
                   >
                     Cancel
@@ -288,11 +338,15 @@ const SingleFoundItem = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting || claimLoading}
-                    className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting || claimLoading ? (
-                      <div className="flex items-center justify-center gap-2"><Spinner size="sm" />Submitting...</div>
-                    ) : "Confirm Claim"}
+                      <div className="flex items-center justify-center gap-2">
+                        <Spinner size="sm" /> Processing...
+                      </div>
+                    ) : (
+                      "✓ Confirm & Mark as Claimed"
+                    )}
                   </button>
                 </div>
               </form>

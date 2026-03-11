@@ -81,6 +81,7 @@ const api = baseApi.injectEndpoints({
           body: data,
         };
       },
+      invalidatesTags: ["mylostItems"], // refetches Lost Items board after new report
     }),
     getSingleLostItem: builder.query({
       query: (id: string) => {
@@ -132,11 +133,12 @@ const api = baseApi.injectEndpoints({
     createFoundItem: builder.mutation({
       query: (data: any) => {
         return {
-          url: `/found-items`,
+          url: `/found-items/public`, // public endpoint — no auth required for students
           method: "POST",
           body: data,
         };
       },
+      invalidatesTags: ["foundItems", "mylostItems"],
     }),
     getFoundItems: builder.query({
       query: (data: any) => {
@@ -217,7 +219,7 @@ const api = baseApi.injectEndpoints({
         };
       },
     }),
-    // my claim
+    // my claims
     myClaims: builder.query({
       query: () => {
         return {
@@ -225,7 +227,20 @@ const api = baseApi.injectEndpoints({
           method: "GET",
         };
       },
+      providesTags: ["claims"],
     }),
+
+    // get single claim by ID
+    getClaimById: builder.query({
+      query: (id: string) => {
+        return {
+          url: `/claims/${id}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["claims"],
+    }),
+
     // admin stats
     adminStats: builder.query({
       query: () => {
@@ -234,9 +249,9 @@ const api = baseApi.injectEndpoints({
           method: "GET",
         };
       },
-      // providesTags: ["adminData"],
     }),
-    // admin stats
+
+    // block user
     blockUser: builder.mutation({
       query: (id: string) => {
         return {
@@ -301,7 +316,31 @@ const api = baseApi.injectEndpoints({
           body: data,
         };
       },
-      invalidatesTags: ["adminData"],
+      invalidatesTags: ["adminData", "claims"],
+    }),
+
+    // update claim status with note (for tracker)
+    updateClaimStatusWithNote: builder.mutation({
+      query: ({ claimId, status, note }: { claimId: string; status: string; note?: string }) => {
+        return {
+          url: `/claims/${claimId}`,
+          method: "PUT",
+          body: { status, note },
+        };
+      },
+      invalidatesTags: ["adminData", "claims"],
+    }),
+
+    // upload item images (multipart)
+    uploadItemImages: builder.mutation({
+      query: ({ id, type, formData }: { id: string; type: "lost" | "found"; formData: FormData }) => {
+        return {
+          url: `/${type === "lost" ? "lostItem" : "found-items"}/${id}/images`,
+          method: "POST",
+          body: formData,
+        };
+      },
+      invalidatesTags: ["mylostItems", "foundItems"],
     }),
 
     // mark lost item as found
@@ -421,6 +460,7 @@ export const {
   useChangeUsernameMutation,
   useCreateClaimMutation,
   useMyClaimsQuery,
+  useGetClaimByIdQuery,
   useGetMyLostItemQuery,
   useEditMyLostItemMutation,
   useDeleteMyLostItemMutation,
@@ -434,6 +474,8 @@ export const {
   useGetAllUsersQuery,
   useGetAllClaimsQuery,
   useUpdateClaimStatusMutation,
+  useUpdateClaimStatusWithNoteMutation,
+  useUploadItemImagesMutation,
   useMarkLostItemAsFoundMutation,
   useGetTestimonialsQuery,
   useCreateTestimonialMutation,

@@ -6,12 +6,9 @@ import { utils } from "../../utils/utils";
 
 const createFoundItem = async (req: Request, res: Response) => {
   try {
-    //   console.log({a:req.body,b:req.user})
-
-    const result = await foundItemService.createFoundItem(
-      req.body,
-      req.user.id
-    );
+    // userId is optional — public student submissions won't have req.user
+    const userId = req.user?.id;
+    const result = await foundItemService.createFoundItem(req.body, userId);
     sendResponse(res, {
       statusCode: StatusCodes.CREATED,
       success: true,
@@ -31,7 +28,6 @@ const createFoundItem = async (req: Request, res: Response) => {
 const getFoundItem = async (req: Request, res: Response) => {
   try {
     const meta = await utils.calculateMeta(req.query);
-
     const result = await foundItemService.getFoundItem(req.query);
     sendResponse(res, {
       statusCode: StatusCodes.OK,
@@ -53,7 +49,6 @@ const getFoundItem = async (req: Request, res: Response) => {
 const getSingleFoundItem = async (req: Request, res: Response) => {
   try {
     const id: any = req?.params.id;
-
     const result = await foundItemService.getSingleFoundItem(id);
     sendResponse(res, {
       statusCode: StatusCodes.OK,
@@ -72,7 +67,6 @@ const getSingleFoundItem = async (req: Request, res: Response) => {
 };
 
 const getMyFoundItem = async (req: Request, res: Response) => {
- 
   const result = await foundItemService.getMyFoundItem(req.user);
   try {
     sendResponse(res, {
@@ -90,10 +84,6 @@ const getMyFoundItem = async (req: Request, res: Response) => {
     });
   }
 };
-
-
-
-
 
 const editMyFoundItem = async (req: Request, res: Response) => {
   const data = req.body;
@@ -116,7 +106,7 @@ const editMyFoundItem = async (req: Request, res: Response) => {
 };
 
 const deleteMyFoundItem = async (req: Request, res: Response) => {
-  const id=req.params.id
+  const id = req.params.id;
   await foundItemService.deleteMyFoundItem(id);
   try {
     sendResponse(res, {
@@ -141,5 +131,5 @@ export const foundItemController = {
   getSingleFoundItem,
   getMyFoundItem,
   editMyFoundItem,
-  deleteMyFoundItem
+  deleteMyFoundItem,
 };

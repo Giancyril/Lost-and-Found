@@ -9,7 +9,7 @@ const Banner = () => {
 
   const slides = [
     {
-      badge: "SAS Lost & Found Portal",
+      badge: "SAS Lost & Found Sytem",
       title: "SAS Lost & Found",
       subtitle: "Management System",
       description:
@@ -20,7 +20,7 @@ const Banner = () => {
     {
       badge: "Found something on campus?",
       title: "Help a Fellow",
-      subtitle: "SAS Member",
+      subtitle: "Student?",
       description:
         "If you've found something on school grounds, please report it here. Your act of honesty helps reunite students and staff with their belongings and strengthens our school community.",
       primaryButton: { text: "Report Found Item", href: "/reportFoundItem" },
