@@ -54,14 +54,14 @@ const RecentFoundItem = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   </div>
 
-                  {/* Badge */}
-                  {foundItem?.isFound ? (
+                  {/* Badge — fixed: use isClaimed not isFound */}
+                  {foundItem?.isClaimed ? (
                     <div className="absolute top-3 right-3 bg-green-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-green-500/40">
                       ✓ Claimed
                     </div>
                   ) : (
                     <div className="absolute top-3 right-3 bg-blue-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-blue-500/40">
-                      Unclaimed
+                      Available
                     </div>
                   )}
                 </div>

@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { FaSearch, FaRobot, FaBrain, FaSpinner, FaEye, FaMapMarkerAlt, FaCalendarAlt, FaUser, FaTags } from "react-icons/fa";
+import {
+  FaSearch, FaRobot, FaBrain, FaSpinner, FaEye,
+  FaMapMarkerAlt, FaCalendarAlt, FaTags, FaCheckCircle,
+} from "react-icons/fa";
 import { useAiSearchMutation } from "../../redux/api/api";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -12,356 +15,296 @@ interface SearchResult {
   totalLost: number;
 }
 
+const exampleQueries = [
+  "Black iPhone with cracked screen near the library",
+  "Gray Lenovo laptop with sticker on the cover",
+  "Wallet with student ID inside Room 205",
+];
+
 const AiSearch: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
+  const [lastQuery, setLastQuery] = useState("");
   const [aiSearch, { isLoading }] = useAiSearchMutation();
   const navigate = useNavigate();
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent, overrideQuery?: string) => {
     e.preventDefault();
-
-    if (!searchQuery.trim()) {
-      toast.error("Please enter a search query");
-      return;
-    }
+    const q = overrideQuery ?? searchQuery;
+    if (!q.trim()) { toast.error("Please enter a search query"); return; }
 
     try {
-      const response = await aiSearch({ query: searchQuery }).unwrap();
-      console.log("Full API response:", response);
-
-      // The response might be wrapped in a data property
+      const response = await aiSearch({ query: q }).unwrap();
       const result = response.data || response;
-      console.log("Search results:", result);
-
       setSearchResults(result);
-      toast.success("AI search completed successfully!");
+      setLastQuery(q);
     } catch (error: any) {
-      console.error("Search error:", error);
       toast.error(error?.data?.message || "Search failed. Please try again.");
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  const totalResults = (searchResults?.totalFound ?? 0) + (searchResults?.totalLost ?? 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-indigo-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+    <div className="min-h-screen bg-gray-950 relative overflow-x-hidden">
+
+      {/* Ambient background */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -left-20 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -right-20 w-64 h-64 bg-indigo-600/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 max-w-5xl mx-auto px-4 py-16">
+
+        {/* ── Hero ── */}
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-6">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-              AI-Powered Search
-            </h1>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-xs font-medium tracking-widest uppercase mb-6">
+            <FaRobot size={10} /> Powered by Gemini AI
           </div>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Harness the power of artificial intelligence to find lost or found items.
-            Simply describe what you're looking for in natural language!
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">
+            Smart Item Search
+          </h1>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+            Describe what you lost or found in natural language. Our AI will intelligently match it across all reported items.
           </p>
         </div>
 
-        {/* Search Form */}
-        <div className="max-w-5xl mx-auto mb-10">
-          <form onSubmit={handleSearch} className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl shadow-2xl p-8 border border-gray-600">
-            <div className="flex flex-col lg:flex-row items-center space-y-4 lg:space-y-0 lg:space-x-6">
-              <div className="flex-1 w-full">
-                <div className="relative">
-                  <FaRobot className="absolute left-4 top-1/2 transform -translate-y-1/2 text-cyan-400 text-xl" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="e.g., I lost a black iPhone 13 with a cracked screen near the library yesterday..."
-                    className="w-full pl-12 pr-6 py-4 bg-gray-900 border border-gray-600 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-400 text-lg"
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-              <button
-                type="submit"
+        {/* ── Search bar ── */}
+        <form onSubmit={handleSearch} className="mb-4">
+          <div className="flex flex-col sm:flex-row gap-3 bg-gray-900 border border-white/10 rounded-2xl p-3 shadow-2xl shadow-black/40">
+            <div className="flex-1 relative">
+              <FaRobot className="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-500" size={16} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
+                placeholder="e.g., I lost a gray laptop with a sticker at Room 205..."
+                className="w-full pl-11 pr-4 py-3.5 bg-transparent text-white placeholder-gray-600 text-sm focus:outline-none"
                 disabled={isLoading}
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white px-8 py-4 rounded-xl flex items-center space-x-3 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-              >
-                {isLoading ? (
-                  <FaSpinner className="animate-spin text-xl" />
-                ) : (
-                  <FaSearch className="text-xl" />
-                )}
-                <span>{isLoading ? "Searching..." : "Search with AI"}</span>
+                maxLength={200}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isLoading || !searchQuery.trim()}
+              className="flex items-center justify-center gap-2.5 px-6 py-3.5 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:text-gray-500 text-gray-950 font-semibold text-sm rounded-xl transition-all duration-200 shrink-0"
+            >
+              {isLoading ? <FaSpinner className="animate-spin" size={14} /> : <FaSearch size={14} />}
+              {isLoading ? "Searching..." : "Search with AI"}
+            </button>
+          </div>
+          {searchQuery && (
+            <p className="text-right text-gray-600 text-xs mt-1.5 pr-1">{searchQuery.length}/200</p>
+          )}
+        </form>
+
+        {/* ── Example queries ── */}
+        {!searchResults && (
+          <div className="flex flex-wrap gap-2 justify-center mb-16">
+            {exampleQueries.map((q) => (
+              <button key={q} onClick={(e) => { setSearchQuery(q); handleSearch(e as any, q); }}
+                className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs rounded-full transition-all">
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── Results ── */}
+        {searchResults && (
+          <div className="space-y-8">
+
+            {/* Result meta */}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="text-white font-semibold">
+                  {totalResults > 0 ? `${totalResults} result${totalResults !== 1 ? "s" : ""} found` : "No results found"}
+                </p>
+                <p className="text-gray-500 text-sm mt-0.5">
+                  for <span className="text-gray-300 italic">"{lastQuery}"</span>
+                </p>
+              </div>
+              <button onClick={() => { setSearchResults(null); setSearchQuery(""); setLastQuery(""); }}
+                className="text-xs text-gray-500 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition-all">
+                Clear results
               </button>
             </div>
-          </form>
-        </div>
 
-        {/* Search Results */}
-        {searchResults && (
-          <div className="max-w-7xl mx-auto">
             {/* AI Reasoning */}
-            <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl shadow-2xl p-8 mb-8 border border-gray-600">
-              <h3 className="text-2xl font-semibold text-white mb-4 flex items-center">
-                <FaBrain className="mr-3 text-cyan-400 text-3xl" />
-                AI Analysis
-              </h3>
-              <div className="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 p-6 rounded-xl border border-cyan-500/20">
-                <p className="text-gray-200 text-lg leading-relaxed">
-                  {searchResults.reasoning}
+            {searchResults.reasoning && searchResults.reasoning !== "Simple text-based search results" && (
+              <div className="bg-gray-900 border border-white/5 rounded-2xl p-5">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <FaBrain size={14} className="text-cyan-400" />
+                  <h3 className="text-white text-sm font-semibold">AI Analysis</h3>
+                </div>
+                <p className="text-gray-400 text-sm leading-relaxed">{searchResults.reasoning}</p>
+              </div>
+            )}
+
+            {/* No results empty state */}
+            {totalResults === 0 && (
+              <div className="text-center py-20 border border-white/5 rounded-2xl bg-gray-900">
+                <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <FaSearch size={20} className="text-gray-600" />
+                </div>
+                <h3 className="text-white font-semibold mb-2">No matching items</h3>
+                <p className="text-gray-500 text-sm max-w-xs mx-auto">
+                  Try different keywords, include the location or color, or check back later as new items are added daily.
                 </p>
               </div>
-            </div>
+            )}
 
-            {/* Results Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl p-6 text-center shadow-xl">
-                <h4 className="text-xl font-semibold text-white mb-2">Found Items</h4>
-                <p className="text-4xl font-bold text-white">{searchResults.totalFound}</p>
-                <p className="text-green-100 mt-2">Items waiting to be claimed</p>
-              </div>
-              <div className="bg-gradient-to-r from-red-600 to-pink-600 rounded-2xl p-6 text-center shadow-xl">
-                <h4 className="text-xl font-semibold text-white mb-2">Lost Items</h4>
-                <p className="text-4xl font-bold text-white">{searchResults.totalLost}</p>
-                <p className="text-red-100 mt-2">Items looking for owners</p>
-              </div>
-            </div>
-
-            {/* Found Items Results */}
+            {/* Found Items */}
             {searchResults.foundItems.length > 0 && (
-              <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl shadow-2xl p-8 mb-8 border border-gray-600">
-                <h3 className="text-2xl font-semibold text-white mb-6 flex items-center">
-
-                  Found Items That Match Your Search
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <section>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+                  <h2 className="text-white font-semibold text-sm uppercase tracking-widest">
+                    Found Items — {searchResults.foundItems.length}
+                  </h2>
+                  <div className="flex-1 h-px bg-white/5" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {searchResults.foundItems.map((item) => (
-                    <div
+                    <ItemCard
                       key={item.id}
-                      className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-600 rounded-xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-emerald-500/50"
-                    >
-                      {item.img && (
-                        <div className="relative mb-4">
-                          <img
-                            src={item.img}
-                            alt={item.foundItemName}
-                            className="w-full h-40 object-cover rounded-lg"
-                          />
-                          {item.isClaimed ?<div className="absolute top-2 right-2 bg-emerald-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">
-                            Found
-                          </div>:<div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">
-                            Not Claimed
-                          </div>}
-
-
-                        </div>
-                      )}
-                      <h4 className="font-bold text-white text-lg mb-3 overflow-hidden text-ellipsis whitespace-nowrap">
-                        {item.foundItemName}
-                      </h4>
-                      <p className="text-gray-300 text-sm mb-4 overflow-hidden" style={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        lineHeight: '1.4em',
-                        maxHeight: '4.2em'
-                      }}>
-                        {item.description}
-                      </p>
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <FaTags className="mr-2 text-cyan-400" />
-                          <span className="text-cyan-300">{item.category?.name || "No category"}</span>
-                        </div>
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <FaMapMarkerAlt className="mr-2 text-cyan-400" />
-                          <span>{item.location}</span>
-                        </div>
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <FaCalendarAlt className="mr-2 text-cyan-400" />
-                          <span>{formatDate(item.date)}</span>
-                        </div>
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <FaUser className="mr-2 text-cyan-400" />
-                          <span>{item.user?.username}</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => navigate(`/foundItems/${item.id}`)}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition-all duration-300 font-semibold"
-                      >
-                        <FaEye />
-                        <span>View Details</span>
-                      </button>
-                    </div>
+                      img={item.img}
+                      name={item.foundItemName}
+                      description={item.description}
+                      category={item.category?.name}
+                      location={item.location}
+                      date={formatDate(item.date)}
+                      badge={item.isClaimed
+                        ? { label: "Claimed", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" }
+                        : { label: "Available", color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20" }
+                      }
+                      accentHover="hover:border-emerald-500/30"
+                      onView={() => navigate(`/foundItems/${item.id}`)}
+                      btnColor="bg-emerald-500/10 hover:bg-emerald-500 border-emerald-500/20 text-emerald-400 hover:text-white"
+                    />
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* Lost Items Results */}
+            {/* Lost Items */}
             {searchResults.lostItems.length > 0 && (
-              <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl shadow-2xl p-8 mb-8 border border-gray-600">
-                <h3 className="text-2xl font-semibold text-white mb-6 flex items-center">
-                 
-                  Lost Items That Match Your Search
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <section>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="w-2 h-2 bg-red-400 rounded-full" />
+                  <h2 className="text-white font-semibold text-sm uppercase tracking-widest">
+                    Lost Items — {searchResults.lostItems.length}
+                  </h2>
+                  <div className="flex-1 h-px bg-white/5" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {searchResults.lostItems.map((item) => (
-                    <div
+                    <ItemCard
                       key={item.id}
-                      className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-600 rounded-xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-red-500/50"
-                    >
-                      {item.img && (
-                        <div className="relative mb-4">
-                          <img
-                            src={item.img}
-                            alt={item.lostItemName}
-                            className="w-full h-40 object-cover rounded-lg"
-                          />
-                          <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">
-                            LOST
-                          </div>
-                        </div>
-                      )}
-                      <h4 className="font-bold text-white text-lg mb-3 overflow-hidden text-ellipsis whitespace-nowrap">
-                        {item.lostItemName}
-                      </h4>
-                      <p className="text-gray-300 text-sm mb-4 overflow-hidden" style={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        lineHeight: '1.4em',
-                        maxHeight: '4.2em'
-                      }}>
-                        {item.description}
-                      </p>
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <FaTags className="mr-2 text-cyan-400" />
-                          <span className="text-cyan-300">{item.category?.name || "No category"}</span>
-                        </div>
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <FaMapMarkerAlt className="mr-2 text-cyan-400" />
-                          <span>{item.location}</span>
-                        </div>
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <FaCalendarAlt className="mr-2 text-cyan-400" />
-                          <span>{formatDate(item.date)}</span>
-                        </div>
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <FaUser className="mr-2 text-cyan-400" />
-                          <span>{item.user?.username}</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => navigate(`/lostItems/${item.id}`)}
-                        className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition-all duration-300 font-semibold"
-                      >
-                        <FaEye />
-                        <span>View Details</span>
-                      </button>
-                    </div>
+                      img={item.img}
+                      name={item.lostItemName}
+                      description={item.description}
+                      category={item.category?.name}
+                      location={item.location}
+                      date={formatDate(item.date)}
+                      badge={{ label: "Lost", color: "text-red-400 bg-red-400/10 border-red-400/20" }}
+                      accentHover="hover:border-red-500/30"
+                      onView={() => navigate(`/lostItems/${item.id}`)}
+                      btnColor="bg-red-500/10 hover:bg-red-500 border-red-500/20 text-red-400 hover:text-white"
+                    />
                   ))}
                 </div>
-              </div>
-            )}
-
-            {/* No Results */}
-            {searchResults.totalFound === 0 && searchResults.totalLost === 0 && (
-              <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl shadow-2xl p-12 text-center border border-gray-600">
-                <div className="w-20 h-20 bg-gradient-to-r from-gray-600 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaSearch className="text-3xl text-gray-300" />
-                </div>
-                <h3 className="text-2xl font-semibold text-white mb-4">
-                  No items found
-                </h3>
-                <p className="text-gray-300 text-lg max-w-md mx-auto">
-                  Try adjusting your search query or check back later for new items. Our AI is constantly learning to provide better results!
-                </p>
-              </div>
+              </section>
             )}
           </div>
         )}
 
-        {/* Search Tips */}
-        <div className="max-w-5xl mx-auto mt-12">
-          <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl shadow-2xl p-8 border border-gray-600">
-            <h3 className="text-2xl font-semibold text-white mb-6 flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mr-3">
-                💡
-              </div>
-              Search Tips for Better Results
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-xs font-bold">1</span>
-                  </div>
+        {/* ── Tips (only shown before search) ── */}
+        {!searchResults && (
+          <div className="mt-4 border border-white/5 rounded-2xl p-6 bg-gray-900/50">
+            <p className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-4">Tips for better results</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { n: "1", title: "Be descriptive", tip: "Include color, brand, size — e.g. \"black Lenovo laptop\"" },
+                { n: "2", title: "Add location",   tip: "\"near the library\", \"Room 205\", \"cafeteria\"" },
+                { n: "3", title: "Mention timing",  tip: "\"yesterday\", \"last Monday\", \"this morning\"" },
+                { n: "4", title: "Unique features", tip: "Stickers, scratches, keychains, case color" },
+              ].map((tip) => (
+                <div key={tip.n} className="flex items-start gap-3">
+                  <span className="w-5 h-5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{tip.n}</span>
                   <div>
-                    <h4 className="text-cyan-300 font-semibold">Be Descriptive</h4>
-                    <p className="text-gray-300 text-sm">
-                      "I lost a black iPhone 13 with a cracked screen and blue case"
-                    </p>
+                    <p className="text-white text-xs font-medium">{tip.title}</p>
+                    <p className="text-gray-500 text-xs mt-0.5">{tip.tip}</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-xs font-bold">2</span>
-                  </div>
-                  <div>
-                    <h4 className="text-cyan-300 font-semibold">Include Location</h4>
-                    <p className="text-gray-300 text-sm">
-                      "near the library", "in the cafeteria", "at the parking lot"
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-xs font-bold">3</span>
-                  </div>
-                  <div>
-                    <h4 className="text-cyan-300 font-semibold">Mention Timing</h4>
-                    <p className="text-gray-300 text-sm">
-                      "yesterday afternoon", "last week", "this morning"
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-xs font-bold">4</span>
-                  </div>
-                  <div>
-                    <h4 className="text-cyan-300 font-semibold">Add Unique Features</h4>
-                    <p className="text-gray-300 text-sm">
-                      "silver keychain attached", "has a sticker", "scratched surface"
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-xs font-bold">5</span>
-                  </div>
-                  <div>
-                    <h4 className="text-cyan-300 font-semibold">Use Natural Language</h4>
-                    <p className="text-gray-300 text-sm">
-                      Our AI understands context - speak naturally!
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 p-4 rounded-lg border border-cyan-500/20">
-                  <p className="text-cyan-200 text-sm font-medium">
-                    🤖 Powered by advanced AI that learns from every search to provide more accurate results
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        </div>
+        )}
+
       </div>
     </div>
   );
 };
+
+/* ── Item Card ── */
+interface ItemCardProps {
+  img?: string;
+  name: string;
+  description: string;
+  category?: string;
+  location: string;
+  date: string;
+  badge: { label: string; color: string };
+  accentHover: string;
+  onView: () => void;
+  btnColor: string;
+}
+
+const ItemCard = ({ img, name, description, category, location, date, badge, accentHover, onView, btnColor }: ItemCardProps) => (
+  <div className={`group bg-gray-900 border border-white/5 ${accentHover} rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:shadow-xl hover:shadow-black/40`}>
+    {img && (
+      <div className="relative h-44 overflow-hidden shrink-0">
+        <img src={img} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
+        <span className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${badge.color}`}>
+          {badge.label === "Claimed" && <FaCheckCircle className="inline mr-1" size={9} />}
+          {badge.label}
+        </span>
+      </div>
+    )}
+    <div className="p-4 flex flex-col flex-1">
+      {!img && (
+        <span className={`self-start mb-3 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${badge.color}`}>
+          {badge.label}
+        </span>
+      )}
+      <h4 className="text-white font-semibold text-sm truncate mb-1">{name}</h4>
+      <p className="text-gray-500 text-xs leading-relaxed line-clamp-2 mb-3">{description}</p>
+      <div className="space-y-1.5 mt-auto mb-4">
+        {category && (
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <FaTags size={10} className="text-gray-600" />{category}
+          </div>
+        )}
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <FaMapMarkerAlt size={10} className="text-gray-600" />{location}
+        </div>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <FaCalendarAlt size={10} className="text-gray-600" />{date}
+        </div>
+      </div>
+      <button onClick={onView}
+        className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-xs font-semibold transition-all duration-200 ${btnColor}`}>
+        <FaEye size={11} /> View Details
+      </button>
+    </div>
+  </div>
+);
 
 export default AiSearch;

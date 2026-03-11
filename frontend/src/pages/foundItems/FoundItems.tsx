@@ -159,14 +159,6 @@ const FoundItemsPage = () => {
           </div>
         </div>
 
-        {/* Results Info */}
-        <div className="mb-6">
-          <p className="text-center text-sm text-gray-500">
-            {fuzzyTerm
-              ? `Search results for "${fuzzyTerm}" — ${foundItems?.data?.length || 0} items found`
-              : `Showing ${foundItems?.data?.length || 0} found items`}
-          </p>
-        </div>
       </div>
 
       {/* Cards */}

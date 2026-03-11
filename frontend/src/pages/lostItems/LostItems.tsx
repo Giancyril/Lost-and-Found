@@ -161,14 +161,6 @@ const LostItemsPage = () => {
           </div>
         </div>
 
-        {/* Results Info */}
-        <div className="mb-6">
-          <p className="text-center text-sm text-gray-500">
-            {fuzzyTerm
-              ? `Search results for "${fuzzyTerm}" — ${lostItems?.data?.length || 0} items found`
-              : `Showing ${lostItems?.data?.length || 0} lost items`}
-          </p>
-        </div>
       </div>
 
       {/* Cards */}
