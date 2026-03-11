@@ -21,8 +21,7 @@ const toggleFoundStatus = async (id: string) => {
   return result;
 };
 
-const createLostItem = async (userId: string | undefined, item: LostItem) => {
-  // Build data object — userId optional for students without accounts
+const createLostItem = async (userId: string | undefined, item: LostItem & { reporterName?: string }) => {
   const createData: any = {
     lostItemName: item.lostItemName,
     description: item.description,
@@ -30,6 +29,7 @@ const createLostItem = async (userId: string | undefined, item: LostItem) => {
     img: item.img,
     location: item.location,
     date: item.date,
+    reporterName: item.reporterName || "",
   };
   if (userId) createData.userId = userId;
 
@@ -45,7 +45,7 @@ const createLostItem = async (userId: string | undefined, item: LostItem) => {
 
 const getLostItem = async () => {
   const result = await prisma.lostItem.findMany({
-    where: { isDeleted: false, isFound: false }, // hide found items from lost board
+    where: { isDeleted: false, isFound: false },
     include: { user: true, category: true },
   });
   return result;
@@ -75,6 +75,7 @@ const editMyLostItem = async (data: any, user?: JwtPayload) => {
   if (data?.description) updateData.description = data.description;
   if (data?.categoryId) updateData.categoryId = data.categoryId;
   if (data?.img) updateData.img = data.img;
+  if (data?.reporterName !== undefined) updateData.reporterName = data.reporterName;
 
   const whereClause: any = { id: data.id };
   if (user) whereClause.userId = user.id;

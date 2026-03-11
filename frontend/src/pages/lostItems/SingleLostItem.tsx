@@ -26,7 +26,6 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const prev = () => setActiveIdx((i) => (i === 0 ? images.length - 1 : i - 1));
   const next = () => setActiveIdx((i) => (i === images.length - 1 ? 0 : i + 1));
 
-  // Wrapper fills the grid cell; image is absolute inside
   const wrapperStyle: React.CSSProperties = {
     position: "relative",
     minHeight: "320px",
@@ -69,7 +68,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "320px", gap: "0.75rem" }}>
-      {/* Main carousel image — grows to fill */}
+      {/* Main carousel image */}
       <div style={{ ...wrapperStyle, flex: 1, minHeight: 0 }}>
         <img
           src={images[activeIdx]}
@@ -79,8 +78,8 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
         />
         <button
           onClick={prev}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 backdrop-blur-sm border border-white/10"
           style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }}
+          className="w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-200 backdrop-blur-sm border border-white/10"
         >
           <FaChevronLeft size={13} />
         </button>
@@ -164,6 +163,7 @@ const SingleLostItem = () => {
         claimProcess: "Visit the SAS office with valid ID to claim this item.",
         categoryId: lostItem?.category?.id,
         lostItemId: lostItemId,
+        reporterName: data.reporterName || "",
       };
       const res: any = await createFoundItem(foundData);
       if (res?.data?.success == false) {
@@ -256,7 +256,6 @@ const SingleLostItem = () => {
 
         {/* Main Content */}
         <div className="w-full px-6 sm:px-10 lg:px-16 py-10">
-          {/* CSS grid with stretch — both cells same height, image absolute inside left cell */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem", alignItems: "stretch" }}>
 
             <ImageCarousel images={imageList} alt={lostItemName} />
@@ -301,7 +300,9 @@ const SingleLostItem = () => {
                     <FaUser size={12} />
                     <span className="text-xs font-bold uppercase tracking-widest">Reported By</span>
                   </div>
-                  <p className="text-gray-300 text-sm">{user?.username || "Anonymous"}</p>
+                  <p className="text-gray-300 text-sm">
+                    {lostItem?.reporterName || user?.username || "Anonymous"}
+                  </p>
                 </div>
               </div>
 
@@ -361,6 +362,23 @@ const SingleLostItem = () => {
 
             <div className="px-6 py-5">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+                {/* Your Name */}
+                <div>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
+                    Your Name
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Juan dela Cruz"
+                    {...register("reporterName", { required: "Please enter your name" })}
+                    className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-all duration-200 placeholder-gray-600"
+                  />
+                  {errors.reporterName && <p className="text-red-400 text-xs mt-1">{errors.reporterName.message as string}</p>}
+                </div>
+
+                {/* Location */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Where Did You Find It?
@@ -374,6 +392,7 @@ const SingleLostItem = () => {
                   {errors.location && <p className="text-red-400 text-xs mt-1">{errors.location.message as string}</p>}
                 </div>
 
+                {/* Date */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Date You Found It
@@ -391,6 +410,7 @@ const SingleLostItem = () => {
                   />
                 </div>
 
+                {/* Additional Details */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     Additional Details

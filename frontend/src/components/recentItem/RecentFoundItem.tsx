@@ -1,6 +1,7 @@
 import { Spinner } from "flowbite-react";
 import { Link } from "react-router-dom";
 import { useGetFoundItemsQuery } from "../../redux/api/api";
+import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 
 const RecentFoundItem = () => {
   const { data: foundItems, isLoading } = useGetFoundItemsQuery({});
@@ -54,7 +55,7 @@ const RecentFoundItem = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   </div>
 
-                  {/* Badge — fixed: use isClaimed not isFound */}
+                  {/* Badge */}
                   {foundItem?.isClaimed ? (
                     <div className="absolute top-3 right-3 bg-green-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-green-500/40">
                       ✓ Claimed
@@ -76,13 +77,17 @@ const RecentFoundItem = () => {
                     {foundItem?.description}
                   </p>
 
-                  <div className="space-y-1.5 mt-auto mb-4">
+                  <div className="space-y-2 mt-auto mb-4">
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>📅</span>
+                      <div className="w-6 h-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                        <FaCalendarAlt className="text-blue-400" size={10} />
+                      </div>
                       <span>{foundItem?.date.split("T")[0]}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>📍</span>
+                      <div className="w-6 h-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                        <FaMapMarkerAlt className="text-blue-400" size={10} />
+                      </div>
                       <span className="line-clamp-1">{foundItem?.location}</span>
                     </div>
                   </div>

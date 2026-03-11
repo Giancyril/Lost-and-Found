@@ -31,7 +31,6 @@ const ReportLostItem = () => {
   const { data: Category } = useCategoryQuery("");
   const [startDate, setStartDate] = useState(new Date());
 
-  // Single image state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
   const [uploadError, setUploadError] = useState("");
@@ -51,10 +50,9 @@ const ReportLostItem = () => {
       return;
     }
     setSelectedFile(file);
-    // Use FileReader to get base64 — both for preview AND for sending to backend
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPreview(reader.result as string); // base64 string, works as img src and as backend value
+      setPreview(reader.result as string);
     };
     reader.readAsDataURL(file);
   };
@@ -80,6 +78,7 @@ const ReportLostItem = () => {
         img: preview || "",
         location: data.location,
         date: startDate,
+        reporterName: data.reporterName || "",
       };
 
       const res: any = await createLostItem(lostData);
@@ -119,6 +118,23 @@ const ReportLostItem = () => {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
+
+                {/* Reporter Name */}
+                <div>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
+                    Your Name
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <input
+                    {...register("reporterName", { required: "Your name is required" })}
+                    type="text"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                    placeholder="e.g. Juan dela Cruz"
+                  />
+                  {errors.reporterName && (
+                    <p className="text-red-400 text-xs mt-1">{errors.reporterName?.message as string}</p>
+                  )}
+                </div>
 
                 {/* Item Name */}
                 <div>
@@ -238,7 +254,6 @@ const ReportLostItem = () => {
                 </label>
 
                 {!preview ? (
-                  /* Drop zone */
                   <div
                     className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
                       isDragging
@@ -274,14 +289,12 @@ const ReportLostItem = () => {
                     </div>
                   </div>
                 ) : (
-                  /* Preview */
                   <div className="relative rounded-xl overflow-hidden border-2 border-blue-500 bg-gray-800">
                     <img
                       src={preview}
                       alt="Preview"
                       className="w-full max-h-64 object-cover"
                     />
-                    {/* Hover overlay with actions */}
                     <div className="absolute inset-0 bg-black/0 hover:bg-black/50 transition-all duration-200 flex items-center justify-center gap-3 opacity-0 hover:opacity-100">
                       <button
                         type="button"
@@ -298,7 +311,6 @@ const ReportLostItem = () => {
                         Remove
                       </button>
                     </div>
-                    {/* File info bar */}
                     <div className="px-3 py-2 bg-gray-900/90 border-t border-gray-700 flex items-center justify-between">
                       <span className="text-xs text-gray-400 truncate">{selectedFile?.name}</span>
                       <span className="text-xs text-gray-500 ml-2 shrink-0">

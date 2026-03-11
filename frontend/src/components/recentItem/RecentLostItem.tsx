@@ -2,6 +2,7 @@ import { Spinner } from "flowbite-react";
 import { Link } from "react-router-dom";
 import type { lostItem } from "../../types/types";
 import { useGetLostItemsQuery } from "../../redux/api/api";
+import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 
 const RecentLostItem = () => {
   const { data: lostItems, isLoading } = useGetLostItemsQuery({});
@@ -16,7 +17,7 @@ const RecentLostItem = () => {
     <div className="bg-gray-900 py-10">
       <div className="px-4 mx-auto max-w-screen-2xl sm:py-6 lg:px-6">
         <div className="mx-auto text-center">
-          <h2 className="mb-4 text-3xl lg:text-4xl tracking-tight font-extrabold text-white pt-20 md:pt-16">
+          <h2 className="mb-4 text-3xl lg:text-4xl tracking-tight font-extrabold text-white">
             Recent Lost Items
           </h2>
           <p className="font-light text-gray-400 sm:text-xl mb-8">
@@ -69,13 +70,17 @@ const RecentLostItem = () => {
                     {lostItem?.description}
                   </p>
 
-                  <div className="space-y-1.5 mt-auto mb-4">
+                  <div className="space-y-2 mt-auto mb-4">
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>📅</span>
+                      <div className="w-6 h-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                        <FaCalendarAlt className="text-blue-400" size={10} />
+                      </div>
                       <span>{lostItem?.date.split("T")[0]}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>📍</span>
+                      <div className="w-6 h-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                        <FaMapMarkerAlt className="text-blue-400" size={10} />
+                      </div>
                       <span className="line-clamp-1">{lostItem.location}</span>
                     </div>
                   </div>
