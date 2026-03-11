@@ -13,14 +13,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import Modals from "../modal/Modal";
 import { ToastContainer } from "react-toastify";
-import {
-  FaSearch,
-  FaUser,
-  FaCog,
-  FaSignOutAlt,
-  FaList,
-  FaTachometerAlt,
-} from "react-icons/fa";
+import { FaCog, FaSignOutAlt, FaTachometerAlt } from "react-icons/fa";
 
 export function Navbars() {
   const navigate = useNavigate();
@@ -56,7 +49,7 @@ export function Navbars() {
           </div>
         </NavbarBrand>
 
-        {/* Right side — show admin dropdown if logged in, nothing if not */}
+        {/* Right side */}
         <div className="flex md:order-2">
           {users?.email && users?.role === "ADMIN" ? (
             <div className="flex items-center space-x-3">
@@ -120,27 +113,6 @@ export function Navbars() {
                   </Link>
                 </DropdownItem>
 
-                <DropdownItem className="hover:bg-gray-700 text-gray-300 hover:text-white">
-                  <Link to="/dashboard/myLostItems" className="flex items-center space-x-2 w-full">
-                    <FaList className="text-yellow-400" />
-                    <span>My Lost Item Reports</span>
-                  </Link>
-                </DropdownItem>
-
-                <DropdownItem className="hover:bg-gray-700 text-gray-300 hover:text-white">
-                  <Link to="/dashboard/myFoundItems" className="flex items-center space-x-2 w-full">
-                    <FaSearch className="text-green-400" />
-                    <span>My Found Item Reports</span>
-                  </Link>
-                </DropdownItem>
-
-                <DropdownItem className="hover:bg-gray-700 text-gray-300 hover:text-white">
-                  <Link to="/dashboard/myClaimRequest" className="flex items-center space-x-2 w-full">
-                    <FaUser className="text-cyan-400" />
-                    <span>My Claim Requests</span>
-                  </Link>
-                </DropdownItem>
-
                 <DropdownDivider className="border-gray-700" />
 
                 <DropdownItem
@@ -154,65 +126,36 @@ export function Navbars() {
                 </DropdownItem>
               </Dropdown>
             </div>
-          ) : null /* No login/register buttons for students */ }
+          ) : null}
           <NavbarToggle />
         </div>
 
         {/* Nav Links */}
         <NavbarCollapse>
           <div className="flex flex-col md:flex-row md:items-center md:gap-12">
-            <NavbarLink
-              href="/"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap"
-            >
+            <NavbarLink href="/" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
               Home
             </NavbarLink>
-            <NavbarLink
-              href="/reportlostItem"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap"
-            >
+            <NavbarLink href="/reportlostItem" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
               Report Lost Item
             </NavbarLink>
-            <NavbarLink
-              href="/lostItems"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap"
-            >
+            <NavbarLink href="/lostItems" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
               Lost Items Board
             </NavbarLink>
-            <NavbarLink
-              href="/foundItems"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap"
-            >
+            <NavbarLink href="/foundItems" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
               Found Items Board
             </NavbarLink>
-            <NavbarLink
-              href="/ai-search"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap"
-            >
+            <NavbarLink href="/ai-search" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
               Smart Search
             </NavbarLink>
-            <NavbarLink
-              href="#aboutUs"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap"
-            >
+            <NavbarLink href="#aboutUs" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
               About
             </NavbarLink>
           </div>
         </NavbarCollapse>
       </Navbar>
 
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="dark" />
     </>
   );
 }

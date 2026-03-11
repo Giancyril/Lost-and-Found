@@ -7,6 +7,7 @@ import { claimsService } from "./claim.service";
 const createClaim = async (req: Request, res: Response) => {
   try {
     const item: Claim = req.body;
+    // req.user is undefined for students (no auth) — service handles this gracefully
     const result = await claimsService.createClaim(item, req.user);
 
     sendResponse(res, {
@@ -28,7 +29,6 @@ const createClaim = async (req: Request, res: Response) => {
 const getClaim = async (req: Request, res: Response) => {
   try {
     const result = await claimsService.getClaim();
-
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
@@ -47,9 +47,8 @@ const getClaim = async (req: Request, res: Response) => {
 
 const getMyClaim = async (req: Request, res: Response) => {
   try {
-    const user = req.user
+    const user = req.user;
     const result = await claimsService.getMyClaim(user);
-
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
@@ -66,10 +65,9 @@ const getMyClaim = async (req: Request, res: Response) => {
   }
 };
 
-const updateClaimStatus = async (req: Request, res: Response,next:NextFunction) => {
+const updateClaimStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await claimsService.updateClaimStatus(req.params.claimId,req.body);
-    // console.log(req.params.claimId);
+    const result = await claimsService.updateClaimStatus(req.params.claimId, req.body);
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
@@ -77,12 +75,13 @@ const updateClaimStatus = async (req: Request, res: Response,next:NextFunction) 
       data: result,
     });
   } catch (error: any) {
-   next(error)
+    next(error);
   }
 };
+
 export const claimsController = {
   createClaim,
   getClaim,
   updateClaimStatus,
-  getMyClaim
+  getMyClaim,
 };

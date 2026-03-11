@@ -89,6 +89,8 @@ model Claim {
   status                 status        @default(PENDING)
   distinguishingFeatures String?
   lostDate               DateTime
+  claimantName           String        @default("")  // student's full name
+  contactNumber          String        @default("")  // student's contact number
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
   user                   User?         @relation(fields: [userId], references: [id])

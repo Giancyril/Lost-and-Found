@@ -168,13 +168,7 @@ const Settings = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Settings</h1>
-          <p className="text-gray-400 mt-1">
-            Configure system settings and preferences
-          </p>
-        </div>
+     <div className="flex justify-end -mt-6">
         <button
           onClick={handleSave}
           className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
