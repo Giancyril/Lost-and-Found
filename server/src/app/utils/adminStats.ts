@@ -13,29 +13,31 @@ export const adminStats = async (req: Request, res: Response) => {
     const lostItems = await lostTItemServices.getLostItem();
     const totalUsers = await userService.allUsers();
     const claims = await claimsService.getClaim();
-    let pendingClaims = 0;
+
     if (claims) {
-      pendingClaims = claims.filter((claim) => claim.status === "PENDING").length;
-      result.pendingClaims = pendingClaims|0;
-       result.totalClaims = claims.length | 0;
+      result.pendingClaims = claims.filter((claim) => claim.status === "PENDING").length | 0;
+      result.totalClaims = claims.length | 0;
     }
+
     const total = (foundItems.length + lostItems.length) | 0;
     result.total = total;
-    // console.log(foundItems);
+
     if (foundItems) {
       result.foundItems = foundItems.length;
+      result.claimedItems = foundItems.filter((item: any) => item.isClaimed).length; // fixed
       result.total = total;
     }
+
     if (lostItems) {
       result.lostItems = lostItems.length;
       result.total = total;
     }
 
     if (totalUsers) {
-      // console.log(first)
       result.totalUsers = totalUsers.length;
       result.userData = totalUsers;
     }
+
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,

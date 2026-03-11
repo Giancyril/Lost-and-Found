@@ -1,21 +1,22 @@
 import { useState, useEffect } from "react";
-import { useGetLostItemsQuery, useGetFoundItemsQuery } from "../../redux/api/api";
+import { useGetLostItemsQuery, useGetFoundItemsQuery, useAdminStatsQuery } from "../../redux/api/api";
 
 const Banner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const { data: lostItems } = useGetLostItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
   const { data: foundItems } = useGetFoundItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
+  const { data: stats } = useAdminStatsQuery("");
 
   const slides = [
     {
-      badge: "SAS Lost & Found Sytem",
+      badge: "SAS Lost & Found System",
       title: "SAS Lost & Found",
       subtitle: "Management System",
       description:
         "The official lost and found platform for SAS students, staff, and faculty. Report missing belongings or help return found items quickly and securely within our school community.",
       primaryButton: { text: "Report a Lost Item", href: "/reportlostItem" },
-      secondaryButton: { text: "Report a Found Item", href: "/reportFoundItem" },
+      secondaryButton: { text: "Report a Found Item", href: "/FoundItems" },
     },
     {
       badge: "Found something on campus?",
@@ -23,17 +24,17 @@ const Banner = () => {
       subtitle: "Student?",
       description:
         "If you've found something on school grounds, please report it here. Your act of honesty helps reunite students and staff with their belongings and strengthens our school community.",
-      primaryButton: { text: "Report Found Item", href: "/reportFoundItem" },
-      secondaryButton: { text: "Browse Lost Items", href: "/lostItems" },
+      primaryButton: { text: "Report a Lost Item", href: "/reportlostItem" },
+      secondaryButton: { text: "Report a Found Item", href: "/FoundItems" },
     },
     {
       badge: "Track your reports anytime",
       title: "Stay Updated on",
       subtitle: "Your Reports",
       description:
-        "Monitor the status of your lost item reports and claim requests in real time. Our school-wide tracking system ensures you're notified the moment your item is located.",
-      primaryButton: { text: "View My Items", href: "/dashboard/myFoundItems" },
-      secondaryButton: { text: "Browse Found Items", href: "/foundItems" },
+        "Monitor the status of your lost item reports and claim requests in real time. Our lost and found system ensures you're notified the moment your item is located.",
+      primaryButton: { text: "Report a Lost Item", href: "/reportlostItem" },
+      secondaryButton: { text: "Report a Found Item", href: "/FoundItems" },
     },
   ];
 
@@ -180,14 +181,14 @@ const Banner = () => {
               )}
             </div>
 
-            {/* Stats */}
+            {/* Stats — fixed: claimedItems now comes from backend */}
             <div className="grid grid-cols-3 gap-4">
               {[
-                [lostItems?.meta?.total != null ? `${lostItems.meta.total}` : "0", "Lost Reports"],
-                [foundItems?.meta?.total != null ? `${foundItems.meta.total}` : "0", "Found Reports"],
-                ["24h", "Avg. Resolution"],
+                [stats?.data?.lostItems ?? lostItems?.data?.length ?? 0, "Lost Reports"],
+                [stats?.data?.foundItems ?? foundItems?.data?.length ?? 0, "Found Reports"],
+                [stats?.data?.claimedItems ?? "—", "Claimed Items"],
               ].map(([num, label]) => (
-                <div key={label} className="bg-white/5 border border-white/10 rounded-xl p-4 text-center backdrop-blur-sm">
+                <div key={label as string} className="bg-white/5 border border-white/10 rounded-xl p-4 text-center backdrop-blur-sm">
                   <p className="text-blue-400 font-black text-xl">{num}</p>
                   <p className="text-gray-500 text-xs mt-1">{label}</p>
                 </div>

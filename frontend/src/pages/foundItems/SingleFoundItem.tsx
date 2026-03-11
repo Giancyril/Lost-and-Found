@@ -126,12 +126,22 @@ const SingleFoundItem = () => {
         </div>
 
         <div className="w-full px-6 sm:px-10 lg:px-16 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <div className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
-              <img className="w-full h-full min-h-80 object-cover" src={foundItemData?.img} alt={foundItemData?.foundItemName}
-                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+          {/* grid with stretch so both cells are same height */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem", alignItems: "stretch" }}
+               className="flex flex-col lg:grid gap-10">
+
+            {/* Left: relative container fills its grid cell, image is absolute inside */}
+            <div style={{ position: "relative", minHeight: "320px" }}
+                 className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+              <img
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
+                src={foundItemData?.img}
+                alt={foundItemData?.foundItemName}
+                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+              />
             </div>
 
+            {/* Right: details */}
             <div className="space-y-5">
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
@@ -207,7 +217,6 @@ const SingleFoundItem = () => {
             </div>
 
             <div className="px-6 py-5">
-              {/* Item preview */}
               <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
                 <img src={foundItemData?.img} alt={foundItemData?.foundItemName} className="w-14 h-14 rounded-lg object-cover shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
@@ -219,7 +228,6 @@ const SingleFoundItem = () => {
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {/* Full Name */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Full Name *</label>
                   <div className="relative">
@@ -231,7 +239,6 @@ const SingleFoundItem = () => {
                   {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
                 </div>
 
-                {/* Contact Number */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Contact Number *</label>
                   <div className="relative">
@@ -246,7 +253,6 @@ const SingleFoundItem = () => {
                   {errors.contactNumber && <p className="text-red-400 text-xs mt-1">{errors.contactNumber.message as string}</p>}
                 </div>
 
-                {/* Lost Date */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date Item Was Lost *</label>
                   <input type="date" {...register("lostDate", { required: "Please provide the date" })}
@@ -254,7 +260,6 @@ const SingleFoundItem = () => {
                   {errors.lostDate && <p className="text-red-400 text-xs mt-1">{errors.lostDate.message as string}</p>}
                 </div>
 
-                {/* Proof of Ownership */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Proof of Ownership *</label>
                   <textarea rows={4}

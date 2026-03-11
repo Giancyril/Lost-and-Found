@@ -73,7 +73,7 @@ router.put("/claims/:claimId", validateRequest(ItemClaimSchema.updateClaim), aut
 // Students use a separate endpoint or we relax validation — see note below
 
 ////////////////////////////////////////////////// admin //////////////////////////////////////////////
-router.get("/admin/stats", auth(), adminStats);
+router.get("/admin/stats", adminStats);
 router.put("/block/user/:id", auth(), userController.blockUser);
 router.put("/change-role/:id", auth(), userController.changeUserRole);
 router.delete("/delete-user/:id", auth(), userController.softDeleteUser);

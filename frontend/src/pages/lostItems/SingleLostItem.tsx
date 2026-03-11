@@ -26,21 +26,41 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const prev = () => setActiveIdx((i) => (i === 0 ? images.length - 1 : i - 1));
   const next = () => setActiveIdx((i) => (i === images.length - 1 ? 0 : i + 1));
 
+  // Wrapper fills the grid cell; image is absolute inside
+  const wrapperStyle: React.CSSProperties = {
+    position: "relative",
+    minHeight: "320px",
+    borderRadius: "1rem",
+    overflow: "hidden",
+    border: "1px solid rgb(31 41 55)",
+    background: "rgb(17 24 39)",
+  };
+
+  const imgStyle: React.CSSProperties = {
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    objectPosition: "center",
+    display: "block",
+  };
+
   if (images.length === 0) {
     return (
-      <div className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex items-center justify-center min-h-80">
-        <img src="/bgimg.png" alt={alt} className="w-full h-full object-cover" />
+      <div style={wrapperStyle}>
+        <img src="/bgimg.png" alt={alt} style={imgStyle} />
       </div>
     );
   }
 
   if (images.length === 1) {
     return (
-      <div className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+      <div style={wrapperStyle}>
         <img
           src={images[0]}
           alt={alt}
-          className="w-full min-h-80 object-cover"
+          style={imgStyle}
           onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
         />
       </div>
@@ -48,41 +68,53 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="relative rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 group">
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "320px", gap: "0.75rem" }}>
+      {/* Main carousel image — grows to fill */}
+      <div style={{ ...wrapperStyle, flex: 1, minHeight: 0 }}>
         <img
           src={images[activeIdx]}
           alt={`${alt} — photo ${activeIdx + 1}`}
-          className="w-full min-h-80 max-h-[480px] object-cover transition-all duration-300"
+          style={imgStyle}
           onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
         />
         <button
           onClick={prev}
           className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 backdrop-blur-sm border border-white/10"
+          style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }}
         >
           <FaChevronLeft size={13} />
         </button>
         <button
           onClick={next}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 backdrop-blur-sm border border-white/10"
+          style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)" }}
+          className="w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-200 backdrop-blur-sm border border-white/10"
         >
           <FaChevronRight size={13} />
         </button>
-        <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full border border-white/10">
+        <div style={{ position: "absolute", bottom: "0.75rem", right: "0.75rem" }}
+             className="bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full border border-white/10">
           {activeIdx + 1} / {images.length}
         </div>
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+        <div style={{ position: "absolute", bottom: "0.75rem", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "0.375rem" }}>
           {images.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setActiveIdx(idx)}
-              className={`h-1.5 rounded-full transition-all duration-200 ${
-                idx === activeIdx ? "bg-white w-4" : "bg-white/40 hover:bg-white/70 w-1.5"
-              }`}
+              style={{
+                height: "0.375rem",
+                borderRadius: "9999px",
+                background: idx === activeIdx ? "white" : "rgba(255,255,255,0.4)",
+                width: idx === activeIdx ? "1rem" : "0.375rem",
+                transition: "all 0.2s",
+                border: "none",
+                cursor: "pointer",
+              }}
             />
           ))}
         </div>
       </div>
+
+      {/* Thumbnails */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {images.map((src, idx) => (
           <button
@@ -97,7 +129,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
             <img
               src={src}
               alt={`Thumbnail ${idx + 1}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center"
               onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
             />
           </button>
@@ -116,11 +148,7 @@ const SingleLostItem = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [foundDate, setFoundDate] = useState(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Track if user already reported this item as found — persists across refreshes via localStorage
-  const storageKey = `reported_found_${lostItemId}`;
-  const [reportedFound, setReportedFound] = useState<boolean>(
-    () => localStorage.getItem(storageKey) === "true"
-  );
+  const [reportedFound, setReportedFound] = useState<boolean>(false);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
@@ -135,7 +163,7 @@ const SingleLostItem = () => {
         date: foundDate,
         claimProcess: "Visit the SAS office with valid ID to claim this item.",
         categoryId: lostItem?.category?.id,
-        lostItemId: lostItemId, // tells backend to flip isFound=true on the original lost item
+        lostItemId: lostItemId,
       };
       const res: any = await createFoundItem(foundData);
       if (res?.data?.success == false) {
@@ -144,7 +172,6 @@ const SingleLostItem = () => {
         toast.success("Thank you! The item has been reported as found.");
         setIsModalOpen(false);
         setReportedFound(true);
-        localStorage.setItem(storageKey, "true"); // persist across refreshes
         refetch();
         reset();
       }
@@ -188,8 +215,6 @@ const SingleLostItem = () => {
   }
 
   const { lostItemName, date, isFound, img, description, location, user, category } = lostItem;
-
-  // isFound from backend OR reportedFound from this session
   const alreadyFound = isFound || reportedFound;
 
   const imageList: string[] = Array.isArray(lostItem.images) && lostItem.images.length > 0
@@ -213,9 +238,7 @@ const SingleLostItem = () => {
             </Link>
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white">
-                  {lostItemName || "Lost Item"}
-                </h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-white">{lostItemName || "Lost Item"}</h1>
                 <p className="text-gray-500 text-sm mt-1">Lost item details and information</p>
               </div>
               {alreadyFound ? (
@@ -233,12 +256,12 @@ const SingleLostItem = () => {
 
         {/* Main Content */}
         <div className="w-full px-6 sm:px-10 lg:px-16 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {/* CSS grid with stretch — both cells same height, image absolute inside left cell */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem", alignItems: "stretch" }}>
 
             <ImageCarousel images={imageList} alt={lostItemName} />
 
             <div className="space-y-5">
-
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
                 <p className="text-gray-400 leading-relaxed text-sm">
@@ -282,14 +305,11 @@ const SingleLostItem = () => {
                 </div>
               </div>
 
-              {/* Found This Item section */}
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2">
                   Found This Item?
                 </h3>
-
                 {alreadyFound ? (
-                  /* After submit or if already marked found by backend */
                   <div className="bg-green-900/20 border border-green-600/30 rounded-xl p-4 flex items-start gap-3">
                     <span className="text-green-400 text-xl mt-0.5">✓</span>
                     <div>
@@ -318,13 +338,12 @@ const SingleLostItem = () => {
                   </>
                 )}
               </div>
-
             </div>
           </div>
         </div>
       </div>
 
-      {/* I Found This Item Modal */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="relative w-full max-w-lg bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">

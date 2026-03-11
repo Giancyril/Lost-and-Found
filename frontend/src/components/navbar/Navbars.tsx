@@ -140,10 +140,10 @@ export function Navbars() {
               Report Lost Item
             </NavbarLink>
             <NavbarLink href="/lostItems" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
-              Lost Items Board
+              Lost Items
             </NavbarLink>
             <NavbarLink href="/foundItems" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
-              Found Items Board
+              Found Items
             </NavbarLink>
             <NavbarLink href="/ai-search" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
               Smart Search
