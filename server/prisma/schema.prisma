@@ -8,21 +8,22 @@ datasource db {
 }
 
 model User {
-  name      String      @default("")
-  id        String      @id @default(uuid())
-  username  String      @unique
-  email     String      @unique
-  activated Boolean     @default(true)
-  password  String
-  role      userRole    @default(USER)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  foundItem FoundItem[]
-  claim     Claim[]
-  userImg   String      @default("")
-  isDeleted Boolean     @default(false)
-  deletedAt DateTime?
-  LostItem  LostItem[]
+  name          String          @default("")
+  id            String          @id @default(uuid())
+  username      String          @unique
+  email         String          @unique
+  activated     Boolean         @default(true)
+  password      String
+  role          userRole        @default(USER)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  foundItem     FoundItem[]
+  claim         Claim[]
+  userImg       String          @default("")
+  isDeleted     Boolean         @default(false)
+  deletedAt     DateTime?
+  LostItem      LostItem[]
+  ClaimAuditLog ClaimAuditLog[]
 
   @@map("users")
 }
@@ -56,7 +57,7 @@ model FoundItem {
   isClaimed     Boolean       @default(false)
   isDeleted     Boolean       @default(false)
   deletedAt     DateTime?
-  reporterName  String        @default("")  // name of person who found and reported the item
+  reporterName  String        @default("")
 
   @@map("foundItems")
 }
@@ -77,28 +78,45 @@ model LostItem {
   isDeleted    Boolean       @default(false)
   deletedAt    DateTime?
   user         User?         @relation(fields: [userId], references: [id])
-  reporterName String        @default("")  // name of student who reported the lost item
+  reporterName String        @default("")
 
   @@map("lostItems")
 }
 
 model Claim {
-  id                     String        @id @default(uuid())
+  id                     String          @id @default(uuid())
   userId                 String?
   foundItemId            String
-  isDeleted              Boolean       @default(false)
+  isDeleted              Boolean         @default(false)
   deletedAt              DateTime?
-  status                 status        @default(PENDING)
+  status                 status          @default(PENDING)
   distinguishingFeatures String?
   lostDate               DateTime
-  claimantName           String        @default("")
-  contactNumber          String        @default("")
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
-  user                   User?         @relation(fields: [userId], references: [id])
-  foundItem              FoundItem     @relation(fields: [foundItemId], references: [id])
+  claimantName           String          @default("")
+  contactNumber          String          @default("")
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  user                   User?           @relation(fields: [userId], references: [id])
+  foundItem              FoundItem       @relation(fields: [foundItemId], references: [id])
+  auditLogs              ClaimAuditLog[]
 
   @@map("claims")
+}
+
+model ClaimAuditLog {
+  id              String   @id @default(uuid())
+  claimId         String
+  claim           Claim    @relation(fields: [claimId], references: [id])
+  action          String
+  fromStatus      String
+  toStatus        String 
+  performedBy     String   @default("Admin")
+  performedById   String?
+  performedByUser User?    @relation(fields: [performedById], references: [id])
+  note            String   @default("")
+  createdAt       DateTime @default(now())
+
+  @@map("claimAuditLogs")
 }
 
 enum status {

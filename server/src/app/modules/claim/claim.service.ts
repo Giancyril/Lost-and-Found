@@ -10,7 +10,7 @@ const createClaim = async (item: Claim & { claimantName?: string; contactNumber?
       lostDate: item.lostDate,
       claimantName: item.claimantName || "",
       contactNumber: item.contactNumber || "",
-      ...(user?.id ? { userId: user.id } : {}), // userId optional — students have no account
+      ...(user?.id ? { userId: user.id } : {}),
     },
   });
   return result;
@@ -60,13 +60,36 @@ const getMyClaim = async (user: JwtPayload) => {
   return result;
 };
 
-const updateClaimStatus = async (claimId: string, data: Partial<Claim>) => {
+const updateClaimStatus = async (
+  claimId: string,
+  data: Partial<Claim>,
+  performer?: { id?: string; name?: string }
+) => {
+  // Fetch current status before updating
+  const existing = await prisma.claim.findUnique({ where: { id: claimId } });
+  const fromStatus = existing?.status ?? "PENDING";
+
   const result = await prisma.claim.update({
     where: { id: claimId },
     data,
   });
 
-  // When a claim is approved, mark the found item as claimed
+  // Write audit log entry
+  if (data.status && data.status !== fromStatus) {
+    await prisma.claimAuditLog.create({
+      data: {
+        claimId,
+        action: data.status,
+        fromStatus: fromStatus,
+        toStatus: data.status,
+        performedBy: performer?.name || "Admin",
+        ...(performer?.id ? { performedById: performer.id } : {}),
+        note: (data as any).note || "",
+      },
+    });
+  }
+
+  // When approved, mark found item as claimed
   if (data.status === "APPROVED") {
     await prisma.foundItem.update({
       where: { id: result.foundItemId },
@@ -74,7 +97,7 @@ const updateClaimStatus = async (claimId: string, data: Partial<Claim>) => {
     });
   }
 
-  // When a claim is rejected/pending, revert isClaimed to false
+  // When rejected or reset to pending, revert isClaimed
   if (data.status === "REJECTED" || data.status === "PENDING") {
     await prisma.foundItem.update({
       where: { id: result.foundItemId },
@@ -85,9 +108,29 @@ const updateClaimStatus = async (claimId: string, data: Partial<Claim>) => {
   return result;
 };
 
+const getAuditLogs = async () => {
+  const result = await prisma.claimAuditLog.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      claim: {
+        include: {
+          foundItem: {
+            select: { foundItemName: true, img: true },
+          },
+        },
+      },
+      performedByUser: {
+        select: { username: true, email: true },
+      },
+    },
+  });
+  return result;
+};
+
 export const claimsService = {
   createClaim,
   getClaim,
   updateClaimStatus,
   getMyClaim,
+  getAuditLogs,
 };

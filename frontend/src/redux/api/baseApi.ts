@@ -13,7 +13,7 @@ export const baseApi = createApi({
       const token = getUserLocalStorage();
 
       if (token) {
-        headers.set("authorization", `${token}`); // no Bearer prefix - backend verifies raw token
+        headers.set("authorization", `${token}`);
       }
       return headers;
     },
@@ -30,6 +30,7 @@ export const baseApi = createApi({
     "foundItems",
     "claims",
     "categories",
+    "auditLogs",
   ],
 
   endpoints: () => ({}),

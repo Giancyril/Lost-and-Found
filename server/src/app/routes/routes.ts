@@ -14,6 +14,7 @@ import { lostItemController } from "../modules/lostItem/lost.controller";
 import { utils } from "../utils/utils";
 import { adminStats } from "../utils/adminStats";
 import { locationStats } from "../utils/locationStats";
+import { getAuditLogs } from "../utils/auditLog";
 import { aiSearchController } from "../modules/aiSearch/aiSearch.controller";
 import { aiSearchValidation } from "../modules/aiSearch/aiSearch.validate";
 
@@ -63,6 +64,7 @@ router.put("/claims/:claimId", validateRequest(ItemClaimSchema.updateClaim), aut
 ////////////////////////////////////////////////// admin //////////////////////////////////////////////
 router.get("/admin/stats", adminStats);
 router.get("/admin/location-stats", locationStats);
+router.get("/admin/audit-logs", auth(), getAuditLogs);
 router.put("/block/user/:id", auth(), userController.blockUser);
 router.put("/change-role/:id", auth(), userController.changeUserRole);
 router.delete("/delete-user/:id", auth(), userController.softDeleteUser);
