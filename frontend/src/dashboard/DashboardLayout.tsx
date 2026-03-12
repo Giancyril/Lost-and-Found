@@ -70,75 +70,154 @@ const notifIcon = (type: Notification["type"]) => {
   }
 };
 
+
 // ─── Notification Bell ────────────────────────────────────────────────────────
 const NotificationBell = () => {
-  const [open, setOpen]                   = useState(false);
+  const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const bellRef                           = useRef<HTMLDivElement>(null);
+  const bellRef = useRef<HTMLDivElement>(null);
+  const mountedRef = useRef(true);
 
-  const seenClaimIds  = useRef<Set<string>>(new Set());
-  const seenFoundIds  = useRef<Set<string>>(new Set());
-  const seenLostIds   = useRef<Set<string>>(new Set());
+  // Track seen items and statuses
+  const seenClaimIds = useRef<Set<string>>(new Set());
+  const seenFoundIds = useRef<Set<string>>(new Set());
+  const seenLostIds = useRef<Set<string>>(new Set());
   const claimStatuses = useRef<Record<string, string>>({});
-  const seededCount   = useRef(0);
 
-  const isFirstLoad = () => seededCount.current < 3;
-  const markSeeded  = () => { seededCount.current += 1; };
+  // Track initialization
+  const isInitialized = useRef({
+    claims: false,
+    found: false,
+    lost: false,
+  });
 
-  const pollOpts = { pollingInterval: 10000, refetchOnFocus: true, refetchOnReconnect: true };
+  // Polling configuration
+  const pollOpts = {
+    pollingInterval: 10000,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+    skip: false, // Ensure queries run
+  };
 
-  const { data: claimsData } = useGetAllClaimsQuery(undefined, pollOpts);
-  const { data: foundData }  = useGetFoundItemsQuery(
-    { limit: 100, sortBy: "createdAt", sortOrder: "desc" }, pollOpts
-  );
-  const { data: lostData }   = useGetLostItemsQuery(
-    { limit: 100, sortBy: "createdAt", sortOrder: "desc" }, pollOpts
-  );
+  // Queries - pass empty object to ensure params are sent
+  const { data: claimsData, isSuccess: claimsSuccess } = useGetAllClaimsQuery(undefined, pollOpts);
+  const { data: foundData, isSuccess: foundSuccess } = useGetFoundItemsQuery({}, pollOpts);
+  const { data: lostData, isSuccess: lostSuccess } = useGetLostItemsQuery({}, pollOpts);
 
-  // Close on outside click
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setOpen(false);
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Process claims
-  useEffect(() => {
-    const claims = claimsData?.data || [];
-    if (claims.length === 0) return;
+  // Enhanced data extraction
+  const extractArray = (data: any): any[] => {
+    if (!data) return [];
+    
+    // Direct array
+    if (Array.isArray(data)) return data;
+    
+    // Common API response patterns
+    if (data.data) {
+      if (Array.isArray(data.data)) return data.data;
+      if (Array.isArray(data.data.items)) return data.data.items;
+      if (Array.isArray(data.data.data)) return data.data.data;
+    }
+    
+    // Other patterns
+    if (Array.isArray(data.items)) return data.items;
+    if (Array.isArray(data.results)) return data.results;
+    if (Array.isArray(data.records)) return data.records;
+    
+    // If it's an object with numeric keys (like {0: item, 1: item})
+    if (typeof data === 'object' && !Array.isArray(data)) {
+      const keys = Object.keys(data);
+      if (keys.every(k => !isNaN(Number(k)))) {
+        return keys.map(k => data[k]);
+      }
+    }
+    
+    return [];
+  };
 
-    if (isFirstLoad()) {
-      claims.forEach((c: any) => {
-        seenClaimIds.current.add(c.id);
-        claimStatuses.current[c.id] = c.status;
+  // Process claims with better error handling
+  useEffect(() => {
+    if (!claimsSuccess || !mountedRef.current) return;
+    
+    const claims = extractArray(claimsData);
+    
+    // Initialize on first load
+    if (!isInitialized.current.claims) {
+      claims.forEach((claim: any) => {
+        if (claim?.id) {
+          seenClaimIds.current.add(claim.id);
+          if (claim.status) {
+            claimStatuses.current[claim.id] = claim.status;
+          }
+        }
       });
-      markSeeded();
+      isInitialized.current.claims = true;
       return;
     }
 
+    // Check for new claims and status changes
     const newNotifs: Notification[] = [];
-    claims.forEach((c: any) => {
-      if (!seenClaimIds.current.has(c.id)) {
-        seenClaimIds.current.add(c.id);
-        claimStatuses.current[c.id] = c.status;
+    
+    claims.forEach((claim: any) => {
+      if (!claim?.id) return;
+      
+      const isNew = !seenClaimIds.current.has(claim.id);
+      const statusChanged = claimStatuses.current[claim.id] && 
+                           claimStatuses.current[claim.id] !== claim.status;
+      
+      if (isNew) {
+        seenClaimIds.current.add(claim.id);
+        if (claim.status) {
+          claimStatuses.current[claim.id] = claim.status;
+        }
+        
         newNotifs.push({
-          id: `claim-${c.id}-${Date.now()}`,
+          id: `claim-${claim.id}-${Date.now()}`,
           type: "claim",
           title: "New Claim Submitted",
-          subtitle: `${c.claimantName || "Someone"} claimed "${c.foundItem?.foundItemName || "an item"}"`,
-          time: c.createdAt,
+          subtitle: `${claim.claimantName || claim.user?.name || "Someone"} claimed "${
+            claim.foundItem?.foundItemName || 
+            claim.foundItem?.name || 
+            claim.itemName || 
+            "an item"
+          }"`,
+          time: claim.createdAt || new Date().toISOString(),
           read: false,
           link: "/dashboard/claims",
         });
-      } else if (claimStatuses.current[c.id] !== c.status) {
-        claimStatuses.current[c.id] = c.status;
+      } else if (statusChanged && claim.status) {
+        claimStatuses.current[claim.id] = claim.status;
+        
+        const statusText = claim.status.charAt(0).toUpperCase() + 
+                          claim.status.slice(1).toLowerCase();
+        
         newNotifs.push({
-          id: `status-${c.id}-${Date.now()}`,
+          id: `status-${claim.id}-${Date.now()}`,
           type: "claim_status",
-          title: `Claim ${c.status.charAt(0) + c.status.slice(1).toLowerCase()}`,
-          subtitle: `"${c.foundItem?.foundItemName || "Item"}" claim is now ${c.status.toLowerCase()}`,
+          title: `Claim ${statusText}`,
+          subtitle: `"${
+            claim.foundItem?.foundItemName || 
+            claim.foundItem?.name || 
+            claim.itemName || 
+            "Item"
+          }" claim is now ${claim.status.toLowerCase()}`,
           time: new Date().toISOString(),
           read: false,
           link: "/dashboard/claims",
@@ -146,79 +225,131 @@ const NotificationBell = () => {
       }
     });
 
-    if (newNotifs.length > 0) setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
-  }, [claimsData]);
+    if (newNotifs.length > 0 && mountedRef.current) {
+      setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
+    }
+  }, [claimsData, claimsSuccess]);
 
   // Process found items
   useEffect(() => {
-    const items = foundData?.data || [];
-    if (items.length === 0) return;
-
-    if (isFirstLoad()) {
-      items.forEach((i: any) => seenFoundIds.current.add(i.id));
-      markSeeded();
+    if (!foundSuccess || !mountedRef.current) return;
+    
+    const items = extractArray(foundData);
+    
+    if (!isInitialized.current.found) {
+      items.forEach((item: any) => {
+        if (item?.id) seenFoundIds.current.add(item.id);
+      });
+      isInitialized.current.found = true;
       return;
     }
 
     const newNotifs: Notification[] = [];
+    
     items.forEach((item: any) => {
+      if (!item?.id) return;
+      
       if (!seenFoundIds.current.has(item.id)) {
         seenFoundIds.current.add(item.id);
+        
         newNotifs.push({
           id: `found-${item.id}-${Date.now()}`,
           type: "found",
           title: "New Found Item Reported",
-          subtitle: `"${item.foundItemName}" found at ${item.location || "unknown location"}`,
-          time: item.createdAt,
+          subtitle: `"${
+            item.foundItemName || 
+            item.name || 
+            item.title || 
+            "Unknown item"
+          }" found at ${item.location || "unknown location"}`,
+          time: item.createdAt || new Date().toISOString(),
           read: false,
           link: "/dashboard/found-items",
         });
       }
     });
 
-    if (newNotifs.length > 0) setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
-  }, [foundData]);
+    if (newNotifs.length > 0 && mountedRef.current) {
+      setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
+    }
+  }, [foundData, foundSuccess]);
 
   // Process lost items
   useEffect(() => {
-    const items = lostData?.data || [];
-    if (items.length === 0) return;
-
-    if (isFirstLoad()) {
-      items.forEach((i: any) => seenLostIds.current.add(i.id));
-      markSeeded();
+    if (!lostSuccess || !mountedRef.current) return;
+    
+    const items = extractArray(lostData);
+    
+    if (!isInitialized.current.lost) {
+      items.forEach((item: any) => {
+        if (item?.id) seenLostIds.current.add(item.id);
+      });
+      isInitialized.current.lost = true;
       return;
     }
 
     const newNotifs: Notification[] = [];
+    
     items.forEach((item: any) => {
+      if (!item?.id) return;
+      
       if (!seenLostIds.current.has(item.id)) {
         seenLostIds.current.add(item.id);
+        
         newNotifs.push({
           id: `lost-${item.id}-${Date.now()}`,
           type: "lost",
           title: "New Lost Item Reported",
-          subtitle: `"${item.lostItemName}" lost at ${item.location || "unknown location"}`,
-          time: item.createdAt,
+          subtitle: `"${
+            item.lostItemName || 
+            item.name || 
+            item.title || 
+            "Unknown item"
+          }" lost at ${item.location || "unknown location"}`,
+          time: item.createdAt || new Date().toISOString(),
           read: false,
           link: "/dashboard/lost-items",
         });
       }
     });
 
-    if (newNotifs.length > 0) setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
-  }, [lostData]);
+    if (newNotifs.length > 0 && mountedRef.current) {
+      setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
+    }
+  }, [lostData, lostSuccess]);
 
+  // Notification management functions
   const unreadCount = notifications.filter(n => !n.read).length;
-  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  const markOneRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  const clearAll    = () => setNotifications([]);
+  
+  const markAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+  
+  const markOneRead = (id: string) => {
+    setNotifications(prev => prev.map(n => 
+      n.id === id ? { ...n, read: true } : n
+    ));
+  };
+  
+  const clearAll = () => {
+    setNotifications([]);
+  };
+
+  // Add sound notification for new notifications (optional)
+  useEffect(() => {
+    if (unreadCount > 0 && mountedRef.current) {
+      // Optional: Play a notification sound
+      // const audio = new Audio('/notification-sound.mp3');
+      // audio.play().catch(() => {});
+    }
+  }, [unreadCount]);
 
   return (
     <div ref={bellRef} className="relative">
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setOpen(!open)}
         className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all"
+        aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
       >
         <FaBell size={14} />
         {unreadCount > 0 && (
@@ -229,7 +360,7 @@ const NotificationBell = () => {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 w-80 sm:w-96 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+        <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-[68px] sm:top-11 w-auto sm:w-96 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <div className="flex items-center gap-2">
@@ -243,54 +374,84 @@ const NotificationBell = () => {
             </div>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
-                <button onClick={markAllRead} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
+                <button 
+                  onClick={markAllRead} 
+                  className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors"
+                >
                   Mark all read
                 </button>
               )}
               {notifications.length > 0 && (
-                <button onClick={clearAll} className="text-gray-600 hover:text-gray-400 text-xs transition-colors">
+                <button 
+                  onClick={clearAll} 
+                  className="text-gray-600 hover:text-gray-400 text-xs transition-colors"
+                >
                   Clear
                 </button>
               )}
+              <button 
+                onClick={() => setOpen(false)} 
+                className="sm:hidden text-gray-500 hover:text-white ml-1"
+              >
+                <FaTimes size={13} />
+              </button>
             </div>
           </div>
 
-          {/* List */}
-          <div className="max-h-[420px] overflow-y-auto divide-y divide-white/5">
+          {/* Notification List */}
+          <div className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto divide-y divide-white/5">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-600">
                 <FaBell size={24} className="mb-3 opacity-30" />
                 <p className="text-sm">No notifications yet</p>
                 <p className="text-xs mt-1 opacity-60">New claims and items will appear here</p>
               </div>
-            ) : notifications.map((n) => (
-              <Link
-                key={n.id}
-                to={n.link}
-                onClick={() => { markOneRead(n.id); setOpen(false); }}
-                className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${!n.read ? "bg-white/[0.02]" : ""}`}
-              >
-                {notifIcon(n.type)}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className={`text-xs font-semibold truncate ${!n.read ? "text-white" : "text-gray-300"}`}>
-                      {n.title}
+            ) : (
+              notifications.map((notif) => (
+                <Link
+                  key={notif.id}
+                  to={notif.link}
+                  onClick={() => {
+                    markOneRead(notif.id);
+                    setOpen(false);
+                  }}
+                  className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${
+                    !notif.read ? "bg-white/[0.02]" : ""
+                  }`}
+                >
+                  {notifIcon(notif.type)}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`text-xs font-semibold truncate ${
+                        !notif.read ? "text-white" : "text-gray-300"
+                      }`}>
+                        {notif.title}
+                      </p>
+                      {!notif.read && (
+                        <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />
+                      )}
+                    </div>
+                    <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">
+                      {notif.subtitle}
                     </p>
-                    {!n.read && <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />}
+                    <p className="text-gray-700 text-[10px] mt-1">
+                      {timeAgo(notif.time)}
+                    </p>
                   </div>
-                  <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">{n.subtitle}</p>
-                  <p className="text-gray-700 text-[10px] mt-1">{timeAgo(n.time)}</p>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))
+            )}
           </div>
 
           {/* Footer */}
           {notifications.length > 0 && (
             <div className="px-4 py-2.5 border-t border-white/5">
-              <Link to="/dashboard/claims" onClick={() => setOpen(false)}
-                className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
-                View all claims →
+              <Link 
+                to="/dashboard/claims" 
+                onClick={() => setOpen(false)}
+                className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors"
+              >
+                View all activity →
               </Link>
             </div>
           )}
@@ -299,6 +460,7 @@ const NotificationBell = () => {
     </div>
   );
 };
+
 
 // ─── Main Layout ──────────────────────────────────────────────────────────────
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
