@@ -5,6 +5,8 @@ import {
   FaFilter,
   FaChevronLeft,
   FaChevronRight,
+  FaCalendarAlt,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 import { useState, useRef } from "react";
 
@@ -99,8 +101,6 @@ const FoundItemsPage = () => {
 
         {/* Search and Filter */}
         <div className="bg-gray-900 rounded-2xl p-6 mb-8 border border-gray-800">
-
-          {/* Fuzzy Search Input */}
           <div className="mb-5">
             <div className="relative">
               <div className="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none">
@@ -158,7 +158,6 @@ const FoundItemsPage = () => {
             )}
           </div>
         </div>
-
       </div>
 
       {/* Cards */}
@@ -173,7 +172,7 @@ const FoundItemsPage = () => {
             </h3>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
               {fuzzyTerm
-                ? `No items found for "${fuzzyTerm}". Try different keywords — the search matches names, descriptions, and locations.`
+                ? `No items found for "${fuzzyTerm}". Try different keywords.`
                 : "No found items have been reported yet. Check back later!"}
             </p>
             {fuzzyTerm && (
@@ -198,9 +197,7 @@ const FoundItemsPage = () => {
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       src={foundItem?.img}
                       alt={foundItem?.foundItemName}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/bgimg.png";
-                      }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   </div>
@@ -222,17 +219,17 @@ const FoundItemsPage = () => {
                   <p className="text-gray-500 text-sm mb-4 line-clamp-2 leading-relaxed">
                     {foundItem?.description}
                   </p>
-                  <div className="space-y-1.5 mt-auto mb-4">
+                  <div className="space-y-2 mt-auto mb-4">
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>📅</span>
-                      <span>
-                        {foundItem?.date
-                          ? foundItem.date.split("T")[0]
-                          : foundItem?.createdAt?.split("T")[0]}
-                      </span>
+                      <div className="w-6 h-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                        <FaCalendarAlt className="text-blue-400" size={10} />
+                      </div>
+                      <span>{foundItem?.date ? foundItem.date.split("T")[0] : foundItem?.createdAt?.split("T")[0]}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>📍</span>
+                      <div className="w-6 h-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                        <FaMapMarkerAlt className="text-blue-400" size={10} />
+                      </div>
                       <span className="line-clamp-1">{foundItem?.location}</span>
                     </div>
                   </div>
@@ -259,9 +256,7 @@ const FoundItemsPage = () => {
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
-                currentPage === 1
-                  ? "text-gray-600 cursor-not-allowed"
-                  : "text-gray-300 bg-gray-800 hover:bg-gray-700"
+                currentPage === 1 ? "text-gray-600 cursor-not-allowed" : "text-gray-300 bg-gray-800 hover:bg-gray-700"
               }`}
             >
               <FaChevronLeft className="w-3 h-3 mr-2" /> Previous
@@ -275,37 +270,20 @@ const FoundItemsPage = () => {
                 if (endPage - startPage + 1 < maxVisiblePages)
                   startPage = Math.max(1, endPage - maxVisiblePages + 1);
                 if (startPage > 1) {
-                  pages.push(
-                    <button key={1} onClick={() => handlePageChange(1)} className="px-3 py-2 text-sm font-medium rounded-lg text-gray-300 bg-gray-800 hover:bg-gray-700 transition-all duration-200">
-                      1
-                    </button>
-                  );
-                  if (startPage > 2)
-                    pages.push(<span key="e1" className="px-2 text-gray-500">...</span>);
+                  pages.push(<button key={1} onClick={() => handlePageChange(1)} className="px-3 py-2 text-sm font-medium rounded-lg text-gray-300 bg-gray-800 hover:bg-gray-700 transition-all duration-200">1</button>);
+                  if (startPage > 2) pages.push(<span key="e1" className="px-2 text-gray-500">...</span>);
                 }
                 for (let i = startPage; i <= endPage; i++) {
                   pages.push(
-                    <button
-                      key={i}
-                      onClick={() => handlePageChange(i)}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                        currentPage === i
-                          ? "text-white bg-blue-600"
-                          : "text-gray-300 bg-gray-800 hover:bg-gray-700"
-                      }`}
-                    >
+                    <button key={i} onClick={() => handlePageChange(i)}
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${currentPage === i ? "text-white bg-blue-600" : "text-gray-300 bg-gray-800 hover:bg-gray-700"}`}>
                       {i}
                     </button>
                   );
                 }
                 if (endPage < totalPages) {
-                  if (endPage < totalPages - 1)
-                    pages.push(<span key="e2" className="px-2 text-gray-500">...</span>);
-                  pages.push(
-                    <button key={totalPages} onClick={() => handlePageChange(totalPages)} className="px-3 py-2 text-sm font-medium rounded-lg text-gray-300 bg-gray-800 hover:bg-gray-700 transition-all duration-200">
-                      {totalPages}
-                    </button>
-                  );
+                  if (endPage < totalPages - 1) pages.push(<span key="e2" className="px-2 text-gray-500">...</span>);
+                  pages.push(<button key={totalPages} onClick={() => handlePageChange(totalPages)} className="px-3 py-2 text-sm font-medium rounded-lg text-gray-300 bg-gray-800 hover:bg-gray-700 transition-all duration-200">{totalPages}</button>);
                 }
                 return pages;
               })()}
@@ -314,9 +292,7 @@ const FoundItemsPage = () => {
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
               className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
-                currentPage === totalPages
-                  ? "text-gray-600 cursor-not-allowed"
-                  : "text-gray-300 bg-gray-800 hover:bg-gray-700"
+                currentPage === totalPages ? "text-gray-600 cursor-not-allowed" : "text-gray-300 bg-gray-800 hover:bg-gray-700"
               }`}
             >
               Next <FaChevronRight className="w-3 h-3 ml-2" />

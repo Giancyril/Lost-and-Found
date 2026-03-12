@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import {
   FaBoxOpen, FaClipboardList, FaExclamationTriangle, FaUsers,
   FaArrowRight, FaSearch, FaCheckCircle, FaTimesCircle, FaClock,
-  FaPlus,
+  FaPlus, FaRecycle, FaChartBar, FaCalendarWeek,
 } from "react-icons/fa";
 import {
   useAdminStatsQuery,
@@ -35,11 +35,11 @@ interface StatCardProps {
   icon: React.ReactNode;
   accent: string;
   href: string;
-  delta?: string;
+  sub?: string;
+  subColor?: string;
 }
-const StatCard = ({ label, value, icon, accent, href, delta }: StatCardProps) => (
+const StatCard = ({ label, value, icon, accent, href, sub, subColor }: StatCardProps) => (
   <Link to={href} className="group relative bg-gray-900 border border-white/5 rounded-2xl p-5 flex flex-col gap-4 hover:border-white/10 transition-all duration-200 overflow-hidden">
-    {/* subtle glow */}
     <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${accent} blur-3xl scale-150`} />
     <div className="relative flex items-start justify-between">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${accent} bg-opacity-10`}>
@@ -50,9 +50,50 @@ const StatCard = ({ label, value, icon, accent, href, delta }: StatCardProps) =>
     <div className="relative">
       <p className="text-3xl font-bold text-white tracking-tight">{value ?? "—"}</p>
       <p className="text-gray-500 text-xs mt-0.5 font-medium">{label}</p>
-      {delta && <p className="text-emerald-400 text-[11px] mt-1.5 font-medium">{delta}</p>}
+      {sub && <p className={`text-[11px] mt-1.5 font-medium ${subColor ?? "text-gray-500"}`}>{sub}</p>}
     </div>
   </Link>
+);
+
+/* ── rate card (for disposal / resolution) ── */
+interface RateCardProps {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  color: string;
+  bar: string;
+  sub: string;
+}
+const RateCard = ({ label, value, icon, color, bar, sub }: RateCardProps) => (
+  <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex flex-col gap-3">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color}`}>
+          {icon}
+        </div>
+        <p className="text-white text-sm font-semibold">{label}</p>
+      </div>
+      <p className={`text-2xl font-bold ${color.includes("emerald") ? "text-emerald-400" : color.includes("blue") ? "text-blue-400" : "text-cyan-400"}`}>
+        {value}%
+      </p>
+    </div>
+    {/* Progress bar */}
+    <div className="w-full bg-gray-800 rounded-full h-2">
+      <div
+        className={`h-2 rounded-full transition-all duration-700 ${bar}`}
+        style={{ width: `${Math.min(value, 100)}%` }}
+      />
+    </div>
+    <p className="text-gray-500 text-xs">{sub}</p>
+  </div>
+);
+
+/* ── mini stat ── */
+const MiniStat = ({ label, value, color }: { label: string; value: number; color: string }) => (
+  <div className="bg-gray-800/60 rounded-xl p-3 text-center border border-white/5">
+    <p className={`text-xl font-bold ${color}`}>{value}</p>
+    <p className="text-gray-500 text-[11px] mt-0.5">{label}</p>
+  </div>
 );
 
 /* ── activity dot ── */
@@ -64,12 +105,12 @@ const typeDot: Record<string, string> = {
 
 /* ── main ── */
 const Dashboard = () => {
-  const { data: statsData, isLoading: statsLoading } = useAdminStatsQuery({});
-  const { data: claimsData,     isLoading: claimsLoading }     = useGetAllClaimsQuery(undefined);
-  const { data: foundItemsData, isLoading: foundLoading }       = useGetFoundItemsQuery({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
-  const { data: lostItemsData,  isLoading: lostLoading }        = useGetLostItemsQuery({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
+  const { data: statsData,      isLoading: statsLoading }  = useAdminStatsQuery({});
+  const { data: claimsData,     isLoading: claimsLoading } = useGetAllClaimsQuery(undefined);
+  const { data: foundItemsData, isLoading: foundLoading }  = useGetFoundItemsQuery({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
+  const { data: lostItemsData,  isLoading: lostLoading }   = useGetLostItemsQuery({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
 
-  const stats = statsData?.data;
+  const stats     = statsData?.data;
   const isLoading = statsLoading || claimsLoading || foundLoading || lostLoading;
 
   /* build unified activity */
@@ -117,7 +158,7 @@ const Dashboard = () => {
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight">Good to see you!</h2>
             <p className="text-gray-400 text-sm mt-1">
-              Northern Bukidnon State College · SAS Office · Lost & Found System
+              National Baptist School of Caloocan · SAS Office · Lost & Found System
             </p>
           </div>
           <div className="flex gap-2">
@@ -133,7 +174,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ── Stats ── */}
+      {/* ── Primary Stats ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Found Items"
@@ -141,6 +182,8 @@ const Dashboard = () => {
           icon={<FaSearch size={16} className="text-cyan-400" />}
           accent="bg-cyan-500/5"
           href="/dashboard/found-items"
+          sub={`+${stats?.foundThisWeek ?? 0} this week`}
+          subColor="text-cyan-400"
         />
         <StatCard
           label="Lost Items"
@@ -148,6 +191,8 @@ const Dashboard = () => {
           icon={<FaExclamationTriangle size={16} className="text-red-400" />}
           accent="bg-red-500/5"
           href="/dashboard/lost-items"
+          sub={`+${stats?.lostThisWeek ?? 0} this week`}
+          subColor="text-red-400"
         />
         <StatCard
           label="Pending Claims"
@@ -155,6 +200,8 @@ const Dashboard = () => {
           icon={<FaClipboardList size={16} className="text-yellow-400" />}
           accent="bg-yellow-500/5"
           href="/dashboard/claims"
+          sub={`${stats?.approvedClaims ?? 0} approved · ${stats?.rejectedClaims ?? 0} rejected`}
+          subColor="text-yellow-400"
         />
         <StatCard
           label="Total Users"
@@ -162,13 +209,52 @@ const Dashboard = () => {
           icon={<FaUsers size={16} className="text-violet-400" />}
           accent="bg-violet-500/5"
           href="/dashboard/users"
+          sub={`${stats?.totalClaims ?? 0} total claims`}
+          subColor="text-violet-400"
         />
+      </div>
+
+      {/* ── Rates + Weekly Summary ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <RateCard
+          label="Disposal Rate"
+          value={stats?.disposalRate ?? 0}
+          icon={<FaRecycle size={14} className="text-emerald-400" />}
+          color="bg-emerald-400/10 text-emerald-400"
+          bar="bg-emerald-400"
+          sub={`${stats?.claimedItems ?? 0} of ${stats?.foundItems ?? 0} found items have been claimed`}
+        />
+        <RateCard
+          label="Resolution Rate"
+          value={stats?.resolutionRate ?? 0}
+          icon={<FaChartBar size={14} className="text-blue-400" />}
+          color="bg-blue-400/10 text-blue-400"
+          bar="bg-blue-400"
+          sub={`${stats?.resolvedLostItems ?? 0} of ${stats?.lostItems ?? 0} lost items have been found`}
+        />
+        {/* Weekly summary */}
+        <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex flex-col gap-3">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-8 h-8 rounded-lg bg-orange-400/10 flex items-center justify-center">
+              <FaCalendarWeek size={14} className="text-orange-400" />
+            </div>
+            <p className="text-white text-sm font-semibold">This Week</p>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <MiniStat label="Found"   value={stats?.foundThisWeek   ?? 0} color="text-cyan-400"   />
+            <MiniStat label="Lost"    value={stats?.lostThisWeek    ?? 0} color="text-red-400"    />
+            <MiniStat label="Claims"  value={stats?.claimsThisWeek  ?? 0} color="text-yellow-400" />
+          </div>
+          <p className="text-gray-600 text-[11px] mt-1">
+            {stats?.itemsLoggedThisWeek ?? 0} total items logged in the last 7 days
+          </p>
+        </div>
       </div>
 
       {/* ── Activity + Pending Claims ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        {/* Activity feed — takes 2/3 */}
+        {/* Activity feed */}
         <div className="lg:col-span-2 bg-gray-900 border border-white/5 rounded-2xl flex flex-col">
           <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
             <div>
@@ -214,7 +300,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Pending claims panel — 1/3 */}
+        {/* Pending claims panel */}
         <div className="bg-gray-900 border border-white/5 rounded-2xl flex flex-col">
           <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
             <div>
@@ -261,10 +347,10 @@ const Dashboard = () => {
         <h3 className="text-white text-sm font-semibold mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Add Category",  icon: <FaBoxOpen size={16} />,          href: "/dashboard/categories",  color: "text-cyan-400   bg-cyan-400/5   hover:bg-cyan-400/10   border-cyan-400/10"   },
-            { label: "Manage Users",  icon: <FaUsers size={16} />,            href: "/dashboard/users",       color: "text-violet-400 bg-violet-400/5 hover:bg-violet-400/10 border-violet-400/10" },
-            { label: "Review Claims", icon: <FaClipboardList size={16} />,    href: "/dashboard/claims",      color: "text-yellow-400 bg-yellow-400/5 hover:bg-yellow-400/10 border-yellow-400/10" },
-            { label: "Lost Items",    icon: <FaExclamationTriangle size={16} />, href: "/dashboard/lost-items", color: "text-red-400    bg-red-400/5    hover:bg-red-400/10    border-red-400/10"    },
+            { label: "Add Category",  icon: <FaBoxOpen size={16} />,             href: "/dashboard/categories",  color: "text-cyan-400   bg-cyan-400/5   hover:bg-cyan-400/10   border-cyan-400/10"   },
+            { label: "Manage Users",  icon: <FaUsers size={16} />,               href: "/dashboard/users",       color: "text-violet-400 bg-violet-400/5 hover:bg-violet-400/10 border-violet-400/10" },
+            { label: "Review Claims", icon: <FaClipboardList size={16} />,       href: "/dashboard/claims",      color: "text-yellow-400 bg-yellow-400/5 hover:bg-yellow-400/10 border-yellow-400/10" },
+            { label: "Lost Items",    icon: <FaExclamationTriangle size={16} />, href: "/dashboard/lost-items",  color: "text-red-400    bg-red-400/5    hover:bg-red-400/10    border-red-400/10"    },
           ].map((action) => (
             <Link key={action.href} to={action.href}
               className={`flex flex-col items-center gap-2.5 p-4 rounded-xl border transition-all duration-150 ${action.color}`}>
