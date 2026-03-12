@@ -115,7 +115,7 @@ const LostItemsManagement = () => {
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const getStatusColor = (isFound: boolean) => isFound ? "bg-green-500" : "bg-red-500";
+  const getStatusColor = (isFound: boolean) => isFound ? "bg-blue-500" : "bg-green-500";
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -257,7 +257,7 @@ const LostItemsManagement = () => {
       {/* Edit Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-t-2xl sm:rounded-lg w-full sm:w-auto sm:max-w-md mx-0 sm:mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-2xl mx-0 sm:mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-5 sm:p-6">
               <h2 className="text-xl font-bold text-white mb-4">Edit Lost Item</h2>
               <form onSubmit={handleEditSubmit} className="space-y-4">

@@ -1,20 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
+  FaBell, FaCheckCircle,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Dropdown, DropdownHeader, DropdownItem, DropdownDivider } from "flowbite-react";
 import Modals from "../components/modal/Modal";
+import {
+  useGetAllClaimsQuery,
+  useGetFoundItemsQuery,
+  useGetLostItemsQuery,
+} from "../redux/api/api";
 
 interface DashboardLayoutProps { children: React.ReactNode; }
 
+interface Notification {
+  id: string;
+  type: "claim" | "found" | "lost" | "claim_status";
+  title: string;
+  subtitle: string;
+  time: string;
+  read: boolean;
+  link: string;
+}
+
 const menuItems = [
-  { title: "Overview",     icon: FaTachometerAlt,       path: "/dashboard",              exact: true },
+  { title: "Overview",     icon: FaTachometerAlt,       path: "/dashboard",             exact: true },
   { title: "Found Items",  icon: FaSearch,              path: "/dashboard/found-items"  },
   { title: "Lost Items",   icon: FaExclamationTriangle, path: "/dashboard/lost-items"   },
   { title: "Claims",       icon: FaClipboardList,       path: "/dashboard/claims"       },
@@ -35,8 +51,258 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/settings":    { title: "Settings",    subtitle: "Configure system preferences" },
 };
 
+const timeAgo = (dateStr: string) => {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+};
+
+const notifIcon = (type: Notification["type"]) => {
+  switch (type) {
+    case "claim":        return <div className="w-8 h-8 rounded-full bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center shrink-0"><FaClipboardList size={12} className="text-yellow-400" /></div>;
+    case "claim_status": return <div className="w-8 h-8 rounded-full bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center shrink-0"><FaCheckCircle size={12} className="text-emerald-400" /></div>;
+    case "found":        return <div className="w-8 h-8 rounded-full bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0"><FaSearch size={12} className="text-cyan-400" /></div>;
+    case "lost":         return <div className="w-8 h-8 rounded-full bg-red-400/10 border border-red-400/20 flex items-center justify-center shrink-0"><FaExclamationTriangle size={12} className="text-red-400" /></div>;
+  }
+};
+
+// ─── Notification Bell ────────────────────────────────────────────────────────
+const NotificationBell = () => {
+  const [open, setOpen]                   = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const bellRef                           = useRef<HTMLDivElement>(null);
+
+  const seenClaimIds  = useRef<Set<string>>(new Set());
+  const seenFoundIds  = useRef<Set<string>>(new Set());
+  const seenLostIds   = useRef<Set<string>>(new Set());
+  const claimStatuses = useRef<Record<string, string>>({});
+  const seededCount   = useRef(0);
+
+  const isFirstLoad = () => seededCount.current < 3;
+  const markSeeded  = () => { seededCount.current += 1; };
+
+  const pollOpts = { pollingInterval: 10000, refetchOnFocus: true, refetchOnReconnect: true };
+
+  const { data: claimsData } = useGetAllClaimsQuery(undefined, pollOpts);
+  const { data: foundData }  = useGetFoundItemsQuery(
+    { limit: 100, sortBy: "createdAt", sortOrder: "desc" }, pollOpts
+  );
+  const { data: lostData }   = useGetLostItemsQuery(
+    { limit: 100, sortBy: "createdAt", sortOrder: "desc" }, pollOpts
+  );
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Process claims
+  useEffect(() => {
+    const claims = claimsData?.data || [];
+    if (claims.length === 0) return;
+
+    if (isFirstLoad()) {
+      claims.forEach((c: any) => {
+        seenClaimIds.current.add(c.id);
+        claimStatuses.current[c.id] = c.status;
+      });
+      markSeeded();
+      return;
+    }
+
+    const newNotifs: Notification[] = [];
+    claims.forEach((c: any) => {
+      if (!seenClaimIds.current.has(c.id)) {
+        seenClaimIds.current.add(c.id);
+        claimStatuses.current[c.id] = c.status;
+        newNotifs.push({
+          id: `claim-${c.id}-${Date.now()}`,
+          type: "claim",
+          title: "New Claim Submitted",
+          subtitle: `${c.claimantName || "Someone"} claimed "${c.foundItem?.foundItemName || "an item"}"`,
+          time: c.createdAt,
+          read: false,
+          link: "/dashboard/claims",
+        });
+      } else if (claimStatuses.current[c.id] !== c.status) {
+        claimStatuses.current[c.id] = c.status;
+        newNotifs.push({
+          id: `status-${c.id}-${Date.now()}`,
+          type: "claim_status",
+          title: `Claim ${c.status.charAt(0) + c.status.slice(1).toLowerCase()}`,
+          subtitle: `"${c.foundItem?.foundItemName || "Item"}" claim is now ${c.status.toLowerCase()}`,
+          time: new Date().toISOString(),
+          read: false,
+          link: "/dashboard/claims",
+        });
+      }
+    });
+
+    if (newNotifs.length > 0) setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
+  }, [claimsData]);
+
+  // Process found items
+  useEffect(() => {
+    const items = foundData?.data || [];
+    if (items.length === 0) return;
+
+    if (isFirstLoad()) {
+      items.forEach((i: any) => seenFoundIds.current.add(i.id));
+      markSeeded();
+      return;
+    }
+
+    const newNotifs: Notification[] = [];
+    items.forEach((item: any) => {
+      if (!seenFoundIds.current.has(item.id)) {
+        seenFoundIds.current.add(item.id);
+        newNotifs.push({
+          id: `found-${item.id}-${Date.now()}`,
+          type: "found",
+          title: "New Found Item Reported",
+          subtitle: `"${item.foundItemName}" found at ${item.location || "unknown location"}`,
+          time: item.createdAt,
+          read: false,
+          link: "/dashboard/found-items",
+        });
+      }
+    });
+
+    if (newNotifs.length > 0) setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
+  }, [foundData]);
+
+  // Process lost items
+  useEffect(() => {
+    const items = lostData?.data || [];
+    if (items.length === 0) return;
+
+    if (isFirstLoad()) {
+      items.forEach((i: any) => seenLostIds.current.add(i.id));
+      markSeeded();
+      return;
+    }
+
+    const newNotifs: Notification[] = [];
+    items.forEach((item: any) => {
+      if (!seenLostIds.current.has(item.id)) {
+        seenLostIds.current.add(item.id);
+        newNotifs.push({
+          id: `lost-${item.id}-${Date.now()}`,
+          type: "lost",
+          title: "New Lost Item Reported",
+          subtitle: `"${item.lostItemName}" lost at ${item.location || "unknown location"}`,
+          time: item.createdAt,
+          read: false,
+          link: "/dashboard/lost-items",
+        });
+      }
+    });
+
+    if (newNotifs.length > 0) setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
+  }, [lostData]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markOneRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const clearAll    = () => setNotifications([]);
+
+  return (
+    <div ref={bellRef} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all"
+      >
+        <FaBell size={14} />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-gray-900 animate-pulse">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-11 w-80 sm:w-96 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+            <div className="flex items-center gap-2">
+              <FaBell size={13} className="text-cyan-400" />
+              <p className="text-white text-sm font-semibold">Notifications</p>
+              {unreadCount > 0 && (
+                <span className="bg-red-500/20 text-red-400 border border-red-500/20 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  {unreadCount} new
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <button onClick={markAllRead} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
+                  Mark all read
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button onClick={clearAll} className="text-gray-600 hover:text-gray-400 text-xs transition-colors">
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* List */}
+          <div className="max-h-[420px] overflow-y-auto divide-y divide-white/5">
+            {notifications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-600">
+                <FaBell size={24} className="mb-3 opacity-30" />
+                <p className="text-sm">No notifications yet</p>
+                <p className="text-xs mt-1 opacity-60">New claims and items will appear here</p>
+              </div>
+            ) : notifications.map((n) => (
+              <Link
+                key={n.id}
+                to={n.link}
+                onClick={() => { markOneRead(n.id); setOpen(false); }}
+                className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${!n.read ? "bg-white/[0.02]" : ""}`}
+              >
+                {notifIcon(n.type)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className={`text-xs font-semibold truncate ${!n.read ? "text-white" : "text-gray-300"}`}>
+                      {n.title}
+                    </p>
+                    {!n.read && <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />}
+                  </div>
+                  <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">{n.subtitle}</p>
+                  <p className="text-gray-700 text-[10px] mt-1">{timeAgo(n.time)}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Footer */}
+          {notifications.length > 0 && (
+            <div className="px-4 py-2.5 border-t border-white/5">
+              <Link to="/dashboard/claims" onClick={() => setOpen(false)}
+                className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
+                View all claims →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Main Layout ──────────────────────────────────────────────────────────────
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen]         = useState(false);
+  const [sidebarOpen, setSidebarOpen]           = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const user = useUserVerification() as any;
@@ -159,7 +425,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <h1 className="text-white text-sm sm:text-base font-semibold tracking-tight truncate">{pageMeta.title}</h1>
             <p className="text-gray-500 text-xs truncate hidden sm:block">{pageMeta.subtitle}</p>
           </div>
+
           <div className="flex items-center gap-2 sm:gap-3">
+            <NotificationBell />
+
             <Dropdown arrowIcon={false} inline label={
               <div className="flex items-center gap-2 sm:gap-2.5 cursor-pointer">
                 <div className="relative">
@@ -168,7 +437,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   </div>
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
                 </div>
-                {/* Show name on sm+ screens */}
                 <div className="hidden sm:block text-left">
                   <p className="text-white text-xs font-medium leading-none">{user?.name || "Admin"}</p>
                   <p className="text-gray-500 text-[10px] mt-0.5">{user?.role || "ADMIN"}</p>
