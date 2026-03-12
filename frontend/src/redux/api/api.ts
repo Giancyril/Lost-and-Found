@@ -81,7 +81,7 @@ const api = baseApi.injectEndpoints({
           body: data,
         };
       },
-      invalidatesTags: ["mylostItems"], // refetches Lost Items board after new report
+      invalidatesTags: ["mylostItems"],
     }),
     getSingleLostItem: builder.query({
       query: (id: string) => {
@@ -133,7 +133,7 @@ const api = baseApi.injectEndpoints({
     createFoundItem: builder.mutation({
       query: (data: any) => {
         return {
-          url: `/found-items/public`, // public endpoint — no auth required for students
+          url: `/found-items/public`,
           method: "POST",
           body: data,
         };
@@ -246,6 +246,16 @@ const api = baseApi.injectEndpoints({
       query: () => {
         return {
           url: `/admin/stats`,
+          method: "GET",
+        };
+      },
+    }),
+
+    // location stats (heatmap)
+    getLocationStats: builder.query({
+      query: () => {
+        return {
+          url: "/admin/location-stats",
           method: "GET",
         };
       },
@@ -468,6 +478,7 @@ export const {
   useDeleteMyFoundItemMutation,
   useEditMyFoundItemMutation,
   useAdminStatsQuery,
+  useGetLocationStatsQuery,
   useBlockUserMutation,
   useChangeUserRoleMutation,
   useSoftDeleteUserMutation,

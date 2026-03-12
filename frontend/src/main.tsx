@@ -24,6 +24,7 @@ import MyLostItems from "./dashboard/myLostItems/MyLostItems.tsx";
 import ReportLostItem from "./pages/reportlostItem/ReportLostItem.tsx";
 import ReportFoundItem from "./pages/reportFoundItem/ReportFoundItem.tsx";
 import AiSearch from "./pages/aiSearch/AiSearch.tsx";
+import HeatmapPage from "./pages/HeatmapPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -35,7 +36,6 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        // Redirect /register to home — registration is disabled
         path: "/register",
         element: <Navigate to="/" replace />,
       },
@@ -102,6 +102,14 @@ const router = createBrowserRouter([
     element: (
       <DashboardLayout>
         <ClaimsManagement />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/dashboard/heatmap",
+    element: (
+      <DashboardLayout>
+        <HeatmapPage />
       </DashboardLayout>
     ),
   },

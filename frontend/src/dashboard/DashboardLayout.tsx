@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
-  FaChevronRight, FaHome, FaSignOutAlt,
+  FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -14,13 +14,14 @@ import Modals from "../components/modal/Modal";
 interface DashboardLayoutProps { children: React.ReactNode; }
 
 const menuItems = [
-  { title: "Overview",     icon: FaTachometerAlt,       path: "/dashboard",             exact: true },
-  { title: "Found Items",  icon: FaSearch,              path: "/dashboard/found-items" },
-  { title: "Lost Items",   icon: FaExclamationTriangle, path: "/dashboard/lost-items"  },
-  { title: "Claims",       icon: FaClipboardList,       path: "/dashboard/claims"      },
-  { title: "Users",        icon: FaUsers,               path: "/dashboard/users"       },
-  { title: "Categories",   icon: FaBoxOpen,             path: "/dashboard/categories"  },
-  { title: "Settings",     icon: FaCog,                 path: "/dashboard/settings"    },
+  { title: "Overview",     icon: FaTachometerAlt,       path: "/dashboard",              exact: true },
+  { title: "Found Items",  icon: FaSearch,              path: "/dashboard/found-items"  },
+  { title: "Lost Items",   icon: FaExclamationTriangle, path: "/dashboard/lost-items"   },
+  { title: "Claims",       icon: FaClipboardList,       path: "/dashboard/claims"       },
+  { title: "Heatmap",      icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"      },
+  { title: "Users",        icon: FaUsers,               path: "/dashboard/users"        },
+  { title: "Categories",   icon: FaBoxOpen,             path: "/dashboard/categories"   },
+  { title: "Settings",     icon: FaCog,                 path: "/dashboard/settings"     },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
@@ -28,6 +29,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/found-items": { title: "Found Items", subtitle: "Manage all reported found items" },
   "/dashboard/lost-items":  { title: "Lost Items",  subtitle: "Track items reported as lost" },
   "/dashboard/claims":      { title: "Claims",      subtitle: "Review and verify item claims" },
+  "/dashboard/heatmap":     { title: "Heatmap",     subtitle: "See where items are most commonly lost or found" },
   "/dashboard/users":       { title: "Users",       subtitle: "Manage registered users" },
   "/dashboard/categories":  { title: "Categories",  subtitle: "Organize item categories" },
   "/dashboard/settings":    { title: "Settings",    subtitle: "Configure system preferences" },
