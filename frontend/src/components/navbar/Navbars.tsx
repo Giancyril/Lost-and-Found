@@ -23,6 +23,7 @@ export function Navbars() {
     Modals({ message: "Log out successfully", status: true });
     window.location.reload();
   };
+
   return (
     <>
       <Navbar
@@ -31,18 +32,19 @@ export function Navbars() {
       >
         {/* Brand / Logo */}
         <NavbarBrand href="/">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5">
             <img
               src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
               alt="NBSC SAS Logo"
-              className="w-10 h-10 object-contain"
+              className="w-9 h-9 object-contain shrink-0"
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
-            <div className="hidden sm:block">
-              <span className="whitespace-nowrap text-base font-black text-white tracking-widest">
+            {/* Always visible — removed hidden sm:block */}
+            <div>
+              <span className="whitespace-nowrap text-sm font-black text-white tracking-widest leading-none">
                 NBSC SAS
               </span>
-              <p className="text-gray-500 text-xs font-medium tracking-wide">
+              <p className="text-gray-500 text-[10px] font-medium tracking-wide leading-tight hidden sm:block">
                 Lost & Found Management System
               </p>
             </div>
@@ -50,50 +52,44 @@ export function Navbars() {
         </NavbarBrand>
 
         {/* Right side */}
-        <div className="flex md:order-2">
+        <div className="flex md:order-2 items-center gap-2">
           {users?.email && users?.role === "ADMIN" ? (
-            <div className="flex items-center space-x-3">
-              <div className="hidden lg:block text-right">
-                <p className="text-white text-sm font-semibold">
-                  {users?.name || "Admin"}
-                </p>
-                <p className="text-gray-500 text-xs">{users?.role}</p>
-              </div>
-
-              <Dropdown
-                arrowIcon={false}
-                inline
-                label={
-                  <div className="relative group cursor-pointer">
-                    {users?.userImg ? (
-                      <img
-                        src={users?.userImg}
-                        alt="Admin"
-                        className="w-10 h-10 rounded-full border-2 border-gray-700 group-hover:border-blue-500 transition-all duration-200 shadow-lg"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center border-2 border-gray-700 group-hover:border-blue-400 transition-all duration-200 shadow-lg">
-                        <span className="text-white font-bold text-sm">
-                          {users?.email?.charAt(0)?.toUpperCase() || "A"}
-                        </span>
+              <div className="flex items-center">
+                <Dropdown
+                  arrowIcon={false}
+                  inline
+                  label={
+                    <div className="flex items-center gap-2.5 cursor-pointer group">
+                      <div className="relative">
+                        {users?.userImg ? (
+                          <img src={users?.userImg} alt="Admin"
+                            className="w-9 h-9 rounded-full border-2 border-gray-700 group-hover:border-blue-500 transition-all duration-200 shadow-lg" />
+                        ) : (
+                          <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center border-2 border-gray-700 group-hover:border-blue-400 transition-all duration-200 shadow-lg">
+                            <span className="text-white font-bold text-sm">
+                              {users?.name?.charAt(0)?.toUpperCase() || users?.email?.charAt(0)?.toUpperCase() || "A"}
+                            </span>
+                          </div>
+                        )}
+                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-gray-900 rounded-full" />
                       </div>
-                    )}
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-gray-900 rounded-full"></div>
-                  </div>
-                }
-                className="bg-gray-900 border border-gray-700 shadow-2xl"
-              >
+                      <div className="hidden sm:block text-left">
+                        <p className="text-white text-sm font-semibold leading-none">{users?.name || "Admin"}</p>
+                        <p className="text-gray-500 text-xs mt-0.5">{users?.role || "ADMIN"}</p>
+                      </div>
+                    </div>
+                  }
+                  className="bg-gray-900 border border-gray-700 shadow-2xl"
+                >
                 <DropdownHeader className="bg-gray-800/50">
-                  <div className="flex items-center space-x-3 py-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center">
+                  <div className="flex items-center space-x-3 py-1">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center shrink-0">
                       <span className="text-white font-bold text-xs">
-                        {users?.email?.charAt(0)?.toUpperCase() || "A"}
+                        {users?.name?.charAt(0)?.toUpperCase() || users?.email?.charAt(0)?.toUpperCase() || "A"}
                       </span>
                     </div>
-                    <div>
-                      <span className="block text-white font-semibold text-sm">
-                        {users?.email}
-                      </span>
+                    <div className="min-w-0">
+                      <span className="block text-white font-semibold text-sm truncate">{users?.name || users?.email}</span>
                       <span className="block text-gray-400 text-xs">{users?.role}</span>
                     </div>
                   </div>
@@ -115,10 +111,7 @@ export function Navbars() {
 
                 <DropdownDivider className="border-gray-700" />
 
-                <DropdownItem
-                  onClick={handleSignOut}
-                  className="hover:bg-red-600/20 text-gray-300 hover:text-red-400"
-                >
+                <DropdownItem onClick={handleSignOut} className="hover:bg-red-600/20 text-gray-300 hover:text-red-400">
                   <div className="flex items-center space-x-2 w-full">
                     <FaSignOutAlt className="text-red-400" />
                     <span>Sign Out</span>
@@ -132,25 +125,19 @@ export function Navbars() {
 
         {/* Nav Links */}
         <NavbarCollapse>
-          <div className="flex flex-col md:flex-row md:items-center md:gap-12">
-            <NavbarLink href="/" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
-              Home
-            </NavbarLink>
-            <NavbarLink href="/reportlostItem" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
-              Report Lost Item
-            </NavbarLink>
-            <NavbarLink href="/lostItems" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
-              Lost Items
-            </NavbarLink>
-            <NavbarLink href="/foundItems" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
-              Found Items
-            </NavbarLink>
-            <NavbarLink href="/ai-search" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
-              Smart Search
-            </NavbarLink>
-            <NavbarLink href="#aboutUs" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
-              About
-            </NavbarLink>
+          <div className="flex flex-col md:flex-row md:items-center md:gap-8 lg:gap-14">
+            {[
+              { label: "Home",             href: "/"              },
+              { label: "Report Lost Item", href: "/reportlostItem"},
+              { label: "Lost Items",       href: "/lostItems"     },
+              { label: "Found Items",      href: "/foundItems"    },
+              { label: "Smart Search",     href: "/ai-search"     },
+            ].map(({ label, href }) => (
+              <NavbarLink key={href} href={href}
+                className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
+                {label}
+              </NavbarLink>
+            ))}
           </div>
         </NavbarCollapse>
       </Navbar>

@@ -149,14 +149,7 @@ const LostItemsPage = () => {
                 <option value="location-desc">Location (Z-A)</option>
               </select>
             </div>
-            {fuzzyTerm && (
-              <button
-                onClick={clearSearch}
-                className="text-blue-400 hover:text-blue-300 text-sm font-medium bg-blue-900/20 px-4 py-2 rounded-lg hover:bg-blue-900/30 transition-all duration-200 border border-blue-600/30"
-              >
-                Clear search
-              </button>
-            )}
+            
           </div>
         </div>
       </div>

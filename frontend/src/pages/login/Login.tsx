@@ -62,7 +62,7 @@ const Login = () => {
                   type="text"
                   {...register("username", { required: "Email is required" })}
                   className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-                  placeholder="admin@nbsc.edu.ph"
+                  placeholder=" "
                 />
                 {errors.username && (
                   <p className="text-red-400 text-xs mt-1">{errors.username?.message as string}</p>
@@ -115,7 +115,7 @@ const Login = () => {
           </div>
 
           <p className="text-center text-gray-600 text-xs mt-6">
-            This portal is for SAS staff only. Students may browse the board without logging in.
+            This is for SAS staff only. Students may browse the board without logging in.
           </p>
 
         </div>

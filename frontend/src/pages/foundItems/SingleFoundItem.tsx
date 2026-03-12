@@ -10,15 +10,8 @@ import { Link, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
-  FaArrowLeft,
-  FaCalendarAlt,
-  FaMapMarkerAlt,
-  FaUser,
-  FaTag,
-  FaTimes,
-  FaBuilding,
-  FaCheckCircle,
-  FaPhone,
+  FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaUser, FaTag,
+  FaTimes, FaBuilding, FaCheckCircle, FaPhone,
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
 
@@ -29,10 +22,10 @@ const SingleFoundItem = () => {
   const isAdmin = users?.role === "ADMIN";
 
   const { data: singleFoundItem, isLoading, refetch } = useGetSingleFoundItemQuery(foundItemId!);
-  const [createClaim, { isLoading: claimLoading }] = useCreateClaimMutation();
-  const [updateClaimStatus] = useUpdateClaimStatusMutation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [createClaim, { isLoading: claimLoading }]    = useCreateClaimMutation();
+  const [updateClaimStatus]                           = useUpdateClaimStatusMutation();
+  const [isSubmitting, setIsSubmitting]               = useState(false);
+  const [isClaimModalOpen, setIsClaimModalOpen]       = useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
@@ -40,14 +33,13 @@ const SingleFoundItem = () => {
     setIsSubmitting(true);
     try {
       const claimData = {
-        foundItemId: foundItemId,
+        foundItemId,
         distinguishingFeatures: data.distinguishingFeatures,
         lostDate: new Date(data.lostDate).toISOString(),
         claimantName: data.claimantName,
         contactNumber: data.contactNumber,
       };
       const res: any = await createClaim(claimData);
-
       if (res?.data?.success) {
         if (isAdmin && res?.data?.data?.id) {
           await updateClaimStatus({ claimId: res.data.data.id, status: "APPROVED" });
@@ -61,7 +53,7 @@ const SingleFoundItem = () => {
       } else {
         toast.error("Failed to submit claim. Please try again.");
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred.");
     } finally {
       setIsSubmitting(false);
@@ -104,61 +96,63 @@ const SingleFoundItem = () => {
   return (
     <>
       <div className="min-h-screen bg-gray-950">
+        {/* Header */}
         <div className="border-b border-gray-800 bg-gray-950">
-          <div className="w-full px-6 sm:px-10 lg:px-16 py-5">
-            <Link to="/foundItems" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 mb-4">
+          <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
+            <Link to="/foundItems"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 mb-4">
               <FaArrowLeft size={11} /> Back
             </Link>
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white">{foundItemData?.foundItemName || "Found Item"}</h1>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{foundItemData?.foundItemName || "Found Item"}</h1>
                 <p className="text-gray-500 text-sm mt-1">Found item details</p>
               </div>
               {isClaimed ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 text-green-400 border border-green-600/30">
+                <span className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 text-green-400 border border-green-600/30">
                   <FaCheckCircle size={10} /> Claimed
                 </span>
               ) : (
-                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-600/30">Available</span>
+                <span className="shrink-0 inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-600/30">
+                  Available
+                </span>
               )}
             </div>
           </div>
         </div>
 
-        <div className="w-full px-6 sm:px-10 lg:px-16 py-10">
-          {/* grid with stretch so both cells are same height */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem", alignItems: "stretch" }}
-               className="flex flex-col lg:grid gap-10">
+        {/* Main Content */}
+        <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
 
-            {/* Left: relative container fills its grid cell, image is absolute inside */}
-            <div style={{ position: "relative", minHeight: "320px" }}
-                 className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+            {/* Image */}
+            <div className="relative w-full aspect-square sm:aspect-video lg:aspect-auto lg:min-h-[400px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
               <img
-                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
+                className="absolute inset-0 w-full h-full object-cover object-center"
                 src={foundItemData?.img}
                 alt={foundItemData?.foundItemName}
                 onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
               />
             </div>
 
-            {/* Right: details */}
-            <div className="space-y-5">
+            {/* Details */}
+            <div className="space-y-4">
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
                 <p className="text-gray-400 leading-relaxed text-sm">{foundItemData?.description || "No description available."}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 {[
                   { icon: <FaCalendarAlt size={12} />, label: "Date Found", value: foundItemData?.date ? new Date(foundItemData.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified" },
-                  { icon: <FaMapMarkerAlt size={12} />, label: "Location", value: foundItemData?.location || "Not specified" },
-                  { icon: <FaTag size={12} />, label: "Category", value: foundItemData?.category?.name || "Uncategorized" },
-                  { icon: <FaUser size={12} />, label: "Logged By", value: foundItemData?.user?.username || "SAS Office" },
+                  { icon: <FaMapMarkerAlt size={12} />, label: "Location",  value: foundItemData?.location || "Not specified" },
+                  { icon: <FaTag size={12} />,          label: "Category",  value: foundItemData?.category?.name || "Uncategorized" },
+                  { icon: <FaUser size={12} />,         label: "Logged By", value: foundItemData?.user?.username || "SAS Office" },
                 ].map((item, i) => (
                   <div key={i} className="bg-gray-900 rounded-xl p-4 border border-gray-800">
                     <div className="flex items-center gap-2 text-blue-400 mb-2">
                       {item.icon}
-                      <span className="text-xs font-bold uppercase tracking-widest">{item.label}</span>
+                      <span className="text-xs font-bold uppercase tracking-widest truncate">{item.label}</span>
                     </div>
                     <p className="text-gray-300 text-sm">{item.value}</p>
                   </div>
@@ -180,7 +174,8 @@ const SingleFoundItem = () => {
                 ) : isAdmin ? (
                   <>
                     <p className="text-gray-500 text-sm mb-4 leading-relaxed">{foundItemData?.claimProcess || "Verify ownership before processing the claim."}</p>
-                    <button onClick={() => setIsClaimModalOpen(true)} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
+                    <button onClick={() => setIsClaimModalOpen(true)}
+                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
                       Process Claim
                     </button>
                   </>
@@ -193,7 +188,8 @@ const SingleFoundItem = () => {
                         <p className="text-gray-400 text-xs mt-1 leading-relaxed">Submit a claim with your details and proof of ownership. The SAS office will review and contact you.</p>
                       </div>
                     </div>
-                    <button onClick={() => setIsClaimModalOpen(true)} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
+                    <button onClick={() => setIsClaimModalOpen(true)}
+                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
                       Submit a Claim
                     </button>
                   </div>
@@ -215,10 +211,10 @@ const SingleFoundItem = () => {
               </div>
               <button onClick={() => { setIsClaimModalOpen(false); reset(); }} className="text-gray-500 hover:text-white ml-4"><FaTimes size={15} /></button>
             </div>
-
             <div className="px-6 py-5">
               <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
-                <img src={foundItemData?.img} alt={foundItemData?.foundItemName} className="w-14 h-14 rounded-lg object-cover shrink-0"
+                <img src={foundItemData?.img} alt={foundItemData?.foundItemName}
+                  className="w-14 h-14 rounded-lg object-cover shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
                 <div>
                   <p className="text-white text-sm font-semibold">{foundItemData?.foundItemName}</p>
@@ -226,7 +222,6 @@ const SingleFoundItem = () => {
                   <p className="text-gray-400 text-xs">📅 Found: {foundItemData?.date?.split("T")[0]}</p>
                 </div>
               </div>
-
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Full Name *</label>
@@ -238,7 +233,6 @@ const SingleFoundItem = () => {
                   </div>
                   {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
                 </div>
-
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Contact Number *</label>
                   <div className="relative">
@@ -252,14 +246,12 @@ const SingleFoundItem = () => {
                   </div>
                   {errors.contactNumber && <p className="text-red-400 text-xs mt-1">{errors.contactNumber.message as string}</p>}
                 </div>
-
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date Item Was Lost *</label>
                   <input type="date" {...register("lostDate", { required: "Please provide the date" })}
                     className="w-full p-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
                   {errors.lostDate && <p className="text-red-400 text-xs mt-1">{errors.lostDate.message as string}</p>}
                 </div>
-
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Proof of Ownership *</label>
                   <textarea rows={4}
@@ -271,7 +263,6 @@ const SingleFoundItem = () => {
                     className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm resize-none placeholder-gray-600" />
                   {errors.distinguishingFeatures && <p className="text-red-400 text-xs mt-1">{errors.distinguishingFeatures.message as string}</p>}
                 </div>
-
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
                     {isAdmin
@@ -279,7 +270,6 @@ const SingleFoundItem = () => {
                       : "ℹ️ Your claim will be reviewed by the SAS office. Make sure your contact number is correct — they will reach out to you for verification."}
                   </p>
                 </div>
-
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => { setIsClaimModalOpen(false); reset(); }}
                     className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium">
@@ -287,9 +277,9 @@ const SingleFoundItem = () => {
                   </button>
                   <button type="submit" disabled={isSubmitting || claimLoading}
                     className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50">
-                    {isSubmitting || claimLoading ? (
-                      <div className="flex items-center justify-center gap-2"><Spinner size="sm" /> Processing...</div>
-                    ) : isAdmin ? "✓ Confirm & Mark as Claimed" : "Submit Claim"}
+                    {isSubmitting || claimLoading
+                      ? <div className="flex items-center justify-center gap-2"><Spinner size="sm" /> Processing...</div>
+                      : isAdmin ? "✓ Confirm & Mark as Claimed" : "Submit Claim"}
                   </button>
                 </div>
               </form>
@@ -297,7 +287,6 @@ const SingleFoundItem = () => {
           </div>
         </div>
       )}
-
       <ToastContainer position="top-right" autoClose={5000} style={{ top: "70px" }} theme="dark" />
     </>
   );
