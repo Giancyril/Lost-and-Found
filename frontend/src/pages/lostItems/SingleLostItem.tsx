@@ -18,21 +18,21 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const next = () => setActiveIdx((i) => (i === images.length - 1 ? 0 : i + 1));
 
   if (images.length === 0) return (
-    <div className="relative w-full aspect-square sm:aspect-video lg:aspect-auto lg:min-h-[320px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+    <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
       <img src="/bgimg.png" alt={alt} className="absolute inset-0 w-full h-full object-cover" />
     </div>
   );
 
   if (images.length === 1) return (
-    <div className="relative w-full aspect-square sm:aspect-video lg:aspect-auto lg:min-h-[320px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+    <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
       <img src={images[0]} alt={alt} className="absolute inset-0 w-full h-full object-cover"
         onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="relative w-full aspect-square sm:aspect-video lg:aspect-auto lg:min-h-[320px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+    <div className="flex flex-col gap-3 h-full">
+      <div className="relative w-full flex-1 min-h-[380px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
         <img src={images[activeIdx]} alt={`${alt} — photo ${activeIdx + 1}`}
           className="absolute inset-0 w-full h-full object-cover"
           onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
@@ -165,9 +165,11 @@ const SingleLostItem = () => {
 
         {/* Main Content */}
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
 
-            <ImageCarousel images={imageList} alt={lostItemName} />
+            <div className="flex flex-col h-full">
+              <ImageCarousel images={imageList} alt={lostItemName} />
+            </div>
 
             <div className="space-y-4">
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
@@ -210,11 +212,15 @@ const SingleLostItem = () => {
                   </div>
                 ) : (
                   <>
-                    <p className="text-gray-500 text-sm mb-4 leading-relaxed">
-                      If you found this item, click below to let the owner know. Fill in where and when you found it.
-                    </p>
+                    <div className="flex items-start gap-3 bg-gray-800/60 rounded-xl p-4 border border-gray-700 mb-4">
+                      <FaBoxOpen className="text-blue-400 mt-0.5 shrink-0 text-lg" />
+                      <div>
+                        <p className="text-white text-sm font-semibold">Did you find this item?</p>
+                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">Let the owner know by filling in where and when you found it. The SAS office will take it from there.</p>
+                      </div>
+                    </div>
                     <button onClick={() => setIsModalOpen(true)}
-                      className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm flex items-center justify-center gap-2">
+                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm flex items-center justify-center gap-2">
                       <FaBoxOpen size={13} /> I Found This Item
                     </button>
                   </>
@@ -225,56 +231,107 @@ const SingleLostItem = () => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal — redesigned */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="relative w-full max-w-lg bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
+
+            {/* Header */}
+            <div className="flex items-start justify-between px-6 py-4 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
               <div>
-                <h3 className="text-base font-bold text-white">I Found This Item</h3>
-                <p className="text-gray-500 text-xs mt-0.5">Tell us where and when you found <span className="text-white">{lostItemName}</span></p>
+                <h3 className="text-base font-bold text-white">I found this item</h3>
+                <p className="text-gray-500 text-xs mt-0.5">Tell us where and when you found <span className="text-white font-medium">{lostItemName}</span></p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white ml-4"><FaTimes size={15} /></button>
+              <button onClick={() => setIsModalOpen(false)}
+                className="text-gray-500 hover:text-white ml-4 mt-0.5 transition-colors">
+                <FaTimes size={14} />
+              </button>
             </div>
-            <div className="px-6 py-5">
+
+            <div className="px-6 py-5 space-y-4">
+
+              {/* Item preview */}
+              <div className="flex items-center gap-3 bg-gray-800/70 rounded-xl p-3 border border-gray-700/60">
+                <img src={img} alt={lostItemName}
+                  className="w-14 h-14 rounded-lg object-cover shrink-0 border border-gray-700"
+                  onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-semibold truncate">{lostItemName}</p>
+                  <p className="text-gray-400 text-xs mt-0.5 truncate">📍 {location}</p>
+                  <p className="text-gray-400 text-xs">📅 Lost: {date?.split("T")[0]}</p>
+                </div>
+                <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                  Missing
+                </span>
+              </div>
+
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Your Name <span className="text-red-500">*</span></label>
-                  <input type="text" placeholder="e.g. Juan dela Cruz"
-                    {...register("reporterName", { required: "Please enter your name" })}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm placeholder-gray-600" />
-                  {errors.reporterName && <p className="text-red-400 text-xs mt-1">{errors.reporterName.message as string}</p>}
+
+                {/* Your name + location side by side */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Your name <span className="text-red-400">*</span>
+                    </label>
+                    <input type="text" placeholder="e.g. Juan dela Cruz"
+                      {...register("reporterName", { required: "Please enter your name" })}
+                      className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm placeholder-gray-600" />
+                    {errors.reporterName && <p className="text-red-400 text-xs mt-1">{errors.reporterName.message as string}</p>}
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Where found <span className="text-red-400">*</span>
+                    </label>
+                    <input type="text" placeholder="e.g. Library, Room 205"
+                      {...register("location", { required: "Please provide the location" })}
+                      className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm placeholder-gray-600" />
+                    {errors.location && <p className="text-red-400 text-xs mt-1">{errors.location.message as string}</p>}
+                  </div>
                 </div>
+
+                {/* Date found */}
                 <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Where Did You Find It?</label>
-                  <input type="text" placeholder="e.g. Library, Canteen, Room 205"
-                    {...register("location", { required: "Please provide the location" })}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm placeholder-gray-600" />
-                  {errors.location && <p className="text-red-400 text-xs mt-1">{errors.location.message as string}</p>}
-                </div>
-                <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date You Found It</label>
+                  <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                    Date you found it
+                  </label>
                   <DatePicker wrapperClassName="w-full"
-                    className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
+                    className="w-full p-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
                     selected={foundDate} onChange={(date: any) => setFoundDate(date)}
                     dateFormat="yyyy-MM-dd" maxDate={new Date()} showYearDropdown showMonthDropdown dropdownMode="select" />
                 </div>
+
+                {/* Additional details */}
                 <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Additional Details</label>
-                  <textarea rows={3} placeholder="Any extra details about the condition or where exactly it was found"
+                  <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                    Additional details
+                  </label>
+                  <textarea rows={3} placeholder="Any extra details about the condition or exactly where it was found"
                     {...register("description")}
                     className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm resize-none placeholder-gray-600" />
                 </div>
+
+                {/* Info banner */}
+                <div className="flex items-start gap-2.5 bg-blue-500/5 border border-blue-500/15 rounded-lg px-4 py-3">
+                  <span className="text-blue-400 text-sm shrink-0 mt-0.5">ℹ</span>
+                  <p className="text-blue-300/80 text-xs leading-relaxed">
+                    Your report will be submitted to the SAS office. The item owner will be notified and can claim it.
+                  </p>
+                </div>
+
+                {/* Actions */}
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => setIsModalOpen(false)}
-                    className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium">
+                    className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium transition-colors">
                     Cancel
                   </button>
                   <button type="submit" disabled={isSubmitting || submitLoading}
-                    className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50">
-                    {isSubmitting || submitLoading ? <div className="flex items-center justify-center gap-2"><Spinner size="sm" /> Submitting...</div> : "Submit"}
+                    className="flex-[2] px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors">
+                    {isSubmitting || submitLoading
+                      ? <div className="flex items-center justify-center gap-2"><Spinner size="sm" /> Submitting...</div>
+                      : "Submit report"}
                   </button>
                 </div>
+
               </form>
             </div>
           </div>

@@ -12,8 +12,66 @@ import "react-toastify/dist/ReactToastify.css";
 import {
   FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaUser, FaTag,
   FaTimes, FaBuilding, FaCheckCircle, FaPhone,
+  FaChevronLeft, FaChevronRight, FaClipboardList,
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
+
+function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const prev = () => setActiveIdx((i) => (i === 0 ? images.length - 1 : i - 1));
+  const next = () => setActiveIdx((i) => (i === images.length - 1 ? 0 : i + 1));
+
+  if (images.length === 0) return (
+    <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+      <img src="/bgimg.png" alt={alt} className="absolute inset-0 w-full h-full object-cover" />
+    </div>
+  );
+
+  if (images.length === 1) return (
+    <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+      <img src={images[0]} alt={alt} className="absolute inset-0 w-full h-full object-cover"
+        onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col gap-3 h-full">
+      <div className="relative w-full flex-1 min-h-[380px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+        <img src={images[activeIdx]} alt={`${alt} — photo ${activeIdx + 1}`}
+          className="absolute inset-0 w-full h-full object-cover"
+          onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+        <button onClick={prev}
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-sm border border-white/10 transition-all">
+          <FaChevronLeft size={13} />
+        </button>
+        <button onClick={next}
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-sm border border-white/10 transition-all">
+          <FaChevronRight size={13} />
+        </button>
+        <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full border border-white/10">
+          {activeIdx + 1} / {images.length}
+        </div>
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {images.map((_, idx) => (
+            <button key={idx} onClick={() => setActiveIdx(idx)}
+              className={`h-1.5 rounded-full transition-all duration-200 ${idx === activeIdx ? "w-4 bg-white" : "w-1.5 bg-white/40"}`} />
+          ))}
+        </div>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {images.map((src, idx) => (
+          <button key={idx} onClick={() => setActiveIdx(idx)}
+            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+              idx === activeIdx ? "border-green-500 ring-2 ring-green-500/30" : "border-gray-700 hover:border-gray-500 opacity-60 hover:opacity-100"
+            }`}>
+            <img src={src} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const SingleFoundItem = () => {
   const { foundItem: foundItemParam } = useParams<{ foundItem: string }>();
@@ -93,6 +151,10 @@ const SingleFoundItem = () => {
 
   const isClaimed = foundItemData?.isClaimed;
 
+  const imageList: string[] = Array.isArray(foundItemData.images) && foundItemData.images.length > 0
+    ? foundItemData.images.map((i: any) => (typeof i === "string" ? i : i?.url ?? i?.src ?? ""))
+    : foundItemData?.img ? [foundItemData.img] : [];
+
   return (
     <>
       <div className="min-h-screen bg-gray-950">
@@ -123,19 +185,14 @@ const SingleFoundItem = () => {
 
         {/* Main Content */}
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
 
-            {/* Image */}
-            <div className="relative w-full aspect-square sm:aspect-video lg:aspect-auto lg:min-h-[400px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
-              <img
-                className="absolute inset-0 w-full h-full object-cover object-center"
-                src={foundItemData?.img}
-                alt={foundItemData?.foundItemName}
-                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-              />
+            {/* Left: Image */}
+            <div className="flex flex-col h-full">
+              <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
             </div>
 
-            {/* Details */}
+            {/* Right: Details */}
             <div className="space-y-4">
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
@@ -161,7 +218,7 @@ const SingleFoundItem = () => {
 
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-3">
-                  {isClaimed ? "Claim Status" : "Claim This Item"}
+                  {isClaimed ? "Claim Status" : isAdmin ? "Process Claim" : "Claim This Item"}
                 </h3>
                 {isClaimed ? (
                   <div className="bg-green-900/20 border border-green-600/30 rounded-xl p-4 flex items-start gap-3">
@@ -172,13 +229,19 @@ const SingleFoundItem = () => {
                     </div>
                   </div>
                 ) : isAdmin ? (
-                  <>
-                    <p className="text-gray-500 text-sm mb-4 leading-relaxed">{foundItemData?.claimProcess || "Verify ownership before processing the claim."}</p>
-                    <button onClick={() => setIsClaimModalOpen(true)}
-                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
-                      Process Claim
-                    </button>
-                  </>
+                    <>
+                      <div className="flex items-start gap-3 bg-gray-800/60 rounded-xl p-4 border border-gray-700 mb-4">
+                        <FaClipboardList className="text-blue-400 mt-0.5 shrink-0 text-lg" />
+                        <div>
+                          <p className="text-white text-sm font-semibold">Review claimant details</p>
+                          <p className="text-gray-400 text-xs mt-1 leading-relaxed">Verify proof of ownership before marking this item as claimed.</p>
+                        </div>
+                      </div>
+                      <button onClick={() => setIsClaimModalOpen(true)}
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
+                        Process Claim
+                      </button>
+                    </>
                 ) : (
                   <div className="space-y-3">
                     <div className="flex items-start gap-3 bg-gray-800/60 rounded-xl p-4 border border-gray-700">
@@ -276,10 +339,10 @@ const SingleFoundItem = () => {
                     Cancel
                   </button>
                   <button type="submit" disabled={isSubmitting || claimLoading}
-                    className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50">
+                    className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50">
                     {isSubmitting || claimLoading
                       ? <div className="flex items-center justify-center gap-2"><Spinner size="sm" /> Processing...</div>
-                      : isAdmin ? "✓ Confirm & Mark as Claimed" : "Submit Claim"}
+                      : isAdmin ? " Confirm as Claimed" : "Submit Claim"}
                   </button>
                 </div>
               </form>

@@ -35,11 +35,6 @@ const Faq = () => {
         "Visit the SAS Office in person with a valid ID and proof of ownership (e.g. description of unique markings, purchase receipt, photos). Our staff will verify your claim and process the release of the item.",
     },
     {
-      question: "What are the SAS Office hours?",
-      answer:
-        "The Student Affairs Office is open Monday to Friday, 8:00 AM to 5:00 PM. Please visit during office hours to report, submit, or claim items.",
-    },
-    {
       question: "How do I use Smart Search?",
       answer:
         "Smart Search uses AI to help you find matching items based on your description. Simply describe what you lost or found in natural language and the system will surface the most relevant results from both boards.",

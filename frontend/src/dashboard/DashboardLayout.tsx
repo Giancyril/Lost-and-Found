@@ -31,8 +31,8 @@ interface Notification {
 
 const menuItems = [
   { title: "Overview",   icon: FaTachometerAlt,       path: "/dashboard",              exact: true },
-  { title: "Found Items",icon: FaSearch,              path: "/dashboard/found-items"               },
   { title: "Lost Items", icon: FaExclamationTriangle, path: "/dashboard/lost-items"                },
+  { title: "Found Items",icon: FaSearch,              path: "/dashboard/found-items"               },
   { title: "Claims",     icon: FaClipboardList,       path: "/dashboard/claims"                    },
   { title: "Analytics",  icon: FaChartLine,           path: "/dashboard/analytics"                 },
   { title: "Heatmap",    icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                   },
@@ -43,8 +43,8 @@ const menuItems = [
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard":             { title: "Overview",   subtitle: "Welcome back! Here's an overview of today's activity." },
-  "/dashboard/found-items": { title: "Found Items",subtitle: "Manage all reported found items"                       },
   "/dashboard/lost-items":  { title: "Lost Items", subtitle: "Track items reported as lost"                          },
+  "/dashboard/found-items": { title: "Found Items",subtitle: "Manage all reported found items"                       },
   "/dashboard/claims":      { title: "Claims",     subtitle: "Review and verify item claims"                         },
   "/dashboard/analytics":   { title: "Analytics",  subtitle: "Monthly trends, category breakdown & top reporters"    },
   "/dashboard/heatmap":     { title: "Heatmap",    subtitle: "See where items are most commonly lost or found"       },
