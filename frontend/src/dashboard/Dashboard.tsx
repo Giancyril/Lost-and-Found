@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import {
   FaBoxOpen, FaClipboardList, FaExclamationTriangle, FaUsers,
   FaArrowRight, FaSearch, FaCheckCircle, FaTimesCircle, FaClock,
-  FaRecycle, FaChartBar, FaCalendarWeek,
+  FaRecycle, FaChartBar, FaCalendarWeek, FaChartLine,
 } from "react-icons/fa";
 import {
   useAdminStatsQuery,
@@ -22,12 +22,12 @@ const timeAgo = (dateStr: string) => {
 };
 
 const claimStatusMeta: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  PENDING:   { label: "Pending",   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",     icon: <FaClock size={10} />       },
-  APPROVED:  { label: "Approved",  color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",  icon: <FaCheckCircle size={10} /> },
-  REJECTED:  { label: "Rejected",  color: "text-red-400 bg-red-400/10 border-red-400/20",              icon: <FaTimesCircle size={10} /> },
-  Claimed:   { label: "Claimed",   color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",  icon: <FaCheckCircle size={10} /> },
-  Available: { label: "Available", color: "text-blue-400 bg-blue-400/10 border-blue-400/20",           icon: <FaSearch size={10} />      },
-  Lost:      { label: "Lost",      color: "text-red-400 bg-red-400/10 border-red-400/20",              icon: <FaExclamationTriangle size={10} /> },
+  PENDING:   { label: "Pending",   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",    icon: <FaClock size={10} />            },
+  APPROVED:  { label: "Approved",  color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", icon: <FaCheckCircle size={10} />      },
+  REJECTED:  { label: "Rejected",  color: "text-red-400 bg-red-400/10 border-red-400/20",             icon: <FaTimesCircle size={10} />      },
+  Claimed:   { label: "Claimed",   color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", icon: <FaCheckCircle size={10} />      },
+  Available: { label: "Available", color: "text-blue-400 bg-blue-400/10 border-blue-400/20",          icon: <FaSearch size={10} />           },
+  Lost:      { label: "Lost",      color: "text-red-400 bg-red-400/10 border-red-400/20",             icon: <FaExclamationTriangle size={10} /> },
 };
 
 interface StatCardProps {
@@ -132,7 +132,7 @@ const Dashboard = () => {
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">Good to see you!</h2>
             <p className="text-gray-400 text-xs sm:text-sm mt-1">
-              Naorthern Bukidnon State College · SAS Office · Lost & Found System
+              Northern Bukidnon State College · SAS Office · Lost & Found System
             </p>
           </div>
           <div className="flex gap-2">
@@ -269,7 +269,7 @@ const Dashboard = () => {
             { label: "Add Category",  icon: <FaBoxOpen size={16} />,             href: "/dashboard/categories", color: "text-cyan-400   bg-cyan-400/5   hover:bg-cyan-400/10   border-cyan-400/10"   },
             { label: "Manage Users",  icon: <FaUsers size={16} />,               href: "/dashboard/users",      color: "text-violet-400 bg-violet-400/5 hover:bg-violet-400/10 border-violet-400/10" },
             { label: "Review Claims", icon: <FaClipboardList size={16} />,       href: "/dashboard/claims",     color: "text-yellow-400 bg-yellow-400/5 hover:bg-yellow-400/10 border-yellow-400/10" },
-            { label: "Lost Items",    icon: <FaExclamationTriangle size={16} />, href: "/dashboard/lost-items", color: "text-red-400    bg-red-400/5    hover:bg-red-400/10    border-red-400/10"    },
+            { label: "Analytics",     icon: <FaChartLine size={16} />,           href: "/dashboard/analytics",  color: "text-cyan-400   bg-cyan-400/5   hover:bg-cyan-400/10   border-cyan-400/10"   },
           ].map((action) => (
             <Link key={action.href} to={action.href}
               className={`flex flex-col items-center gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-xl border transition-all duration-150 ${action.color}`}>

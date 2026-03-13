@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useGetLocationStatsQuery } from "../redux/api/api";
+import { useGetLocationStatsQuery } from "../../redux/api/api";
 import { FaMapMarkedAlt, FaSearch, FaBoxOpen, FaExclamationTriangle, FaCheckCircle } from "react-icons/fa";
 
 type Filter = "all" | "found" | "lost";
 
 const HeatmapPage = () => {
-  const { data, isLoading } = useGetLocationStatsQuery({});
+  const { data, isLoading } = useGetLocationStatsQuery(undefined);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
 
@@ -35,7 +35,7 @@ const HeatmapPage = () => {
   );
 
   if (isLoading) return (
-    <div className="p-4 sm:p-6 animate-pulse space-y-4">
+    <div className="space-y-4 sm:space-y-6 animate-pulse">
       <div className="h-20 bg-gray-800/60 rounded-2xl" />
       <div className="grid grid-cols-3 gap-3"><div className="h-20 bg-gray-800/60 rounded-2xl" /><div className="h-20 bg-gray-800/60 rounded-2xl" /><div className="h-20 bg-gray-800/60 rounded-2xl" /></div>
       {[1,2,3,4,5].map(i => <div key={i} className="h-14 bg-gray-800/60 rounded-2xl" />)}
@@ -43,23 +43,9 @@ const HeatmapPage = () => {
   );
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
-      {/* Header */}
-      <div className="relative bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-transparent pointer-events-none" />
-        <div className="relative flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center shrink-0">
-            <FaMapMarkedAlt size={18} className="text-cyan-400" />
-          </div>
-          <div>
-            <h2 className="text-white text-base sm:text-lg font-bold tracking-tight">Location Heatmap</h2>
-            <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
-              Ranked by report frequency · {raw.length} unique locations
-            </p>
-          </div>
-        </div>
-      </div>
+      
 
       {/* Summary stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">

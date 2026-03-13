@@ -74,14 +74,14 @@ const CategoriesManagement = () => {
     new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
   if (isLoading) return (
-    <div className="p-4 sm:p-6 animate-pulse space-y-4">
+    <div className="space-y-4 sm:space-y-6 animate-pulse">
       <div className="h-8 bg-gray-700 rounded w-1/4" />
       {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-700 rounded" />)}
     </div>
   );
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Add button */}
       <div className="flex justify-end">

@@ -4,7 +4,7 @@ import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
-  FaBell, FaCheckCircle,
+  FaBell, FaCheckCircle, FaChartLine,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -30,25 +30,27 @@ interface Notification {
 }
 
 const menuItems = [
-  { title: "Overview",     icon: FaTachometerAlt,       path: "/dashboard",             exact: true },
-  { title: "Found Items",  icon: FaSearch,              path: "/dashboard/found-items"  },
-  { title: "Lost Items",   icon: FaExclamationTriangle, path: "/dashboard/lost-items"   },
-  { title: "Claims",       icon: FaClipboardList,       path: "/dashboard/claims"       },
-  { title: "Heatmap",      icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"      },
-  { title: "Users",        icon: FaUsers,               path: "/dashboard/users"        },
-  { title: "Categories",   icon: FaBoxOpen,             path: "/dashboard/categories"   },
-  { title: "Settings",     icon: FaCog,                 path: "/dashboard/settings"     },
+  { title: "Overview",   icon: FaTachometerAlt,       path: "/dashboard",              exact: true },
+  { title: "Found Items",icon: FaSearch,              path: "/dashboard/found-items"               },
+  { title: "Lost Items", icon: FaExclamationTriangle, path: "/dashboard/lost-items"                },
+  { title: "Claims",     icon: FaClipboardList,       path: "/dashboard/claims"                    },
+  { title: "Analytics",  icon: FaChartLine,           path: "/dashboard/analytics"                 },
+  { title: "Heatmap",    icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                   },
+  { title: "Users",      icon: FaUsers,               path: "/dashboard/users"                     },
+  { title: "Categories", icon: FaBoxOpen,             path: "/dashboard/categories"                },
+  { title: "Settings",   icon: FaCog,                 path: "/dashboard/settings"                  },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
-  "/dashboard":             { title: "Overview",    subtitle: "Welcome back! Here's an overview of today's activity." },
-  "/dashboard/found-items": { title: "Found Items", subtitle: "Manage all reported found items" },
-  "/dashboard/lost-items":  { title: "Lost Items",  subtitle: "Track items reported as lost" },
-  "/dashboard/claims":      { title: "Claims",      subtitle: "Review and verify item claims" },
-  "/dashboard/heatmap":     { title: "Heatmap",     subtitle: "See where items are most commonly lost or found" },
-  "/dashboard/users":       { title: "Users",       subtitle: "Manage registered users" },
-  "/dashboard/categories":  { title: "Categories",  subtitle: "Organize item categories" },
-  "/dashboard/settings":    { title: "Settings",    subtitle: "Configure system preferences" },
+  "/dashboard":             { title: "Overview",   subtitle: "Welcome back! Here's an overview of today's activity." },
+  "/dashboard/found-items": { title: "Found Items",subtitle: "Manage all reported found items"                       },
+  "/dashboard/lost-items":  { title: "Lost Items", subtitle: "Track items reported as lost"                          },
+  "/dashboard/claims":      { title: "Claims",     subtitle: "Review and verify item claims"                         },
+  "/dashboard/analytics":   { title: "Analytics",  subtitle: "Monthly trends, category breakdown & top reporters"    },
+  "/dashboard/heatmap":     { title: "Heatmap",    subtitle: "See where items are most commonly lost or found"       },
+  "/dashboard/users":       { title: "Users",      subtitle: "Manage registered users"                               },
+  "/dashboard/categories":  { title: "Categories", subtitle: "Organize item categories"                              },
+  "/dashboard/settings":    { title: "Settings",   subtitle: "Configure system preferences"                          },
 };
 
 const timeAgo = (dateStr: string) => {
@@ -64,10 +66,10 @@ const timeAgo = (dateStr: string) => {
 const notifIcon = (type: Notification["type"]) => {
   const base = "w-8 h-8 rounded-full flex items-center justify-center shrink-0";
   switch (type) {
-    case "claim":        return <div className={`${base} bg-yellow-400/10 border border-yellow-400/20`}><FaClipboardList  size={12} className="text-yellow-400" /></div>;
-    case "claim_status": return <div className={`${base} bg-emerald-400/10 border border-emerald-400/20`}><FaCheckCircle   size={12} className="text-emerald-400" /></div>;
-    case "found":        return <div className={`${base} bg-cyan-400/10 border border-cyan-400/20`}><FaSearch           size={12} className="text-cyan-400" /></div>;
-    case "lost":         return <div className={`${base} bg-red-400/10 border border-red-400/20`}><FaExclamationTriangle size={12} className="text-red-400" /></div>;
+    case "claim":        return <div className={`${base} bg-yellow-400/10 border border-yellow-400/20`}><FaClipboardList   size={12} className="text-yellow-400" /></div>;
+    case "claim_status": return <div className={`${base} bg-emerald-400/10 border border-emerald-400/20`}><FaCheckCircle  size={12} className="text-emerald-400" /></div>;
+    case "found":        return <div className={`${base} bg-cyan-400/10 border border-cyan-400/20`}><FaSearch              size={12} className="text-cyan-400"    /></div>;
+    case "lost":         return <div className={`${base} bg-red-400/10 border border-red-400/20`}><FaExclamationTriangle   size={12} className="text-red-400"     /></div>;
   }
 };
 
@@ -77,9 +79,6 @@ const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const bellRef                           = useRef<HTMLDivElement>(null);
 
-  // We track the latest createdAt timestamp we've already processed per feed.
-  // This is more reliable than seenIds because RTK Query may return the same
-  // object reference from cache, so a Set comparison can silently fail.
   const latestClaimTs = useRef<string | null>(null);
   const latestFoundTs = useRef<string | null>(null);
   const latestLostTs  = useRef<string | null>(null);
@@ -87,11 +86,10 @@ const NotificationBell = () => {
 
   const pollOpts = { pollingInterval: 10000, refetchOnFocus: true, refetchOnReconnect: true };
 
-  const { data: claimsData }  = useGetAllClaimsQuery(undefined, pollOpts);
-  const { data: foundData }   = useGetFoundItemsQuery({},        pollOpts);
-  const { data: lostData }    = useGetLostItemsQuery({},         pollOpts);
+  const { data: claimsData } = useGetAllClaimsQuery(undefined, pollOpts);
+  const { data: foundData }  = useGetFoundItemsQuery({},        pollOpts);
+  const { data: lostData }   = useGetLostItemsQuery({},         pollOpts);
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (bellRef.current && !bellRef.current.contains(e.target as Node)) setOpen(false);
@@ -107,8 +105,7 @@ const NotificationBell = () => {
     return [];
   };
 
-  // Items created within this window on first load are shown as notifications
-  const RECENT_MS = 2 * 60 * 1000; // 2 minutes
+  const RECENT_MS = 2 * 60 * 1000;
 
   const processItems = <T extends { id: string; createdAt: string }>(
     rawData: any,
@@ -122,19 +119,12 @@ const NotificationBell = () => {
     if (items.length === 0) return;
 
     if (!initialized.current[initKey]) {
-      // Seed the cutoff timestamp
       latestTs.current = items[0].createdAt;
       initialized.current[initKey] = true;
-
-      // Show items created in the last RECENT_MS as notifications immediately
       const recentCutoff = Date.now() - RECENT_MS;
-      const recentItems = items.filter(
-        i => new Date(i.createdAt).getTime() > recentCutoff
-      );
+      const recentItems = items.filter(i => new Date(i.createdAt).getTime() > recentCutoff);
       if (recentItems.length > 0) {
-        setNotifications(prev =>
-          [...recentItems.map(makeNotif), ...prev].slice(0, 50)
-        );
+        setNotifications(prev => [...recentItems.map(makeNotif), ...prev].slice(0, 50));
       }
       return;
     }
@@ -150,58 +140,34 @@ const NotificationBell = () => {
     }
   };
 
-  // ── Claims ──
   useEffect(() => {
-    processItems(
-      claimsData,
-      latestClaimTs,
-      "claims",
-      (claim: any): Notification => ({
-        id: `claim-${claim.id}-${claim.createdAt}`,
-        type: "claim",
-        title: "New Claim Submitted",
-        subtitle: `${claim.claimantName || "Someone"} claimed "${claim.foundItem?.foundItemName || "an item"}"`,
-        time: claim.createdAt,
-        read: false,
-        link: "/dashboard/claims",
-      })
-    );
+    processItems(claimsData, latestClaimTs, "claims", (claim: any): Notification => ({
+      id: `claim-${claim.id}-${claim.createdAt}`,
+      type: "claim",
+      title: "New Claim Submitted",
+      subtitle: `${claim.claimantName || "Someone"} claimed "${claim.foundItem?.foundItemName || "an item"}"`,
+      time: claim.createdAt, read: false, link: "/dashboard/claims",
+    }));
   }, [claimsData]);
 
-  // ── Found Items ──
   useEffect(() => {
-    processItems(
-      foundData,
-      latestFoundTs,
-      "found",
-      (item: any): Notification => ({
-        id: `found-${item.id}-${item.createdAt}`,
-        type: "found",
-        title: "New Found Item Reported",
-        subtitle: `"${item.foundItemName || item.name || "Unknown item"}" found at ${item.location || "unknown location"}`,
-        time: item.createdAt,
-        read: false,
-        link: "/dashboard/found-items",
-      })
-    );
+    processItems(foundData, latestFoundTs, "found", (item: any): Notification => ({
+      id: `found-${item.id}-${item.createdAt}`,
+      type: "found",
+      title: "New Found Item Reported",
+      subtitle: `"${item.foundItemName || item.name || "Unknown item"}" found at ${item.location || "unknown location"}`,
+      time: item.createdAt, read: false, link: "/dashboard/found-items",
+    }));
   }, [foundData]);
 
-  // ── Lost Items ──
   useEffect(() => {
-    processItems(
-      lostData,
-      latestLostTs,
-      "lost",
-      (item: any): Notification => ({
-        id: `lost-${item.id}-${item.createdAt}`,
-        type: "lost",
-        title: "New Lost Item Reported",
-        subtitle: `"${item.lostItemName || item.name || "Unknown item"}" lost at ${item.location || "unknown location"}`,
-        time: item.createdAt,
-        read: false,
-        link: "/dashboard/lost-items",
-      })
-    );
+    processItems(lostData, latestLostTs, "lost", (item: any): Notification => ({
+      id: `lost-${item.id}-${item.createdAt}`,
+      type: "lost",
+      title: "New Lost Item Reported",
+      subtitle: `"${item.lostItemName || item.name || "Unknown item"}" lost at ${item.location || "unknown location"}`,
+      time: item.createdAt, read: false, link: "/dashboard/lost-items",
+    }));
   }, [lostData]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -226,7 +192,6 @@ const NotificationBell = () => {
 
       {open && (
         <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-[68px] sm:top-11 w-auto sm:w-96 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
-          {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <div className="flex items-center gap-2">
               <FaBell size={13} className="text-cyan-400" />
@@ -254,7 +219,6 @@ const NotificationBell = () => {
             </div>
           </div>
 
-          {/* List */}
           <div className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto divide-y divide-white/5">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-600">
@@ -286,7 +250,6 @@ const NotificationBell = () => {
             )}
           </div>
 
-          {/* Footer */}
           {notifications.length > 0 && (
             <div className="px-4 py-2.5 border-t border-white/5">
               <Link to="/dashboard/claims" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
