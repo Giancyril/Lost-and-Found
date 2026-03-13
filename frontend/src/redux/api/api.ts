@@ -92,6 +92,7 @@ const api = baseApi.injectEndpoints({
     // claims
     createClaim: builder.mutation({
       query: (data: any) => ({ url: `/claims`, method: "POST", body: data }),
+      invalidatesTags: ["adminData"],
     }),
     myClaims: builder.query({
       query: () => ({ url: `/my/claims`, method: "GET" }),
@@ -192,11 +193,7 @@ const api = baseApi.injectEndpoints({
       invalidatesTags: ["faqs"],
     }),
 
-    // recent activity
-    getRecentActivity: builder.query({
-      query: () => ({ url: "/recent-activity", method: "GET" }),
-      providesTags: ["recentActivity"],
-    }),
+    
 
     // AI search
     aiSearch: builder.mutation({
@@ -248,6 +245,5 @@ export const {
   useCreateServiceMutation,
   useGetFaqsQuery,
   useCreateFaqMutation,
-  useGetRecentActivityQuery,
   useAiSearchMutation,
 } = api;

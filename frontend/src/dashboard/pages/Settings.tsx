@@ -191,21 +191,19 @@ const Settings = () => {
     <div className="p-4 sm:p-6 space-y-6 min-h-screen">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-white">Settings</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Manage your system preferences and account</p>
-        </div>
+      <div className="flex items-center justify-end">
         <button
           onClick={handleSave}
-          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-            transition-all duration-300 shadow-lg ${
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
+            transition-all duration-300 shrink-0 ${
             savedIndicator
-              ? "bg-green-600 text-white shadow-green-900/30"
-              : "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/30"
+              ? "bg-green-600 hover:bg-green-500 text-white"
+              : "bg-blue-600 hover:bg-blue-500 text-white"
           }`}
         >
-          {savedIndicator ? <><FaCheck size={12} /> Saved!</> : <><FaSave size={12} /> Save Changes</>}
+          {savedIndicator
+            ? <><FaCheck size={13} /> Saved!</>
+            : <><FaSave size={13} /> Save Changes</>}
         </button>
       </div>
 

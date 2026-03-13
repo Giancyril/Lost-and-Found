@@ -62,294 +62,159 @@ const timeAgo = (dateStr: string) => {
 };
 
 const notifIcon = (type: Notification["type"]) => {
+  const base = "w-8 h-8 rounded-full flex items-center justify-center shrink-0";
   switch (type) {
-    case "claim":        return <div className="w-8 h-8 rounded-full bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center shrink-0"><FaClipboardList size={12} className="text-yellow-400" /></div>;
-    case "claim_status": return <div className="w-8 h-8 rounded-full bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center shrink-0"><FaCheckCircle size={12} className="text-emerald-400" /></div>;
-    case "found":        return <div className="w-8 h-8 rounded-full bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0"><FaSearch size={12} className="text-cyan-400" /></div>;
-    case "lost":         return <div className="w-8 h-8 rounded-full bg-red-400/10 border border-red-400/20 flex items-center justify-center shrink-0"><FaExclamationTriangle size={12} className="text-red-400" /></div>;
+    case "claim":        return <div className={`${base} bg-yellow-400/10 border border-yellow-400/20`}><FaClipboardList  size={12} className="text-yellow-400" /></div>;
+    case "claim_status": return <div className={`${base} bg-emerald-400/10 border border-emerald-400/20`}><FaCheckCircle   size={12} className="text-emerald-400" /></div>;
+    case "found":        return <div className={`${base} bg-cyan-400/10 border border-cyan-400/20`}><FaSearch           size={12} className="text-cyan-400" /></div>;
+    case "lost":         return <div className={`${base} bg-red-400/10 border border-red-400/20`}><FaExclamationTriangle size={12} className="text-red-400" /></div>;
   }
 };
 
-
 // ─── Notification Bell ────────────────────────────────────────────────────────
 const NotificationBell = () => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]                   = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const bellRef = useRef<HTMLDivElement>(null);
-  const mountedRef = useRef(true);
+  const bellRef                           = useRef<HTMLDivElement>(null);
 
-  // Track seen items and statuses
-  const seenClaimIds = useRef<Set<string>>(new Set());
-  const seenFoundIds = useRef<Set<string>>(new Set());
-  const seenLostIds = useRef<Set<string>>(new Set());
-  const claimStatuses = useRef<Record<string, string>>({});
+  // We track the latest createdAt timestamp we've already processed per feed.
+  // This is more reliable than seenIds because RTK Query may return the same
+  // object reference from cache, so a Set comparison can silently fail.
+  const latestClaimTs = useRef<string | null>(null);
+  const latestFoundTs = useRef<string | null>(null);
+  const latestLostTs  = useRef<string | null>(null);
+  const initialized   = useRef({ claims: false, found: false, lost: false });
 
-  // Track initialization
-  const isInitialized = useRef({
-    claims: false,
-    found: false,
-    lost: false,
-  });
+  const pollOpts = { pollingInterval: 10000, refetchOnFocus: true, refetchOnReconnect: true };
 
-  // Polling configuration
-  const pollOpts = {
-    pollingInterval: 10000,
-    refetchOnFocus: true,
-    refetchOnReconnect: true,
-    skip: false, // Ensure queries run
-  };
+  const { data: claimsData }  = useGetAllClaimsQuery(undefined, pollOpts);
+  const { data: foundData }   = useGetFoundItemsQuery({},        pollOpts);
+  const { data: lostData }    = useGetLostItemsQuery({},         pollOpts);
 
-  // Queries - pass empty object to ensure params are sent
-  const { data: claimsData, isSuccess: claimsSuccess } = useGetAllClaimsQuery(undefined, pollOpts);
-  const { data: foundData, isSuccess: foundSuccess } = useGetFoundItemsQuery({}, pollOpts);
-  const { data: lostData, isSuccess: lostSuccess } = useGetLostItemsQuery({}, pollOpts);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  // Close dropdown on outside click
+  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Enhanced data extraction
-  const extractArray = (data: any): any[] => {
+  const toArray = (data: any): any[] => {
     if (!data) return [];
-    
-    // Direct array
     if (Array.isArray(data)) return data;
-    
-    // Common API response patterns
-    if (data.data) {
-      if (Array.isArray(data.data)) return data.data;
-      if (Array.isArray(data.data.items)) return data.data.items;
-      if (Array.isArray(data.data.data)) return data.data.data;
-    }
-    
-    // Other patterns
-    if (Array.isArray(data.items)) return data.items;
-    if (Array.isArray(data.results)) return data.results;
-    if (Array.isArray(data.records)) return data.records;
-    
-    // If it's an object with numeric keys (like {0: item, 1: item})
-    if (typeof data === 'object' && !Array.isArray(data)) {
-      const keys = Object.keys(data);
-      if (keys.every(k => !isNaN(Number(k)))) {
-        return keys.map(k => data[k]);
-      }
-    }
-    
+    if (Array.isArray(data.data)) return data.data;
     return [];
   };
 
-  // Process claims with better error handling
-  useEffect(() => {
-    if (!claimsSuccess || !mountedRef.current) return;
-    
-    const claims = extractArray(claimsData);
-    
-    // Initialize on first load
-    if (!isInitialized.current.claims) {
-      claims.forEach((claim: any) => {
-        if (claim?.id) {
-          seenClaimIds.current.add(claim.id);
-          if (claim.status) {
-            claimStatuses.current[claim.id] = claim.status;
-          }
-        }
-      });
-      isInitialized.current.claims = true;
+  // Items created within this window on first load are shown as notifications
+  const RECENT_MS = 2 * 60 * 1000; // 2 minutes
+
+  const processItems = <T extends { id: string; createdAt: string }>(
+    rawData: any,
+    latestTs: React.MutableRefObject<string | null>,
+    initKey: keyof typeof initialized.current,
+    makeNotif: (item: T) => Notification
+  ) => {
+    const items = [...toArray(rawData)].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    ) as T[];
+    if (items.length === 0) return;
+
+    if (!initialized.current[initKey]) {
+      // Seed the cutoff timestamp
+      latestTs.current = items[0].createdAt;
+      initialized.current[initKey] = true;
+
+      // Show items created in the last RECENT_MS as notifications immediately
+      const recentCutoff = Date.now() - RECENT_MS;
+      const recentItems = items.filter(
+        i => new Date(i.createdAt).getTime() > recentCutoff
+      );
+      if (recentItems.length > 0) {
+        setNotifications(prev =>
+          [...recentItems.map(makeNotif), ...prev].slice(0, 50)
+        );
+      }
       return;
     }
 
-    // Check for new claims and status changes
-    const newNotifs: Notification[] = [];
-    
-    claims.forEach((claim: any) => {
-      if (!claim?.id) return;
-      
-      const isNew = !seenClaimIds.current.has(claim.id);
-      const statusChanged = claimStatuses.current[claim.id] && 
-                           claimStatuses.current[claim.id] !== claim.status;
-      
-      if (isNew) {
-        seenClaimIds.current.add(claim.id);
-        if (claim.status) {
-          claimStatuses.current[claim.id] = claim.status;
-        }
-        
-        newNotifs.push({
-          id: `claim-${claim.id}-${Date.now()}`,
-          type: "claim",
-          title: "New Claim Submitted",
-          subtitle: `${claim.claimantName || claim.user?.name || "Someone"} claimed "${
-            claim.foundItem?.foundItemName || 
-            claim.foundItem?.name || 
-            claim.itemName || 
-            "an item"
-          }"`,
-          time: claim.createdAt || new Date().toISOString(),
-          read: false,
-          link: "/dashboard/claims",
-        });
-      } else if (statusChanged && claim.status) {
-        claimStatuses.current[claim.id] = claim.status;
-        
-        const statusText = claim.status.charAt(0).toUpperCase() + 
-                          claim.status.slice(1).toLowerCase();
-        
-        newNotifs.push({
-          id: `status-${claim.id}-${Date.now()}`,
-          type: "claim_status",
-          title: `Claim ${statusText}`,
-          subtitle: `"${
-            claim.foundItem?.foundItemName || 
-            claim.foundItem?.name || 
-            claim.itemName || 
-            "Item"
-          }" claim is now ${claim.status.toLowerCase()}`,
-          time: new Date().toISOString(),
-          read: false,
-          link: "/dashboard/claims",
-        });
-      }
-    });
+    const cutoff = latestTs.current;
+    const newItems = cutoff
+      ? items.filter(i => new Date(i.createdAt).getTime() > new Date(cutoff).getTime())
+      : [];
 
-    if (newNotifs.length > 0 && mountedRef.current) {
-      setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
+    if (newItems.length > 0) {
+      latestTs.current = newItems[0].createdAt;
+      setNotifications(prev => [...newItems.map(makeNotif), ...prev].slice(0, 50));
     }
-  }, [claimsData, claimsSuccess]);
+  };
 
-  // Process found items
+  // ── Claims ──
   useEffect(() => {
-    if (!foundSuccess || !mountedRef.current) return;
-    
-    const items = extractArray(foundData);
-    
-    if (!isInitialized.current.found) {
-      items.forEach((item: any) => {
-        if (item?.id) seenFoundIds.current.add(item.id);
-      });
-      isInitialized.current.found = true;
-      return;
-    }
+    processItems(
+      claimsData,
+      latestClaimTs,
+      "claims",
+      (claim: any): Notification => ({
+        id: `claim-${claim.id}-${claim.createdAt}`,
+        type: "claim",
+        title: "New Claim Submitted",
+        subtitle: `${claim.claimantName || "Someone"} claimed "${claim.foundItem?.foundItemName || "an item"}"`,
+        time: claim.createdAt,
+        read: false,
+        link: "/dashboard/claims",
+      })
+    );
+  }, [claimsData]);
 
-    const newNotifs: Notification[] = [];
-    
-    items.forEach((item: any) => {
-      if (!item?.id) return;
-      
-      if (!seenFoundIds.current.has(item.id)) {
-        seenFoundIds.current.add(item.id);
-        
-        newNotifs.push({
-          id: `found-${item.id}-${Date.now()}`,
-          type: "found",
-          title: "New Found Item Reported",
-          subtitle: `"${
-            item.foundItemName || 
-            item.name || 
-            item.title || 
-            "Unknown item"
-          }" found at ${item.location || "unknown location"}`,
-          time: item.createdAt || new Date().toISOString(),
-          read: false,
-          link: "/dashboard/found-items",
-        });
-      }
-    });
-
-    if (newNotifs.length > 0 && mountedRef.current) {
-      setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
-    }
-  }, [foundData, foundSuccess]);
-
-  // Process lost items
+  // ── Found Items ──
   useEffect(() => {
-    if (!lostSuccess || !mountedRef.current) return;
-    
-    const items = extractArray(lostData);
-    
-    if (!isInitialized.current.lost) {
-      items.forEach((item: any) => {
-        if (item?.id) seenLostIds.current.add(item.id);
-      });
-      isInitialized.current.lost = true;
-      return;
-    }
+    processItems(
+      foundData,
+      latestFoundTs,
+      "found",
+      (item: any): Notification => ({
+        id: `found-${item.id}-${item.createdAt}`,
+        type: "found",
+        title: "New Found Item Reported",
+        subtitle: `"${item.foundItemName || item.name || "Unknown item"}" found at ${item.location || "unknown location"}`,
+        time: item.createdAt,
+        read: false,
+        link: "/dashboard/found-items",
+      })
+    );
+  }, [foundData]);
 
-    const newNotifs: Notification[] = [];
-    
-    items.forEach((item: any) => {
-      if (!item?.id) return;
-      
-      if (!seenLostIds.current.has(item.id)) {
-        seenLostIds.current.add(item.id);
-        
-        newNotifs.push({
-          id: `lost-${item.id}-${Date.now()}`,
-          type: "lost",
-          title: "New Lost Item Reported",
-          subtitle: `"${
-            item.lostItemName || 
-            item.name || 
-            item.title || 
-            "Unknown item"
-          }" lost at ${item.location || "unknown location"}`,
-          time: item.createdAt || new Date().toISOString(),
-          read: false,
-          link: "/dashboard/lost-items",
-        });
-      }
-    });
+  // ── Lost Items ──
+  useEffect(() => {
+    processItems(
+      lostData,
+      latestLostTs,
+      "lost",
+      (item: any): Notification => ({
+        id: `lost-${item.id}-${item.createdAt}`,
+        type: "lost",
+        title: "New Lost Item Reported",
+        subtitle: `"${item.lostItemName || item.name || "Unknown item"}" lost at ${item.location || "unknown location"}`,
+        time: item.createdAt,
+        read: false,
+        link: "/dashboard/lost-items",
+      })
+    );
+  }, [lostData]);
 
-    if (newNotifs.length > 0 && mountedRef.current) {
-      setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
-    }
-  }, [lostData, lostSuccess]);
-
-  // Notification management functions
   const unreadCount = notifications.filter(n => !n.read).length;
-  
-  const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-  
-  const markOneRead = (id: string) => {
-    setNotifications(prev => prev.map(n => 
-      n.id === id ? { ...n, read: true } : n
-    ));
-  };
-  
-  const clearAll = () => {
-    setNotifications([]);
-  };
-
-  // Add sound notification for new notifications (optional)
-  useEffect(() => {
-    if (unreadCount > 0 && mountedRef.current) {
-      // Optional: Play a notification sound
-      // const audio = new Audio('/notification-sound.mp3');
-      // audio.play().catch(() => {});
-    }
-  }, [unreadCount]);
+  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markOneRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const clearAll    = () => setNotifications([]);
 
   return (
     <div ref={bellRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
+        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
         className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all"
-        aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
       >
         <FaBell size={14} />
         {unreadCount > 0 && (
@@ -374,31 +239,22 @@ const NotificationBell = () => {
             </div>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
-                <button 
-                  onClick={markAllRead} 
-                  className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors"
-                >
+                <button onClick={markAllRead} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
                   Mark all read
                 </button>
               )}
               {notifications.length > 0 && (
-                <button 
-                  onClick={clearAll} 
-                  className="text-gray-600 hover:text-gray-400 text-xs transition-colors"
-                >
+                <button onClick={clearAll} className="text-gray-600 hover:text-gray-400 text-xs transition-colors">
                   Clear
                 </button>
               )}
-              <button 
-                onClick={() => setOpen(false)} 
-                className="sm:hidden text-gray-500 hover:text-white ml-1"
-              >
+              <button onClick={() => setOpen(false)} className="sm:hidden text-gray-500 hover:text-white ml-1">
                 <FaTimes size={13} />
               </button>
             </div>
           </div>
 
-          {/* Notification List */}
+          {/* List */}
           <div className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto divide-y divide-white/5">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-600">
@@ -411,32 +267,19 @@ const NotificationBell = () => {
                 <Link
                   key={notif.id}
                   to={notif.link}
-                  onClick={() => {
-                    markOneRead(notif.id);
-                    setOpen(false);
-                  }}
-                  className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${
-                    !notif.read ? "bg-white/[0.02]" : ""
-                  }`}
+                  onClick={() => { markOneRead(notif.id); setOpen(false); }}
+                  className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${!notif.read ? "bg-white/[0.02]" : ""}`}
                 >
                   {notifIcon(notif.type)}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <p className={`text-xs font-semibold truncate ${
-                        !notif.read ? "text-white" : "text-gray-300"
-                      }`}>
+                      <p className={`text-xs font-semibold truncate ${!notif.read ? "text-white" : "text-gray-300"}`}>
                         {notif.title}
                       </p>
-                      {!notif.read && (
-                        <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />
-                      )}
+                      {!notif.read && <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />}
                     </div>
-                    <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">
-                      {notif.subtitle}
-                    </p>
-                    <p className="text-gray-700 text-[10px] mt-1">
-                      {timeAgo(notif.time)}
-                    </p>
+                    <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">{notif.subtitle}</p>
+                    <p className="text-gray-700 text-[10px] mt-1">{timeAgo(notif.time)}</p>
                   </div>
                 </Link>
               ))
@@ -446,11 +289,7 @@ const NotificationBell = () => {
           {/* Footer */}
           {notifications.length > 0 && (
             <div className="px-4 py-2.5 border-t border-white/5">
-              <Link 
-                to="/dashboard/claims" 
-                onClick={() => setOpen(false)}
-                className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors"
-              >
+              <Link to="/dashboard/claims" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
                 View all activity →
               </Link>
             </div>
@@ -460,7 +299,6 @@ const NotificationBell = () => {
     </div>
   );
 };
-
 
 // ─── Main Layout ──────────────────────────────────────────────────────────────
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
@@ -508,7 +346,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
                 alt="NBSC SAS Logo"
                 className="w-8 h-8 object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
               />
               <div className="leading-tight">
                 <p className="text-white text-sm font-semibold tracking-widest">NBSC SAS</p>
@@ -521,30 +359,36 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
               alt="NBSC SAS Logo"
               className="w-8 h-8 object-contain"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
           )}
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-500 hover:text-white p-1">
             <FaTimes size={14} />
           </button>
-          <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded-md text-gray-500 hover:text-white hover:bg-white/5 transition-colors ${sidebarCollapsed ? "mx-auto mt-1" : ""}`}>
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded-md text-gray-500 hover:text-white hover:bg-white/5 transition-colors ${sidebarCollapsed ? "mx-auto mt-1" : ""}`}
+          >
             {sidebarCollapsed ? <FaChevronRight size={10} /> : <FaChevronLeft size={10} />}
           </button>
         </div>
 
-        {/* Nav links */}
+        {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
           {!sidebarCollapsed && <p className="text-[10px] uppercase tracking-widest text-gray-600 font-medium px-2 mb-3">Menu</p>}
           {menuItems.map((item) => {
             const active = isActive(item.path, item.exact);
             const Icon = item.icon;
             return (
-              <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setSidebarOpen(false)}
                 title={sidebarCollapsed ? item.title : undefined}
                 className={`relative flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group
                   ${active ? "bg-cyan-500/10 text-cyan-400" : "text-gray-400 hover:text-white hover:bg-white/5"}
-                  ${sidebarCollapsed ? "justify-center" : ""}`}>
+                  ${sidebarCollapsed ? "justify-center" : ""}`}
+              >
                 {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-cyan-400 rounded-full" />}
                 <Icon size={14} className={active ? "text-cyan-400" : "text-gray-500 group-hover:text-gray-300"} />
                 {!sidebarCollapsed && <span>{item.title}</span>}
@@ -560,14 +404,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Bottom */}
         <div className="shrink-0 border-t border-white/5 px-3 py-4 space-y-0.5">
-          <Link to="/" title={sidebarCollapsed ? "Back to Home" : undefined}
-            className={`flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}>
+          <Link
+            to="/"
+            title={sidebarCollapsed ? "Back to Home" : undefined}
+            className={`flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}
+          >
             <FaHome size={14} className="text-gray-500 group-hover:text-gray-300" />
             {!sidebarCollapsed && <span>Back to Home</span>}
             {sidebarCollapsed && <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible whitespace-nowrap z-50 shadow-xl">Back to Home</span>}
           </Link>
-          <button onClick={handleSignOut} title={sidebarCollapsed ? "Sign Out" : undefined}
-            className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}>
+          <button
+            onClick={handleSignOut}
+            title={sidebarCollapsed ? "Sign Out" : undefined}
+            className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}
+          >
             <FaSignOutAlt size={14} className="text-gray-500 group-hover:text-red-400" />
             {!sidebarCollapsed && <span>Sign Out</span>}
             {sidebarCollapsed && <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible whitespace-nowrap z-50 shadow-xl">Sign Out</span>}
@@ -600,7 +450,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-white text-xs font-medium leading-none">{user?.name || "Admin"}</p>
+                  <p className="text-white text-xs font-medium leading-none">{user?.username || user?.name || "Admin"}</p>
                   <p className="text-gray-500 text-[10px] mt-0.5">{user?.role || "ADMIN"}</p>
                 </div>
               </div>
@@ -611,7 +461,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     {initials}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{user?.name || "Admin"}</p>
+                    <p className="text-white text-sm font-medium truncate">{user?.username || user?.name || "Admin"}</p>
                     <p className="text-gray-400 text-xs truncate">{user?.email || ""}</p>
                   </div>
                 </div>
