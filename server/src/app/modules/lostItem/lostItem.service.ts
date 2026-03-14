@@ -43,12 +43,36 @@ const createLostItem = async (userId: string | undefined, item: LostItem & { rep
   return result;
 };
 
-const getLostItem = async () => {
+const getLostItem = async (query: any = {}) => {
+  const {
+    searchTerm,
+    page = 1,
+    limit = 10,
+    sortBy = "lostItemName",
+    sortOrder = "asc",
+  } = query;
+
+  const whereConditions: any = {
+    isDeleted: false,
+  };
+
+  if (searchTerm) {
+    whereConditions.OR = [
+      { lostItemName: { contains: searchTerm, mode: "insensitive" } },
+      { location: { contains: searchTerm, mode: "insensitive" } },
+      { description: { contains: searchTerm, mode: "insensitive" } },
+    ];
+  }
+
   const result = await prisma.lostItem.findMany({
-    where: { isDeleted: false, isFound: false },
+    where: whereConditions,
+    orderBy: { [sortBy]: sortOrder },
+    skip: (Number(page) - 1) * Number(limit),
+    take: Number(limit),
     include: { user: true, category: true },
   });
-  return result;
+
+  return result; // ✅ plain array — meta handled by controller like found items
 };
 
 const getSingleLostItem = async (singleId: string) => {

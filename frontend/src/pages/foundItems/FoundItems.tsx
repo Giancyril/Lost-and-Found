@@ -88,16 +88,7 @@ const FoundItemsPage = () => {
   return (
     <div className="min-h-screen bg-gray-950 pb-16">
       <div className="py-8 px-6 sm:px-10 lg:px-16 mx-auto">
-
-        {/* Header */}
-        <div className="mx-auto text-center lg:mb-8 mb-6">
-          <h2 className="mb-4 text-3xl lg:text-4xl tracking-tight font-extrabold text-white">
-            All Found Items
-          </h2>
-          <p className="font-light text-gray-500 sm:text-lg">
-            Discover items that have been found and reported
-          </p>
-        </div>
+        
 
         {/* Search and Filter */}
         <div className="bg-gray-900 rounded-2xl p-6 mb-8 border border-gray-800">

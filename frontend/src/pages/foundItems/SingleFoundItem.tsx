@@ -104,7 +104,7 @@ const SingleFoundItem = () => {
           toast.success("Claim processed and marked as approved!");
           refetch();
         } else {
-          toast.success("Claim submitted! The SAS office will contact you shortly.");
+          toast.success("Your claim has been submitted. Please visit the SAS office with a valid ID for verification.");
         }
         setIsClaimModalOpen(false);
         reset();
@@ -330,7 +330,7 @@ const SingleFoundItem = () => {
                   <p className="text-blue-300 text-xs leading-relaxed">
                     {isAdmin
                       ? "ℹ️ Confirming this claim will mark the item as Claimed and remove it from the available items board."
-                      : "ℹ️ Your claim will be reviewed by the SAS office. Make sure your contact number is correct — they will reach out to you for verification."}
+                      : "ℹ️ Your claim will be reviewed by the SAS office. Make sure your contact number is correct they will reach out to you for verification."}
                   </p>
                 </div>
                 <div className="flex gap-3 pt-1">

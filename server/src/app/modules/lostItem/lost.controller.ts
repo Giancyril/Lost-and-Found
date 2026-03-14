@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import sendResponse from "../../global/response";
 import { StatusCodes } from "http-status-codes";
 import { lostTItemServices } from "./lostItem.service";
+import { utils } from "../../utils/utils";
 
 const toggleFoundStatus = async (req: Request, res: Response) => {
   try {
@@ -29,7 +30,6 @@ const toggleFoundStatus = async (req: Request, res: Response) => {
 const createLostItem = async (req: Request, res: Response) => {
   try {
     const item = req.body;
-    // userId is optional — students report lost items without accounts
     const userId = req.user?.id;
     const result = await lostTItemServices.createLostItem(userId, item);
     sendResponse(res, {
@@ -50,11 +50,13 @@ const createLostItem = async (req: Request, res: Response) => {
 
 const getLostItem = async (req: Request, res: Response) => {
   try {
-    const result = await lostTItemServices.getLostItem();
+    const meta = await utils.calculateMeta(req.query); // ✅ same as found items
+    const result = await lostTItemServices.getLostItem(req.query); // ✅ pass query
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
       message: "Lost items retrieved successfully",
+      meta, // ✅ meta at top level like found items
       data: result,
     });
   } catch (error: any) {

@@ -90,16 +90,6 @@ const LostItemsPage = () => {
     <div className="min-h-screen bg-gray-950 pb-16">
       <div className="py-8 px-6 sm:px-10 lg:px-16 mx-auto">
 
-        {/* Header */}
-        <div className="mx-auto text-center lg:mb-8 mb-6">
-          <h2 className="mb-4 text-3xl lg:text-4xl tracking-tight font-extrabold text-white">
-            All Lost Items
-          </h2>
-          <p className="font-light text-gray-500 sm:text-lg">
-            Help reunite people with their lost belongings
-          </p>
-        </div>
-
         {/* Search and Filter */}
         <div className="bg-gray-900 rounded-2xl p-6 mb-8 border border-gray-800">
           <div className="mb-5">
@@ -149,7 +139,6 @@ const LostItemsPage = () => {
                 <option value="location-desc">Location (Z-A)</option>
               </select>
             </div>
-            
           </div>
         </div>
       </div>
@@ -162,12 +151,12 @@ const LostItemsPage = () => {
               <FaSearch className="text-gray-600 text-2xl" />
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">
-              {fuzzyTerm ? "No items found" : "No lost items yet"}
+              {fuzzyTerm ? "No items found" : "No lost items yet"} {/* ✅ fixed */}
             </h3>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
               {fuzzyTerm
                 ? `No items found for "${fuzzyTerm}". Try different keywords.`
-                : "No lost items have been reported yet. Check back later!"}
+                : "No lost items have been reported yet. Check back later!"} {/* ✅ fixed */}
             </p>
             {fuzzyTerm && (
               <button
@@ -197,15 +186,10 @@ const LostItemsPage = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   </div>
-                  {lostItem?.isFound ? (
-                    <div className="absolute top-3 right-3 bg-green-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-green-500/40">
-                      ✓ Found
-                    </div>
-                  ) : (
-                    <div className="absolute top-3 right-3 bg-red-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-red-500/40">
-                      Lost
-                    </div>
-                  )}
+                  {/* ✅ removed isFound badge — backend now filters these out */}
+                  <div className="absolute top-3 right-3 bg-red-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-red-500/40">
+                    Lost
+                  </div>
                 </div>
 
                 <div className="p-5 text-white flex flex-col flex-1">

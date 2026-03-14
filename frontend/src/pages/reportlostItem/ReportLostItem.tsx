@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { Spinner } from "flowbite-react";
-import Modals from "../../components/modal/Modal";
+import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useState, useRef } from "react";
 import {
@@ -84,11 +84,11 @@ const ReportLostItem = () => {
       const res: any = await createLostItem(lostData);
 
       if (res?.data?.success === false) {
-        Modals({ message: "Failed to report lost item", status: false });
+        toast.error("Failed to report lost item");
         return;
       }
 
-      Modals({ message: "Lost item reported successfully", status: true });
+      toast.success("Lost item reported successfully");
       reset();
       setSelectedFile(null);
       setPreview("");
@@ -96,7 +96,7 @@ const ReportLostItem = () => {
       setselectedMenu("");
       setselectedMenucategoryId("");
     } catch (err: any) {
-      Modals({ message: "Failed to report lost item", status: false });
+      toast.error("Failed to report lost item");
     }
   };
 
