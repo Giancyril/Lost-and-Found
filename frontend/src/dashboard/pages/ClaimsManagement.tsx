@@ -139,23 +139,25 @@ const ClaimsManagement = () => {
           </div>
 
           {/* Filters */}
-          <div className="bg-gray-800 rounded-xl p-4 sm:p-5 border border-gray-700">
-            <div className="flex flex-col gap-3">
-              <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
-                <input type="text" placeholder="Search by item, claimant name, or contact..."
-                  value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500" />
-              </div>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full sm:w-40 px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <option value="ALL">All Status</option>
-                <option value="PENDING">Pending</option>
-                <option value="APPROVED">Approved</option>
-                <option value="REJECTED">Rejected</option>
-              </select>
-            </div>
-          </div>
+         <div className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
+  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+    <div className="flex-1 relative">
+      <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
+      <input type="text" placeholder="Search by item, claimant name, or contact..."
+        value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full pl-9 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+    </div>
+    <div className="flex gap-2 sm:gap-4">
+      <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+        className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        <option value="ALL">All Status</option>
+        <option value="PENDING">Pending</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </div>
+  </div>
+</div>
 
           {/* Claims — card layout on mobile, table on desktop */}
           <div className="space-y-3 md:hidden">

@@ -5,6 +5,7 @@ import {
   useGetFoundItemsQuery,
   useDeleteMyFoundItemMutation,
   useEditMyFoundItemMutation,
+  useCategoryQuery,
 } from "../../redux/api/api";
 
 interface FoundItem {
@@ -39,6 +40,7 @@ const FoundItemsManagement = () => {
   const [editForm, setEditForm] = useState({ foundItemName: "", description: "", location: "", date: "" });
 
   const { data: foundItemsData, isLoading, error } = useGetFoundItemsQuery({ searchTerm, sortBy: "foundItemName", sortOrder: "asc" });
+  const { data: categoriesData } = useCategoryQuery({});
   const [deleteFoundItem] = useDeleteMyFoundItemMutation();
   const [editMyFoundItem] = useEditMyFoundItemMutation();
 
@@ -143,13 +145,12 @@ const FoundItemsManagement = () => {
               <option value="CLAIMED">Claimed</option>
             </select>
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-              <option value="ALL">All Categories</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Personal Items">Personal Items</option>
-              <option value="Keys">Keys</option>
-              <option value="Documents">Documents</option>
-            </select>
+  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+  <option value="ALL">All Categories</option>
+  {categoriesData?.data?.map((cat: any) => (
+    <option key={cat.id} value={cat.name}>{cat.name}</option>
+  ))}
+</select>
           </div>
         </div>
       </div>
