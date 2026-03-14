@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { FaEdit, FaTrash, FaEye, FaSearch, FaCheck, FaTimes } from "react-icons/fa";
 import { IoMdRadioButtonOn } from "react-icons/io";
+import { MdCheckCircle } from "react-icons/md";
 import { toast } from "react-toastify";
 import {
-  useGetLostItemsQuery,
+  useGetAllLostItemsQuery,
   useDeleteMyLostItemMutation,
   useMarkLostItemAsFoundMutation,
   useEditMyLostItemMutation,
@@ -42,7 +43,8 @@ const LostItemsManagement = () => {
   const [isDeleteLoading, setIsDeleteLoading]     = useState(false);
   const [editFormData, setEditFormData] = useState({ lostItemName: "", description: "", location: "", date: "", categoryId: "" });
 
-  const { data: lostItemsData, isLoading, error } = useGetLostItemsQuery({ searchTerm, sortBy: "lostItemName", sortOrder: "asc" });
+  // fetch ALL items (no isFound filter) so stats are accurate
+  const { data: lostItemsData, isLoading, error } = useGetAllLostItemsQuery({ searchTerm, sortBy: "lostItemName", sortOrder: "asc" });
   const { data: categoriesData } = useCategoryQuery({});
   const [deleteMyLostItem] = useDeleteMyLostItemMutation();
   const [markAsFound]      = useMarkLostItemAsFoundMutation();
@@ -83,11 +85,11 @@ const LostItemsManagement = () => {
 
   const handleDeleteCancel = () => { setIsDeleteModalOpen(false); setDeletingItem(null); setIsDeleteLoading(false); };
 
-  const handleMarkAsFound = async (id: string, currentStatus: boolean) => {
+  const handleMarkAsResolved = async (id: string, currentStatus: boolean) => {
     setMarkingAsFoundId(id);
     try {
       await markAsFound({ id }).unwrap();
-      toast.success(currentStatus ? "Item marked as not found successfully" : "Item marked as found successfully");
+      toast.success(currentStatus ? "Item marked as active successfully." : "Item marked as resolved successfully.");
     } catch { toast.error("Failed to update item status"); }
     finally { setMarkingAsFoundId(null); }
   };
@@ -108,14 +110,22 @@ const LostItemsManagement = () => {
   );
 
   const items = lostItemsData?.data || [];
+
   const filteredItems = items.filter((item: LostItem) => {
     const matchesSearch   = item.lostItemName.toLowerCase().includes(searchTerm.toLowerCase()) || item.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus   = statusFilter === "ALL" || (statusFilter === "FOUND" && item.isFound) || (statusFilter === "ACTIVE" && !item.isFound);
+    const matchesStatus   = statusFilter === "ALL" || (statusFilter === "RESOLVED" && item.isFound) || (statusFilter === "ACTIVE" && !item.isFound);
     const matchesCategory = categoryFilter === "ALL" || item.category?.name === categoryFilter;
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
   const getStatusColor = (isFound: boolean) => isFound ? "bg-blue-500" : "bg-green-500";
+
+  // resolved this week
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - 7);
+  weekStart.setHours(0, 0, 0, 0);
+  const resolvedThisWeek = items.filter((i: LostItem) => i.isFound && new Date(i.date) >= weekStart).length;
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
@@ -123,9 +133,9 @@ const LostItemsManagement = () => {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
         {[
-          { label: "Total Reports", value: items.length,                                          icon: <FaEye className="text-white" />,             num: "text-white"     },
-          { label: "Active",        value: items.filter((i: LostItem) => !i.isFound).length,      icon: <IoMdRadioButtonOn className="text-white" />, num: "text-red-500"   },
-          { label: "Found",         value: items.filter((i: LostItem) => i.isFound).length,       icon: <FaSearch className="text-white" />,          num: "text-green-500" },
+          { label: "Total Reports",        value: items.length,                                     icon: <FaEye className="text-white" />,              num: "text-white"     },
+          { label: "Active",               value: items.filter((i: LostItem) => !i.isFound).length, icon: <IoMdRadioButtonOn className="text-white" />,  num: "text-red-500"   },
+          { label: "Resolved This Week",   value: resolvedThisWeek,                                 icon: <MdCheckCircle className="text-white" />,      num: "text-green-500" },
         ].map((s) => (
           <div key={s.label} className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
             <div className="flex items-center justify-between">
@@ -152,15 +162,14 @@ const LostItemsManagement = () => {
               className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active</option>
-              <option value="FOUND">Found</option>
+              <option value="RESOLVED">Resolved</option> {/* ✅ renamed from FOUND */}
             </select>
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
               className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
               <option value="ALL">All Categories</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Personal Items">Personal Items</option>
-              <option value="Jewelry">Jewelry</option>
-              <option value="Documents">Documents</option>
+              {categoriesData?.data?.map((cat: any) => ( // ✅ dynamic from API
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -189,17 +198,17 @@ const LostItemsManagement = () => {
                   <td className="px-6 py-4 text-gray-300">{new Date(item.date).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(item.isFound)}`}>
-                      {item.isFound ? "Found" : "Active"}
+                      {item.isFound ? "Resolved" : "Active"} {/* ✅ renamed */}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-300">{item.user?.username || "N/A"}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
                       <button onClick={() => handleEdit(item)} className="p-2 text-yellow-500 hover:bg-yellow-500 hover:text-white rounded-lg transition-colors"><FaEdit /></button>
-                      <button onClick={() => handleMarkAsFound(item.id, item.isFound)} disabled={markingAsFoundId === item.id}
-                        className={`p-2 rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center ${item.isFound ? "text-red-500 hover:bg-red-500 hover:text-white disabled:bg-red-400" : "text-green-500 hover:bg-green-500 hover:text-white disabled:bg-green-400"}`}
-                        title={item.isFound ? "Mark as Not Found" : "Mark as Found"}>
-                        {markingAsFoundId === item.id ? <Spinner color={item.isFound ? "text-red-500" : "text-green-500"} /> : item.isFound ? <FaTimes /> : <FaCheck />}
+                      <button onClick={() => handleMarkAsResolved(item.id, item.isFound)} disabled={markingAsFoundId === item.id}
+                        className={`p-2 rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center ${item.isFound ? "text-orange-500 hover:bg-orange-500 hover:text-white disabled:bg-orange-400" : "text-green-500 hover:bg-green-500 hover:text-white disabled:bg-green-400"}`}
+                        title={item.isFound ? "Mark as Active" : "Mark as Resolved"}>
+                        {markingAsFoundId === item.id ? <Spinner color={item.isFound ? "text-orange-500" : "text-green-500"} /> : item.isFound ? <FaTimes /> : <FaCheck />}
                       </button>
                       <button onClick={() => handleDelete(item)} className="p-2 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors flex items-center justify-center"><FaTrash /></button>
                     </div>
@@ -229,7 +238,7 @@ const LostItemsManagement = () => {
                 <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">{item.description}</p>
               </div>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-medium text-white ${getStatusColor(item.isFound)}`}>
-                {item.isFound ? "Found" : "Active"}
+                {item.isFound ? "Resolved" : "Active"}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -242,9 +251,13 @@ const LostItemsManagement = () => {
               <button onClick={() => handleEdit(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-yellow-500 hover:bg-yellow-500/10 rounded-lg text-xs font-medium">
                 <FaEdit size={11} /> Edit
               </button>
-              <button onClick={() => handleMarkAsFound(item.id, item.isFound)} disabled={markingAsFoundId === item.id}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium ${item.isFound ? "text-red-500 hover:bg-red-500/10" : "text-green-500 hover:bg-green-500/10"}`}>
-                {markingAsFoundId === item.id ? <Spinner color={item.isFound ? "text-red-500" : "text-green-500"} /> : item.isFound ? <><FaTimes size={11} /> Unmark</> : <><FaCheck size={11} /> Mark Found</>}
+              <button onClick={() => handleMarkAsResolved(item.id, item.isFound)} disabled={markingAsFoundId === item.id}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium ${item.isFound ? "text-orange-500 hover:bg-orange-500/10" : "text-green-500 hover:bg-green-500/10"}`}>
+                {markingAsFoundId === item.id
+                  ? <Spinner color={item.isFound ? "text-orange-500" : "text-green-500"} />
+                  : item.isFound
+                    ? <><FaTimes size={11} /> Reopen</>
+                    : <><FaCheck size={11} /> Resolve</>}
               </button>
               <button onClick={() => handleDelete(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-red-500 hover:bg-red-500/10 rounded-lg text-xs font-medium">
                 <FaTrash size={11} /> Delete

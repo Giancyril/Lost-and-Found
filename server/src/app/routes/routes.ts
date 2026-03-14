@@ -51,6 +51,7 @@ router.put("/found-lost", auth(), lostItemController.toggleFoundStatus);
 router.get("/my/lostItem", auth(), lostItemController.getMyLostItem);
 router.put("/my/lostItem", auth(), lostItemController.editMyLostItem);
 router.delete("/my/lostItem/:id", auth(), lostItemController.deleteMyLostItem);
+
 router.get("/my/foundItem", auth(), foundItemController.getMyFoundItem);
 router.put("/my/foundItem", auth(), foundItemController.editMyFoundItem);
 router.delete("/my/foundItem/:id", auth(), foundItemController.deleteMyFoundItem);
@@ -62,6 +63,7 @@ router.get("/my/claims", auth(), claimsController.getMyClaim);
 router.put("/claims/:claimId", validateRequest(ItemClaimSchema.updateClaim), auth(), claimsController.updateClaimStatus);
 
 ////////////////////////////////////////////////// admin //////////////////////////////////////////////
+router.get("/admin/lostItems", auth(), lostItemController.getAllLostItems);
 router.get("/admin/stats", adminStats);
 router.get("/admin/location-stats", locationStats);
 router.get("/admin/audit-logs", auth(), getAuditLogs);

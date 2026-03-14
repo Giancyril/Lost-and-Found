@@ -50,13 +50,35 @@ const createLostItem = async (req: Request, res: Response) => {
 
 const getLostItem = async (req: Request, res: Response) => {
   try {
-    const meta = await utils.calculateMeta(req.query); // ✅ same as found items
-    const result = await lostTItemServices.getLostItem(req.query); // ✅ pass query
+    const meta = await utils.calculateMeta(req.query);
+    const result = await lostTItemServices.getLostItem(req.query);
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
       message: "Lost items retrieved successfully",
-      meta, // ✅ meta at top level like found items
+      meta,
+      data: result,
+    });
+  } catch (error: any) {
+    sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success: false,
+      message: error?.message,
+      data: null,
+    });
+  }
+};
+
+// ✅ admin — all lost items including resolved
+const getAllLostItems = async (req: Request, res: Response) => {
+  try {
+    const meta = await utils.calculateMeta(req.query);
+    const result = await lostTItemServices.getAllLostItems(req.query);
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "All lost items retrieved successfully",
+      meta,
       data: result,
     });
   } catch (error: any) {
@@ -153,6 +175,7 @@ export const lostItemController = {
   toggleFoundStatus,
   createLostItem,
   getLostItem,
+  getAllLostItems, // ✅ added
   getSingleLostItem,
   getMyLostItem,
   editMyLostItem,

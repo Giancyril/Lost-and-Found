@@ -193,6 +193,12 @@ const api = baseApi.injectEndpoints({
       invalidatesTags: ["faqs"],
     }),
 
+    // lost item — add after getLostItems
+getAllLostItems: builder.query({
+  query: (data: any) => ({ url: "/admin/lostItems", method: "GET", params: data }),
+  providesTags: ["mylostItems"],
+}),
+
     
 
     // AI search
@@ -203,6 +209,7 @@ const api = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetAllLostItemsQuery,
   useGetLostItemsQuery,
   useLoginMutation,
   useRegistersMutation,

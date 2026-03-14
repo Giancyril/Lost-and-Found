@@ -54,7 +54,41 @@ const getLostItem = async (query: any = {}) => {
 
   const whereConditions: any = {
     isDeleted: false,
-    isFound: false, // ✅ this was missing
+    isFound: false, // public — only active lost items
+  };
+
+  if (searchTerm) {
+    whereConditions.OR = [
+      { lostItemName: { contains: searchTerm, mode: "insensitive" } },
+      { location: { contains: searchTerm, mode: "insensitive" } },
+      { description: { contains: searchTerm, mode: "insensitive" } },
+    ];
+  }
+
+  const result = await prisma.lostItem.findMany({
+    where: whereConditions,
+    orderBy: { [sortBy]: sortOrder },
+    skip: (Number(page) - 1) * Number(limit),
+    take: Number(limit),
+    include: { user: true, category: true },
+  });
+
+  return result;
+};
+
+// ✅ admin — returns ALL lost items including resolved
+const getAllLostItems = async (query: any = {}) => {
+  const {
+    searchTerm,
+    page = 1,
+    limit = 10,
+    sortBy = "lostItemName",
+    sortOrder = "asc",
+  } = query;
+
+  const whereConditions: any = {
+    isDeleted: false,
+    // no isFound filter
   };
 
   if (searchTerm) {
@@ -132,6 +166,7 @@ export const lostTItemServices = {
   toggleFoundStatus,
   createLostItem,
   getLostItem,
+  getAllLostItems, // ✅ added
   getSingleLostItem,
   getMyLostItem,
   editMyLostItem,
