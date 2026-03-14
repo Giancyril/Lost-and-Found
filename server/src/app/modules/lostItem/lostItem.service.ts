@@ -54,6 +54,7 @@ const getLostItem = async (query: any = {}) => {
 
   const whereConditions: any = {
     isDeleted: false,
+    isFound: false, // ✅ this was missing
   };
 
   if (searchTerm) {
@@ -72,7 +73,7 @@ const getLostItem = async (query: any = {}) => {
     include: { user: true, category: true },
   });
 
-  return result; // ✅ plain array — meta handled by controller like found items
+  return result;
 };
 
 const getSingleLostItem = async (singleId: string) => {
