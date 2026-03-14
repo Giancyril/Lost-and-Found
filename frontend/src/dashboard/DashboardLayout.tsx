@@ -76,7 +76,12 @@ const notifIcon = (type: Notification["type"]) => {
 // ─── Notification Bell ────────────────────────────────────────────────────────
 const NotificationBell = () => {
   const [open, setOpen]                   = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+  try {
+    const saved = localStorage.getItem("admin_notifications");
+    return saved ? JSON.parse(saved) : [];
+  } catch { return []; }
+  });
   const bellRef                           = useRef<HTMLDivElement>(null);
 
   const latestClaimTs = useRef<string | null>(null);
@@ -105,7 +110,7 @@ const NotificationBell = () => {
     return [];
   };
 
-  const RECENT_MS = 2 * 60 * 1000;
+  const RECENT_MS = 24 * 60 * 60 * 1000;
 
   const processItems = <T extends { id: string; createdAt: string }>(
     rawData: any,
@@ -175,6 +180,12 @@ const NotificationBell = () => {
   const markOneRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   const clearAll    = () => setNotifications([]);
 
+  useEffect(() => {
+  try {
+    localStorage.setItem("admin_notifications", JSON.stringify(notifications));
+  } catch {}
+}, [notifications]);
+
   return (
     <div ref={bellRef} className="relative">
       <button
@@ -227,7 +238,7 @@ const NotificationBell = () => {
                 <p className="text-xs mt-1 opacity-60">New claims and items will appear here</p>
               </div>
             ) : (
-              notifications.map((notif) => (
+              [...notifications].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).map((notif) => (
                 <Link
                   key={notif.id}
                   to={notif.link}
@@ -252,7 +263,7 @@ const NotificationBell = () => {
 
           {notifications.length > 0 && (
             <div className="px-4 py-2.5 border-t border-white/5">
-              <Link to="/dashboard/claims" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
+              <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
                 View all activity →
               </Link>
             </div>
