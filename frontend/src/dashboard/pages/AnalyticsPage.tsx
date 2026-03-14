@@ -71,17 +71,6 @@ const AnalyticsPage = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
-      {/* ── Page header ── */}
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
-          <FaChartLine size={15} className="text-cyan-400" />
-        </div>
-        <div>
-          <h2 className="text-white text-base sm:text-lg font-bold tracking-tight">Analytics</h2>
-          <p className="text-gray-500 text-xs mt-0.5">Last 6 months · Real-time data</p>
-        </div>
-      </div>
-
       {/* ── Summary stat pills ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[

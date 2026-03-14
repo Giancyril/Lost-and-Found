@@ -75,30 +75,41 @@ const notifIcon = (type: Notification["type"]) => {
 
 // ─── Notification Bell ────────────────────────────────────────────────────────
 const NotificationBell = () => {
-  const [open, setOpen]                   = useState(false);
+  const [open, setOpen] = useState(false);
+
   const [notifications, setNotifications] = useState<Notification[]>(() => {
-  try {
-    const saved = localStorage.getItem("admin_notifications");
-    return saved ? JSON.parse(saved) : [];
-  } catch { return []; }
+    try {
+      const saved = localStorage.getItem("admin_notifications");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
-  const bellRef                           = useRef<HTMLDivElement>(null);
+
+  const bellRef = useRef<HTMLDivElement>(null);
 
   const latestClaimTs = useRef<string | null>(null);
   const latestFoundTs = useRef<string | null>(null);
-  const latestLostTs  = useRef<string | null>(null);
-  const initialized   = useRef({ claims: false, found: false, lost: false });
+  const latestLostTs = useRef<string | null>(null);
 
-  const pollOpts = { pollingInterval: 10000, refetchOnFocus: true, refetchOnReconnect: true };
+  const initialized = useRef({ claims: false, found: false, lost: false });
+
+  const pollOpts = {
+    pollingInterval: 8000,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  };
 
   const { data: claimsData } = useGetAllClaimsQuery(undefined, pollOpts);
-  const { data: foundData }  = useGetFoundItemsQuery({},        pollOpts);
-  const { data: lostData }   = useGetLostItemsQuery({},         pollOpts);
+  const { data: foundData } = useGetFoundItemsQuery({}, pollOpts);
+  const { data: lostData } = useGetLostItemsQuery({}, pollOpts);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setOpen(false);
+      if (bellRef.current && !bellRef.current.contains(e.target as Node))
+        setOpen(false);
     };
+
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
@@ -110,6 +121,21 @@ const NotificationBell = () => {
     return [];
   };
 
+  const mergeNotifications = (
+    incoming: Notification[],
+    prev: Notification[]
+  ): Notification[] => {
+    const map = new Map<string, Notification>();
+
+    [...incoming, ...prev].forEach((n) => {
+      if (!map.has(n.id)) map.set(n.id, n);
+    });
+
+    return Array.from(map.values())
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+      .slice(0, 50);
+  };
+
   const RECENT_MS = 24 * 60 * 60 * 1000;
 
   const processItems = <T extends { id: string; createdAt: string }>(
@@ -119,81 +145,122 @@ const NotificationBell = () => {
     makeNotif: (item: T) => Notification
   ) => {
     const items = [...toArray(rawData)].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
     ) as T[];
+
     if (items.length === 0) return;
 
     if (!initialized.current[initKey]) {
       latestTs.current = items[0].createdAt;
       initialized.current[initKey] = true;
+
       const recentCutoff = Date.now() - RECENT_MS;
-      const recentItems = items.filter(i => new Date(i.createdAt).getTime() > recentCutoff);
+
+      const recentItems = items.filter(
+        (i) => new Date(i.createdAt).getTime() > recentCutoff
+      );
+
       if (recentItems.length > 0) {
-        setNotifications(prev => [...recentItems.map(makeNotif), ...prev].slice(0, 50));
+        setNotifications((prev) =>
+          mergeNotifications(recentItems.map(makeNotif), prev)
+        );
       }
+
       return;
     }
 
     const cutoff = latestTs.current;
+
     const newItems = cutoff
-      ? items.filter(i => new Date(i.createdAt).getTime() > new Date(cutoff).getTime())
+      ? items.filter(
+          (i) =>
+            new Date(i.createdAt).getTime() >
+            new Date(cutoff).getTime()
+        )
       : [];
 
     if (newItems.length > 0) {
       latestTs.current = newItems[0].createdAt;
-      setNotifications(prev => [...newItems.map(makeNotif), ...prev].slice(0, 50));
+
+      setNotifications((prev) =>
+        mergeNotifications(newItems.map(makeNotif), prev)
+      );
     }
   };
 
   useEffect(() => {
     processItems(claimsData, latestClaimTs, "claims", (claim: any): Notification => ({
-      id: `claim-${claim.id}-${claim.createdAt}`,
+      id: `claim-${claim.id}`,
       type: "claim",
       title: "New Claim Submitted",
-      subtitle: `${claim.claimantName || "Someone"} claimed "${claim.foundItem?.foundItemName || "an item"}"`,
-      time: claim.createdAt, read: false, link: "/dashboard/claims",
+      subtitle: `${claim.claimantName || "Someone"} claimed "${
+        claim.foundItem?.foundItemName || "an item"
+      }"`,
+      time: claim.createdAt,
+      read: false,
+      link: "/dashboard/claims",
     }));
   }, [claimsData]);
 
   useEffect(() => {
     processItems(foundData, latestFoundTs, "found", (item: any): Notification => ({
-      id: `found-${item.id}-${item.createdAt}`,
+      id: `found-${item.id}`,
       type: "found",
       title: "New Found Item Reported",
-      subtitle: `"${item.foundItemName || item.name || "Unknown item"}" found at ${item.location || "unknown location"}`,
-      time: item.createdAt, read: false, link: "/dashboard/found-items",
+      subtitle: `"${item.foundItemName || item.name || "Unknown item"}" found at ${
+        item.location || "unknown location"
+      }`,
+      time: item.createdAt,
+      read: false,
+      link: "/dashboard/found-items",
     }));
   }, [foundData]);
 
   useEffect(() => {
     processItems(lostData, latestLostTs, "lost", (item: any): Notification => ({
-      id: `lost-${item.id}-${item.createdAt}`,
+      id: `lost-${item.id}`,
       type: "lost",
       title: "New Lost Item Reported",
-      subtitle: `"${item.lostItemName || item.name || "Unknown item"}" lost at ${item.location || "unknown location"}`,
-      time: item.createdAt, read: false, link: "/dashboard/lost-items",
+      subtitle: `"${item.lostItemName || item.name || "Unknown item"}" lost at ${
+        item.location || "unknown location"
+      }`,
+      time: item.createdAt,
+      read: false,
+      link: "/dashboard/lost-items",
     }));
   }, [lostData]);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  const markOneRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  const clearAll    = () => setNotifications([]);
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAllRead = () =>
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
+  const markOneRead = (id: string) =>
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+
+  const clearAll = () => setNotifications([]);
 
   useEffect(() => {
-  try {
-    localStorage.setItem("admin_notifications", JSON.stringify(notifications));
-  } catch {}
-}, [notifications]);
+    try {
+      localStorage.setItem(
+        "admin_notifications",
+        JSON.stringify(notifications)
+      );
+    } catch {}
+  }, [notifications]);
 
   return (
     <div ref={bellRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
         className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all"
       >
         <FaBell size={14} />
+
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-gray-900 animate-pulse">
             {unreadCount > 99 ? "99+" : unreadCount}
@@ -261,13 +328,6 @@ const NotificationBell = () => {
             )}
           </div>
 
-          {notifications.length > 0 && (
-            <div className="px-4 py-2.5 border-t border-white/5">
-              <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
-                View all activity →
-              </Link>
-            </div>
-          )}
         </div>
       )}
     </div>
