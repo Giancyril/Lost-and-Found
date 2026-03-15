@@ -13,7 +13,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://127.0.0.1:5173",
-      `${process.env.CLIENT_URL}`,
+      "https://lost-and-found-liart-seven.vercel.app",
     ],
     credentials: true,
   })
