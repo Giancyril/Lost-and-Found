@@ -33,19 +33,19 @@ const services: Service[] = [
   },
   {
     title: "Location-Based Services",
-    description: "Browse items by specific campus areas — classrooms, gym, cafeteria, library — to narrow down where your belongings may have been found.",
+    description: "Browse items by specific campus areas classrooms, gym, cafeteria, library to narrow down where your belongings may have been found.",
   },
   {
-    title: "Help Desk Support",
-    description: "Our school admin team is available to assist with reports, claims, or any concerns related to lost and found items on campus.",
+    title: "Smart AI Search",                                          
+    description: "Describe your lost item in your own words and let our AI-powered search find the closest matches from the database instantly.",
   },
   {
-    title: "Data Encryption and Privacy",
-    description: "All student and staff information is protected with industry-standard encryption, ensuring privacy and security at all times.",
+    title: "Item Status Tracking",                                    
+    description: "Monitor the progress of your lost item report in real time from submission and review to recovery and return.",
   },
   {
     title: "Item Claiming",
-    description: "Claim found items through a secure, verified process. Only the rightful owner — confirmed by school ID — can retrieve their belongings.",
+    description: "Claim found items through a secure, verified process. Only the rightful owner confirmed by school ID can retrieve their belongings.",
   },
 ];
 
@@ -64,7 +64,7 @@ const Services = () => {
             </span>
           </h2>
           <p className="text-gray-400 text-lg leading-relaxed">
-            Everything SAS students and staff need to report, search, and recover lost items on campus — all in one place.
+            Everything SAS students and staff need to report, search, and recover lost items on campus all in one place.
           </p>
         </div>
 

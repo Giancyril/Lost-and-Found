@@ -17,6 +17,7 @@ import { locationStats } from "../utils/locationStats";
 import { getAuditLogs } from "../utils/auditLog";
 import { aiSearchController } from "../modules/aiSearch/aiSearch.controller";
 import { aiSearchValidation } from "../modules/aiSearch/aiSearch.validate";
+import { sendLostItemEmail, sendClaimApprovedEmail } from "../utils/emailController";
 
 const router = express.Router();
 
@@ -73,5 +74,9 @@ router.delete("/delete-user/:id", auth(), userController.softDeleteUser);
 
 ////////////////////////////////////////////////// AI search //////////////////////////////////////////////
 router.post("/ai-search", validateRequest(aiSearchValidation.aiSearchSchema), aiSearchController.aiSearch);
+
+// ── Email / Mailer ──
+router.post("/email/lost-item",      auth(), sendLostItemEmail);
+router.post("/email/claim-approved", auth(), sendClaimApprovedEmail);
 
 export default router;

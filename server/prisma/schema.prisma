@@ -79,6 +79,7 @@ model LostItem {
   deletedAt    DateTime?
   user         User?         @relation(fields: [userId], references: [id])
   reporterName String        @default("")
+  schoolEmail  String @default("")
 
   @@map("lostItems")
 }

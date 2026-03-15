@@ -79,6 +79,7 @@ const ReportLostItem = () => {
         location: data.location,
         date: startDate,
         reporterName: data.reporterName || "",
+        schoolEmail: data.schoolEmail || "",
       };
 
       const res: any = await createLostItem(lostData);
@@ -133,6 +134,29 @@ const ReportLostItem = () => {
                   />
                   {errors.reporterName && (
                     <p className="text-red-400 text-xs mt-1">{errors.reporterName?.message as string}</p>
+                  )}
+                </div>
+
+                {/* School Email */}
+                <div>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
+                    School ID / Email
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <input
+                    {...register("schoolEmail", {
+                      required: "School email is required",
+                      pattern: {
+                        value: /^[^\s@]+@nbsc\.edu\.ph$/i,
+                        message: "Must be a valid NBSC email (e.g. juan@nbsc.edu.ph)",
+                      },
+                    })}
+                    type="email"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                    placeholder="e.g. juandelacruz@nbsc.edu.ph"
+                  />
+                  {errors.schoolEmail && (
+                    <p className="text-red-400 text-xs mt-1">{errors.schoolEmail?.message as string}</p>
                   )}
                 </div>
 

@@ -21,15 +21,16 @@ const toggleFoundStatus = async (id: string) => {
   return result;
 };
 
-const createLostItem = async (userId: string | undefined, item: LostItem & { reporterName?: string }) => {
+const createLostItem = async (userId: string | undefined, item: LostItem & { reporterName?: string; schoolEmail?: string }) => {
   const createData: any = {
     lostItemName: item.lostItemName,
-    description: item.description,
-    categoryId: item.categoryId,
-    img: item.img,
-    location: item.location,
-    date: item.date,
+    description:  item.description,
+    categoryId:   item.categoryId,
+    img:          item.img,
+    location:     item.location,
+    date:         item.date,
     reporterName: item.reporterName || "",
+    schoolEmail:  item.schoolEmail  || "",   
   };
   if (userId) createData.userId = userId;
 
@@ -60,8 +61,8 @@ const getLostItem = async (query: any = {}) => {
   if (searchTerm) {
     whereConditions.OR = [
       { lostItemName: { contains: searchTerm, mode: "insensitive" } },
-      { location: { contains: searchTerm, mode: "insensitive" } },
-      { description: { contains: searchTerm, mode: "insensitive" } },
+      { location:     { contains: searchTerm, mode: "insensitive" } },
+      { description:  { contains: searchTerm, mode: "insensitive" } },
     ];
   }
 
@@ -94,8 +95,8 @@ const getAllLostItems = async (query: any = {}) => {
   if (searchTerm) {
     whereConditions.OR = [
       { lostItemName: { contains: searchTerm, mode: "insensitive" } },
-      { location: { contains: searchTerm, mode: "insensitive" } },
-      { description: { contains: searchTerm, mode: "insensitive" } },
+      { location:     { contains: searchTerm, mode: "insensitive" } },
+      { description:  { contains: searchTerm, mode: "insensitive" } },
     ];
   }
 
@@ -128,13 +129,14 @@ const getMyLostItem = async (user: JwtPayload) => {
 
 const editMyLostItem = async (data: any, user?: JwtPayload) => {
   const updateData: any = {};
-  if (data?.lostItemName) updateData.lostItemName = data.lostItemName;
-  if (data?.location) updateData.location = data.location;
-  if (data?.date) updateData.date = data.date;
-  if (data?.description) updateData.description = data.description;
-  if (data?.categoryId) updateData.categoryId = data.categoryId;
-  if (data?.img) updateData.img = data.img;
+  if (data?.lostItemName)              updateData.lostItemName = data.lostItemName;
+  if (data?.location)                  updateData.location     = data.location;
+  if (data?.date)                      updateData.date         = data.date;
+  if (data?.description)               updateData.description  = data.description;
+  if (data?.categoryId)                updateData.categoryId   = data.categoryId;
+  if (data?.img)                       updateData.img          = data.img;
   if (data?.reporterName !== undefined) updateData.reporterName = data.reporterName;
+  if (data?.schoolEmail  !== undefined) updateData.schoolEmail  = data.schoolEmail;  // ✅ ADD THIS
 
   const whereClause: any = { id: data.id };
   if (user) whereClause.userId = user.id;
@@ -166,7 +168,7 @@ export const lostTItemServices = {
   toggleFoundStatus,
   createLostItem,
   getLostItem,
-  getAllLostItems, // ✅ added
+  getAllLostItems,
   getSingleLostItem,
   getMyLostItem,
   editMyLostItem,

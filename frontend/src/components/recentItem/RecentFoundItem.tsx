@@ -41,7 +41,7 @@ const RecentFoundItem = () => {
           {items.map((foundItem: any) => (
             <div
               key={`${foundItem?.id}127`}
-              className="group relative bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 border border-gray-800 hover:border-green-600/50 hover:shadow-lg hover:shadow-green-900/20 max-w-sm flex flex-col"
+              className="group relative bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 border border-gray-800 hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-900/20 max-w-sm flex flex-col"
             >
               <div className="relative overflow-hidden">
                 <div className="h-52 w-full overflow-hidden">
@@ -67,7 +67,7 @@ const RecentFoundItem = () => {
               </div>
 
               <div className="p-5 text-white flex flex-col flex-1">
-                <h3 className="text-base font-bold mb-2 text-white group-hover:text-green-400 transition-colors duration-200 line-clamp-1">
+                <h3 className="text-base font-bold mb-2 text-white group-hover:text-blue-400 transition-colors duration-200 line-clamp-1">
                   {foundItem?.foundItemName}
                 </h3>
                 <p className="text-gray-500 text-sm mb-4 line-clamp-2 leading-relaxed">
@@ -88,7 +88,7 @@ const RecentFoundItem = () => {
                   </div>
                 </div>
                 <Link to={`/foundItems/${foundItem?.id}`} className="block">
-                  <button className="w-full bg-green-600/20 hover:bg-green-600 border border-green-600/40 hover:border-green-600 text-green-300 hover:text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200">
+                  <button className="w-full bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 hover:border-blue-600 text-blue-300 hover:text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200">
                     View Details
                   </button>
                 </Link>
@@ -102,7 +102,7 @@ const RecentFoundItem = () => {
       <div className="flex justify-center mt-2 mb-4">
         <Link
           to="/foundItems"
-          className="inline-flex items-center gap-2 bg-green-600/20 hover:bg-green-600 border border-green-600/40 hover:border-green-600 text-green-300 hover:text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 text-sm"
+          className="inline-flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 hover:border-blue-600 text-blue-300 hover:text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 text-sm"
         >
           View All Found Items <FaArrowRight size={12} />
         </Link>

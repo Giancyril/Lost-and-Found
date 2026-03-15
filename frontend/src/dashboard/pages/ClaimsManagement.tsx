@@ -1,13 +1,14 @@
 import { useState } from "react";
 import {
   FaEye, FaSearch, FaCheck, FaTimes, FaUser, FaPhone, FaBoxOpen,
-  FaHistory, FaClipboardList, FaChevronLeft, FaChevronRight,
+  FaHistory, FaClipboardList, FaChevronLeft, FaChevronRight, FaEnvelope,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
   useGetAllClaimsQuery,
   useUpdateClaimStatusMutation,
   useGetAuditLogsQuery,
+  useSendClaimApprovedEmailMutation,
 } from "../../redux/api/api";
 
 type Tab = "claims" | "audit";
@@ -25,9 +26,20 @@ const ClaimsManagement = () => {
   const [newStatus, setNewStatus]                 = useState("");
   const [isStatusLoading, setIsStatusLoading]     = useState(false);
 
+  // Email modal state
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailClaim, setEmailClaim]             = useState<any>(null);
+  const [isSendingEmail, setIsSendingEmail]     = useState(false);
+  const [claimEmailForm, setClaimEmailForm]     = useState({
+    toEmail: "", smtpHost: "smtp.gmail.com", smtpPort: 587,
+    smtpUsername: "", smtpPassword: "", fromName: "NBSC SAS Lost & Found",
+    fromEmail: "", smtpSecure: true,
+  });
+
   const { data: allClaims, isLoading }               = useGetAllClaimsQuery(undefined);
   const { data: auditData, isLoading: auditLoading } = useGetAuditLogsQuery({});
   const [updateClaimStatus]                          = useUpdateClaimStatusMutation();
+  const [sendClaimApprovedEmail]                     = useSendClaimApprovedEmailMutation();
 
   const claims    = allClaims?.data || [];
   const auditLogs = auditData?.data  || [];
@@ -66,6 +78,46 @@ const ClaimsManagement = () => {
     finally { setIsStatusLoading(false); }
   };
   const handleStatusCancel = () => { setIsStatusModalOpen(false); setSelectedClaim(null); setNewStatus(""); setIsStatusLoading(false); };
+
+  // Email handlers
+  const handleOpenClaimEmail = (claim: any) => {
+    setEmailClaim(claim);
+    setClaimEmailForm(prev => ({ ...prev, toEmail: "" }));
+    setIsEmailModalOpen(true);
+  };
+
+  const handleSendClaimEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailClaim) return;
+    setIsSendingEmail(true);
+    try {
+      await sendClaimApprovedEmail({
+        smtp: {
+          host:      claimEmailForm.smtpHost,
+          port:      claimEmailForm.smtpPort,
+          secure:    claimEmailForm.smtpSecure,
+          username:  claimEmailForm.smtpUsername,
+          password:  claimEmailForm.smtpPassword,
+          fromName:  claimEmailForm.fromName,
+          fromEmail: claimEmailForm.fromEmail,
+        },
+        recipient: {
+          toEmail:       claimEmailForm.toEmail,
+          claimantName:  emailClaim.claimantName || "Student",
+          itemName:      emailClaim.foundItem?.foundItemName || "Unknown Item",
+          location:      emailClaim.foundItem?.location || "Unknown",
+          claimDate:     new Date(emailClaim.updatedAt || emailClaim.createdAt).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }),
+          contactNumber: emailClaim.contactNumber || "N/A",
+        },
+      }).unwrap();
+      toast.success("Claim approval email sent successfully!");
+      setIsEmailModalOpen(false);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to send email. Check your SMTP settings.");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -139,25 +191,25 @@ const ClaimsManagement = () => {
           </div>
 
           {/* Filters */}
-         <div className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
-  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-    <div className="flex-1 relative">
-      <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
-      <input type="text" placeholder="Search by item, claimant name, or contact..."
-        value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full pl-9 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-    </div>
-    <div className="flex gap-2 sm:gap-4">
-      <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-        className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-        <option value="ALL">All Status</option>
-        <option value="PENDING">Pending</option>
-        <option value="APPROVED">Approved</option>
-        <option value="REJECTED">Rejected</option>
-      </select>
-    </div>
-  </div>
-</div>
+          <div className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex-1 relative">
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
+                <input type="text" placeholder="Search by item, claimant name, or contact..."
+                  value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+              </div>
+              <div className="flex gap-2 sm:gap-4">
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="ALL">All Status</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
           {/* Claims — card layout on mobile, table on desktop */}
           <div className="space-y-3 md:hidden">
@@ -196,6 +248,13 @@ const ClaimsManagement = () => {
                     className="flex items-center gap-1.5 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium rounded-lg transition-colors">
                     <FaEye size={11} /> Verify
                   </button>
+                  {/* ✅ Email button — only for APPROVED claims (mobile) */}
+                  {claim.status === "APPROVED" && (
+                    <button onClick={() => handleOpenClaimEmail(claim)}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 text-blue-300 hover:text-white text-xs font-medium rounded-lg transition-colors">
+                      <FaEnvelope size={11} /> Email
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -259,10 +318,19 @@ const ClaimsManagement = () => {
                         </select>
                       </td>
                       <td className="px-5 py-4">
-                        <button onClick={() => handleViewDetails(claim)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium rounded-lg transition-colors">
-                          <FaEye size={11} /> Verify
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleViewDetails(claim)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium rounded-lg transition-colors">
+                            <FaEye size={11} /> Verify
+                          </button>
+                          {/* ✅ Email button — only for APPROVED claims (desktop) */}
+                          {claim.status === "APPROVED" && (
+                            <button onClick={() => handleOpenClaimEmail(claim)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 text-blue-300 hover:text-white text-xs font-medium rounded-lg transition-colors">
+                              <FaEnvelope size={11} /> Email
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -529,6 +597,113 @@ const ClaimsManagement = () => {
           </div>
         </div>
       )}
+
+      {/* ✅ Claim Email Modal */}
+      {isEmailModalOpen && emailClaim && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl w-full max-w-lg border border-gray-700 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
+              <div>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <FaEnvelope className="text-green-400" size={14} /> Send Claim Approval Email
+                </h2>
+                <p className="text-gray-400 text-xs mt-0.5">Notify the claimant that their claim has been approved</p>
+              </div>
+              <button onClick={() => setIsEmailModalOpen(false)} className="text-gray-400 hover:text-white p-1">
+                <FaTimes size={15} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendClaimEmail} className="p-5 space-y-4">
+              {/* Claim preview */}
+              <div className="bg-gray-900 rounded-xl p-3 border border-gray-700 flex items-center gap-3">
+                <img src={emailClaim.foundItem?.img || "/default-item.png"} alt={emailClaim.foundItem?.foundItemName}
+                  className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-semibold truncate">{emailClaim.foundItem?.foundItemName}</p>
+                  <p className="text-gray-500 text-xs">Claimed by: {emailClaim.claimantName || "—"} · {emailClaim.contactNumber || "—"}</p>
+                </div>
+                <span className="shrink-0 px-2 py-0.5 bg-green-500/20 text-green-400 text-[10px] font-bold rounded-full border border-green-500/20">APPROVED</span>
+              </div>
+
+              {/* Recipient email */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                  Recipient Email <span className="text-red-400">*</span>
+                </label>
+                <input type="email" required placeholder="claimant@email.com" value={claimEmailForm.toEmail}
+                  onChange={e => setClaimEmailForm(p => ({ ...p, toEmail: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500/50" />
+              </div>
+
+              {/* SMTP settings collapsible */}
+              <details className="group">
+                <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 flex items-center gap-2 py-1 select-none">
+                  <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+                  SMTP Configuration
+                </summary>
+                <div className="mt-3 space-y-3 pl-4 border-l border-gray-700">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">SMTP Host</label>
+                      <input type="text" value={claimEmailForm.smtpHost} onChange={e => setClaimEmailForm(p => ({ ...p, smtpHost: e.target.value }))}
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-green-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">SMTP Port</label>
+                      <input type="number" value={claimEmailForm.smtpPort} onChange={e => setClaimEmailForm(p => ({ ...p, smtpPort: +e.target.value }))}
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-green-500" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">SMTP Username</label>
+                    <input type="text" placeholder="your@gmail.com" value={claimEmailForm.smtpUsername} onChange={e => setClaimEmailForm(p => ({ ...p, smtpUsername: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-green-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">SMTP Password / App Password</label>
+                    <input type="password" placeholder="••••••••" value={claimEmailForm.smtpPassword} onChange={e => setClaimEmailForm(p => ({ ...p, smtpPassword: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-green-500" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">From Name</label>
+                      <input type="text" value={claimEmailForm.fromName} onChange={e => setClaimEmailForm(p => ({ ...p, fromName: e.target.value }))}
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-green-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">From Email</label>
+                      <input type="email" placeholder="noreply@school.edu" value={claimEmailForm.fromEmail} onChange={e => setClaimEmailForm(p => ({ ...p, fromEmail: e.target.value }))}
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-green-500" />
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              {/* Info box */}
+              <div className="bg-green-900/20 border border-green-600/20 rounded-xl px-4 py-3">
+                <p className="text-green-300 text-xs leading-relaxed">
+                  📧 This will send a professionally formatted <strong>claim approval email</strong> to <strong>{emailClaim.claimantName || "the claimant"}</strong>, notifying them that their claim for <strong>"{emailClaim.foundItem?.foundItemName}"</strong> has been approved and is ready for pickup at the SAS office.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setIsEmailModalOpen(false)} disabled={isSendingEmail}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSendingEmail}
+                  className="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                  {isSendingEmail
+                    ? <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Sending...</>
+                    : <><FaEnvelope size={12} /> Send Email</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

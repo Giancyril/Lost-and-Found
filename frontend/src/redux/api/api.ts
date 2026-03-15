@@ -199,6 +199,14 @@ getAllLostItems: builder.query({
   providesTags: ["mylostItems"],
 }),
 
+
+// email
+sendLostItemEmail: builder.mutation({
+  query: (data: any) => ({ url: "/email/lost-item", method: "POST", body: data }),
+}),
+sendClaimApprovedEmail: builder.mutation({
+  query: (data: any) => ({ url: "/email/claim-approved", method: "POST", body: data }),
+}),
     
 
     // AI search
@@ -253,4 +261,6 @@ export const {
   useGetFaqsQuery,
   useCreateFaqMutation,
   useAiSearchMutation,
+  useSendLostItemEmailMutation,
+  useSendClaimApprovedEmailMutation,
 } = api;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaEdit, FaTrash, FaEye, FaSearch, FaCheck, FaTimes } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye, FaSearch, FaCheck, FaTimes, FaEnvelope, FaCheckCircle } from "react-icons/fa";
 import { IoMdRadioButtonOn } from "react-icons/io";
 import { MdCheckCircle } from "react-icons/md";
 import { toast } from "react-toastify";
@@ -9,6 +9,7 @@ import {
   useMarkLostItemAsFoundMutation,
   useEditMyLostItemMutation,
   useCategoryQuery,
+  useSendLostItemEmailMutation,
 } from "../../redux/api/api";
 
 interface LostItem {
@@ -20,6 +21,8 @@ interface LostItem {
   date: string;
   isFound: boolean;
   img?: string;
+  reporterName?: string;
+  schoolEmail?: string;
   user: { username: string };
 }
 
@@ -43,7 +46,18 @@ const LostItemsManagement = () => {
   const [isDeleteLoading, setIsDeleteLoading]     = useState(false);
   const [editFormData, setEditFormData] = useState({ lostItemName: "", description: "", location: "", date: "", categoryId: "" });
 
-  // fetch ALL items (no isFound filter) so stats are accurate
+  // Email modal state
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailItem, setEmailItem]               = useState<LostItem | null>(null);
+  const [emailForm, setEmailForm] = useState({
+    toEmail: "", smtpHost: "smtp.gmail.com", smtpPort: 587,
+    smtpUsername: "", smtpPassword: "", fromName: "NBSC SAS Lost & Found",
+    fromEmail: "", smtpSecure: false,
+  });
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailSentIds, setEmailSentIds]     = useState<Set<string>>(new Set());
+  const [sendLostItemEmail] = useSendLostItemEmailMutation();
+
   const { data: lostItemsData, isLoading, error } = useGetAllLostItemsQuery({ searchTerm, sortBy: "lostItemName", sortOrder: "asc" });
   const { data: categoriesData } = useCategoryQuery({});
   const [deleteMyLostItem] = useDeleteMyLostItemMutation();
@@ -69,7 +83,6 @@ const LostItemsManagement = () => {
   };
 
   const handleEditCancel = () => { setIsEditModalOpen(false); setEditingItem(null); };
-
   const handleDelete = (item: LostItem) => { setDeletingItem(item); setIsDeleteModalOpen(true); };
 
   const handleDeleteConfirm = async () => {
@@ -94,6 +107,48 @@ const LostItemsManagement = () => {
     finally { setMarkingAsFoundId(null); }
   };
 
+  // Open email modal — pre-fill toEmail from schoolEmail if available
+  const handleOpenEmailModal = (item: LostItem) => {
+    setEmailItem(item);
+    setEmailForm(prev => ({ ...prev, toEmail: item.schoolEmail || "" }));
+    setIsEmailModalOpen(true);
+  };
+
+  // Send email
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailItem) return;
+    setIsSendingEmail(true);
+    try {
+      await sendLostItemEmail({
+        smtp: {
+          host:      emailForm.smtpHost,
+          port:      emailForm.smtpPort,
+          secure:    emailForm.smtpSecure,
+          username:  emailForm.smtpUsername,
+          password:  emailForm.smtpPassword,
+          fromName:  emailForm.fromName,
+          fromEmail: emailForm.fromEmail,
+        },
+        recipient: {
+          toEmail:      emailForm.toEmail,
+          reporterName: emailItem.reporterName || emailItem.user?.username || "Student",
+          itemName:     emailItem.lostItemName,
+          location:     emailItem.location,
+          date:         new Date(emailItem.date).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }),
+          description:  emailItem.description,
+        },
+      }).unwrap();
+      toast.success("Email sent successfully!");
+      if (emailItem) setEmailSentIds(prev => new Set(prev).add(emailItem.id));
+      setIsEmailModalOpen(false);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to send email. Check your SMTP settings.");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   if (isLoading) return (
     <div className="space-y-4 sm:space-y-6 animate-pulse">
       <div className="h-8 bg-gray-700 rounded w-1/4" />
@@ -110,7 +165,6 @@ const LostItemsManagement = () => {
   );
 
   const items = lostItemsData?.data || [];
-
   const filteredItems = items.filter((item: LostItem) => {
     const matchesSearch   = item.lostItemName.toLowerCase().includes(searchTerm.toLowerCase()) || item.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus   = statusFilter === "ALL" || (statusFilter === "RESOLVED" && item.isFound) || (statusFilter === "ACTIVE" && !item.isFound);
@@ -120,7 +174,6 @@ const LostItemsManagement = () => {
 
   const getStatusColor = (isFound: boolean) => isFound ? "bg-blue-500" : "bg-green-500";
 
-  // resolved this week
   const now = new Date();
   const weekStart = new Date(now);
   weekStart.setDate(now.getDate() - 7);
@@ -133,9 +186,9 @@ const LostItemsManagement = () => {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
         {[
-          { label: "Total Reports",        value: items.length,                                     icon: <FaEye className="text-white" />,              num: "text-white"     },
-          { label: "Active",               value: items.filter((i: LostItem) => !i.isFound).length, icon: <IoMdRadioButtonOn className="text-white" />,  num: "text-red-500"   },
-          { label: "Resolved This Week",   value: resolvedThisWeek,                                 icon: <MdCheckCircle className="text-white" />,      num: "text-green-500" },
+          { label: "Total Reports",      value: items.length,                                     icon: <FaEye className="text-white" />,             num: "text-white"     },
+          { label: "Active",             value: items.filter((i: LostItem) => !i.isFound).length, icon: <IoMdRadioButtonOn className="text-white" />, num: "text-red-500"   },
+          { label: "Resolved This Week", value: resolvedThisWeek,                                 icon: <MdCheckCircle className="text-white" />,     num: "text-green-500" },
         ].map((s) => (
           <div key={s.label} className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
             <div className="flex items-center justify-between">
@@ -162,12 +215,12 @@ const LostItemsManagement = () => {
               className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active</option>
-              <option value="RESOLVED">Resolved</option> {/* ✅ renamed from FOUND */}
+              <option value="RESOLVED">Resolved</option>
             </select>
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
               className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
               <option value="ALL">All Categories</option>
-              {categoriesData?.data?.map((cat: any) => ( // ✅ dynamic from API
+              {categoriesData?.data?.map((cat: any) => (
                 <option key={cat.id} value={cat.name}>{cat.name}</option>
               ))}
             </select>
@@ -178,39 +231,63 @@ const LostItemsManagement = () => {
       {/* Table — desktop */}
       <div className="hidden md:block bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-sm">
             <thead className="bg-gray-900">
               <tr>
-                {["Item","Category","Location","Date Lost","Status","Reported By","Actions"].map(h => (
-                  <th key={h} className="px-6 py-4 text-left text-sm font-medium text-gray-300">{h}</th>
-                ))}
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Item</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Category</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Location</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Reporter</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">School Email</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
               {filteredItems.map((item: LostItem) => (
-                <tr key={item.id} className="hover:bg-gray-700 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-white">{item.lostItemName}</div>
-                    <div className="text-sm text-gray-400 truncate max-w-xs">{item.description}</div>
+                <tr key={item.id} className="hover:bg-gray-750 transition-colors">
+                  <td className="px-4 py-3 max-w-[180px]">
+                    <div className="font-medium text-white text-sm truncate">{item.lostItemName}</div>
+                    <div className="text-xs text-gray-500 truncate">{item.description}</div>
                   </td>
-                  <td className="px-6 py-4 text-gray-300">{item.category?.name || "N/A"}</td>
-                  <td className="px-6 py-4 text-gray-300">{item.location}</td>
-                  <td className="px-6 py-4 text-gray-300">{new Date(item.date).toLocaleDateString()}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(item.isFound)}`}>
-                      {item.isFound ? "Resolved" : "Active"} {/* ✅ renamed */}
+                  <td className="px-3 py-3 text-xs text-gray-300 whitespace-nowrap">{item.category?.name || "N/A"}</td>
+                  <td className="px-3 py-3 text-xs text-gray-300 whitespace-nowrap">{item.location}</td>
+                  <td className="px-3 py-3 text-xs text-gray-300 whitespace-nowrap">{new Date(item.date).toLocaleDateString()}</td>
+                  <td className="px-3 py-3">
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold text-white whitespace-nowrap ${getStatusColor(item.isFound)}`}>
+                      {item.isFound ? "Resolved" : "Active"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-gray-300">{item.user?.username || "N/A"}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <button onClick={() => handleEdit(item)} className="p-2 text-yellow-500 hover:bg-yellow-500 hover:text-white rounded-lg transition-colors"><FaEdit /></button>
+                  <td className="px-3 py-3 text-xs text-gray-300 max-w-[100px] truncate">{item.user?.username || item.reporterName || "N/A"}</td>
+                  <td className="px-3 py-3 max-w-[160px]">
+                    {item.schoolEmail ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full truncate max-w-full">
+                        <FaEnvelope size={8} className="shrink-0" />
+                        <span className="truncate">{item.schoolEmail}</span>
+                      </span>
+                    ) : (
+                      <span className="text-gray-600 text-xs italic">Not provided</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleEdit(item)} className="p-1.5 text-yellow-500 hover:bg-yellow-500 hover:text-white rounded-lg transition-colors" title="Edit"><FaEdit size={13} /></button>
                       <button onClick={() => handleMarkAsResolved(item.id, item.isFound)} disabled={markingAsFoundId === item.id}
-                        className={`p-2 rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center ${item.isFound ? "text-orange-500 hover:bg-orange-500 hover:text-white disabled:bg-orange-400" : "text-green-500 hover:bg-green-500 hover:text-white disabled:bg-green-400"}`}
+                        className={`p-1.5 rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center ${item.isFound ? "text-orange-500 hover:bg-orange-500 hover:text-white" : "text-green-500 hover:bg-green-500 hover:text-white"}`}
                         title={item.isFound ? "Mark as Active" : "Mark as Resolved"}>
-                        {markingAsFoundId === item.id ? <Spinner color={item.isFound ? "text-orange-500" : "text-green-500"} /> : item.isFound ? <FaTimes /> : <FaCheck />}
+                        {markingAsFoundId === item.id ? <Spinner color={item.isFound ? "text-orange-500" : "text-green-500"} /> : item.isFound ? <FaTimes size={13} /> : <FaCheck size={13} />}
                       </button>
-                      <button onClick={() => handleDelete(item)} className="p-2 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors flex items-center justify-center"><FaTrash /></button>
+                      {emailSentIds.has(item.id) ? (
+                        <span className="flex items-center gap-1 px-2 py-1 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-[10px] font-semibold whitespace-nowrap">
+                          <FaCheckCircle size={10} /> Sent
+                        </span>
+                      ) : (
+                        <button onClick={() => handleOpenEmailModal(item)} className="p-1.5 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors" title="Send Email">
+                          <FaEnvelope size={13} />
+                        </button>
+                      )}
+                      <button onClick={() => handleDelete(item)} className="p-1.5 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors" title="Delete"><FaTrash size={13} /></button>
                     </div>
                   </td>
                 </tr>
@@ -245,7 +322,18 @@ const LostItemsManagement = () => {
               <div><p className="text-gray-600">Category</p><p className="text-gray-300 mt-0.5">{item.category?.name || "N/A"}</p></div>
               <div><p className="text-gray-600">Location</p><p className="text-gray-300 mt-0.5">{item.location}</p></div>
               <div><p className="text-gray-600">Date Lost</p><p className="text-gray-300 mt-0.5">{new Date(item.date).toLocaleDateString()}</p></div>
-              <div><p className="text-gray-600">Reported By</p><p className="text-gray-300 mt-0.5">{item.user?.username || "N/A"}</p></div>
+              <div><p className="text-gray-600">Reported By</p><p className="text-gray-300 mt-0.5">{item.user?.username || item.reporterName || "N/A"}</p></div>
+              {/* School Email row */}
+              <div className="col-span-2">
+                <p className="text-gray-600">School Email</p>
+                {item.schoolEmail ? (
+                  <span className="inline-flex items-center gap-1 text-blue-300 text-xs mt-0.5">
+                    <FaEnvelope size={9} /> {item.schoolEmail}
+                  </span>
+                ) : (
+                  <p className="text-gray-600 italic mt-0.5">Not provided</p>
+                )}
+              </div>
             </div>
             <div className="flex gap-1.5 pt-1 border-t border-white/5">
               <button onClick={() => handleEdit(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-yellow-500 hover:bg-yellow-500/10 rounded-lg text-xs font-medium">
@@ -253,12 +341,19 @@ const LostItemsManagement = () => {
               </button>
               <button onClick={() => handleMarkAsResolved(item.id, item.isFound)} disabled={markingAsFoundId === item.id}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium ${item.isFound ? "text-orange-500 hover:bg-orange-500/10" : "text-green-500 hover:bg-green-500/10"}`}>
-                {markingAsFoundId === item.id
-                  ? <Spinner color={item.isFound ? "text-orange-500" : "text-green-500"} />
-                  : item.isFound
-                    ? <><FaTimes size={11} /> Reopen</>
-                    : <><FaCheck size={11} /> Resolve</>}
+                {markingAsFoundId === item.id ? <Spinner color={item.isFound ? "text-orange-500" : "text-green-500"} />
+                  : item.isFound ? <><FaTimes size={11} /> Reopen</> : <><FaCheck size={11} /> Resolve</>}
               </button>
+              {/* Email button mobile */}
+              {emailSentIds.has(item.id) ? (
+                <span className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-xs font-semibold">
+                  <FaCheckCircle size={11} /> Sent
+                </span>
+              ) : (
+                <button onClick={() => handleOpenEmailModal(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-blue-400 hover:bg-blue-500/10 rounded-lg text-xs font-medium">
+                  <FaEnvelope size={11} /> Email
+                </button>
+              )}
               <button onClick={() => handleDelete(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-red-500 hover:bg-red-500/10 rounded-lg text-xs font-medium">
                 <FaTrash size={11} /> Delete
               </button>
@@ -343,6 +438,131 @@ const LostItemsManagement = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Modal */}
+      {isEmailModalOpen && emailItem && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl w-full max-w-lg border border-gray-700 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
+              <div>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <FaEnvelope className="text-blue-400" size={14} /> Send Report Confirmation Email
+                </h2>
+                <p className="text-gray-400 text-xs mt-0.5">Send a thank you email to the reporter of this lost item</p>
+              </div>
+              <button onClick={() => setIsEmailModalOpen(false)} className="text-gray-400 hover:text-white p-1">
+                <FaTimes size={15} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendEmail} className="p-5 space-y-4">
+              {/* Item preview */}
+              <div className="bg-gray-900 rounded-xl p-3 border border-gray-700 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                  <FaSearch size={14} className="text-blue-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-semibold truncate">{emailItem.lostItemName}</p>
+                  <p className="text-gray-500 text-xs">📍 {emailItem.location} · 📅 {new Date(emailItem.date).toLocaleDateString()}</p>
+                  {emailItem.schoolEmail && (
+                    <p className="text-blue-400 text-xs mt-0.5 flex items-center gap-1">
+                      <FaEnvelope size={9} /> {emailItem.schoolEmail}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Recipient email — pre-filled from schoolEmail */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                  Recipient Email <span className="text-red-400">*</span>
+                  {emailItem.schoolEmail && (
+                    <span className="ml-2 text-[10px] text-green-400 font-normal normal-case tracking-normal">
+                      ✓ Pre-filled from school email
+                    </span>
+                  )}
+                </label>
+                <input type="email" required placeholder="reporter@email.com" value={emailForm.toEmail}
+                  onChange={e => setEmailForm(p => ({ ...p, toEmail: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+              </div>
+
+              {/* SMTP settings collapsible */}
+              <details className="group">
+                <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 flex items-center gap-2 py-1 select-none">
+                  <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+                  SMTP Configuration
+                </summary>
+                <div className="mt-3 space-y-3 pl-4 border-l border-gray-700">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">SMTP Host</label>
+                      <input type="text" value={emailForm.smtpHost} onChange={e => setEmailForm(p => ({ ...p, smtpHost: e.target.value }))}
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">SMTP Port</label>
+                      <input type="number" value={emailForm.smtpPort} onChange={e => setEmailForm(p => ({ ...p, smtpPort: +e.target.value }))}
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                    </div>
+                  </div>
+                  {/* SSL/TLS toggle */}
+                  <div className="flex items-center justify-between bg-gray-900 border border-gray-700 rounded-lg px-3 py-2">
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium">SSL/TLS (secure)</p>
+                      <p className="text-[10px] text-gray-600 mt-0.5">Port <strong className="text-gray-500">587</strong> → OFF · Port <strong className="text-gray-500">465</strong> → ON</p>
+                    </div>
+                    <button type="button" onClick={() => setEmailForm(p => ({ ...p, smtpSecure: !p.smtpSecure }))}
+                      className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ml-3 ${emailForm.smtpSecure ? "bg-blue-600" : "bg-gray-600"}`}>
+                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${emailForm.smtpSecure ? "translate-x-5" : "translate-x-0.5"}`} />
+                    </button>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">SMTP Username</label>
+                    <input type="text" placeholder="your@gmail.com" value={emailForm.smtpUsername} onChange={e => setEmailForm(p => ({ ...p, smtpUsername: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">SMTP Password / App Password</label>
+                    <input type="password" placeholder="••••••••" value={emailForm.smtpPassword} onChange={e => setEmailForm(p => ({ ...p, smtpPassword: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">From Name</label>
+                      <input type="text" value={emailForm.fromName} onChange={e => setEmailForm(p => ({ ...p, fromName: e.target.value }))}
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">From Email</label>
+                      <input type="email" placeholder="noreply@school.edu" value={emailForm.fromEmail} onChange={e => setEmailForm(p => ({ ...p, fromEmail: e.target.value }))}
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              {/* Info box */}
+              <div className="bg-blue-900/20 border border-blue-600/20 rounded-xl px-4 py-3">
+                <p className="text-blue-300 text-xs leading-relaxed">
+                  📧 This will send a professionally formatted <strong>thank you confirmation email</strong> to the reporter, acknowledging receipt of their lost item report for <strong>"{emailItem.lostItemName}"</strong>.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setIsEmailModalOpen(false)} disabled={isSendingEmail}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSendingEmail}
+                  className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                  {isSendingEmail ? <><Spinner /> Sending...</> : <><FaEnvelope size={12} /> Send Email</>}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
