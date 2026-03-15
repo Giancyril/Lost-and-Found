@@ -4,32 +4,11 @@ import { lostItemReportedTemplate, itemClaimedTemplate } from "./emailTemplates"
 import sendResponse from "../global/response";
 import { StatusCodes } from "http-status-codes";
 
-// Helper — merge request smtp fields with .env fallbacks
-const resolveSmtp = (smtp: any) => ({
-  host:      smtp?.host      || process.env.SMTP_HOST      || "smtp.gmail.com",
-  port:      smtp?.port      || Number(process.env.SMTP_PORT) || 587,
-  secure:    smtp?.secure    ?? (process.env.SMTP_SECURE === "true"),
-  username:  smtp?.username  || process.env.SMTP_USERNAME  || "",
-  password:  smtp?.password  || process.env.SMTP_PASSWORD  || "",
-  fromName:  smtp?.fromName  || process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found",
-  fromEmail: smtp?.fromEmail || process.env.SMTP_FROM_EMAIL || "",
-});
-
 export const sendLostItemEmail = async (req: Request, res: Response) => {
   try {
     const { smtp, recipient } = req.body;
-    // recipient = { toEmail, reporterName, itemName, location, date, description }
 
-    const smtpConfig = resolveSmtp(smtp);
-
-    if (!smtpConfig.username || !smtpConfig.password) {
-      return sendResponse(res, {
-        statusCode: StatusCodes.BAD_REQUEST,
-        success: false,
-        message: "SMTP credentials are missing. Please configure SMTP settings.",
-        data: null,
-      });
-    }
+    const fromName = smtp?.fromName || process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
 
     const template = lostItemReportedTemplate({
       reporterName: recipient.reporterName,
@@ -40,10 +19,10 @@ export const sendLostItemEmail = async (req: Request, res: Response) => {
     });
 
     await sendEmail({
-      ...smtpConfig,
-      toEmail: recipient.toEmail,
-      subject: template.subject,
-      html:    template.html,
+      fromName,
+      toEmail:  recipient.toEmail,
+      subject:  template.subject,
+      html:     template.html,
     });
 
     sendResponse(res, {
@@ -65,18 +44,8 @@ export const sendLostItemEmail = async (req: Request, res: Response) => {
 export const sendClaimApprovedEmail = async (req: Request, res: Response) => {
   try {
     const { smtp, recipient } = req.body;
-    // recipient = { toEmail, claimantName, itemName, location, claimDate, contactNumber }
 
-    const smtpConfig = resolveSmtp(smtp);
-
-    if (!smtpConfig.username || !smtpConfig.password) {
-      return sendResponse(res, {
-        statusCode: StatusCodes.BAD_REQUEST,
-        success: false,
-        message: "SMTP credentials are missing. Please configure SMTP settings.",
-        data: null,
-      });
-    }
+    const fromName = smtp?.fromName || process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
 
     const template = itemClaimedTemplate({
       claimantName:  recipient.claimantName,
@@ -87,10 +56,10 @@ export const sendClaimApprovedEmail = async (req: Request, res: Response) => {
     });
 
     await sendEmail({
-      ...smtpConfig,
-      toEmail: recipient.toEmail,
-      subject: template.subject,
-      html:    template.html,
+      fromName,
+      toEmail:  recipient.toEmail,
+      subject:  template.subject,
+      html:     template.html,
     });
 
     sendResponse(res, {

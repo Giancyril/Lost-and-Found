@@ -1,41 +1,20 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-export const createTransporter = (config: {
-  host: string;
-  port: number;
-  secure: boolean;
-  username: string;
-  password: string;
-}) => {
-  return nodemailer.createTransport({
-    host: config.host,
-    port: config.port,
-    secure: config.secure,
-    auth: {
-      user: config.username,
-      pass: config.password,
-    },
-  });
-};
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendEmail = async (config: {
-  host: string;
-  port: number;
-  secure: boolean;
-  username: string;
-  password: string;
   fromName: string;
-  fromEmail: string;
   toEmail: string;
   subject: string;
   html: string;
 }) => {
-  const transporter = createTransporter(config);
-  const info = await transporter.sendMail({
-    from: `"${config.fromName}" <${config.fromEmail}>`,
+  const { data, error } = await resend.emails.send({
+    from: `${config.fromName} <onboarding@resend.dev>`,
     to: config.toEmail,
     subject: config.subject,
     html: config.html,
   });
-  return info;
+
+  if (error) throw error;
+  return data;
 };
