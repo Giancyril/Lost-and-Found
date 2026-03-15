@@ -18,7 +18,13 @@ const RecentLostItem = () => {
   const items = lostItems?.data?.slice(0, 10) ?? [];
 
   return (
-    <div className="bg-gray-900 py-10">
+    <div className="bg-gray-900 py-12">
+
+      {/* Divider */}
+      <div className="mx-auto max-w-screen-2xl px-8 sm:px-12 lg:px-16 mb-10">
+        <hr className="border-gray-800" />
+      </div>
+
       <div className="px-4 mx-auto max-w-screen-2xl lg:px-6">
         <div className="mx-auto text-center">
           <h2 className="mb-4 text-3xl lg:text-4xl tracking-tight font-extrabold text-white">
@@ -31,12 +37,12 @@ const RecentLostItem = () => {
       </div>
 
       {/* Cards */}
-      <div className="container mx-auto flex justify-center mb-8 px-8 sm:px-12 lg:px-16">
-        <div className="grid gap-6 mx-auto grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="w-full px-4 sm:px-8 lg:px-16 mb-8">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 [&>*]:w-full">
           {items.map((lostItem: lostItem) => (
             <div
               key={`${lostItem?.id}127`}
-              className="group relative bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 border border-gray-800 hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-900/20 max-w-sm flex flex-col"
+              className="group relative bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 border border-gray-800 hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-900/20 w-full flex flex-col"
             >
               <div className="relative overflow-hidden">
                 <div className="h-52 w-full overflow-hidden">
@@ -94,7 +100,7 @@ const RecentLostItem = () => {
       </div>
 
       {/* View All */}
-      <div className="flex justify-center mt-2 mb-4">
+      <div className="flex justify-center mt-2 mb-2">
         <Link
           to="/lostItems"
           className="inline-flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 hover:border-blue-600 text-blue-300 hover:text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 text-sm"

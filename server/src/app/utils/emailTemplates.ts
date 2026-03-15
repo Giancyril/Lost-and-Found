@@ -93,7 +93,7 @@ export const lostItemReportedTemplate = (data: {
                     <tr>
                       <td style="padding:16px 20px;">
                         <p style="margin:0;font-size:13px;color:#1e40af;line-height:1.6;">
-                          <strong>What happens next?</strong> The SAS office will review your report and cross-reference it with found items on campus. You will be contacted once a match is found.
+                          <strong>What happens next?</strong> The SAS office will review your report and cross-reference it with found items on campus.
                         </p>
                       </td>
                     </tr>
