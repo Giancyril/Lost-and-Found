@@ -230,10 +230,11 @@ const AnalyticsPage = () => {
             >
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
               <XAxis
-                dataKey={peakView === "days" ? "day" : "hour"}
-                tick={{ fill: "#6b7280", fontSize: peakView === "hours" ? 9 : 11 }}
+                dataKey={peakView === "days" ? "day" : "label"}
+                tick={{ fill: "#6b7280", fontSize: 10 }}
                 axisLine={false} tickLine={false}
-                interval={peakView === "hours" ? 1 : 0}
+                interval={0}
+                width={60}
               />
               <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
@@ -246,12 +247,15 @@ const AnalyticsPage = () => {
         {(() => {
           const data    = peakView === "days" ? peakDays : peakHours;
           const busiest = [...data].sort((a: any, b: any) => b.total - a.total)[0];
-          const key     = peakView === "days" ? "day" : "hour";
+          const displayKey = peakView === "days" ? "day" : "label";
+          const displayName = peakView === "hours"
+            ? (busiest[displayKey] as string).split("\n")[0] // just "Early Morning", not the full label
+            : busiest[displayKey];
           if (!busiest || busiest.total === 0) return null;
           return (
             <div className="px-5 py-3 border-t border-white/5 flex items-center gap-2">
-              <span className="text-yellow-400 text-xs font-semibold">⚡ Busiest {peakView === "days" ? "day" : "hour"}:</span>
-              <span className="text-white text-xs font-bold">{busiest[key]}</span>
+              <span className="text-yellow-400 text-xs font-semibold">⚡ Busiest {peakView === "days" ? "day" : "time block"}:</span>
+              <span className="text-white text-xs font-bold">{displayName}</span>
               <span className="text-gray-500 text-xs">— {busiest.total} reports</span>
             </div>
           );

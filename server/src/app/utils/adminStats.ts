@@ -10,19 +10,17 @@ export const adminStats = async (req: Request, res: Response) => {
   const result: any = {};
   try {
     const foundItems      = await foundItemService.getFoundItem({});
-    const lostItemsActive = await lostTItemServices.getLostItem();        // isFound: false
-    const allLostItems    = await lostTItemServices.getAllLostItems({});   // all including resolved
+    const lostItemsActive = await lostTItemServices.getLostItem();
+    const allLostItems    = await lostTItemServices.getAllLostItems({});
     const totalUsers      = await userService.allUsers();
     const claims          = await claimsService.getClaim();
 
     // ── Date helpers ──────────────────────────────────────────────
-    const now       = new Date();
-    const weekStart = new Date(now);
+    const now        = new Date();
+    const weekStart  = new Date(now);
     weekStart.setDate(now.getDate() - 7);
     weekStart.setHours(0, 0, 0, 0);
-
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
     const isThisWeek  = (d: string) => new Date(d) >= weekStart;
     const isThisMonth = (d: string) => new Date(d) >= monthStart;
 
@@ -82,13 +80,10 @@ export const adminStats = async (req: Request, res: Response) => {
     foundItems.forEach((i: any)   => addToMonth(i.createdAt, "found"));
     allLostItems.forEach((i: any) => addToMonth(i.createdAt, "lost"));
     claims.forEach((c: any)       => addToMonth(c.createdAt, "claims"));
-
-    // resolved = lost items that are now found, bucketed by when they were marked found
     allLostItems
       .filter((i: any) => i.isFound && i.updatedAt)
       .forEach((i: any) => addToMonth(i.updatedAt, "resolved"));
 
-    // ── Resolution rate trend (per month) ─────────────────────────
     result.monthlyStats = Object.values(monthlyMap).map((m: any) => ({
       ...m,
       resolutionRate: m.lost > 0 ? Math.round((m.resolved / m.lost) * 100) : 0,
@@ -139,10 +134,7 @@ export const adminStats = async (req: Request, res: Response) => {
       result.avgClaimResolutionDays = null;
     }
 
-    // ── 1. Resolution rate trend (monthly) ───────────────────────
-    // Already embedded in monthlyStats above as resolutionRate per month
-
-    // ── 2. Peak reporting days ────────────────────────────────────
+    // ── Peak reporting days ───────────────────────────────────────
     const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const peakDays: Record<number, { day: string; found: number; lost: number; total: number }> = {};
     for (let i = 0; i < 7; i++) peakDays[i] = { day: DAY_LABELS[i], found: 0, lost: 0, total: 0 };
@@ -159,57 +151,65 @@ export const adminStats = async (req: Request, res: Response) => {
     });
     result.peakReportingDays = Object.values(peakDays);
 
-    // ── 3. Peak reporting hours ───────────────────────────────────
-    const peakHours: Record<number, { hour: string; found: number; lost: number; total: number }> = {};
-    for (let i = 0; i < 24; i++) {
-      const label = i === 0 ? "12am" : i < 12 ? `${i}am` : i === 12 ? "12pm" : `${i - 12}pm`;
-      peakHours[i] = { hour: label, found: 0, lost: 0, total: 0 };
-    }
+    // ── Peak reporting hours (grouped into time blocks) ───────────
+    const timeBlocks: Record<string, { label: string; found: number; lost: number; total: number }> = {
+      "Early Morning": { label: "Early Morning\n12am–6am", found: 0, lost: 0, total: 0 },
+      "Morning":       { label: "Morning\n6am–12pm",       found: 0, lost: 0, total: 0 },
+      "Afternoon":     { label: "Afternoon\n12pm–6pm",     found: 0, lost: 0, total: 0 },
+      "Evening":       { label: "Evening\n6pm–12am",       found: 0, lost: 0, total: 0 },
+    };
+
+    const getTimeBlock = (hour: number): string => {
+      if (hour >= 0  && hour < 6)  return "Early Morning";
+      if (hour >= 6  && hour < 12) return "Morning";
+      if (hour >= 12 && hour < 18) return "Afternoon";
+      return "Evening";
+    };
+
     foundItems.forEach((i: any) => {
-      const h = new Date(i.createdAt).getHours();
-      peakHours[h].found++;
-      peakHours[h].total++;
+      const block = getTimeBlock(new Date(i.createdAt).getHours());
+      timeBlocks[block].found++;
+      timeBlocks[block].total++;
     });
     allLostItems.forEach((i: any) => {
-      const h = new Date(i.createdAt).getHours();
-      peakHours[h].lost++;
-      peakHours[h].total++;
+      const block = getTimeBlock(new Date(i.createdAt).getHours());
+      timeBlocks[block].lost++;
+      timeBlocks[block].total++;
     });
-    result.peakReportingHours = Object.values(peakHours);
+    result.peakReportingHours = Object.values(timeBlocks);
 
-    // ── 4. Unclaimed items age ────────────────────────────────────
+    // ── Unclaimed items age ───────────────────────────────────────
     const unclaimedItems = foundItems.filter((i: any) => !i.isClaimed);
-    const ageMs = (i: any) => now.getTime() - new Date(i.createdAt).getTime();
+    const ageMs   = (i: any) => now.getTime() - new Date(i.createdAt).getTime();
     const ageDays = (i: any) => Math.floor(ageMs(i) / (1000 * 60 * 60 * 24));
 
     result.unclaimedItemsAge = {
-      total:        unclaimedItems.length,
-      over7days:    unclaimedItems.filter((i: any) => ageDays(i) >= 7).length,
-      over30days:   unclaimedItems.filter((i: any) => ageDays(i) >= 30).length,
-      over90days:   unclaimedItems.filter((i: any) => ageDays(i) >= 90).length,
-      avgAgeDays:   unclaimedItems.length > 0
+      total:      unclaimedItems.length,
+      over7days:  unclaimedItems.filter((i: any) => ageDays(i) >= 7).length,
+      over30days: unclaimedItems.filter((i: any) => ageDays(i) >= 30).length,
+      over90days: unclaimedItems.filter((i: any) => ageDays(i) >= 90).length,
+      avgAgeDays: unclaimedItems.length > 0
         ? Math.round(unclaimedItems.reduce((s: number, i: any) => s + ageDays(i), 0) / unclaimedItems.length)
         : 0,
       oldest: unclaimedItems
         .sort((a: any, b: any) => ageMs(b) - ageMs(a))
         .slice(0, 5)
         .map((i: any) => ({
-          id:   i.id,
-          name: i.foundItemName,
-          days: ageDays(i),
+          id:       i.id,
+          name:     i.foundItemName,
+          days:     ageDays(i),
           location: i.location,
         })),
     };
 
-    // ── 5. Lost vs Found match rate ───────────────────────────────
+    // ── Lost vs Found match rate ──────────────────────────────────
     const totalLost     = allLostItems.length;
     const totalResolved = allLostItems.filter((i: any) => i.isFound).length;
     result.lostFoundMatchRate = {
       totalLost,
       totalResolved,
-      unresolved:  totalLost - totalResolved,
-      matchRate:   totalLost > 0 ? Math.round((totalResolved / totalLost) * 100) : 0,
-      // Monthly breakdown already in monthlyStats.resolved
+      unresolved: totalLost - totalResolved,
+      matchRate:  totalLost > 0 ? Math.round((totalResolved / totalLost) * 100) : 0,
     };
 
     sendResponse(res, {
