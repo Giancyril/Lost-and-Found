@@ -140,7 +140,7 @@ const ReportLostItem = () => {
                 {/* School Email */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
-                    School ID / Email
+                    Institutional Email
                     <span className="text-red-500 ml-1">*</span>
                   </label>
                   <input

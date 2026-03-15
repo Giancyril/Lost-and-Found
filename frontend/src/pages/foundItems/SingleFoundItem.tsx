@@ -11,7 +11,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
   FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaUser, FaTag,
-  FaTimes, FaBuilding, FaCheckCircle, FaPhone,
+  FaTimes, FaBuilding, FaCheckCircle, FaEnvelope,
   FaChevronLeft, FaChevronRight, FaClipboardList,
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
@@ -95,7 +95,7 @@ const SingleFoundItem = () => {
         distinguishingFeatures: data.distinguishingFeatures,
         lostDate: new Date(data.lostDate).toISOString(),
         claimantName: data.claimantName,
-        contactNumber: data.contactNumber,
+        schoolEmail: data.schoolEmail,   // ✅ replaced contactNumber
       };
       const res: any = await createClaim(claimData);
       if (res?.data?.success) {
@@ -248,7 +248,7 @@ const SingleFoundItem = () => {
                       <FaBuilding className="text-blue-400 mt-0.5 shrink-0 text-lg" />
                       <div>
                         <p className="text-white text-sm font-semibold">Is this your item?</p>
-                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">Submit a claim with your details and proof of ownership. The SAS office will review and contact you.</p>
+                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">Submit a claim with your details and proof of ownership. The SAS office will review and contact you via your school email.</p>
                       </div>
                     </div>
                     <button onClick={() => setIsClaimModalOpen(true)}
@@ -275,6 +275,7 @@ const SingleFoundItem = () => {
               <button onClick={() => { setIsClaimModalOpen(false); reset(); }} className="text-gray-500 hover:text-white ml-4"><FaTimes size={15} /></button>
             </div>
             <div className="px-6 py-5">
+              {/* Item preview */}
               <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
                 <img src={foundItemData?.img} alt={foundItemData?.foundItemName}
                   className="w-14 h-14 rounded-lg object-cover shrink-0"
@@ -285,7 +286,9 @@ const SingleFoundItem = () => {
                   <p className="text-gray-400 text-xs">📅 Found: {foundItemData?.date?.split("T")[0]}</p>
                 </div>
               </div>
+
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* Full Name */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Full Name *</label>
                   <div className="relative">
@@ -296,25 +299,36 @@ const SingleFoundItem = () => {
                   </div>
                   {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
                 </div>
+
+                {/* School Email — replaces Contact Number */}
                 <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Contact Number *</label>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
+                    School ID / Email *
+                  </label>
                   <div className="relative">
-                    <FaPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
-                    <input type="tel" placeholder="e.g. 09XX-XXX-XXXX"
-                      {...register("contactNumber", {
-                        required: "Contact number is required",
-                        pattern: { value: /^[0-9+\-\s()]{7,15}$/, message: "Enter a valid contact number" },
+                    <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
+                    <input type="email" placeholder="e.g. juandelacruz@nbsc.edu.ph"
+                      {...register("schoolEmail", {
+                        required: "School email is required",
+                        pattern: {
+                          value: /^[^\s@]+@nbsc\.edu\.ph$/i,
+                          message: "Must be a valid NBSC email (@nbsc.edu.ph)",
+                        },
                       })}
                       className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm placeholder-gray-600" />
                   </div>
-                  {errors.contactNumber && <p className="text-red-400 text-xs mt-1">{errors.contactNumber.message as string}</p>}
+                  {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
                 </div>
+
+                {/* Date Lost */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date Item Was Lost *</label>
                   <input type="date" {...register("lostDate", { required: "Please provide the date" })}
                     className="w-full p-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
                   {errors.lostDate && <p className="text-red-400 text-xs mt-1">{errors.lostDate.message as string}</p>}
                 </div>
+
+                {/* Proof of Ownership */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Proof of Ownership *</label>
                   <textarea rows={4}
@@ -326,13 +340,17 @@ const SingleFoundItem = () => {
                     className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm resize-none placeholder-gray-600" />
                   {errors.distinguishingFeatures && <p className="text-red-400 text-xs mt-1">{errors.distinguishingFeatures.message as string}</p>}
                 </div>
+
+                {/* Info banner */}
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
                     {isAdmin
                       ? "ℹ️ Confirming this claim will mark the item as Claimed and remove it from the available items board."
-                      : "ℹ️ Your claim will be reviewed by the SAS office. Make sure your contact number is correct they will reach out to you for verification."}
+                      : "ℹ️ Your claim will be reviewed by the SAS office. We will contact you via your school email for verification."}
                   </p>
                 </div>
+
+                {/* Actions */}
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => { setIsClaimModalOpen(false); reset(); }}
                     className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium">
@@ -342,7 +360,7 @@ const SingleFoundItem = () => {
                     className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50">
                     {isSubmitting || claimLoading
                       ? <div className="flex items-center justify-center gap-2"><Spinner size="sm" /> Processing...</div>
-                      : isAdmin ? " Confirm as Claimed" : "Submit Claim"}
+                      : isAdmin ? "Confirm as Claimed" : "Submit Claim"}
                   </button>
                 </div>
               </form>

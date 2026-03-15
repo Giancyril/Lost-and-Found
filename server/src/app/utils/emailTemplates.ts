@@ -135,14 +135,14 @@ export const itemClaimedTemplate = (data: {
   claimDate: string;
   contactNumber: string;
 }) => ({
-  subject: `Claim Approved — ${data.itemName} is Ready for Pickup`,
+  subject: `Item Successfully Received — ${data.itemName} Has Been Claimed`,
   html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <title>Claim Approved</title>
+      <title>Item Received Confirmation</title>
     </head>
     <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 0;">
@@ -162,10 +162,10 @@ export const itemClaimedTemplate = (data: {
                     <tr>
                       <td>
                         <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">NBSC SAS Lost &amp; Found</p>
-                        <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;">Your Claim Has Been Approved</h1>
+                        <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;">Your Item Has Been Received</h1>
                       </td>
                       <td align="right" valign="top">
-                        <span style="display:inline-block;background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid #bbf7d0;">✓ APPROVED</span>
+                        <span style="display:inline-block;background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid #bbf7d0;">✓ RECEIVED</span>
                       </td>
                     </tr>
                   </table>
@@ -177,22 +177,25 @@ export const itemClaimedTemplate = (data: {
                 <td style="padding:32px 40px;">
 
                   <p style="margin:0 0 8px;font-size:16px;font-weight:600;color:#0f172a;">Hello, ${data.claimantName}</p>
+                  <p style="margin:0 0 10px;font-size:14px;color:#64748b;line-height:1.7;">
+                    This is an automated confirmation from the NBSC SAS Lost &amp; Found office. Our records indicate that the item listed below has been successfully claimed and received.
+                  </p>
                   <p style="margin:0 0 28px;font-size:14px;color:#64748b;line-height:1.7;">
-                    Your claim has been verified and approved by the SAS office. Your item is now ready for pickup. Please visit the SAS office with your valid school ID to retrieve your belonging.
+                    <strong style="color:#0f172a;">Is this you?</strong> If you did receive this item, no further action is needed. If you did <strong>not</strong> receive this item or believe this is an error, please contact the SAS office immediately.
                   </p>
 
                   <!-- DETAIL CARD -->
                   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:28px;">
                     <tr>
                       <td style="padding:16px 20px;border-bottom:1px solid #e2e8f0;">
-                        <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;">Claim Details</p>
+                        <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;">Claim Record</p>
                       </td>
                     </tr>
                     <tr>
                       <td style="padding:0 20px;">
                         <table width="100%" cellpadding="0" cellspacing="0">
                           <tr style="border-bottom:1px solid #f1f5f9;">
-                            <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;width:130px;">Item Name</td>
+                            <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;width:130px;">Item</td>
                             <td style="padding:12px 0;font-size:13px;color:#0f172a;font-weight:600;">${data.itemName}</td>
                           </tr>
                           <tr style="border-bottom:1px solid #f1f5f9;">
@@ -200,17 +203,13 @@ export const itemClaimedTemplate = (data: {
                             <td style="padding:12px 0;font-size:13px;color:#334155;">📍 ${data.location}</td>
                           </tr>
                           <tr style="border-bottom:1px solid #f1f5f9;">
-                            <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Claim Date</td>
+                            <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Date Claimed</td>
                             <td style="padding:12px 0;font-size:13px;color:#334155;">📅 ${data.claimDate}</td>
-                          </tr>
-                          <tr style="border-bottom:1px solid #f1f5f9;">
-                            <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Contact #</td>
-                            <td style="padding:12px 0;font-size:13px;color:#334155;">${data.contactNumber}</td>
                           </tr>
                           <tr>
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Status</td>
                             <td style="padding:12px 0;">
-                              <span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid #bbf7d0;">✓ Approved</span>
+                              <span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid #bbf7d0;">✓ Successfully Received</span>
                             </td>
                           </tr>
                         </table>
@@ -218,26 +217,24 @@ export const itemClaimedTemplate = (data: {
                     </tr>
                   </table>
 
-                  <!-- PICKUP BOX -->
-                  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:20px;">
+                  <!-- NOT YOU BOX -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;margin-bottom:20px;">
                     <tr>
-                      <td style="padding:20px 24px;">
-                        <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#166534;">📍 Pickup Instructions</p>
-                        <p style="margin:0;font-size:13px;color:#15803d;line-height:1.7;">
-                          Please proceed to the <strong>SAS Office</strong> during office hours and present your <strong>valid school ID</strong>.
-                          Our staff will verify your identity and release the item to you.<br/><br/>
-                          Office Hours: <strong>Monday – Friday, 8:00 AM – 5:00 PM</strong>
+                      <td style="padding:18px 24px;">
+                        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#c2410c;">⚠️ Not you?</p>
+                        <p style="margin:0;font-size:13px;color:#9a3412;line-height:1.7;">
+                          If you did <strong>not</strong> claim this item or did not authorize this transaction, please contact the SAS office immediately at your earliest convenience so we can investigate.
                         </p>
                       </td>
                     </tr>
                   </table>
 
-                  <!-- WARNING NOTE -->
-                  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;">
+                  <!-- INFO NOTE -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;">
                     <tr>
                       <td style="padding:14px 20px;">
-                        <p style="margin:0;font-size:13px;color:#92400e;line-height:1.6;">
-                          ⚠️ <strong>Important:</strong> Please claim your item within <strong>7 days</strong>. Items not claimed within the allotted time may be turned over to the school administration.
+                        <p style="margin:0;font-size:13px;color:#1e40af;line-height:1.6;">
+                          This email is an automated notification from the NBSC SAS Lost &amp; Found system. <strong>Please do not reply to this email.</strong> For inquiries, visit the SAS office directly during office hours: <strong>Monday – Friday, 8:00 AM – 5:00 PM</strong>.
                         </p>
                       </td>
                     </tr>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
-  FaEye, FaSearch, FaCheck, FaTimes, FaUser, FaPhone, FaBoxOpen,
-  FaHistory, FaClipboardList, FaChevronLeft, FaChevronRight, FaEnvelope,
+  FaEye, FaSearch, FaCheck, FaTimes, FaUser, FaBoxOpen,
+  FaHistory, FaClipboardList, FaChevronLeft, FaChevronRight, FaEnvelope, FaCheckCircle,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -29,11 +29,25 @@ const ClaimsManagement = () => {
   // Email modal state
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailClaim, setEmailClaim]             = useState<any>(null);
-  const [isSendingEmail, setIsSendingEmail]     = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [claimEmailSentIds, setClaimEmailSentIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("claimEmailSentIds");
+      return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+
+  const markClaimEmailSent = (id: string) => {
+    setClaimEmailSentIds(prev => {
+      const next = new Set(prev).add(id);
+      localStorage.setItem("claimEmailSentIds", JSON.stringify([...next]));
+      return next;
+    });
+  };
   const [claimEmailForm, setClaimEmailForm]     = useState({
     toEmail: "", smtpHost: "smtp.gmail.com", smtpPort: 587,
     smtpUsername: "", smtpPassword: "", fromName: "NBSC SAS Lost & Found",
-    fromEmail: "", smtpSecure: true,
+    fromEmail: "", smtpSecure: false,
   });
 
   const { data: allClaims, isLoading }               = useGetAllClaimsQuery(undefined);
@@ -82,7 +96,7 @@ const ClaimsManagement = () => {
   // Email handlers
   const handleOpenClaimEmail = (claim: any) => {
     setEmailClaim(claim);
-    setClaimEmailForm(prev => ({ ...prev, toEmail: "" }));
+    setClaimEmailForm(prev => ({ ...prev, toEmail: claim.schoolEmail || "" }));
     setIsEmailModalOpen(true);
   };
 
@@ -111,6 +125,7 @@ const ClaimsManagement = () => {
         },
       }).unwrap();
       toast.success("Claim approval email sent successfully!");
+      if (emailClaim) markClaimEmailSent(emailClaim.id);
       setIsEmailModalOpen(false);
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to send email. Check your SMTP settings.");
@@ -235,7 +250,12 @@ const ClaimsManagement = () => {
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-400">
                   <span className="flex items-center gap-1"><FaUser size={9} /> {claim.claimantName || "—"}</span>
-                  <span className="flex items-center gap-1"><FaPhone size={9} /> {claim.contactNumber || "—"}</span>
+                  <span className="flex items-center gap-1">
+                    <FaEnvelope size={9} />
+                    {claim.schoolEmail
+                      ? <span className="text-blue-300">{claim.schoolEmail}</span>
+                      : <span className="italic">No email</span>}
+                  </span>
                 </div>
                 <div className="flex gap-2 pt-1">
                   <select value={claim.status} onChange={(e) => handleStatusChange(claim.id, e.target.value)}
@@ -250,10 +270,16 @@ const ClaimsManagement = () => {
                   </button>
                   {/* ✅ Email button — only for APPROVED claims (mobile) */}
                   {claim.status === "APPROVED" && (
-                    <button onClick={() => handleOpenClaimEmail(claim)}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 text-blue-300 hover:text-white text-xs font-medium rounded-lg transition-colors">
-                      <FaEnvelope size={11} /> Email
-                    </button>
+                    claimEmailSentIds.has(claim.id) ? (
+                      <span className="flex items-center gap-1.5 px-3 py-2 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-semibold rounded-lg whitespace-nowrap">
+                        <FaCheckCircle size={11} /> Sent
+                      </span>
+                    ) : (
+                      <button onClick={() => handleOpenClaimEmail(claim)}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 text-blue-300 hover:text-white text-xs font-medium rounded-lg transition-colors">
+                        <FaEnvelope size={11} /> Email
+                      </button>
+                    )
                   )}
                 </div>
               </div>
@@ -297,8 +323,10 @@ const ClaimsManagement = () => {
                             {claim.claimantName || <span className="text-gray-500 italic">Not provided</span>}
                           </div>
                           <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                            <FaPhone size={9} className="text-gray-500" />
-                            {claim.contactNumber || <span className="italic">No contact</span>}
+                            <FaEnvelope size={9} className="text-gray-500" />
+                            {claim.schoolEmail
+                              ? <span className="text-blue-300">{claim.schoolEmail}</span>
+                              : <span className="italic text-gray-600">No email</span>}
                           </div>
                           <div className="text-xs text-gray-500">Submitted: {formatDate(claim.createdAt)}</div>
                         </div>
@@ -325,10 +353,16 @@ const ClaimsManagement = () => {
                           </button>
                           {/* ✅ Email button — only for APPROVED claims (desktop) */}
                           {claim.status === "APPROVED" && (
-                            <button onClick={() => handleOpenClaimEmail(claim)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 text-blue-300 hover:text-white text-xs font-medium rounded-lg transition-colors">
-                              <FaEnvelope size={11} /> Email
-                            </button>
+                            claimEmailSentIds.has(claim.id) ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-semibold rounded-lg whitespace-nowrap">
+                                <FaCheckCircle size={11} /> Sent
+                              </span>
+                            ) : (
+                              <button onClick={() => handleOpenClaimEmail(claim)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 text-blue-300 hover:text-white text-xs font-medium rounded-lg transition-colors">
+                                <FaEnvelope size={11} /> Email
+                              </button>
+                            )
                           )}
                         </div>
                       </td>
@@ -516,7 +550,10 @@ const ClaimsManagement = () => {
                     <div>
                       <p className="text-white font-semibold text-sm">{selectedClaim.claimantName || "—"}</p>
                       <div className="flex items-center gap-1.5 text-gray-400 text-xs mt-0.5">
-                        <FaPhone size={9} /> {selectedClaim.contactNumber || "No contact provided"}
+                        <FaEnvelope size={9} />
+                        {selectedClaim.schoolEmail
+                          ? <span className="text-blue-300">{selectedClaim.schoolEmail}</span>
+                          : <span className="italic">No email provided</span>}
                       </div>
                     </div>
                   </div>
@@ -630,6 +667,11 @@ const ClaimsManagement = () => {
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
                   Recipient Email <span className="text-red-400">*</span>
+                  {emailClaim?.schoolEmail && (
+                    <span className="ml-2 text-[10px] text-green-400 font-normal normal-case tracking-normal">
+                      ✓ Pre-filled from school email
+                    </span>
+                  )}
                 </label>
                 <input type="email" required placeholder="claimant@email.com" value={claimEmailForm.toEmail}
                   onChange={e => setClaimEmailForm(p => ({ ...p, toEmail: e.target.value }))}

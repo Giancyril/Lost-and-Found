@@ -2,14 +2,18 @@ import { Claim, status } from "@prisma/client";
 import { JwtPayload } from "jsonwebtoken";
 import prisma from "../../config/prisma";
 
-const createClaim = async (item: Claim & { claimantName?: string; contactNumber?: string }, user?: JwtPayload) => {
+const createClaim = async (
+  item: Claim & { claimantName?: string; contactNumber?: string; schoolEmail?: string },
+  user?: JwtPayload
+) => {
   const result = await prisma.claim.create({
     data: {
-      foundItemId: item.foundItemId,
+      foundItemId:            item.foundItemId,
       distinguishingFeatures: item.distinguishingFeatures,
-      lostDate: item.lostDate,
-      claimantName: item.claimantName || "",
-      contactNumber: item.contactNumber || "",
+      lostDate:               item.lostDate,
+      claimantName:           item.claimantName  || "",
+      contactNumber:          item.contactNumber || "",   // keep for backwards compat
+      schoolEmail:            item.schoolEmail   || "",   // ✅ new field
       ...(user?.id ? { userId: user.id } : {}),
     },
   });
@@ -65,7 +69,6 @@ const updateClaimStatus = async (
   data: Partial<Claim>,
   performer?: { id?: string; name?: string }
 ) => {
-  // Fetch current status before updating
   const existing = await prisma.claim.findUnique({ where: { id: claimId } });
   const fromStatus = existing?.status ?? "PENDING";
 
@@ -74,14 +77,13 @@ const updateClaimStatus = async (
     data,
   });
 
-  // Write audit log entry
   if (data.status && data.status !== fromStatus) {
     await prisma.claimAuditLog.create({
       data: {
         claimId,
-        action: data.status,
-        fromStatus: fromStatus,
-        toStatus: data.status,
+        action:      data.status,
+        fromStatus:  fromStatus,
+        toStatus:    data.status,
         performedBy: performer?.name || "Admin",
         ...(performer?.id ? { performedById: performer.id } : {}),
         note: (data as any).note || "",
@@ -89,7 +91,6 @@ const updateClaimStatus = async (
     });
   }
 
-  // When approved, mark found item as claimed
   if (data.status === "APPROVED") {
     await prisma.foundItem.update({
       where: { id: result.foundItemId },
@@ -97,7 +98,6 @@ const updateClaimStatus = async (
     });
   }
 
-  // When rejected or reset to pending, revert isClaimed
   if (data.status === "REJECTED" || data.status === "PENDING") {
     await prisma.foundItem.update({
       where: { id: result.foundItemId },

@@ -55,7 +55,20 @@ const LostItemsManagement = () => {
     fromEmail: "", smtpSecure: false,
   });
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [emailSentIds, setEmailSentIds]     = useState<Set<string>>(new Set());
+  const [emailSentIds, setEmailSentIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("lostItemEmailSentIds");
+      return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+
+  const markEmailSent = (id: string) => {
+    setEmailSentIds(prev => {
+      const next = new Set(prev).add(id);
+      localStorage.setItem("lostItemEmailSentIds", JSON.stringify([...next]));
+      return next;
+    });
+  };
   const [sendLostItemEmail] = useSendLostItemEmailMutation();
 
   const { data: lostItemsData, isLoading, error } = useGetAllLostItemsQuery({ searchTerm, sortBy: "lostItemName", sortOrder: "asc" });
@@ -140,7 +153,7 @@ const LostItemsManagement = () => {
         },
       }).unwrap();
       toast.success("Email sent successfully!");
-      if (emailItem) setEmailSentIds(prev => new Set(prev).add(emailItem.id));
+      if (emailItem) markEmailSent(emailItem.id);
       setIsEmailModalOpen(false);
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to send email. Check your SMTP settings.");
