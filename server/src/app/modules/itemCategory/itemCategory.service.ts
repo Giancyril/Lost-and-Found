@@ -5,12 +5,13 @@ const createItemCategory = async (data: ItemCategory) => {
   const result = await prisma.itemCategory.create({
     data: data,
   });
-
   return result;
 };
 
 const getItemCategory = async () => {
-  const result = await prisma.itemCategory.findMany();
+  const result = await prisma.itemCategory.findMany({
+    orderBy: { name: "asc" },  //
+  });
   return result;
 };
 

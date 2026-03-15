@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaBoxOpen } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaBoxOpen,
+  FaTshirt, FaGem, FaBook, FaIdCard, FaMobileAlt, FaBriefcase,
+  FaWallet, FaHeadphones, FaKey, FaGlasses, FaUmbrella, FaFootballBall,
+  FaLaptop, FaTabletAlt, FaCamera, FaClock, FaRing, FaTag,
+  FaPlug, FaUsb, FaTint,
+} from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
   useCategoryQuery,
@@ -18,6 +23,55 @@ interface Category {
 interface FormData {
   name: string;
 }
+
+// Map category name keywords to icons + colors
+const getCategoryIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes("cloth") || n.includes("shirt") || n.includes("wear") || n.includes("apparel") || n.includes("fashion"))
+    return { icon: <FaTshirt size={13} />, color: "text-purple-400", bg: "bg-purple-500/10" };
+  if (n.includes("accessor") || n.includes("jewel") || n.includes("ring") || n.includes("bracelet"))
+    return { icon: <FaGem size={13} />, color: "text-pink-400", bg: "bg-pink-500/10" };
+  if (n.includes("book") || n.includes("stationery") || n.includes("pen") || n.includes("notebook"))
+    return { icon: <FaBook size={13} />, color: "text-yellow-400", bg: "bg-yellow-500/10" };
+  if (n.includes("id") || n.includes("card") || n.includes("document") || n.includes("license"))
+    return { icon: <FaIdCard size={13} />, color: "text-blue-400", bg: "bg-blue-500/10" };
+  if (n.includes("phone") || n.includes("mobile") || n.includes("celphone") || n.includes("cellphone"))
+    return { icon: <FaMobileAlt size={13} />, color: "text-cyan-400", bg: "bg-cyan-500/10" };
+  if (n.includes("laptop") || n.includes("computer") || n.includes("pc"))
+    return { icon: <FaLaptop size={13} />, color: "text-indigo-400", bg: "bg-indigo-500/10" };
+  if (n.includes("tablet") || n.includes("ipad"))
+    return { icon: <FaTabletAlt size={13} />, color: "text-indigo-400", bg: "bg-indigo-500/10" };
+  if (n.includes("electronic") || n.includes("device") || n.includes("gadget"))
+    return { icon: <FaLaptop size={13} />, color: "text-indigo-400", bg: "bg-indigo-500/10" };
+  if (n.includes("bag") || n.includes("wallet") || n.includes("purse") || n.includes("pouch"))
+    return { icon: <FaWallet size={13} />, color: "text-amber-400", bg: "bg-amber-500/10" };
+  if (n.includes("brief") || n.includes("backpack") || n.includes("luggage"))
+    return { icon: <FaBriefcase size={13} />, color: "text-amber-400", bg: "bg-amber-500/10" };
+  if (n.includes("headphone") || n.includes("earphone") || n.includes("airpod") || n.includes("audio"))
+    return { icon: <FaHeadphones size={13} />, color: "text-green-400", bg: "bg-green-500/10" };
+  if (n.includes("key") || n.includes("keychain"))
+    return { icon: <FaKey size={13} />, color: "text-orange-400", bg: "bg-orange-500/10" };
+  if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear"))
+    return { icon: <FaGlasses size={13} />, color: "text-teal-400", bg: "bg-teal-500/10" };
+  if (n.includes("umbrella"))
+    return { icon: <FaUmbrella size={13} />, color: "text-blue-400", bg: "bg-blue-500/10" };
+  if (n.includes("sport") || n.includes("ball") || n.includes("gym"))
+    return { icon: <FaFootballBall size={13} />, color: "text-red-400", bg: "bg-red-500/10" };
+  if (n.includes("camera") || n.includes("photo"))
+    return { icon: <FaCamera size={13} />, color: "text-violet-400", bg: "bg-violet-500/10" };
+  if (n.includes("watch") || n.includes("clock"))
+    return { icon: <FaClock size={13} />, color: "text-gray-300", bg: "bg-gray-500/10" };
+  if (n.includes("jewelry") || n.includes("necklace"))
+    return { icon: <FaRing size={13} />, color: "text-yellow-400", bg: "bg-yellow-500/10" };
+  if (n.includes("charger") || n.includes("cable") || n.includes("cord") || n.includes("plug") || n.includes("adapter"))
+    return { icon: <FaPlug size={13} />, color: "text-yellow-400", bg: "bg-yellow-500/10" };
+  if (n.includes("flash") || n.includes("usb") || n.includes("drive") || n.includes("memory") || n.includes("storage"))
+    return { icon: <FaUsb size={13} />, color: "text-blue-400", bg: "bg-blue-500/10" };
+  if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask") || n.includes("drink"))
+    return { icon: <FaTint size={13} />, color: "text-cyan-400", bg: "bg-cyan-500/10" };
+  // default
+  return { icon: <FaTag size={13} />, color: "text-green-400", bg: "bg-green-500/10" };
+};
 
 const CategoriesManagement = () => {
   const [searchTerm, setSearchTerm]               = useState("");
@@ -87,7 +141,7 @@ const CategoriesManagement = () => {
       <div className="flex justify-end">
         <button onClick={() => setShowAddForm(true)}
           className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium">
-    <FaPlus size={12} /> Add Category
+          <FaPlus size={12} /> Add Category
         </button>
       </div>
 
@@ -157,7 +211,14 @@ const CategoriesManagement = () => {
                         onChange={(e) => setEditForm({ name: e.target.value })}
                         className="px-3 py-1 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-full" />
                     ) : (
-                      <div className="font-medium text-white">{category.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-lg ${getCategoryIcon(category.name).bg} flex items-center justify-center shrink-0`}>
+                          <span className={getCategoryIcon(category.name).color}>
+                            {getCategoryIcon(category.name).icon}
+                          </span>
+                        </div>
+                        <span className="font-medium text-white">{category.name}</span>
+                      </div>
                     )}
                   </td>
                   <td className="px-6 py-4 text-gray-300">{formatDate(category.createdAt)}</td>
@@ -201,58 +262,62 @@ const CategoriesManagement = () => {
             <FaBoxOpen className="mx-auto text-4xl text-gray-500 mb-4" />
             <p className="text-gray-400">{searchTerm ? "No categories match your search." : "No categories yet."}</p>
           </div>
-        ) : filteredCategories.map((category) => (
-          <div key={category.id} className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
-            {editingId === category.id ? (
-              <div className="space-y-3">
-                <input type="text" value={editForm.name}
-                  onChange={(e) => setEditForm({ name: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-                <div className="flex gap-2">
-                  <button onClick={handleSave} disabled={!editForm.name.trim() || isUpdating}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white rounded-lg text-sm font-medium">
-                    <FaSave size={11} /> {isUpdating ? "Saving..." : "Save"}
-                  </button>
-                  <button onClick={handleCancel}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium">
-                    <FaTimes size={11} /> Cancel
-                  </button>
+        ) : filteredCategories.map((category) => {
+          const { icon, color, bg } = getCategoryIcon(category.name);
+          return (
+            <div key={category.id} className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
+              {editingId === category.id ? (
+                <div className="space-y-3">
+                  <input type="text" value={editForm.name}
+                    onChange={(e) => setEditForm({ name: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                  <div className="flex gap-2">
+                    <button onClick={handleSave} disabled={!editForm.name.trim() || isUpdating}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white rounded-lg text-sm font-medium">
+                      <FaSave size={11} /> {isUpdating ? "Saving..." : "Save"}
+                    </button>
+                    <button onClick={handleCancel}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium">
+                      <FaTimes size={11} /> Cancel
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-                      <FaBoxOpen className="text-green-400" size={13} />
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      {/* ✅ Dynamic icon based on category name */}
+                      <div className={`w-9 h-9 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
+                        <span className={color}>{icon}</span>
+                      </div>
+                      <p className="text-white font-medium">{category.name}</p>
                     </div>
-                    <p className="text-white font-medium">{category.name}</p>
+                    <div className="flex gap-1.5 shrink-0">
+                      <button onClick={() => handleEdit(category)}
+                        className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-colors">
+                        <FaEdit size={13} />
+                      </button>
+                      <button onClick={() => handleDeleteClick(category)}
+                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                        <FaTrash size={13} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-1.5 shrink-0">
-                    <button onClick={() => handleEdit(category)}
-                      className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-colors">
-                      <FaEdit size={13} />
-                    </button>
-                    <button onClick={() => handleDeleteClick(category)}
-                      className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-                      <FaTrash size={13} />
-                    </button>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 pt-1 border-t border-white/5">
+                    <div>
+                      <span className="text-gray-600">Created</span>
+                      <p className="text-gray-400 mt-0.5">{new Date(category.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Updated</span>
+                      <p className="text-gray-400 mt-0.5">{new Date(category.updatedAt).toLocaleDateString()}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 pt-1 border-t border-white/5">
-                  <div>
-                    <span className="text-gray-600">Created</span>
-                    <p className="text-gray-400 mt-0.5">{new Date(category.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Updated</span>
-                    <p className="text-gray-400 mt-0.5">{new Date(category.updatedAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        ))}
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Delete Modal */}
@@ -277,7 +342,7 @@ const CategoriesManagement = () => {
                   {isDeleting ? (
                     <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg> Deleting...</>
                   ) : "Delete"}
                 </button>

@@ -132,7 +132,7 @@ const Dashboard = () => {
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">Good to see you!</h2>
             <p className="text-gray-400 text-xs sm:text-sm mt-1">
-              Northern Bukidnon State College · SAS Office · Lost & Found System
+              NBSC SAS · Lost & Found System
             </p>
           </div>
           <div className="flex gap-2">
