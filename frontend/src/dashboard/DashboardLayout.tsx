@@ -30,27 +30,27 @@ interface Notification {
 }
 
 const menuItems = [
-  { title: "Overview",   icon: FaTachometerAlt,       path: "/dashboard",              exact: true },
-  { title: "Lost Items", icon: FaExclamationTriangle, path: "/dashboard/lost-items"                },
-  { title: "Found Items",icon: FaSearch,              path: "/dashboard/found-items"               },
-  { title: "Claims",     icon: FaClipboardList,       path: "/dashboard/claims"                    },
-  { title: "Analytics",  icon: FaChartLine,           path: "/dashboard/analytics"                 },
-  { title: "Heatmap",    icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                   },
-  { title: "Users",      icon: FaUsers,               path: "/dashboard/users"                     },
-  { title: "Categories", icon: FaBoxOpen,             path: "/dashboard/categories"                },
-  { title: "Settings",   icon: FaCog,                 path: "/dashboard/settings"                  },
+  { title: "Overview",    icon: FaTachometerAlt,       path: "/dashboard",              exact: true },
+  { title: "Lost Items",  icon: FaExclamationTriangle, path: "/dashboard/lost-items"                },
+  { title: "Found Items", icon: FaSearch,              path: "/dashboard/found-items"               },
+  { title: "Claims",      icon: FaClipboardList,       path: "/dashboard/claims"                    },
+  { title: "Analytics",   icon: FaChartLine,           path: "/dashboard/analytics"                 },
+  { title: "Heatmap",     icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                   },
+  { title: "Users",       icon: FaUsers,               path: "/dashboard/users"                     },
+  { title: "Categories",  icon: FaBoxOpen,             path: "/dashboard/categories"                },
+  { title: "Settings",    icon: FaCog,                 path: "/dashboard/settings"                  },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
-  "/dashboard":             { title: "Overview",   subtitle: "Welcome back! Here's an overview of today's activity." },
-  "/dashboard/lost-items":  { title: "Lost Items", subtitle: "Track items reported as lost"                          },
-  "/dashboard/found-items": { title: "Found Items",subtitle: "Manage all reported found items"                       },
-  "/dashboard/claims":      { title: "Claims",     subtitle: "Review and verify item claims"                         },
-  "/dashboard/analytics":   { title: "Analytics",  subtitle: "Monthly trends, category breakdown & top reporters"    },
-  "/dashboard/heatmap":     { title: "Heatmap",    subtitle: "See where items are most commonly lost or found"       },
-  "/dashboard/users":       { title: "Users",      subtitle: "Manage registered users"                               },
-  "/dashboard/categories":  { title: "Categories", subtitle: "Organize item categories"                              },
-  "/dashboard/settings":    { title: "Settings",   subtitle: "Configure system preferences"                          },
+  "/dashboard":             { title: "Overview",    subtitle: "Welcome back! Here's an overview of today's activity." },
+  "/dashboard/lost-items":  { title: "Lost Items",  subtitle: "Track items reported as lost"                          },
+  "/dashboard/found-items": { title: "Found Items", subtitle: "Manage all reported found items"                       },
+  "/dashboard/claims":      { title: "Claims",      subtitle: "Review and verify item claims"                         },
+  "/dashboard/analytics":   { title: "Analytics",   subtitle: "Monthly trends, category breakdown & top reporters"    },
+  "/dashboard/heatmap":     { title: "Heatmap",     subtitle: "See where items are most commonly lost or found"       },
+  "/dashboard/users":       { title: "Users",       subtitle: "Manage registered users"                               },
+  "/dashboard/categories":  { title: "Categories",  subtitle: "Organize item categories"                              },
+  "/dashboard/settings":    { title: "Settings",    subtitle: "Configure system preferences"                          },
 };
 
 const timeAgo = (dateStr: string) => {
@@ -66,50 +66,65 @@ const timeAgo = (dateStr: string) => {
 const notifIcon = (type: Notification["type"]) => {
   const base = "w-8 h-8 rounded-full flex items-center justify-center shrink-0";
   switch (type) {
-    case "claim":        return <div className={`${base} bg-yellow-400/10 border border-yellow-400/20`}><FaClipboardList   size={12} className="text-yellow-400" /></div>;
-    case "claim_status": return <div className={`${base} bg-emerald-400/10 border border-emerald-400/20`}><FaCheckCircle  size={12} className="text-emerald-400" /></div>;
-    case "found":        return <div className={`${base} bg-cyan-400/10 border border-cyan-400/20`}><FaSearch              size={12} className="text-cyan-400"    /></div>;
-    case "lost":         return <div className={`${base} bg-red-400/10 border border-red-400/20`}><FaExclamationTriangle   size={12} className="text-red-400"     /></div>;
+    case "claim":        return <div className={`${base} bg-yellow-400/10 border border-yellow-400/20`}><FaClipboardList  size={12} className="text-yellow-400" /></div>;
+    case "claim_status": return <div className={`${base} bg-emerald-400/10 border border-emerald-400/20`}><FaCheckCircle size={12} className="text-emerald-400" /></div>;
+    case "found":        return <div className={`${base} bg-cyan-400/10 border border-cyan-400/20`}><FaSearch             size={12} className="text-cyan-400"    /></div>;
+    case "lost":         return <div className={`${base} bg-red-400/10 border border-red-400/20`}><FaExclamationTriangle  size={12} className="text-red-400"     /></div>;
   }
+};
+
+// ─── helpers to seed timestamps from localStorage ─────────────────────────────
+const getSavedLatestTs = (type: string): string | null => {
+  try {
+    const saved = localStorage.getItem("admin_notifications");
+    if (!saved) return null;
+    const notifs: Notification[] = JSON.parse(saved);
+    const filtered = notifs.filter(n =>
+      type === "claims" ? n.type === "claim" : n.type === type
+    );
+    if (filtered.length === 0) return null;
+    return filtered.sort(
+      (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
+    )[0].time;
+  } catch { return null; }
 };
 
 // ─── Notification Bell ────────────────────────────────────────────────────────
 const NotificationBell = () => {
   const [open, setOpen] = useState(false);
 
+  // ✅ load from localStorage on mount
   const [notifications, setNotifications] = useState<Notification[]>(() => {
     try {
       const saved = localStorage.getItem("admin_notifications");
       return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   });
 
   const bellRef = useRef<HTMLDivElement>(null);
 
-  const latestClaimTs = useRef<string | null>(null);
-  const latestFoundTs = useRef<string | null>(null);
-  const latestLostTs = useRef<string | null>(null);
+  // ✅ seed timestamps from saved notifications so we don't re-add on refresh
+  const latestClaimTs = useRef<string | null>(getSavedLatestTs("claims"));
+  const latestFoundTs = useRef<string | null>(getSavedLatestTs("found"));
+  const latestLostTs  = useRef<string | null>(getSavedLatestTs("lost"));
 
-  const initialized = useRef({ claims: false, found: false, lost: false });
+  // ✅ if we have saved data, mark as already initialized
+  const initialized = useRef({
+    claims: getSavedLatestTs("claims") !== null,
+    found:  getSavedLatestTs("found")  !== null,
+    lost:   getSavedLatestTs("lost")   !== null,
+  });
 
-  const pollOpts = {
-    pollingInterval: 8000,
-    refetchOnFocus: true,
-    refetchOnReconnect: true,
-  };
+  const pollOpts = { pollingInterval: 8000, refetchOnFocus: true, refetchOnReconnect: true };
 
   const { data: claimsData } = useGetAllClaimsQuery(undefined, pollOpts);
-  const { data: foundData } = useGetFoundItemsQuery({}, pollOpts);
-  const { data: lostData } = useGetLostItemsQuery({}, pollOpts);
+  const { data: foundData }  = useGetFoundItemsQuery({},        pollOpts);
+  const { data: lostData }   = useGetLostItemsQuery({},      pollOpts);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node))
-        setOpen(false);
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setOpen(false);
     };
-
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
@@ -121,16 +136,10 @@ const NotificationBell = () => {
     return [];
   };
 
-  const mergeNotifications = (
-    incoming: Notification[],
-    prev: Notification[]
-  ): Notification[] => {
+  const mergeNotifications = (incoming: Notification[], prev: Notification[]): Notification[] => {
     const map = new Map<string, Notification>();
-
-    [...incoming, ...prev].forEach((n) => {
-      if (!map.has(n.id)) map.set(n.id, n);
-    });
-
+    // prev first so incoming read:false doesn't overwrite already-read saved ones
+    [...prev, ...incoming].forEach(n => { if (!map.has(n.id)) map.set(n.id, n); });
     return Array.from(map.values())
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
       .slice(0, 50);
@@ -145,122 +154,107 @@ const NotificationBell = () => {
     makeNotif: (item: T) => Notification
   ) => {
     const items = [...toArray(rawData)].sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() -
-        new Date(a.createdAt).getTime()
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     ) as T[];
-
     if (items.length === 0) return;
 
     if (!initialized.current[initKey]) {
+      // first load with no saved data — seed timestamp and show recent items
       latestTs.current = items[0].createdAt;
       initialized.current[initKey] = true;
-
       const recentCutoff = Date.now() - RECENT_MS;
-
-      const recentItems = items.filter(
-        (i) => new Date(i.createdAt).getTime() > recentCutoff
-      );
-
+      const recentItems  = items.filter(i => new Date(i.createdAt).getTime() > recentCutoff);
       if (recentItems.length > 0) {
-        setNotifications((prev) =>
-          mergeNotifications(recentItems.map(makeNotif), prev)
-        );
+        setNotifications(prev => mergeNotifications(recentItems.map(makeNotif), prev));
       }
-
       return;
     }
 
-    const cutoff = latestTs.current;
-
+    // already initialized — only add genuinely new items
+    const cutoff  = latestTs.current;
     const newItems = cutoff
-      ? items.filter(
-          (i) =>
-            new Date(i.createdAt).getTime() >
-            new Date(cutoff).getTime()
-        )
+      ? items.filter(i => new Date(i.createdAt).getTime() > new Date(cutoff).getTime())
       : [];
 
     if (newItems.length > 0) {
       latestTs.current = newItems[0].createdAt;
-
-      setNotifications((prev) =>
-        mergeNotifications(newItems.map(makeNotif), prev)
-      );
+      setNotifications(prev => mergeNotifications(newItems.map(makeNotif), prev));
     }
   };
 
   useEffect(() => {
     processItems(claimsData, latestClaimTs, "claims", (claim: any): Notification => ({
-      id: `claim-${claim.id}`,
-      type: "claim",
-      title: "New Claim Submitted",
-      subtitle: `${claim.claimantName || "Someone"} claimed "${
-        claim.foundItem?.foundItemName || "an item"
-      }"`,
-      time: claim.createdAt,
-      read: false,
-      link: "/dashboard/claims",
+      id:       `claim-${claim.id}`,
+      type:     "claim",
+      title:    "New Claim Submitted",
+      subtitle: `${claim.claimantName || "Someone"} claimed "${claim.foundItem?.foundItemName || "an item"}"`,
+      time:     claim.createdAt,
+      read:     false,
+      link:     "/dashboard/claims",
     }));
   }, [claimsData]);
 
   useEffect(() => {
     processItems(foundData, latestFoundTs, "found", (item: any): Notification => ({
-      id: `found-${item.id}`,
-      type: "found",
-      title: "New Found Item Reported",
-      subtitle: `"${item.foundItemName || item.name || "Unknown item"}" found at ${
-        item.location || "unknown location"
-      }`,
-      time: item.createdAt,
-      read: false,
-      link: "/dashboard/found-items",
+      id:       `found-${item.id}`,
+      type:     "found",
+      title:    "New Found Item Reported",
+      subtitle: `"${item.foundItemName || "Unknown item"}" found at ${item.location || "unknown location"}`,
+      time:     item.createdAt,
+      read:     false,
+      link:     "/dashboard/found-items",
     }));
   }, [foundData]);
 
   useEffect(() => {
     processItems(lostData, latestLostTs, "lost", (item: any): Notification => ({
-      id: `lost-${item.id}`,
-      type: "lost",
-      title: "New Lost Item Reported",
-      subtitle: `"${item.lostItemName || item.name || "Unknown item"}" lost at ${
-        item.location || "unknown location"
-      }`,
-      time: item.createdAt,
-      read: false,
-      link: "/dashboard/lost-items",
+      id:       `lost-${item.id}`,
+      type:     "lost",
+      title:    "New Lost Item Reported",
+      subtitle: `"${item.lostItemName || "Unknown item"}" lost at ${item.location || "unknown location"}`,
+      time:     item.createdAt,
+      read:     false,
+      link:     "/dashboard/lost-items",
     }));
   }, [lostData]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAllRead = () =>
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-
-  const markOneRead = (id: string) =>
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-
-  const clearAll = () => setNotifications([]);
-
+  // ✅ persist to localStorage whenever notifications change
   useEffect(() => {
     try {
-      localStorage.setItem(
-        "admin_notifications",
-        JSON.stringify(notifications)
-      );
+      localStorage.setItem("admin_notifications", JSON.stringify(notifications));
     } catch {}
   }, [notifications]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  // ✅ markAllRead also syncs to localStorage immediately
+  const markAllRead = () => {
+    const updated = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updated);
+    try { localStorage.setItem("admin_notifications", JSON.stringify(updated)); } catch {}
+  };
+
+  const markOneRead = (id: string) =>
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+
+  // ✅ clearAll also resets timestamps and localStorage
+  const clearAll = () => {
+    setNotifications([]);
+    latestClaimTs.current = null;
+    latestFoundTs.current = null;
+    latestLostTs.current  = null;
+    initialized.current   = { claims: false, found: false, lost: false };
+    try { localStorage.removeItem("admin_notifications"); } catch {}
+  };
 
   return (
     <div ref={bellRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
+        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
         className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all"
       >
         <FaBell size={14} />
-
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-gray-900 animate-pulse">
             {unreadCount > 99 ? "99+" : unreadCount}
@@ -305,29 +299,38 @@ const NotificationBell = () => {
                 <p className="text-xs mt-1 opacity-60">New claims and items will appear here</p>
               </div>
             ) : (
-              [...notifications].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).map((notif) => (
-                <Link
-                  key={notif.id}
-                  to={notif.link}
-                  onClick={() => { markOneRead(notif.id); setOpen(false); }}
-                  className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${!notif.read ? "bg-white/[0.02]" : ""}`}
-                >
-                  {notifIcon(notif.type)}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className={`text-xs font-semibold truncate ${!notif.read ? "text-white" : "text-gray-300"}`}>
-                        {notif.title}
-                      </p>
-                      {!notif.read && <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />}
+              [...notifications]
+                .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+                .map(notif => (
+                  <Link
+                    key={notif.id}
+                    to={notif.link}
+                    onClick={() => { markOneRead(notif.id); setOpen(false); }}
+                    className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${!notif.read ? "bg-white/[0.02]" : ""}`}
+                  >
+                    {notifIcon(notif.type)}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={`text-xs font-semibold truncate ${!notif.read ? "text-white" : "text-gray-300"}`}>
+                          {notif.title}
+                        </p>
+                        {!notif.read && <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />}
+                      </div>
+                      <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">{notif.subtitle}</p>
+                      <p className="text-gray-700 text-[10px] mt-1">{timeAgo(notif.time)}</p>
                     </div>
-                    <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">{notif.subtitle}</p>
-                    <p className="text-gray-700 text-[10px] mt-1">{timeAgo(notif.time)}</p>
-                  </div>
-                </Link>
-              ))
+                  </Link>
+                ))
             )}
           </div>
 
+          {notifications.length > 0 && (
+            <div className="px-4 py-2.5 border-t border-white/5">
+              <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
+                View all activity →
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -345,7 +348,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     exact ? location.pathname === path : (location.pathname === path || location.pathname.startsWith(path + "/"));
 
   const getPageMeta = () => {
-    const key = Object.keys(pageTitles).find((k) =>
+    const key = Object.keys(pageTitles).find(k =>
       k === "/dashboard" ? location.pathname === k : location.pathname.startsWith(k)
     );
     return pageTitles[key ?? "/dashboard"] ?? { title: "Dashboard", subtitle: "" };
@@ -376,12 +379,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className={`flex items-center h-16 border-b border-white/5 px-4 shrink-0 ${sidebarCollapsed ? "justify-center" : "justify-between"}`}>
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2.5">
-              <img
-                src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
-                alt="NBSC SAS Logo"
-                className="w-8 h-8 object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-              />
+              <img src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png" alt="NBSC SAS Logo"
+                className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
               <div className="leading-tight">
                 <p className="text-white text-sm font-semibold tracking-widest">NBSC SAS</p>
                 <p className="text-gray-500 text-[10px] uppercase tracking-widest">Lost & Found</p>
@@ -389,20 +388,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
           )}
           {sidebarCollapsed && (
-            <img
-              src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
-              alt="NBSC SAS Logo"
-              className="w-8 h-8 object-contain"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-            />
+            <img src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png" alt="NBSC SAS Logo"
+              className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
           )}
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-500 hover:text-white p-1">
             <FaTimes size={14} />
           </button>
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded-md text-gray-500 hover:text-white hover:bg-white/5 transition-colors ${sidebarCollapsed ? "mx-auto mt-1" : ""}`}
-          >
+          <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded-md text-gray-500 hover:text-white hover:bg-white/5 transition-colors ${sidebarCollapsed ? "mx-auto mt-1" : ""}`}>
             {sidebarCollapsed ? <FaChevronRight size={10} /> : <FaChevronLeft size={10} />}
           </button>
         </div>
@@ -410,19 +403,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
           {!sidebarCollapsed && <p className="text-[10px] uppercase tracking-widest text-gray-600 font-medium px-2 mb-3">Menu</p>}
-          {menuItems.map((item) => {
+          {menuItems.map(item => {
             const active = isActive(item.path, item.exact);
-            const Icon = item.icon;
+            const Icon   = item.icon;
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
+              <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
                 title={sidebarCollapsed ? item.title : undefined}
                 className={`relative flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group
                   ${active ? "bg-cyan-500/10 text-cyan-400" : "text-gray-400 hover:text-white hover:bg-white/5"}
-                  ${sidebarCollapsed ? "justify-center" : ""}`}
-              >
+                  ${sidebarCollapsed ? "justify-center" : ""}`}>
                 {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-cyan-400 rounded-full" />}
                 <Icon size={14} className={active ? "text-cyan-400" : "text-gray-500 group-hover:text-gray-300"} />
                 {!sidebarCollapsed && <span>{item.title}</span>}
@@ -438,20 +427,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Bottom */}
         <div className="shrink-0 border-t border-white/5 px-3 py-4 space-y-0.5">
-          <Link
-            to="/"
-            title={sidebarCollapsed ? "Back to Home" : undefined}
-            className={`flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}
-          >
+          <Link to="/" title={sidebarCollapsed ? "Back to Home" : undefined}
+            className={`flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}>
             <FaHome size={14} className="text-gray-500 group-hover:text-gray-300" />
             {!sidebarCollapsed && <span>Back to Home</span>}
             {sidebarCollapsed && <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible whitespace-nowrap z-50 shadow-xl">Back to Home</span>}
           </Link>
-          <button
-            onClick={handleSignOut}
-            title={sidebarCollapsed ? "Sign Out" : undefined}
-            className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}
-          >
+          <button onClick={handleSignOut} title={sidebarCollapsed ? "Sign Out" : undefined}
+            className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}>
             <FaSignOutAlt size={14} className="text-gray-500 group-hover:text-red-400" />
             {!sidebarCollapsed && <span>Sign Out</span>}
             {sidebarCollapsed && <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible whitespace-nowrap z-50 shadow-xl">Sign Out</span>}
