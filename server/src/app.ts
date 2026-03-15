@@ -16,8 +16,12 @@ app.use(
       "https://lost-and-found-liart-seven.vercel.app",
     ],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization", "authorization"],
   })
 );
+
+app.options("*", cors());
 
 // Increase body size limit to 10mb to support base64 image uploads
 app.use(express.json({ limit: "10mb" }));
