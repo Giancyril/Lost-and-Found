@@ -128,9 +128,9 @@ const ReportFoundItem = () => {
   // Non-admin: show office visit message
   if (!isAdmin) {
     return (
-      <section className="min-h-screen flex items-center justify-center bg-gray-950 py-8 px-4">
+      <section className="min-h-screen flex items-center justify-center bg-gray-950 py-6 px-3">
         <div className="w-full max-w-sm mx-auto">
-          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-10 text-center">
+          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-6 sm:p-10 text-center">
             <div className="w-16 h-16 bg-green-500/10 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-5">
               <FaBoxOpen className="text-green-400 text-2xl" />
             </div>
@@ -169,9 +169,9 @@ const ReportFoundItem = () => {
   // Admin: full form
   return (
     <>
-      <section className="min-h-screen flex items-center justify-center bg-gray-950 py-8 px-4">
+      <section className="min-h-screen flex items-center justify-center bg-gray-950 py-6 px-3">
         <div className="w-full max-w-2xl mx-auto">
-          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-5 sm:p-8">
+          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-4 sm:p-8">
 
             {/* Header */}
             <div className="mb-8 text-center">

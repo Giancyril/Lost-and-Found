@@ -103,9 +103,9 @@ const ReportLostItem = () => {
 
   return (
     <>
-      <section className="min-h-screen flex items-center justify-center bg-gray-950 py-8 px-4">
+      <section className="min-h-screen flex items-center justify-center bg-gray-950 py-6 px-3">
         <div className="w-full max-w-2xl mx-auto">
-          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-5 sm:p-8">
+          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-4 sm:p-8">
 
             {/* Header */}
             <div className="mb-8 text-center">

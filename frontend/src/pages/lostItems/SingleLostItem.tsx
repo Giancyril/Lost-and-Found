@@ -234,10 +234,10 @@ const SingleLostItem = () => {
       {/* Modal — redesigned */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm">
-          <div className="relative w-full sm:max-w-md bg-gray-900 rounded-t-2xl sm:rounded-2xl border border-gray-800 shadow-2xl max-h-[85vh] overflow-y-auto">
+          <div className="relative w-full sm:max-w-md bg-gray-900 rounded-t-2xl sm:rounded-2xl border border-gray-800 shadow-2xl max-h-[82vh] overflow-y-auto">
 
             {/* Header */}
-            <div className="flex items-start justify-between px-6 py-4 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
+            <div className="flex items-start justify-between px-4 py-3 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
               <div>
                 <h3 className="text-base font-bold text-white">I found this item</h3>
                 <p className="text-gray-500 text-xs mt-0.5">Tell us where and when you found <span className="text-white font-medium">{lostItemName}</span></p>
@@ -248,7 +248,7 @@ const SingleLostItem = () => {
               </button>
             </div>
 
-            <div className="px-6 py-5 space-y-4">
+            <div className="px-4 py-4 space-y-3">
 
               {/* Item preview */}
               <div className="flex items-center gap-3 bg-gray-800/70 rounded-xl p-3 border border-gray-700/60">
