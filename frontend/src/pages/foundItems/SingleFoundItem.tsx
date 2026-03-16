@@ -37,13 +37,9 @@ const HiddenImagePlaceholder = () => (
     <div className="text-center px-6">
       <p className="text-white font-semibold text-sm mb-1">Image Not Available</p>
       <p className="text-gray-500 text-xs leading-relaxed">
-        For security purposes, the photo of this item is hidden from public view.
+        The photo of this item is hidden from public view.
         Submit a claim with proof of ownership to proceed.
       </p>
-    </div>
-    <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-2.5 mt-1">
-      <span className="text-yellow-400 text-sm">🔒</span>
-      <p className="text-yellow-300/80 text-xs">Only visible to SAS Office staff</p>
     </div>
   </div>
 );
