@@ -31,7 +31,7 @@ const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: (v: b
 );
 
 const SectionCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-gray-800/50 border border-gray-700/60 rounded-2xl p-4 sm:p-6 ${className}`}>
+  <div className={`bg-gray-800 border border-gray-700 rounded-2xl p-4 sm:p-6 ${className}`}>
     {children}
   </div>
 );
@@ -45,7 +45,7 @@ const FieldLabel = ({ children }: { children: React.ReactNode }) => (
 const InputField = ({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement> & { className?: string }) => (
   <input
     {...props}
-    className={`w-full px-4 py-2.5 bg-gray-900/80 border border-gray-700 rounded-xl text-white text-sm
+    className={`w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm
       placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50
       transition-all duration-200 ${className}`}
   />
@@ -54,7 +54,7 @@ const InputField = ({ className = "", ...props }: React.InputHTMLAttributes<HTML
 const SelectField = ({ className = "", children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { className?: string }) => (
   <select
     {...props}
-    className={`w-full px-4 py-2.5 bg-gray-900/80 border border-gray-700 rounded-xl text-white text-sm
+    className={`w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm
       focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 ${className}`}
   >
     {children}
@@ -208,7 +208,7 @@ const Settings = () => {
       </div>
 
       {/* ── Mobile Tab Bar (horizontal scroll) ── */}
-      <div className="lg:hidden bg-gray-800/60 border border-gray-700/60 rounded-2xl p-2">
+      <div className="lg:hidden bg-gray-800 border border-gray-700 rounded-2xl p-2">
         <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-hide">
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
@@ -235,7 +235,7 @@ const Settings = () => {
 
         {/* ── Desktop Sidebar ── */}
         <aside className="hidden lg:block lg:w-56 shrink-0">
-          <div className="bg-gray-800/60 border border-gray-700/60 rounded-2xl p-2 lg:sticky lg:top-4">
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-2 lg:sticky lg:top-4">
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 px-3 py-2">Navigation</p>
             <nav className="flex flex-col gap-0.5">
               {tabs.map(tab => {
@@ -288,7 +288,7 @@ const Settings = () => {
                     { label: "Email",    value: (user as any)?.email    || "—" },
                     { label: "Role",     value: (user as any)?.role     || "—" },
                   ].map(item => (
-                    <div key={item.label} className="bg-gray-900/60 rounded-xl p-2.5 sm:p-3 min-w-0">
+                    <div key={item.label} className="bg-gray-900 rounded-xl p-2.5 sm:p-3 min-w-0">
                       <p className="text-[10px] uppercase tracking-wider text-gray-600 font-semibold">{item.label}</p>
                       <p className="text-white text-xs sm:text-sm font-medium mt-0.5 truncate">{item.value}</p>
                     </div>
