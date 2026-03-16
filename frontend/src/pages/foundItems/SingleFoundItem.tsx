@@ -16,6 +16,38 @@ import {
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
 
+// ── Hide image for Wallets & Purses (admin always sees) ──
+const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
+
+const shouldHideImage = (categoryName: string, isAdmin: boolean) => {
+  if (isAdmin) return false;
+  return HIDDEN_IMAGE_CATEGORIES.some((c) =>
+    categoryName?.toLowerCase().includes(c)
+  );
+};
+
+// ── Placeholder shown to non-admin when category is hidden ──
+const HiddenImagePlaceholder = () => (
+  <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex flex-col items-center justify-center gap-4">
+    <div className="w-20 h-20 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
+      <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+      </svg>
+    </div>
+    <div className="text-center px-6">
+      <p className="text-white font-semibold text-sm mb-1">Image Not Available</p>
+      <p className="text-gray-500 text-xs leading-relaxed">
+        For security purposes, the photo of this item is hidden from public view.
+        Submit a claim with proof of ownership to proceed.
+      </p>
+    </div>
+    <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-2.5 mt-1">
+      <span className="text-yellow-400 text-sm">🔒</span>
+      <p className="text-yellow-300/80 text-xs">Only visible to SAS Office staff</p>
+    </div>
+  </div>
+);
+
 function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const prev = () => setActiveIdx((i) => (i === 0 ? images.length - 1 : i - 1));
@@ -95,7 +127,7 @@ const SingleFoundItem = () => {
         distinguishingFeatures: data.distinguishingFeatures,
         lostDate: new Date(data.lostDate).toISOString(),
         claimantName: data.claimantName,
-        schoolEmail: data.schoolEmail,   // ✅ replaced contactNumber
+        schoolEmail: data.schoolEmail,
       };
       const res: any = await createClaim(claimData);
       if (res?.data?.success) {
@@ -150,6 +182,7 @@ const SingleFoundItem = () => {
   );
 
   const isClaimed = foundItemData?.isClaimed;
+  const hideImage = shouldHideImage(foundItemData?.category?.name, isAdmin);
 
   const imageList: string[] = Array.isArray(foundItemData.images) && foundItemData.images.length > 0
     ? foundItemData.images.map((i: any) => (typeof i === "string" ? i : i?.url ?? i?.src ?? ""))
@@ -187,9 +220,12 @@ const SingleFoundItem = () => {
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
 
-            {/* Left: Image */}
+            {/* Left: Image or Hidden Placeholder */}
             <div className="flex flex-col h-full">
-              <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
+              {hideImage
+                ? <HiddenImagePlaceholder />
+                : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
+              }
             </div>
 
             {/* Right: Details */}
@@ -275,11 +311,19 @@ const SingleFoundItem = () => {
               <button onClick={() => { setIsClaimModalOpen(false); reset(); }} className="text-gray-500 hover:text-white ml-4"><FaTimes size={15} /></button>
             </div>
             <div className="px-4 py-4">
-              {/* Item preview */}
+              {/* Item preview — show placeholder thumbnail if image is hidden */}
               <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
-                <img src={foundItemData?.img} alt={foundItemData?.foundItemName}
-                  className="w-14 h-14 rounded-lg object-cover shrink-0"
-                  onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+                {hideImage ? (
+                  <div className="w-14 h-14 rounded-lg bg-gray-700 border border-gray-600 flex items-center justify-center shrink-0">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  </div>
+                ) : (
+                  <img src={foundItemData?.img} alt={foundItemData?.foundItemName}
+                    className="w-14 h-14 rounded-lg object-cover shrink-0"
+                    onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+                )}
                 <div>
                   <p className="text-white text-sm font-semibold">{foundItemData?.foundItemName}</p>
                   <p className="text-gray-400 text-xs mt-0.5">📍 {foundItemData?.location}</p>
@@ -300,7 +344,7 @@ const SingleFoundItem = () => {
                   {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
                 </div>
 
-                {/* School Email — replaces Contact Number */}
+                {/* School Email */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
                     School ID / Email *
@@ -345,8 +389,8 @@ const SingleFoundItem = () => {
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
                     {isAdmin
-                      ? "ℹ️ Confirming this claim will mark the item as Claimed and remove it from the available items board."
-                      : "ℹ️ Your claim will be reviewed by the SAS office. We will contact you via your school email for verification."}
+                      ? "ℹ️ Your claim will be sent to the SAS office for review."
+                      : "ℹ️ Once submitted, the SAS office will review this claim and contact you via your school email for verification before the item is released."}
                   </p>
                 </div>
 
