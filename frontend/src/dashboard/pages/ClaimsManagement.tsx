@@ -548,13 +548,13 @@ const ClaimsManagement = () => {
               </div>
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <FaUser className="text-green-400" size={13} />
-                  <h3 className="text-xs font-bold text-green-400 uppercase tracking-widest">Claimant's Proof</h3>
+                  <FaUser className="text-blue-400" size={13} />
+                  <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest">Claimant's Proof</h3>
                 </div>
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 space-y-3">
                   <div className="flex items-center gap-3 pb-3 border-b border-gray-700">
-                    <div className="w-9 h-9 rounded-full bg-green-600/20 border border-green-600/30 flex items-center justify-center shrink-0">
-                      <FaUser className="text-green-400" size={13} />
+                    <div className="w-9 h-9 rounded-full bg-blue-600/20 border border-blue-600/30 flex items-center justify-center shrink-0">
+                      <FaUser className="text-blue-400" size={13} />
                     </div>
                     <div>
                       <p className="text-white font-semibold text-sm">{selectedClaim.claimantName || "—"}</p>

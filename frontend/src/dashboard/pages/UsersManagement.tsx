@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import {
   useGetAllUsersQuery,
   useBlockUserMutation,
+  useChangeUserRoleMutation,
   useSoftDeleteUserMutation,
   useRegistersMutation,
 } from "../../redux/api/api";
@@ -41,9 +42,10 @@ const UsersManagement = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
   const { data: allUsersData, isLoading } = useGetAllUsersQuery(undefined);
-  const [blockUser]        = useBlockUserMutation();
-  const [softDeleteUser]   = useSoftDeleteUserMutation();
-  const [registerUser]     = useRegistersMutation();
+  const [blockUser]      = useBlockUserMutation();
+  const [changeUserRole] = useChangeUserRoleMutation();
+  const [softDeleteUser] = useSoftDeleteUserMutation();
+  const [registerUser]   = useRegistersMutation();
 
   const transformUser = (apiUser: ApiUser): User => ({
     id: apiUser.id, name: apiUser.username, email: apiUser.email, role: apiUser.role,
@@ -86,16 +88,29 @@ const UsersManagement = () => {
   const handleCreateAdmin = async (data: any) => {
     setIsCreating(true);
     try {
+      // Step 1: Register the user
       const res: any = await registerUser({
         username: data.username,
         email:    data.email,
         password: data.password,
-        role:     "ADMIN",
       });
+
       if (res?.error) {
-        toast.error(res.error?.data?.message || "Failed to create admin account.");
+        toast.error(res.error?.data?.message || "Failed to create account.");
         return;
       }
+
+      // Step 2: Promote to ADMIN using the new user's id
+      const newUserId = res?.data?.data?.id;
+      if (newUserId) {
+        await changeUserRole({ id: newUserId, role: "ADMIN" }).unwrap();
+      } else {
+        toast.error("Account created but could not promote to Admin. Please set role manually.");
+        setIsCreateModalOpen(false);
+        reset();
+        return;
+      }
+
       toast.success(`Admin account for "${data.username}" created successfully!`);
       setIsCreateModalOpen(false);
       reset();
@@ -119,8 +134,8 @@ const UsersManagement = () => {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
         {[
-          { label: "Total Admins", value: adminUsers.length,                                              icon: <FaShieldAlt className="text-white" />, num: "text-white"      },
-          { label: "Active",       value: adminUsers.filter((u: User) => u.status === "ACTIVE").length,   icon: <FaShieldAlt className="text-white" />, num: "text-green-500"  },
+          { label: "Total Admins", value: adminUsers.length,                                               icon: <FaShieldAlt className="text-white" />, num: "text-white"      },
+          { label: "Active",       value: adminUsers.filter((u: User) => u.status === "ACTIVE").length,    icon: <FaShieldAlt className="text-white" />, num: "text-green-500"  },
           { label: "Suspended",    value: adminUsers.filter((u: User) => u.status === "SUSPENDED").length, icon: <FaBan className="text-white" />,       num: "text-yellow-500" },
         ].map((s) => (
           <div key={s.label} className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
