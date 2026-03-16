@@ -111,46 +111,42 @@ const FoundItemsManagement = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-6">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
-          { label: "Total Items", value: items?.length | 0,                                      icon: <FaEye className="text-white" />,    num: "text-white"      },
-          { label: "Active",      value: items.filter((i: FoundItem) => !i.isClaimed).length,    icon: <FaSearch className="text-white" />, num: "text-green-500"  },
-          { label: "Claimed",     value: items.filter((i: FoundItem) => i.isClaimed).length,     icon: <FaSearch className="text-white" />, num: "text-yellow-500" },
+          { label: "Total Items", value: items?.length || 0,                                   icon: <FaEye className="text-white" />,    num: "text-white"      },
+          { label: "Active",      value: items.filter((i: FoundItem) => !i.isClaimed).length,  icon: <FaSearch className="text-white" />, num: "text-green-500"  },
+          { label: "Claimed",     value: items.filter((i: FoundItem) => i.isClaimed).length,   icon: <FaSearch className="text-white" />, num: "text-yellow-500" },
         ].map((s) => (
-          <div key={s.label} className="bg-gray-800 rounded-xl p-3 sm:p-6 border border-gray-700">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <div>
-                <p className="text-gray-400 text-[10px] sm:text-sm leading-tight">{s.label}</p>
-                <p className={`text-xl sm:text-2xl font-bold ${s.num}`}>{s.value}</p>
-              </div>
-              <div className="hidden sm:flex bg-gray-500 p-3 rounded-lg">{s.icon}</div>
-            </div>
+          <div key={s.label} className="bg-gray-800 rounded-xl p-2.5 sm:p-6 border border-gray-700">
+            <p className="text-gray-400 text-[9px] sm:text-sm leading-tight truncate">{s.label}</p>
+            <p className={`text-lg sm:text-2xl font-bold mt-1 ${s.num}`}>{s.value}</p>
+            <div className="hidden sm:flex mt-2 bg-gray-500 p-3 rounded-lg w-fit">{s.icon}</div>
           </div>
-          ))}
+        ))}
       </div>
 
       {/* Filters */}
-      <div className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <div className="flex-1 relative">
+      <div className="bg-gray-800 rounded-xl p-3 sm:p-6 border border-gray-700">
+        <div className="flex flex-col gap-2 sm:gap-4">
+          <div className="relative">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
             <input type="text" placeholder="Search items..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
           </div>
-          <div className="flex gap-2 sm:gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active</option>
               <option value="CLAIMED">Claimed</option>
             </select>
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-  <option value="ALL">All Categories</option>
-  {categoriesData?.data?.map((cat: any) => (
-    <option key={cat.id} value={cat.name}>{cat.name}</option>
-  ))}
-</select>
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+              <option value="ALL">All Categories</option>
+              {categoriesData?.data?.map((cat: any) => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

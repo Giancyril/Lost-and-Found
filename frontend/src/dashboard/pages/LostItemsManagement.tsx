@@ -46,7 +46,6 @@ const LostItemsManagement = () => {
   const [isDeleteLoading, setIsDeleteLoading]     = useState(false);
   const [editFormData, setEditFormData] = useState({ lostItemName: "", description: "", location: "", date: "", categoryId: "" });
 
-  // Email modal state
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailItem, setEmailItem]               = useState<LostItem | null>(null);
   const [emailForm, setEmailForm] = useState({
@@ -120,14 +119,12 @@ const LostItemsManagement = () => {
     finally { setMarkingAsFoundId(null); }
   };
 
-  // Open email modal — pre-fill toEmail from schoolEmail if available
   const handleOpenEmailModal = (item: LostItem) => {
     setEmailItem(item);
     setEmailForm(prev => ({ ...prev, toEmail: item.schoolEmail || "" }));
     setIsEmailModalOpen(true);
   };
 
-  // Send email
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailItem) return;
@@ -197,41 +194,37 @@ const LostItemsManagement = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-6">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
           { label: "Total Reports",      value: items.length,                                     icon: <FaEye className="text-white" />,             num: "text-white"     },
           { label: "Active",             value: items.filter((i: LostItem) => !i.isFound).length, icon: <IoMdRadioButtonOn className="text-white" />, num: "text-red-500"   },
           { label: "Resolved This Week", value: resolvedThisWeek,                                 icon: <MdCheckCircle className="text-white" />,     num: "text-green-500" },
         ].map((s) => (
-          <div key={s.label} className="bg-gray-800 rounded-xl p-3 sm:p-6 border border-gray-700">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-              <div>
-                <p className="text-gray-400 text-[10px] sm:text-sm leading-tight">{s.label}</p>
-                <p className={`text-xl sm:text-2xl font-bold ${s.num}`}>{s.value}</p>
-              </div>
-              <div className="hidden sm:flex bg-gray-500 p-3 rounded-lg">{s.icon}</div>
-            </div>
+          <div key={s.label} className="bg-gray-800 rounded-xl p-2.5 sm:p-6 border border-gray-700">
+            <p className="text-gray-400 text-[9px] sm:text-sm leading-tight truncate">{s.label}</p>
+            <p className={`text-lg sm:text-2xl font-bold mt-1 ${s.num}`}>{s.value}</p>
+            <div className="hidden sm:flex mt-2 bg-gray-500 p-3 rounded-lg w-fit">{s.icon}</div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <div className="flex-1 relative">
+      <div className="bg-gray-800 rounded-xl p-3 sm:p-6 border border-gray-700">
+        <div className="flex flex-col gap-2 sm:gap-4">
+          <div className="relative">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
             <input type="text" placeholder="Search lost items..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm" />
           </div>
-          <div className="flex gap-2 sm:gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active</option>
               <option value="RESOLVED">Resolved</option>
             </select>
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
               <option value="ALL">All Categories</option>
               {categoriesData?.data?.map((cat: any) => (
                 <option key={cat.id} value={cat.name}>{cat.name}</option>
@@ -336,7 +329,6 @@ const LostItemsManagement = () => {
               <div><p className="text-gray-600">Location</p><p className="text-gray-300 mt-0.5">{item.location}</p></div>
               <div><p className="text-gray-600">Date Lost</p><p className="text-gray-300 mt-0.5">{new Date(item.date).toLocaleDateString()}</p></div>
               <div><p className="text-gray-600">Reported By</p><p className="text-gray-300 mt-0.5">{item.user?.username || item.reporterName || "N/A"}</p></div>
-              {/* School Email row */}
               <div className="col-span-2">
                 <p className="text-gray-600">School Email</p>
                 {item.schoolEmail ? (
@@ -357,7 +349,6 @@ const LostItemsManagement = () => {
                 {markingAsFoundId === item.id ? <Spinner color={item.isFound ? "text-orange-500" : "text-green-500"} />
                   : item.isFound ? <><FaTimes size={11} /> Reopen</> : <><FaCheck size={11} /> Resolve</>}
               </button>
-              {/* Email button mobile */}
               {emailSentIds.has(item.id) ? (
                 <span className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-xs font-semibold">
                   <FaCheckCircle size={11} /> Sent
@@ -470,9 +461,7 @@ const LostItemsManagement = () => {
                 <FaTimes size={15} />
               </button>
             </div>
-
             <form onSubmit={handleSendEmail} className="p-5 space-y-4">
-              {/* Item preview */}
               <div className="bg-gray-900 rounded-xl p-3 border border-gray-700 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                   <FaSearch size={14} className="text-blue-400" />
@@ -487,8 +476,6 @@ const LostItemsManagement = () => {
                   )}
                 </div>
               </div>
-
-              {/* Recipient email — pre-filled from schoolEmail */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
                   Recipient Email <span className="text-red-400">*</span>
@@ -502,8 +489,6 @@ const LostItemsManagement = () => {
                   onChange={e => setEmailForm(p => ({ ...p, toEmail: e.target.value }))}
                   className="w-full px-4 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
               </div>
-
-              {/* SMTP settings collapsible */}
               <details className="group">
                 <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 flex items-center gap-2 py-1 select-none">
                   <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
@@ -522,7 +507,6 @@ const LostItemsManagement = () => {
                         className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                   </div>
-                  {/* SSL/TLS toggle */}
                   <div className="flex items-center justify-between bg-gray-900 border border-gray-700 rounded-lg px-3 py-2">
                     <div>
                       <p className="text-xs text-gray-400 font-medium">SSL/TLS (secure)</p>
@@ -557,14 +541,11 @@ const LostItemsManagement = () => {
                   </div>
                 </div>
               </details>
-
-              {/* Info box */}
               <div className="bg-blue-900/20 border border-blue-600/20 rounded-xl px-4 py-3">
                 <p className="text-blue-300 text-xs leading-relaxed">
                   📧 This will send a professionally formatted <strong>thank you confirmation email</strong> to the reporter, acknowledging receipt of their lost item report for <strong>"{emailItem.lostItemName}"</strong>.
                 </p>
               </div>
-
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setIsEmailModalOpen(false)} disabled={isSendingEmail}
                   className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
