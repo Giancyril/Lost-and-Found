@@ -233,8 +233,8 @@ const SingleLostItem = () => {
 
       {/* Modal — redesigned */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm">
-          <div className="relative w-full sm:max-w-md bg-gray-900 rounded-t-2xl sm:rounded-2xl border border-gray-800 shadow-2xl max-h-[82vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">
 
             {/* Header */}
             <div className="flex items-start justify-between px-4 py-3 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">

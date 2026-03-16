@@ -258,8 +258,8 @@ const ClaimsManagement = () => {
                   </span>
                 </div>
                 <div className="flex gap-1.5 pt-1">
-  <select value={claim.status} onChange={(e) => handleStatusChange(claim.id, e.target.value)}
-    className={`w-28 shrink-0 px-3 py-2 rounded-lg text-xs font-medium text-white border-0 cursor-pointer focus:outline-none ${getStatusColor(claim.status)}`}>
+                  <select value={claim.status} onChange={(e) => handleStatusChange(claim.id, e.target.value)}
+                    className={`w-28 shrink-0 px-3 py-2 rounded-lg text-xs font-medium text-white border-0 cursor-pointer focus:outline-none ${getStatusColor(claim.status)}`}>
                     <option value="PENDING"  className="bg-gray-800 text-yellow-400">PENDING</option>
                     <option value="APPROVED" className="bg-gray-800 text-green-400">APPROVED</option>
                     <option value="REJECTED" className="bg-gray-800 text-red-400">REJECTED</option>

@@ -448,8 +448,8 @@ const LostItemsManagement = () => {
 
       {/* Email Modal */}
       {isEmailModalOpen && emailItem && (
-        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-          <div className="bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md border border-gray-700 max-h-[85vh] overflow-y-auto mt-auto sm:mt-0">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl w-full max-w-md border border-gray-700 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
               <div>
                 <h2 className="text-base font-bold text-white flex items-center gap-2">
