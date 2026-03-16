@@ -7,8 +7,20 @@ import {
   FaChevronRight,
   FaCalendarAlt,
   FaMapMarkerAlt,
+  FaPlus,
+  FaTimes,
 } from "react-icons/fa";
 import { useState, useRef } from "react";
+import { Spinner } from "flowbite-react";
+import { useForm } from "react-hook-form";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import {
+  useCategoryQuery,
+  useCreateFoundItemMutation,
+  useUploadItemImagesMutation,
+} from "../../redux/api/api";
+import { useUserVerification } from "../../auth/auth";
 
 const FoundItemsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,6 +39,96 @@ const FoundItemsPage = () => {
     sortOrder,
   });
 
+  // ── Admin check ──
+  const users: any = useUserVerification();
+  const isAdmin = users?.role === "ADMIN";
+
+  // ── Add Found Item modal state ──
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addSelectedFiles, setAddSelectedFiles] = useState<File[]>([]);
+  const [addPreviews, setAddPreviews] = useState<string[]>([]);
+  const [addPrimaryIdx, setAddPrimaryIdx] = useState(0);
+  const [addUploadError, setAddUploadError] = useState("");
+  const [addIsDragging, setAddIsDragging] = useState(false);
+  const [addStartDate, setAddStartDate] = useState(new Date());
+  const [addSelectedMenu, setAddSelectedMenu] = useState("");
+  const [addSelectedMenucategoryId, setAddSelectedMenucategoryId] = useState("");
+  const addFileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_IMAGES = 6;
+  const MAX_SIZE_MB = 5;
+
+  const { data: Category } = useCategoryQuery("");
+  const [createFoundItem, { isLoading: isCreating }] = useCreateFoundItemMutation();
+  const [uploadItemImages, { isLoading: isUploading }] = useUploadItemImagesMutation();
+  const isBusy = isCreating || isUploading;
+
+  const {
+    handleSubmit: handleAddSubmit,
+    register: addRegister,
+    formState: { errors: addErrors },
+    reset: addReset,
+  } = useForm();
+
+  const handleAddFileChange = (files: FileList | null) => {
+    if (!files) return;
+    setAddUploadError("");
+    const incoming = Array.from(files);
+    const valid = incoming.filter((f) => {
+      if (!f.type.startsWith("image/")) { setAddUploadError("Only image files allowed."); return false; }
+      if (f.size > MAX_SIZE_MB * 1024 * 1024) { setAddUploadError(`Max ${MAX_SIZE_MB}MB each.`); return false; }
+      return true;
+    });
+    const combined = [...addSelectedFiles, ...valid].slice(0, MAX_IMAGES);
+    if (addSelectedFiles.length + valid.length > MAX_IMAGES) setAddUploadError(`Max ${MAX_IMAGES} images.`);
+    setAddSelectedFiles(combined);
+    setAddPreviews(combined.map((f) => URL.createObjectURL(f)));
+  };
+
+  const removeAddFile = (idx: number) => {
+    const updated = addSelectedFiles.filter((_, i) => i !== idx);
+    setAddSelectedFiles(updated);
+    setAddPreviews(updated.map((f) => URL.createObjectURL(f)));
+    if (addPrimaryIdx >= updated.length) setAddPrimaryIdx(0);
+  };
+
+  const closeAddModal = () => {
+    setIsAddModalOpen(false);
+    addReset();
+    setAddSelectedFiles([]);
+    setAddPreviews([]);
+    setAddPrimaryIdx(0);
+    setAddUploadError("");
+    setAddSelectedMenu("");
+    setAddSelectedMenucategoryId("");
+    setAddStartDate(new Date());
+  };
+
+  const onAddSubmit = async (data: any) => {
+    if (!addSelectedMenucategoryId) return;
+    try {
+      const foundData = {
+        img: addPreviews[addPrimaryIdx] || "",
+        categoryId: addSelectedMenucategoryId,
+        foundItemName: data.foundItemName,
+        description: data.description,
+        location: data.location,
+        date: addStartDate,
+        claimProcess: data.claimProcess,
+      };
+      const res: any = await createFoundItem(foundData);
+      if (res?.data?.success === false) return;
+      if (addSelectedFiles.length > 0 && res?.data?.data?.id) {
+        const formData = new FormData();
+        addSelectedFiles.forEach((file) => formData.append("images", file));
+        formData.append("primaryIndex", String(addPrimaryIdx));
+        await uploadItemImages({ id: res.data.data.id, type: "found", formData });
+      }
+      closeAddModal();
+    } catch {}
+  };
+
+  // ── Search / sort / pagination handlers ──
   const handleFuzzyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFuzzyTerm(value);
@@ -88,7 +190,18 @@ const FoundItemsPage = () => {
   return (
     <div className="min-h-screen bg-gray-950 pb-16">
       <div className="py-8 px-6 sm:px-10 lg:px-16 mx-auto">
-        
+
+        {/* Admin — Add Found Item button */}
+        {isAdmin && (
+          <div className="flex justify-end mb-6">
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-lg shadow-green-900/30"
+            >
+              <FaPlus size={12} /> Add Found Item
+            </button>
+          </div>
+        )}
 
         {/* Search and Filter */}
         <div className="bg-gray-900 rounded-2xl p-6 mb-8 border border-gray-800">
@@ -139,7 +252,6 @@ const FoundItemsPage = () => {
                 <option value="location-desc">Location (Z-A)</option>
               </select>
             </div>
-           
           </div>
         </div>
       </div>
@@ -282,6 +394,220 @@ const FoundItemsPage = () => {
               Next <FaChevronRight className="w-3 h-3 ml-2" />
             </button>
           </nav>
+        </div>
+      )}
+
+      {/* ── Add Found Item Modal (admin only) ── */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-2xl w-full max-w-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">
+
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
+              <div>
+                <h2 className="text-base font-bold text-white">Add Found Item</h2>
+                <p className="text-gray-500 text-xs mt-0.5">Fill out the details to log an item found on campus</p>
+              </div>
+              <button onClick={closeAddModal} className="text-gray-500 hover:text-white p-1 transition-colors">
+                <FaTimes size={15} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddSubmit(onAddSubmit)} className="p-6 space-y-5">
+              <div className="grid gap-5 md:grid-cols-2">
+
+                {/* Item Name */}
+                <div>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Item Name</label>
+                  <input
+                    {...addRegister("foundItemName", { required: "Item name is required" })}
+                    type="text"
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="e.g. Black laptop, Blue water bottle"
+                  />
+                  {addErrors.foundItemName && <p className="text-red-400 text-xs mt-1">{addErrors.foundItemName?.message as string}</p>}
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Description</label>
+                  <input
+                    {...addRegister("description", { required: "Description is required" })}
+                    type="text"
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="Color, brand, size, markings"
+                  />
+                  {addErrors.description && <p className="text-red-400 text-xs mt-1">{addErrors.description?.message as string}</p>}
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Where Found</label>
+                  <input
+                    {...addRegister("location", { required: "Location is required" })}
+                    type="text"
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="e.g. Library, Canteen, Room 205"
+                  />
+                  {addErrors.location && <p className="text-red-400 text-xs mt-1">{addErrors.location?.message as string}</p>}
+                </div>
+
+                {/* Claim Instructions */}
+                <div>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Claim Instructions</label>
+                  <input
+                    {...addRegister("claimProcess", { required: "Claim instructions are required" })}
+                    type="text"
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="e.g. Visit the SAS office with valid ID"
+                  />
+                  {addErrors.claimProcess && <p className="text-red-400 text-xs mt-1">{addErrors.claimProcess?.message as string}</p>}
+                </div>
+
+                {/* Date Found */}
+                <div>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date Found</label>
+                  <DatePicker
+                    wrapperClassName="w-full"
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    selected={addStartDate}
+                    onChange={(date: any) => setAddStartDate(date)}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="Select date"
+                    showYearDropdown
+                    showMonthDropdown
+                    dropdownMode="select"
+                    maxDate={new Date()}
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Category</label>
+                  <div className="relative">
+                    <select
+                      className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer text-sm"
+                      value={addSelectedMenucategoryId}
+                      onChange={(e) => {
+                        const cat = Category?.data?.find((c: any) => c.id === e.target.value);
+                        if (cat) {
+                          setAddSelectedMenu(cat.name);
+                          setAddSelectedMenucategoryId(cat.id);
+                        }
+                      }}
+                    >
+                      <option value="" disabled className="text-gray-500">Select a category</option>
+                      {Category?.data?.map((cat: any) => (
+                        <option key={cat.id} value={cat.id} className="text-white bg-gray-800">{cat.name}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
+                    </div>
+                  </div>
+                  {!addSelectedMenu && (
+                    <p className="text-red-400 text-xs mt-1">Category is required</p>
+                  )}
+                </div>
+
+              </div>
+
+              {/* Image Upload */}
+              <div>
+                <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
+                  Item Photos{" "}
+                  <span className="text-gray-500 normal-case font-normal">(up to {MAX_IMAGES} images)</span>
+                </label>
+                <div
+                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${
+                    addIsDragging
+                      ? "border-blue-500 bg-blue-900/10"
+                      : "border-gray-700 bg-gray-800/50 hover:border-blue-500 hover:bg-gray-800"
+                  }`}
+                  onClick={() => addFileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setAddIsDragging(true); }}
+                  onDragLeave={() => setAddIsDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setAddIsDragging(false);
+                    handleAddFileChange(e.dataTransfer.files);
+                  }}
+                >
+                  <input
+                    ref={addFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleAddFileChange(e.target.files)}
+                  />
+                  <div className="text-gray-400 text-sm">
+                    <span className="text-blue-400 font-medium">Click to upload</span> or drag & drop
+                    <p className="text-xs text-gray-600 mt-1">
+                      JPG, PNG, WEBP · Max {MAX_SIZE_MB}MB each · {addSelectedFiles.length}/{MAX_IMAGES} selected
+                    </p>
+                  </div>
+                </div>
+
+                {addUploadError && <p className="text-red-400 text-xs mt-1.5">{addUploadError}</p>}
+
+                {addPreviews.length > 0 && (
+                  <>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
+                      {addPreviews.map((src, idx) => (
+                        <div
+                          key={idx}
+                          className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all duration-200 cursor-pointer ${
+                            idx === addPrimaryIdx
+                              ? "border-blue-500 ring-2 ring-blue-500/30"
+                              : "border-gray-700 hover:border-gray-500"
+                          }`}
+                          onClick={() => setAddPrimaryIdx(idx)}
+                          title="Click to set as cover photo"
+                        >
+                          <img src={src} className="w-full h-full object-cover" alt="" />
+                          {idx === addPrimaryIdx && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-blue-600/90 text-white text-center text-[10px] font-bold py-0.5">
+                              Cover
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); removeAddFile(idx); }}
+                            className="absolute top-1 right-1 w-5 h-5 bg-black/60 hover:bg-red-600 rounded-full text-white text-xs flex items-center justify-center transition-colors duration-150"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1.5">Click a photo to set it as the cover image</p>
+                  </>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={closeAddModal}
+                  disabled={isBusy}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isBusy}
+                  className="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                >
+                  {isBusy ? <><Spinner size="sm" /> Submitting...</> : "Submit Found Item"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
