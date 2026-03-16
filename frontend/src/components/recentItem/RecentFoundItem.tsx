@@ -74,10 +74,9 @@ const RecentFoundItem = () => {
                   <img
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     src={
-                      foundItem?.img ||
                       (Array.isArray(foundItem?.images) && foundItem.images.length > 0
-                        ? (typeof foundItem.images[0] === "string" ? foundItem.images[0] : foundItem.images[0]?.url ?? foundItem.images[0]?.src ?? "/bgimg.png")
-                        : "/bgimg.png")
+                        ? (typeof foundItem.images[0] === "string" ? foundItem.images[0] : foundItem.images[0]?.url ?? foundItem.images[0]?.src ?? "")
+                        : "") || foundItem?.img || "/bgimg.png"
                     }
                     alt={foundItem?.foundItemName}
                     width={500}

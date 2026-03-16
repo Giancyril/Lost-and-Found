@@ -205,10 +205,9 @@ const LostItemsPage = () => {
                     ) : (
                       <img
                         src={
-                          lostItem?.img ||
                           (Array.isArray(lostItem?.images) && lostItem.images.length > 0
-                            ? (typeof lostItem.images[0] === "string" ? lostItem.images[0] : lostItem.images[0]?.url ?? lostItem.images[0]?.src ?? "/bgimg.png")
-                            : "/bgimg.png")
+                            ? (typeof lostItem.images[0] === "string" ? lostItem.images[0] : lostItem.images[0]?.url ?? lostItem.images[0]?.src ?? "")
+                            : "") || lostItem?.img || "/bgimg.png"
                         }
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         alt={lostItem?.lostItemName}
