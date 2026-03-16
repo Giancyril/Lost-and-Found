@@ -11,6 +11,39 @@ import {
   FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaUser, FaTag,
   FaTimes, FaBoxOpen, FaChevronLeft, FaChevronRight,
 } from "react-icons/fa";
+import { useUserVerification } from "../../auth/auth";
+
+// ── Hide image for sensitive categories (admin always sees) ──
+const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
+
+const shouldHideImage = (categoryName: string | undefined, isAdmin: boolean) => {
+  if (isAdmin) return false;
+  return HIDDEN_IMAGE_CATEGORIES.some((c) =>
+    categoryName?.toLowerCase().includes(c)
+  );
+};
+
+// ── Placeholder shown to non-admin when category is hidden ──
+const HiddenImagePlaceholder = () => (
+  <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex flex-col items-center justify-center gap-4">
+    <div className="w-20 h-20 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
+      <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+      </svg>
+    </div>
+    <div className="text-center px-6">
+      <p className="text-white font-semibold text-sm mb-1">Image Not Available</p>
+      <p className="text-gray-500 text-xs leading-relaxed">
+        For security purposes, the photo of this item is hidden from public view.
+        Submit a claim with proof of ownership to proceed.
+      </p>
+    </div>
+    <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-2.5 mt-1">
+      <span className="text-yellow-400 text-sm">🔒</span>
+      <p className="text-yellow-300/80 text-xs">Only visible to SAS Office staff</p>
+    </div>
+  </div>
+);
 
 function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -70,6 +103,9 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
 }
 
 const SingleLostItem = () => {
+  const users: any = useUserVerification();
+  const isAdmin = users?.role === "ADMIN";
+
   const { lostItem: lostItemId }: any = useParams();
   const { data: singleLostItem, isLoading, refetch } = useGetSingleLostItemQuery(lostItemId);
   const [createFoundItem, { isLoading: submitLoading }] = useCreateFoundItemMutation();
@@ -134,6 +170,7 @@ const SingleLostItem = () => {
 
   const { lostItemName, date, isFound, img, description, location, user, category } = lostItem;
   const alreadyFound = isFound || reportedFound;
+  const hideImage = shouldHideImage(category?.name, isAdmin);
 
   const imageList: string[] = Array.isArray(lostItem.images) && lostItem.images.length > 0
     ? lostItem.images.map((i: any) => (typeof i === "string" ? i : i?.url ?? i?.src ?? ""))
@@ -167,8 +204,12 @@ const SingleLostItem = () => {
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
 
+            {/* Left: Image or Hidden Placeholder */}
             <div className="flex flex-col h-full">
-              <ImageCarousel images={imageList} alt={lostItemName} />
+              {hideImage
+                ? <HiddenImagePlaceholder />
+                : <ImageCarousel images={imageList} alt={lostItemName} />
+              }
             </div>
 
             <div className="space-y-4">
@@ -231,7 +272,7 @@ const SingleLostItem = () => {
         </div>
       </div>
 
-      {/* Modal — redesigned */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -252,9 +293,19 @@ const SingleLostItem = () => {
 
               {/* Item preview */}
               <div className="flex items-center gap-3 bg-gray-800/70 rounded-xl p-3 border border-gray-700/60">
-                <img src={img} alt={lostItemName}
-                  className="w-14 h-14 rounded-lg object-cover shrink-0 border border-gray-700"
-                  onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+                {hideImage ? (
+                  // ── Hidden thumbnail in modal ──
+                  <div className="w-14 h-14 rounded-lg shrink-0 border border-gray-700 bg-gray-700 flex items-center justify-center">
+                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round"
+                        d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  </div>
+                ) : (
+                  <img src={img} alt={lostItemName}
+                    className="w-14 h-14 rounded-lg object-cover shrink-0 border border-gray-700"
+                    onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold truncate">{lostItemName}</p>
                   <p className="text-gray-400 text-xs mt-0.5 truncate">📍 {location}</p>
@@ -267,7 +318,6 @@ const SingleLostItem = () => {
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-                {/* Your name + location side by side */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
@@ -289,7 +339,6 @@ const SingleLostItem = () => {
                   </div>
                 </div>
 
-                {/* Date found */}
                 <div>
                   <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                     Date you found it
@@ -300,7 +349,6 @@ const SingleLostItem = () => {
                     dateFormat="yyyy-MM-dd" maxDate={new Date()} showYearDropdown showMonthDropdown dropdownMode="select" />
                 </div>
 
-                {/* Additional details */}
                 <div>
                   <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                     Additional details
@@ -310,7 +358,6 @@ const SingleLostItem = () => {
                     className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm resize-none placeholder-gray-600" />
                 </div>
 
-                {/* Info banner */}
                 <div className="flex items-start gap-2.5 bg-blue-500/5 border border-blue-500/15 rounded-lg px-4 py-3">
                   <span className="text-blue-400 text-sm shrink-0 mt-0.5">ℹ</span>
                   <p className="text-blue-300/80 text-xs leading-relaxed">
@@ -318,7 +365,6 @@ const SingleLostItem = () => {
                   </p>
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => setIsModalOpen(false)}
                     className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium transition-colors">

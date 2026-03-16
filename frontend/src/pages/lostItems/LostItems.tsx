@@ -9,9 +9,22 @@ import {
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import { useState, useRef } from "react";
-import type { lostItem } from "../../types/types";
+import { useUserVerification } from "../../auth/auth";
+
+// ── Hide image for sensitive categories (admin always sees) ──
+const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
+
+const shouldHideImage = (categoryName: string | undefined, isAdmin: boolean) => {
+  if (isAdmin) return false;
+  return HIDDEN_IMAGE_CATEGORIES.some((c) =>
+    categoryName?.toLowerCase().includes(c)
+  );
+};
 
 const LostItemsPage = () => {
+  const users: any = useUserVerification();
+  const isAdmin = users?.role === "ADMIN";
+
   const [searchTerm, setSearchTerm] = useState("");
   const [fuzzyTerm, setFuzzyTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -151,12 +164,12 @@ const LostItemsPage = () => {
               <FaSearch className="text-gray-600 text-2xl" />
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">
-              {fuzzyTerm ? "No items found" : "No lost items yet"} {/* ✅ fixed */}
+              {fuzzyTerm ? "No items found" : "No lost items yet"}
             </h3>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
               {fuzzyTerm
                 ? `No items found for "${fuzzyTerm}". Try different keywords.`
-                : "No lost items have been reported yet. Check back later!"} {/* ✅ fixed */}
+                : "No lost items have been reported yet. Check back later!"}
             </p>
             {fuzzyTerm && (
               <button
@@ -169,24 +182,38 @@ const LostItemsPage = () => {
           </div>
         ) : (
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {lostItems?.data?.map((lostItem: lostItem) => (
+            {lostItems?.data?.map((lostItem: any) => (
               <div
                 key={`${lostItem?.id}127`}
                 className="group relative bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 border border-gray-800 hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-900/20 flex flex-col"
               >
                 <div className="relative overflow-hidden">
                   <div className="h-52 w-full overflow-hidden">
-                    <img
-                      src={lostItem?.img}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      alt={lostItem?.lostItemName}
-                      width={500}
-                      height={500}
-                      onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                    />
+                    {shouldHideImage(lostItem?.category?.name, isAdmin) ? (
+                      // ── Hidden image placeholder for sensitive categories ──
+                      <div className="w-full h-full bg-gray-800 flex flex-col items-center justify-center gap-2">
+                        <div className="w-14 h-14 rounded-full bg-gray-700 border border-gray-700 flex items-center justify-center">
+                          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                          </svg>
+                        </div>
+                        <p className="text-gray-500 text-xs font-medium">Image Hidden</p>
+                        <p className="text-gray-600 text-[10px] text-center px-4 leading-relaxed">
+                          Submit a claim to verify ownership
+                        </p>
+                      </div>
+                    ) : (
+                      <img
+                        src={lostItem?.img}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        alt={lostItem?.lostItemName}
+                        width={500}
+                        height={500}
+                        onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   </div>
-                  {/* ✅ removed isFound badge — backend now filters these out */}
                   <div className="absolute top-3 right-3 bg-red-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-red-500/40">
                     Lost
                   </div>
