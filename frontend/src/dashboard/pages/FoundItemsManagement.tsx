@@ -236,8 +236,8 @@ const FoundItemsManagement = () => {
 
       {/* Edit Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-2xl mx-0 sm:mx-4 border border-gray-700 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg mx-0 sm:mx-4 border border-gray-700 max-h-[85vh] overflow-y-auto">
             <div className="p-5 sm:p-6">
               <h2 className="text-xl font-bold text-white mb-4">Edit Found Item</h2>
               <form onSubmit={handleEditSubmit} className="space-y-4">
@@ -273,8 +273,8 @@ const FoundItemsManagement = () => {
 
       {/* Delete Modal */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:w-auto sm:max-w-md mx-0 sm:mx-4 border border-gray-700 p-5 sm:p-6">
+        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-sm mx-0 sm:mx-4 border border-gray-700 p-5">
             <div className="text-center">
               <div className="bg-gray-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <FaTrash className="text-red-600 text-xl" />

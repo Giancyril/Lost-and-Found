@@ -211,17 +211,17 @@ const Settings = () => {
 
         {/* ── Sidebar ── */}
         <aside className="lg:w-56 shrink-0">
-          <div className="bg-gray-800/60 border border-gray-700/60 rounded-2xl p-2 sticky top-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 px-3 py-2">Navigation</p>
-            <nav className="space-y-0.5">
+          <div className="bg-gray-800/60 border border-gray-700/60 rounded-2xl p-2 lg:sticky lg:top-4">
+            <p className="hidden lg:block text-[10px] font-bold uppercase tracking-widest text-gray-600 px-3 py-2">Navigation</p>
+            <nav className="flex lg:flex-col gap-1 overflow-x-auto pb-1 lg:pb-0 lg:space-y-0.5 scrollbar-hide">
               {tabs.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium
-                      transition-all duration-150 ${
+                    className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-left text-xs sm:text-sm font-medium
+                      transition-all duration-150 whitespace-nowrap ${
                       isActive
                         ? `${tab.accent} border`
                         : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"

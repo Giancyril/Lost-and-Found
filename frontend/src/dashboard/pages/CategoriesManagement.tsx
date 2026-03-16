@@ -323,7 +323,7 @@ const CategoriesManagement = () => {
       {/* Delete Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-          <div className="bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md border border-gray-700 p-5 sm:p-6">
+          <div className="bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm border border-gray-700 p-5 sm:p-6">
             <div className="text-center">
               <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
                 <FaTrash className="text-red-400 text-xl" />

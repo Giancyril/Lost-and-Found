@@ -240,8 +240,8 @@ const UsersManagement = () => {
 
       {/* Delete Modal */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:w-auto sm:max-w-md mx-0 sm:mx-4 border border-gray-700 p-5 sm:p-6">
+        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-sm mx-0 sm:mx-4 border border-gray-700 p-5 sm:p-6">
             <div className="text-center">
               <div className="bg-gray-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <FaTrash className="text-red-600 text-xl" />
