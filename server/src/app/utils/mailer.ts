@@ -1,20 +1,26 @@
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from "nodemailer";
 
 export const sendEmail = async (config: {
   fromName: string;
+  fromEmail: string;
   toEmail: string;
   subject: string;
   html: string;
 }) => {
-  const { data, error } = await resend.emails.send({
-    from: `${config.fromName} <onboarding@resend.dev>`,
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_FROM_EMAIL,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"${config.fromName}" <${config.fromEmail}>`,
     to: config.toEmail,
     subject: config.subject,
     html: config.html,
   });
-
-  if (error) throw new Error(JSON.stringify(error));
-  return data;
 };

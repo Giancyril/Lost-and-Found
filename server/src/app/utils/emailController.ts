@@ -19,9 +19,10 @@ export const sendLostItemEmail = async (req: Request, res: Response) => {
 
     await sendEmail({
       fromName,
+      fromEmail: process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com",
       toEmail: recipient.toEmail,
       subject: template.subject,
-      html:    template.html,
+      html: template.html,
     });
 
     sendResponse(res, {
@@ -54,11 +55,12 @@ export const sendClaimApprovedEmail = async (req: Request, res: Response) => {
     });
 
     await sendEmail({
-      fromName,
-      toEmail: recipient.toEmail,
-      subject: template.subject,
-      html:    template.html,
-    });
+    fromName,
+    fromEmail: process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com",
+    toEmail: recipient.toEmail,
+    subject: template.subject,
+    html: template.html,
+  });
 
     sendResponse(res, {
       statusCode: StatusCodes.OK,
