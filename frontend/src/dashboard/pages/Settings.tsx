@@ -20,7 +20,7 @@ const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: (v: b
   <button
     type="button"
     onClick={() => onChange(!checked)}
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
+    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none shrink-0 ${
       checked ? "bg-blue-600" : "bg-gray-600"
     }`}
   >
@@ -31,7 +31,7 @@ const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: (v: b
 );
 
 const SectionCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-gray-800/50 border border-gray-700/60 rounded-2xl p-6 ${className}`}>
+  <div className={`bg-gray-800/50 border border-gray-700/60 rounded-2xl p-4 sm:p-6 ${className}`}>
     {children}
   </div>
 );
@@ -84,8 +84,8 @@ const SubmitButton = ({ loading, children }: { loading?: boolean; children: Reac
 const NotificationRow = ({
   label, description, checked, onChange,
 }: { label: string; description: string; checked: boolean; onChange: (v: boolean) => void }) => (
-  <div className="flex items-center justify-between py-4 border-b border-gray-700/50 last:border-0">
-    <div>
+  <div className="flex items-center justify-between gap-4 py-4 border-b border-gray-700/50 last:border-0">
+    <div className="min-w-0">
       <p className="text-sm font-medium text-white">{label}</p>
       <p className="text-xs text-gray-500 mt-0.5">{description}</p>
     </div>
@@ -207,21 +207,45 @@ const Settings = () => {
         </button>
       </div>
 
+      {/* ── Mobile Tab Bar (horizontal scroll) ── */}
+      <div className="lg:hidden bg-gray-800/60 border border-gray-700/60 rounded-2xl p-2">
+        <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-hide">
+          {tabs.map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium
+                  transition-all duration-150 whitespace-nowrap ${
+                  isActive
+                    ? `${tab.accent} border`
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <span className={isActive ? "" : "opacity-60"}>{tab.icon}</span>
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col lg:flex-row gap-5">
 
-        {/* ── Sidebar ── */}
-        <aside className="lg:w-56 shrink-0">
+        {/* ── Desktop Sidebar ── */}
+        <aside className="hidden lg:block lg:w-56 shrink-0">
           <div className="bg-gray-800/60 border border-gray-700/60 rounded-2xl p-2 lg:sticky lg:top-4">
-            <p className="hidden lg:block text-[10px] font-bold uppercase tracking-widest text-gray-600 px-3 py-2">Navigation</p>
-            <nav className="flex lg:flex-col gap-1 overflow-x-auto pb-1 lg:pb-0 lg:space-y-0.5 scrollbar-hide">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 px-3 py-2">Navigation</p>
+            <nav className="flex flex-col gap-0.5">
               {tabs.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-left text-xs sm:text-sm font-medium
-                      transition-all duration-150 whitespace-nowrap ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-left text-sm font-medium
+                      transition-all duration-150 ${
                       isActive
                         ? `${tab.accent} border`
                         : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
@@ -246,27 +270,27 @@ const Settings = () => {
               <SectionCard>
                 <div className="flex items-center gap-4 mb-5">
                   <div className="w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/30
-                    flex items-center justify-center text-blue-400 text-xl font-bold">
+                    flex items-center justify-center text-blue-400 text-xl font-bold shrink-0">
                     {((user as any)?.username?.[0] || "A").toUpperCase()}
                   </div>
-                  <div>
-                    <p className="text-white font-semibold">{(user as any)?.username || "Admin"}</p>
-                    <p className="text-gray-400 text-sm">{(user as any)?.email || "N/A"}</p>
+                  <div className="min-w-0">
+                    <p className="text-white font-semibold truncate">{(user as any)?.username || "Admin"}</p>
+                    <p className="text-gray-400 text-sm truncate">{(user as any)?.email || "N/A"}</p>
                     <span className="inline-block mt-1 px-2 py-0.5 bg-blue-500/10 text-blue-400
                       border border-blue-500/20 rounded-full text-[11px] font-semibold uppercase tracking-wide">
                       {(user as any)?.role || "Admin"}
                     </span>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {[
                     { label: "Username", value: (user as any)?.username || "—" },
                     { label: "Email",    value: (user as any)?.email    || "—" },
                     { label: "Role",     value: (user as any)?.role     || "—" },
                   ].map(item => (
-                    <div key={item.label} className="bg-gray-900/60 rounded-xl p-3">
+                    <div key={item.label} className="bg-gray-900/60 rounded-xl p-2.5 sm:p-3 min-w-0">
                       <p className="text-[10px] uppercase tracking-wider text-gray-600 font-semibold">{item.label}</p>
-                      <p className="text-white text-sm font-medium mt-0.5 truncate">{item.value}</p>
+                      <p className="text-white text-xs sm:text-sm font-medium mt-0.5 truncate">{item.value}</p>
                     </div>
                   ))}
                 </div>
@@ -275,7 +299,7 @@ const Settings = () => {
               {/* Change Password */}
               <SectionCard>
                 <div className="flex items-center gap-2.5 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                     <FaKey className="text-blue-400" size={12} />
                   </div>
                   <div>
@@ -325,7 +349,7 @@ const Settings = () => {
               {/* Change Email */}
               <SectionCard>
                 <div className="flex items-center gap-2.5 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
                     <FaAt className="text-cyan-400" size={12} />
                   </div>
                   <div>
@@ -355,7 +379,7 @@ const Settings = () => {
               {/* Change Username */}
               <SectionCard>
                 <div className="flex items-center gap-2.5 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
                     <FaIdBadge className="text-purple-400" size={12} />
                   </div>
                   <div>
@@ -479,7 +503,7 @@ const Settings = () => {
                   <InputField type="number" value={settings.maxLoginAttempts} onChange={e => set("maxLoginAttempts", +e.target.value)} />
                 </div>
               </div>
-              <div className="border-t border-gray-700/50 pt-5 space-y-0">
+              <div className="border-t border-gray-700/50 pt-5">
                 <NotificationRow label="Two-Factor Authentication" description="Require 2FA for all users"                   checked={settings.enableTwoFactor}        onChange={v => set("enableTwoFactor", v)} />
                 <NotificationRow label="Force Password Change"     description="Require users to change default passwords"   checked={settings.requirePasswordChange}   onChange={v => set("requirePasswordChange", v)} />
               </div>
@@ -502,7 +526,7 @@ const Settings = () => {
                   <InputField type="number" value={settings.maxImageSize} onChange={e => set("maxImageSize", +e.target.value)} />
                 </div>
               </div>
-              <div className="border-t border-gray-700/50 pt-5 space-y-0">
+              <div className="border-t border-gray-700/50 pt-5">
                 <NotificationRow label="Auto-delete Expired Items" description="Automatically remove items past expiry date"       checked={settings.autoDeleteExpiredItems} onChange={v => set("autoDeleteExpiredItems", v)} />
                 <NotificationRow label="Require Item Approval"     description="Items must be reviewed before becoming visible"   checked={settings.requireItemApproval}    onChange={v => set("requireItemApproval", v)} />
               </div>
