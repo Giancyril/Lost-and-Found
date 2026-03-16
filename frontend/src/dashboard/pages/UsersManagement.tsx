@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { FaTrash, FaSearch, FaShieldAlt, FaUser, FaBan } from "react-icons/fa";
+import { FaTrash, FaSearch, FaShieldAlt, FaBan, FaPlus, FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { useForm } from "react-hook-form";
 import {
   useGetAllUsersQuery,
   useBlockUserMutation,
-  useChangeUserRoleMutation,
   useSoftDeleteUserMutation,
+  useRegistersMutation,
 } from "../../redux/api/api";
 
 interface ApiUser {
@@ -28,16 +29,21 @@ const Spinner = () => (
 
 const UsersManagement = () => {
   const [searchTerm, setSearchTerm]     = useState("");
-  const [roleFilter, setRoleFilter]     = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingUser, setDeletingUser]           = useState<User | null>(null);
   const [isDeleteLoading, setIsDeleteLoading]     = useState(false);
 
+  // Create Admin modal
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreating, setIsCreating]               = useState(false);
+  const [showPassword, setShowPassword]           = useState(false);
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+
   const { data: allUsersData, isLoading } = useGetAllUsersQuery(undefined);
-  const [blockUser]      = useBlockUserMutation();
-  const [changeUserRole] = useChangeUserRoleMutation();
-  const [softDeleteUser] = useSoftDeleteUserMutation();
+  const [blockUser]        = useBlockUserMutation();
+  const [softDeleteUser]   = useSoftDeleteUserMutation();
+  const [registerUser]     = useRegistersMutation();
 
   const transformUser = (apiUser: ApiUser): User => ({
     id: apiUser.id, name: apiUser.username, email: apiUser.email, role: apiUser.role,
@@ -45,25 +51,20 @@ const UsersManagement = () => {
     lastLogin: undefined, itemsReported: 0, claimsMade: 0, profileImage: apiUser.userImg || undefined,
   });
 
-  const users = allUsersData?.data ? allUsersData.data.map(transformUser) : [];
+  // ── Only show ADMIN users ──
+  const allUsers   = allUsersData?.data ? allUsersData.data.map(transformUser) : [];
+  const adminUsers = allUsers.filter((u: User) => u.role === "ADMIN");
 
-  const filteredUsers = users.filter((user: User) => {
+  const filteredUsers = adminUsers.filter((user: User) => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole   = roleFilter === "ALL" || user.role === roleFilter;
     const matchesStatus = statusFilter === "ALL" || user.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
-
-  const handleRoleChange = async (id: string, newRole: string) => {
-    try { await changeUserRole({ id, role: newRole }).unwrap(); toast.success("User role changed successfully"); }
-    catch { toast.error("Failed to change user role"); }
-  };
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      if (newStatus === "SUSPENDED") { await blockUser(id).unwrap(); toast.success("User blocked successfully"); }
-      else if (newStatus === "ACTIVE") { await blockUser(id).unwrap(); toast.success("User activated successfully"); }
-      else { toast.info("Status change functionality needs to be implemented on the backend"); }
+      await blockUser(id).unwrap();
+      toast.success(newStatus === "SUSPENDED" ? "User suspended successfully" : "User activated successfully");
     } catch { toast.error("Failed to update user status"); }
   };
 
@@ -74,7 +75,7 @@ const UsersManagement = () => {
     setIsDeleteLoading(true);
     try {
       await softDeleteUser(deletingUser.id).unwrap();
-      toast.success("User deleted successfully");
+      toast.success("Admin account deleted successfully");
       setIsDeleteModalOpen(false); setDeletingUser(null);
     } catch { toast.error("Failed to delete user"); }
     finally { setIsDeleteLoading(false); }
@@ -82,9 +83,27 @@ const UsersManagement = () => {
 
   const handleDeleteCancel = () => { setIsDeleteModalOpen(false); setDeletingUser(null); setIsDeleteLoading(false); };
 
-  const getRoleColor   = (role: string)   => role === "ADMIN" ? "bg-red-500" : role === "USER" ? "bg-green-500" : "bg-gray-500";
-  const getStatusColor = (status: string) => status === "ACTIVE" ? "bg-green-500" : status === "SUSPENDED" ? "bg-yellow-500" : status === "BANNED" ? "bg-red-500" : "bg-gray-500";
-  const getRoleIcon    = (role: string)   => role === "ADMIN" ? <FaShieldAlt className="text-red-500" /> : <FaUser className="text-green-500" />;
+  const handleCreateAdmin = async (data: any) => {
+    setIsCreating(true);
+    try {
+      const res: any = await registerUser({
+        username: data.username,
+        email:    data.email,
+        password: data.password,
+        role:     "ADMIN",
+      });
+      if (res?.error) {
+        toast.error(res.error?.data?.message || "Failed to create admin account.");
+        return;
+      }
+      toast.success(`Admin account for "${data.username}" created successfully!`);
+      setIsCreateModalOpen(false);
+      reset();
+    } catch { toast.error("Failed to create admin account."); }
+    finally { setIsCreating(false); }
+  };
+
+  const getStatusColor = (status: string) => status === "ACTIVE" ? "bg-green-500" : status === "SUSPENDED" ? "bg-yellow-500" : "bg-gray-500";
   const formatDate     = (d: string)      => new Date(d).toLocaleDateString();
 
   if (isLoading) return (
@@ -98,12 +117,11 @@ const UsersManagement = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
         {[
-          { label: "Total Users", value: users.length,                                             icon: <FaUser className="text-white" />,     num: "text-white"      },
-          { label: "Active Users", value: users.filter((u: User) => u.status === "ACTIVE").length, icon: <FaUser className="text-white" />,     num: "text-green-500"  },
-          { label: "Admins",       value: users.filter((u: User) => u.role === "ADMIN").length,    icon: <FaShieldAlt className="text-white" />, num: "text-red-500"    },
-          { label: "Suspended",    value: users.filter((u: User) => u.status === "SUSPENDED").length, icon: <FaBan className="text-white" />,  num: "text-yellow-500" },
+          { label: "Total Admins", value: adminUsers.length,                                              icon: <FaShieldAlt className="text-white" />, num: "text-white"      },
+          { label: "Active",       value: adminUsers.filter((u: User) => u.status === "ACTIVE").length,   icon: <FaShieldAlt className="text-white" />, num: "text-green-500"  },
+          { label: "Suspended",    value: adminUsers.filter((u: User) => u.status === "SUSPENDED").length, icon: <FaBan className="text-white" />,       num: "text-yellow-500" },
         ].map((s) => (
           <div key={s.label} className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
             <div className="flex items-center justify-between">
@@ -117,27 +135,27 @@ const UsersManagement = () => {
         ))}
       </div>
 
-      {/* Filters */}
+      {/* Filters + Create Admin button */}
       <div className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1 relative">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
-            <input type="text" placeholder="Search users..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+            <input type="text" placeholder="Search admins..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
           </div>
-          <div className="flex gap-2 sm:gap-4">
-            <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
-              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-              <option value="ALL">All Roles</option>
-              <option value="ADMIN">Admin</option>
-              <option value="USER">User</option>
-            </select>
+          <div className="flex gap-2 sm:gap-3">
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
               className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active</option>
               <option value="SUSPENDED">Suspended</option>
             </select>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg text-sm transition-all duration-200 shrink-0"
+            >
+              <FaPlus size={11} /> Create Admin
+            </button>
           </div>
         </div>
       </div>
@@ -148,7 +166,7 @@ const UsersManagement = () => {
           <table className="w-full">
             <thead className="bg-gray-900">
               <tr>
-                {["User","Role","Status","Joined","Actions"].map(h => (
+                {["Admin User", "Status", "Joined", "Actions"].map(h => (
                   <th key={h} className="px-6 py-4 text-left text-sm font-medium text-gray-300">{h}</th>
                 ))}
               </tr>
@@ -158,30 +176,28 @@ const UsersManagement = () => {
                 <tr key={user.id} className="hover:bg-gray-700 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
-                      {getRoleIcon(user.role)}
+                      <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0">
+                        <FaShieldAlt className="text-red-400" size={12} />
+                      </div>
                       <div>
                         <div className="font-medium text-white">{user.name}</div>
                         <div className="text-sm text-gray-400">{user.email}</div>
                       </div>
+                      <span className="px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-bold rounded-full uppercase">Admin</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <select value={user.role} onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getRoleColor(user.role)}`}>
-                      <option value="USER">User</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
-                  </td>
-                  <td className="px-6 py-4">
                     <select value={user.status} onChange={(e) => handleStatusChange(user.id, e.target.value)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(user.status)}`}>
+                      className={`px-3 py-1 rounded-full text-xs font-medium text-white border-0 cursor-pointer focus:outline-none ${getStatusColor(user.status)}`}>
                       <option value="ACTIVE">Active</option>
                       <option value="SUSPENDED">Suspended</option>
                     </select>
                   </td>
                   <td className="px-6 py-4 text-gray-300">{formatDate(user.createdAt)}</td>
                   <td className="px-6 py-4">
-                    <button onClick={() => handleDelete(user)} className="p-2 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors" title="Delete User"><FaTrash /></button>
+                    <button onClick={() => handleDelete(user)} className="p-2 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors" title="Delete Admin">
+                      <FaTrash size={13} />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -189,7 +205,10 @@ const UsersManagement = () => {
           </table>
         </div>
         {filteredUsers.length === 0 && (
-          <div className="text-center py-12"><FaUser className="mx-auto text-4xl text-gray-500 mb-4" /><p className="text-gray-400">No users found matching your criteria</p></div>
+          <div className="text-center py-12">
+            <FaShieldAlt className="mx-auto text-4xl text-gray-500 mb-4" />
+            <p className="text-gray-400">No admin accounts found</p>
+          </div>
         )}
       </div>
 
@@ -197,30 +216,29 @@ const UsersManagement = () => {
       <div className="md:hidden space-y-3">
         {filteredUsers.length === 0 ? (
           <div className="text-center py-12 bg-gray-800 rounded-xl border border-gray-700">
-            <FaUser className="mx-auto text-4xl text-gray-500 mb-4" />
-            <p className="text-gray-400">No users found matching your criteria</p>
+            <FaShieldAlt className="mx-auto text-4xl text-gray-500 mb-4" />
+            <p className="text-gray-400">No admin accounts found</p>
           </div>
         ) : filteredUsers.map((user: User) => (
           <div key={user.id} className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0">
-                {getRoleIcon(user.role)}
+                <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0">
+                  <FaShieldAlt className="text-red-400" size={12} />
+                </div>
                 <div className="min-w-0">
-                  <p className="text-white font-medium truncate text-sm">{user.name}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-white font-medium truncate text-sm">{user.name}</p>
+                    <span className="px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 text-[9px] font-bold rounded-full uppercase shrink-0">Admin</span>
+                  </div>
                   <p className="text-gray-400 text-xs truncate">{user.email}</p>
                 </div>
               </div>
-              <button onClick={() => handleDelete(user)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors shrink-0"><FaTrash size={13} /></button>
+              <button onClick={() => handleDelete(user)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors shrink-0">
+                <FaTrash size={13} />
+              </button>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              <div>
-                <p className="text-gray-600 text-[10px] mb-1">Role</p>
-                <select value={user.role} onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                  className={`w-full px-2 py-1 rounded-lg text-[11px] font-medium text-white border-0 ${getRoleColor(user.role)}`}>
-                  <option value="USER">User</option>
-                  <option value="ADMIN">Admin</option>
-                </select>
-              </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <p className="text-gray-600 text-[10px] mb-1">Status</p>
                 <select value={user.status} onChange={(e) => handleStatusChange(user.id, e.target.value)}
@@ -238,27 +256,127 @@ const UsersManagement = () => {
         ))}
       </div>
 
+      {/* ── Create Admin Modal ── */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl w-full max-w-md border border-gray-700 shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
+              <div>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <FaShieldAlt className="text-red-400" size={14} /> Create Admin Account
+                </h2>
+                <p className="text-gray-400 text-xs mt-0.5">New account will be set as Admin by default</p>
+              </div>
+              <button onClick={() => { setIsCreateModalOpen(false); reset(); }} className="text-gray-400 hover:text-white p-1">
+                <FaTimes size={15} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit(handleCreateAdmin)} className="p-5 space-y-4">
+              {/* Username */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                  Username <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. sas_admin"
+                  {...register("username", {
+                    required: "Username is required",
+                    minLength: { value: 3, message: "Min. 3 characters" },
+                    pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Letters, numbers, underscores only" },
+                  })}
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                />
+                {errors.username && <p className="text-red-400 text-xs mt-1">{errors.username.message as string}</p>}
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                  Email <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="email"
+                  placeholder="admin@nbsc.edu.ph"
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: { value: /^\S+@\S+$/i, message: "Invalid email address" },
+                  })}
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                />
+                {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message as string}</p>}
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                  Password <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Min. 6 characters"
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: { value: 6, message: "Min. 6 characters" },
+                    })}
+                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 pr-10"
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
+                    {showPassword ? <FaEyeSlash size={13} /> : <FaEye size={13} />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password.message as string}</p>}
+              </div>
+
+              {/* Role badge — always Admin */}
+              <div className="flex items-center gap-3 bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3">
+                <FaShieldAlt className="text-red-400 shrink-0" size={13} />
+                <div>
+                  <p className="text-white text-xs font-semibold">Role: Admin</p>
+                  <p className="text-gray-500 text-[11px] mt-0.5">This account will have full dashboard access</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => { setIsCreateModalOpen(false); reset(); }} disabled={isCreating}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" disabled={isCreating}
+                  className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                  {isCreating ? <><Spinner /> Creating...</> : <><FaPlus size={11} /> Create Admin</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Delete Modal */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-sm mx-0 sm:mx-4 border border-gray-700 p-5 sm:p-6">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl w-full max-w-sm border border-gray-700 p-5 sm:p-6">
             <div className="text-center">
-              <div className="bg-gray-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <FaTrash className="text-red-600 text-xl" />
+              <div className="bg-gray-700 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <FaTrash className="text-red-500 text-xl" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">Delete User</h2>
-              <p className="text-gray-400 mb-4">Are you sure? This action cannot be undone.</p>
+              <h2 className="text-xl font-bold text-white mb-2">Delete Admin Account</h2>
+              <p className="text-gray-400 mb-4 text-sm">Are you sure? This action cannot be undone.</p>
               {deletingUser && (
                 <div className="bg-gray-700 rounded-lg p-4 mb-6 text-left">
-                  <div className="flex items-center space-x-3 mb-2">
-                    {getRoleIcon(deletingUser.role)}
-                    <div><h3 className="font-medium text-white">{deletingUser.name}</h3><p className="text-sm text-gray-400">{deletingUser.email}</p></div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0">
+                      <FaShieldAlt className="text-red-400" size={12} />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-white text-sm">{deletingUser.name}</h3>
+                      <p className="text-xs text-gray-400">{deletingUser.email}</p>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm text-gray-500">
-                    <span>Role: {deletingUser.role}</span>
-                    <span>Status: {deletingUser.status}</span>
-                  </div>
-                  <div className="text-sm text-gray-500 mt-1">Joined: {formatDate(deletingUser.createdAt)}</div>
+                  <p className="text-xs text-gray-500">Joined: {formatDate(deletingUser.createdAt)}</p>
                 </div>
               )}
               <div className="flex gap-3">
@@ -266,7 +384,7 @@ const UsersManagement = () => {
                   className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-lg transition-colors text-sm">Cancel</button>
                 <button type="button" onClick={handleDeleteConfirm} disabled={isDeleteLoading}
                   className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-                  {isDeleteLoading ? <><Spinner /> Deleting...</> : "Delete User"}
+                  {isDeleteLoading ? <><Spinner /> Deleting...</> : "Delete"}
                 </button>
               </div>
             </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   FaEye, FaSearch, FaCheck, FaTimes, FaUser, FaBoxOpen,
   FaHistory, FaClipboardList, FaChevronLeft, FaChevronRight, FaEnvelope, FaCheckCircle,
+  FaCalendarAlt, FaMapMarkerAlt,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -533,7 +534,15 @@ const ClaimsManagement = () => {
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 space-y-2.5">
                   <div><p className="text-xs text-gray-500 uppercase tracking-widest">Item Name</p><p className="text-white font-semibold text-sm">{selectedClaim.foundItem?.foundItemName}</p></div>
                   <div><p className="text-xs text-gray-500 uppercase tracking-widest">Category</p><p className="text-gray-300 text-sm">{selectedClaim.foundItem?.category?.name}</p></div>
-                  <div><p className="text-xs text-gray-500 uppercase tracking-widest">Location Found</p><p className="text-gray-300 text-sm">📍 {selectedClaim.foundItem?.location}</p></div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-widest">Location Found</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                        <FaMapMarkerAlt className="text-blue-400" size={11} />
+                      </div>
+                      <p className="text-gray-300 text-sm">{selectedClaim.foundItem?.location}</p>
+                    </div>
+                  </div>
                   <div><p className="text-xs text-gray-500 uppercase tracking-widest">Description</p><p className="text-gray-300 text-sm leading-relaxed">{selectedClaim.foundItem?.description}</p></div>
                 </div>
               </div>
@@ -557,7 +566,15 @@ const ClaimsManagement = () => {
                       </div>
                     </div>
                   </div>
-                  <div><p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Date Item Was Lost</p><p className="text-gray-300 text-sm">📅 {formatDate(selectedClaim.lostDate)}</p></div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Date Item Was Lost</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                        <FaCalendarAlt className="text-blue-400" size={11} />
+                      </div>
+                      <p className="text-gray-300 text-sm">{formatDate(selectedClaim.lostDate)}</p>
+                    </div>
+                  </div>
                   <div>
                     <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Proof of Ownership</p>
                     <div className="bg-gray-800 rounded-lg p-3 border border-gray-600">
