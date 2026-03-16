@@ -111,22 +111,22 @@ const FoundItemsManagement = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
+      <div className="grid grid-cols-3 gap-2 sm:gap-6">
         {[
           { label: "Total Items", value: items?.length | 0,                                      icon: <FaEye className="text-white" />,    num: "text-white"      },
           { label: "Active",      value: items.filter((i: FoundItem) => !i.isClaimed).length,    icon: <FaSearch className="text-white" />, num: "text-green-500"  },
           { label: "Claimed",     value: items.filter((i: FoundItem) => i.isClaimed).length,     icon: <FaSearch className="text-white" />, num: "text-yellow-500" },
         ].map((s) => (
-          <div key={s.label} className="bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-700">
-            <div className="flex items-center justify-between">
+          <div key={s.label} className="bg-gray-800 rounded-xl p-3 sm:p-6 border border-gray-700">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
               <div>
-                <p className="text-gray-400 text-sm">{s.label}</p>
-                <p className={`text-2xl font-bold ${s.num}`}>{s.value}</p>
+                <p className="text-gray-400 text-[10px] sm:text-sm leading-tight">{s.label}</p>
+                <p className={`text-xl sm:text-2xl font-bold ${s.num}`}>{s.value}</p>
               </div>
-              <div className="bg-gray-500 p-3 rounded-lg">{s.icon}</div>
+              <div className="hidden sm:flex bg-gray-500 p-3 rounded-lg">{s.icon}</div>
             </div>
           </div>
-        ))}
+          ))}
       </div>
 
       {/* Filters */}
