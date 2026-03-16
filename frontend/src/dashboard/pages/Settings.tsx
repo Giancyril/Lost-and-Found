@@ -457,7 +457,7 @@ const Settings = () => {
                     value={settings.siteDescription}
                     onChange={e => set("siteDescription", e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-2.5 bg-gray-900/80 border border-gray-700 rounded-xl text-white text-sm
+                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm
                       placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50
                       transition-all duration-200 resize-none"
                   />

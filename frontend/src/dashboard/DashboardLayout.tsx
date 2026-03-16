@@ -73,7 +73,6 @@ const notifIcon = (type: Notification["type"]) => {
   }
 };
 
-// ─── helpers to seed timestamps from localStorage ─────────────────────────────
 const getSavedLatestTs = (type: string): string | null => {
   try {
     const saved = localStorage.getItem("admin_notifications");
@@ -89,11 +88,9 @@ const getSavedLatestTs = (type: string): string | null => {
   } catch { return null; }
 };
 
-// ─── Notification Bell ────────────────────────────────────────────────────────
 const NotificationBell = () => {
   const [open, setOpen] = useState(false);
 
-  // ✅ load from localStorage on mount
   const [notifications, setNotifications] = useState<Notification[]>(() => {
     try {
       const saved = localStorage.getItem("admin_notifications");
@@ -102,13 +99,10 @@ const NotificationBell = () => {
   });
 
   const bellRef = useRef<HTMLDivElement>(null);
-
-  // ✅ seed timestamps from saved notifications so we don't re-add on refresh
   const latestClaimTs = useRef<string | null>(getSavedLatestTs("claims"));
   const latestFoundTs = useRef<string | null>(getSavedLatestTs("found"));
   const latestLostTs  = useRef<string | null>(getSavedLatestTs("lost"));
 
-  // ✅ if we have saved data, mark as already initialized
   const initialized = useRef({
     claims: getSavedLatestTs("claims") !== null,
     found:  getSavedLatestTs("found")  !== null,
@@ -119,7 +113,7 @@ const NotificationBell = () => {
 
   const { data: claimsData } = useGetAllClaimsQuery(undefined, pollOpts);
   const { data: foundData }  = useGetFoundItemsQuery({},        pollOpts);
-  const { data: lostData }   = useGetLostItemsQuery({},      pollOpts);
+  const { data: lostData }   = useGetLostItemsQuery({},         pollOpts);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -138,7 +132,6 @@ const NotificationBell = () => {
 
   const mergeNotifications = (incoming: Notification[], prev: Notification[]): Notification[] => {
     const map = new Map<string, Notification>();
-    // prev first so incoming read:false doesn't overwrite already-read saved ones
     [...prev, ...incoming].forEach(n => { if (!map.has(n.id)) map.set(n.id, n); });
     return Array.from(map.values())
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
@@ -159,7 +152,6 @@ const NotificationBell = () => {
     if (items.length === 0) return;
 
     if (!initialized.current[initKey]) {
-      // first load with no saved data — seed timestamp and show recent items
       latestTs.current = items[0].createdAt;
       initialized.current[initKey] = true;
       const recentCutoff = Date.now() - RECENT_MS;
@@ -170,8 +162,7 @@ const NotificationBell = () => {
       return;
     }
 
-    // already initialized — only add genuinely new items
-    const cutoff  = latestTs.current;
+    const cutoff   = latestTs.current;
     const newItems = cutoff
       ? items.filter(i => new Date(i.createdAt).getTime() > new Date(cutoff).getTime())
       : [];
@@ -218,7 +209,6 @@ const NotificationBell = () => {
     }));
   }, [lostData]);
 
-  // ✅ persist to localStorage whenever notifications change
   useEffect(() => {
     try {
       localStorage.setItem("admin_notifications", JSON.stringify(notifications));
@@ -227,7 +217,6 @@ const NotificationBell = () => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  // ✅ markAllRead also syncs to localStorage immediately
   const markAllRead = () => {
     const updated = notifications.map(n => ({ ...n, read: true }));
     setNotifications(updated);
@@ -237,7 +226,6 @@ const NotificationBell = () => {
   const markOneRead = (id: string) =>
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
 
-  // ✅ clearAll also resets timestamps and localStorage
   const clearAll = () => {
     setNotifications([]);
     latestClaimTs.current = null;
@@ -367,13 +355,21 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     user?.email?.charAt(0)?.toUpperCase() || "A";
 
   return (
-    <div className="min-h-screen bg-gray-950 flex">
+    // ── Root: block on mobile, flex on lg ──────────────────────────────────
+    <div className="min-h-screen bg-gray-950 lg:flex overflow-x-hidden">
+
+      {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 h-full z-50 flex flex-col bg-gray-900 border-r border-white/5 transition-all duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 ${sidebarCollapsed ? "lg:w-[72px]" : "lg:w-60"} w-60`}>
+      {/* Sidebar — always fixed, off-screen on mobile until opened */}
+      <aside className={`fixed top-0 left-0 h-full z-50 flex flex-col bg-gray-900 border-r border-white/5
+        transition-all duration-300 ease-in-out
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:translate-x-0
+        ${sidebarCollapsed ? "lg:w-[72px]" : "lg:w-60"}
+        w-60`}>
 
         {/* Logo */}
         <div className={`flex items-center h-16 border-b border-white/5 px-4 shrink-0 ${sidebarCollapsed ? "justify-center" : "justify-between"}`}>
@@ -442,8 +438,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ml-0 ${sidebarCollapsed ? "lg:ml-[72px]" : "lg:ml-60"}`}>
+      {/* ── Main content — full width on mobile, offset on desktop ── */}
+      <div className={`w-full flex flex-col min-h-screen bg-gray-950 overflow-x-hidden transition-all duration-300 ${sidebarCollapsed ? "lg:ml-[72px] lg:w-[calc(100%-72px)]" : "lg:ml-60 lg:w-[calc(100%-240px)]"}`}>
 
         {/* Topbar */}
         <header className="h-16 bg-gray-900/80 backdrop-blur border-b border-white/5 flex items-center px-4 sm:px-5 gap-4 shrink-0 sticky top-0 z-30">
@@ -507,7 +503,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-5 lg:p-7 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 sm:p-5 lg:p-7 overflow-auto bg-gray-950">{children}</main>
       </div>
 
       <ToastContainer position="top-right" autoClose={4000} hideProgressBar newestOnTop closeOnClick theme="dark"
