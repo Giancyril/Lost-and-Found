@@ -191,14 +191,14 @@ const UsersManagement = () => {
                 <tr key={user.id} className="hover:bg-gray-700 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0">
-                        <FaShieldAlt className="text-red-400" size={12} />
+                      <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+                        <FaShieldAlt className="text-blue-400" size={12} />
                       </div>
                       <div>
                         <div className="font-medium text-white">{user.name}</div>
                         <div className="text-sm text-gray-400">{user.email}</div>
                       </div>
-                      <span className="px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-bold rounded-full uppercase">Admin</span>
+                      <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold rounded-full uppercase">Admin</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
