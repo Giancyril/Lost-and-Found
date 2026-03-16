@@ -15,6 +15,8 @@ import { Spinner } from "flowbite-react";
 import { useForm } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   useCategoryQuery,
   useCreateFoundItemMutation,
@@ -45,9 +47,8 @@ const FoundItemsPage = () => {
 
   // ── Add Found Item modal state ──
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [addSelectedFiles, setAddSelectedFiles] = useState<File[]>([]);
-  const [addPreviews, setAddPreviews] = useState<string[]>([]);
-  const [addPrimaryIdx, setAddPrimaryIdx] = useState(0);
+  const [addSelectedFile, setAddSelectedFile] = useState<File | null>(null);
+  const [addPreview, setAddPreview] = useState<string>("");
   const [addUploadError, setAddUploadError] = useState("");
   const [addIsDragging, setAddIsDragging] = useState(false);
   const [addStartDate, setAddStartDate] = useState(new Date());
@@ -55,7 +56,6 @@ const FoundItemsPage = () => {
   const [addSelectedMenucategoryId, setAddSelectedMenucategoryId] = useState("");
   const addFileInputRef = useRef<HTMLInputElement>(null);
 
-  const MAX_IMAGES = 6;
   const MAX_SIZE_MB = 5;
 
   const { data: Category } = useCategoryQuery("");
@@ -71,33 +71,29 @@ const FoundItemsPage = () => {
   } = useForm();
 
   const handleAddFileChange = (files: FileList | null) => {
-    if (!files) return;
+    if (!files || files.length === 0) return;
     setAddUploadError("");
-    const incoming = Array.from(files);
-    const valid = incoming.filter((f) => {
-      if (!f.type.startsWith("image/")) { setAddUploadError("Only image files allowed."); return false; }
-      if (f.size > MAX_SIZE_MB * 1024 * 1024) { setAddUploadError(`Max ${MAX_SIZE_MB}MB each.`); return false; }
-      return true;
-    });
-    const combined = [...addSelectedFiles, ...valid].slice(0, MAX_IMAGES);
-    if (addSelectedFiles.length + valid.length > MAX_IMAGES) setAddUploadError(`Max ${MAX_IMAGES} images.`);
-    setAddSelectedFiles(combined);
-    setAddPreviews(combined.map((f) => URL.createObjectURL(f)));
+    const file = files[0];
+    if (!file.type.startsWith("image/")) { setAddUploadError("Only image files are allowed."); return; }
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) { setAddUploadError(`File must be under ${MAX_SIZE_MB}MB.`); return; }
+    setAddSelectedFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setAddPreview(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
-  const removeAddFile = (idx: number) => {
-    const updated = addSelectedFiles.filter((_, i) => i !== idx);
-    setAddSelectedFiles(updated);
-    setAddPreviews(updated.map((f) => URL.createObjectURL(f)));
-    if (addPrimaryIdx >= updated.length) setAddPrimaryIdx(0);
+  const removeAddFile = () => {
+    setAddSelectedFile(null);
+    setAddPreview("");
+    setAddUploadError("");
+    if (addFileInputRef.current) addFileInputRef.current.value = "";
   };
 
   const closeAddModal = () => {
     setIsAddModalOpen(false);
     addReset();
-    setAddSelectedFiles([]);
-    setAddPreviews([]);
-    setAddPrimaryIdx(0);
+    setAddSelectedFile(null);
+    setAddPreview("");
     setAddUploadError("");
     setAddSelectedMenu("");
     setAddSelectedMenucategoryId("");
@@ -108,7 +104,7 @@ const FoundItemsPage = () => {
     if (!addSelectedMenucategoryId) return;
     try {
       const foundData = {
-        img: addPreviews[addPrimaryIdx] || "",
+        img: addPreview || "",
         categoryId: addSelectedMenucategoryId,
         foundItemName: data.foundItemName,
         description: data.description,
@@ -117,15 +113,21 @@ const FoundItemsPage = () => {
         claimProcess: data.claimProcess,
       };
       const res: any = await createFoundItem(foundData);
-      if (res?.data?.success === false) return;
-      if (addSelectedFiles.length > 0 && res?.data?.data?.id) {
+      if (res?.data?.success === false) {
+        toast.error("Failed to submit found item. Please try again.");
+        return;
+      }
+      if (addSelectedFile && res?.data?.data?.id) {
         const formData = new FormData();
-        addSelectedFiles.forEach((file) => formData.append("images", file));
-        formData.append("primaryIndex", String(addPrimaryIdx));
+        formData.append("images", addSelectedFile);
+        formData.append("primaryIndex", "0");
         await uploadItemImages({ id: res.data.data.id, type: "found", formData });
       }
+      toast.success("Found item submitted successfully!");
       closeAddModal();
-    } catch {}
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    }
   };
 
   // ── Search / sort / pagination handlers ──
@@ -196,7 +198,7 @@ const FoundItemsPage = () => {
           <div className="flex justify-end mb-6">
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-lg shadow-green-900/30"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-lg shadow-green-900/30"
             >
               <FaPlus size={12} /> Add Found Item
             </button>
@@ -514,77 +516,90 @@ const FoundItemsPage = () => {
 
               </div>
 
-              {/* Image Upload */}
+              {/* Single Image Upload */}
               <div>
                 <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
-                  Item Photos{" "}
-                  <span className="text-gray-500 normal-case font-normal">(up to {MAX_IMAGES} images)</span>
+                  Item Photo <span className="text-red-500 ml-1">*</span>
                 </label>
-                <div
-                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${
-                    addIsDragging
-                      ? "border-blue-500 bg-blue-900/10"
-                      : "border-gray-700 bg-gray-800/50 hover:border-blue-500 hover:bg-gray-800"
-                  }`}
-                  onClick={() => addFileInputRef.current?.click()}
-                  onDragOver={(e) => { e.preventDefault(); setAddIsDragging(true); }}
-                  onDragLeave={() => setAddIsDragging(false)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setAddIsDragging(false);
-                    handleAddFileChange(e.dataTransfer.files);
-                  }}
-                >
-                  <input
-                    ref={addFileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => handleAddFileChange(e.target.files)}
-                  />
-                  <div className="text-gray-400 text-sm">
-                    <span className="text-blue-400 font-medium">Click to upload</span> or drag & drop
-                    <p className="text-xs text-gray-600 mt-1">
-                      JPG, PNG, WEBP · Max {MAX_SIZE_MB}MB each · {addSelectedFiles.length}/{MAX_IMAGES} selected
-                    </p>
-                  </div>
-                </div>
 
-                {addUploadError && <p className="text-red-400 text-xs mt-1.5">{addUploadError}</p>}
-
-                {addPreviews.length > 0 && (
-                  <>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
-                      {addPreviews.map((src, idx) => (
-                        <div
-                          key={idx}
-                          className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all duration-200 cursor-pointer ${
-                            idx === addPrimaryIdx
-                              ? "border-blue-500 ring-2 ring-blue-500/30"
-                              : "border-gray-700 hover:border-gray-500"
-                          }`}
-                          onClick={() => setAddPrimaryIdx(idx)}
-                          title="Click to set as cover photo"
-                        >
-                          <img src={src} className="w-full h-full object-cover" alt="" />
-                          {idx === addPrimaryIdx && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-blue-600/90 text-white text-center text-[10px] font-bold py-0.5">
-                              Cover
-                            </div>
-                          )}
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); removeAddFile(idx); }}
-                            className="absolute top-1 right-1 w-5 h-5 bg-black/60 hover:bg-red-600 rounded-full text-white text-xs flex items-center justify-center transition-colors duration-150"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
+                {!addPreview ? (
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
+                      addIsDragging
+                        ? "border-blue-500 bg-blue-900/10"
+                        : "border-gray-700 bg-gray-800/50 hover:border-blue-500 hover:bg-gray-800"
+                    }`}
+                    onClick={() => addFileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setAddIsDragging(true); }}
+                    onDragLeave={() => setAddIsDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setAddIsDragging(false);
+                      handleAddFileChange(e.dataTransfer.files);
+                    }}
+                  >
+                    <input
+                      ref={addFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleAddFileChange(e.target.files)}
+                    />
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center text-gray-400">
+                        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        <span className="text-blue-400 font-medium">Click to upload</span> or drag & drop
+                      </p>
+                      <p className="text-xs text-gray-600">JPG, PNG, WEBP · Max {MAX_SIZE_MB}MB</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1.5">Click a photo to set it as the cover image</p>
-                  </>
+                  </div>
+                ) : (
+                  <div className="relative rounded-xl overflow-hidden border-2 border-blue-500 bg-gray-800">
+                    <img
+                      src={addPreview}
+                      alt="Preview"
+                      className="w-full max-h-64 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/0 hover:bg-black/50 transition-all duration-200 flex items-center justify-center gap-3 opacity-0 hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => addFileInputRef.current?.click()}
+                        className="bg-white/90 hover:bg-white text-gray-900 text-xs font-semibold px-4 py-2 rounded-lg transition-all duration-150"
+                      >
+                        Change Photo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={removeAddFile}
+                        className="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all duration-150"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="px-3 py-2 bg-gray-900/90 border-t border-gray-700 flex items-center justify-between">
+                      <span className="text-xs text-gray-400 truncate">{addSelectedFile?.name}</span>
+                      <span className="text-xs text-gray-500 ml-2 shrink-0">
+                        {addSelectedFile ? (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB" : ""}
+                      </span>
+                    </div>
+                    <input
+                      ref={addFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleAddFileChange(e.target.files)}
+                    />
+                  </div>
+                )}
+
+                {addUploadError && (
+                  <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                    <span>⚠</span> {addUploadError}
+                  </p>
                 )}
               </div>
 
@@ -610,6 +625,8 @@ const FoundItemsPage = () => {
           </div>
         </div>
       )}
+
+      <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
     </div>
   );
 };
