@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaBoxOpen,
+import {
+  FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaBoxOpen,
   FaTshirt, FaGem, FaBook, FaIdCard, FaMobileAlt, FaBriefcase,
   FaWallet, FaHeadphones, FaKey, FaGlasses, FaUmbrella, FaFootballBall,
   FaLaptop, FaTabletAlt, FaCamera, FaClock, FaRing, FaTag,
-  FaPlug, FaUsb, FaTint,
+  FaPlug, FaUsb, FaTint, FaPaintBrush, FaMusic, FaUtensils,
+  FaCalculator, FaShapes,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -27,9 +29,9 @@ interface FormData {
 // Map category name keywords to icons + colors
 const getCategoryIcon = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes("cloth") || n.includes("shirt") || n.includes("wear") || n.includes("apparel") || n.includes("fashion"))
+  if (n.includes("cloth") || n.includes("shirt") || n.includes("wear") || n.includes("apparel") || n.includes("fashion") || n.includes("uniform"))
     return { icon: <FaTshirt size={13} />, color: "text-purple-400", bg: "bg-purple-500/10" };
-  if (n.includes("accessor") || n.includes("jewel") || n.includes("ring") || n.includes("bracelet"))
+  if (n.includes("accessor") || n.includes("jewel") || n.includes("bracelet") || n.includes("necklace"))
     return { icon: <FaGem size={13} />, color: "text-pink-400", bg: "bg-pink-500/10" };
   if (n.includes("book") || n.includes("stationery") || n.includes("pen") || n.includes("notebook"))
     return { icon: <FaBook size={13} />, color: "text-yellow-400", bg: "bg-yellow-500/10" };
@@ -43,15 +45,15 @@ const getCategoryIcon = (name: string) => {
     return { icon: <FaTabletAlt size={13} />, color: "text-indigo-400", bg: "bg-indigo-500/10" };
   if (n.includes("electronic") || n.includes("device") || n.includes("gadget"))
     return { icon: <FaLaptop size={13} />, color: "text-indigo-400", bg: "bg-indigo-500/10" };
-  if (n.includes("bag") || n.includes("wallet") || n.includes("purse") || n.includes("pouch"))
-    return { icon: <FaWallet size={13} />, color: "text-amber-400", bg: "bg-amber-500/10" };
-  if (n.includes("brief") || n.includes("backpack") || n.includes("luggage"))
+  if (n.includes("bag") || n.includes("purse") || n.includes("pouch") || n.includes("backpack") || n.includes("luggage"))
     return { icon: <FaBriefcase size={13} />, color: "text-amber-400", bg: "bg-amber-500/10" };
+  if (n.includes("wallet"))
+    return { icon: <FaWallet size={13} />, color: "text-amber-400", bg: "bg-amber-500/10" };
   if (n.includes("headphone") || n.includes("earphone") || n.includes("airpod") || n.includes("audio"))
     return { icon: <FaHeadphones size={13} />, color: "text-green-400", bg: "bg-green-500/10" };
   if (n.includes("key") || n.includes("keychain"))
     return { icon: <FaKey size={13} />, color: "text-orange-400", bg: "bg-orange-500/10" };
-  if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear"))
+  if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass"))
     return { icon: <FaGlasses size={13} />, color: "text-teal-400", bg: "bg-teal-500/10" };
   if (n.includes("umbrella"))
     return { icon: <FaUmbrella size={13} />, color: "text-blue-400", bg: "bg-blue-500/10" };
@@ -61,7 +63,7 @@ const getCategoryIcon = (name: string) => {
     return { icon: <FaCamera size={13} />, color: "text-violet-400", bg: "bg-violet-500/10" };
   if (n.includes("watch") || n.includes("clock"))
     return { icon: <FaClock size={13} />, color: "text-gray-300", bg: "bg-gray-500/10" };
-  if (n.includes("jewelry") || n.includes("necklace"))
+  if (n.includes("ring"))
     return { icon: <FaRing size={13} />, color: "text-yellow-400", bg: "bg-yellow-500/10" };
   if (n.includes("charger") || n.includes("cable") || n.includes("cord") || n.includes("plug") || n.includes("adapter"))
     return { icon: <FaPlug size={13} />, color: "text-yellow-400", bg: "bg-yellow-500/10" };
@@ -69,6 +71,16 @@ const getCategoryIcon = (name: string) => {
     return { icon: <FaUsb size={13} />, color: "text-blue-400", bg: "bg-blue-500/10" };
   if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask") || n.includes("drink"))
     return { icon: <FaTint size={13} />, color: "text-cyan-400", bg: "bg-cyan-500/10" };
+  if (n.includes("art") || n.includes("draw") || n.includes("paint") || n.includes("sketch") || n.includes("brush"))
+    return { icon: <FaPaintBrush size={13} />, color: "text-rose-400", bg: "bg-rose-500/10" };
+  if (n.includes("music") || n.includes("instrument") || n.includes("guitar") || n.includes("violin"))
+    return { icon: <FaMusic size={13} />, color: "text-fuchsia-400", bg: "bg-fuchsia-500/10" };
+  if (n.includes("lunch") || n.includes("food") || n.includes("container") || n.includes("box") || n.includes("snack"))
+    return { icon: <FaUtensils size={13} />, color: "text-orange-400", bg: "bg-orange-500/10" };
+  if (n.includes("calculat"))
+    return { icon: <FaCalculator size={13} />, color: "text-lime-400", bg: "bg-lime-500/10" };
+  if (n.includes("other"))
+    return { icon: <FaShapes size={13} />, color: "text-gray-400", bg: "bg-gray-500/10" };
   // default
   return { icon: <FaTag size={13} />, color: "text-green-400", bg: "bg-green-500/10" };
 };
