@@ -386,7 +386,7 @@ const SingleFoundItem = () => {
                   <p className="text-blue-300 text-xs leading-relaxed">
                     {isAdmin
                       ? "ℹ️ Your claim will be sent to the SAS office for review."
-                      : "ℹ️ Once submitted, the SAS office will review this claim and contact you via your school email for verification before the item is released."}
+                      : "ℹ️ Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
                   </p>
                 </div>
 

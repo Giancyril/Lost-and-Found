@@ -242,7 +242,7 @@ const SingleLostItem = () => {
                       </p>
                       <p className="text-green-400/70 text-xs mt-1 leading-relaxed">
                         {reportedFound
-                          ? "Your report has been submitted. The SAS Office will contact the owner."
+                          ? "Your report has been submitted."
                           : "Someone has already reported finding this item."}
                       </p>
                     </div>
@@ -357,7 +357,7 @@ const SingleLostItem = () => {
                 <div className="flex items-start gap-2.5 bg-blue-500/5 border border-blue-500/15 rounded-lg px-4 py-3">
                   <span className="text-blue-400 text-sm shrink-0 mt-0.5">ℹ</span>
                   <p className="text-blue-300/80 text-xs leading-relaxed">
-                    Your report will be submitted to the SAS office. The item owner will be notified and can claim it.
+                    Your report will be submitted to the SAS office. The owner can visit and claim it with proof of ownership.
                   </p>
                 </div>
 
