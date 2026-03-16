@@ -443,7 +443,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       </aside>
 
       {/* Main content */}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? "lg:ml-[72px]" : "lg:ml-60"}`}>
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ml-0 ${sidebarCollapsed ? "lg:ml-[72px]" : "lg:ml-60"}`}>
 
         {/* Topbar */}
         <header className="h-16 bg-gray-900/80 backdrop-blur border-b border-white/5 flex items-center px-4 sm:px-5 gap-4 shrink-0 sticky top-0 z-30">
