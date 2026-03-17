@@ -62,9 +62,18 @@ const ItemLifecycleTimeline = ({ foundItem }: Props) => {
 
   // ── Safely extract claim and auditLogs ────────────────────────────────────
   // Prisma returns claim as an array (one-to-many relation)
-  const claimArr: any[]  = Array.isArray(foundItem.claim) ? foundItem.claim : [];
-  const claim: any | null = claimArr.length > 0 ? claimArr[0] : null;
+  const claimArr: any[] = Array.isArray(foundItem.claim) ? foundItem.claim : [];
+
+  // Priority: APPROVED first, then PENDING, then latest REJECTED
+  const claim: any | null =
+    claimArr.find((c: any) => c.status === "APPROVED") ??
+    claimArr.find((c: any) => c.status === "PENDING")  ??
+    [...claimArr].sort((a: any, b: any) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0] ?? null;
+
   const auditLogs: any[] = claim?.auditLogs ?? [];
+  const totalClaims = claimArr.length;
 
   const isClaimed = foundItem.isClaimed;
 
@@ -178,7 +187,14 @@ const ItemLifecycleTimeline = ({ foundItem }: Props) => {
             <FaClipboardList className="text-violet-400" size={13} />
           </div>
           <div className="text-left">
-            <p className="text-white text-sm font-bold">Item Lifecycle</p>
+            <p className="text-white text-sm font-bold flex items-center gap-2">
+              Item Lifecycle
+              {totalClaims > 1 && (
+                <span className="text-[10px] bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-1.5 py-0.5 rounded-full font-semibold">
+                  {totalClaims} claims
+                </span>
+              )}
+            </p>
             <p className="text-gray-500 text-xs mt-0.5">
               {currentStage ? (
                 <span className={STAGE_META[currentStage.stage]?.color}>
@@ -211,6 +227,21 @@ const ItemLifecycleTimeline = ({ foundItem }: Props) => {
               style={{ width: `${stagePercent}%` }}
             />
           </div>
+
+          {/* Multi-claim notice */}
+          {totalClaims > 1 && (
+            <div className="mb-5 flex items-start gap-2.5 bg-yellow-500/5 border border-yellow-500/20 rounded-xl px-4 py-3">
+              <FaClipboardList className="text-yellow-400 shrink-0 mt-0.5" size={12} />
+              <p className="text-yellow-300/80 text-xs leading-relaxed">
+                <strong>{totalClaims} students</strong> have submitted a claim for this item. The timeline shows the{" "}
+                {claimArr.find((c: any) => c.status === "APPROVED")
+                  ? "approved claim"
+                  : claimArr.find((c: any) => c.status === "PENDING")
+                  ? "active pending claim"
+                  : "most recent claim"}. Admin reviews each claim individually in the dashboard.
+              </p>
+            </div>
+          )}
 
           <div className="relative">
             {/* Vertical connector */}
