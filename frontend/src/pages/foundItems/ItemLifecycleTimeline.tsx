@@ -6,30 +6,30 @@ import { useState } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface TimelineEvent {
-  id: string;
-  stage:     "reported" | "claimed" | "under_review" | "approved" | "rejected" | "returned";
-  label:     string;
-  sublabel:  string;
-  time:      string | null;
-  actor:     string;
-  done:      boolean;
-  active:    boolean;
+  id:       string;
+  stage:    "reported" | "claimed" | "under_review" | "approved" | "rejected" | "returned";
+  label:    string;
+  sublabel: string;
+  time:     string | null;
+  actor:    string;
+  done:     boolean;
+  active:   boolean;
 }
 
 interface Props {
-  foundItem: any;   // the full foundItem object from useGetSingleFoundItemQuery
-  claims?:   any[]; // optional: array of claims on this item (from getClaim filtered by foundItemId)
+  foundItem: any;  // full foundItem object from useGetSingleFoundItemQuery
+  claims?:   any[]; // unused — we read directly from foundItem.claim
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmt = (dateStr: string | null) => {
   if (!dateStr) return null;
   return new Date(dateStr).toLocaleString("en-PH", {
-    month:  "short",
-    day:    "numeric",
-    year:   "numeric",
-    hour:   "2-digit",
-    minute: "2-digit",
+    month:   "short",
+    day:     "numeric",
+    year:    "numeric",
+    hour:    "2-digit",
+    minute:  "2-digit",
   });
 };
 
@@ -46,38 +46,45 @@ const timeAgo = (dateStr: string | null) => {
 
 // ── Stage config ──────────────────────────────────────────────────────────────
 const STAGE_META: Record<string, { icon: React.ReactNode; color: string; ring: string; bg: string }> = {
-  reported:     { icon: <FaBoxOpen size={12} />,      color: "text-cyan-400",    ring: "border-cyan-400",    bg: "bg-cyan-400/10"    },
-  claimed:      { icon: <FaClipboardList size={12} />, color: "text-yellow-400",  ring: "border-yellow-400",  bg: "bg-yellow-400/10"  },
-  under_review: { icon: <FaClock size={12} />,         color: "text-orange-400",  ring: "border-orange-400",  bg: "bg-orange-400/10"  },
-  approved:     { icon: <FaCheckCircle size={12} />,   color: "text-emerald-400", ring: "border-emerald-400", bg: "bg-emerald-400/10" },
-  rejected:     { icon: <FaTimesCircle size={12} />,   color: "text-red-400",     ring: "border-red-400",     bg: "bg-red-400/10"     },
-  returned:     { icon: <FaHandshake size={12} />,     color: "text-violet-400",  ring: "border-violet-400",  bg: "bg-violet-400/10"  },
+  reported:     { icon: <FaBoxOpen size={12} />,       color: "text-cyan-400",    ring: "border-cyan-400",    bg: "bg-cyan-400/10"    },
+  claimed:      { icon: <FaClipboardList size={12} />,  color: "text-yellow-400",  ring: "border-yellow-400",  bg: "bg-yellow-400/10"  },
+  under_review: { icon: <FaClock size={12} />,          color: "text-orange-400",  ring: "border-orange-400",  bg: "bg-orange-400/10"  },
+  approved:     { icon: <FaCheckCircle size={12} />,    color: "text-emerald-400", ring: "border-emerald-400", bg: "bg-emerald-400/10" },
+  rejected:     { icon: <FaTimesCircle size={12} />,    color: "text-red-400",     ring: "border-red-400",     bg: "bg-red-400/10"     },
+  returned:     { icon: <FaHandshake size={12} />,      color: "text-violet-400",  ring: "border-violet-400",  bg: "bg-violet-400/10"  },
 };
 
 // ── Main Component ─────────────────────────────────────────────────────────────
-const ItemLifecycleTimeline = ({ foundItem, claims = [] }: Props) => {
+const ItemLifecycleTimeline = ({ foundItem }: Props) => {
   const [expanded, setExpanded] = useState(true);
 
   if (!foundItem) return null;
 
-  const isClaimed  = foundItem.isClaimed;
-  const claim      = claims[0] ?? foundItem.claim ?? null; // best available claim
+  // ── Safely extract claim and auditLogs ────────────────────────────────────
+  // Prisma returns claim as an array (one-to-many relation)
+  const claimArr: any[]  = Array.isArray(foundItem.claim) ? foundItem.claim : [];
+  const claim: any | null = claimArr.length > 0 ? claimArr[0] : null;
   const auditLogs: any[] = claim?.auditLogs ?? [];
 
-  // ── Determine which stages are done ───────────────────────────────────────
-  const reportedAt    = foundItem.createdAt ?? null;
-  const claimedAt     = claim?.createdAt ?? null;
-  const approvedLog   = auditLogs.find((l: any) => l.toStatus === "APPROVED");
-  const rejectedLog   = auditLogs.find((l: any) => l.toStatus === "REJECTED");
-  const approvedAt    = approvedLog?.createdAt ?? null;
-  const rejectedAt    = rejectedLog?.createdAt ?? null;
-  const returnedAt    = isClaimed && approvedAt ? approvedAt : null;
+  const isClaimed = foundItem.isClaimed;
 
-  // ── Build timeline events ─────────────────────────────────────────────────
-  const events = ([
+  // ── Key timestamps ────────────────────────────────────────────────────────
+  const reportedAt  = foundItem.createdAt ?? null;
+  const claimedAt   = claim?.createdAt    ?? null;
+
+  const approvedLog = auditLogs.find((l: any) => l.toStatus === "APPROVED");
+  const rejectedLog = auditLogs.find((l: any) => l.toStatus === "REJECTED");
+  const approvedAt  = approvedLog?.createdAt ?? null;
+  const rejectedAt  = rejectedLog?.createdAt ?? null;
+
+  // "Returned" = item is marked isClaimed AND claim is approved
+  const returnedAt  = isClaimed && approvedAt ? approvedAt : null;
+
+  // ── Build stages ──────────────────────────────────────────────────────────
+  const baseEvents: TimelineEvent[] = [
     {
       id:       "reported",
-      stage:    "reported" as const,
+      stage:    "reported",
       label:    "Item Reported",
       sublabel: `Found at ${foundItem.location ?? "unknown location"}`,
       time:     reportedAt,
@@ -87,9 +94,11 @@ const ItemLifecycleTimeline = ({ foundItem, claims = [] }: Props) => {
     },
     {
       id:       "claimed",
-      stage:    "claimed" as const,
+      stage:    "claimed",
       label:    "Claim Submitted",
-      sublabel: claim ? `By ${claim.claimantName ?? "Anonymous"}` : "Waiting for a claim",
+      sublabel: claim
+        ? `By ${claim.claimantName ?? "Anonymous"}`
+        : "Waiting for a claim",
       time:     claimedAt,
       actor:    claim?.claimantName ?? "—",
       done:     !!claimedAt,
@@ -97,49 +106,65 @@ const ItemLifecycleTimeline = ({ foundItem, claims = [] }: Props) => {
     },
     {
       id:       "under_review",
-      stage:    "under_review" as const,
+      stage:    "under_review",
       label:    "Under Review",
-      sublabel: claim ? "SAS office is verifying proof of ownership" : "No claim to review yet",
+      sublabel: claim
+        ? "SAS office is verifying proof of ownership"
+        : "No claim to review yet",
       time:     claimedAt,
       actor:    "SAS Admin",
       done:     !!claimedAt && (!!approvedAt || !!rejectedAt),
       active:   !!claimedAt && !approvedAt && !rejectedAt,
     },
-    ...(rejectedAt ? [{
-      id:       "rejected",
-      stage:    "rejected" as const,
-      label:    "Claim Rejected",
-      sublabel: `Rejected by ${rejectedLog?.performedBy ?? "Admin"}`,
-      time:     rejectedAt,
-      actor:    rejectedLog?.performedBy ?? "Admin",
-      done:     true,
-      active:   true,
-    } satisfies TimelineEvent] : []),
-    {
-      id:       "approved",
-      stage:    "approved" as const,
-      label:    "Claim Approved",
-      sublabel: approvedAt ? `Approved by ${approvedLog?.performedBy ?? "Admin"}` : "Pending approval",
-      time:     approvedAt,
-      actor:    approvedLog?.performedBy ?? "—",
-      done:     !!approvedAt,
-      active:   !!approvedAt && !returnedAt,
-    },
-    {
-      id:       "returned",
-      stage:    "returned" as const,
-      label:    "Item Returned",
-      sublabel: returnedAt ? `Returned to ${claim?.claimantName ?? "owner"}` : "Pending return",
-      time:     returnedAt,
-      actor:    claim?.claimantName ?? "—",
-      done:     !!returnedAt,
-      active:   !!returnedAt,
-    },
-  ] as TimelineEvent[]).filter(e => !rejectedAt || (e.stage !== "approved" && e.stage !== "returned"));
+  ];
 
-  // ── Current stage label for header ───────────────────────────────────────
+  // Conditionally add rejected OR approved + returned
+  const outcomeEvents: TimelineEvent[] = rejectedAt
+    ? [
+        {
+          id:       "rejected",
+          stage:    "rejected",
+          label:    "Claim Rejected",
+          sublabel: `Rejected by ${rejectedLog?.performedBy ?? "Admin"}`,
+          time:     rejectedAt,
+          actor:    rejectedLog?.performedBy ?? "Admin",
+          done:     true,
+          active:   true,
+        },
+      ]
+    : [
+        {
+          id:       "approved",
+          stage:    "approved",
+          label:    "Claim Approved",
+          sublabel: approvedAt
+            ? `Approved by ${approvedLog?.performedBy ?? "Admin"}`
+            : "Pending approval",
+          time:     approvedAt,
+          actor:    approvedLog?.performedBy ?? "—",
+          done:     !!approvedAt,
+          active:   !!approvedAt && !returnedAt,
+        },
+        {
+          id:       "returned",
+          stage:    "returned",
+          label:    "Item Returned",
+          sublabel: returnedAt
+            ? `Returned to ${claim?.claimantName ?? "owner"}`
+            : "Pending return",
+          time:     returnedAt,
+          actor:    claim?.claimantName ?? "—",
+          done:     !!returnedAt,
+          active:   !!returnedAt,
+        },
+      ];
+
+  const events: TimelineEvent[] = [...baseEvents, ...outcomeEvents];
+
+  // ── Progress ──────────────────────────────────────────────────────────────
+  const doneCount    = events.filter(e => e.done).length;
+  const stagePercent = Math.round((doneCount / events.length) * 100);
   const currentStage = events.filter(e => e.done).slice(-1)[0];
-  const stagePercent = Math.round((events.filter(e => e.done).length / events.length) * 100);
 
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
@@ -164,7 +189,6 @@ const ItemLifecycleTimeline = ({ foundItem, claims = [] }: Props) => {
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          {/* Mini progress bar */}
           <div className="hidden sm:block w-24 bg-gray-800 rounded-full h-1.5">
             <div
               className="h-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 transition-all duration-700"
@@ -173,16 +197,14 @@ const ItemLifecycleTimeline = ({ foundItem, claims = [] }: Props) => {
           </div>
           {expanded
             ? <FaChevronUp size={11} className="text-gray-500" />
-            : <FaChevronDown size={11} className="text-gray-500" />
-          }
+            : <FaChevronDown size={11} className="text-gray-500" />}
         </div>
       </button>
 
       {/* Timeline body */}
       {expanded && (
         <div className="px-5 pb-5 pt-1">
-
-          {/* Progress bar full */}
+          {/* Full progress bar */}
           <div className="w-full bg-gray-800 rounded-full h-1 mb-6">
             <div
               className="h-1 rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500 transition-all duration-700"
@@ -190,9 +212,8 @@ const ItemLifecycleTimeline = ({ foundItem, claims = [] }: Props) => {
             />
           </div>
 
-          {/* Events */}
           <div className="relative">
-            {/* Vertical connector line */}
+            {/* Vertical connector */}
             <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-gray-800" />
 
             <div className="space-y-5">
@@ -213,10 +234,14 @@ const ItemLifecycleTimeline = ({ foundItem, claims = [] }: Props) => {
                     <div className={`flex-1 min-w-0 pt-0.5 pb-1 ${!event.done ? "opacity-40" : ""}`}>
                       <div className="flex items-start justify-between gap-2 flex-wrap">
                         <div>
-                          <p className={`text-sm font-semibold ${event.done ? "text-white" : "text-gray-500"} ${event.active ? meta.color : ""}`}>
+                          <p className={`text-sm font-semibold ${
+                            event.done ? "text-white" : "text-gray-500"
+                          } ${event.active && event.done ? meta.color : ""}`}>
                             {event.label}
                             {event.active && event.done && (
-                              <span className="ml-2 text-[10px] bg-white/5 border border-white/10 text-gray-400 px-1.5 py-0.5 rounded-full align-middle">Current</span>
+                              <span className="ml-2 text-[10px] bg-white/5 border border-white/10 text-gray-400 px-1.5 py-0.5 rounded-full align-middle">
+                                Current
+                              </span>
                             )}
                           </p>
                           <p className={`text-xs mt-0.5 ${event.done ? "text-gray-400" : "text-gray-600"}`}>
@@ -239,7 +264,6 @@ const ItemLifecycleTimeline = ({ foundItem, claims = [] }: Props) => {
                         </div>
                       )}
 
-                      {/* Connector note between steps */}
                       {idx < events.length - 1 && event.done && (
                         <div className="mt-2 h-px bg-white/5 w-full" />
                       )}
@@ -250,7 +274,7 @@ const ItemLifecycleTimeline = ({ foundItem, claims = [] }: Props) => {
             </div>
           </div>
 
-          {/* Footer note */}
+          {/* Footer */}
           <div className="mt-5 pt-4 border-t border-white/5 flex items-center gap-2">
             <FaClock size={10} className="text-gray-600 shrink-0" />
             <p className="text-gray-600 text-[10px] leading-relaxed">

@@ -106,6 +106,15 @@ const getSingleFoundItem = async (id: string) => {
         },
       },
       category: true,
+      claim: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        include: {
+          auditLogs: {
+            orderBy: { createdAt: "asc" },
+          },
+        },
+      },
     },
   });
   return result;
