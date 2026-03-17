@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaFilter,
   FaLightbulb, FaTimes, FaChevronLeft, FaChevronRight,
-  FaCheckCircle, FaPaperPlane,
+  FaCheckCircle,
   FaEye, FaTag,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
@@ -132,8 +132,8 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                 <p className="text-gray-600 text-[10px] mt-1">{details.length} / min. 10 characters</p>
               </div>
 
-              <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl px-4 py-3">
-                <p className="text-yellow-300/80 text-xs leading-relaxed">
+              <div className="bg-yellow-500/5 border border-blue-500/20 rounded-xl px-4 py-3">
+                <p className="text-blue-300/80 text-xs leading-relaxed">
                   🔒 Your tip is submitted <strong>completely anonymously</strong>. No personal information is collected or stored.
                 </p>
               </div>
@@ -144,8 +144,8 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                   Cancel
                 </button>
                 <button type="submit" disabled={details.trim().length < 10}
-                  className="flex-1 py-2.5 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
-                  <FaPaperPlane size={11} /> Submit Tip
+                  className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                  Submit Tip
                 </button>
               </div>
             </form>
@@ -251,13 +251,13 @@ const BulletinBoard = () => {
 
       {/* Hero banner */}
       <div className="relative bg-gray-900 border-b border-gray-800 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-red-900/20 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
           <div className="max-w-2xl">
             {/* pulse dot instead of FaExclamationTriangle icon */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-[11px] font-semibold uppercase tracking-widest mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[11px] font-semibold uppercase tracking-widest mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
               Community Bulletin Board
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-3">
@@ -275,9 +275,6 @@ const BulletinBoard = () => {
                 <FaCheckCircle className="text-emerald-400" size={11} />
                 <span>No login required</span>
               </div>
-              <Link to="/lostItems" className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 border border-blue-600/30 rounded-lg text-xs text-blue-400 hover:bg-blue-600/30 transition-colors">
-                View full lost items list →
-              </Link>
             </div>
           </div>
         </div>
@@ -294,7 +291,7 @@ const BulletinBoard = () => {
                 value={fuzzyTerm}
                 onChange={handleFuzzyChange}
                 placeholder="Search lost items by name, location, or description..."
-                className="w-full pl-11 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
+                className="w-full pl-11 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
               />
               {fuzzyTerm && (
                 <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white px-2 py-1 text-xs transition-colors">
@@ -311,7 +308,7 @@ const BulletinBoard = () => {
                 const [f, o] = e.target.value.split("-");
                 setSortBy(f); setSortOrder(o); setCurrentPage(1);
               }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40"
             >
               <option value="date-desc">Date Lost (Newest)</option>
               <option value="date-asc">Date Lost (Oldest)</option>
