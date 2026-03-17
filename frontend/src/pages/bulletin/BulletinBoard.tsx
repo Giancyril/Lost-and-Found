@@ -354,33 +354,48 @@ const BulletinBoard = () => {
     <div className="min-h-screen bg-gray-950 pb-16">
 
       {/* Hero banner */}
-      <div className="relative bg-gray-900 border-b border-gray-800 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-red-900/20 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold mb-4">
-              <FaExclamationTriangle size={10} /> Community Bulletin Board
-            </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-3">
-              Lost Items Bulletin Board
-            </h1>
-            <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-6 max-w-xl">
-              Help reunite students with their lost belongings. If you've seen any of these items, submit an anonymous tip — no account needed.
-            </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-400">
-                <FaLightbulb className="text-yellow-400" size={11} />
-                <span>Anonymous tips welcome</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-400">
-                <FaCheckCircle className="text-emerald-400" size={11} />
-                <span>No login required</span>
-              </div>
-            </div>
-          </div>
-        </div>
+<div className="relative overflow-hidden">
+  {/* Background — matches Banner component */}
+  <div className="absolute inset-0">
+    <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-gray-950 to-gray-900" />
+    <div className="absolute inset-0 opacity-[0.03]" style={{
+      backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.05) 60px, rgba(255,255,255,0.05) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.05) 60px, rgba(255,255,255,0.05) 61px)`,
+    }} />
+    <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" />
+  </div>
+
+  <div className="relative px-6 sm:px-10 lg:px-16 py-14 sm:py-20 flex flex-col items-center text-center">
+    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold mb-5">
+      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+      <FaExclamationTriangle size={10} /> Community Bulletin Board
+    </div>
+
+    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight mb-4 max-w-2xl">
+      Lost Items{" "}
+      <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
+        Bulletin Board
+      </span>
+    </h1>
+
+    <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full mb-5" />
+
+    <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-7 max-w-xl">
+      Help reunite students with their lost belongings. If you've seen any of these items, submit an anonymous tip — no account needed.
+    </p>
+
+    <div className="flex items-center gap-3 flex-wrap justify-center">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
+        <FaLightbulb className="text-yellow-400" size={11} />
+        <span>Anonymous tips welcome</span>
       </div>
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
+        <FaCheckCircle className="text-emerald-400" size={11} />
+        <span>No login required</span>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Search & filters */}
       <div className="px-6 sm:px-10 lg:px-16 py-6">
