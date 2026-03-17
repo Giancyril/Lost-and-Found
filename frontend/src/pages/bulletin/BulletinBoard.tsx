@@ -4,11 +4,47 @@ import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaFilter,
   FaLightbulb, FaTimes, FaChevronLeft, FaChevronRight,
   FaExclamationTriangle, FaCheckCircle, FaPaperPlane,
-  FaEye, FaTag,
+  FaEye, FaTag, FaWallet, FaMobileAlt, FaLaptop, FaKey,
+  FaBriefcase, FaHeadphones, FaGlasses, FaBook, FaIdCard,
+  FaUmbrella, FaTshirt, FaCamera, FaClock, FaTint,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
+
+// ── Category icon resolver ────────────────────────────────────────────────────
+const getCategoryIcon = (name: string) => {
+  const n = name?.toLowerCase() ?? "";
+  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch"))
+    return <FaWallet size={9} className="text-amber-400" />;
+  if (n.includes("phone") || n.includes("mobile") || n.includes("celphone") || n.includes("cellphone"))
+    return <FaMobileAlt size={9} className="text-cyan-400" />;
+  if (n.includes("laptop") || n.includes("computer") || n.includes("electronic") || n.includes("device") || n.includes("gadget"))
+    return <FaLaptop size={9} className="text-indigo-400" />;
+  if (n.includes("key"))
+    return <FaKey size={9} className="text-orange-400" />;
+  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage"))
+    return <FaBriefcase size={9} className="text-amber-400" />;
+  if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod"))
+    return <FaHeadphones size={9} className="text-green-400" />;
+  if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass"))
+    return <FaGlasses size={9} className="text-teal-400" />;
+  if (n.includes("book") || n.includes("stationery") || n.includes("notebook"))
+    return <FaBook size={9} className="text-yellow-400" />;
+  if (n.includes("id") || n.includes("card") || n.includes("document"))
+    return <FaIdCard size={9} className="text-blue-400" />;
+  if (n.includes("umbrella"))
+    return <FaUmbrella size={9} className="text-blue-400" />;
+  if (n.includes("cloth") || n.includes("shirt") || n.includes("uniform") || n.includes("wear"))
+    return <FaTshirt size={9} className="text-purple-400" />;
+  if (n.includes("camera") || n.includes("photo"))
+    return <FaCamera size={9} className="text-violet-400" />;
+  if (n.includes("watch") || n.includes("clock"))
+    return <FaClock size={9} className="text-gray-300" />;
+  if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask"))
+    return <FaTint size={9} className="text-cyan-400" />;
+  return <FaTag size={9} className="text-blue-400" />;
+};
 
 // ── Tip submission — uses a simple anonymous POST ─────────────────────────────
 // We store tips in localStorage client-side as a lightweight solution.
@@ -371,7 +407,7 @@ const BulletinBoard = () => {
                       src={item?.img || "/bgimg.png"}
                       alt={item?.lostItemName}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
@@ -417,8 +453,8 @@ const BulletinBoard = () => {
 
                     <div className="space-y-1.5 mt-auto mb-3">
                       <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <div className="w-5 h-5 rounded bg-red-500/10 flex items-center justify-center shrink-0">
-                          <FaMapMarkerAlt className="text-red-400" size={9} />
+                        <div className="w-5 h-5 rounded bg-blue-500/10 flex items-center justify-center shrink-0">
+                          <FaMapMarkerAlt className="text-blue-400" size={9} />
                         </div>
                         <span className="line-clamp-1">{item?.location}</span>
                       </div>
@@ -430,8 +466,8 @@ const BulletinBoard = () => {
                       </div>
                       {item?.category?.name && (
                         <div className="flex items-center gap-2 text-xs text-gray-400">
-                          <div className="w-5 h-5 rounded bg-violet-500/10 flex items-center justify-center shrink-0">
-                            <FaTag className="text-violet-400" size={9} />
+                          <div className="w-5 h-5 rounded bg-blue-500/10 flex items-center justify-center shrink-0">
+                            {getCategoryIcon(item.category.name)}
                           </div>
                           <span>{item.category.name}</span>
                         </div>
@@ -443,21 +479,23 @@ const BulletinBoard = () => {
                       <button
                         onClick={() => setTipItem(item)}
                         disabled={!!item?.isFound}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <FaLightbulb size={10} /> I Saw This
                       </button>
                       <div className="flex gap-1.5">
-                        {tipCount > 0 && (
+                        {tipCount > 0 ? (
                           <button
                             onClick={() => setViewTipsItem(item)}
-                            className="flex-1 flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-lg transition-all"
+                            className="w-9 shrink-0 flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-lg transition-all"
                           >
                             <FaEye size={9} /> {tipCount}
                           </button>
+                        ) : (
+                          <span className="w-9 shrink-0" />
                         )}
                         <Link to={`/lostItems/${item.id}`}
-                          className={`${tipCount > 0 ? "flex-1" : "w-full"} flex items-center justify-center py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all`}>
+                          className="flex-1 flex items-center justify-center py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all">
                           Details
                         </Link>
                       </div>
