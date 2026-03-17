@@ -96,6 +96,7 @@ const ArchivePage = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
+
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit">
         <button
@@ -259,12 +260,12 @@ const ArchivePage = () => {
           {/* Desktop table */}
           <div className="hidden md:block bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
             <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-white/5 text-[11px] uppercase tracking-widest text-gray-600 font-medium">
-              <div className="col-span-4">Item</div>
+              <div className="col-span-3">Item</div>
               <div className="col-span-2">Category</div>
               <div className="col-span-2">Location</div>
               <div className="col-span-2">{activeTab === "stale" ? "Found On" : "Archived On"}</div>
               <div className="col-span-1">Age</div>
-              <div className="col-span-1">Actions</div>
+              <div className="col-span-2">Actions</div>
             </div>
             <div className="divide-y divide-white/5">
               {items.map((item: any) => {
@@ -272,7 +273,7 @@ const ArchivePage = () => {
                 const isVeryStale = daysOld > 60;
                 return (
                   <div key={item.id} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors">
-                    <div className="col-span-4 flex items-center gap-3">
+                    <div className="col-span-3 flex items-center gap-3">
                       <img
                         src={item.img || "/bgimg.png"}
                         alt={item.foundItemName}
@@ -307,7 +308,7 @@ const ArchivePage = () => {
                       </span>
                     </div>
                     {/* ── Actions column — widened to col-span-1, buttons now wrap nicely ── */}
-                    <div className="col-span-1 flex items-center gap-1.5">
+                    <div className="col-span-2 flex items-center gap-1.5">
                       {activeTab === "stale" ? (
                         <button
                           onClick={() => handleArchive(item.id, item.foundItemName)}
