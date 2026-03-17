@@ -1,4 +1,4 @@
-import { useGetLostItemsQuery } from "../../redux/api/api";
+import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
 import { Link } from "react-router-dom";
 import {
   FaSearch,
@@ -25,11 +25,12 @@ const LostItemsPage = () => {
   const users: any = useUserVerification();
   const isAdmin = users?.role === "ADMIN";
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [fuzzyTerm, setFuzzyTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState("lostItemName");
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [searchTerm, setSearchTerm]       = useState("");
+  const [fuzzyTerm, setFuzzyTerm]         = useState("");
+  const [currentPage, setCurrentPage]     = useState(1);
+  const [sortBy, setSortBy]               = useState("lostItemName");
+  const [sortOrder, setSortOrder]         = useState("asc");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [limit] = useState(12);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -40,6 +41,8 @@ const LostItemsPage = () => {
     sortBy,
     sortOrder,
   });
+
+  const { data: categoriesData } = useCategoryQuery("");
 
   const handleFuzzyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -58,6 +61,11 @@ const LostItemsPage = () => {
     setCurrentPage(1);
   };
 
+  const handleCategoryChange = (cat: string) => {
+    setCategoryFilter(cat);
+    setCurrentPage(1);
+  };
+
   const handlePageChange = (page: number) => setCurrentPage(page);
 
   const clearSearch = () => {
@@ -66,16 +74,19 @@ const LostItemsPage = () => {
     setCurrentPage(1);
   };
 
+  // ── Client-side category filter ──
+  const filteredItems = categoryFilter === "ALL"
+    ? lostItems?.data ?? []
+    : (lostItems?.data ?? []).filter((item: any) =>
+        item?.category?.name?.toLowerCase() === categoryFilter.toLowerCase()
+      );
+
   const totalPages = lostItems?.meta?.totalPage || 1;
 
   if (isLoading)
     return (
       <div className="min-h-screen bg-gray-950">
         <div className="py-8 px-6 sm:px-10 lg:px-16 mx-auto">
-          <div className="mx-auto text-center lg:mb-8 mb-6">
-            <div className="h-8 bg-gray-800 rounded-lg w-64 mx-auto mb-4 animate-pulse"></div>
-            <div className="h-4 bg-gray-800 rounded w-96 mx-auto animate-pulse"></div>
-          </div>
           <div className="bg-gray-900 rounded-2xl p-6 mb-8 border border-gray-800">
             <div className="h-12 bg-gray-800 rounded-xl mb-6 animate-pulse"></div>
             <div className="flex gap-4">
@@ -104,8 +115,9 @@ const LostItemsPage = () => {
       <div className="py-8 px-6 sm:px-10 lg:px-16 mx-auto">
 
         {/* Search and Filter */}
-        <div className="bg-gray-900 rounded-2xl p-6 mb-8 border border-gray-800">
-          <div className="mb-5">
+        <div className="bg-gray-900 rounded-2xl p-6 mb-6 border border-gray-800">
+          {/* Search */}
+          <div className="mb-4">
             <div className="relative">
               <div className="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none">
                 <FaSearch className="text-gray-500" size={13} />
@@ -136,53 +148,81 @@ const LostItemsPage = () => {
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <FaFilter className="text-gray-500" size={13} />
-              <select
-                value={`${sortBy}-${sortOrder}`}
-                onChange={handleSortChange}
-                className="block w-full sm:w-56 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+          {/* Sort */}
+          <div className="flex items-center gap-3 mb-5">
+            <FaFilter className="text-gray-500 shrink-0" size={13} />
+            <select
+              value={`${sortBy}-${sortOrder}`}
+              onChange={handleSortChange}
+              className="block w-full sm:w-56 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+            >
+              <option value="lostItemName-asc">Name (A-Z)</option>
+              <option value="lostItemName-desc">Name (Z-A)</option>
+              <option value="date-desc">Date (Newest First)</option>
+              <option value="date-asc">Date (Oldest First)</option>
+              <option value="location-asc">Location (A-Z)</option>
+              <option value="location-desc">Location (Z-A)</option>
+            </select>
+          </div>
+
+          {/* Category pills */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => handleCategoryChange("ALL")}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 ${
+                categoryFilter === "ALL"
+                  ? "bg-blue-600 border-blue-600 text-white"
+                  : "bg-gray-800 border-gray-700 text-gray-400 hover:border-blue-500/50 hover:text-white"
+              }`}
+            >
+              All
+            </button>
+            {categoriesData?.data?.map((cat: any) => (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryChange(cat.name)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 ${
+                  categoryFilter === cat.name
+                    ? "bg-blue-600 border-blue-600 text-white"
+                    : "bg-gray-800 border-gray-700 text-gray-400 hover:border-blue-500/50 hover:text-white"
+                }`}
               >
-                <option value="lostItemName-asc">Name (A-Z)</option>
-                <option value="lostItemName-desc">Name (Z-A)</option>
-                <option value="date-desc">Date (Newest First)</option>
-                <option value="date-asc">Date (Oldest First)</option>
-                <option value="location-asc">Location (A-Z)</option>
-                <option value="location-desc">Location (Z-A)</option>
-              </select>
-            </div>
+                {cat.name}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
       {/* Cards */}
       <div className="px-6 sm:px-10 lg:px-16">
-        {lostItems?.data?.length === 0 ? (
+        {filteredItems.length === 0 ? (
           <div className="text-center py-16">
             <div className="bg-gray-900 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center border border-gray-800">
               <FaSearch className="text-gray-600 text-2xl" />
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">
-              {fuzzyTerm ? "No items found" : "No lost items yet"}
+              {fuzzyTerm || categoryFilter !== "ALL" ? "No items found" : "No lost items yet"}
             </h3>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
               {fuzzyTerm
                 ? `No items found for "${fuzzyTerm}". Try different keywords.`
+                : categoryFilter !== "ALL"
+                ? `No lost items found in "${categoryFilter}".`
                 : "No lost items have been reported yet. Check back later!"}
             </p>
-            {fuzzyTerm && (
+            {(fuzzyTerm || categoryFilter !== "ALL") && (
               <button
-                onClick={clearSearch}
+                onClick={() => { clearSearch(); handleCategoryChange("ALL"); }}
                 className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-all duration-200"
               >
-                Clear search
+                Clear filters
               </button>
             )}
           </div>
         ) : (
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {lostItems?.data?.map((lostItem: any) => (
+            {filteredItems.map((lostItem: any) => (
               <div
                 key={`${lostItem?.id}127`}
                 className="group relative bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 border border-gray-800 hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-900/20 flex flex-col"
@@ -190,7 +230,6 @@ const LostItemsPage = () => {
                 <div className="relative overflow-hidden">
                   <div className="h-52 w-full overflow-hidden">
                     {shouldHideImage(lostItem?.category?.name, isAdmin) ? (
-                      // ── Hidden image placeholder for sensitive categories ──
                       <div className="w-full h-full bg-gray-800 flex flex-col items-center justify-center gap-2">
                         <div className="w-14 h-14 rounded-full bg-gray-700 border border-gray-700 flex items-center justify-center">
                           <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5">
@@ -257,7 +296,7 @@ const LostItemsPage = () => {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalPages > 1 && categoryFilter === "ALL" && (
         <div className="flex flex-col items-center mt-12 pb-8 space-y-4">
           <div className="text-sm text-gray-500">
             Page {currentPage} of {totalPages} ({lostItems?.meta?.total || 0} total items)
