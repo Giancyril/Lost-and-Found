@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   FaPrint, FaDownload, FaCalendarAlt, FaBoxOpen, FaExclamationTriangle,
   FaClipboardList, FaUsers, FaMapMarkerAlt, FaChartBar,
@@ -57,10 +57,9 @@ const StatCard = ({ label, value, sub, icon, color, trend }: StatCardProps) => (
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 const ReportPage = () => {
-  const [period, setPeriod]   = useState<Period>("month");
+  const [period, setPeriod]     = useState<Period>("month");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate]     = useState("");
-  const printRef = useRef<HTMLDivElement>(null);
 
   const { data: statsData,    isLoading: statsLoading }    = useAdminStatsQuery({});
   const { data: locationData, isLoading: locationLoading } = useGetLocationStatsQuery({});
@@ -118,6 +117,7 @@ const ReportPage = () => {
           .print-border { border-color: #e5e7eb !important; }
           @page { margin: 1.5cm; size: A4; }
         }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
 
       <div className="space-y-5 max-w-5xl mx-auto">
@@ -166,7 +166,7 @@ const ReportPage = () => {
         </div>
 
         {/* ── PRINTABLE REPORT ─────────────────────────────────────────────── */}
-        <div id="report-printable" ref={printRef} className="print-page space-y-5">
+        <div id="report-printable" className="print-page space-y-5">
 
           {/* Report header */}
           <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-6">
