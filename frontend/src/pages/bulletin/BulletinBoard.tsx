@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaFilter,
   FaLightbulb, FaTimes, FaChevronLeft, FaChevronRight,
-  FaCheckCircle, FaPaperPlane, FaEye, FaTag,
+  FaCheckCircle, FaEye, FaTag,
   FaTshirt, FaGem, FaBook, FaIdCard, FaMobileAlt, FaBriefcase,
   FaWallet, FaHeadphones, FaKey, FaGlasses, FaUmbrella, FaFootballBall,
   FaLaptop, FaTabletAlt, FaCamera, FaClock, FaRing,
@@ -123,8 +123,8 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <div>
             <h3 className="text-white font-bold text-base flex items-center gap-2">
-              <span className="w-6 h-6 rounded-md bg-amber-400/10 border border-amber-400/20 flex items-center justify-center shrink-0">
-                <FaLightbulb className="text-amber-400" size={11} />
+              <span className="w-6 h-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                <FaLightbulb className="text-blue-500" size={11} />
               </span>
               Submit a Tip
             </h3>
@@ -194,9 +194,9 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                 <p className="text-gray-600 text-[10px] mt-1">{details.length} / min. 10 characters</p>
               </div>
 
-              <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl px-4 py-3">
-                <p className="text-yellow-300/80 text-xs leading-relaxed">
-                  🔒 Your tip is submitted <strong>completely anonymously</strong>. No personal information is collected or stored.
+              <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-3">
+                <p className="text-blue-300/80 text-xs leading-relaxed">
+                     Your tip is submitted <strong>completely anonymously</strong>. No personal information is collected or stored.
                 </p>
               </div>
 
@@ -206,8 +206,8 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                   Cancel
                 </button>
                 <button type="submit" disabled={details.trim().length < 10}
-                  className="flex-1 py-2.5 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
-                  <FaPaperPlane size={11} /> Submit Tip
+                  className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                  Submit Tip
                 </button>
               </div>
             </form>
@@ -228,7 +228,6 @@ const TipsViewerModal = ({ item, onClose }: { item: any; onClose: () => void }) 
           <div>
             <h3 className="text-white font-bold text-base flex items-center gap-2">
               <span className="w-6 h-6 rounded-md bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0">
-                <FaEye className="text-cyan-400" size={11} />
               </span>
               Community Tips
             </h3>
@@ -251,7 +250,7 @@ const TipsViewerModal = ({ item, onClose }: { item: any; onClose: () => void }) 
                 <div key={i} className="bg-gray-800/60 border border-white/5 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <FaMapMarkerAlt size={10} className="text-orange-400 shrink-0" />
-                    <span className="text-orange-300 text-xs font-medium">{tip.location}</span>
+                    <span className="text-blue-300 text-xs font-medium">{tip.location}</span>
                     <span className="text-gray-600 text-[10px] ml-auto">{timeAgo(tip.time)}</span>
                   </div>
                   <p className="text-gray-300 text-sm leading-relaxed">{tip.details}</p>
@@ -318,8 +317,8 @@ const BulletinBoard = () => {
         <div className="relative px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
           <div className="max-w-2xl">
             {/* pulse dot instead of FaExclamationTriangle icon */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-[11px] font-semibold uppercase tracking-widest mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[11px] font-semibold uppercase tracking-widest mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
               Community Bulletin Board
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-3">
@@ -337,9 +336,6 @@ const BulletinBoard = () => {
                 <FaCheckCircle className="text-emerald-400" size={11} />
                 <span>No login required</span>
               </div>
-              <Link to="/lostItems" className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 border border-blue-600/30 rounded-lg text-xs text-blue-400 hover:bg-blue-600/30 transition-colors">
-                View full lost items list →
-              </Link>
             </div>
           </div>
         </div>
@@ -356,7 +352,7 @@ const BulletinBoard = () => {
                 value={fuzzyTerm}
                 onChange={handleFuzzyChange}
                 placeholder="Search lost items by name, location, or description..."
-                className="w-full pl-11 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
+                className="w-full pl-11 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
               />
               {fuzzyTerm && (
                 <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white px-2 py-1 text-xs transition-colors">
@@ -373,7 +369,7 @@ const BulletinBoard = () => {
                 const [f, o] = e.target.value.split("-");
                 setSortBy(f); setSortOrder(o); setCurrentPage(1);
               }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40"
             >
               <option value="date-desc">Date Lost (Newest)</option>
               <option value="date-asc">Date Lost (Oldest)</option>
@@ -519,7 +515,7 @@ const BulletinBoard = () => {
                       <button
                         onClick={() => setTipItem(item)}
                         disabled={!!item?.isFound}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <FaLightbulb size={10} /> I Saw This
                       </button>
