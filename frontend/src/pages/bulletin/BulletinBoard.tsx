@@ -144,7 +144,7 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                   Cancel
                 </button>
                 <button type="submit" disabled={details.trim().length < 10}
-                  className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
                   Submit Tip
                 </button>
               </div>
@@ -318,7 +318,7 @@ const BulletinBoard = () => {
             <select
               value={categoryFilter}
               onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40"
             >
               <option value="ALL">All Categories</option>
               {categoriesData?.data?.map((cat: any) => (
@@ -365,7 +365,7 @@ const BulletinBoard = () => {
               const daysAgoLost = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
               return (
                 <div key={item.id}
-                  className="group bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-red-500/40 hover:shadow-lg hover:shadow-red-900/10 transition-all duration-300 flex flex-col">
+                  className="group bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-900/10 transition-all duration-300 flex flex-col">
 
                   {/* Image */}
                   <div className="relative h-48 overflow-hidden">
