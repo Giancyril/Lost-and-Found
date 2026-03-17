@@ -69,11 +69,12 @@ export const sendClaimApprovedEmail = async (req: Request, res: Response) => {
       data: null,
     });
   } catch (error: any) {
-    sendResponse(res, {
-      statusCode: StatusCodes.BAD_REQUEST,
-      success: false,
-      message: error?.message || "Failed to send email",
-      data: null,
-    });
-  }
-};
+  console.error("Email error:", JSON.stringify(error, null, 2));
+  console.error("Email error message:", error?.message);
+  sendResponse(res, {
+    statusCode: StatusCodes.BAD_REQUEST,
+    success: false,
+    message: error?.message || "Failed to send email",
+    data: null,
+  });
+  }};
