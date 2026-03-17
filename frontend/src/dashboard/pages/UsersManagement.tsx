@@ -371,41 +371,74 @@ const UsersManagement = () => {
       )}
 
       {/* Delete Modal */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl w-full max-w-sm border border-gray-700 p-5 sm:p-6">
-            <div className="text-center">
-              <div className="bg-gray-700 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <FaTrash className="text-red-500 text-xl" />
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">Delete Admin Account</h2>
-              <p className="text-gray-400 mb-4 text-sm">Are you sure? This action cannot be undone.</p>
-              {deletingUser && (
-                <div className="bg-gray-700 rounded-lg p-4 mb-6 text-left">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0">
-                      <FaShieldAlt className="text-red-400" size={12} />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-white text-sm">{deletingUser.name}</h3>
-                      <p className="text-xs text-gray-400">{deletingUser.email}</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500">Joined: {formatDate(deletingUser.createdAt)}</p>
-                </div>
-              )}
-              <div className="flex gap-3">
-                <button type="button" onClick={handleDeleteCancel} disabled={isDeleteLoading}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-lg transition-colors text-sm">Cancel</button>
-                <button type="button" onClick={handleDeleteConfirm} disabled={isDeleteLoading}
-                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-                  {isDeleteLoading ? <><Spinner /> Deleting...</> : "Delete"}
-                </button>
-              </div>
-            </div>
+{isDeleteModalOpen && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+            <FaTrash size={11} className="text-red-400" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-white">Delete Admin Account</h2>
+            <p className="text-gray-500 text-[11px]">This action cannot be undone</p>
           </div>
         </div>
-      )}
+        <button onClick={handleDeleteCancel} disabled={isDeleteLoading}
+          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors disabled:opacity-50">
+          <FaTimes size={12} />
+        </button>
+      </div>
+
+      <div className="p-5 space-y-4">
+        {/* User preview card */}
+        {deletingUser && (
+          <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+              <FaShieldAlt size={10} className="text-red-400" />
+              <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Account to Delete</p>
+            </div>
+            <div className="p-3 space-y-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                  <FaShieldAlt size={11} className="text-red-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-semibold truncate">{deletingUser.name}</p>
+                  <p className="text-gray-400 text-xs truncate">{deletingUser.email}</p>
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-600 pt-0.5">
+                Joined: <span className="text-gray-500">{formatDate(deletingUser.createdAt)}</span>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Warning notice */}
+        <div className="bg-red-500/5 border border-red-500/15 rounded-xl px-3.5 py-2.5">
+          <p className="text-red-300/80 text-xs leading-relaxed">
+            Deleting this account will <strong>permanently remove</strong> it and all associated data. This cannot be reversed.
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <button type="button" onClick={handleDeleteCancel} disabled={isDeleteLoading}
+            className="flex items-center gap-1.5 px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+            Cancel
+          </button>
+          <button type="button" onClick={handleDeleteConfirm} disabled={isDeleteLoading}
+            className="flex items-center gap-1.5 px-4 py-2 bg-red-500/10 hover:bg-red-500 border border-red-500/30 text-red-400 hover:text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            {isDeleteLoading ? <><Spinner /> Deleting...</> : <><FaTrash size={10} /> Delete Account</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

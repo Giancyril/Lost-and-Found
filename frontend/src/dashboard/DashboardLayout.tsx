@@ -316,13 +316,7 @@ const NotificationBell = () => {
             )}
           </div>
 
-          {notifications.length > 0 && (
-            <div className="px-4 py-2.5 border-t border-white/5">
-              <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
-                View all activity →
-              </Link>
-            </div>
-          )}
+          
         </div>
       )}
     </div>
