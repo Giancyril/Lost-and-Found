@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { FaEdit, FaTrash, FaEye, FaSearch } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye, FaSearch, FaArchive } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
   useGetFoundItemsQuery,
   useDeleteMyFoundItemMutation,
   useEditMyFoundItemMutation,
   useCategoryQuery,
+  useArchiveFoundItemMutation,
 } from "../../redux/api/api";
 
 interface FoundItem {
@@ -16,6 +17,7 @@ interface FoundItem {
   location: string;
   date: string;
   isClaimed: boolean;
+  isArchived?: boolean;
   img?: string;
   user: { username: string };
 }
@@ -37,12 +39,16 @@ const FoundItemsManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingItem, setDeletingItem]           = useState<FoundItem | null>(null);
   const [isDeleteLoading, setIsDeleteLoading]     = useState(false);
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+  const [archivingItem, setArchivingItem]           = useState<FoundItem | null>(null);
+  const [isArchiveLoading, setIsArchiveLoading]     = useState(false);
   const [editForm, setEditForm] = useState({ foundItemName: "", description: "", location: "", date: "" });
 
   const { data: foundItemsData, isLoading, error } = useGetFoundItemsQuery({ searchTerm, sortBy: "foundItemName", sortOrder: "asc" });
   const { data: categoriesData } = useCategoryQuery({});
-  const [deleteFoundItem] = useDeleteMyFoundItemMutation();
-  const [editMyFoundItem] = useEditMyFoundItemMutation();
+  const [deleteFoundItem]  = useDeleteMyFoundItemMutation();
+  const [editMyFoundItem]  = useEditMyFoundItemMutation();
+  const [archiveFoundItem] = useArchiveFoundItemMutation();
 
   const handleEdit = (item: FoundItem) => {
     setEditingItem(item);
@@ -81,6 +87,22 @@ const FoundItemsManagement = () => {
   };
 
   const handleDeleteCancel = () => { setIsDeleteModalOpen(false); setDeletingItem(null); setIsDeleteLoading(false); };
+
+  // ── Archive handlers ──────────────────────────────────────────────────────
+  const handleArchive = (item: FoundItem) => { setArchivingItem(item); setIsArchiveModalOpen(true); };
+
+  const handleArchiveConfirm = async () => {
+    if (!archivingItem) return;
+    setIsArchiveLoading(true);
+    try {
+      await archiveFoundItem(archivingItem.id).unwrap();
+      toast.success(`"${archivingItem.foundItemName}" moved to archive`);
+      setIsArchiveModalOpen(false); setArchivingItem(null);
+    } catch { toast.error("Failed to archive item"); }
+    finally { setIsArchiveLoading(false); }
+  };
+
+  const handleArchiveCancel = () => { setIsArchiveModalOpen(false); setArchivingItem(null); setIsArchiveLoading(false); };
 
   if (isLoading) return (
     <div className="space-y-4 sm:space-y-6 animate-pulse">
@@ -179,9 +201,16 @@ const FoundItemsManagement = () => {
                   </td>
                   <td className="px-6 py-4 text-gray-300">{item.user?.username || "N/A"}</td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <button onClick={() => handleEdit(item)} className="p-2 text-yellow-500 hover:bg-yellow-500 hover:text-white rounded-lg transition-colors"><FaEdit /></button>
-                      <button onClick={() => handleDelete(item)} className="p-2 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors"><FaTrash /></button>
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => handleEdit(item)} title="Edit" className="p-2 text-yellow-500 hover:bg-yellow-500 hover:text-white rounded-lg transition-colors"><FaEdit size={13} /></button>
+                      <button onClick={() => handleDelete(item)} title="Delete" className="p-2 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors"><FaTrash size={13} /></button>
+                      {/* Archive — only for unclaimed, non-archived items */}
+                      {!item.isClaimed && !item.isArchived && (
+                        <button onClick={() => handleArchive(item)} title="Archive this item"
+                          className="p-2 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 rounded-lg transition-colors">
+                          <FaArchive size={13} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -225,6 +254,11 @@ const FoundItemsManagement = () => {
               <button onClick={() => handleDelete(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-red-500 hover:bg-red-500/10 rounded-lg text-xs font-medium transition-colors">
                 <FaTrash size={11} /> Delete
               </button>
+              {!item.isClaimed && !item.isArchived && (
+                <button onClick={() => handleArchive(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-orange-400 hover:bg-orange-500/10 rounded-lg text-xs font-medium transition-colors">
+                  <FaArchive size={11} /> Archive
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -299,6 +333,39 @@ const FoundItemsManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Archive Confirmation Modal */}
+      {isArchiveModalOpen && archivingItem && (
+        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-sm mx-0 sm:mx-4 border border-gray-700 p-5">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                <FaArchive className="text-orange-400 text-xl" />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Archive Found Item</h2>
+              <p className="text-gray-400 text-sm mb-4">
+                This will hide <span className="text-white font-semibold">"{archivingItem.foundItemName}"</span> from the public listing. You can restore it anytime from the Archive Log.
+              </p>
+              <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl px-4 py-3 mb-5 text-left">
+                <p className="text-orange-300 text-xs leading-relaxed">
+                  Archived items are <strong>not deleted</strong> — they are hidden from the public found items page and can be restored or permanently deleted from <strong>Archive Log</strong>.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={handleArchiveCancel} disabled={isArchiveLoading}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white py-2.5 px-4 rounded-lg transition-colors text-sm">
+                  Cancel
+                </button>
+                <button type="button" onClick={handleArchiveConfirm} disabled={isArchiveLoading}
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                  {isArchiveLoading ? <><Spinner /> Archiving...</> : <><FaArchive size={13} /> Archive Item</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
