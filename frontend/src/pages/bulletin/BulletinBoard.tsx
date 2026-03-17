@@ -376,7 +376,7 @@ const BulletinBoard = () => {
                       src={item?.img || "/bgimg.png"}
                       alt={item?.lostItemName}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
