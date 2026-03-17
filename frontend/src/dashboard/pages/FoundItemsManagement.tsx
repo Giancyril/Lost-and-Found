@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { FaEdit, FaTrash, FaEye, FaSearch, FaArchive } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye, 
+  FaSearch, FaArchive, FaMapMarkerAlt, 
+  FaCalendarAlt, FaClipboardList, 
+  FaBoxOpen, FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
   useGetFoundItemsQuery,
   useDeleteMyFoundItemMutation,
   useEditMyFoundItemMutation,
   useCategoryQuery,
-  useArchiveFoundItemMutation,
+  useArchiveFoundItemMutation, 
 } from "../../redux/api/api";
 
 interface FoundItem {
@@ -267,41 +270,120 @@ const FoundItemsManagement = () => {
       </div>
 
       {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto border border-gray-700">
-            <div className="p-5 sm:p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Edit Found Item</h2>
-              <form onSubmit={handleEditSubmit} className="space-y-4">
-                {[
-                  { label: "Item Name", key: "foundItemName", type: "text" },
-                  { label: "Location",  key: "location",      type: "text" },
-                  { label: "Date Found",key: "date",          type: "date" },
-                ].map(({ label, key, type }) => (
-                  <div key={key}>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
-                    <input type={type} value={(editForm as any)[key]} onChange={(e) => setEditForm({ ...editForm, [key]: e.target.value })} disabled={isEditLoading}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-sm" required />
-                  </div>
-                ))}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
-                  <textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} disabled={isEditLoading} rows={3}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-sm" required />
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <button type="submit" disabled={isEditLoading}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
-                    {isEditLoading ? <><Spinner /> Updating...</> : "Update Item"}
-                  </button>
-                  <button type="button" onClick={handleEditCancel} disabled={isEditLoading}
-                    className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-lg transition-colors text-sm">Cancel</button>
-                </div>
-              </form>
+{isEditModalOpen && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+
+      {/* Modal header */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
+            <FaEdit size={11} className="text-yellow-400" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-white">Edit Found Item</h2>
+            <p className="text-gray-500 text-[11px]">Update the details of this found item report</p>
+          </div>
+        </div>
+        <button onClick={handleEditCancel} disabled={isEditLoading}
+          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors disabled:opacity-50">
+          <FaTimes size={12} />
+        </button>
+      </div>
+
+      <form onSubmit={handleEditSubmit} className="p-5 space-y-4">
+
+        {/* Item name + location side by side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+              <FaBoxOpen size={10} className="text-cyan-400" />
+              <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Item Name</p>
+            </div>
+            <div className="p-3">
+              <input
+                type="text"
+                value={editForm.foundItemName}
+                onChange={(e) => setEditForm({ ...editForm, foundItemName: e.target.value })}
+                disabled={isEditLoading}
+                placeholder="e.g. Black Umbrella"
+                className="w-full bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none disabled:cursor-not-allowed"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+              <FaMapMarkerAlt size={10} className="text-blue-400" />
+              <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Location Found</p>
+            </div>
+            <div className="p-3">
+              <input
+                type="text"
+                value={editForm.location}
+                onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                disabled={isEditLoading}
+                placeholder="e.g. SWDC Building"
+                className="w-full bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none disabled:cursor-not-allowed"
+                required
+              />
             </div>
           </div>
         </div>
-      )}
+
+        {/* Date found */}
+        <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+            <FaCalendarAlt size={10} className="text-emerald-400" />
+            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Date Found</p>
+          </div>
+          <div className="p-3">
+            <input
+              type="date"
+              value={editForm.date}
+              onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+              disabled={isEditLoading}
+              className="w-full bg-transparent text-white text-sm focus:outline-none disabled:cursor-not-allowed [color-scheme:dark]"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+            <FaClipboardList size={10} className="text-violet-400" />
+            <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Description</p>
+          </div>
+          <div className="p-3">
+            <textarea
+              value={editForm.description}
+              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+              disabled={isEditLoading}
+              rows={3}
+              placeholder="Describe the item in detail..."
+              className="w-full bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none resize-none disabled:cursor-not-allowed"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <button type="button" onClick={handleEditCancel} disabled={isEditLoading}
+            className="flex items-center gap-1.5 px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+            Cancel
+          </button>
+          <button type="submit" disabled={isEditLoading}
+            className="flex items-center gap-1.5 px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500 border border-yellow-500/30 text-yellow-400 hover:text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            {isEditLoading ? <><Spinner /> Updating...</> : <><FaEdit size={10} /> Update Item</>}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
       {/* Delete Modal */}
       {isDeleteModalOpen && (

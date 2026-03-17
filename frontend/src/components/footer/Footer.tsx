@@ -29,7 +29,7 @@ const Footers = () => {
               <div className="w-7 h-7 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center text-blue-400 shrink-0">
                 <FaEnvelope size={11} />
               </div>
-              <p className="text-gray-500 text-sm">lostandfound@sas.edu.ph</p>
+              <p className="text-gray-500 text-sm">sas@nbsc.edu.ph</p>
             </div>
           </div>
 

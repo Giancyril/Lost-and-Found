@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaFilter,
   FaLightbulb, FaTimes, FaChevronLeft, FaChevronRight,
-  FaExclamationTriangle, FaCheckCircle, FaPaperPlane,
+  FaExclamationTriangle, FaCheckCircle,
   FaEye, FaTag, FaWallet, FaMobileAlt, FaLaptop, FaKey,
   FaBriefcase, FaHeadphones, FaGlasses, FaBook, FaIdCard,
   FaUmbrella, FaTshirt, FaCamera, FaClock, FaTint,
@@ -100,7 +100,7 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <div>
             <h3 className="text-white font-bold text-base flex items-center gap-2">
-              <FaLightbulb className="text-yellow-400" size={14} /> Submit a Tip
+              <FaLightbulb className="text-blue-400" size={14} /> Submit a Tip
             </h3>
             <p className="text-gray-500 text-xs mt-0.5">Your tip is completely anonymous</p>
           </div>
@@ -169,8 +169,8 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                 <p className="text-gray-600 text-[10px] mt-1">{details.length} / min. 10 characters</p>
               </div>
 
-              <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl px-4 py-3">
-                <p className="text-yellow-300/80 text-xs leading-relaxed">
+              <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-3">
+                <p className="text-blue-300/80 text-xs leading-relaxed">
                   🔒 Your tip is submitted <strong>completely anonymously</strong>. No personal information is collected or stored.
                 </p>
               </div>
@@ -181,8 +181,8 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                   Cancel
                 </button>
                 <button type="submit" disabled={details.trim().length < 10}
-                  className="flex-1 py-2.5 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
-                  <FaPaperPlane size={11} /> Submit Tip
+                  className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                  Submit Tip
                 </button>
               </div>
             </form>
