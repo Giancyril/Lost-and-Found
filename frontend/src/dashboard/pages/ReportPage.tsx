@@ -109,8 +109,8 @@ const ReportPage = () => {
             </h2>
             <p className="text-gray-500 text-xs mt-0.5">Generate and export a printable summary</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-xl p-1">
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-xl p-1 flex-wrap">
               {(["week", "month", "custom"] as Period[]).map(p => (
                 <button key={p} onClick={() => setPeriod(p)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
@@ -146,34 +146,38 @@ const ReportPage = () => {
 
             {/* Cover header */}
             <div className="r-card bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
+              {/* Top row: logo + title | generated date */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0">
                   <img src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
-                    alt="NBSC" className="w-12 h-12 object-contain shrink-0"
+                    alt="NBSC" className="w-10 h-10 sm:w-12 sm:h-12 object-contain shrink-0"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                  <div>
-                    <p className="r-text text-white font-bold text-lg leading-tight">NBSC SAS Lost & Found</p>
-                    <p className="r-muted text-gray-400 text-[10px] mt-0.5 uppercase tracking-widest">Student Affairs Services · Northern Bukidnon State College</p>
-                    <div className="mt-3 pt-3 border-t border-white/5 r-divider">
-                      <p className="text-cyan-400 text-[10px] font-semibold uppercase tracking-widest mb-1">
-                        {period === "week" ? "Weekly" : period === "month" ? "Monthly" : "Custom Period"} Summary Report
-                      </p>
-                      <p className="r-text text-white text-2xl font-bold leading-tight">{dateRange}</p>
-                    </div>
+                  <div className="min-w-0">
+                    <p className="r-text text-white font-bold text-base sm:text-lg leading-tight">NBSC SAS Lost & Found</p>
+                    <p className="r-muted text-gray-400 text-[10px] mt-0.5 uppercase tracking-widest leading-relaxed">Student Affairs Services · Northern Bukidnon State College</p>
                   </div>
                 </div>
-                <div className="text-right shrink-0 ml-4">
+                <div className="text-right shrink-0">
                   <p className="r-muted text-gray-500 text-[10px] uppercase tracking-widest">Generated</p>
-                  <p className="r-text text-white text-sm font-semibold mt-0.5">
-                    {now.toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}
+                  <p className="r-text text-white text-xs sm:text-sm font-semibold mt-0.5">
+                    {now.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
                   </p>
                   <p className="r-muted text-gray-500 text-xs mt-0.5">
                     {now.toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}
                   </p>
-                  <div className="mt-3 pt-3 border-t border-white/5 r-divider">
-                    <p className="r-muted text-gray-600 text-[10px]">Prepared by: System Admin</p>
-                    <p className="r-muted text-gray-600 text-[10px] mt-0.5">NBSC Lost & Found System</p>
-                  </div>
+                </div>
+              </div>
+              {/* Bottom row: report title | prepared by */}
+              <div className="mt-3 pt-3 border-t border-white/5 r-divider flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+                <div>
+                  <p className="text-cyan-400 text-[10px] font-semibold uppercase tracking-widest mb-1">
+                    {period === "week" ? "Weekly" : period === "month" ? "Monthly" : "Custom Period"} Summary Report
+                  </p>
+                  <p className="r-text text-white text-xl sm:text-2xl font-bold leading-tight">{dateRange}</p>
+                </div>
+                <div className="sm:text-right">
+                  <p className="r-muted text-gray-600 text-[10px]">Prepared by: System Admin</p>
+                  <p className="r-muted text-gray-600 text-[10px] mt-0.5">NBSC Lost & Found System</p>
                 </div>
               </div>
             </div>
@@ -381,7 +385,7 @@ const ReportPage = () => {
                   <FaCalendarAlt className="text-cyan-400" size={12} /> 6-Month Activity Trend
                 </h3>
                 <p className="r-muted text-gray-500 text-[10px] mt-0.5 mb-4 uppercase tracking-wider">Monthly breakdown of all activity</p>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-white/10 r-divider">
