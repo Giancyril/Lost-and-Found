@@ -387,24 +387,34 @@ const BulletinBoard = () => {
       {/* ── Search & filters ─────────────────────────────────────────────────── */}
       <div className="relative z-10 px-6 sm:px-10 lg:px-16 pb-6">
         <div className="space-y-3">
-          {/* Search input — solid style */}
-          <div className="relative">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
-            <input
-              type="search"
-              value={fuzzyTerm}
-              onChange={handleFuzzyChange}
-              placeholder="Search lost items by name, location, or description..."
-              className="w-full pl-11 pr-16 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
-            />
+
+          {/* Search input */}
+          <div>
+            <div className="relative">
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
+              <input
+                type="text"
+                value={fuzzyTerm}
+                onChange={handleFuzzyChange}
+                placeholder="Search lost items by name, location, or description..."
+                className="w-full pl-11 pr-28 py-3.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+              />
+              {fuzzyTerm && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all whitespace-nowrap"
+                >
+                  <FaTimes size={9} />
+                  <span>Clear</span>
+                </button>
+              )}
+            </div>
             {fuzzyTerm && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-500 hover:text-white text-xs transition-colors whitespace-nowrap"
-              >
-                <span>✕</span>
-                <span className="hidden sm:inline">Clear</span>
-              </button>
+              <p className="text-xs text-gray-500 mt-2 pl-1">
+                Showing results for{" "}
+                <span className="text-blue-400 font-medium">"{fuzzyTerm}"</span>
+                {" "}— results update as you type
+              </p>
             )}
           </div>
 
@@ -442,7 +452,7 @@ const BulletinBoard = () => {
         {isLoading ? (
           <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-gray-900 rounded-xl overflow-hidden border border-white/5 animate-pulse">
+              <div key={i} className="bg-gray-900 rounded-xl overflow-hidden border border-white/5">
                 <div className="h-48 bg-gray-800" />
                 <div className="p-4 space-y-2">
                   <div className="h-4 bg-gray-800 rounded" />
