@@ -3,12 +3,74 @@ import { Link } from "react-router-dom";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaFilter,
   FaLightbulb, FaTimes, FaChevronLeft, FaChevronRight,
-  FaCheckCircle,
-  FaEye, FaTag,
+  FaCheckCircle, FaPaperPlane, FaEye, FaTag,
+  FaTshirt, FaGem, FaBook, FaIdCard, FaMobileAlt, FaBriefcase,
+  FaWallet, FaHeadphones, FaKey, FaGlasses, FaUmbrella, FaFootballBall,
+  FaLaptop, FaTabletAlt, FaCamera, FaClock, FaRing,
+  FaPlug, FaUsb, FaTint, FaPaintBrush, FaMusic, FaUtensils,
+  FaCalculator, FaShapes,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
+
+// ── Category icon map (matches CategoriesManagement) ─────────────────────────
+const getCategoryIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes("cloth") || n.includes("shirt") || n.includes("wear") || n.includes("apparel") || n.includes("fashion") || n.includes("uniform"))
+    return { icon: <FaTshirt size={7} />, color: "text-purple-400" };
+  if (n.includes("accessor") || n.includes("jewel") || n.includes("bracelet") || n.includes("necklace"))
+    return { icon: <FaGem size={7} />, color: "text-pink-400" };
+  if (n.includes("book") || n.includes("stationery") || n.includes("pen") || n.includes("notebook"))
+    return { icon: <FaBook size={7} />, color: "text-yellow-400" };
+  if (n.includes("id") || n.includes("card") || n.includes("document") || n.includes("license"))
+    return { icon: <FaIdCard size={7} />, color: "text-blue-400" };
+  if (n.includes("phone") || n.includes("mobile") || n.includes("celphone") || n.includes("cellphone"))
+    return { icon: <FaMobileAlt size={7} />, color: "text-cyan-400" };
+  if (n.includes("laptop") || n.includes("computer") || n.includes("pc"))
+    return { icon: <FaLaptop size={7} />, color: "text-indigo-400" };
+  if (n.includes("tablet") || n.includes("ipad"))
+    return { icon: <FaTabletAlt size={7} />, color: "text-indigo-400" };
+  if (n.includes("electronic") || n.includes("device") || n.includes("gadget"))
+    return { icon: <FaLaptop size={7} />, color: "text-indigo-400" };
+  if (n.includes("bag") || n.includes("purse") || n.includes("pouch") || n.includes("backpack") || n.includes("luggage"))
+    return { icon: <FaBriefcase size={7} />, color: "text-amber-400" };
+  if (n.includes("wallet"))
+    return { icon: <FaWallet size={7} />, color: "text-amber-400" };
+  if (n.includes("headphone") || n.includes("earphone") || n.includes("airpod") || n.includes("audio"))
+    return { icon: <FaHeadphones size={7} />, color: "text-green-400" };
+  if (n.includes("key") || n.includes("keychain"))
+    return { icon: <FaKey size={7} />, color: "text-orange-400" };
+  if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass"))
+    return { icon: <FaGlasses size={7} />, color: "text-teal-400" };
+  if (n.includes("umbrella"))
+    return { icon: <FaUmbrella size={7} />, color: "text-blue-400" };
+  if (n.includes("sport") || n.includes("ball") || n.includes("gym"))
+    return { icon: <FaFootballBall size={7} />, color: "text-red-400" };
+  if (n.includes("camera") || n.includes("photo"))
+    return { icon: <FaCamera size={7} />, color: "text-violet-400" };
+  if (n.includes("watch") || n.includes("clock"))
+    return { icon: <FaClock size={7} />, color: "text-gray-300" };
+  if (n.includes("ring"))
+    return { icon: <FaRing size={7} />, color: "text-yellow-400" };
+  if (n.includes("charger") || n.includes("cable") || n.includes("cord") || n.includes("plug") || n.includes("adapter"))
+    return { icon: <FaPlug size={7} />, color: "text-yellow-400" };
+  if (n.includes("flash") || n.includes("usb") || n.includes("drive") || n.includes("memory") || n.includes("storage"))
+    return { icon: <FaUsb size={7} />, color: "text-blue-400" };
+  if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask") || n.includes("drink"))
+    return { icon: <FaTint size={7} />, color: "text-cyan-400" };
+  if (n.includes("art") || n.includes("draw") || n.includes("paint") || n.includes("sketch") || n.includes("brush"))
+    return { icon: <FaPaintBrush size={7} />, color: "text-rose-400" };
+  if (n.includes("music") || n.includes("instrument") || n.includes("guitar") || n.includes("violin"))
+    return { icon: <FaMusic size={7} />, color: "text-fuchsia-400" };
+  if (n.includes("lunch") || n.includes("food") || n.includes("container") || n.includes("box") || n.includes("snack"))
+    return { icon: <FaUtensils size={7} />, color: "text-orange-400" };
+  if (n.includes("calculat"))
+    return { icon: <FaCalculator size={7} />, color: "text-lime-400" };
+  if (n.includes("other"))
+    return { icon: <FaShapes size={7} />, color: "text-gray-400" };
+  return { icon: <FaTag size={7} />, color: "text-green-400" };
+};
 
 const saveTipLocally = (lostItemId: string, tip: { location: string; details: string; time: string }) => {
   try {
@@ -132,8 +194,8 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                 <p className="text-gray-600 text-[10px] mt-1">{details.length} / min. 10 characters</p>
               </div>
 
-              <div className="bg-yellow-500/5 border border-blue-500/20 rounded-xl px-4 py-3">
-                <p className="text-blue-300/80 text-xs leading-relaxed">
+              <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl px-4 py-3">
+                <p className="text-yellow-300/80 text-xs leading-relaxed">
                   🔒 Your tip is submitted <strong>completely anonymously</strong>. No personal information is collected or stored.
                 </p>
               </div>
@@ -144,8 +206,8 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                   Cancel
                 </button>
                 <button type="submit" disabled={details.trim().length < 10}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
-                  Submit Tip
+                  className="flex-1 py-2.5 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                  <FaPaperPlane size={11} /> Submit Tip
                 </button>
               </div>
             </form>
@@ -251,13 +313,13 @@ const BulletinBoard = () => {
 
       {/* Hero banner */}
       <div className="relative bg-gray-900 border-b border-gray-800 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-red-900/20 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
           <div className="max-w-2xl">
             {/* pulse dot instead of FaExclamationTriangle icon */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[11px] font-semibold uppercase tracking-widest mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-[11px] font-semibold uppercase tracking-widest mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
               Community Bulletin Board
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-3">
@@ -275,6 +337,9 @@ const BulletinBoard = () => {
                 <FaCheckCircle className="text-emerald-400" size={11} />
                 <span>No login required</span>
               </div>
+              <Link to="/lostItems" className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 border border-blue-600/30 rounded-lg text-xs text-blue-400 hover:bg-blue-600/30 transition-colors">
+                View full lost items list →
+              </Link>
             </div>
           </div>
         </div>
@@ -291,7 +356,7 @@ const BulletinBoard = () => {
                 value={fuzzyTerm}
                 onChange={handleFuzzyChange}
                 placeholder="Search lost items by name, location, or description..."
-                className="w-full pl-11 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
+                className="w-full pl-11 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
               />
               {fuzzyTerm && (
                 <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white px-2 py-1 text-xs transition-colors">
@@ -308,7 +373,7 @@ const BulletinBoard = () => {
                 const [f, o] = e.target.value.split("-");
                 setSortBy(f); setSortOrder(o); setCurrentPage(1);
               }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40"
             >
               <option value="date-desc">Date Lost (Newest)</option>
               <option value="date-asc">Date Lost (Oldest)</option>
@@ -318,7 +383,7 @@ const BulletinBoard = () => {
             <select
               value={categoryFilter}
               onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40"
             >
               <option value="ALL">All Categories</option>
               {categoriesData?.data?.map((cat: any) => (
@@ -365,7 +430,7 @@ const BulletinBoard = () => {
               const daysAgoLost = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
               return (
                 <div key={item.id}
-                  className="group bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-900/10 transition-all duration-300 flex flex-col">
+                  className="group bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-red-500/40 hover:shadow-lg hover:shadow-red-900/10 transition-all duration-300 flex flex-col">
 
                   {/* Image */}
                   <div className="relative h-48 overflow-hidden">
@@ -414,7 +479,10 @@ const BulletinBoard = () => {
                     {item?.category?.name && (
                       <div className="absolute bottom-3 left-3">
                         <span className="flex items-center gap-1 px-2 py-0.5 bg-black/50 text-gray-300 text-[10px] rounded-md backdrop-blur-sm border border-white/10">
-                          <FaTag size={7} /> {item.category.name}
+                          <span className={getCategoryIcon(item.category.name).color}>
+                            {getCategoryIcon(item.category.name).icon}
+                          </span>
+                          {item.category.name}
                         </span>
                       </div>
                     )}
@@ -447,27 +515,29 @@ const BulletinBoard = () => {
                     <div className="h-px bg-white/5 mb-3" />
 
                     {/* Action buttons */}
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => setTipItem(item)}
                         disabled={!!item?.isFound}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-1.5 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <FaLightbulb size={10} /> I Saw This
                       </button>
-                      {tipCount > 0 && (
-                        <button
-                          onClick={() => setViewTipsItem(item)}
-                          className="w-9 h-9 flex items-center justify-center bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 rounded-lg transition-all shrink-0"
-                          title={`${tipCount} tip${tipCount !== 1 ? "s" : ""}`}
-                        >
-                          <FaEye size={12} />
-                        </button>
-                      )}
-                      <Link to={`/lostItems/${item.id}`}
-                        className="flex-1 flex items-center justify-center py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all">
-                        Details
-                      </Link>
+                      <div className="flex gap-1.5">
+                        {tipCount > 0 && (
+                          <button
+                            onClick={() => setViewTipsItem(item)}
+                            className="w-9 shrink-0 flex items-center justify-center bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 rounded-lg transition-all"
+                            title={`${tipCount} tip${tipCount !== 1 ? "s" : ""}`}
+                          >
+                            <FaEye size={12} />
+                          </button>
+                        )}
+                        <Link to={`/lostItems/${item.id}`}
+                          className="flex-1 flex items-center justify-center py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all">
+                          Details
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
