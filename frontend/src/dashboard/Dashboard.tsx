@@ -2,13 +2,17 @@ import { Link } from "react-router-dom";
 import {
   FaBoxOpen, FaClipboardList, FaExclamationTriangle, FaUsers,
   FaArrowRight, FaSearch, FaCheckCircle, FaTimesCircle, FaClock,
-  FaRecycle, FaChartBar, FaCalendarWeek, FaChartLine,
+  FaRecycle, FaChartBar, FaCalendarWeek,
+  FaArchive, FaHistory, FaExclamationCircle,
 } from "react-icons/fa";
 import {
   useAdminStatsQuery,
   useGetAllClaimsQuery,
   useGetFoundItemsQuery,
   useGetLostItemsQuery,
+  useGetArchivedFoundItemsQuery,
+  useGetStaleFoundItemsQuery,
+  useGetAuditLogsQuery,
 } from "../redux/api/api";
 
 const timeAgo = (dateStr: string) => {
@@ -20,6 +24,9 @@ const timeAgo = (dateStr: string) => {
   if (h < 24) return `${h}h ago`;
   return `${Math.floor(h / 24)}d ago`;
 };
+
+const formatDate = (d: string) =>
+  new Date(d).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
 
 const claimStatusMeta: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   PENDING:   { label: "Pending",   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",    icon: <FaClock size={10} />            },
@@ -81,14 +88,30 @@ const typeDot: Record<string, string> = {
   claim: "bg-yellow-400",
 };
 
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "PENDING":  return "bg-yellow-400/10 text-yellow-400 border-yellow-400/20";
+    case "APPROVED": return "bg-emerald-400/10 text-emerald-400 border-emerald-400/20";
+    case "REJECTED": return "bg-red-400/10 text-red-400 border-red-400/20";
+    case "SUBMITTED": return "bg-cyan-400/10 text-cyan-400 border-cyan-400/20";
+    default:         return "bg-gray-500/10 text-gray-400 border-gray-500/20";
+  }
+};
+
 const Dashboard = () => {
   const { data: statsData,      isLoading: statsLoading }  = useAdminStatsQuery({});
   const { data: claimsData,     isLoading: claimsLoading } = useGetAllClaimsQuery(undefined);
   const { data: foundItemsData, isLoading: foundLoading }  = useGetFoundItemsQuery({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
   const { data: lostItemsData,  isLoading: lostLoading }   = useGetLostItemsQuery({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
+  const { data: archivedData }                             = useGetArchivedFoundItemsQuery(undefined);
+  const { data: staleData }                                = useGetStaleFoundItemsQuery(undefined);
+  const { data: auditData }                                = useGetAuditLogsQuery({});
 
-  const stats     = statsData?.data;
-  const isLoading = statsLoading || claimsLoading || foundLoading || lostLoading;
+  const stats        = statsData?.data;
+  const isLoading    = statsLoading || claimsLoading || foundLoading || lostLoading;
+  const archivedItems = archivedData?.data ?? [];
+  const staleItems    = staleData?.data    ?? [];
+  const auditLogs     = auditData?.data    ?? [];
 
   const buildActivity = () => {
     const items: any[] = [];
@@ -105,6 +128,11 @@ const Dashboard = () => {
   };
 
   const pendingClaims = (claimsData?.data || []).filter((c: any) => c.status === "PENDING");
+
+  // Recent audit log entries (last 6)
+  const recentAuditLogs = [...auditLogs]
+    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 6);
 
   if (isLoading) return (
     <div className="space-y-4 sm:space-y-6 animate-pulse">
@@ -261,15 +289,239 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* ── Archive Overview + Claim History ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+
+        {/* Archive Overview */}
+        <div className="bg-gray-900 border border-white/5 rounded-2xl flex flex-col">
+          <div className="flex items-center justify-between px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-white/5">
+            <div>
+              <h3 className="text-white text-sm font-semibold flex items-center gap-2">
+                <FaArchive size={13} className="text-orange-400" /> Archive Overview
+              </h3>
+              <p className="text-gray-500 text-xs mt-0.5">Stale & archived found items</p>
+            </div>
+            <Link to="/dashboard/found-items/archive"
+              className="text-[11px] text-orange-400 hover:text-orange-300 font-medium transition-colors flex items-center gap-1">
+              Manage <FaArrowRight size={9} />
+            </Link>
+          </div>
+
+          {/* Summary row */}
+          <div className="grid grid-cols-2 gap-3 p-4 sm:p-5 border-b border-white/5">
+            <div className="bg-orange-500/5 border border-orange-500/15 rounded-xl p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <FaExclamationCircle size={11} className="text-orange-400" />
+                <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-widest">Stale Items</p>
+              </div>
+              <p className="text-2xl font-bold text-orange-400">{staleItems.length}</p>
+              <p className="text-gray-600 text-[10px] mt-0.5">Unclaimed 30+ days</p>
+            </div>
+            <div className="bg-gray-800/60 border border-white/5 rounded-xl p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <FaArchive size={11} className="text-gray-400" />
+                <p className="text-gray-400 text-[10px] font-semibold uppercase tracking-widest">Archived</p>
+              </div>
+              <p className="text-2xl font-bold text-gray-300">{archivedItems.length}</p>
+              <p className="text-gray-600 text-[10px] mt-0.5">Hidden from public</p>
+            </div>
+          </div>
+
+          {/* Stale items preview */}
+          <div className="flex-1 divide-y divide-white/5 overflow-auto max-h-[240px]">
+            {staleItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-gray-600">
+                <FaCheckCircle size={22} className="mb-2 opacity-40 text-emerald-500" />
+                <p className="text-xs text-gray-400">No stale items</p>
+                <p className="text-[10px] mt-0.5 opacity-60">All items claimed within 30 days</p>
+              </div>
+            ) : staleItems.slice(0, 5).map((item: any) => {
+              const daysOld = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+              const isVeryStale = daysOld > 60;
+              return (
+                <div key={item.id} className="flex items-center gap-3 px-4 sm:px-5 py-3 hover:bg-white/[0.02] transition-colors">
+                  <img
+                    src={item.img || "/bgimg.png"}
+                    alt={item.foundItemName}
+                    onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                    className="w-8 h-8 rounded-lg object-cover shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-xs font-medium truncate">{item.foundItemName}</p>
+                    <p className="text-gray-500 text-[10px] truncate">{item.location}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                      isVeryStale
+                        ? "bg-red-400/10 text-red-400 border-red-400/20"
+                        : "bg-orange-400/10 text-orange-400 border-orange-400/20"
+                    }`}>
+                      {daysOld}d
+                    </span>
+                    <p className="text-gray-700 text-[10px] mt-0.5">{formatDate(item.createdAt)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {staleItems.length > 5 && (
+            <div className="px-4 sm:px-5 py-3 border-t border-white/5">
+              <Link to="/dashboard/found-items/archive"
+                className="flex items-center justify-center gap-2 w-full py-2 rounded-xl bg-orange-500/5 hover:bg-orange-500/10 border border-orange-500/15 text-orange-400 text-xs font-medium transition-all">
+                View all {staleItems.length} stale items <FaArrowRight size={10} />
+              </Link>
+            </div>
+          )}
+
+          {/* Archived preview (recent 3) */}
+          {archivedItems.length > 0 && (
+            <>
+              <div className="px-4 sm:px-5 py-2.5 border-t border-white/5 bg-white/[0.01]">
+                <p className="text-[10px] uppercase tracking-widest text-gray-600 font-medium">Recently Archived</p>
+              </div>
+              <div className="divide-y divide-white/5">
+                {archivedItems.slice(0, 3).map((item: any) => (
+                  <div key={item.id} className="flex items-center gap-3 px-4 sm:px-5 py-3 hover:bg-white/[0.02] transition-colors">
+                    <img
+                      src={item.img || "/bgimg.png"}
+                      alt={item.foundItemName}
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                      className="w-8 h-8 rounded-lg object-cover shrink-0 opacity-60"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-gray-400 text-xs font-medium truncate">{item.foundItemName}</p>
+                      <p className="text-gray-600 text-[10px]">
+                        {item.claim ? (
+                          <span className="text-emerald-500/70">Claimed · </span>
+                        ) : null}
+                        Archived {item.archivedAt ? timeAgo(item.archivedAt) : "—"}
+                      </p>
+                    </div>
+                    <FaArchive size={10} className="text-gray-700 shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Claim History / Audit Log Preview */}
+        <div className="bg-gray-900 border border-white/5 rounded-2xl flex flex-col">
+          <div className="flex items-center justify-between px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-white/5">
+            <div>
+              <h3 className="text-white text-sm font-semibold flex items-center gap-2">
+                <FaHistory size={13} className="text-violet-400" /> Claim History
+              </h3>
+              <p className="text-gray-500 text-xs mt-0.5">Recent status changes & audit trail</p>
+            </div>
+            <Link to="/dashboard/claims"
+              className="text-[11px] text-violet-400 hover:text-violet-300 font-medium transition-colors flex items-center gap-1">
+              Full log <FaArrowRight size={9} />
+            </Link>
+          </div>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-2 p-4 sm:p-5 border-b border-white/5">
+            {[
+              { label: "Total",    value: (claimsData?.data || []).length,                                                    color: "text-white"       },
+              { label: "Approved", value: (claimsData?.data || []).filter((c: any) => c.status === "APPROVED").length,        color: "text-emerald-400" },
+              { label: "Rejected", value: (claimsData?.data || []).filter((c: any) => c.status === "REJECTED").length,        color: "text-red-400"     },
+            ].map(s => (
+              <div key={s.label} className="bg-gray-800/50 border border-white/5 rounded-xl p-2.5 text-center">
+                <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-gray-600 text-[10px] mt-0.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Recent audit entries timeline */}
+          <div className="flex-1 overflow-auto max-h-[360px]">
+            {recentAuditLogs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-600">
+                <FaHistory size={22} className="mb-2 opacity-40" />
+                <p className="text-xs text-gray-400">No audit history yet</p>
+                <p className="text-[10px] mt-0.5 opacity-60">Status changes will appear here</p>
+              </div>
+            ) : (
+              <div className="relative px-4 sm:px-5 py-4">
+                {/* vertical line */}
+                <div className="absolute left-[28px] sm:left-[32px] top-4 bottom-4 w-px bg-gray-800" />
+                <div className="space-y-4">
+                  {recentAuditLogs.map((log: any) => {
+                    const isApproved = log.toStatus === "APPROVED";
+                    const isRejected = log.toStatus === "REJECTED";
+                    return (
+                      <div key={log.id} className="relative flex items-start gap-3">
+                        {/* Timeline dot */}
+                        <div className={`relative z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          isApproved
+                            ? "bg-emerald-400/10 border-emerald-400"
+                            : isRejected
+                            ? "bg-red-400/10 border-red-400"
+                            : "bg-violet-400/10 border-violet-400"
+                        }`}>
+                          {isApproved
+                            ? <FaCheckCircle size={10} className="text-emerald-400" />
+                            : isRejected
+                            ? <FaTimesCircle size={10} className="text-red-400" />
+                            : <FaHistory size={10} className="text-violet-400" />
+                          }
+                        </div>
+
+                        <div className="flex-1 min-w-0 pt-0.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-white text-xs font-semibold truncate">
+                                {log.claim?.foundItem?.foundItemName ?? "Unknown Item"}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${getStatusBadge(log.fromStatus)}`}>
+                                  {log.fromStatus}
+                                </span>
+                                <span className="text-gray-700 text-[10px]">→</span>
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${getStatusBadge(log.toStatus)}`}>
+                                  {log.toStatus}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="text-gray-600 text-[10px]">{timeAgo(log.createdAt)}</p>
+                            </div>
+                          </div>
+                          <p className="text-gray-600 text-[10px] mt-1">
+                            By <span className="text-gray-400">{log.performedBy}</span>
+                          </p>
+                          {log.note && (
+                            <p className="text-gray-700 text-[10px] mt-0.5 italic truncate">"{log.note}"</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="px-4 sm:px-5 py-3 sm:py-4 border-t border-white/5">
+            <Link to="/dashboard/claims"
+              className="flex items-center justify-center gap-2 w-full py-2 rounded-xl bg-violet-500/5 hover:bg-violet-500/10 border border-violet-500/15 text-violet-400 text-xs font-medium transition-all">
+              View full audit log <FaArrowRight size={10} />
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Quick Actions */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5">
         <h3 className="text-white text-sm font-semibold mb-3 sm:mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {[
-            { label: "Add Category",  icon: <FaBoxOpen size={16} />,             href: "/dashboard/categories", color: "text-cyan-400   bg-cyan-400/5   hover:bg-cyan-400/10   border-cyan-400/10"   },
-            { label: "Manage Users",  icon: <FaUsers size={16} />,               href: "/dashboard/users",      color: "text-violet-400 bg-violet-400/5 hover:bg-violet-400/10 border-violet-400/10" },
-            { label: "Review Claims", icon: <FaClipboardList size={16} />,       href: "/dashboard/claims",     color: "text-yellow-400 bg-yellow-400/5 hover:bg-yellow-400/10 border-yellow-400/10" },
-            { label: "Analytics",     icon: <FaChartLine size={16} />,           href: "/dashboard/analytics",  color: "text-cyan-400   bg-cyan-400/5   hover:bg-cyan-400/10   border-cyan-400/10"   },
+            { label: "Add Category",   icon: <FaBoxOpen size={16} />,       href: "/dashboard/categories",          color: "text-cyan-400   bg-cyan-400/5   hover:bg-cyan-400/10   border-cyan-400/10"   },
+            { label: "Manage Users",   icon: <FaUsers size={16} />,          href: "/dashboard/users",               color: "text-violet-400 bg-violet-400/5 hover:bg-violet-400/10 border-violet-400/10" },
+            { label: "Review Claims",  icon: <FaClipboardList size={16} />,  href: "/dashboard/claims",              color: "text-yellow-400 bg-yellow-400/5 hover:bg-yellow-400/10 border-yellow-400/10" },
+            { label: "Archive Log",    icon: <FaArchive size={16} />,        href: "/dashboard/found-items/archive", color: "text-orange-400 bg-orange-400/5 hover:bg-orange-400/10 border-orange-400/10" },
           ].map((action) => (
             <Link key={action.href} to={action.href}
               className={`flex flex-col items-center gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-xl border transition-all duration-150 ${action.color}`}>
