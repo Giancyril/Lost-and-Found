@@ -118,27 +118,26 @@ const LostItemsPage = () => {
         <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 mb-6 border border-gray-800 overflow-hidden">
           {/* Search */}
           <div className="mb-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none">
-                <FaSearch className="text-gray-500" size={13} />
+              <div className="relative">
+                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
+                <input
+                  type="search"
+                  className="block w-full py-3 pl-11 pr-16 text-sm text-white border border-gray-700 rounded-xl bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500 transition-all duration-200"
+                  placeholder="Search by name, location, or description..."
+                  value={fuzzyTerm}
+                  onChange={handleFuzzyInputChange}
+                />
+                {fuzzyTerm && (
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-500 hover:text-white text-xs transition-colors whitespace-nowrap"
+                  >
+                    <span>✕</span>
+                    <span className="hidden sm:inline">Clear</span>
+                  </button>
+                )}
               </div>
-              <input
-                type="search"
-                className="block w-full p-3.5 ps-11 text-sm text-white border border-gray-700 rounded-xl bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500 transition-all duration-200"
-                placeholder="Search by name, location, or description..."
-                value={fuzzyTerm}
-                onChange={handleFuzzyInputChange}
-              />
-              {fuzzyTerm ? (
-                <button
-                  type="button"
-                  onClick={clearSearch}
-                  className="text-white absolute end-2.5 bottom-2 bg-gray-600 hover:bg-gray-500 font-medium rounded-lg text-sm px-3 py-1.5 transition-all duration-200"
-                >
-                  ✕ Clear
-                </button>
-              ) : null}
-            </div>
             {fuzzyTerm && (
               <p className="text-xs text-gray-500 mt-2 ps-1">
                 Showing results for{" "}

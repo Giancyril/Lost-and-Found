@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
-  FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaFilter,
+  FaSearch, FaMapMarkerAlt, FaCalendarAlt,
   FaLightbulb, FaTimes, FaChevronLeft, FaChevronRight,
   FaExclamationTriangle, FaCheckCircle,
   FaEye, FaTag, FaWallet, FaMobileAlt, FaLaptop, FaKey,
@@ -356,7 +356,7 @@ const BulletinBoard = () => {
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
       <div className="relative z-10 px-6 sm:px-10 lg:px-16 pt-16 pb-12 flex flex-col items-center text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold mb-5">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
           <FaExclamationTriangle size={10} /> Community Bulletin Board
         </div>
 
@@ -370,19 +370,9 @@ const BulletinBoard = () => {
         <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full mb-5" />
 
         <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-7 max-w-xl">
-          Help reunite students with their lost belongings. If you've seen any of these items, submit an anonymous tip — no account needed.
+          Browse items reported missing within the NBSC campus. If you have seen any of these belongings, submit an anonymous sighting report to help the SAS office reunite them with their owners.
         </p>
 
-        <div className="flex items-center gap-3 flex-wrap justify-center">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
-            <FaLightbulb className="text-yellow-400" size={11} />
-            <span>Anonymous tips welcome</span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
-            <FaCheckCircle className="text-emerald-400" size={11} />
-            <span>No login required</span>
-          </div>
-        </div>
       </div>
 
       {/* ── Search & filters ─────────────────────────────────────────────────── */}
@@ -396,17 +386,17 @@ const BulletinBoard = () => {
                 value={fuzzyTerm}
                 onChange={handleFuzzyChange}
                 placeholder="Search lost items by name, location, or description..."
-                className="w-full pl-11 pr-4 py-3 bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none"
+                className="w-full pl-11 pr-16 py-3 bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none"
               />
               {fuzzyTerm && (
-                <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white px-2 py-1 text-xs transition-colors">
-                  ✕ Clear
-                </button>
+                <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white px-2 py-1 text-xs transition-colors flex items-center gap-1 whitespace-nowrap">
+              <span>✕</span>
+              <span className="hidden sm:inline">Clear</span>
+            </button>
               )}
             </div>
           </div>
           <div className="flex items-center gap-2 border-t border-white/5 pt-3">
-            <FaFilter className="text-gray-600 shrink-0 hidden sm:block" size={12} />
             <select
               value={`${sortBy}-${sortOrder}`}
               onChange={e => {
