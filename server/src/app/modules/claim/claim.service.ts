@@ -12,8 +12,8 @@ const createClaim = async (
       distinguishingFeatures: item.distinguishingFeatures,
       lostDate:               item.lostDate,
       claimantName:           item.claimantName  || "",
-      contactNumber:          item.contactNumber || "",   // keep for backwards compat
-      schoolEmail:            item.schoolEmail   || "",   // ✅ new field
+      contactNumber:          item.contactNumber || "",   
+      schoolEmail:            item.schoolEmail   || "",   
       ...(user?.id ? { userId: user.id } : {}),
     },
   });

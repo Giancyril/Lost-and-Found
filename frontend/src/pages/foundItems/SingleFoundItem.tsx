@@ -15,6 +15,7 @@ import {
   FaChevronLeft, FaChevronRight, FaClipboardList,
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
+import ItemLifecycleTimeline from "./ItemLifecycleTimeline";
 
 // ── Hide image for Wallets & Purses (admin always sees) ──
 const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
@@ -26,7 +27,6 @@ const shouldHideImage = (categoryName: string, isAdmin: boolean) => {
   );
 };
 
-// ── Placeholder shown to non-admin when category is hidden ──
 const HiddenImagePlaceholder = () => (
   <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex flex-col items-center justify-center gap-4">
     <div className="w-20 h-20 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
@@ -214,9 +214,9 @@ const SingleFoundItem = () => {
 
         {/* Main Content */}
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
 
-            {/* Left: Image or Hidden Placeholder */}
+            {/* Left: Image */}
             <div className="flex flex-col h-full">
               {hideImage
                 ? <HiddenImagePlaceholder />
@@ -224,13 +224,15 @@ const SingleFoundItem = () => {
               }
             </div>
 
-            {/* Right: Details */}
+            {/* Right: Details + Timeline + Claim */}
             <div className="space-y-4">
+              {/* Description */}
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
                 <p className="text-gray-400 leading-relaxed text-sm">{foundItemData?.description || "No description available."}</p>
               </div>
 
+              {/* Info grid */}
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { icon: <FaCalendarAlt size={12} />, label: "Date Found", value: foundItemData?.date ? new Date(foundItemData.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified" },
@@ -248,6 +250,13 @@ const SingleFoundItem = () => {
                 ))}
               </div>
 
+              {/* ── Feature 8: Item Lifecycle Timeline ── */}
+              <ItemLifecycleTimeline
+                foundItem={foundItemData}
+                claims={foundItemData?.claim ? [foundItemData.claim] : []}
+              />
+
+              {/* Claim section */}
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-3">
                   {isClaimed ? "Claim Status" : isAdmin ? "Process Claim" : "Claim This Item"}
@@ -261,19 +270,19 @@ const SingleFoundItem = () => {
                     </div>
                   </div>
                 ) : isAdmin ? (
-                    <>
-                      <div className="flex items-start gap-3 bg-gray-800/60 rounded-xl p-4 border border-gray-700 mb-4">
-                        <FaClipboardList className="text-blue-400 mt-0.5 shrink-0 text-lg" />
-                        <div>
-                          <p className="text-white text-sm font-semibold">Review claimant details</p>
-                          <p className="text-gray-400 text-xs mt-1 leading-relaxed">Verify proof of ownership before marking this item as claimed.</p>
-                        </div>
+                  <>
+                    <div className="flex items-start gap-3 bg-gray-800/60 rounded-xl p-4 border border-gray-700 mb-4">
+                      <FaClipboardList className="text-blue-400 mt-0.5 shrink-0 text-lg" />
+                      <div>
+                        <p className="text-white text-sm font-semibold">Review claimant details</p>
+                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">Verify proof of ownership before marking this item as claimed.</p>
                       </div>
-                      <button onClick={() => setIsClaimModalOpen(true)}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
-                        Process Claim
-                      </button>
-                    </>
+                    </div>
+                    <button onClick={() => setIsClaimModalOpen(true)}
+                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
+                      Process Claim
+                    </button>
+                  </>
                 ) : (
                   <div className="space-y-3">
                     <div className="flex items-start gap-3 bg-gray-800/60 rounded-xl p-4 border border-gray-700">
@@ -307,7 +316,6 @@ const SingleFoundItem = () => {
               <button onClick={() => { setIsClaimModalOpen(false); reset(); }} className="text-gray-500 hover:text-white ml-4"><FaTimes size={15} /></button>
             </div>
             <div className="px-4 py-4">
-              {/* Item preview — show placeholder thumbnail if image is hidden */}
               <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
                 {hideImage ? (
                   <div className="w-14 h-14 rounded-lg bg-gray-700 border border-gray-600 flex items-center justify-center shrink-0">
@@ -328,7 +336,6 @@ const SingleFoundItem = () => {
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {/* Full Name */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Full Name *</label>
                   <div className="relative">
@@ -340,27 +347,20 @@ const SingleFoundItem = () => {
                   {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
                 </div>
 
-                {/* School Email */}
                 <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">
-                    School ID / Email *
-                  </label>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">School ID / Email *</label>
                   <div className="relative">
                     <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
                     <input type="email" placeholder="e.g. juandelacruz@nbsc.edu.ph"
                       {...register("schoolEmail", {
                         required: "School email is required",
-                        pattern: {
-                          value: /^[^\s@]+@nbsc\.edu\.ph$/i,
-                          message: "Must be a valid NBSC email (@nbsc.edu.ph)",
-                        },
+                        pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email (@nbsc.edu.ph)" },
                       })}
                       className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm placeholder-gray-600" />
                   </div>
                   {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
                 </div>
 
-                {/* Date Lost */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date Item Was Lost *</label>
                   <input type="date" {...register("lostDate", { required: "Please provide the date" })}
@@ -368,7 +368,6 @@ const SingleFoundItem = () => {
                   {errors.lostDate && <p className="text-red-400 text-xs mt-1">{errors.lostDate.message as string}</p>}
                 </div>
 
-                {/* Proof of Ownership */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Proof of Ownership *</label>
                   <textarea rows={4}
@@ -381,7 +380,6 @@ const SingleFoundItem = () => {
                   {errors.distinguishingFeatures && <p className="text-red-400 text-xs mt-1">{errors.distinguishingFeatures.message as string}</p>}
                 </div>
 
-                {/* Info banner */}
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
                     {isAdmin
@@ -390,7 +388,6 @@ const SingleFoundItem = () => {
                   </p>
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => { setIsClaimModalOpen(false); reset(); }}
                     className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium">
