@@ -26,6 +26,7 @@ import ReportFoundItem from "./pages/reportFoundItem/ReportFoundItem.tsx";
 import AiSearch from "./pages/aiSearch/AiSearch.tsx";
 import HeatmapPage from "./dashboard/pages/HeatmapPage.tsx";
 import AnalyticsPage from "./dashboard/pages/AnalyticsPage.tsx";
+import ArchievePage from "./dashboard/pages/ArchievePage.tsx"; // ← added
 
 
 const router = createBrowserRouter([
@@ -107,8 +108,8 @@ const router = createBrowserRouter([
       </DashboardLayout>
     ),
   },
-   {
-    path: "/dashboard/analytics",                         
+  {
+    path: "/dashboard/analytics",
     element: (
       <DashboardLayout>
         <AnalyticsPage />
@@ -144,6 +145,14 @@ const router = createBrowserRouter([
     element: (
       <DashboardLayout>
         <Settings />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/dashboard/archive",           // ← added
+    element: (
+      <DashboardLayout>
+        <ArchievePage />
       </DashboardLayout>
     ),
   },
