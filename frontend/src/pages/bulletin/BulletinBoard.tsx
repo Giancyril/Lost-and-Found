@@ -204,16 +204,20 @@ const TipsViewerModal = ({ item, onClose }: { item: any; onClose: () => void }) 
             <h3 className="text-white font-bold text-base flex items-center gap-2">
               <FaEye className="text-cyan-400" size={14} /> Community Tips
             </h3>
-            <p className="text-gray-500 text-xs mt-0.5">{item?.lostItemName} · {tips.length} tip{tips.length !== 1 ? "s" : ""}</p>
+            <p className="text-gray-500 text-xs mt-0.5">{item?.lostItemName} · {tips.length} {tips.length === 1 ? "tip" : "tips"}</p>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-white p-1"><FaTimes size={15} /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-5">
           {tips.length === 0 ? (
-            <div className="text-center py-10 text-gray-600">
-              <FaLightbulb size={28} className="mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No tips yet</p>
-              <p className="text-xs mt-1 opacity-60">Be the first to submit a tip!</p>
+            <div className="text-center py-10">
+              <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-3">
+                <FaEye className="text-cyan-400 opacity-40" size={22} />
+              </div>
+              <p className="text-white text-sm font-semibold">No tips yet</p>
+              <p className="text-gray-500 text-xs mt-1.5 leading-relaxed max-w-xs mx-auto">
+                No one has submitted a tip for this item yet. If you've seen it, click <strong className="text-blue-400">"I Saw This"</strong> to help!
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -484,16 +488,14 @@ const BulletinBoard = () => {
                         <FaLightbulb size={10} /> I Saw This
                       </button>
                       <div className="flex gap-1.5">
-                        {tipCount > 0 ? (
-                          <button
-                            onClick={() => setViewTipsItem(item)}
-                            className="w-9 shrink-0 flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-lg transition-all"
-                          >
-                            <FaEye size={9} /> {tipCount}
-                          </button>
-                        ) : (
-                          <span className="w-9 shrink-0" />
-                        )}
+                        <button
+                          onClick={() => setViewTipsItem(item)}
+                          className="w-9 shrink-0 flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-lg transition-all"
+                          title={tipCount > 0 ? `${tipCount} tip${tipCount !== 1 ? "s" : ""}` : "No tips yet"}
+                        >
+                          <FaEye size={9} />
+                          <span className="text-[10px]">{tipCount}</span>
+                        </button>
                         <Link to={`/lostItems/${item.id}`}
                           className="flex-1 flex items-center justify-center py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all">
                           Details
