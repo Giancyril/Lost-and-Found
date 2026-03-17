@@ -355,7 +355,6 @@ const SingleLostItem = () => {
                 </div>
 
                 <div className="flex items-start gap-2.5 bg-blue-500/5 border border-blue-500/15 rounded-lg px-4 py-3">
-                  <span className="text-blue-400 text-sm shrink-0 mt-0.5">ℹ</span>
                   <p className="text-blue-300/80 text-xs leading-relaxed">
                     Your report will be submitted to the SAS office. The owner can visit and claim it with proof of ownership.
                   </p>

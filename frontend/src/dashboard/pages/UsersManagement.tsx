@@ -278,7 +278,7 @@ const UsersManagement = () => {
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
               <div>
                 <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <FaShieldAlt className="text-red-400" size={14} /> Create Admin Account
+                  <FaShieldAlt className="text-blue-400" size={14} /> Create Admin Account
                 </h2>
                 <p className="text-gray-400 text-xs mt-0.5">New account will be set as Admin by default</p>
               </div>
@@ -347,8 +347,8 @@ const UsersManagement = () => {
               </div>
 
               {/* Role badge — always Admin */}
-              <div className="flex items-center gap-3 bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3">
-                <FaShieldAlt className="text-red-400 shrink-0" size={13} />
+              <div className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-3">
+                <FaShieldAlt className="text-blue-400 shrink-0" size={13} />
                 <div>
                   <p className="text-white text-xs font-semibold">Role: Admin</p>
                   <p className="text-gray-500 text-[11px] mt-0.5">This account will have full dashboard access</p>

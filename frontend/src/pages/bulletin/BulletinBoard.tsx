@@ -171,7 +171,7 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
 
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-3">
                 <p className="text-blue-300/80 text-xs leading-relaxed">
-                  🔒 Your tip is submitted <strong>completely anonymously</strong>. No personal information is collected or stored.
+                   Your tip is submitted <strong>completely anonymously</strong>. No personal information is collected or stored.
                 </p>
               </div>
 
@@ -181,7 +181,7 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                   Cancel
                 </button>
                 <button type="submit" disabled={details.trim().length < 10}
-                  className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-900 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                  className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
                   Submit Tip
                 </button>
               </div>
