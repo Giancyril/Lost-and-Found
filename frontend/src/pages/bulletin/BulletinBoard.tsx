@@ -3,16 +3,13 @@ import { Link } from "react-router-dom";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaFilter,
   FaLightbulb, FaTimes, FaChevronLeft, FaChevronRight,
-  FaExclamationTriangle, FaCheckCircle, FaPaperPlane,
+  FaCheckCircle, FaPaperPlane,
   FaEye, FaTag,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
 
-// ── Tip submission — uses a simple anonymous POST ─────────────────────────────
-// We store tips in localStorage client-side as a lightweight solution.
-// If you want server-side persistence, add a /tips POST endpoint.
 const saveTipLocally = (lostItemId: string, tip: { location: string; details: string; time: string }) => {
   try {
     const existing = JSON.parse(localStorage.getItem("bulletin_tips") || "{}");
@@ -64,17 +61,19 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
           <div>
             <h3 className="text-white font-bold text-base flex items-center gap-2">
-              <FaLightbulb className="text-yellow-400" size={14} /> Submit a Tip
+              <span className="w-6 h-6 rounded-md bg-amber-400/10 border border-amber-400/20 flex items-center justify-center shrink-0">
+                <FaLightbulb className="text-amber-400" size={11} />
+              </span>
+              Submit a Tip
             </h3>
             <p className="text-gray-500 text-xs mt-0.5">Your tip is completely anonymous</p>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white p-1 transition-colors">
-            <FaTimes size={15} />
+          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+            <FaTimes size={13} />
           </button>
         </div>
 
         <div className="p-5">
-          {/* Item preview */}
           <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
             <img
               src={item?.img || "/bgimg.png"}
@@ -88,12 +87,12 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                 <FaMapMarkerAlt size={9} /> {item?.location}
               </p>
             </div>
-            <span className="shrink-0 px-2 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-bold rounded-full border border-red-500/20">Lost</span>
+            <span className="shrink-0 px-2 py-0.5 bg-red-500/10 text-red-400 text-[10px] font-semibold rounded-md border border-red-500/20 uppercase tracking-wide">Lost</span>
           </div>
 
           {submitted ? (
             <div className="text-center py-6">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
                 <FaCheckCircle className="text-emerald-400" size={24} />
               </div>
               <p className="text-white font-semibold">Tip Submitted!</p>
@@ -166,11 +165,16 @@ const TipsViewerModal = ({ item, onClose }: { item: any; onClose: () => void }) 
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
           <div>
             <h3 className="text-white font-bold text-base flex items-center gap-2">
-              <FaEye className="text-cyan-400" size={14} /> Community Tips
+              <span className="w-6 h-6 rounded-md bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0">
+                <FaEye className="text-cyan-400" size={11} />
+              </span>
+              Community Tips
             </h3>
             <p className="text-gray-500 text-xs mt-0.5">{item?.lostItemName} · {tips.length} tip{tips.length !== 1 ? "s" : ""}</p>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white p-1"><FaTimes size={15} /></button>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+            <FaTimes size={13} />
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto p-5">
           {tips.length === 0 ? (
@@ -202,14 +206,14 @@ const TipsViewerModal = ({ item, onClose }: { item: any; onClose: () => void }) 
 
 // ── Main Bulletin Board Page ───────────────────────────────────────────────────
 const BulletinBoard = () => {
-  const [searchTerm, setSearchTerm]       = useState("");
-  const [fuzzyTerm, setFuzzyTerm]         = useState("");
+  const [searchTerm, setSearchTerm]         = useState("");
+  const [fuzzyTerm, setFuzzyTerm]           = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
-  const [currentPage, setCurrentPage]     = useState(1);
-  const [sortBy, setSortBy]               = useState("date");
-  const [sortOrder, setSortOrder]         = useState("desc");
-  const [tipItem, setTipItem]             = useState<any>(null);
-  const [viewTipsItem, setViewTipsItem]   = useState<any>(null);
+  const [currentPage, setCurrentPage]       = useState(1);
+  const [sortBy, setSortBy]                 = useState("date");
+  const [sortOrder, setSortOrder]           = useState("desc");
+  const [tipItem, setTipItem]               = useState<any>(null);
+  const [viewTipsItem, setViewTipsItem]     = useState<any>(null);
   const [limit] = useState(12);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -240,7 +244,6 @@ const BulletinBoard = () => {
 
   const totalPages = lostItems?.meta?.totalPage || 1;
 
-  // Count tips per item from localStorage
   const getTipCount = (id: string) => getTipsForItem(id).length;
 
   return (
@@ -252,8 +255,10 @@ const BulletinBoard = () => {
         <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs font-semibold mb-4">
-              <FaExclamationTriangle size={10} /> Community Bulletin Board
+            {/* pulse dot instead of FaExclamationTriangle icon */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-[11px] font-semibold uppercase tracking-widest mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+              Community Bulletin Board
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-3">
               Lost Items Bulletin Board
@@ -359,7 +364,7 @@ const BulletinBoard = () => {
         ) : (
           <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredItems.map((item: any) => {
-              const tipCount = getTipCount(item.id);
+              const tipCount    = getTipCount(item.id);
               const daysAgoLost = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
               return (
                 <div key={item.id}
@@ -375,21 +380,22 @@ const BulletinBoard = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
-                    {/* Badges */}
+                    {/* Top-left: Lost/Found badge — rounded-md flat style */}
                     <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                      <span className="px-2 py-0.5 bg-red-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-red-500/40">
-                        Lost
-                      </span>
-                      {item?.isFound && (
-                        <span className="px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-emerald-500/40">
-                          Found!
+                      {item?.isFound ? (
+                        <span className="px-2 py-0.5 bg-emerald-600/80 text-white text-[10px] font-bold rounded-md backdrop-blur-sm border border-emerald-400/30 uppercase tracking-wide">
+                          ✓ Found
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 bg-red-600/80 text-white text-[10px] font-bold rounded-md backdrop-blur-sm border border-red-400/30 uppercase tracking-wide">
+                          Lost
                         </span>
                       )}
                     </div>
 
-                    {/* Days lost badge */}
+                    {/* Top-right: days badge — rounded-md */}
                     <div className="absolute top-3 right-3">
-                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm border ${
+                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md backdrop-blur-sm border ${
                         daysAgoLost > 30 ? "bg-orange-500/80 text-white border-orange-400/40" :
                         daysAgoLost > 7  ? "bg-yellow-500/80 text-gray-900 border-yellow-400/40" :
                                            "bg-white/10 text-white border-white/20"
@@ -398,11 +404,20 @@ const BulletinBoard = () => {
                       </span>
                     </div>
 
-                    {/* Tip count pill */}
+                    {/* Bottom-right: tip count — amber, rounded-md */}
                     {tipCount > 0 && (
                       <div className="absolute bottom-3 right-3">
-                        <span className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/90 text-gray-900 text-[10px] font-bold rounded-full">
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-400/90 text-gray-900 text-[10px] font-bold rounded-md">
                           <FaLightbulb size={8} /> {tipCount} tip{tipCount !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Bottom-left: category overlay badge */}
+                    {item?.category?.name && (
+                      <div className="absolute bottom-3 left-3">
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-black/50 text-gray-300 text-[10px] rounded-md backdrop-blur-sm border border-white/10">
+                          <FaTag size={7} /> {item.category.name}
                         </span>
                       </div>
                     )}
@@ -415,10 +430,11 @@ const BulletinBoard = () => {
                     </h3>
                     <p className="text-gray-500 text-xs mb-3 line-clamp-2 leading-relaxed">{item?.description}</p>
 
+                    {/* Meta — removed category row (moved to image overlay) */}
                     <div className="space-y-1.5 mt-auto mb-3">
                       <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <div className="w-5 h-5 rounded bg-red-500/10 flex items-center justify-center shrink-0">
-                          <FaMapMarkerAlt className="text-red-400" size={9} />
+                        <div className="w-5 h-5 rounded bg-blue-500/10 flex items-center justify-center shrink-0">
+                          <FaMapMarkerAlt className="text-blue-400" size={9} />
                         </div>
                         <span className="line-clamp-1">{item?.location}</span>
                       </div>
@@ -428,39 +444,33 @@ const BulletinBoard = () => {
                         </div>
                         <span>{item?.date?.split("T")[0]}</span>
                       </div>
-                      {item?.category?.name && (
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                          <div className="w-5 h-5 rounded bg-violet-500/10 flex items-center justify-center shrink-0">
-                            <FaTag className="text-violet-400" size={9} />
-                          </div>
-                          <span>{item.category.name}</span>
-                        </div>
-                      )}
                     </div>
 
+                    {/* Divider */}
+                    <div className="h-px bg-white/5 mb-3" />
+
                     {/* Action buttons */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex gap-2">
                       <button
                         onClick={() => setTipItem(item)}
                         disabled={!!item?.isFound}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <FaLightbulb size={10} /> I Saw This
                       </button>
-                      <div className="flex gap-1.5">
-                        {tipCount > 0 && (
-                          <button
-                            onClick={() => setViewTipsItem(item)}
-                            className="flex-1 flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-lg transition-all"
-                          >
-                            <FaEye size={9} /> {tipCount}
-                          </button>
-                        )}
-                        <Link to={`/lostItems/${item.id}`}
-                          className={`${tipCount > 0 ? "flex-1" : "w-full"} flex items-center justify-center py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all`}>
-                          Details
-                        </Link>
-                      </div>
+                      {tipCount > 0 && (
+                        <button
+                          onClick={() => setViewTipsItem(item)}
+                          className="w-9 h-9 flex items-center justify-center bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 rounded-lg transition-all shrink-0"
+                          title={`${tipCount} tip${tipCount !== 1 ? "s" : ""}`}
+                        >
+                          <FaEye size={12} />
+                        </button>
+                      )}
+                      <Link to={`/lostItems/${item.id}`}
+                        className="flex-1 flex items-center justify-center py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all">
+                        Details
+                      </Link>
                     </div>
                   </div>
                 </div>
