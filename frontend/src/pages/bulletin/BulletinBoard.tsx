@@ -292,7 +292,7 @@ const BulletinBoard = () => {
         <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs font-semibold mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold mb-4">
               <FaExclamationTriangle size={10} /> Community Bulletin Board
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-3">
@@ -310,9 +310,6 @@ const BulletinBoard = () => {
                 <FaCheckCircle className="text-emerald-400" size={11} />
                 <span>No login required</span>
               </div>
-              <Link to="/lostItems" className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 border border-blue-600/30 rounded-lg text-xs text-blue-400 hover:bg-blue-600/30 transition-colors">
-                View full lost items list →
-              </Link>
             </div>
           </div>
         </div>
@@ -478,8 +475,7 @@ const BulletinBoard = () => {
                       )}
                     </div>
 
-                    {/* Action buttons */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-1.5">
                       <button
                         onClick={() => setTipItem(item)}
                         disabled={!!item?.isFound}
@@ -487,20 +483,18 @@ const BulletinBoard = () => {
                       >
                         <FaLightbulb size={10} /> I Saw This
                       </button>
-                      <div className="flex gap-1.5">
-                        <button
-                          onClick={() => setViewTipsItem(item)}
-                          className="w-9 shrink-0 flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-lg transition-all"
-                          title={tipCount > 0 ? `${tipCount} tip${tipCount !== 1 ? "s" : ""}` : "No tips yet"}
-                        >
-                          <FaEye size={9} />
-                          <span className="text-[10px]">{tipCount}</span>
-                        </button>
-                        <Link to={`/lostItems/${item.id}`}
-                          className="flex-1 flex items-center justify-center py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all">
-                          Details
-                        </Link>
-                      </div>
+                      <button
+                        onClick={() => setViewTipsItem(item)}
+                        className="flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-lg transition-all"
+                        title={tipCount > 0 ? `${tipCount} tip${tipCount !== 1 ? "s" : ""}` : "No tips yet"}
+                      >
+                        <FaEye size={9} />
+                        <span className="text-[10px]">{tipCount}</span>
+                      </button>
+                      <Link to={`/lostItems/${item.id}`}
+                        className="flex items-center justify-center py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all">
+                        Details
+                      </Link>
                     </div>
                   </div>
                 </div>
