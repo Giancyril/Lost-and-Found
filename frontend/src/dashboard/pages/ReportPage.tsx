@@ -146,16 +146,11 @@ const ReportPage = () => {
 
             {/* Cover header */}
             <div className="r-card bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5">
-              {/* Top row: logo + title | generated date */}
+              {/* Top row: title | generated date */}
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3 min-w-0">
-                  <img src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
-                    alt="NBSC" className="w-10 h-10 sm:w-12 sm:h-12 object-contain shrink-0"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                  <div className="min-w-0">
-                    <p className="r-text text-white font-bold text-base sm:text-lg leading-tight">NBSC SAS Lost & Found</p>
-                    <p className="r-muted text-gray-400 text-[10px] mt-0.5 uppercase tracking-widest leading-relaxed">Student Affairs Services · Northern Bukidnon State College</p>
-                  </div>
+                <div className="min-w-0">
+                  <p className="r-text text-white font-bold text-base sm:text-lg leading-tight">NBSC SAS Lost & Found</p>
+                  <p className="r-muted text-gray-400 text-[10px] mt-0.5 uppercase tracking-widest">Student Affairs Services · Northern Bukidnon State College</p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="r-muted text-gray-500 text-[10px] uppercase tracking-widest">Generated</p>
