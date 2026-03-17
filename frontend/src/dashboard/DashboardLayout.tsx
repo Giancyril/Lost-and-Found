@@ -4,7 +4,7 @@ import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
-  FaBell, FaCheckCircle, FaChartLine, FaArchive,
+  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -39,6 +39,7 @@ const menuItems = [
   { title: "Users",       icon: FaUsers,               path: "/dashboard/users"                            },
   { title: "Categories",  icon: FaBoxOpen,             path: "/dashboard/categories"                       },
   { title: "Archive Log", icon: FaArchive,             path: "/dashboard/archive"                          },
+  { title: "Report",      icon: FaFileAlt,            path: "/dashboard/report"                           },
   { title: "Settings",    icon: FaCog,                 path: "/dashboard/settings"                         },
 ];
 
@@ -52,6 +53,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/users":       { title: "Users",       subtitle: "Manage registered users"                               },
   "/dashboard/categories":  { title: "Categories",  subtitle: "Organize item categories"                              },
   "/dashboard/archive":     { title: "Archive Log", subtitle: "Manage stale & archived found items"                   },
+  "/dashboard/report":      { title: "Report",      subtitle: "Weekly/monthly summary report"                         },
   "/dashboard/settings":    { title: "Settings",    subtitle: "Configure system preferences"                          },
 };
 
