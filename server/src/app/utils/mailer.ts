@@ -8,14 +8,14 @@ export const sendEmail = async (config: {
   html: string;
 }) => {
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.SMTP_FROM_EMAIL,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
-  });
+  host: "74.125.24.108",  // smtp.gmail.com IPv4 address
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_FROM_EMAIL,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
 
   await transporter.sendMail({
     from: `"${config.fromName}" <${config.fromEmail}>`,
