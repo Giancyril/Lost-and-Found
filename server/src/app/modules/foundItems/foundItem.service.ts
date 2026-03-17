@@ -56,6 +56,7 @@ const getFoundItem = async (data: TFilter) => {
 
   const whereConditions: Prisma.FoundItemWhereInput = {
     isDeleted: false,
+    isArchived: false, // ← exclude archived from public feed
   };
 
   if (foundItemName) {
@@ -141,6 +142,58 @@ const deleteMyFoundItem = async (id: string) => {
   return result;
 };
 
+// ── Archive / Restore ─────────────────────────────────────────────────────────
+
+const archiveFoundItem = async (id: string) => {
+  const result = await prisma.foundItem.update({
+    where: { id },
+    data: { isArchived: true, archivedAt: new Date() },
+  });
+  return result;
+};
+
+const restoreFoundItem = async (id: string) => {
+  const result = await prisma.foundItem.update({
+    where: { id },
+    data: { isArchived: false, archivedAt: null },
+  });
+  return result;
+};
+
+const getArchivedFoundItems = async () => {
+  const result = await prisma.foundItem.findMany({
+    where: { isDeleted: false, isArchived: true },
+    orderBy: { archivedAt: "desc" },
+    include: {
+      user: {
+        select: { id: true, username: true, email: true },
+      },
+      category: true,
+      claim: {
+        select: { id: true, status: true, claimantName: true },
+      },
+    },
+  });
+  return result;
+};
+
+// ── Auto-flag: found items unclaimed for 30+ days ─────────────────────────────
+const getStalFoundItems = async () => {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const result = await prisma.foundItem.findMany({
+    where: {
+      isDeleted: false,
+      isArchived: false,
+      isClaimed: false,
+      createdAt: { lte: thirtyDaysAgo },
+    },
+    include: { category: true },
+  });
+  return result;
+};
+
 export const foundItemService = {
   createFoundItem,
   getFoundItem,
@@ -148,4 +201,8 @@ export const foundItemService = {
   getMyFoundItem,
   editMyFoundItem,
   deleteMyFoundItem,
+  archiveFoundItem,
+  restoreFoundItem,
+  getArchivedFoundItems,
+  getStalFoundItems,
 };

@@ -43,6 +43,12 @@ router.post("/found-items", validateRequest(FoundItemSchema.createFoundItem), au
 router.get("/found-items", foundItemController.getFoundItem);
 router.get("/found-item/:id", foundItemController.getSingleFoundItem);
 
+// ── Archive routes (admin only) ──
+router.get("/found-items/archived",        auth(), foundItemController.getArchivedFoundItems);
+router.get("/found-items/stale",           auth(), foundItemController.getStaleFoundItems);
+router.put("/found-items/:id/archive",     auth(), foundItemController.archiveFoundItem);
+router.put("/found-items/:id/restore",     auth(), foundItemController.restoreFoundItem);
+
 ////////////////////////////////////////////////// lost items //////////////////////////////////////////////
 router.post("/lostItem", lostItemController.createLostItem);
 router.get("/lostItem", lostItemController.getLostItem);

@@ -194,20 +194,37 @@ const api = baseApi.injectEndpoints({
     }),
 
     // lost item — add after getLostItems
-getAllLostItems: builder.query({
-  query: (data: any) => ({ url: "/admin/lostItems", method: "GET", params: data }),
-  providesTags: ["mylostItems"],
-}),
+    getAllLostItems: builder.query({
+      query: (data: any) => ({ url: "/admin/lostItems", method: "GET", params: data }),
+      providesTags: ["mylostItems"],
+    }),
 
 
-// email
-sendLostItemEmail: builder.mutation({
-  query: (data: any) => ({ url: "/email/lost-item", method: "POST", body: data }),
-}),
-sendClaimApprovedEmail: builder.mutation({
-  query: (data: any) => ({ url: "/email/claim-approved", method: "POST", body: data }),
-}),
-    
+    // email
+    sendLostItemEmail: builder.mutation({
+      query: (data: any) => ({ url: "/email/lost-item", method: "POST", body: data }),
+    }),
+    sendClaimApprovedEmail: builder.mutation({
+      query: (data: any) => ({ url: "/email/claim-approved", method: "POST", body: data }),
+    }),
+        
+    // archived and stale items
+    getArchivedFoundItems: builder.query({
+      query: () => ({ url: "/found-items/archived", method: "GET" }),
+      providesTags: ["foundItems"],
+    }),
+    getStaleFoundItems: builder.query({
+      query: () => ({ url: "/found-items/stale", method: "GET" }),
+      providesTags: ["foundItems"],
+    }),
+    archiveFoundItem: builder.mutation({
+      query: (id: string) => ({ url: `/found-items/${id}/archive`, method: "PUT" }),
+      invalidatesTags: ["foundItems"],
+    }),
+    restoreFoundItem: builder.mutation({
+      query: (id: string) => ({ url: `/found-items/${id}/restore`, method: "PUT" }),
+      invalidatesTags: ["foundItems"],
+    }),
 
     // AI search
     aiSearch: builder.mutation({
@@ -263,4 +280,8 @@ export const {
   useAiSearchMutation,
   useSendLostItemEmailMutation,
   useSendClaimApprovedEmailMutation,
+  useGetArchivedFoundItemsQuery,
+  useGetStaleFoundItemsQuery,
+  useArchiveFoundItemMutation,
+  useRestoreFoundItemMutation,
 } = api;
