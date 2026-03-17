@@ -120,10 +120,10 @@ const ReportPage = () => {
         .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <div className="space-y-5 max-w-5xl mx-auto">
+      <div className="space-y-4 max-w-7xl mx-auto">
 
         {/* ── Controls bar (no-print) ──────────────────────────────────────── */}
-        <div className="no-print bg-gray-900 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+        <div className="no-print bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
           <div>
             <h2 className="text-white font-bold text-base flex items-center gap-2">
               <FaChartBar className="text-cyan-400" size={15} /> Summary Report
@@ -166,10 +166,10 @@ const ReportPage = () => {
         </div>
 
         {/* ── PRINTABLE REPORT ─────────────────────────────────────────────── */}
-        <div id="report-printable" className="print-page space-y-5">
+        <div id="report-printable" className="print-page space-y-4">
 
           {/* Report header */}
-          <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-6">
+          <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-4 sm:p-5">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-3 mb-2">
@@ -199,18 +199,18 @@ const ReportPage = () => {
           </div>
 
           {/* ── Primary stats grid ─────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Found Items"     value={fmt(foundCount)}               icon={<FaBoxOpen size={14} className="text-cyan-400" />}            color="bg-gray-900 print-card border-white/5 print-border" sub={`${fmt(stats?.foundItems)} total`}          trend="up"      />
-            <StatCard label="Lost Items"      value={fmt(lostCount)}                icon={<FaExclamationTriangle size={14} className="text-red-400" />}  color="bg-gray-900 print-card border-white/5 print-border" sub={`${fmt(stats?.lostItems)} total`}           trend="neutral" />
-            <StatCard label="Claims"          value={fmt(claimCount)}               icon={<FaClipboardList size={14} className="text-yellow-400" />}     color="bg-gray-900 print-card border-white/5 print-border" sub={`${fmt(stats?.pendingClaims)} pending`}      trend="neutral" />
-            <StatCard label="Registered Users" value={fmt(stats?.totalUsers)}       icon={<FaUsers size={14} className="text-violet-400" />}             color="bg-gray-900 print-card border-white/5 print-border" sub="all time"                                             />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <StatCard label="Found Items"      value={fmt(foundCount)}          icon={<FaBoxOpen size={14} className="text-cyan-400" />}           color="bg-gray-900 print-card border-white/5 print-border" sub={`${fmt(stats?.foundItems)} total`}       trend="up"      />
+            <StatCard label="Lost Items"       value={fmt(lostCount)}           icon={<FaExclamationTriangle size={14} className="text-red-400" />} color="bg-gray-900 print-card border-white/5 print-border" sub={`${fmt(stats?.lostItems)} total`}        trend="neutral" />
+            <StatCard label="Claims"           value={fmt(claimCount)}          icon={<FaClipboardList size={14} className="text-yellow-400" />}    color="bg-gray-900 print-card border-white/5 print-border" sub={`${fmt(stats?.pendingClaims)} pending`}  trend="neutral" />
+            <StatCard label="Registered Users" value={fmt(stats?.totalUsers)}   icon={<FaUsers size={14} className="text-violet-400" />}            color="bg-gray-900 print-card border-white/5 print-border" sub="all time"                                         />
           </div>
 
           {/* ── Claims breakdown + Rates ──────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
             {/* Claims breakdown */}
-            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-5">
+            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-4 sm:p-5">
               <h3 className="text-white print-text-dark text-sm font-bold mb-4 flex items-center gap-2">
                 <FaClipboardList className="text-yellow-400" size={13} /> Claims Breakdown
               </h3>
@@ -242,7 +242,7 @@ const ReportPage = () => {
             </div>
 
             {/* Performance rates */}
-            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-5">
+            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-4 sm:p-5">
               <h3 className="text-white print-text-dark text-sm font-bold mb-4 flex items-center gap-2">
                 <FaChartBar className="text-cyan-400" size={13} /> Performance Rates
               </h3>
@@ -268,7 +268,7 @@ const ReportPage = () => {
           </div>
 
           {/* ── Top Locations ─────────────────────────────────────────────── */}
-          <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-5">
+          <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-4 sm:p-5">
             <h3 className="text-white print-text-dark text-sm font-bold mb-4 flex items-center gap-2">
               <FaMapMarkerAlt className="text-orange-400" size={13} /> Top Locations
             </h3>
@@ -310,11 +310,11 @@ const ReportPage = () => {
 
           {/* ── Category Breakdown ────────────────────────────────────────── */}
           {stats?.categoryBreakdown && stats.categoryBreakdown.length > 0 && (
-            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-5">
+            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-4 sm:p-5">
               <h3 className="text-white print-text-dark text-sm font-bold mb-4 flex items-center gap-2">
                 <FaBoxOpen className="text-violet-400" size={13} /> Category Breakdown
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {stats.categoryBreakdown.map((cat: any) => (
                   <div key={cat.name} className="bg-gray-800/60 print-card border border-white/5 print-border rounded-xl p-3">
                     <p className="text-white print-text-dark text-xs font-semibold truncate">{cat.name}</p>
@@ -330,10 +330,10 @@ const ReportPage = () => {
           )}
 
           {/* ── Unclaimed Items Age + Top Reporters ──────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
             {/* Unclaimed age */}
-            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-5">
+            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-4 sm:p-5">
               <h3 className="text-white print-text-dark text-sm font-bold mb-4 flex items-center gap-2">
                 <FaClock className="text-orange-400" size={13} /> Unclaimed Items Age
               </h3>
@@ -354,7 +354,7 @@ const ReportPage = () => {
             </div>
 
             {/* Top reporters */}
-            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-5">
+            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-4 sm:p-5">
               <h3 className="text-white print-text-dark text-sm font-bold mb-4 flex items-center gap-2">
                 <FaTrophy className="text-yellow-400" size={13} /> Top Reporters
               </h3>
@@ -380,7 +380,7 @@ const ReportPage = () => {
 
           {/* ── Monthly Trend Table ──────────────────────────────────────── */}
           {stats?.monthlyStats && (
-            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-5">
+            <div className="bg-gray-900 print-card border border-white/5 print-border rounded-2xl p-4 sm:p-5">
               <h3 className="text-white print-text-dark text-sm font-bold mb-4 flex items-center gap-2">
                 <FaCalendarAlt className="text-cyan-400" size={13} /> 6-Month Trend
               </h3>
