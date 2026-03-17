@@ -454,36 +454,70 @@ const FoundItemsManagement = () => {
 )}
 
       {/* Archive Confirmation Modal */}
-      {isArchiveModalOpen && archivingItem && (
-        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full sm:max-w-sm mx-0 sm:mx-4 border border-gray-700 p-5">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                <FaArchive className="text-orange-400 text-xl" />
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">Archive Found Item</h2>
-              <p className="text-gray-400 text-sm mb-4">
-                This will hide <span className="text-white font-semibold">"{archivingItem.foundItemName}"</span> from the public listing. You can restore it anytime from the Archive Log.
-              </p>
-              <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl px-4 py-3 mb-5 text-left">
-                <p className="text-orange-300 text-xs leading-relaxed">
-                  Archived items are <strong>not deleted</strong> — they are hidden from the public found items page and can be restored or permanently deleted from <strong>Archive Log</strong>.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={handleArchiveCancel} disabled={isArchiveLoading}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white py-2.5 px-4 rounded-lg transition-colors text-sm">
-                  Cancel
-                </button>
-                <button type="button" onClick={handleArchiveConfirm} disabled={isArchiveLoading}
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium">
-                  {isArchiveLoading ? <><Spinner /> Archiving...</> : <><FaArchive size={13} /> Archive Item</>}
-                </button>
-              </div>
+{isArchiveModalOpen && archivingItem && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
+            <FaArchive size={11} className="text-orange-400" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-white">Archive Found Item</h2>
+            <p className="text-gray-500 text-[11px]">Item will be hidden from public listing</p>
+          </div>
+        </div>
+        <button onClick={handleArchiveCancel} disabled={isArchiveLoading}
+          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors disabled:opacity-50">
+          <FaTimes size={12} />
+        </button>
+      </div>
+
+      <div className="p-5 space-y-4">
+        {/* Item preview card */}
+        <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+            <FaBoxOpen size={10} className="text-cyan-400" />
+            <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Item to Archive</p>
+          </div>
+          <div className="p-3 space-y-2">
+            <p className="text-white text-sm font-semibold">{archivingItem.foundItemName}</p>
+            <p className="text-gray-400 text-xs leading-relaxed">{archivingItem.description}</p>
+            <div className="flex items-center gap-3 pt-1 text-[10px] text-gray-500">
+              <span className="flex items-center gap-1">
+                <FaMapMarkerAlt size={8} className="text-blue-400" /> {archivingItem.location}
+              </span>
+              <span className="flex items-center gap-1">
+                <FaCalendarAlt size={8} className="text-emerald-400" /> {new Date(archivingItem.date).toLocaleDateString()}
+              </span>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Info notice */}
+        <div className="bg-orange-500/5 border border-orange-500/15 rounded-xl px-3.5 py-2.5">
+          <p className="text-orange-300/80 text-xs leading-relaxed">
+            Archived items are <strong>not deleted</strong> — they are hidden from the public found items page and can be restored or permanently deleted from <strong>Archive Log</strong>.
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <button type="button" onClick={handleArchiveCancel} disabled={isArchiveLoading}
+            className="flex items-center gap-1.5 px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+            Cancel
+          </button>
+          <button type="button" onClick={handleArchiveConfirm} disabled={isArchiveLoading}
+            className="flex items-center gap-1.5 px-4 py-2 bg-orange-500/10 hover:bg-orange-500 border border-orange-500/30 text-orange-400 hover:text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            {isArchiveLoading ? <><Spinner /> Archiving...</> : <><FaArchive size={10} /> Archive Item</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
     </div>
   );
