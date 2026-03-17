@@ -17,8 +17,9 @@ interface TimelineEvent {
 }
 
 interface Props {
-  foundItem: any;  // full foundItem object from useGetSingleFoundItemQuery
-  claims?:   any[]; // unused — we read directly from foundItem.claim
+  foundItem:      any;
+  currentUserId?: string; // logged-in user's id — shows their own claim if available
+  claims?:        any[];  // unused — we read directly from foundItem.claim
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -55,27 +56,37 @@ const STAGE_META: Record<string, { icon: React.ReactNode; color: string; ring: s
 };
 
 // ── Main Component ─────────────────────────────────────────────────────────────
-const ItemLifecycleTimeline = ({ foundItem }: Props) => {
+const ItemLifecycleTimeline = ({ foundItem, currentUserId }: Props) => {
   const [expanded, setExpanded] = useState(true);
 
   if (!foundItem) return null;
 
-  // ── Safely extract claim and auditLogs ────────────────────────────────────
-  // Prisma returns claim as an array (one-to-many relation)
+  // ── Extract all claims ────────────────────────────────────────────────────
   const claimArr: any[] = Array.isArray(foundItem.claim) ? foundItem.claim : [];
+  const totalClaims     = claimArr.length;
 
-  // Priority: APPROVED first, then PENDING, then latest REJECTED
+  // ── Smart claim selection ─────────────────────────────────────────────────
+  // Priority:
+  // 1. Logged-in user's own claim (most personal, most relevant)
+  // 2. Any APPROVED claim
+  // 3. Any PENDING claim
+  // 4. Latest REJECTED claim (fallback)
+  const userClaim = currentUserId
+    ? claimArr.find((c: any) => c.userId === currentUserId)
+    : null;
+
   const claim: any | null =
+    userClaim ??
     claimArr.find((c: any) => c.status === "APPROVED") ??
     claimArr.find((c: any) => c.status === "PENDING")  ??
     [...claimArr].sort((a: any, b: any) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )[0] ?? null;
 
-  const auditLogs: any[] = claim?.auditLogs ?? [];
-  const totalClaims = claimArr.length;
+  const isShowingOwnClaim = !!userClaim && claim?.userId === currentUserId;
 
-  const isClaimed = foundItem.isClaimed;
+  const auditLogs: any[] = claim?.auditLogs ?? [];
+  const isClaimed         = foundItem.isClaimed;
 
   // ── Key timestamps ────────────────────────────────────────────────────────
   const reportedAt  = foundItem.createdAt ?? null;
@@ -86,7 +97,6 @@ const ItemLifecycleTimeline = ({ foundItem }: Props) => {
   const approvedAt  = approvedLog?.createdAt ?? null;
   const rejectedAt  = rejectedLog?.createdAt ?? null;
 
-  // "Returned" = item is marked isClaimed AND claim is approved
   const returnedAt  = isClaimed && approvedAt ? approvedAt : null;
 
   // ── Build stages ──────────────────────────────────────────────────────────
@@ -127,7 +137,6 @@ const ItemLifecycleTimeline = ({ foundItem }: Props) => {
     },
   ];
 
-  // Conditionally add rejected OR approved + returned
   const outcomeEvents: TimelineEvent[] = rejectedAt
     ? [
         {
@@ -175,6 +184,33 @@ const ItemLifecycleTimeline = ({ foundItem }: Props) => {
   const stagePercent = Math.round((doneCount / events.length) * 100);
   const currentStage = events.filter(e => e.done).slice(-1)[0];
 
+  // ── Multi-claim notice message ────────────────────────────────────────────
+  const multiClaimMessage = () => {
+    if (isShowingOwnClaim) {
+      const otherCount = totalClaims - 1;
+      return (
+        <>
+          📋 Showing <strong>your claim</strong>.{" "}
+          {otherCount === 1
+            ? "1 other student has also claimed this item."
+            : `${otherCount} other students have also claimed this item.`}{" "}
+          Admin reviews each claim individually.
+        </>
+      );
+    }
+    const whichClaim = claimArr.find((c: any) => c.status === "APPROVED")
+      ? "approved claim"
+      : claimArr.find((c: any) => c.status === "PENDING")
+      ? "active pending claim"
+      : "most recent claim";
+    return (
+      <>
+        <strong>{totalClaims} students</strong> have submitted a claim for this item.
+        Showing the {whichClaim}. Admin reviews each claim individually in the dashboard.
+      </>
+    );
+  };
+
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
       {/* Header */}
@@ -192,6 +228,11 @@ const ItemLifecycleTimeline = ({ foundItem }: Props) => {
               {totalClaims > 1 && (
                 <span className="text-[10px] bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-1.5 py-0.5 rounded-full font-semibold">
                   {totalClaims} claims
+                </span>
+              )}
+              {isShowingOwnClaim && (
+                <span className="text-[10px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 px-1.5 py-0.5 rounded-full font-semibold">
+                  Your claim
                 </span>
               )}
             </p>
@@ -230,15 +271,17 @@ const ItemLifecycleTimeline = ({ foundItem }: Props) => {
 
           {/* Multi-claim notice */}
           {totalClaims > 1 && (
-            <div className="mb-5 flex items-start gap-2.5 bg-yellow-500/5 border border-yellow-500/20 rounded-xl px-4 py-3">
-              <FaClipboardList className="text-yellow-400 shrink-0 mt-0.5" size={12} />
-              <p className="text-yellow-300/80 text-xs leading-relaxed">
-                <strong>{totalClaims} students</strong> have submitted a claim for this item. The timeline shows the{" "}
-                {claimArr.find((c: any) => c.status === "APPROVED")
-                  ? "approved claim"
-                  : claimArr.find((c: any) => c.status === "PENDING")
-                  ? "active pending claim"
-                  : "most recent claim"}. Admin reviews each claim individually in the dashboard.
+            <div className={`mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 border ${
+              isShowingOwnClaim
+                ? "bg-cyan-500/5 border-cyan-500/20"
+                : "bg-yellow-500/5 border-yellow-500/20"
+            }`}>
+              <FaClipboardList
+                className={`shrink-0 mt-0.5 ${isShowingOwnClaim ? "text-cyan-400" : "text-yellow-400"}`}
+                size={12}
+              />
+              <p className={`text-xs leading-relaxed ${isShowingOwnClaim ? "text-cyan-300/80" : "text-yellow-300/80"}`}>
+                {multiClaimMessage()}
               </p>
             </div>
           )}
