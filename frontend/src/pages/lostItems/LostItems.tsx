@@ -148,48 +148,33 @@ const LostItemsPage = () => {
             )}
           </div>
 
-          {/* Sort */}
-          <div className="flex items-center gap-3 mb-5">
-            <FaFilter className="text-gray-500 shrink-0" size={13} />
+          {/* Sort + Category dropdowns */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <FaFilter className="text-gray-500 shrink-0" size={13} />
+              <select
+                value={`${sortBy}-${sortOrder}`}
+                onChange={handleSortChange}
+                className="block w-full sm:w-56 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              >
+                <option value="lostItemName-asc">Name (A-Z)</option>
+                <option value="lostItemName-desc">Name (Z-A)</option>
+                <option value="date-desc">Date (Newest First)</option>
+                <option value="date-asc">Date (Oldest First)</option>
+                <option value="location-asc">Location (A-Z)</option>
+                <option value="location-desc">Location (Z-A)</option>
+              </select>
+            </div>
             <select
-              value={`${sortBy}-${sortOrder}`}
-              onChange={handleSortChange}
+              value={categoryFilter}
+              onChange={(e) => handleCategoryChange(e.target.value)}
               className="block w-full sm:w-56 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             >
-              <option value="lostItemName-asc">Name (A-Z)</option>
-              <option value="lostItemName-desc">Name (Z-A)</option>
-              <option value="date-desc">Date (Newest First)</option>
-              <option value="date-asc">Date (Oldest First)</option>
-              <option value="location-asc">Location (A-Z)</option>
-              <option value="location-desc">Location (Z-A)</option>
+              <option value="ALL">All Categories</option>
+              {categoriesData?.data?.map((cat: any) => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
             </select>
-          </div>
-
-          {/* Category pills */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => handleCategoryChange("ALL")}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 ${
-                categoryFilter === "ALL"
-                  ? "bg-blue-600 border-blue-600 text-white"
-                  : "bg-gray-800 border-gray-700 text-gray-400 hover:border-blue-500/50 hover:text-white"
-              }`}
-            >
-              All
-            </button>
-            {categoriesData?.data?.map((cat: any) => (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.name)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 ${
-                  categoryFilter === cat.name
-                    ? "bg-blue-600 border-blue-600 text-white"
-                    : "bg-gray-800 border-gray-700 text-gray-400 hover:border-blue-500/50 hover:text-white"
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
           </div>
         </div>
       </div>
