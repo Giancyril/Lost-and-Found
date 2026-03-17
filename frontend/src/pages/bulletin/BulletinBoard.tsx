@@ -121,7 +121,6 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
         </div>
 
         <div className="p-5">
-          {/* Item preview */}
           <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
             <img
               src={item?.img || "/bgimg.png"}
@@ -219,8 +218,6 @@ const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () =>
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 rounded-2xl w-full max-w-md border border-gray-800 shadow-2xl max-h-[80vh] flex flex-col">
-
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
           <div>
             <h3 className="text-white font-bold text-base flex items-center gap-2">
@@ -240,7 +237,6 @@ const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () =>
           </button>
         </div>
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto p-5">
           {tips.length === 0 ? (
             <div className="text-center py-10">
@@ -257,7 +253,6 @@ const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () =>
             <div className="space-y-3">
               {tips.map((tip, i) => (
                 <div key={i} className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
-                  {/* Tip header row */}
                   <div className="flex items-center gap-2 px-4 pt-3 pb-2">
                     <FaMapMarkerAlt size={10} className="text-orange-400 shrink-0" />
                     <span className="text-orange-300 text-xs font-medium truncate">{tip.location}</span>
@@ -289,8 +284,6 @@ const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () =>
                       )
                     )}
                   </div>
-
-                  {/* Tip body */}
                   <div className="px-4 pb-3">
                     <p className="text-gray-300 text-sm leading-relaxed">{tip.details}</p>
                     <p className="text-gray-600 text-[10px] mt-2">Anonymous tip</p>
@@ -347,59 +340,54 @@ const BulletinBoard = () => {
       );
 
   const totalPages = lostItems?.meta?.totalPage || 1;
-
   const getTipCount = (id: string) => getTipsForItem(id).length;
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-16">
+    // ── Single flat bg-gray-950, identical to AiSearch ────────────────────────
+    <div className="min-h-screen bg-gray-950 relative overflow-x-hidden pb-16">
 
-      {/* Hero banner */}
-<div className="relative overflow-hidden">
-  {/* Background — matches Banner component */}
-  <div className="absolute inset-0">
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-gray-950 to-gray-900" />
-    <div className="absolute inset-0 opacity-[0.03]" style={{
-      backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.05) 60px, rgba(255,255,255,0.05) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.05) 60px, rgba(255,255,255,0.05) 61px)`,
-    }} />
-    <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-    <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" />
-  </div>
-
-  <div className="relative px-6 sm:px-10 lg:px-16 py-14 sm:py-20 flex flex-col items-center text-center">
-    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold mb-5">
-      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-      <FaExclamationTriangle size={10} /> Community Bulletin Board
-    </div>
-
-    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight mb-4 max-w-2xl">
-      Lost Items{" "}
-      <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
-        Bulletin Board
-      </span>
-    </h1>
-
-    <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full mb-5" />
-
-    <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-7 max-w-xl">
-      Help reunite students with their lost belongings. If you've seen any of these items, submit an anonymous tip — no account needed.
-    </p>
-
-    <div className="flex items-center gap-3 flex-wrap justify-center">
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
-        <FaLightbulb className="text-yellow-400" size={11} />
-        <span>Anonymous tips welcome</span>
+      {/* Fixed ambient glow orbs — same as AiSearch, covers whole page */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -left-20 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -right-20 w-64 h-64 bg-indigo-600/5 rounded-full blur-3xl" />
       </div>
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
-        <FaCheckCircle className="text-emerald-400" size={11} />
-        <span>No login required</span>
-      </div>
-    </div>
-  </div>
-</div>
 
-      {/* Search & filters */}
-      <div className="px-6 sm:px-10 lg:px-16 py-6">
-        <div className="bg-gray-900 rounded-2xl p-4 sm:p-5 border border-gray-800">
+      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
+      <div className="relative z-10 px-6 sm:px-10 lg:px-16 pt-16 pb-12 flex flex-col items-center text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold mb-5">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+          <FaExclamationTriangle size={10} /> Community Bulletin Board
+        </div>
+
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight mb-4 max-w-2xl">
+          Lost Items{" "}
+          <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
+            Bulletin Board
+          </span>
+        </h1>
+
+        <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full mb-5" />
+
+        <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-7 max-w-xl">
+          Help reunite students with their lost belongings. If you've seen any of these items, submit an anonymous tip — no account needed.
+        </p>
+
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
+            <FaLightbulb className="text-yellow-400" size={11} />
+            <span>Anonymous tips welcome</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
+            <FaCheckCircle className="text-emerald-400" size={11} />
+            <span>No login required</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Search & filters ─────────────────────────────────────────────────── */}
+      <div className="relative z-10 px-6 sm:px-10 lg:px-16 pb-6">
+        <div className="bg-gray-900 border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl shadow-black/40">
           <div className="mb-4">
             <div className="relative">
               <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={13} />
@@ -408,7 +396,7 @@ const BulletinBoard = () => {
                 value={fuzzyTerm}
                 onChange={handleFuzzyChange}
                 placeholder="Search lost items by name, location, or description..."
-                className="w-full pl-11 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40 transition-all"
+                className="w-full pl-11 pr-4 py-3 bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none"
               />
               {fuzzyTerm && (
                 <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white px-2 py-1 text-xs transition-colors">
@@ -417,41 +405,41 @@ const BulletinBoard = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <FaFilter className="text-gray-500 shrink-0 hidden sm:block" size={12} />
+          <div className="flex items-center gap-2 border-t border-white/5 pt-3">
+            <FaFilter className="text-gray-600 shrink-0 hidden sm:block" size={12} />
             <select
               value={`${sortBy}-${sortOrder}`}
               onChange={e => {
                 const [f, o] = e.target.value.split("-");
                 setSortBy(f); setSortOrder(o); setCurrentPage(1);
               }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-white/10 rounded-xl bg-white/5 focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
             >
-              <option value="date-desc">Date Lost (Newest)</option>
-              <option value="date-asc">Date Lost (Oldest)</option>
-              <option value="lostItemName-asc">Name (A-Z)</option>
-              <option value="lostItemName-desc">Name (Z-A)</option>
+              <option value="date-desc" className="bg-gray-900">Date Lost (Newest)</option>
+              <option value="date-asc"  className="bg-gray-900">Date Lost (Oldest)</option>
+              <option value="lostItemName-asc"  className="bg-gray-900">Name (A-Z)</option>
+              <option value="lostItemName-desc" className="bg-gray-900">Name (Z-A)</option>
             </select>
             <select
               value={categoryFilter}
               onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-red-500/40 focus:border-red-500/40"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-white/10 rounded-xl bg-white/5 focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
             >
-              <option value="ALL">All Categories</option>
+              <option value="ALL" className="bg-gray-900">All Categories</option>
               {categoriesData?.data?.map((cat: any) => (
-                <option key={cat.id} value={cat.name}>{cat.name}</option>
+                <option key={cat.id} value={cat.name} className="bg-gray-900">{cat.name}</option>
               ))}
             </select>
           </div>
         </div>
       </div>
 
-      {/* Cards grid */}
-      <div className="px-6 sm:px-10 lg:px-16">
+      {/* ── Cards grid ───────────────────────────────────────────────────────── */}
+      <div className="relative z-10 px-6 sm:px-10 lg:px-16">
         {isLoading ? (
           <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-gray-900 rounded-xl overflow-hidden border border-gray-800 animate-pulse">
+              <div key={i} className="bg-gray-900 rounded-xl overflow-hidden border border-white/5 animate-pulse">
                 <div className="h-48 bg-gray-800" />
                 <div className="p-4 space-y-2">
                   <div className="h-4 bg-gray-800 rounded" />
@@ -463,7 +451,7 @@ const BulletinBoard = () => {
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-20 h-20 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto mb-4">
+            <div className="w-20 h-20 rounded-full bg-gray-900 border border-white/5 flex items-center justify-center mx-auto mb-4">
               <FaSearch className="text-gray-600 text-2xl" />
             </div>
             <p className="text-white font-semibold mb-2">No lost items found</p>
@@ -482,7 +470,7 @@ const BulletinBoard = () => {
               const daysAgoLost = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
               return (
                 <div key={item.id}
-                  className="group bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-blue-500/60 hover:shadow-lg hover:shadow-blue-900/20 transition-all duration-300 flex flex-col">
+                  className="group bg-gray-900 rounded-xl overflow-hidden border border-white/5 hover:border-blue-500/40 hover:shadow-xl hover:shadow-black/40 transition-all duration-200 flex flex-col">
 
                   {/* Image */}
                   <div className="relative h-48 overflow-hidden">
@@ -490,11 +478,10 @@ const BulletinBoard = () => {
                       src={item?.img || "/bgimg.png"}
                       alt={item?.lostItemName}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
 
-                    {/* Badges */}
                     <div className="absolute top-3 left-3 flex items-center gap-1.5">
                       <span className="px-2 py-0.5 bg-red-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-red-500/40">
                         Lost
@@ -506,7 +493,6 @@ const BulletinBoard = () => {
                       )}
                     </div>
 
-                    {/* Days lost badge */}
                     <div className="absolute top-3 right-3">
                       <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm border ${
                         daysAgoLost > 30 ? "bg-orange-500/80 text-white border-orange-400/40" :
@@ -517,7 +503,6 @@ const BulletinBoard = () => {
                       </span>
                     </div>
 
-                    {/* Tip count pill */}
                     {tipCount > 0 && (
                       <div className="absolute bottom-3 right-3">
                         <span className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/90 text-gray-900 text-[10px] font-bold rounded-full">
@@ -535,23 +520,17 @@ const BulletinBoard = () => {
                     <p className="text-gray-500 text-xs mb-3 line-clamp-2 leading-relaxed">{item?.description}</p>
 
                     <div className="space-y-1.5 mt-auto mb-3">
-                      <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <div className="w-5 h-5 rounded bg-blue-500/10 flex items-center justify-center shrink-0">
-                          <FaMapMarkerAlt className="text-blue-400" size={9} />
-                        </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <FaMapMarkerAlt size={9} className="text-gray-600 shrink-0" />
                         <span className="line-clamp-1">{item?.location}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <div className="w-5 h-5 rounded bg-blue-500/10 flex items-center justify-center shrink-0">
-                          <FaCalendarAlt className="text-blue-400" size={9} />
-                        </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <FaCalendarAlt size={9} className="text-gray-600 shrink-0" />
                         <span>{item?.date?.split("T")[0]}</span>
                       </div>
                       {item?.category?.name && (
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                          <div className="w-5 h-5 rounded bg-blue-500/10 flex items-center justify-center shrink-0">
-                            {getCategoryIcon(item.category.name)}
-                          </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span className="text-gray-600 shrink-0">{getCategoryIcon(item.category.name)}</span>
                           <span>{item.category.name}</span>
                         </div>
                       )}
@@ -561,20 +540,20 @@ const BulletinBoard = () => {
                       <button
                         onClick={() => setTipItem(item)}
                         disabled={!!item?.isFound}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <FaLightbulb size={10} /> I Saw This
                       </button>
                       <button
                         onClick={() => setViewTipsItem(item)}
-                        className="flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-lg transition-all"
+                        className="flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-xl transition-all"
                         title={tipCount > 0 ? `${tipCount} tip${tipCount !== 1 ? "s" : ""}` : "No tips yet"}
                       >
                         <FaEye size={9} />
                         <span className="text-[10px]">{tipCount}</span>
                       </button>
                       <Link to={`/lostItems/${item.id}`}
-                        className="flex items-center justify-center py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all">
+                        className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
                         Details
                       </Link>
                     </div>
@@ -586,30 +565,32 @@ const BulletinBoard = () => {
         )}
       </div>
 
-      {/* Pagination */}
+      {/* ── Pagination ───────────────────────────────────────────────────────── */}
       {totalPages > 1 && (
-        <div className="flex flex-col items-center mt-12 space-y-3">
+        <div className="relative z-10 flex flex-col items-center mt-12 space-y-3">
           <p className="text-gray-500 text-sm">Page {currentPage} of {totalPages}</p>
-          <nav className="inline-flex items-center gap-1 bg-gray-900 rounded-2xl p-2 border border-gray-800">
+          <nav className="inline-flex items-center gap-1 bg-gray-900 rounded-2xl p-2 border border-white/10">
             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-xl text-gray-300 bg-gray-800 hover:bg-gray-700 disabled:text-gray-600 disabled:cursor-not-allowed transition-all">
+              className="flex items-center px-4 py-2 text-sm font-medium rounded-xl text-gray-300 bg-white/5 hover:bg-white/10 disabled:text-gray-600 disabled:cursor-not-allowed transition-all">
               <FaChevronLeft size={11} className="mr-1.5" /> Prev
             </button>
             {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
               <button key={p} onClick={() => setCurrentPage(p)}
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${currentPage === p ? "bg-blue-600 text-white" : "text-gray-300 bg-gray-800 hover:bg-gray-700"}`}>
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                  currentPage === p ? "bg-blue-600 text-white" : "text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white"
+                }`}>
                 {p}
               </button>
             ))}
             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-xl text-gray-300 bg-gray-800 hover:bg-gray-700 disabled:text-gray-600 disabled:cursor-not-allowed transition-all">
+              className="flex items-center px-4 py-2 text-sm font-medium rounded-xl text-gray-300 bg-white/5 hover:bg-white/10 disabled:text-gray-600 disabled:cursor-not-allowed transition-all">
               Next <FaChevronRight size={11} className="ml-1.5" />
             </button>
           </nav>
         </div>
       )}
 
-      {/* Modals */}
+      {/* ── Modals ───────────────────────────────────────────────────────────── */}
       {tipItem && (
         <TipModal item={tipItem} onClose={() => setTipItem(null)} />
       )}
