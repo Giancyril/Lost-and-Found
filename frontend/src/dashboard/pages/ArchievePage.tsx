@@ -13,7 +13,6 @@ import {
   useDeleteMyFoundItemMutation,
 } from "../../redux/api/api";
 
-
 const daysAgo = (dateStr: string) => {
   const diff = Date.now() - new Date(dateStr).getTime();
   const d = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -96,28 +95,6 @@ const ArchivePage = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-
-      {/* Header */}
-      <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-white text-base font-bold flex items-center gap-2">
-            <FaArchive className="text-orange-400" size={15} /> Archive Log
-          </h2>
-          <p className="text-gray-500 text-xs mt-0.5">
-            Manage stale unclaimed items and archived found items
-          </p>
-        </div>
-        <div className="flex items-center gap-3 text-xs">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-400/10 border border-orange-400/20 rounded-lg">
-            <FaExclamationTriangle size={10} className="text-orange-400" />
-            <span className="text-orange-400 font-semibold">{staleItems.length} stale</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 border border-white/5 rounded-lg">
-            <FaArchive size={10} className="text-gray-400" />
-            <span className="text-gray-400 font-semibold">{archivedItems.length} archived</span>
-          </div>
-        </div>
-      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit">
@@ -267,7 +244,7 @@ const ArchivePage = () => {
                         <button
                           onClick={() => handleDelete(item.id, item.foundItemName)}
                           disabled={deleting === item.id}
-                          className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
                         >
                           <FaTrash size={10} />
                         </button>
@@ -329,6 +306,7 @@ const ArchivePage = () => {
                         {daysOld}d
                       </span>
                     </div>
+                    {/* ── Actions column — widened to col-span-1, buttons now wrap nicely ── */}
                     <div className="col-span-1 flex items-center gap-1.5">
                       {activeTab === "stale" ? (
                         <button
@@ -355,9 +333,10 @@ const ArchivePage = () => {
                             onClick={() => handleDelete(item.id, item.foundItemName)}
                             disabled={deleting === item.id}
                             title="Permanently delete"
-                            className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
                           >
                             <FaTrash size={10} />
+                            {deleting === item.id ? "..." : "Delete"}
                           </button>
                         </>
                       )}

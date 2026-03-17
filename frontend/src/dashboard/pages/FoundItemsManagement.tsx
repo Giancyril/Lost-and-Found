@@ -203,14 +203,14 @@ const FoundItemsManagement = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5">
                       <button onClick={() => handleEdit(item)} title="Edit" className="p-2 text-yellow-500 hover:bg-yellow-500 hover:text-white rounded-lg transition-colors"><FaEdit size={13} /></button>
-                      <button onClick={() => handleDelete(item)} title="Delete" className="p-2 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors"><FaTrash size={13} /></button>
                       {/* Archive — only for unclaimed, non-archived items */}
                       {!item.isClaimed && !item.isArchived && (
                         <button onClick={() => handleArchive(item)} title="Archive this item"
-                          className="p-2 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 rounded-lg transition-colors">
+                          className="p-2 text-orange-400 hover:bg-orange-500/20 rounded-lg transition-colors">
                           <FaArchive size={13} />
                         </button>
                       )}
+                      <button onClick={() => handleDelete(item)} title="Delete" className="p-2 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors"><FaTrash size={13} /></button>
                     </div>
                   </td>
                 </tr>
