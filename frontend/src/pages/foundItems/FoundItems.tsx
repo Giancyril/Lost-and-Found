@@ -2,7 +2,6 @@ import { useGetFoundItemsQuery } from "../../redux/api/api";
 import { Link } from "react-router-dom";
 import {
   FaSearch,
-  FaFilter,
   FaChevronLeft,
   FaChevronRight,
   FaCalendarAlt,
@@ -232,24 +231,25 @@ const FoundItemsPage = () => {
         <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 mb-8 border border-gray-800 overflow-hidden">
           <div className="mb-5">
             <div className="relative">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
+              <div className="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none">
+                <FaSearch className="text-gray-500" size={13} />
+              </div>
               <input
                 type="search"
-                className="block w-full py-3 pl-11 pr-16 text-sm text-white border border-gray-700 rounded-xl bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500 transition-all duration-200"
+                className="block w-full p-3.5 ps-11 text-sm text-white border border-gray-700 rounded-xl bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500 transition-all duration-200"
                 placeholder="Search by name, location, or description..."
                 value={fuzzyTerm}
                 onChange={handleFuzzyInputChange}
               />
-              {fuzzyTerm && (
+              {fuzzyTerm ? (
                 <button
                   type="button"
                   onClick={clearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-500 hover:text-white text-xs transition-colors whitespace-nowrap"
+                  className="text-white absolute end-2.5 bottom-2 bg-gray-600 hover:bg-gray-500 font-medium rounded-lg text-sm px-3 py-1.5 transition-all duration-200"
                 >
-                  <span>✕</span>
-                  <span className="hidden sm:inline">Clear</span>
+                  ✕ Clear
                 </button>
-              )}
+              ) : null}
             </div>
             {fuzzyTerm && (
               <p className="text-xs text-gray-500 mt-2 ps-1">
@@ -261,7 +261,6 @@ const FoundItemsPage = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <FaFilter className="text-gray-500 shrink-0 hidden sm:block" size={13} />
             <select
               value={`${sortBy}-${sortOrder}`}
               onChange={handleSortChange}

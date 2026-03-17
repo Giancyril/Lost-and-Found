@@ -343,10 +343,9 @@ const BulletinBoard = () => {
   const getTipCount = (id: string) => getTipsForItem(id).length;
 
   return (
-    // ── Single flat bg-gray-950, identical to AiSearch ────────────────────────
     <div className="min-h-screen bg-gray-950 relative overflow-x-hidden pb-16">
 
-      {/* Fixed ambient glow orbs — same as AiSearch, covers whole page */}
+      {/* Fixed ambient glow orbs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/5 rounded-full blur-3xl" />
         <div className="absolute top-1/3 -left-20 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl" />
@@ -354,56 +353,70 @@ const BulletinBoard = () => {
       </div>
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="relative z-10 px-6 sm:px-10 lg:px-16 pt-16 pb-12 flex flex-col items-center text-center">
+      <div className="relative z-10 px-6 sm:px-10 lg:px-16 pt-10 sm:pt-16 pb-6 sm:pb-12 flex flex-col items-center text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold mb-5">
           <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-          <FaExclamationTriangle size={10} /> Community Bulletin Board
+          <FaExclamationTriangle size={10} /> NBSC SAS · Lost & Found
         </div>
 
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight mb-4 max-w-2xl">
-          Lost Items{" "}
+        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight mb-3 max-w-2xl">
+          Missing Items{" "}
           <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
-            Bulletin Board
+            Public Registry
           </span>
         </h1>
 
-        <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full mb-5" />
+        <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full mb-4" />
 
-        <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-7 max-w-xl">
+        <p className="text-gray-400 text-sm leading-relaxed mb-5 max-w-xl">
           Browse items reported missing within the NBSC campus. If you have seen any of these belongings, submit an anonymous sighting report to help the SAS office reunite them with their owners.
         </p>
 
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
+            <FaLightbulb className="text-yellow-400" size={11} />
+            <span>Anonymous sightings accepted</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
+            <FaCheckCircle className="text-emerald-400" size={11} />
+            <span>Open to all NBSC students</span>
+          </div>
+        </div>
       </div>
 
       {/* ── Search & filters ─────────────────────────────────────────────────── */}
       <div className="relative z-10 px-6 sm:px-10 lg:px-16 pb-6">
-        <div className="bg-gray-900 border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl shadow-black/40">
-          <div className="mb-4">
-            <div className="relative">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={13} />
-              <input
-                type="search"
-                value={fuzzyTerm}
-                onChange={handleFuzzyChange}
-                placeholder="Search lost items by name, location, or description..."
-                className="w-full pl-11 pr-16 py-3 bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none"
-              />
-              {fuzzyTerm && (
-                <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white px-2 py-1 text-xs transition-colors flex items-center gap-1 whitespace-nowrap">
-              <span>✕</span>
-              <span className="hidden sm:inline">Clear</span>
-            </button>
-              )}
-            </div>
+        <div className="space-y-3">
+          {/* Search input — solid style */}
+          <div className="relative">
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
+            <input
+              type="search"
+              value={fuzzyTerm}
+              onChange={handleFuzzyChange}
+              placeholder="Search lost items by name, location, or description..."
+              className="w-full pl-11 pr-16 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
+            />
+            {fuzzyTerm && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-500 hover:text-white text-xs transition-colors whitespace-nowrap"
+              >
+                <span>✕</span>
+                <span className="hidden sm:inline">Clear</span>
+              </button>
+            )}
           </div>
-          <div className="flex items-center gap-2 border-t border-white/5 pt-3">
+
+          {/* Dropdowns */}
+          <div className="flex items-center gap-2">
             <select
               value={`${sortBy}-${sortOrder}`}
               onChange={e => {
                 const [f, o] = e.target.value.split("-");
                 setSortBy(f); setSortOrder(o); setCurrentPage(1);
               }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-white/10 rounded-xl bg-white/5 focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-xl bg-gray-800 focus:ring-2 focus:ring-blue-500/40 focus:outline-none transition-all"
             >
               <option value="date-desc" className="bg-gray-900">Date Lost (Newest)</option>
               <option value="date-asc"  className="bg-gray-900">Date Lost (Oldest)</option>
@@ -413,7 +426,7 @@ const BulletinBoard = () => {
             <select
               value={categoryFilter}
               onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-white/10 rounded-xl bg-white/5 focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-xl bg-gray-800 focus:ring-2 focus:ring-blue-500/40 focus:outline-none transition-all"
             >
               <option value="ALL" className="bg-gray-900">All Categories</option>
               {categoriesData?.data?.map((cat: any) => (
