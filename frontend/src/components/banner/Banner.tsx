@@ -15,7 +15,7 @@ const Banner = () => {
       subtitle: "Management System",
       description: "The official lost and found platform for SAS students, staff, and faculty. Report missing belongings or help return found items quickly and securely within our school community.",
       primaryButton:   { text: "Report a Lost Item",  href: "/reportlostItem" },
-      secondaryButton: { text: "Report a Found Item", href: "/FoundItems"     },
+      secondaryButton: { text: "Check Recovered items", href: "/FoundItems"     },
     },
     {
       badge: "Found something on campus?",
@@ -23,7 +23,7 @@ const Banner = () => {
       subtitle: "Student?",
       description: "If you've found something on school grounds, please report it here. Your act of honesty helps reunite students and staff with their belongings and strengthens our school community.",
       primaryButton:   { text: "Report a Lost Item",  href: "/reportlostItem" },
-      secondaryButton: { text: "Report a Found Item", href: "/FoundItems"     },
+      secondaryButton: { text: "Check Recovered items", href: "/FoundItems"     },
     },
     {
       badge: "Track your reports anytime",
@@ -31,7 +31,7 @@ const Banner = () => {
       subtitle: "Your Reports",
       description: "Monitor the status of your lost item reports and claim requests in real time. Our lost and found system ensures you're notified the moment your item is located.",
       primaryButton:   { text: "Report a Lost Item",  href: "/reportlostItem" },
-      secondaryButton: { text: "Report a Found Item", href: "/FoundItems"     },
+      secondaryButton: { text: "Check Recovered items", href: "/FoundItems"     },
     },
   ];
 

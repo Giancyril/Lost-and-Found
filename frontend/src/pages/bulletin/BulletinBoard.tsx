@@ -6,11 +6,12 @@ import {
   FaExclamationTriangle, FaCheckCircle,
   FaEye, FaTag, FaWallet, FaMobileAlt, FaLaptop, FaKey,
   FaBriefcase, FaHeadphones, FaGlasses, FaBook, FaIdCard,
-  FaUmbrella, FaTshirt, FaCamera, FaClock, FaTint,
+  FaUmbrella, FaTshirt, FaCamera, FaClock, FaTint, FaTrash,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
+import { useUserVerification } from "../../auth/auth";
 
 // ── Category icon resolver ────────────────────────────────────────────────────
 const getCategoryIcon = (name: string) => {
@@ -46,9 +47,7 @@ const getCategoryIcon = (name: string) => {
   return <FaTag size={9} className="text-blue-400" />;
 };
 
-// ── Tip submission — uses a simple anonymous POST ─────────────────────────────
-// We store tips in localStorage client-side as a lightweight solution.
-// If you want server-side persistence, add a /tips POST endpoint.
+// ── Tip storage helpers ───────────────────────────────────────────────────────
 const saveTipLocally = (lostItemId: string, tip: { location: string; details: string; time: string }) => {
   try {
     const existing = JSON.parse(localStorage.getItem("bulletin_tips") || "{}");
@@ -65,6 +64,18 @@ const getTipsForItem = (lostItemId: string): { location: string; details: string
   } catch { return []; }
 };
 
+const deleteTipLocally = (lostItemId: string, index: number): { location: string; details: string; time: string }[] => {
+  try {
+    const existing = JSON.parse(localStorage.getItem("bulletin_tips") || "{}");
+    if (existing[lostItemId]) {
+      existing[lostItemId].splice(index, 1);
+      localStorage.setItem("bulletin_tips", JSON.stringify(existing));
+      return existing[lostItemId];
+    }
+    return [];
+  } catch { return []; }
+};
+
 const timeAgo = (dateStr: string) => {
   const diff = Date.now() - new Date(dateStr).getTime();
   const m = Math.floor(diff / 60000);
@@ -77,8 +88,8 @@ const timeAgo = (dateStr: string) => {
 
 // ── Tip Modal ──────────────────────────────────────────────────────────────────
 const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
-  const [location, setLocation] = useState("");
-  const [details, setDetails]   = useState("");
+  const [location, setLocation]   = useState("");
+  const [details, setDetails]     = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -171,7 +182,7 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
 
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-3">
                 <p className="text-blue-300/80 text-xs leading-relaxed">
-                   Your tip is submitted <strong>completely anonymously</strong>. No personal information is collected or stored.
+                  Your tip is submitted <strong>completely anonymously</strong>. No personal information is collected or stored.
                 </p>
               </div>
 
@@ -194,20 +205,42 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
 };
 
 // ── Tips Viewer Modal ──────────────────────────────────────────────────────────
-const TipsViewerModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
-  const tips = getTipsForItem(item.id);
+const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () => void; isAdmin?: boolean }) => {
+  const [tips, setTips] = useState(() => getTipsForItem(item.id));
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null);
+
+  const handleDeleteTip = (index: number) => {
+    const updated = deleteTipLocally(item.id, index);
+    setTips([...updated]);
+    setConfirmDeleteIdx(null);
+    toast.success("Tip removed successfully");
+  };
+
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 rounded-2xl w-full max-w-md border border-gray-800 shadow-2xl max-h-[80vh] flex flex-col">
+
+        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
           <div>
             <h3 className="text-white font-bold text-base flex items-center gap-2">
               <FaEye className="text-cyan-400" size={14} /> Community Tips
+              {isAdmin && (
+                <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded-full font-semibold">
+                  Admin
+                </span>
+              )}
             </h3>
-            <p className="text-gray-500 text-xs mt-0.5">{item?.lostItemName} · {tips.length} {tips.length === 1 ? "tip" : "tips"}</p>
+            <p className="text-gray-500 text-xs mt-0.5">
+              {item?.lostItemName} · {tips.length} {tips.length === 1 ? "tip" : "tips"}
+            </p>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white p-1"><FaTimes size={15} /></button>
+          <button onClick={onClose} className="text-gray-500 hover:text-white p-1 transition-colors">
+            <FaTimes size={15} />
+          </button>
         </div>
+
+        {/* Body */}
         <div className="flex-1 overflow-y-auto p-5">
           {tips.length === 0 ? (
             <div className="text-center py-10">
@@ -216,20 +249,52 @@ const TipsViewerModal = ({ item, onClose }: { item: any; onClose: () => void }) 
               </div>
               <p className="text-white text-sm font-semibold">No tips yet</p>
               <p className="text-gray-500 text-xs mt-1.5 leading-relaxed max-w-xs mx-auto">
-                No one has submitted a tip for this item yet. If you've seen it, click <strong className="text-blue-400">"I Saw This"</strong> to help!
+                No one has submitted a tip for this item yet. If you've seen it, click{" "}
+                <strong className="text-blue-400">"I Saw This"</strong> to help!
               </p>
             </div>
           ) : (
             <div className="space-y-3">
               {tips.map((tip, i) => (
-                <div key={i} className="bg-gray-800/60 border border-white/5 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
+                <div key={i} className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+                  {/* Tip header row */}
+                  <div className="flex items-center gap-2 px-4 pt-3 pb-2">
                     <FaMapMarkerAlt size={10} className="text-orange-400 shrink-0" />
-                    <span className="text-orange-300 text-xs font-medium">{tip.location}</span>
-                    <span className="text-gray-600 text-[10px] ml-auto">{timeAgo(tip.time)}</span>
+                    <span className="text-orange-300 text-xs font-medium truncate">{tip.location}</span>
+                    <span className="text-gray-600 text-[10px] ml-auto shrink-0">{timeAgo(tip.time)}</span>
+                    {isAdmin && (
+                      confirmDeleteIdx === i ? (
+                        <div className="flex items-center gap-1 ml-1 shrink-0">
+                          <button
+                            onClick={() => handleDeleteTip(i)}
+                            className="flex items-center gap-1 px-2 py-0.5 bg-red-500 hover:bg-red-400 text-white text-[10px] font-semibold rounded-lg transition-all"
+                          >
+                            <FaTrash size={8} /> Confirm
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteIdx(null)}
+                            className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-[10px] font-medium rounded-lg transition-all"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteIdx(i)}
+                          title="Delete tip"
+                          className="ml-1 w-6 h-6 flex items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500 border border-red-500/20 text-red-400 hover:text-white transition-all shrink-0"
+                        >
+                          <FaTrash size={9} />
+                        </button>
+                      )
+                    )}
                   </div>
-                  <p className="text-gray-300 text-sm leading-relaxed">{tip.details}</p>
-                  <p className="text-gray-600 text-[10px] mt-2">Anonymous tip</p>
+
+                  {/* Tip body */}
+                  <div className="px-4 pb-3">
+                    <p className="text-gray-300 text-sm leading-relaxed">{tip.details}</p>
+                    <p className="text-gray-600 text-[10px] mt-2">Anonymous tip</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -242,16 +307,19 @@ const TipsViewerModal = ({ item, onClose }: { item: any; onClose: () => void }) 
 
 // ── Main Bulletin Board Page ───────────────────────────────────────────────────
 const BulletinBoard = () => {
-  const [searchTerm, setSearchTerm]       = useState("");
-  const [fuzzyTerm, setFuzzyTerm]         = useState("");
+  const [searchTerm, setSearchTerm]         = useState("");
+  const [fuzzyTerm, setFuzzyTerm]           = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
-  const [currentPage, setCurrentPage]     = useState(1);
-  const [sortBy, setSortBy]               = useState("date");
-  const [sortOrder, setSortOrder]         = useState("desc");
-  const [tipItem, setTipItem]             = useState<any>(null);
-  const [viewTipsItem, setViewTipsItem]   = useState<any>(null);
-  const [limit] = useState(12);
+  const [currentPage, setCurrentPage]       = useState(1);
+  const [sortBy, setSortBy]                 = useState("date");
+  const [sortOrder, setSortOrder]           = useState("desc");
+  const [tipItem, setTipItem]               = useState<any>(null);
+  const [viewTipsItem, setViewTipsItem]     = useState<any>(null);
+  const [limit]                             = useState(12);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const users: any = useUserVerification();
+  const isAdmin    = users?.role === "ADMIN";
 
   const { data: lostItems, isLoading } = useGetLostItemsQuery({
     searchTerm,
@@ -280,7 +348,6 @@ const BulletinBoard = () => {
 
   const totalPages = lostItems?.meta?.totalPage || 1;
 
-  // Count tips per item from localStorage
   const getTipCount = (id: string) => getTipsForItem(id).length;
 
   return (
@@ -396,7 +463,7 @@ const BulletinBoard = () => {
         ) : (
           <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredItems.map((item: any) => {
-              const tipCount = getTipCount(item.id);
+              const tipCount    = getTipCount(item.id);
               const daysAgoLost = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
               return (
                 <div key={item.id}
@@ -528,8 +595,16 @@ const BulletinBoard = () => {
       )}
 
       {/* Modals */}
-      {tipItem      && <TipModal         item={tipItem}      onClose={() => setTipItem(null)}      />}
-      {viewTipsItem && <TipsViewerModal  item={viewTipsItem} onClose={() => setViewTipsItem(null)} />}
+      {tipItem && (
+        <TipModal item={tipItem} onClose={() => setTipItem(null)} />
+      )}
+      {viewTipsItem && (
+        <TipsViewerModal
+          item={viewTipsItem}
+          onClose={() => setViewTipsItem(null)}
+          isAdmin={isAdmin}
+        />
+      )}
 
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
     </div>

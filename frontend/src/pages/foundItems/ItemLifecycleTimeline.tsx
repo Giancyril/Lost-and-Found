@@ -57,7 +57,7 @@ const STAGE_META: Record<string, { icon: React.ReactNode; color: string; ring: s
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 const ItemLifecycleTimeline = ({ foundItem, currentUserId }: Props) => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   if (!foundItem) return null;
 
