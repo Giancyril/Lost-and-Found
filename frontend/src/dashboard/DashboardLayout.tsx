@@ -4,7 +4,7 @@ import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
-  FaBell, FaCheckCircle, FaChartLine,
+  FaBell, FaCheckCircle, FaChartLine, FaArchive,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -30,15 +30,16 @@ interface Notification {
 }
 
 const menuItems = [
-  { title: "Overview",    icon: FaTachometerAlt,       path: "/dashboard",              exact: true },
-  { title: "Lost Items",  icon: FaExclamationTriangle, path: "/dashboard/lost-items"                },
-  { title: "Found Items", icon: FaSearch,              path: "/dashboard/found-items"               },
-  { title: "Claims",      icon: FaClipboardList,       path: "/dashboard/claims"                    },
-  { title: "Analytics",   icon: FaChartLine,           path: "/dashboard/analytics"                 },
-  { title: "Heatmap",     icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                   },
-  { title: "Users",       icon: FaUsers,               path: "/dashboard/users"                     },
-  { title: "Categories",  icon: FaBoxOpen,             path: "/dashboard/categories"                },
-  { title: "Settings",    icon: FaCog,                 path: "/dashboard/settings"                  },
+  { title: "Overview",    icon: FaTachometerAlt,       path: "/dashboard",                     exact: true },
+  { title: "Lost Items",  icon: FaExclamationTriangle, path: "/dashboard/lost-items"                       },
+  { title: "Found Items", icon: FaSearch,              path: "/dashboard/found-items"                      },
+  { title: "Claims",      icon: FaClipboardList,       path: "/dashboard/claims"                           },
+  { title: "Analytics",   icon: FaChartLine,           path: "/dashboard/analytics"                        },
+  { title: "Heatmap",     icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                          },
+  { title: "Users",       icon: FaUsers,               path: "/dashboard/users"                            },
+  { title: "Categories",  icon: FaBoxOpen,             path: "/dashboard/categories"                       },
+  { title: "Archive Log", icon: FaArchive,             path: "/dashboard/archive"                          },
+  { title: "Settings",    icon: FaCog,                 path: "/dashboard/settings"                         },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
@@ -50,6 +51,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/heatmap":     { title: "Heatmap",     subtitle: "See where items are most commonly lost or found"       },
   "/dashboard/users":       { title: "Users",       subtitle: "Manage registered users"                               },
   "/dashboard/categories":  { title: "Categories",  subtitle: "Organize item categories"                              },
+  "/dashboard/archive":     { title: "Archive Log", subtitle: "Manage stale & archived found items"                   },
   "/dashboard/settings":    { title: "Settings",    subtitle: "Configure system preferences"                          },
 };
 
@@ -355,7 +357,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     user?.email?.charAt(0)?.toUpperCase() || "A";
 
   return (
-    // ── Root: block on mobile, flex on lg ──────────────────────────────────
     <div className="min-h-screen bg-gray-950 lg:flex overflow-x-hidden">
 
       {/* Mobile overlay */}
@@ -363,7 +364,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar — always fixed, off-screen on mobile until opened */}
+      {/* Sidebar */}
       <aside className={`fixed top-0 left-0 h-full z-50 flex flex-col bg-gray-900 border-r border-white/5
         transition-all duration-300 ease-in-out
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -438,7 +439,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </aside>
 
-      {/* ── Main content — full width on mobile, offset on desktop ── */}
+      {/* Main content */}
       <div className={`w-full flex flex-col min-h-screen bg-gray-950 overflow-x-hidden transition-all duration-300 ${sidebarCollapsed ? "lg:ml-[72px] lg:w-[calc(100%-72px)]" : "lg:ml-60 lg:w-[calc(100%-240px)]"}`}>
 
         {/* Topbar */}

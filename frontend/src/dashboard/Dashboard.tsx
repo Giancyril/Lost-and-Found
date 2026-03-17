@@ -301,7 +301,7 @@ const Dashboard = () => {
               </h3>
               <p className="text-gray-500 text-xs mt-0.5">Stale & archived found items</p>
             </div>
-            <Link to="/dashboard/found-items/archive"
+            <Link to="/dashboard/archive"
               className="text-[11px] text-orange-400 hover:text-orange-300 font-medium transition-colors flex items-center gap-1">
               Manage <FaArrowRight size={9} />
             </Link>
@@ -367,7 +367,7 @@ const Dashboard = () => {
 
           {staleItems.length > 5 && (
             <div className="px-4 sm:px-5 py-3 border-t border-white/5">
-              <Link to="/dashboard/found-items/archive"
+              <Link to="/dashboard/archive"
                 className="flex items-center justify-center gap-2 w-full py-2 rounded-xl bg-orange-500/5 hover:bg-orange-500/10 border border-orange-500/15 text-orange-400 text-xs font-medium transition-all">
                 View all {staleItems.length} stale items <FaArrowRight size={10} />
               </Link>
@@ -521,7 +521,7 @@ const Dashboard = () => {
             { label: "Add Category",   icon: <FaBoxOpen size={16} />,       href: "/dashboard/categories",          color: "text-cyan-400   bg-cyan-400/5   hover:bg-cyan-400/10   border-cyan-400/10"   },
             { label: "Manage Users",   icon: <FaUsers size={16} />,          href: "/dashboard/users",               color: "text-violet-400 bg-violet-400/5 hover:bg-violet-400/10 border-violet-400/10" },
             { label: "Review Claims",  icon: <FaClipboardList size={16} />,  href: "/dashboard/claims",              color: "text-yellow-400 bg-yellow-400/5 hover:bg-yellow-400/10 border-yellow-400/10" },
-            { label: "Archive Log",    icon: <FaArchive size={16} />,        href: "/dashboard/found-items/archive", color: "text-orange-400 bg-orange-400/5 hover:bg-orange-400/10 border-orange-400/10" },
+            { label: "Archive Log",    icon: <FaArchive size={16} />,        href: "/dashboard/archive", color: "text-orange-400 bg-orange-400/5 hover:bg-orange-400/10 border-orange-400/10" },
           ].map((action) => (
             <Link key={action.href} to={action.href}
               className={`flex flex-col items-center gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-xl border transition-all duration-150 ${action.color}`}>
