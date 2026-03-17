@@ -2,7 +2,6 @@ import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
 import { Link } from "react-router-dom";
 import {
   FaSearch,
-  FaFilter,
   FaChevronLeft,
   FaChevronRight,
   FaCalendarAlt,
@@ -149,26 +148,23 @@ const LostItemsPage = () => {
           </div>
 
           {/* Sort + Category dropdowns */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <FaFilter className="text-gray-500 shrink-0" size={13} />
-              <select
-                value={`${sortBy}-${sortOrder}`}
-                onChange={handleSortChange}
-                className="block w-full sm:w-56 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              >
-                <option value="lostItemName-asc">Name (A-Z)</option>
-                <option value="lostItemName-desc">Name (Z-A)</option>
-                <option value="date-desc">Date (Newest First)</option>
-                <option value="date-asc">Date (Oldest First)</option>
-                <option value="location-asc">Location (A-Z)</option>
-                <option value="location-desc">Location (Z-A)</option>
-              </select>
-            </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={`${sortBy}-${sortOrder}`}
+              onChange={handleSortChange}
+              className="flex-1 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+            >
+              <option value="lostItemName-asc">Name (A-Z)</option>
+              <option value="lostItemName-desc">Name (Z-A)</option>
+              <option value="date-desc">Date (Newest First)</option>
+              <option value="date-asc">Date (Oldest First)</option>
+              <option value="location-asc">Location (A-Z)</option>
+              <option value="location-desc">Location (Z-A)</option>
+            </select>
             <select
               value={categoryFilter}
               onChange={(e) => handleCategoryChange(e.target.value)}
-              className="block w-full sm:w-56 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className="flex-1 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             >
               <option value="ALL">All Categories</option>
               {categoriesData?.data?.map((cat: any) => (

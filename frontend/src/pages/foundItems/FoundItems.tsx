@@ -2,7 +2,6 @@ import { useGetFoundItemsQuery } from "../../redux/api/api";
 import { Link } from "react-router-dom";
 import {
   FaSearch,
-  FaFilter,
   FaChevronLeft,
   FaChevronRight,
   FaCalendarAlt,
@@ -40,6 +39,7 @@ const FoundItemsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("foundItemName");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [limit] = useState(12);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -166,6 +166,18 @@ const FoundItemsPage = () => {
     setCurrentPage(1);
   };
 
+  const handleCategoryChange = (cat: string) => {
+    setCategoryFilter(cat);
+    setCurrentPage(1);
+  };
+
+  // ── Client-side category filter ──
+  const filteredItems = categoryFilter === "ALL"
+    ? foundItems?.data ?? []
+    : (foundItems?.data ?? []).filter((item: any) =>
+        item?.category?.name?.toLowerCase() === categoryFilter.toLowerCase()
+      );
+
   const totalPages = foundItems?.meta?.totalPage || 1;
 
   if (isLoading)
@@ -248,53 +260,62 @@ const FoundItemsPage = () => {
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <FaFilter className="text-gray-500" size={13} />
-              <select
-                value={`${sortBy}-${sortOrder}`}
-                onChange={handleSortChange}
-                className="block w-full sm:w-56 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              >
-                <option value="foundItemName-asc">Name (A-Z)</option>
-                <option value="foundItemName-desc">Name (Z-A)</option>
-                <option value="date-desc">Date (Newest First)</option>
-                <option value="date-asc">Date (Oldest First)</option>
-                <option value="location-asc">Location (A-Z)</option>
-                <option value="location-desc">Location (Z-A)</option>
-              </select>
-            </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={`${sortBy}-${sortOrder}`}
+              onChange={handleSortChange}
+              className="flex-1 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+            >
+              <option value="foundItemName-asc">Name (A-Z)</option>
+              <option value="foundItemName-desc">Name (Z-A)</option>
+              <option value="date-desc">Date (Newest First)</option>
+              <option value="date-asc">Date (Oldest First)</option>
+              <option value="location-asc">Location (A-Z)</option>
+              <option value="location-desc">Location (Z-A)</option>
+            </select>
+            <select
+              value={categoryFilter}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="flex-1 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+            >
+              <option value="ALL">All Categories</option>
+              {Category?.data?.map((cat: any) => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
 
       {/* Cards */}
       <div className="px-6 sm:px-10 lg:px-16">
-        {foundItems?.data?.length === 0 ? (
+        {filteredItems.length === 0 ? (
           <div className="text-center py-16">
             <div className="bg-gray-900 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center border border-gray-800">
               <FaSearch className="text-gray-600 text-2xl" />
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">
-              {fuzzyTerm ? "No items found" : "No found items yet"}
+              {fuzzyTerm || categoryFilter !== "ALL" ? "No items found" : "No found items yet"}
             </h3>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
               {fuzzyTerm
                 ? `No items found for "${fuzzyTerm}". Try different keywords.`
+                : categoryFilter !== "ALL"
+                ? `No found items in "${categoryFilter}".`
                 : "No found items have been reported yet. Check back later!"}
             </p>
-            {fuzzyTerm && (
+            {(fuzzyTerm || categoryFilter !== "ALL") && (
               <button
-                onClick={clearSearch}
+                onClick={() => { clearSearch(); handleCategoryChange("ALL"); }}
                 className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-all duration-200"
               >
-                Clear search
+                Clear filters
               </button>
             )}
           </div>
         ) : (
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {foundItems?.data?.map((foundItem: any) => (
+            {filteredItems.map((foundItem: any) => (
               <div
                 key={foundItem.id}
                 className="group relative bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 border border-gray-800 hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-900/20 flex flex-col"
@@ -373,7 +394,7 @@ const FoundItemsPage = () => {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalPages > 1 && categoryFilter === "ALL" && (
         <div className="flex flex-col items-center mt-12 pb-8 space-y-4">
           <div className="text-sm text-gray-500">
             Page {currentPage} of {totalPages} ({foundItems?.meta?.total || 0} total items)
