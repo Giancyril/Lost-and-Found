@@ -2,6 +2,7 @@ import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
 import { Link } from "react-router-dom";
 import {
   FaSearch,
+  FaFilter,
   FaChevronLeft,
   FaChevronRight,
   FaCalendarAlt,
@@ -114,7 +115,7 @@ const LostItemsPage = () => {
       <div className="py-8 px-6 sm:px-10 lg:px-16 mx-auto">
 
         {/* Search and Filter */}
-        <div className="bg-gray-900 rounded-2xl p-6 mb-6 border border-gray-800">
+        <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 mb-6 border border-gray-800 overflow-hidden">
           {/* Search */}
           <div className="mb-4">
             <div className="relative">
@@ -149,10 +150,11 @@ const LostItemsPage = () => {
 
           {/* Sort + Category dropdowns */}
           <div className="flex items-center gap-2">
+            <FaFilter className="text-gray-500 shrink-0 hidden sm:block" size={13} />
             <select
               value={`${sortBy}-${sortOrder}`}
               onChange={handleSortChange}
-              className="flex-1 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             >
               <option value="lostItemName-asc">Name (A-Z)</option>
               <option value="lostItemName-desc">Name (Z-A)</option>
@@ -164,7 +166,7 @@ const LostItemsPage = () => {
             <select
               value={categoryFilter}
               onChange={(e) => handleCategoryChange(e.target.value)}
-              className="flex-1 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-lg bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             >
               <option value="ALL">All Categories</option>
               {categoriesData?.data?.map((cat: any) => (
