@@ -485,10 +485,10 @@ const LostItemsPage = () => {
           <div className="space-y-2">
             {/* List header */}
             <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-white/5">
-              <div className="col-span-5">Item</div>
+              <div className="col-span-4">Item</div>
               <div className="col-span-2">Location</div>
               <div className="col-span-2">Category</div>
-              <div className="col-span-1">Date Lost</div>
+              <div className="col-span-2">Date Lost</div>
               <div className="col-span-2 text-right">Actions</div>
             </div>
             {filteredItems.map((item: any) => {
@@ -537,7 +537,7 @@ const LostItemsPage = () => {
 
                   {/* Desktop list row */}
                   <div className="hidden sm:grid grid-cols-12 gap-4 items-center px-4 py-3">
-                    <div className="col-span-5 flex items-center gap-3 min-w-0">
+                    <div className="col-span-4 flex items-center gap-3 min-w-0">
                       <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0">
                         {hideImg ? (
                           <div className="w-full h-full flex items-center justify-center"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg></div>
@@ -566,7 +566,7 @@ const LostItemsPage = () => {
                         </span>
                       ) : <span className="text-gray-600 text-xs">—</span>}
                     </div>
-                    <div className="col-span-1">
+                    <div className="col-span-2">
                       <p className="text-gray-400 text-xs flex items-center gap-1.5">
                         <span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></span>
                         {lostDateStr} · <span className={`font-semibold ${daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-500"}`}>{daysAgo === 0 ? "Today" : `${daysAgo}d ago`}</span>
