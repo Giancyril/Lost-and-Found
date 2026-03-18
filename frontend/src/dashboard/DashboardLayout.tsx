@@ -4,7 +4,7 @@ import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
-  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
+  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -39,7 +39,7 @@ const menuItems = [
   { title: "Users",       icon: FaUsers,               path: "/dashboard/users"                            },
   { title: "Categories",  icon: FaBoxOpen,             path: "/dashboard/categories"                       },
   { title: "Archive Log", icon: FaArchive,             path: "/dashboard/archive"                          },
-  { title: "Report",      icon: FaFileAlt,             path: "/dashboard/report"                           },
+  { title: "Report",      icon: FaFileAlt,            path: "/dashboard/report"                           },
   { title: "Settings",    icon: FaCog,                 path: "/dashboard/settings"                         },
 ];
 
@@ -315,6 +315,14 @@ const NotificationBell = () => {
                 ))
             )}
           </div>
+
+          {notifications.length > 0 && (
+            <div className="px-4 py-2.5 border-t border-white/5">
+              <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
+                View all activity →
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -392,15 +400,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
 
         {/* Nav */}
-        <nav
-          className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 scrollbar-hide"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
-        >
-          {!sidebarCollapsed && (
-            <p className="text-[10px] uppercase tracking-widest text-gray-600 font-medium px-2 mb-3">Menu</p>
-          )}
-
-          {/* Menu items */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 scrollbar-hide" style={{scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
+          {!sidebarCollapsed && <p className="text-[10px] uppercase tracking-widest text-gray-600 font-medium px-2 mb-3">Menu</p>}
           {menuItems.map(item => {
             const active = isActive(item.path, item.exact);
             const Icon   = item.icon;
@@ -421,39 +422,23 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </Link>
             );
           })}
-
-          {/* Divider */}
-          <div className={`my-2 border-t border-white/5 ${sidebarCollapsed ? "mx-2" : "mx-1"}`} />
-
-          {/* Back to Home */}
-          <Link to="/" onClick={() => setSidebarOpen(false)}
-            title={sidebarCollapsed ? "Back to Home" : undefined}
-            className={`relative flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors group
-              ${sidebarCollapsed ? "justify-center" : ""}`}>
-            <FaHome size={14} className="text-gray-500 group-hover:text-gray-300" />
-            {!sidebarCollapsed && <span>Back to Home</span>}
-            {sidebarCollapsed && (
-              <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-xl">
-                Back to Home
-              </span>
-            )}
-          </Link>
-
-          {/* Sign Out */}
-          <button onClick={handleSignOut}
-            title={sidebarCollapsed ? "Sign Out" : undefined}
-            className={`w-full relative flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors group
-              ${sidebarCollapsed ? "justify-center" : ""}`}>
-            <FaSignOutAlt size={14} className="text-gray-500 group-hover:text-red-400" />
-            {!sidebarCollapsed && <span>Sign Out</span>}
-            {sidebarCollapsed && (
-              <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-xl">
-                Sign Out
-              </span>
-            )}
-          </button>
         </nav>
 
+        {/* Bottom */}
+        <div className="shrink-0 border-t border-white/5 px-3 py-4 space-y-0.5">
+          <Link to="/" title={sidebarCollapsed ? "Back to Home" : undefined}
+            className={`flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}>
+            <FaHome size={14} className="text-gray-500 group-hover:text-gray-300" />
+            {!sidebarCollapsed && <span>Back to Home</span>}
+            {sidebarCollapsed && <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible whitespace-nowrap z-50 shadow-xl">Back to Home</span>}
+          </Link>
+          <button onClick={handleSignOut} title={sidebarCollapsed ? "Sign Out" : undefined}
+            className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}>
+            <FaSignOutAlt size={14} className="text-gray-500 group-hover:text-red-400" />
+            {!sidebarCollapsed && <span>Sign Out</span>}
+            {sidebarCollapsed && <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible whitespace-nowrap z-50 shadow-xl">Sign Out</span>}
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}

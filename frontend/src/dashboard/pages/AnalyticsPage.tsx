@@ -230,35 +230,35 @@ const AnalyticsPage = () => {
             >
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
               <XAxis
-  dataKey={peakView === "days" ? "day" : "label"}
-  tick={peakView === "hours"
-    ? ({ x, y, payload }) => {
-        const lines = (payload.value as string).split("\n");
-        return (
-          <g transform={`translate(${x},${y})`}>
-            {lines.map((line: string, i: number) => (
-              <text
-                key={i}
-                x={0}
-                y={0}
-                dy={10 + i * 11}
-                textAnchor="middle"
-                fill="#6b7280"
-                fontSize={9}
-              >
-                {line}
-              </text>
-            ))}
-          </g>
-        );
-      }
-    : { fill: "#6b7280", fontSize: 10 }
-  }
-  axisLine={false}
-  tickLine={false}
-  interval={0}
-  height={peakView === "hours" ? 40 : 20}
-/>
+                  dataKey={peakView === "days" ? "day" : "label"}
+                  tick={peakView === "hours"
+                    ? ({ x, y, payload }) => {
+                        const lines = (payload.value as string).split("\n");
+                        return (
+                          <g transform={`translate(${x},${y})`}>
+                            {lines.map((line: string, i: number) => (
+                              <text
+                                key={i}
+                                x={0}
+                                y={0}
+                                dy={10 + i * 11}
+                                textAnchor="middle"
+                                fill="#6b7280"
+                                fontSize={9}
+                              >
+                                {line}
+                              </text>
+                            ))}
+                          </g>
+                        );
+                      }
+                    : { fill: "#6b7280", fontSize: 10 }
+                  }
+                  axisLine={false}
+                  tickLine={false}
+                  interval={0}
+                  height={peakView === "hours" ? 40 : 20}
+                />
               <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
               <Bar dataKey="found" name="Found" fill="#22d3ee" radius={[3,3,0,0]} maxBarSize={24} stackId="a" />

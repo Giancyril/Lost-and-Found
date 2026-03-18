@@ -5,7 +5,7 @@ import {
   FaLightbulb, FaTimes, FaEye, FaTag, FaTrash,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
-  FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle, FaFilter,
+  FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle, 
   FaTh, FaList,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
@@ -323,7 +323,6 @@ const LostItemsPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <FaFilter size={11} className="text-gray-600 shrink-0 hidden sm:block" />
             <select value={`${sortBy}-${sortOrder}`}
               onChange={e => { const [f, o] = e.target.value.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }}
               className="flex-1 min-w-0 py-2.5 px-3 text-sm text-white border border-white/5 rounded-xl bg-gray-900 focus:ring-2 focus:ring-blue-500/30 focus:outline-none">
@@ -464,7 +463,7 @@ const LostItemsPage = () => {
                     <div className="grid grid-cols-3 gap-1.5">
                       <button onClick={() => setTipItem(item)} disabled={!!item?.isFound}
                         className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                        <FaLightbulb size={9} /> I Saw This
+                         I Saw This
                       </button>
                       <button onClick={() => setViewTipsItem(item)}
                         className="flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[11px] font-medium rounded-lg transition-all">
