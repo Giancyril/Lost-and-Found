@@ -28,7 +28,7 @@ const shouldHideImage = (categoryName: string, isAdmin: boolean) => {
 };
 
 const HiddenImagePlaceholder = () => (
-  <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex flex-col items-center justify-center gap-4">
+  <div className="relative w-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex flex-col items-center justify-center gap-4">
     <div className="w-20 h-20 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
       <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
@@ -50,21 +50,21 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const next = () => setActiveIdx((i) => (i === images.length - 1 ? 0 : i + 1));
 
   if (images.length === 0) return (
-    <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+    <div className="relative w-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
       <img src="/bgimg.png" alt={alt} className="absolute inset-0 w-full h-full object-cover" />
     </div>
   );
 
   if (images.length === 1) return (
-    <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+    <div className="relative w-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
       <img src={images[0]} alt={alt} className="absolute inset-0 w-full h-full object-cover"
         onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-3 h-full">
-      <div className="relative w-full flex-1 min-h-[380px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+    <div className="flex flex-col gap-3">
+      <div className="relative w-full min-h-[380px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
         <img src={images[activeIdx]} alt={`${alt} — photo ${activeIdx + 1}`}
           className="absolute inset-0 w-full h-full object-cover"
           onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
@@ -216,8 +216,8 @@ const SingleFoundItem = () => {
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
 
-            {/* Left: Image */}
-            <div className="flex flex-col h-full">
+            {/* Left: Image — sticky so it doesn't stretch when right column expands */}
+            <div className="lg:sticky lg:top-6">
               {hideImage
                 ? <HiddenImagePlaceholder />
                 : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
@@ -383,8 +383,8 @@ const SingleFoundItem = () => {
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
                     {isAdmin
-                      ? " Your claim will be sent to the SAS office for review."
-                      : " Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
+                      ? "ℹ️ Your claim will be sent to the SAS office for review."
+                      : "ℹ️ Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
                   </p>
                 </div>
 
