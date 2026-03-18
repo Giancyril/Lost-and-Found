@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import {
-  Clock,
   Mesh,
   OrthographicCamera,
   PlaneGeometry,
@@ -95,8 +94,8 @@ float wave(vec2 uv, float offset, vec2 screenUv, vec2 mouseUv, bool shouldBend) 
   float time = iTime * animationSpeed;
   float x_offset   = offset;
   float x_movement = time * 0.1;
-  float amp        = sin(offset + time * 0.2) * 0.3;
-  float y          = sin(uv.x + x_offset + x_movement) * amp;
+  float amp         = sin(offset + time * 0.2) * 0.3;
+  float y           = sin(uv.x + x_offset + x_movement) * amp;
   if (shouldBend) {
     vec2 d = screenUv - mouseUv;
     float influence = exp(-dot(d, d) * bendRadius);
@@ -299,7 +298,8 @@ export default function FloatingLines({
     const mesh = new Mesh(geometry, material);
     scene.add(mesh);
 
-    const clock = new Clock();
+    // --- REPLACEMENT FOR THREE.CLOCK ---
+    const startTime = performance.now();
 
     const setSize = () => {
       if (!active) return;
@@ -337,7 +337,11 @@ export default function FloatingLines({
     let raf = 0;
     const renderLoop = () => {
       if (!active) return;
-      uniforms.iTime.value = clock.getElapsedTime();
+      
+      // Calculate elapsed time manually in seconds
+      const currentTime = performance.now();
+      uniforms.iTime.value = (currentTime - startTime) / 1000;
+
       if (interactive) {
         currentMouseRef.current.lerp(targetMouseRef.current, mouseDamping);
         uniforms.iMouse.value.copy(currentMouseRef.current);
