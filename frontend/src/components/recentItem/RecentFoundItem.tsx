@@ -1,24 +1,29 @@
+import { useState } from "react";
 import { Spinner } from "flowbite-react";
 import { Link } from "react-router-dom";
 import { useGetFoundItemsQuery } from "../../redux/api/api";
-import { FaCalendarAlt, FaMapMarkerAlt, FaArrowRight } from "react-icons/fa";
+import { FaCalendarAlt, FaMapMarkerAlt, FaArrowRight, FaClock, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
 
-// ── Hide image for sensitive categories (admin always sees) ──
 const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
 
 const shouldHideImage = (categoryName: string | undefined, isAdmin: boolean) => {
   if (isAdmin) return false;
-  return HIDDEN_IMAGE_CATEGORIES.some((c) =>
-    categoryName?.toLowerCase().includes(c)
-  );
+  return HIDDEN_IMAGE_CATEGORIES.some((c) => categoryName?.toLowerCase().includes(c));
+};
+
+const timeAgo = (d: string) => {
+  const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m}m ago`;
+  return `${Math.floor(m / 60)}h ago`;
 };
 
 const RecentFoundItem = () => {
   const users: any = useUserVerification();
   const isAdmin = users?.role === "ADMIN";
 
-  const { data: foundItems, isLoading } = useGetFoundItemsQuery({ limit: 10, sortBy: "date", sortOrder: "desc" });
+  const { data: foundItems, isLoading } = useGetFoundItemsQuery({ limit: 50, sortBy: "date", sortOrder: "desc" });
 
   if (isLoading) {
     return (
@@ -28,7 +33,22 @@ const RecentFoundItem = () => {
     );
   }
 
-  const items = foundItems?.data?.slice(0, 10) ?? [];
+  // Only show items posted within the last 3 hours
+  const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+  const items = (foundItems?.data ?? [])
+    .filter((item: any) => {
+      const created = new Date(item.createdAt ?? item.date).getTime();
+      return Date.now() - created <= THREE_HOURS_MS;
+    })
+    .slice(0, 10);
+
+  // Don't render the section at all if no recent items
+  if (items.length === 0) return null;
+
+  const ITEMS_PER_PAGE = 5;
+  const [page, setPage] = useState(0);
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const visibleItems = items.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
 
   return (
     <div className="bg-gray-900 py-12">
@@ -40,19 +60,22 @@ const RecentFoundItem = () => {
 
       <div className="px-4 mx-auto max-w-screen-2xl lg:px-6">
         <div className="mx-auto text-center">
-          <h2 className="mb-4 text-3xl lg:text-4xl tracking-tight font-extrabold text-white">
+          <h2 className="mb-2 text-3xl lg:text-4xl tracking-tight font-extrabold text-white">
             Recent Found Items
           </h2>
-          <p className="font-light text-gray-400 sm:text-xl mb-8">
-            These are the recent found item reports
-          </p>
+          <div className="flex items-center justify-center gap-1.5 mb-8">
+            <FaClock size={11} className="text-blue-400" />
+            <p className="font-light text-gray-400 text-sm">
+              Showing items reported within the last 3 hours
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Cards */}
       <div className="w-full px-4 sm:px-8 lg:px-16 mb-8">
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 [&>*]:w-full">
-          {items.map((foundItem: any) => (
+          {visibleItems.map((foundItem: any) => (
             <div
               key={`${foundItem?.id}127`}
               className="group relative bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 border border-gray-800 hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-900/20 w-full flex flex-col"
@@ -66,9 +89,7 @@ const RecentFoundItem = () => {
                       </svg>
                     </div>
                     <p className="text-gray-500 text-xs font-medium">Image Hidden</p>
-                    <p className="text-gray-600 text-[10px] text-center px-4 leading-relaxed">
-                      Submit a claim to verify ownership
-                    </p>
+                    <p className="text-gray-600 text-[10px] text-center px-4 leading-relaxed">Submit a claim to verify ownership</p>
                   </div>
                 ) : (
                   <img
@@ -85,6 +106,8 @@ const RecentFoundItem = () => {
                   />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                {/* Status badge */}
                 {foundItem?.isClaimed ? (
                   <div className="absolute top-3 right-3 bg-green-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-green-500/40">
                     ✓ Claimed
@@ -94,6 +117,12 @@ const RecentFoundItem = () => {
                     Available
                   </div>
                 )}
+
+                {/* Time ago badge */}
+                <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full border border-white/10">
+                  <FaClock size={8} className="text-blue-400" />
+                  <span className="text-white text-[10px] font-medium">{timeAgo(foundItem.createdAt ?? foundItem.date)}</span>
+                </div>
               </div>
 
               <div className="p-5 text-white flex flex-col flex-1">
@@ -128,8 +157,27 @@ const RecentFoundItem = () => {
         </div>
       </div>
 
-      {/* View All */}
-      <div className="flex justify-center mt-4 mb-14">
+      {/* Pagination + View All */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4 mb-14">
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              <FaChevronLeft size={12} />
+            </button>
+            <span className="text-gray-500 text-xs px-2">
+              {page + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={page === totalPages - 1}
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              <FaChevronRight size={12} />
+            </button>
+          </div>
+        )}
         <Link
           to="/foundItems"
           className="inline-flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 hover:border-blue-600 text-blue-300 hover:text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 text-sm"
