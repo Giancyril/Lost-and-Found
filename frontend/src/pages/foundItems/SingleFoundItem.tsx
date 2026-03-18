@@ -365,11 +365,7 @@ const SingleFoundItem = () => {
         {/* Header */}
         <div className="border-b border-gray-800 bg-gray-950">
           <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
-            <Link to="/foundItems"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 mb-4">
-              <FaArrowLeft size={11} /> Back
-            </Link>
-            {/* ← ONLY CHANGE from doc 16: flex-col on mobile, flex-row on sm+ */}
+            {/* Mobile: title full width on its own line, badges wrap below; Desktop: side by side */}
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{foundItemData?.foundItemName || "Found Item"}</h1>
@@ -516,8 +512,8 @@ const SingleFoundItem = () => {
                 )}
                 <div>
                   <p className="text-white text-sm font-semibold">{foundItemData?.foundItemName}</p>
-                  <p className="text-gray-400 text-xs mt-0.5">📍 {foundItemData?.location}</p>
-                  <p className="text-gray-400 text-xs">📅 Found: {foundItemData?.date?.split("T")[0]}</p>
+                  <p className="text-gray-400 text-xs mt-0.5"> {foundItemData?.location}</p>
+                  <p className="text-gray-400 text-xs"> Found: {foundItemData?.date?.split("T")[0]}</p>
                 </div>
               </div>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -563,7 +559,7 @@ const SingleFoundItem = () => {
                 </div>
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
-                    {isAdmin ? "ℹ️ Your claim will be sent to the SAS office for review." : "ℹ️ Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
+                    {isAdmin ? " Your claim will be sent to the SAS office for review." : " Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
                   </p>
                 </div>
                 <div className="flex gap-3 pt-1">

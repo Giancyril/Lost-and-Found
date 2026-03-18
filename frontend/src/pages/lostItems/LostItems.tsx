@@ -522,13 +522,13 @@ const LostItemsPage = () => {
                     </div>
                     <div className="flex flex-col gap-1 shrink-0">
                       <button onClick={() => setTipItem(item)} disabled={!!item?.isFound}
-                        className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                        <FaLightbulb size={8} /> I Saw This
+                        className="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                        I Saw This
                       </button>
                       <div className="flex gap-1">
                         <button onClick={() => setViewTipsItem(item)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[10px] rounded-lg transition-all">
-                          <FaEye size={8} /> {tipCount}
+                          className="px-2.5 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[10px] rounded-lg transition-all">
+                          👁 {tipCount}
                         </button>
                         <Link to={`/lostItems/${item.id}`} className="flex items-center px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] rounded-lg transition-all">Details</Link>
                       </div>

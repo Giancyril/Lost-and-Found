@@ -169,10 +169,6 @@ const SingleLostItem = () => {
         {/* Header */}
         <div className="border-b border-gray-800 bg-gray-950">
           <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
-            <Link to="/lostItems"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 mb-4">
-              <FaArrowLeft size={11} /> Back
-            </Link>
             {/* Mobile: title full width, badge below; Desktop: side by side */}
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div className="min-w-0">
@@ -285,8 +281,8 @@ const SingleLostItem = () => {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold truncate">{lostItemName}</p>
-                  <p className="text-gray-400 text-xs mt-0.5 truncate">📍 {location}</p>
-                  <p className="text-gray-400 text-xs">📅 Lost: {date?.split("T")[0]}</p>
+                  <p className="text-gray-400 text-xs mt-0.5 truncate"> {location}</p>
+                  <p className="text-gray-400 text-xs"> Lost: {date?.split("T")[0]}</p>
                 </div>
                 <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">Missing</span>
               </div>
