@@ -38,17 +38,14 @@ const Login = () => {
 
   return (
     <>
-      {/* Full-screen wrapper */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-950">
+      {/* Changed items-center to items-start and added pt-32 to move the card up */}
+      <section className="relative min-h-screen flex items-start justify-center overflow-hidden bg-gray-950 pt-32">
 
         {/* ── Floating wave background ── */}
-        {/* Base dark layer matching navbar bg-gray-950 */}
         <div className="absolute inset-0 bg-gray-950" />
 
-        {/* Subtle radial glow — same blue as navbar accent */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_60%,rgba(37,99,235,0.12),transparent)]" />
 
-        {/* FloatingLines — colors pulled from navbar blue/cyan palette */}
         <div className="absolute inset-0" style={{ mixBlendMode: 'screen' }}>
           <FloatingLines
             enabledWaves={["top", "middle", "bottom"]}
@@ -60,12 +57,11 @@ const Login = () => {
             bendRadius={4}
             bendStrength={-0.4}
             parallaxStrength={0.15}
-            // Matches navbar: gray-950 → blue-600 → cyan-400 → blue-300
             linesGradient={[
-              "#1e3a5f",   // deep navy — matches bg-gray-950 edge
-              "#2563eb",   // blue-600 — primary navbar accent
-              "#22d3ee",   // cyan-400 — gradient highlight
-              "#93c5fd",   // blue-300 — light tail
+              "#1e3a5f",
+              "#2563eb",
+              "#22d3ee",
+              "#93c5fd",
             ]}
             mixBlendMode="screen"
           />
@@ -73,18 +69,13 @@ const Login = () => {
 
         {/* ── Login card ── */}
         <div className="relative z-10 w-full max-w-md px-6">
-
-          {/* Card */}
           <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/50 p-8">
-
             <div className="mb-7 text-center">
               <h2 className="text-lg font-bold text-white">Staff Sign In</h2>
               <p className="text-gray-500 text-sm mt-1">Enter your credentials to access the admin panel</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-
-              {/* Email */}
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
                   Email or Username
@@ -100,7 +91,6 @@ const Login = () => {
                 )}
               </div>
 
-              {/* Password */}
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
                   Password
@@ -125,7 +115,6 @@ const Login = () => {
                 )}
               </div>
 
-              {/* Submit */}
               {isLoading ? (
                 <div className="flex justify-center py-3">
                   <div className="flex items-center gap-3">
@@ -141,10 +130,8 @@ const Login = () => {
                   Sign In
                 </button>
               )}
-
             </form>
           </div>
-
         </div>
       </section>
 
