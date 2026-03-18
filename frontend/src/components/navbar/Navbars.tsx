@@ -136,7 +136,6 @@ export function Navbars() {
               { label: "Report Lost Item", href: "/reportlostItem" },
               { label: "Lost Items",       href: "/lostItems"      },
               { label: "Found Items",      href: "/foundItems"     },
-              { label: "Bulletin",         href: "/bulletin"       },
               { label: "Smart Search",     href: "/ai-search"      },
             ].map(({ label, href }) => (
               <NavbarLink key={href} href={href}

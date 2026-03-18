@@ -6,7 +6,7 @@ import {
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
-  FaClipboardList,
+  FaClipboardList, FaUser, FaEnvelope,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -19,6 +19,7 @@ import {
   useCategoryQuery,
   useCreateFoundItemMutation,
   useUploadItemImagesMutation,
+  useCreateClaimMutation,
 } from "../../redux/api/api";
 import { useUserVerification } from "../../auth/auth";
 
@@ -48,6 +49,166 @@ const shouldHideImage = (cat: string | undefined, isAdmin: boolean) => {
   return HIDDEN_IMAGE_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
 };
 
+// ── Quick Claim Modal ─────────────────────────────────────────────────────────
+const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
+  const [createClaim, { isLoading: claimLoading }] = useCreateClaimMutation();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const [submitted, setSubmitted] = useState(false);
+
+  const onSubmit = async (data: any) => {
+    try {
+      const res: any = await createClaim({
+        foundItemId:            item.id,
+        claimantName:           data.claimantName,
+        schoolEmail:            data.schoolEmail,
+        lostDate:               new Date(data.lostDate).toISOString(),
+        distinguishingFeatures: data.distinguishingFeatures,
+      });
+      if (res?.data?.success) {
+        setSubmitted(true);
+        toast.success("Claim submitted! The SAS office will review and contact you.");
+        setTimeout(onClose, 2000);
+      } else {
+        toast.error("Failed to submit claim. Please try again.");
+      }
+    } catch { toast.error("An unexpected error occurred."); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+              <FaClipboardList size={11} className="text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Submit a Claim</h3>
+              <p className="text-gray-500 text-[11px]">Prove ownership to retrieve this item</p>
+            </div>
+          </div>
+          <button onClick={onClose}
+            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+            <FaTimes size={12} />
+          </button>
+        </div>
+
+        <div className="p-5">
+          {/* Item preview */}
+          <div className="flex items-center gap-3 bg-gray-800/60 border border-white/5 rounded-xl p-3 mb-5">
+            <img src={(Array.isArray(item?.images) && item.images.length > 0
+                ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? "")
+                : "") || item?.img || "/bgimg.png"}
+              alt={item?.foundItemName}
+              onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+              className="w-12 h-12 rounded-lg object-cover shrink-0 border border-white/5" />
+            <div className="min-w-0">
+              <p className="text-white text-sm font-semibold truncate">{item?.foundItemName}</p>
+              <p className="text-gray-500 text-[10px] mt-0.5 flex items-center gap-1">
+                <FaMapMarkerAlt size={8} /> {item?.location}
+              </p>
+            </div>
+            <span className="shrink-0 px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full border border-blue-500/20">Available</span>
+          </div>
+
+          {submitted ? (
+            <div className="text-center py-8">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+                <FaCheckCircle className="text-emerald-400" size={24} />
+              </div>
+              <p className="text-white font-semibold">Claim Submitted!</p>
+              <p className="text-gray-500 text-xs mt-1.5 leading-relaxed max-w-xs mx-auto">
+                The SAS office will review your proof and contact you via your school email.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
+              {/* Full Name */}
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                  Full Name <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
+                  <input type="text" placeholder="Enter your full name"
+                    {...register("claimantName", { required: "Full name is required" })}
+                    className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                </div>
+                {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
+              </div>
+
+              {/* School Email */}
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                  School Email <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
+                  <input type="email" placeholder="yourname@nbsc.edu.ph"
+                    {...register("schoolEmail", {
+                      required: "School email is required",
+                      pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+                    })}
+                    className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                </div>
+                {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
+              </div>
+
+              {/* Date Lost */}
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                  Date Item Was Lost <span className="text-red-400">*</span>
+                </label>
+                <input type="date"
+                  {...register("lostDate", { required: "Please provide the date" })}
+                  className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                {errors.lostDate && <p className="text-red-400 text-xs mt-1">{errors.lostDate.message as string}</p>}
+              </div>
+
+              {/* Proof */}
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                  Proof of Ownership <span className="text-red-400">*</span>
+                </label>
+                <textarea rows={3} placeholder="Describe identifying details — stickers, initials, scratches, serial number, contents, etc."
+                  {...register("distinguishingFeatures", {
+                    required: "Please describe identifying details",
+                    minLength: { value: 10, message: "At least 10 characters required" },
+                  })}
+                  className="w-full p-3 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                {errors.distinguishingFeatures && <p className="text-red-400 text-xs mt-1">{errors.distinguishingFeatures.message as string}</p>}
+              </div>
+
+              {/* Info note */}
+              <div className="bg-blue-500/5 border border-blue-500/15 rounded-xl px-3.5 py-2.5">
+                <p className="text-blue-300/70 text-[11px] leading-relaxed">
+                  ℹ️ Once submitted, the SAS office will verify your proof and contact you via school email before releasing the item.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => { reset(); onClose(); }}
+                  className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" disabled={claimLoading}
+                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
+                  {claimLoading
+                    ? <><svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Submitting...</>
+                    : <><FaClipboardList size={10} /> Submit Claim</>}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const FoundItemsPage = () => {
   const users: any = useUserVerification();
@@ -60,6 +221,7 @@ const FoundItemsPage = () => {
   const [sortBy, setSortBy]                 = useState("foundItemName");
   const [sortOrder, setSortOrder]           = useState("asc");
   const [viewMode, setViewMode]             = useState<"grid" | "list">("grid");
+  const [claimItem, setClaimItem]           = useState<any>(null);
   const [limit]                             = useState(12);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -351,10 +513,11 @@ const FoundItemsPage = () => {
                     {/* Action buttons */}
                     <div className="grid grid-cols-2 gap-1.5">
                       {!isClaimed ? (
-                        <Link to={`/foundItems/${item.id}`}
+                        <button
+                          onClick={() => setClaimItem(item)}
                           className="flex items-center justify-center gap-1.5 py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">
                           <FaClipboardList size={9} /> Claim Item
-                        </Link>
+                        </button>
                       ) : (
                         <div className="flex items-center justify-center gap-1.5 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold rounded-lg">
                           <FaCheckCircle size={9} /> Claimed
@@ -415,10 +578,10 @@ const FoundItemsPage = () => {
                     </div>
                     <div className="flex flex-col gap-1 shrink-0">
                       {!isClaimed ? (
-                        <Link to={`/foundItems/${item.id}`}
+                        <button onClick={() => setClaimItem(item)}
                           className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[10px] font-semibold rounded-lg transition-all">
                           <FaClipboardList size={8} /> Claim
-                        </Link>
+                        </button>
                       ) : (
                         <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold rounded-lg">
                           <FaCheckCircle size={8} /> Claimed
@@ -484,10 +647,10 @@ const FoundItemsPage = () => {
                     </div>
                     <div className="col-span-2 flex items-center justify-end gap-1.5">
                       {!isClaimed && (
-                        <Link to={`/foundItems/${item.id}`}
+                        <button onClick={() => setClaimItem(item)}
                           className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[10px] font-semibold rounded-lg transition-all whitespace-nowrap">
                           <FaClipboardList size={8} /> Claim Item
-                        </Link>
+                        </button>
                       )}
                       <Link to={`/foundItems/${item.id}`}
                         className="flex items-center px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] rounded-lg transition-all">
@@ -661,6 +824,11 @@ const FoundItemsPage = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ── Quick Claim Modal ── */}
+      {claimItem && (
+        <QuickClaimModal item={claimItem} onClose={() => setClaimItem(null)} />
       )}
 
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
