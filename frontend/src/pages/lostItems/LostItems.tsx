@@ -571,7 +571,7 @@ const LostItemsPage = () => {
                     <div className="col-span-2 flex items-center justify-end gap-1.5">
                       <button onClick={() => setTipItem(item)} disabled={!!item?.isFound}
                         className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap">
-                        <FaLightbulb size={8} /> I Saw This
+                        I Saw This
                       </button>
                       <button onClick={() => setViewTipsItem(item)}
                         className="flex items-center gap-1 px-2 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[10px] rounded-lg transition-all">

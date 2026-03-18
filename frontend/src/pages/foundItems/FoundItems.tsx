@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight,
-  FaTimes, FaFilter, FaTh, FaList, FaTag, FaPlus,
+  FaTimes, FaTh, FaList, FaTag, FaPlus,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
@@ -348,7 +348,6 @@ const FoundItemsPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <FaFilter size={11} className="text-gray-600 shrink-0 hidden sm:block" />
             <select value={`${sortBy}-${sortOrder}`}
               onChange={e => { const [f, o] = e.target.value.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }}
               className="flex-1 min-w-0 py-2.5 px-3 text-sm text-white border border-white/5 rounded-xl bg-gray-900 focus:ring-2 focus:ring-blue-500/30 focus:outline-none">
@@ -516,7 +515,7 @@ const FoundItemsPage = () => {
                         <button
                           onClick={() => setClaimItem(item)}
                           className="flex items-center justify-center gap-1.5 py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">
-                          <FaClipboardList size={9} /> Claim Item
+                          Claim Item
                         </button>
                       ) : (
                         <div className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg">

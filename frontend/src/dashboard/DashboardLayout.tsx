@@ -4,12 +4,11 @@ import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
-  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt
+  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, FaChevronDown,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Dropdown, DropdownHeader, DropdownItem, DropdownDivider } from "flowbite-react";
 import Modals from "../components/modal/Modal";
 import {
   useGetAllClaimsQuery,
@@ -30,17 +29,17 @@ interface Notification {
 }
 
 const menuItems = [
-  { title: "Overview",    icon: FaTachometerAlt,       path: "/dashboard",                     exact: true },
-  { title: "Lost Items",  icon: FaExclamationTriangle, path: "/dashboard/lost-items"                       },
-  { title: "Found Items", icon: FaSearch,              path: "/dashboard/found-items"                      },
-  { title: "Claims",      icon: FaClipboardList,       path: "/dashboard/claims"                           },
-  { title: "Analytics",   icon: FaChartLine,           path: "/dashboard/analytics"                        },
-  { title: "Heatmap",     icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                          },
-  { title: "Users",       icon: FaUsers,               path: "/dashboard/users"                            },
-  { title: "Categories",  icon: FaBoxOpen,             path: "/dashboard/categories"                       },
-  { title: "Archive Log", icon: FaArchive,             path: "/dashboard/archive"                          },
-  { title: "Report",      icon: FaFileAlt,            path: "/dashboard/report"                           },
-  { title: "Settings",    icon: FaCog,                 path: "/dashboard/settings"                         },
+  { title: "Overview",    icon: FaTachometerAlt,       path: "/dashboard",            exact: true },
+  { title: "Lost Items",  icon: FaExclamationTriangle, path: "/dashboard/lost-items"              },
+  { title: "Found Items", icon: FaSearch,              path: "/dashboard/found-items"             },
+  { title: "Claims",      icon: FaClipboardList,       path: "/dashboard/claims"                  },
+  { title: "Analytics",   icon: FaChartLine,           path: "/dashboard/analytics"               },
+  { title: "Heatmap",     icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                 },
+  { title: "Users",       icon: FaUsers,               path: "/dashboard/users"                   },
+  { title: "Categories",  icon: FaBoxOpen,             path: "/dashboard/categories"              },
+  { title: "Archive Log", icon: FaArchive,             path: "/dashboard/archive"                 },
+  { title: "Report",      icon: FaFileAlt,             path: "/dashboard/report"                  },
+  { title: "Settings",    icon: FaCog,                 path: "/dashboard/settings"                },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
@@ -82,170 +81,76 @@ const getSavedLatestTs = (type: string): string | null => {
     const saved = localStorage.getItem("admin_notifications");
     if (!saved) return null;
     const notifs: Notification[] = JSON.parse(saved);
-    const filtered = notifs.filter(n =>
-      type === "claims" ? n.type === "claim" : n.type === type
-    );
+    const filtered = notifs.filter(n => type === "claims" ? n.type === "claim" : n.type === type);
     if (filtered.length === 0) return null;
-    return filtered.sort(
-      (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
-    )[0].time;
+    return filtered.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())[0].time;
   } catch { return null; }
 };
 
+// ── Notification Bell ─────────────────────────────────────────────────────────
 const NotificationBell = () => {
   const [open, setOpen] = useState(false);
-
   const [notifications, setNotifications] = useState<Notification[]>(() => {
-    try {
-      const saved = localStorage.getItem("admin_notifications");
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
+    try { const saved = localStorage.getItem("admin_notifications"); return saved ? JSON.parse(saved) : []; } catch { return []; }
   });
-
-  const bellRef = useRef<HTMLDivElement>(null);
+  const bellRef       = useRef<HTMLDivElement>(null);
   const latestClaimTs = useRef<string | null>(getSavedLatestTs("claims"));
   const latestFoundTs = useRef<string | null>(getSavedLatestTs("found"));
   const latestLostTs  = useRef<string | null>(getSavedLatestTs("lost"));
-
-  const initialized = useRef({
-    claims: getSavedLatestTs("claims") !== null,
-    found:  getSavedLatestTs("found")  !== null,
-    lost:   getSavedLatestTs("lost")   !== null,
-  });
-
-  const pollOpts = { pollingInterval: 8000, refetchOnFocus: true, refetchOnReconnect: true };
+  const initialized   = useRef({ claims: getSavedLatestTs("claims") !== null, found: getSavedLatestTs("found") !== null, lost: getSavedLatestTs("lost") !== null });
+  const pollOpts      = { pollingInterval: 8000, refetchOnFocus: true, refetchOnReconnect: true };
 
   const { data: claimsData } = useGetAllClaimsQuery(undefined, pollOpts);
   const { data: foundData }  = useGetFoundItemsQuery({},        pollOpts);
   const { data: lostData }   = useGetLostItemsQuery({},         pollOpts);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setOpen(false);
-    };
+    const handler = (e: MouseEvent) => { if (bellRef.current && !bellRef.current.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const toArray = (data: any): any[] => {
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data.data)) return data.data;
-    return [];
-  };
+  const toArray = (data: any): any[] => { if (!data) return []; if (Array.isArray(data)) return data; if (Array.isArray(data.data)) return data.data; return []; };
 
   const mergeNotifications = (incoming: Notification[], prev: Notification[]): Notification[] => {
     const map = new Map<string, Notification>();
     [...prev, ...incoming].forEach(n => { if (!map.has(n.id)) map.set(n.id, n); });
-    return Array.from(map.values())
-      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-      .slice(0, 50);
+    return Array.from(map.values()).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 50);
   };
 
   const RECENT_MS = 24 * 60 * 60 * 1000;
 
   const processItems = <T extends { id: string; createdAt: string }>(
-    rawData: any,
-    latestTs: React.MutableRefObject<string | null>,
-    initKey: keyof typeof initialized.current,
-    makeNotif: (item: T) => Notification
+    rawData: any, latestTs: React.MutableRefObject<string | null>,
+    initKey: keyof typeof initialized.current, makeNotif: (item: T) => Notification
   ) => {
-    const items = [...toArray(rawData)].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    ) as T[];
+    const items = [...toArray(rawData)].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) as T[];
     if (items.length === 0) return;
-
     if (!initialized.current[initKey]) {
       latestTs.current = items[0].createdAt;
       initialized.current[initKey] = true;
-      const recentCutoff = Date.now() - RECENT_MS;
-      const recentItems  = items.filter(i => new Date(i.createdAt).getTime() > recentCutoff);
-      if (recentItems.length > 0) {
-        setNotifications(prev => mergeNotifications(recentItems.map(makeNotif), prev));
-      }
+      const recentItems = items.filter(i => new Date(i.createdAt).getTime() > Date.now() - RECENT_MS);
+      if (recentItems.length > 0) setNotifications(prev => mergeNotifications(recentItems.map(makeNotif), prev));
       return;
     }
-
-    const cutoff   = latestTs.current;
-    const newItems = cutoff
-      ? items.filter(i => new Date(i.createdAt).getTime() > new Date(cutoff).getTime())
-      : [];
-
-    if (newItems.length > 0) {
-      latestTs.current = newItems[0].createdAt;
-      setNotifications(prev => mergeNotifications(newItems.map(makeNotif), prev));
-    }
+    const newItems = latestTs.current ? items.filter(i => new Date(i.createdAt).getTime() > new Date(latestTs.current!).getTime()) : [];
+    if (newItems.length > 0) { latestTs.current = newItems[0].createdAt; setNotifications(prev => mergeNotifications(newItems.map(makeNotif), prev)); }
   };
 
-  useEffect(() => {
-    processItems(claimsData, latestClaimTs, "claims", (claim: any): Notification => ({
-      id:       `claim-${claim.id}`,
-      type:     "claim",
-      title:    "New Claim Submitted",
-      subtitle: `${claim.claimantName || "Someone"} claimed "${claim.foundItem?.foundItemName || "an item"}"`,
-      time:     claim.createdAt,
-      read:     false,
-      link:     "/dashboard/claims",
-    }));
-  }, [claimsData]);
-
-  useEffect(() => {
-    processItems(foundData, latestFoundTs, "found", (item: any): Notification => ({
-      id:       `found-${item.id}`,
-      type:     "found",
-      title:    "New Found Item Reported",
-      subtitle: `"${item.foundItemName || "Unknown item"}" found at ${item.location || "unknown location"}`,
-      time:     item.createdAt,
-      read:     false,
-      link:     "/dashboard/found-items",
-    }));
-  }, [foundData]);
-
-  useEffect(() => {
-    processItems(lostData, latestLostTs, "lost", (item: any): Notification => ({
-      id:       `lost-${item.id}`,
-      type:     "lost",
-      title:    "New Lost Item Reported",
-      subtitle: `"${item.lostItemName || "Unknown item"}" lost at ${item.location || "unknown location"}`,
-      time:     item.createdAt,
-      read:     false,
-      link:     "/dashboard/lost-items",
-    }));
-  }, [lostData]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("admin_notifications", JSON.stringify(notifications));
-    } catch {}
-  }, [notifications]);
+  useEffect(() => { processItems(claimsData, latestClaimTs, "claims", (claim: any): Notification => ({ id: `claim-${claim.id}`, type: "claim", title: "New Claim Submitted", subtitle: `${claim.claimantName || "Someone"} claimed "${claim.foundItem?.foundItemName || "an item"}"`, time: claim.createdAt, read: false, link: "/dashboard/claims" })); }, [claimsData]);
+  useEffect(() => { processItems(foundData, latestFoundTs, "found", (item: any): Notification => ({ id: `found-${item.id}`, type: "found", title: "New Found Item Reported", subtitle: `"${item.foundItemName || "Unknown item"}" found at ${item.location || "unknown location"}`, time: item.createdAt, read: false, link: "/dashboard/found-items" })); }, [foundData]);
+  useEffect(() => { processItems(lostData, latestLostTs, "lost", (item: any): Notification => ({ id: `lost-${item.id}`, type: "lost", title: "New Lost Item Reported", subtitle: `"${item.lostItemName || "Unknown item"}" lost at ${item.location || "unknown location"}`, time: item.createdAt, read: false, link: "/dashboard/lost-items" })); }, [lostData]);
+  useEffect(() => { try { localStorage.setItem("admin_notifications", JSON.stringify(notifications)); } catch {} }, [notifications]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAllRead = () => {
-    const updated = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updated);
-    try { localStorage.setItem("admin_notifications", JSON.stringify(updated)); } catch {}
-  };
-
-  const markOneRead = (id: string) =>
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-
-  const clearAll = () => {
-    setNotifications([]);
-    latestClaimTs.current = null;
-    latestFoundTs.current = null;
-    latestLostTs.current  = null;
-    initialized.current   = { claims: false, found: false, lost: false };
-    try { localStorage.removeItem("admin_notifications"); } catch {}
-  };
+  const markAllRead = () => { const u = notifications.map(n => ({ ...n, read: true })); setNotifications(u); try { localStorage.setItem("admin_notifications", JSON.stringify(u)); } catch {} };
+  const markOneRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const clearAll = () => { setNotifications([]); latestClaimTs.current = null; latestFoundTs.current = null; latestLostTs.current = null; initialized.current = { claims: false, found: false, lost: false }; try { localStorage.removeItem("admin_notifications"); } catch {} };
 
   return (
     <div ref={bellRef} className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
-        className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all"
-      >
+      <button onClick={() => setOpen(!open)} aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+        className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all">
         <FaBell size={14} />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-gray-900 animate-pulse">
@@ -253,36 +158,20 @@ const NotificationBell = () => {
           </span>
         )}
       </button>
-
       {open && (
         <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-[68px] sm:top-11 w-auto sm:w-96 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <div className="flex items-center gap-2">
               <FaBell size={13} className="text-cyan-400" />
               <p className="text-white text-sm font-semibold">Notifications</p>
-              {unreadCount > 0 && (
-                <span className="bg-red-500/20 text-red-400 border border-red-500/20 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                  {unreadCount} new
-                </span>
-              )}
+              {unreadCount > 0 && <span className="bg-red-500/20 text-red-400 border border-red-500/20 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount} new</span>}
             </div>
             <div className="flex items-center gap-2">
-              {unreadCount > 0 && (
-                <button onClick={markAllRead} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
-                  Mark all read
-                </button>
-              )}
-              {notifications.length > 0 && (
-                <button onClick={clearAll} className="text-gray-600 hover:text-gray-400 text-xs transition-colors">
-                  Clear
-                </button>
-              )}
-              <button onClick={() => setOpen(false)} className="sm:hidden text-gray-500 hover:text-white ml-1">
-                <FaTimes size={13} />
-              </button>
+              {unreadCount > 0 && <button onClick={markAllRead} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">Mark all read</button>}
+              {notifications.length > 0 && <button onClick={clearAll} className="text-gray-600 hover:text-gray-400 text-xs transition-colors">Clear</button>}
+              <button onClick={() => setOpen(false)} className="sm:hidden text-gray-500 hover:text-white ml-1"><FaTimes size={13} /></button>
             </div>
           </div>
-
           <div className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto divide-y divide-white/5">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-600">
@@ -291,38 +180,83 @@ const NotificationBell = () => {
                 <p className="text-xs mt-1 opacity-60">New claims and items will appear here</p>
               </div>
             ) : (
-              [...notifications]
-                .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-                .map(notif => (
-                  <Link
-                    key={notif.id}
-                    to={notif.link}
-                    onClick={() => { markOneRead(notif.id); setOpen(false); }}
-                    className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${!notif.read ? "bg-white/[0.02]" : ""}`}
-                  >
-                    {notifIcon(notif.type)}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className={`text-xs font-semibold truncate ${!notif.read ? "text-white" : "text-gray-300"}`}>
-                          {notif.title}
-                        </p>
-                        {!notif.read && <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />}
-                      </div>
-                      <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">{notif.subtitle}</p>
-                      <p className="text-gray-700 text-[10px] mt-1">{timeAgo(notif.time)}</p>
+              [...notifications].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).map(notif => (
+                <Link key={notif.id} to={notif.link} onClick={() => { markOneRead(notif.id); setOpen(false); }}
+                  className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${!notif.read ? "bg-white/[0.02]" : ""}`}>
+                  {notifIcon(notif.type)}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`text-xs font-semibold truncate ${!notif.read ? "text-white" : "text-gray-300"}`}>{notif.title}</p>
+                      {!notif.read && <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />}
                     </div>
-                  </Link>
-                ))
+                    <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">{notif.subtitle}</p>
+                    <p className="text-gray-700 text-[10px] mt-1">{timeAgo(notif.time)}</p>
+                  </div>
+                </Link>
+              ))
             )}
           </div>
-
           {notifications.length > 0 && (
             <div className="px-4 py-2.5 border-t border-white/5">
-              <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">
-                View all activity →
-              </Link>
+              <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">View all activity →</Link>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Custom Profile Dropdown ───────────────────────────────────────────────────
+const ProfileDropdown = ({ initials, user, handleSignOut }: { initials: string; user: any; handleSignOut: () => void }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => setOpen(prev => !prev)} className="flex items-center gap-2.5 cursor-pointer group focus:outline-none">
+        <div className="relative">
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center border-2 border-gray-700 group-hover:border-blue-400 transition-all duration-200 shadow-lg text-white font-bold text-sm shrink-0">{initials}</div>
+          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
+        </div>
+        <div className="hidden sm:block text-left">
+          <p className="text-white text-sm font-semibold leading-none">{user?.username || user?.name || "Admin"}</p>
+          <p className="text-gray-500 text-xs mt-0.5">{user?.role || "ADMIN"}</p>
+        </div>
+        <FaChevronDown size={10} className={`text-gray-500 hidden sm:block transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+          <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/5">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-sm font-bold shrink-0">{initials}</div>
+            <div className="min-w-0">
+              <p className="text-white text-sm font-medium truncate">{user?.username || user?.name || "Admin"}</p>
+              <p className="text-gray-400 text-xs truncate">{user?.email || ""}</p>
+            </div>
+          </div>
+          <div className="py-1">
+            <Link to="/dashboard/settings" onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
+              <FaCog size={13} className="text-gray-500 shrink-0" /> Settings
+            </Link>
+            <Link to="/" onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
+              <FaHome size={13} className="text-gray-500 shrink-0" /> Back to Home
+            </Link>
+          </div>
+          <div className="border-t border-white/5 py-1">
+            <button type="button" onClick={() => { setOpen(false); handleSignOut(); }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm">
+              <FaSignOutAlt size={13} className="shrink-0" /> Sign out
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -354,8 +288,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const pageMeta = getPageMeta();
   const initials =
-    user?.name?.charAt(0)?.toUpperCase() ||
     user?.username?.charAt(0)?.toUpperCase() ||
+    user?.name?.charAt(0)?.toUpperCase() ||
     user?.email?.charAt(0)?.toUpperCase() || "A";
 
   return (
@@ -400,7 +334,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 scrollbar-hide" style={{scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 scrollbar-hide"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
           {!sidebarCollapsed && <p className="text-[10px] uppercase tracking-widest text-gray-600 font-medium px-2 mb-3">Menu</p>}
           {menuItems.map(item => {
             const active = isActive(item.path, item.exact);
@@ -423,22 +358,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             );
           })}
         </nav>
-
-        {/* Bottom */}
-        <div className="shrink-0 border-t border-white/5 px-3 py-4 space-y-0.5">
-          <Link to="/" title={sidebarCollapsed ? "Back to Home" : undefined}
-            className={`flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}>
-            <FaHome size={14} className="text-gray-500 group-hover:text-gray-300" />
-            {!sidebarCollapsed && <span>Back to Home</span>}
-            {sidebarCollapsed && <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible whitespace-nowrap z-50 shadow-xl">Back to Home</span>}
-          </Link>
-          <button onClick={handleSignOut} title={sidebarCollapsed ? "Sign Out" : undefined}
-            className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors group relative ${sidebarCollapsed ? "justify-center" : ""}`}>
-            <FaSignOutAlt size={14} className="text-gray-500 group-hover:text-red-400" />
-            {!sidebarCollapsed && <span>Sign Out</span>}
-            {sidebarCollapsed && <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible whitespace-nowrap z-50 shadow-xl">Sign Out</span>}
-          </button>
-        </div>
       </aside>
 
       {/* Main content */}
@@ -453,56 +372,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <h1 className="text-white text-sm sm:text-base font-semibold tracking-tight truncate">{pageMeta.title}</h1>
             <p className="text-gray-500 text-xs truncate hidden sm:block">{pageMeta.subtitle}</p>
           </div>
-
           <div className="flex items-center gap-2 sm:gap-3">
             <NotificationBell />
-
-            <Dropdown arrowIcon={false} inline label={
-              <div className="flex items-center gap-2 sm:gap-2.5 cursor-pointer">
-                <div className="relative">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                    {initials}
-                  </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
-                </div>
-                <div className="hidden sm:block text-left">
-                  <p className="text-white text-xs font-medium leading-none">{user?.username || user?.name || "Admin"}</p>
-                  <p className="text-gray-500 text-[10px] mt-0.5">{user?.role || "ADMIN"}</p>
-                </div>
-              </div>
-            } className="!bg-gray-800 !border !border-white/10 !shadow-2xl !rounded-xl overflow-hidden">
-              <DropdownHeader className="!bg-gray-700/50 border-b border-white/5">
-                <div className="flex items-center gap-3 py-1">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
-                    {initials}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{user?.username || user?.name || "Admin"}</p>
-                    <p className="text-gray-400 text-xs truncate">{user?.email || ""}</p>
-                  </div>
-                </div>
-              </DropdownHeader>
-              <div className="py-1">
-                <DropdownItem className="!text-gray-300 hover:!bg-white/5 hover:!text-white !text-sm">
-                  <Link to="/dashboard/settings" className="flex items-center gap-2.5 w-full">
-                    <FaCog size={13} className="text-gray-500" /><span>Settings</span>
-                  </Link>
-                </DropdownItem>
-                <DropdownItem className="!text-gray-300 hover:!bg-white/5 hover:!text-white !text-sm">
-                  <Link to="/" className="flex items-center gap-2.5 w-full">
-                    <FaHome size={13} className="text-gray-500" /><span>Back to Home</span>
-                  </Link>
-                </DropdownItem>
-              </div>
-              <DropdownDivider className="!border-white/5" />
-              <div className="py-1">
-                <DropdownItem onClick={handleSignOut} className="!text-red-400 hover:!bg-red-500/10 hover:!text-red-300 !text-sm">
-                  <div className="flex items-center gap-2.5 w-full">
-                    <FaSignOutAlt size={13} /><span>Sign out</span>
-                  </div>
-                </DropdownItem>
-              </div>
-            </Dropdown>
+            <ProfileDropdown initials={initials} user={user} handleSignOut={handleSignOut} />
           </div>
         </header>
 
