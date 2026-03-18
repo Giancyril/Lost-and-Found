@@ -7,6 +7,7 @@ import { useLoginMutation } from "../../redux/api/api";
 import { useNavigate } from "react-router-dom";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { useState } from "react";
+import FloatingLines from "../../components/FloatingLines";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -37,32 +38,74 @@ const Login = () => {
 
   return (
     <>
-      <section className="min-h-screen flex items-start justify-center bg-gray-950 px-6 pt-20">
+      {/* Full-screen wrapper */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-950">
 
-        {/* Card */}
-        <div className="w-full max-w-md">
+        {/* ── Floating wave background ── */}
+        {/* Base dark layer matching navbar bg-gray-950 */}
+        <div className="absolute inset-0 bg-gray-950" />
 
+        {/* Subtle radial glow — same blue as navbar accent */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_60%,rgba(37,99,235,0.12),transparent)]" />
 
+        {/* FloatingLines — colors pulled from navbar blue/cyan palette */}
+        <div className="absolute inset-0" style={{ mixBlendMode: 'screen' }}>
+          <FloatingLines
+            enabledWaves={["top", "middle", "bottom"]}
+            lineCount={[4, 6, 4]}
+            lineDistance={[6, 5, 7]}
+            animationSpeed={0.6}
+            interactive={true}
+            parallax={true}
+            bendRadius={4}
+            bendStrength={-0.4}
+            parallaxStrength={0.15}
+            // Matches navbar: gray-950 → blue-600 → cyan-400 → blue-300
+            linesGradient={[
+              "#1e3a5f",   // deep navy — matches bg-gray-950 edge
+              "#2563eb",   // blue-600 — primary navbar accent
+              "#22d3ee",   // cyan-400 — gradient highlight
+              "#93c5fd",   // blue-300 — light tail
+            ]}
+            mixBlendMode="screen"
+          />
+        </div>
 
-          <div className="bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl p-10">
+        {/* ── Login card ── */}
+        <div className="relative z-10 w-full max-w-md px-6">
 
-            <div className="mb-8 text-center">
-              <h2 className="text-lg font-bold text-white">Sign In</h2>
+          {/* Logo area above card */}
+          <div className="flex flex-col items-center mb-6">
+            <img
+              src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
+              alt="NBSC SAS Logo"
+              className="w-12 h-12 object-contain mb-3 drop-shadow-lg"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+            <p className="text-blue-400 text-[11px] font-bold uppercase tracking-[0.2em]">NBSC SAS</p>
+            <p className="text-gray-500 text-xs mt-0.5">Lost & Found Management System</p>
+          </div>
+
+          {/* Card */}
+          <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/50 p-8">
+
+            <div className="mb-7 text-center">
+              <h2 className="text-lg font-bold text-white">Staff Sign In</h2>
               <p className="text-gray-500 text-sm mt-1">Enter your credentials to access the admin panel</p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
               {/* Email */}
               <div>
-                <label className="block text-xs font-bold text-white uppercase tracking-widest mb-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
                   Email or Username
                 </label>
                 <input
                   type="text"
                   {...register("username", { required: "Email is required" })}
-                  className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-                  placeholder=" "
+                  className="w-full bg-gray-800/80 border border-white/10 text-white placeholder-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 text-sm"
+                  placeholder="admin@nbsc.edu.ph"
                 />
                 {errors.username && (
                   <p className="text-red-400 text-xs mt-1">{errors.username?.message as string}</p>
@@ -71,7 +114,7 @@ const Login = () => {
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-bold text-white uppercase tracking-widest mb-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
                   Password
                 </label>
                 <div className="relative">
@@ -79,7 +122,7 @@ const Login = () => {
                     type={showPassword ? "text" : "password"}
                     {...register("password", { required: "Password is required" })}
                     placeholder="••••••••"
-                    className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl px-4 py-4 pr-11 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                    className="w-full bg-gray-800/80 border border-white/10 text-white placeholder-gray-600 rounded-xl px-4 py-3 pr-11 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 text-sm"
                   />
                   <button
                     type="button"
@@ -105,7 +148,7 @@ const Login = () => {
               ) : (
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-4 px-4 rounded-xl transition-all duration-200 text-sm mt-2 shadow-lg"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 text-sm mt-1 shadow-lg shadow-blue-900/30"
                 >
                   Sign In
                 </button>
@@ -114,12 +157,12 @@ const Login = () => {
             </form>
           </div>
 
-          <p className="text-center text-gray-600 text-xs mt-6">
+          <p className="text-center text-gray-600 text-xs mt-5">
             This is for SAS staff only. Students may browse the board without logging in.
           </p>
-
         </div>
       </section>
+
       <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
     </>
   );
