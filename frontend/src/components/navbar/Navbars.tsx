@@ -14,10 +14,46 @@ import { Link, useNavigate } from "react-router-dom";
 import Modals from "../modal/Modal";
 import { ToastContainer } from "react-toastify";
 import { FaCog, FaSignOutAlt, FaTachometerAlt } from "react-icons/fa";
+import { useState, useRef, useEffect } from "react";
 
 export function Navbars() {
   const navigate = useNavigate();
   const users: any = useUserVerification();
+
+  // ── Hidden login trigger ──────────────────────────────────────────────────
+  // Click the brand logo/text 3 times within 2 seconds to reveal Login
+  const [loginVisible, setLoginVisible] = useState(false);
+  const clickCountRef  = useRef(0);
+  const clickTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleBrandClick = () => {
+    // Already logged in — no need for the trick
+    if (users?.email) return;
+
+    clickCountRef.current += 1;
+
+    // Reset counter after 2 s of inactivity
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    clickTimerRef.current = setTimeout(() => {
+      clickCountRef.current = 0;
+    }, 2000);
+
+    if (clickCountRef.current >= 3) {
+      clickCountRef.current = 0;
+      setLoginVisible(true);
+
+      // Auto-hide after 8 s if not used
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = setTimeout(() => setLoginVisible(false), 8000);
+    }
+  };
+
+  // Clean up timers on unmount
+  useEffect(() => () => {
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    if (hideTimerRef.current)  clearTimeout(hideTimerRef.current);
+  }, []);
 
   const handleSignOut = () => {
     signOut(navigate);
@@ -31,14 +67,23 @@ export function Navbars() {
         fluid
         className="sticky top-0 z-50 bg-gray-950/95 backdrop-blur-md border-b border-gray-800 shadow-2xl"
       >
-        {/* Brand / Logo */}
-        <NavbarBrand href="/">
-          <div className="flex items-center space-x-2.5">
+        {/* Brand / Logo — triple-click to reveal login */}
+        <NavbarBrand
+          href="/"
+          onClick={(e) => {
+            // Only intercept if not logged in
+            if (!users?.email) {
+              e.preventDefault();
+              handleBrandClick();
+            }
+          }}
+        >
+          <div className="flex items-center space-x-2.5 select-none">
             <img
               src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
               alt="NBSC SAS Logo"
               className="w-9 h-9 object-contain shrink-0"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
             <div>
               <span className="whitespace-nowrap text-sm font-black text-white tracking-widest leading-none">
@@ -119,12 +164,17 @@ export function Navbars() {
                 </DropdownItem>
               </Dropdown>
             </div>
-          ) : (
-            <Link to="/login"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-all duration-200">
+          ) : loginVisible ? (
+            /* Login button — revealed after triple-click on brand */
+            <Link
+              to="/login"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-all duration-200 animate-pulse"
+              onClick={() => setLoginVisible(false)}
+            >
               Login
             </Link>
-          )}
+          ) : null /* hidden by default */ }
+
           <NavbarToggle />
         </div>
 
@@ -143,7 +193,6 @@ export function Navbars() {
                 {label}
               </NavbarLink>
             ))}
-            
           </div>
         </NavbarCollapse>
       </Navbar>

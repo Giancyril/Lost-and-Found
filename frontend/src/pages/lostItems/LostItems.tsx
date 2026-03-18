@@ -146,9 +146,6 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                   className="w-full p-3 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/30" />
                 <p className="text-gray-700 text-[10px] mt-1">{details.length} / min. 10 chars</p>
               </div>
-              <div className="bg-blue-500/5 border border-blue-500/15 rounded-xl px-3.5 py-2.5">
-                <p className="text-blue-300/70 text-[11px] leading-relaxed">🔒 Fully anonymous. No personal info collected.</p>
-              </div>
               <div className="flex gap-2 pt-1">
                 <button type="button" onClick={onClose}
                   className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">
@@ -209,8 +206,8 @@ const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () =>
               {tips.map((tip, i) => (
                 <div key={i} className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
                   <div className="flex items-center gap-2 px-3.5 pt-3 pb-2">
-                    <FaMapMarkerAlt size={9} className="text-orange-400 shrink-0" />
-                    <span className="text-orange-300 text-xs font-medium truncate flex-1">{tip.location}</span>
+                    <FaMapMarkerAlt size={9} className="text-blue-400 shrink-0" />
+                    <span className="text-blue-300 text-xs font-medium truncate flex-1">{tip.location}</span>
                     <span className="text-gray-600 text-[10px] shrink-0">{timeAgo(tip.time)}</span>
                     {isAdmin && (
                       confirmIdx === i ? (

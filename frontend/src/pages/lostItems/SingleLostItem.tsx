@@ -146,7 +146,6 @@ const SingleLostItem = () => {
   if (!lostItem) return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center">
       <div className="bg-gray-900 rounded-2xl p-8 border border-gray-800 text-center max-w-md mx-auto px-4">
-        <div className="text-5xl mb-4">😞</div>
         <h2 className="text-2xl font-bold text-white mb-3">Item Not Found</h2>
         <Link to="/lostItems" className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg text-sm">
           <FaArrowLeft size={11} /> Back
