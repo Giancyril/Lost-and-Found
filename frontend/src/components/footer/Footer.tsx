@@ -42,7 +42,12 @@ const Footers = () => {
               <div className="w-7 h-7 rounded-lg bg-blue-600/10 border border-blue-600/20 flex items-center justify-center text-blue-400 shrink-0">
                 <FaFacebook size={11} />
               </div>
-              <a href="#" className="text-gray-500 hover:text-white text-sm transition-colors duration-200">
+              <a 
+                href="https://www.facebook.com/nbscstudentaffairsandservices" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-gray-500 hover:text-white text-sm transition-colors duration-200"
+              >
                 SAS Official Facebook Page
               </a>
             </div>
