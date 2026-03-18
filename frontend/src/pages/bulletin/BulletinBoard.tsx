@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt,
   FaLightbulb, FaTimes, FaChevronLeft, FaChevronRight,
-  FaExclamationTriangle, FaCheckCircle,
+  FaCheckCircle,
   FaEye, FaTag, FaWallet, FaMobileAlt, FaLaptop, FaKey,
   FaBriefcase, FaHeadphones, FaGlasses, FaBook, FaIdCard,
   FaUmbrella, FaTshirt, FaCamera, FaClock, FaTint, FaTrash,
@@ -354,15 +354,11 @@ const BulletinBoard = () => {
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
       <div className="relative z-10 px-6 sm:px-10 lg:px-16 pt-10 sm:pt-16 pb-6 sm:pb-12 flex flex-col items-center text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-semibold mb-5">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-          <FaExclamationTriangle size={10} /> NBSC SAS · Lost & Found
-        </div>
 
         <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight mb-3 max-w-2xl">
           Missing Items{" "}
           <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
-            Public Registry
+            Bulletin Board
           </span>
         </h1>
 
@@ -372,16 +368,6 @@ const BulletinBoard = () => {
           Browse items reported missing within the NBSC campus. If you have seen any of these belongings, submit an anonymous sighting report to help the SAS office reunite them with their owners.
         </p>
 
-        <div className="flex items-center gap-3 flex-wrap justify-center">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
-            <FaLightbulb className="text-yellow-400" size={11} />
-            <span>Anonymous sightings accepted</span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400">
-            <FaCheckCircle className="text-emerald-400" size={11} />
-            <span>Open to all NBSC students</span>
-          </div>
-        </div>
       </div>
 
       {/* ── Search & filters ─────────────────────────────────────────────────── */}
