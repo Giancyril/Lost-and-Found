@@ -39,7 +39,7 @@ const Login = () => {
   return (
     <>
       {/* Changed items-center to items-start and added pt-32 to move the card up */}
-      <section className="relative min-h-screen flex items-start justify-center overflow-hidden bg-gray-950 pt-14">
+      <section className="relative min-h-screen flex items-start justify-center overflow-hidden bg-gray-950 pt-18">
 
         {/* ── Floating wave background ── */}
         <div className="absolute inset-0 bg-gray-950" />
