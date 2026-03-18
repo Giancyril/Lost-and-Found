@@ -74,18 +74,6 @@ const Login = () => {
         {/* ── Login card ── */}
         <div className="relative z-10 w-full max-w-md px-6">
 
-          {/* Logo area above card */}
-          <div className="flex flex-col items-center mb-6">
-            <img
-              src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
-              alt="NBSC SAS Logo"
-              className="w-12 h-12 object-contain mb-3 drop-shadow-lg"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-            />
-            <p className="text-blue-400 text-[11px] font-bold uppercase tracking-[0.2em]">NBSC SAS</p>
-            <p className="text-gray-500 text-xs mt-0.5">Lost & Found Management System</p>
-          </div>
-
           {/* Card */}
           <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/50 p-8">
 
@@ -157,9 +145,6 @@ const Login = () => {
             </form>
           </div>
 
-          <p className="text-center text-gray-600 text-xs mt-5">
-            This is for SAS staff only. Students may browse the board without logging in.
-          </p>
         </div>
       </section>
 
