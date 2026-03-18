@@ -628,10 +628,7 @@ const FoundItemsPage = () => {
                     <div className="col-span-1">
                       <p className="text-gray-400 text-xs flex items-center gap-1.5">
                         <span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></span>
-                        {dateStr}
-                      </p>
-                      <p className={`text-[10px] font-semibold mt-0.5 ml-6 ${daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-600"}`}>
-                        {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
+                        {dateStr} · <span className={`font-semibold ${daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-600"}`}>{daysAgo === 0 ? "Today" : `${daysAgo}d ago`}</span>
                       </p>
                     </div>
                     <div className="col-span-1">

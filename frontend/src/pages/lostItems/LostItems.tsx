@@ -146,6 +146,9 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                   className="w-full p-3 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/30" />
                 <p className="text-gray-700 text-[10px] mt-1">{details.length} / min. 10 chars</p>
               </div>
+              <div className="bg-blue-500/5 border border-blue-500/15 rounded-xl px-3.5 py-2.5">
+                <p className="text-blue-300/70 text-[11px] leading-relaxed">🔒 Fully anonymous. No personal info collected.</p>
+              </div>
               <div className="flex gap-2 pt-1">
                 <button type="button" onClick={onClose}
                   className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">
@@ -566,10 +569,7 @@ const LostItemsPage = () => {
                     <div className="col-span-1">
                       <p className="text-gray-400 text-xs flex items-center gap-1.5">
                         <span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></span>
-                        {lostDateStr}
-                      </p>
-                      <p className={`text-[10px] font-semibold mt-0.5 ml-6 ${daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-600"}`}>
-                        {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
+                        {lostDateStr} · <span className={`font-semibold ${daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-500"}`}>{daysAgo === 0 ? "Today" : `${daysAgo}d ago`}</span>
                       </p>
                     </div>
                     <div className="col-span-2 flex items-center justify-end gap-1.5">
