@@ -159,8 +159,6 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
       <div className="relative w-full max-w-lg bg-gray-900 border border-white/10 rounded-2xl shadow-2xl max-h-[88vh] flex flex-col">
-
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
@@ -186,8 +184,6 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
             <FaTimes size={13} />
           </button>
         </div>
-
-        {/* Progress bar */}
         <div className="px-5 pt-4 shrink-0">
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-gray-600 text-[10px] uppercase tracking-widest font-medium">Progress</p>
@@ -197,7 +193,6 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
             <div className="h-2 rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500 transition-all duration-700"
               style={{ width: `${progress}%` }} />
           </div>
-          {/* Stage pip labels */}
           <div className="flex justify-between mt-1.5">
             {stages.map(s => (
               <div key={s.id} className={`text-[9px] font-medium ${s.done ? STAGE_META[s.stage]?.color : "text-gray-700"}`}>
@@ -206,8 +201,6 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
             ))}
           </div>
         </div>
-
-        {/* Multi-claim notice */}
         {totalClaims > 1 && (
           <div className="mx-5 mt-4 flex items-start gap-2.5 bg-yellow-500/5 border border-yellow-500/20 rounded-xl px-4 py-3 shrink-0">
             <FaClipboardList className="text-yellow-400 shrink-0 mt-0.5" size={11} />
@@ -216,20 +209,15 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
             </p>
           </div>
         )}
-
-        {/* Timeline */}
         <div className="flex-1 overflow-y-auto px-5 py-5">
           <div className="relative">
-            {/* Vertical line */}
             <div className="absolute left-[18px] top-5 bottom-5 w-px bg-gray-800" />
-
             <div className="space-y-0">
               {stages.map((stage, idx) => {
-                const meta    = STAGE_META[stage.stage];
-                const isLast  = idx === stages.length - 1;
+                const meta   = STAGE_META[stage.stage];
+                const isLast = idx === stages.length - 1;
                 return (
                   <div key={stage.id} className="relative flex gap-4">
-                    {/* Left: dot + connector */}
                     <div className="flex flex-col items-center shrink-0" style={{ width: 36 }}>
                       <div className={`relative z-10 w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
                         stage.done ? `${meta.ring} ${meta.bg} ${meta.color}` : "border-gray-700 bg-gray-800/80 text-gray-700"
@@ -240,8 +228,6 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
                         <div className={`w-px flex-1 my-1 min-h-[24px] ${stage.done ? meta.line : "bg-gray-800"}`} />
                       )}
                     </div>
-
-                    {/* Right: content */}
                     <div className={`flex-1 min-w-0 pb-5 ${!stage.done ? "opacity-35" : ""}`}>
                       <div className="flex items-start justify-between gap-2 pt-1.5">
                         <div>
@@ -250,14 +236,10 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
                               {stage.label}
                             </p>
                             {stage.active && stage.done && (
-                              <span className="text-[10px] bg-white/5 border border-white/10 text-gray-400 px-1.5 py-0.5 rounded-full">
-                                Current
-                              </span>
+                              <span className="text-[10px] bg-white/5 border border-white/10 text-gray-400 px-1.5 py-0.5 rounded-full">Current</span>
                             )}
                           </div>
-                          <p className={`text-xs mt-0.5 ${stage.done ? "text-gray-400" : "text-gray-700"}`}>
-                            {stage.sublabel}
-                          </p>
+                          <p className={`text-xs mt-0.5 ${stage.done ? "text-gray-400" : "text-gray-700"}`}>{stage.sublabel}</p>
                           {stage.done && stage.actor !== "—" && (
                             <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-white/5 border border-white/5 rounded-full">
                               <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
@@ -279,7 +261,10 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
             </div>
           </div>
         </div>
-
+        <div className="px-5 py-3 border-t border-white/5 shrink-0 flex items-center gap-2">
+          <FaClock size={10} className="text-gray-700 shrink-0" />
+          <p className="text-gray-700 text-[10px]">Timeline updates automatically as the claim is processed by SAS Admin.</p>
+        </div>
       </div>
     </div>
   );
@@ -370,7 +355,6 @@ const SingleFoundItem = () => {
     ? foundItemData.images.map((i: any) => (typeof i === "string" ? i : i?.url ?? i?.src ?? ""))
     : foundItemData?.img ? [foundItemData.img] : [];
 
-  // Claim count for badge
   const claimCount = Array.isArray(foundItemData?.claim)
     ? foundItemData.claim.length
     : foundItemData?.claim ? 1 : 0;
@@ -385,13 +369,13 @@ const SingleFoundItem = () => {
               className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 mb-4">
               <FaArrowLeft size={11} /> Back
             </Link>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{foundItemData?.foundItemName || "Found Item"}</h1>
+            {/* ← ONLY CHANGE from doc 16: flex-col on mobile, flex-row on sm+ */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{foundItemData?.foundItemName || "Found Item"}</h1>
                 <p className="text-gray-500 text-sm mt-1">Found item details</p>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {/* Timeline trigger button */}
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
                 <button
                   onClick={() => setIsTimelineOpen(true)}
                   className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all"
@@ -417,7 +401,7 @@ const SingleFoundItem = () => {
           </div>
         </div>
 
-        {/* Main Content — original layout preserved */}
+        {/* Main Content */}
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
 
@@ -501,12 +485,12 @@ const SingleFoundItem = () => {
         </div>
       </div>
 
-      {/* ── Lifecycle Timeline Modal ── */}
+      {/* Lifecycle Timeline Modal */}
       {isTimelineOpen && (
         <LifecycleModal foundItem={foundItemData} onClose={() => setIsTimelineOpen(false)} />
       )}
 
-      {/* ── Claim Modal ── */}
+      {/* Claim Modal */}
       {isClaimModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -536,7 +520,6 @@ const SingleFoundItem = () => {
                   <p className="text-gray-400 text-xs">📅 Found: {foundItemData?.date?.split("T")[0]}</p>
                 </div>
               </div>
-
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Full Name *</label>
@@ -580,7 +563,7 @@ const SingleFoundItem = () => {
                 </div>
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
-                    {isAdmin ? " Your claim will be sent to the SAS office for review." : " Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
+                    {isAdmin ? "ℹ️ Your claim will be sent to the SAS office for review." : "ℹ️ Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
                   </p>
                 </div>
                 <div className="flex gap-3 pt-1">

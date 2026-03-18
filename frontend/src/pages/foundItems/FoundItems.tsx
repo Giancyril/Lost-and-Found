@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight,
-  FaTimes, FaTh, FaList, FaTag, FaPlus,
+  FaTimes, FaFilter, FaTh, FaList, FaTag, FaPlus,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
@@ -220,7 +220,7 @@ const FoundItemsPage = () => {
   const [currentPage, setCurrentPage]       = useState(1);
   const [sortBy, setSortBy]                 = useState("foundItemName");
   const [sortOrder, setSortOrder]           = useState("asc");
-  const [viewMode, setViewMode]             = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode]             = useState<"grid" | "list">(typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "grid");
   const [claimItem, setClaimItem]           = useState<any>(null);
   const [limit]                             = useState(12);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -348,6 +348,7 @@ const FoundItemsPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <FaFilter size={11} className="text-gray-600 shrink-0 hidden sm:block" />
             <select value={`${sortBy}-${sortOrder}`}
               onChange={e => { const [f, o] = e.target.value.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }}
               className="flex-1 min-w-0 py-2.5 px-3 text-sm text-white border border-white/5 rounded-xl bg-gray-900 focus:ring-2 focus:ring-blue-500/30 focus:outline-none">
@@ -518,8 +519,8 @@ const FoundItemsPage = () => {
                           <FaClipboardList size={9} /> Claim Item
                         </button>
                       ) : (
-                        <div className="flex items-center justify-center gap-1.5 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold rounded-lg">
-                          <FaCheckCircle size={9} /> Claimed
+                        <div className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg">
+                          Claimed
                         </div>
                       )}
                       <Link to={`/foundItems/${item.id}`}
@@ -578,16 +579,16 @@ const FoundItemsPage = () => {
                     <div className="flex flex-col gap-1 shrink-0">
                       {!isClaimed ? (
                         <button onClick={() => setClaimItem(item)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[10px] font-semibold rounded-lg transition-all">
-                          <FaClipboardList size={8} /> Claim
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-semibold rounded-lg transition-all">
+                          Claim
                         </button>
                       ) : (
-                        <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold rounded-lg">
-                          <FaCheckCircle size={8} /> Claimed
+                        <span className="px-3 py-1.5 bg-blue-600/20 border border-blue-600/30 text-blue-400 text-[10px] font-semibold rounded-lg text-center">
+                          Claimed
                         </span>
                       )}
                       <Link to={`/foundItems/${item.id}`}
-                        className="flex items-center justify-center px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] rounded-lg transition-all">
+                        className="flex items-center justify-center px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] rounded-lg transition-all">
                         Details
                       </Link>
                     </div>
@@ -635,8 +636,8 @@ const FoundItemsPage = () => {
                     </div>
                     <div className="col-span-1">
                       {isClaimed ? (
-                        <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full">
-                          <FaCheckCircle size={8} /> Claimed
+                        <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-full">
+                          Claimed
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-full">
@@ -647,8 +648,8 @@ const FoundItemsPage = () => {
                     <div className="col-span-2 flex items-center justify-end gap-1.5">
                       {!isClaimed && (
                         <button onClick={() => setClaimItem(item)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[10px] font-semibold rounded-lg transition-all whitespace-nowrap">
-                          <FaClipboardList size={8} /> Claim Item
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-semibold rounded-lg transition-all whitespace-nowrap">
+                          Claim Item
                         </button>
                       )}
                       <Link to={`/foundItems/${item.id}`}

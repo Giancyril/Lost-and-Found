@@ -5,7 +5,7 @@ import {
   FaLightbulb, FaTimes, FaEye, FaTag, FaTrash,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
-  FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
+  FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle, FaFilter,
   FaTh, FaList,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
@@ -146,6 +146,9 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                   className="w-full p-3 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/30" />
                 <p className="text-gray-700 text-[10px] mt-1">{details.length} / min. 10 chars</p>
               </div>
+              <div className="bg-blue-500/5 border border-blue-500/15 rounded-xl px-3.5 py-2.5">
+                <p className="text-blue-300/70 text-[11px] leading-relaxed">🔒 Fully anonymous. No personal info collected.</p>
+              </div>
               <div className="flex gap-2 pt-1">
                 <button type="button" onClick={onClose}
                   className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">
@@ -256,7 +259,7 @@ const LostItemsPage = () => {
   const [sortOrder, setSortOrder]           = useState("desc");
   const [tipItem, setTipItem]               = useState<any>(null);
   const [viewTipsItem, setViewTipsItem]     = useState<any>(null);
-  const [viewMode, setViewMode]             = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode]             = useState<"grid" | "list">(typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "grid");
   const [limit]                             = useState(12);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -323,6 +326,7 @@ const LostItemsPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <FaFilter size={11} className="text-gray-600 shrink-0 hidden sm:block" />
             <select value={`${sortBy}-${sortOrder}`}
               onChange={e => { const [f, o] = e.target.value.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }}
               className="flex-1 min-w-0 py-2.5 px-3 text-sm text-white border border-white/5 rounded-xl bg-gray-900 focus:ring-2 focus:ring-blue-500/30 focus:outline-none">
@@ -400,9 +404,9 @@ const LostItemsPage = () => {
           /* ── GRID VIEW ── */
           <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredItems.map((item: any) => {
-              const tipCount    = getTipCount(item.id);
-              const daysAgo     = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
-              const hideImg     = shouldHideImage(item?.category?.name, isAdmin);
+              const tipCount = getTipCount(item.id);
+              const daysAgo  = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
+              const hideImg  = shouldHideImage(item?.category?.name, isAdmin);
               return (
                 <div key={item.id} className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col">
                   <div className="relative h-48 overflow-hidden bg-gray-800">
