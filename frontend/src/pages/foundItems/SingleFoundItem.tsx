@@ -15,7 +15,7 @@ import {
   FaChevronLeft, FaChevronRight, FaClipboardList,
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
-import ItemLifecycleTimeline from "./ItemLifecycleTimeline"; // ← Feature 8
+import ItemLifecycleTimeline from "./ItemLifecycleTimeline";
 
 // ── Hide image for Wallets & Purses (admin always sees) ──
 const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
@@ -27,8 +27,22 @@ const shouldHideImage = (categoryName: string, isAdmin: boolean) => {
   );
 };
 
-
-
+const HiddenImagePlaceholder = () => (
+  <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex flex-col items-center justify-center gap-4">
+    <div className="w-20 h-20 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
+      <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+      </svg>
+    </div>
+    <div className="text-center px-6">
+      <p className="text-white font-semibold text-sm mb-1">Image Not Available</p>
+      <p className="text-gray-500 text-xs leading-relaxed">
+        The photo of this item is hidden from public view.
+        Submit a claim with proof of ownership to proceed.
+      </p>
+    </div>
+  </div>
+);
 
 function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -50,7 +64,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
 
   return (
     <div className="flex flex-col gap-3 h-full">
-      <div className="relative flex-1 rounded-xl overflow-hidden bg-gray-900">
+      <div className="relative w-full flex-1 min-h-[380px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
         <img src={images[activeIdx]} alt={`${alt} — photo ${activeIdx + 1}`}
           className="absolute inset-0 w-full h-full object-cover"
           onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
@@ -200,38 +214,18 @@ const SingleFoundItem = () => {
 
         {/* Main Content */}
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
-          <div className="lg:flex lg:gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
 
-            {/* Left: Image — sticky, fixed height */}
-            <div className="lg:w-1/2 shrink-0 mb-6 lg:mb-0 sticky top-20">
-              <div className="w-full h-[460px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
-                {hideImage ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
-                      <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                      </svg>
-                    </div>
-                    <div className="text-center px-6">
-                      <p className="text-white font-semibold text-sm mb-1">Image Not Available</p>
-                      <p className="text-gray-500 text-xs leading-relaxed">The photo of this item is hidden from public view. Submit a claim with proof of ownership to proceed.</p>
-                    </div>
-                  </div>
-                ) : imageList.length === 0 ? (
-                  <img src="/bgimg.png" alt={foundItemData?.foundItemName} className="w-full h-full object-cover" />
-                ) : imageList.length === 1 ? (
-                  <img src={imageList[0]} alt={foundItemData?.foundItemName}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
-                ) : (
-                  /* Multi-image inline carousel */
-                  <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
-                )}
-              </div>
+            {/* Left: Image */}
+            <div className="flex flex-col h-full">
+              {hideImage
+                ? <HiddenImagePlaceholder />
+                : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
+              }
             </div>
 
             {/* Right: Details + Timeline + Claim */}
-            <div className="lg:w-1/2 space-y-4">
+            <div className="space-y-4">
               {/* Description */}
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
@@ -306,9 +300,7 @@ const SingleFoundItem = () => {
                 )}
               </div>
             </div>
-            {/* end right panel */}
           </div>
-          {/* end lg:flex */}
         </div>
       </div>
 
@@ -391,8 +383,8 @@ const SingleFoundItem = () => {
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
                     {isAdmin
-                      ? "ℹ️ Your claim will be sent to the SAS office for review."
-                      : "ℹ️ Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
+                      ? " Your claim will be sent to the SAS office for review."
+                      : " Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
                   </p>
                 </div>
 
