@@ -5,7 +5,7 @@ import {
   FaLightbulb, FaTimes, FaEye, FaTag, FaTrash,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
-  FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle, FaFilter,
+  FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
   FaTh, FaList,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
@@ -326,7 +326,6 @@ const LostItemsPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <FaFilter size={11} className="text-gray-600 shrink-0 hidden sm:block" />
             <select value={`${sortBy}-${sortOrder}`}
               onChange={e => { const [f, o] = e.target.value.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }}
               className="flex-1 min-w-0 py-2.5 px-3 text-sm text-white border border-white/5 rounded-xl bg-gray-900 focus:ring-2 focus:ring-blue-500/30 focus:outline-none">
@@ -406,7 +405,6 @@ const LostItemsPage = () => {
             {filteredItems.map((item: any) => {
               const tipCount    = getTipCount(item.id);
               const daysAgo     = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
-              const lostDateStr = item?.date?.split("T")[0] ?? "—";
               const hideImg     = shouldHideImage(item?.category?.name, isAdmin);
               return (
                 <div key={item.id} className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col">
@@ -432,7 +430,6 @@ const LostItemsPage = () => {
                       <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm border ${daysAgo > 30 ? "bg-orange-500/80 text-white border-orange-400/30" : daysAgo > 7 ? "bg-yellow-500/80 text-gray-900 border-yellow-400/30" : "bg-black/50 text-white border-white/15"}`}>
                         {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
                       </span>
-                      <span className="px-2 py-0.5 bg-black/50 text-gray-300 text-[10px] rounded-full backdrop-blur-sm border border-white/10">{lostDateStr}</span>
                     </div>
                     {tipCount > 0 && (
                       <div className="absolute bottom-3 right-3">
@@ -443,10 +440,26 @@ const LostItemsPage = () => {
                   <div className="p-4 flex flex-col flex-1">
                     <h3 className="text-white text-sm font-bold mb-1 line-clamp-1 group-hover:text-blue-400 transition-colors">{item?.lostItemName}</h3>
                     <p className="text-gray-500 text-xs mb-3 line-clamp-2 leading-relaxed">{item?.description}</p>
-                    <div className="space-y-1 mt-auto mb-3">
-                      <div className="flex items-center gap-2 text-xs text-gray-500"><FaMapMarkerAlt size={9} className="text-gray-600 shrink-0" /><span className="line-clamp-1">{item?.location}</span></div>
+                    <div className="space-y-1.5 mt-auto mb-3">
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                          <FaMapMarkerAlt className="text-blue-400" size={8} />
+                        </div>
+                        <span className="line-clamp-1">{item?.location}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                          <FaCalendarAlt className="text-blue-400" size={8} />
+                        </div>
+                        <span>{item?.date?.split("T")[0] ?? "—"}</span>
+                      </div>
                       {item?.category?.name && (
-                        <div className="flex items-center gap-2 text-xs text-gray-500"><span className="shrink-0">{getCategoryIcon(item.category.name)}</span><span>{item.category.name}</span></div>
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                            {getCategoryIcon(item.category.name)}
+                          </div>
+                          <span>{item.category.name}</span>
+                        </div>
                       )}
                     </div>
                     <div className="h-px bg-white/[0.04] mb-3" />
@@ -497,8 +510,14 @@ const LostItemsPage = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition-colors">{item?.lostItemName}</p>
-                      <p className="text-gray-500 text-[10px] mt-0.5 flex items-center gap-1"><FaMapMarkerAlt size={8} />{item?.location}</p>
-                      <p className="text-gray-600 text-[10px] mt-0.5 flex items-center gap-1"><FaCalendarAlt size={8} />{lostDateStr} · <span className={daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-500"}>{daysAgo === 0 ? "Today" : `${daysAgo}d ago`}</span></p>
+                      <p className="text-gray-500 text-[10px] mt-0.5 flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaMapMarkerAlt className="text-blue-400" size={7} /></span>
+                        {item?.location}
+                      </p>
+                      <p className="text-gray-500 text-[10px] mt-0.5 flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={7} /></span>
+                        {lostDateStr} · <span className={daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-600"}>{daysAgo === 0 ? "Today" : `${daysAgo}d ago`}</span>
+                      </p>
                     </div>
                     <div className="flex flex-col gap-1 shrink-0">
                       <button onClick={() => setTipItem(item)} disabled={!!item?.isFound}
@@ -533,7 +552,10 @@ const LostItemsPage = () => {
                       </div>
                     </div>
                     <div className="col-span-2">
-                      <p className="text-gray-400 text-xs flex items-center gap-1.5 truncate"><FaMapMarkerAlt size={9} className="text-gray-600 shrink-0" />{item?.location}</p>
+                      <p className="text-gray-400 text-xs flex items-center gap-1.5 truncate">
+                        <span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaMapMarkerAlt className="text-blue-400" size={8} /></span>
+                        {item?.location}
+                      </p>
                     </div>
                     <div className="col-span-2">
                       {item?.category?.name ? (
@@ -544,8 +566,11 @@ const LostItemsPage = () => {
                       ) : <span className="text-gray-600 text-xs">—</span>}
                     </div>
                     <div className="col-span-1">
-                      <p className="text-gray-400 text-xs">{lostDateStr}</p>
-                      <p className={`text-[10px] font-semibold ${daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-600"}`}>
+                      <p className="text-gray-400 text-xs flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></span>
+                        {lostDateStr}
+                      </p>
+                      <p className={`text-[10px] font-semibold mt-0.5 ml-6 ${daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-600"}`}>
                         {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
                       </p>
                     </div>
