@@ -13,9 +13,9 @@ import {
   FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaUser, FaTag,
   FaTimes, FaBuilding, FaCheckCircle, FaEnvelope,
   FaChevronLeft, FaChevronRight, FaClipboardList,
+  FaBoxOpen, FaHandshake, FaClock,
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
-import ItemLifecycleTimeline from "./ItemLifecycleTimeline";
 
 // ── Hide image for Wallets & Purses (admin always sees) ──
 const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
@@ -101,6 +101,198 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   );
 }
 
+// ── Lifecycle Timeline Modal ───────────────────────────────────────────────────
+const fmt = (d: string | null) => d ? new Date(d).toLocaleString("en-PH", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
+const timeAgo = (d: string | null) => {
+  if (!d) return "";
+  const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
+  if (m < 1) return "Just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+};
+
+const STAGE_META: Record<string, { icon: React.ReactNode; color: string; ring: string; bg: string; line: string }> = {
+  reported:     { icon: <FaBoxOpen size={13} />,       color: "text-cyan-400",    ring: "border-cyan-500",    bg: "bg-cyan-500/10",    line: "bg-cyan-500/30"    },
+  claimed:      { icon: <FaClipboardList size={13} />, color: "text-yellow-400",  ring: "border-yellow-500",  bg: "bg-yellow-500/10",  line: "bg-yellow-500/30"  },
+  under_review: { icon: <FaClock size={13} />,         color: "text-orange-400",  ring: "border-orange-500",  bg: "bg-orange-500/10",  line: "bg-orange-500/30"  },
+  approved:     { icon: <FaCheckCircle size={13} />,   color: "text-emerald-400", ring: "border-emerald-500", bg: "bg-emerald-500/10", line: "bg-emerald-500/30" },
+  rejected:     { icon: <FaTimes size={13} />,         color: "text-red-400",     ring: "border-red-500",     bg: "bg-red-500/10",     line: "bg-red-500/30"     },
+  returned:     { icon: <FaHandshake size={13} />,     color: "text-violet-400",  ring: "border-violet-500",  bg: "bg-violet-500/10",  line: "bg-violet-500/30"  },
+};
+
+function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () => void }) {
+  const claimArr: any[] = Array.isArray(foundItem?.claim) ? foundItem.claim : foundItem?.claim ? [foundItem.claim] : [];
+  const totalClaims = claimArr.length;
+
+  const claim: any =
+    claimArr.find((c: any) => c.status === "APPROVED") ??
+    claimArr.find((c: any) => c.status === "PENDING")  ??
+    [...claimArr].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ?? null;
+
+  const auditLogs: any[] = claim?.auditLogs ?? [];
+  const reportedAt  = foundItem?.createdAt ?? null;
+  const claimedAt   = claim?.createdAt ?? null;
+  const approvedLog = auditLogs.find((l: any) => l.toStatus === "APPROVED");
+  const rejectedLog = auditLogs.find((l: any) => l.toStatus === "REJECTED");
+  const approvedAt  = approvedLog?.createdAt ?? null;
+  const rejectedAt  = rejectedLog?.createdAt ?? null;
+  const returnedAt  = foundItem?.isClaimed && approvedAt ? approvedAt : null;
+
+  const stages = [
+    { id: "reported",     stage: "reported"     as const, label: "Item Reported",   sublabel: `Found at ${foundItem?.location ?? "—"}`,                                      time: reportedAt, actor: foundItem?.user?.username ?? "SAS Office", done: true,           active: !claimedAt },
+    { id: "claimed",      stage: "claimed"      as const, label: "Claim Submitted", sublabel: claim ? `By ${claim.claimantName ?? "Anonymous"}` : "No claim yet",             time: claimedAt,  actor: claim?.claimantName ?? "—",                done: !!claimedAt,    active: !!claimedAt && !approvedAt && !rejectedAt },
+    { id: "under_review", stage: "under_review" as const, label: "Under Review",    sublabel: claim ? "SAS office is verifying ownership" : "Awaiting claim submission",      time: claimedAt,  actor: "SAS Admin",                               done: !!claimedAt && (!!approvedAt || !!rejectedAt), active: !!claimedAt && !approvedAt && !rejectedAt },
+    ...(rejectedAt ? [
+      { id: "rejected",   stage: "rejected"     as const, label: "Claim Rejected",  sublabel: `Rejected by ${rejectedLog?.performedBy ?? "Admin"}`,                          time: rejectedAt, actor: rejectedLog?.performedBy ?? "Admin",        done: true,           active: true },
+    ] : [
+      { id: "approved",   stage: "approved"     as const, label: "Claim Approved",  sublabel: approvedAt ? `Approved by ${approvedLog?.performedBy ?? "Admin"}` : "Pending", time: approvedAt, actor: approvedLog?.performedBy ?? "—",            done: !!approvedAt,   active: !!approvedAt && !returnedAt },
+      { id: "returned",   stage: "returned"     as const, label: "Item Returned",   sublabel: returnedAt ? `Returned to ${claim?.claimantName ?? "owner"}` : "Pending",       time: returnedAt, actor: claim?.claimantName ?? "—",                done: !!returnedAt,   active: !!returnedAt },
+    ]),
+  ];
+
+  const doneCount = stages.filter(s => s.done).length;
+  const progress  = Math.round((doneCount / stages.length) * 100);
+  const current   = stages.filter(s => s.done).slice(-1)[0];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg bg-gray-900 border border-white/10 rounded-2xl shadow-2xl max-h-[88vh] flex flex-col">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+              <FaClipboardList className="text-violet-400" size={14} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-white text-sm font-bold">Item Lifecycle</p>
+                {totalClaims > 1 && (
+                  <span className="text-[10px] bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-1.5 py-0.5 rounded-full font-semibold">
+                    {totalClaims} claims
+                  </span>
+                )}
+              </div>
+              <p className="text-gray-500 text-xs mt-0.5">
+                {current ? <span className={STAGE_META[current.stage]?.color}>{current.label}</span> : "Not started"}
+                {" "}· {progress}% complete
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose}
+            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0">
+            <FaTimes size={13} />
+          </button>
+        </div>
+
+        {/* Progress bar */}
+        <div className="px-5 pt-4 shrink-0">
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-gray-600 text-[10px] uppercase tracking-widest font-medium">Progress</p>
+            <p className="text-gray-400 text-[10px] font-semibold">{doneCount} / {stages.length} stages</p>
+          </div>
+          <div className="w-full bg-gray-800 rounded-full h-2">
+            <div className="h-2 rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500 transition-all duration-700"
+              style={{ width: `${progress}%` }} />
+          </div>
+          {/* Stage pip labels */}
+          <div className="flex justify-between mt-1.5">
+            {stages.map(s => (
+              <div key={s.id} className={`text-[9px] font-medium ${s.done ? STAGE_META[s.stage]?.color : "text-gray-700"}`}>
+                {s.label.split(" ")[0]}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Multi-claim notice */}
+        {totalClaims > 1 && (
+          <div className="mx-5 mt-4 flex items-start gap-2.5 bg-yellow-500/5 border border-yellow-500/20 rounded-xl px-4 py-3 shrink-0">
+            <FaClipboardList className="text-yellow-400 shrink-0 mt-0.5" size={11} />
+            <p className="text-yellow-300/80 text-xs leading-relaxed">
+              <strong>{totalClaims} students</strong> have submitted a claim for this item. Showing the most relevant claim. Admin reviews each individually in the dashboard.
+            </p>
+          </div>
+        )}
+
+        {/* Timeline */}
+        <div className="flex-1 overflow-y-auto px-5 py-5">
+          <div className="relative">
+            {/* Vertical line */}
+            <div className="absolute left-[18px] top-5 bottom-5 w-px bg-gray-800" />
+
+            <div className="space-y-0">
+              {stages.map((stage, idx) => {
+                const meta    = STAGE_META[stage.stage];
+                const isLast  = idx === stages.length - 1;
+                return (
+                  <div key={stage.id} className="relative flex gap-4">
+                    {/* Left: dot + connector */}
+                    <div className="flex flex-col items-center shrink-0" style={{ width: 36 }}>
+                      <div className={`relative z-10 w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
+                        stage.done ? `${meta.ring} ${meta.bg} ${meta.color}` : "border-gray-700 bg-gray-800/80 text-gray-700"
+                      }`}>
+                        {stage.done ? meta.icon : <div className="w-2.5 h-2.5 rounded-full bg-gray-700" />}
+                      </div>
+                      {!isLast && (
+                        <div className={`w-px flex-1 my-1 min-h-[24px] ${stage.done ? meta.line : "bg-gray-800"}`} />
+                      )}
+                    </div>
+
+                    {/* Right: content */}
+                    <div className={`flex-1 min-w-0 pb-5 ${!stage.done ? "opacity-35" : ""}`}>
+                      <div className="flex items-start justify-between gap-2 pt-1.5">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className={`text-sm font-semibold ${stage.done ? "text-white" : "text-gray-600"} ${stage.active && stage.done ? meta.color : ""}`}>
+                              {stage.label}
+                            </p>
+                            {stage.active && stage.done && (
+                              <span className="text-[10px] bg-white/5 border border-white/10 text-gray-400 px-1.5 py-0.5 rounded-full">
+                                Current
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-xs mt-0.5 ${stage.done ? "text-gray-400" : "text-gray-700"}`}>
+                            {stage.sublabel}
+                          </p>
+                          {stage.done && stage.actor !== "—" && (
+                            <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 bg-white/5 border border-white/5 rounded-full">
+                              <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+                              <span className="text-[10px] text-gray-500">{stage.actor}</span>
+                            </div>
+                          )}
+                        </div>
+                        {stage.time && (
+                          <div className="text-right shrink-0">
+                            <p className="text-gray-500 text-[10px] font-medium">{timeAgo(stage.time)}</p>
+                            <p className="text-gray-700 text-[10px] mt-0.5">{fmt(stage.time)}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-3 border-t border-white/5 shrink-0 flex items-center gap-2">
+          <FaClock size={10} className="text-gray-700 shrink-0" />
+          <p className="text-gray-700 text-[10px]">
+            Timeline updates automatically as the claim is processed by SAS Admin.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Component ─────────────────────────────────────────────────────────────
 const SingleFoundItem = () => {
   const { foundItem: foundItemParam } = useParams<{ foundItem: string }>();
   const foundItemId = foundItemParam;
@@ -112,6 +304,7 @@ const SingleFoundItem = () => {
   const [updateClaimStatus]                           = useUpdateClaimStatusMutation();
   const [isSubmitting, setIsSubmitting]               = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen]       = useState(false);
+  const [isTimelineOpen, setIsTimelineOpen]           = useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
@@ -184,6 +377,11 @@ const SingleFoundItem = () => {
     ? foundItemData.images.map((i: any) => (typeof i === "string" ? i : i?.url ?? i?.src ?? ""))
     : foundItemData?.img ? [foundItemData.img] : [];
 
+  // Claim count for badge
+  const claimCount = Array.isArray(foundItemData?.claim)
+    ? foundItemData.claim.length
+    : foundItemData?.claim ? 1 : 0;
+
   return (
     <>
       <div className="min-h-screen bg-gray-950">
@@ -199,22 +397,36 @@ const SingleFoundItem = () => {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{foundItemData?.foundItemName || "Found Item"}</h1>
                 <p className="text-gray-500 text-sm mt-1">Found item details</p>
               </div>
-              {isClaimed ? (
-                <span className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 text-green-400 border border-green-600/30">
-                  <FaCheckCircle size={10} /> Claimed
-                </span>
-              ) : (
-                <span className="shrink-0 inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-600/30">
-                  Available
-                </span>
-              )}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Timeline trigger button */}
+                <button
+                  onClick={() => setIsTimelineOpen(true)}
+                  className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all"
+                >
+                  <FaClipboardList size={10} /> Lifecycle
+                  {claimCount > 0 && (
+                    <span className="ml-0.5 bg-violet-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-none">
+                      {claimCount}
+                    </span>
+                  )}
+                </button>
+                {isClaimed ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 text-green-400 border border-green-600/30">
+                    <FaCheckCircle size={10} /> Claimed
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-600/30">
+                    Available
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content — original layout preserved */}
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
 
             {/* Left: Image */}
             <div className="flex flex-col h-full">
@@ -224,15 +436,13 @@ const SingleFoundItem = () => {
               }
             </div>
 
-            {/* Right: Details + Timeline + Claim */}
+            {/* Right: Details + Claim */}
             <div className="space-y-4">
-              {/* Description */}
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
                 <p className="text-gray-400 leading-relaxed text-sm">{foundItemData?.description || "No description available."}</p>
               </div>
 
-              {/* Info grid */}
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { icon: <FaCalendarAlt size={12} />, label: "Date Found", value: foundItemData?.date ? new Date(foundItemData.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified" },
@@ -250,11 +460,35 @@ const SingleFoundItem = () => {
                 ))}
               </div>
 
-              {/* ── Feature 8: Item Lifecycle Timeline ── */}
-              <ItemLifecycleTimeline
-                foundItem={foundItemData}
-                claims={foundItemData?.claim ? [foundItemData.claim] : []}
-              />
+              {/* Lifecycle timeline inline teaser — click to open full modal */}
+              <button
+                onClick={() => setIsTimelineOpen(true)}
+                className="w-full bg-gray-900 border border-white/5 hover:border-violet-500/30 rounded-xl p-4 flex items-center justify-between group transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+                    <FaClipboardList className="text-violet-400" size={12} />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-white text-sm font-semibold flex items-center gap-2">
+                      Item Lifecycle Timeline
+                      {claimCount > 0 && (
+                        <span className="text-[10px] bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-1.5 py-0.5 rounded-full font-semibold">
+                          {claimCount} claim{claimCount !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-gray-500 text-xs mt-0.5">
+                      {isClaimed ? "Item has been returned to owner" : claimCount > 0 ? "Claim is under review" : "Waiting for a claim submission"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-violet-400 font-medium group-hover:translate-x-0.5 transition-transform">
+                    View →
+                  </span>
+                </div>
+              </button>
 
               {/* Claim section */}
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
@@ -304,7 +538,12 @@ const SingleFoundItem = () => {
         </div>
       </div>
 
-      {/* Claim Modal */}
+      {/* ── Lifecycle Timeline Modal ── */}
+      {isTimelineOpen && (
+        <LifecycleModal foundItem={foundItemData} onClose={() => setIsTimelineOpen(false)} />
+      )}
+
+      {/* ── Claim Modal ── */}
       {isClaimModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -346,7 +585,6 @@ const SingleFoundItem = () => {
                   </div>
                   {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
                 </div>
-
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">School ID / Email *</label>
                   <div className="relative">
@@ -360,14 +598,12 @@ const SingleFoundItem = () => {
                   </div>
                   {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
                 </div>
-
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date Item Was Lost *</label>
                   <input type="date" {...register("lostDate", { required: "Please provide the date" })}
                     className="w-full p-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
                   {errors.lostDate && <p className="text-red-400 text-xs mt-1">{errors.lostDate.message as string}</p>}
                 </div>
-
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Proof of Ownership *</label>
                   <textarea rows={4}
@@ -379,15 +615,11 @@ const SingleFoundItem = () => {
                     className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm resize-none placeholder-gray-600" />
                   {errors.distinguishingFeatures && <p className="text-red-400 text-xs mt-1">{errors.distinguishingFeatures.message as string}</p>}
                 </div>
-
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
-                    {isAdmin
-                      ? " Your claim will be sent to the SAS office for review."
-                      : " Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
+                    {isAdmin ? "ℹ️ Your claim will be sent to the SAS office for review." : "ℹ️ Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
                   </p>
                 </div>
-
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => { setIsClaimModalOpen(false); reset(); }}
                     className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium">
@@ -405,6 +637,7 @@ const SingleFoundItem = () => {
           </div>
         </div>
       )}
+
       <ToastContainer position="top-right" autoClose={5000} style={{ top: "70px" }} theme="dark" />
     </>
   );
