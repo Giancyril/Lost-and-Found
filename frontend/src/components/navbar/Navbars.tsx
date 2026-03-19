@@ -167,7 +167,6 @@ export function Navbars() {
               { label: "Lost Items",       href: "/lostItems"      },
               { label: "Found Items",      href: "/foundItems"     },
               { label: "Smart Search",     href: "/ai-search"      },
-              { label: "Track Claim",      href: "/track-claim"    },
             ].map(({ label, href }) => (
               <NavbarLink key={href} href={href}
                 className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">

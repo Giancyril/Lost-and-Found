@@ -296,12 +296,6 @@ const LostItemsPage = () => {
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-300">
-                <FaLightbulb size={10} className="text-blue-400" /> Anonymous tips welcome
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs text-emerald-300">
-                <FaCheckCircle size={10} className="text-emerald-400" /> No login required
-              </div>
             </div>
           </div>
         </div>

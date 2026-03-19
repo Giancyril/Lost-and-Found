@@ -362,51 +362,65 @@ const SingleFoundItem = () => {
   return (
     <>
       <div className="min-h-screen bg-gray-950">
-        {/* Header */}
-        <div className="border-b border-gray-800 bg-gray-950">
-          <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
-            {/* Mobile: title full width on its own line, badges wrap below; Desktop: side by side */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{foundItemData?.foundItemName || "Found Item"}</h1>
-                <p className="text-gray-500 text-sm mt-1">Found item details</p>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
-                <button
-                  onClick={() => setIsTimelineOpen(true)}
-                  className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all"
-                >
-                  <FaClipboardList size={10} /> Lifecycle
-                  {claimCount > 0 && (
-                    <span className="ml-0.5 bg-violet-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-none">
-                      {claimCount}
-                    </span>
-                  )}
-                </button>
-                {isClaimed ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 text-green-400 border border-green-600/30">
-                    <FaCheckCircle size={10} /> Claimed
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-600/30">
-                    Available
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+  {/* Header */}
+  <div className="border-b border-gray-800 bg-gray-950">
+    <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
+      {/* Container: justify-between pushes content to opposite ends */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        
+        {/* Left Side: Title and Subtitle */}
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">
+            {foundItemData?.foundItemName || "Found Item"}
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">Item lost details</p>
         </div>
+
+        {/* Right Side: Lifecycle Button */}
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
+          <button
+            onClick={() => setIsTimelineOpen(true)}
+            className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all"
+          >
+            <FaClipboardList size={10} /> View Lifecycle
+            {claimCount > 0 && (
+              <span className="ml-0.5 bg-violet-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-none">
+                {claimCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+      
+    </div>
+  </div>
+</div>
 
         {/* Main Content */}
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
 
-            {/* Left: Image */}
-            <div className="flex flex-col h-full">
-              {hideImage
-                ? <HiddenImagePlaceholder />
-                : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
-              }
+            {/* Left: Image with Status Overlay */}
+            <div className="relative flex flex-col h-full rounded-2xl overflow-hidden">
+              
+              {/* Status Badge Overlay */}
+              <div className="absolute top-3 left-3 z-10">
+                {isClaimed ? (
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-emerald-500/30">
+                    <FaCheckCircle size={8} /> Claimed
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-blue-500/30">
+                    Available
+                  </span>
+                )}
+              </div>
+
+              {hideImage ? (
+                <HiddenImagePlaceholder />
+              ) : (
+                <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
+              )}
             </div>
 
             {/* Right: Details + Claim */}

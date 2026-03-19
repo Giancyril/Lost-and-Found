@@ -168,18 +168,10 @@ const SingleLostItem = () => {
         {/* Header */}
         <div className="border-b border-gray-800 bg-gray-950">
           <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
-            {/* Mobile: title full width, badge below; Desktop: side by side */}
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{lostItemName || "Lost Item"}</h1>
                 <p className="text-gray-500 text-sm mt-1">Lost item details and information</p>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
-                {alreadyFound ? (
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-green-600/20 text-green-400 border border-green-600/30">✓ Found</span>
-                ) : (
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-red-600/20 text-red-400 border border-red-600/30">Missing</span>
-                )}
               </div>
             </div>
           </div>
@@ -189,10 +181,23 @@ const SingleLostItem = () => {
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
 
-            <div className="flex flex-col h-full">
-              {hideImage ? <HiddenImagePlaceholder /> : <ImageCarousel images={imageList} alt={lostItemName} />}
+            {/* Left: Image Carousel with "Lost" Overlay Badge */}
+            <div className="relative flex flex-col h-full rounded-2xl overflow-hidden">
+              {/* Overlay Badge */}
+              {!alreadyFound && (
+                <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-red-600 text-white text-[10px] uppercase font-bold rounded-full shadow-lg border border-red-700/50 tracking-wider">
+                  Lost
+                </div>
+              )}
+              
+              {hideImage ? (
+                <HiddenImagePlaceholder />
+              ) : (
+                <ImageCarousel images={imageList} alt={lostItemName} />
+              )}
             </div>
 
+            {/* Right: Details */}
             <div className="space-y-4">
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
