@@ -90,7 +90,7 @@ const RecentLostItem = () => {
                   <div className="absolute top-2.5 left-2.5">
                     {isFound
                       ? <span className="px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full border border-emerald-500/30 backdrop-blur-sm">✓ Found</span>
-                      : <span className="px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full border border-blue-500/30 backdrop-blur-sm">Lost</span>
+                      : <span className="px-2 py-0.5 bg-red-600/90 text-white text-[10px] font-bold rounded-full border border-red-500/30 backdrop-blur-sm">Lost</span>
                     }
                   </div>
                   {/* Time */}
