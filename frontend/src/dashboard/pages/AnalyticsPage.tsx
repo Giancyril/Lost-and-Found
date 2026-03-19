@@ -43,8 +43,8 @@ const medalColor = (i: number) => {
 };
 
 const AnalyticsPage = () => {
-  const [chartType, setChartType]   = useState<"area" | "bar">("area");
-  const [peakView, setPeakView]     = useState<"days" | "hours">("days");
+  const [chartType, setChartType] = useState<"area" | "bar">("area");
+  const [peakView, setPeakView]   = useState<"days" | "hours">("days");
   const { data: statsData, isLoading } = useAdminStatsQuery({});
   const stats = statsData?.data;
 
@@ -59,64 +59,64 @@ const AnalyticsPage = () => {
     </div>
   );
 
-  const monthlyStats  = stats?.monthlyStats      || [];
-  const topReporters  = stats?.topReporters       || [];
-  const catBreakdown  = stats?.categoryBreakdown  || [];
-  const peakDays      = stats?.peakReportingDays  || [];
-  const peakHours     = stats?.peakReportingHours || [];
-  const unclaimedAge  = stats?.unclaimedItemsAge  || {};
-  const matchRate     = stats?.lostFoundMatchRate  || {};
+  const monthlyStats = stats?.monthlyStats      || [];
+  const topReporters = stats?.topReporters       || [];
+  const catBreakdown = stats?.categoryBreakdown  || [];
+  const peakDays     = stats?.peakReportingDays  || [];
+  const peakHours    = stats?.peakReportingHours || [];
+  const unclaimedAge = stats?.unclaimedItemsAge  || {};
+  const matchRate    = stats?.lostFoundMatchRate  || {};
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
+      {/* Export buttons */}
+      <div className="flex items-center justify-end gap-2 flex-wrap">
+        <button
+          onClick={() => printAnalyticsReport(stats)}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all duration-200"
+        >
+          <FaPrint size={10} /> Print Report
+        </button>
+        <ExportButton
+          label="Monthly Trends"
+          filename="nbsc-monthly-trends"
+          pdfTitle="NBSC Lost & Found — Monthly Trends"
+          getRows={() => monthlyStats.map((m: any) => ({
+            Month: m.month,
+            "Found Items": m.found ?? 0,
+            "Lost Reports": m.lost ?? 0,
+            Claims: m.claims ?? 0,
+            Resolved: m.resolved ?? 0,
+            "Resolution Rate (%)": m.resolutionRate ?? 0,
+          }))}
+        />
+        <ExportButton
+          label="Categories"
+          filename="nbsc-category-breakdown"
+          pdfTitle="NBSC Lost & Found — Category Breakdown"
+          getRows={() => catBreakdown.map((c: any) => ({
+            Category: c.name,
+            "Found Items": c.found ?? 0,
+            "Lost Reports": c.lost ?? 0,
+            Total: c.total ?? 0,
+          }))}
+        />
+      </div>
+
       {/* Summary stat pills */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total Found",   value: stats?.foundItems   ?? 0, color: "text-cyan-400",   bg: "bg-cyan-400/10 border-cyan-400/20"      },
-          { label: "Total Lost",    value: stats?.lostItems    ?? 0, color: "text-red-400",    bg: "bg-red-400/10 border-red-400/20"        },
-          { label: "Total Claims",  value: stats?.totalClaims  ?? 0, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20"  },
-          { label: "Claimed Items", value: stats?.claimedItems ?? 0, color: "text-emerald-400",bg: "bg-emerald-400/10 border-emerald-400/20"},
+          { label: "Total Found",   value: stats?.foundItems   ?? 0, color: "text-cyan-400",    bg: "bg-cyan-400/10 border-cyan-400/20"      },
+          { label: "Total Lost",    value: stats?.lostItems    ?? 0, color: "text-red-400",     bg: "bg-red-400/10 border-red-400/20"        },
+          { label: "Total Claims",  value: stats?.totalClaims  ?? 0, color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20"  },
+          { label: "Claimed Items", value: stats?.claimedItems ?? 0, color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20"},
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-4 flex flex-col gap-1 ${s.bg} bg-gray-900`}>
             <p className={`text-2xl sm:text-3xl font-bold ${s.color}`}>{s.value}</p>
             <p className="text-gray-500 text-xs font-medium">{s.label}</p>
           </div>
         ))}
-        </div>
-        <div className="flex items-center gap-2 self-start pt-1">
-          <button
-            onClick={() => printAnalyticsReport(stats)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all duration-200"
-          >
-            <FaPrint size={10} /> Print Report
-          </button>
-          <ExportButton
-            label="Monthly Trends"
-            filename="nbsc-monthly-trends"
-            pdfTitle="NBSC Lost & Found — Monthly Trends"
-            getRows={() => monthlyStats.map((m: any) => ({
-              Month: m.month,
-              "Found Items": m.found ?? 0,
-              "Lost Reports": m.lost ?? 0,
-              Claims: m.claims ?? 0,
-              Resolved: m.resolved ?? 0,
-              "Resolution Rate (%)": m.resolutionRate ?? 0,
-            }))}
-          />
-          <ExportButton
-            label="Categories"
-            filename="nbsc-category-breakdown"
-            pdfTitle="NBSC Lost & Found — Category Breakdown"
-            getRows={() => catBreakdown.map((c: any) => ({
-              Category: c.name,
-              "Found Items": c.found ?? 0,
-              "Lost Reports": c.lost ?? 0,
-              Total: c.total ?? 0,
-            }))}
-          />
-        </div>
       </div>
 
       {/* Monthly Trends Chart */}
@@ -205,7 +205,7 @@ const AnalyticsPage = () => {
         })()}
       </div>
 
-      {/* ── NEW: Resolution Rate Trend ── */}
+      {/* Resolution Rate Trend */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-white/5">
           <h3 className="text-white text-sm font-semibold">Resolution Rate Trend</h3>
@@ -229,10 +229,9 @@ const AnalyticsPage = () => {
             </ResponsiveContainer>
           )}
         </div>
-        {/* Summary row */}
         <div className="grid grid-cols-3 border-t border-white/5">
           {[
-            { label: "Overall Match Rate", value: `${matchRate.matchRate ?? 0}%`, color: "text-violet-400" },
+            { label: "Overall Match Rate", value: `${matchRate.matchRate ?? 0}%`, color: "text-violet-400"  },
             { label: "Total Resolved",     value: matchRate.totalResolved ?? 0,   color: "text-emerald-400" },
             { label: "Still Unresolved",   value: matchRate.unresolved ?? 0,      color: "text-red-400"     },
           ].map((s, i) => (
@@ -244,7 +243,7 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
-      {/* ── NEW: Peak Reporting Days/Hours ── */}
+      {/* Peak Reporting Times */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
           <div>
@@ -258,42 +257,25 @@ const AnalyticsPage = () => {
         </div>
         <div className="px-2 pb-4 pt-4 h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={peakView === "days" ? peakDays : peakHours}
-              margin={{ top: 5, right: 20, left: -20, bottom: 0 }}
-              barCategoryGap="25%"
-            >
+            <BarChart data={peakView === "days" ? peakDays : peakHours} margin={{ top: 5, right: 20, left: -20, bottom: 0 }} barCategoryGap="25%">
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
               <XAxis
-                  dataKey={peakView === "days" ? "day" : "label"}
-                  tick={peakView === "hours"
-                    ? ({ x, y, payload }) => {
-                        const lines = (payload.value as string).split("\n");
-                        return (
-                          <g transform={`translate(${x},${y})`}>
-                            {lines.map((line: string, i: number) => (
-                              <text
-                                key={i}
-                                x={0}
-                                y={0}
-                                dy={10 + i * 11}
-                                textAnchor="middle"
-                                fill="#6b7280"
-                                fontSize={9}
-                              >
-                                {line}
-                              </text>
-                            ))}
-                          </g>
-                        );
-                      }
-                    : { fill: "#6b7280", fontSize: 10 }
-                  }
-                  axisLine={false}
-                  tickLine={false}
-                  interval={0}
-                  height={peakView === "hours" ? 40 : 20}
-                />
+                dataKey={peakView === "days" ? "day" : "label"}
+                tick={peakView === "hours"
+                  ? ({ x, y, payload }) => {
+                      const lines = (payload.value as string).split("\n");
+                      return (
+                        <g transform={`translate(${x},${y})`}>
+                          {lines.map((line: string, i: number) => (
+                            <text key={i} x={0} y={0} dy={10 + i * 11} textAnchor="middle" fill="#6b7280" fontSize={9}>{line}</text>
+                          ))}
+                        </g>
+                      );
+                    }
+                  : { fill: "#6b7280", fontSize: 10 }
+                }
+                axisLine={false} tickLine={false} interval={0} height={peakView === "hours" ? 40 : 20}
+              />
               <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
               <Bar dataKey="found" name="Found" fill="#22d3ee" radius={[3,3,0,0]} maxBarSize={24} stackId="a" />
@@ -301,13 +283,12 @@ const AnalyticsPage = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        {/* Busiest day/hour callout */}
         {(() => {
           const data    = peakView === "days" ? peakDays : peakHours;
           const busiest = [...data].sort((a: any, b: any) => b.total - a.total)[0];
-          const displayKey = peakView === "days" ? "day" : "label";
+          const displayKey  = peakView === "days" ? "day" : "label";
           const displayName = peakView === "hours"
-            ? (busiest[displayKey] as string).split("\n")[0] // just "Early Morning", not the full label
+            ? (busiest[displayKey] as string).split("\n")[0]
             : busiest[displayKey];
           if (!busiest || busiest.total === 0) return null;
           return (
@@ -320,22 +301,19 @@ const AnalyticsPage = () => {
         })()}
       </div>
 
-      {/* ── NEW: Unclaimed Items Age + Lost vs Found Match Rate ── */}
+      {/* Unclaimed Items Age + Match Rate */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-        {/* Unclaimed Items Age */}
         <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
           <div className="px-5 py-4 border-b border-white/5">
             <h3 className="text-white text-sm font-semibold">Unclaimed Items Age</h3>
             <p className="text-gray-500 text-xs mt-0.5">How long found items have been sitting unclaimed</p>
           </div>
           <div className="p-5 space-y-4">
-            {/* Age buckets */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "7+ days",  value: unclaimedAge.over7days  ?? 0, color: "text-yellow-400", bg: "bg-yellow-400/5 border-yellow-400/10"  },
-                { label: "30+ days", value: unclaimedAge.over30days ?? 0, color: "text-orange-400", bg: "bg-orange-400/5 border-orange-400/10"  },
-                { label: "90+ days", value: unclaimedAge.over90days ?? 0, color: "text-red-400",    bg: "bg-red-400/5 border-red-400/10"        },
+                { label: "7+ days",  value: unclaimedAge.over7days  ?? 0, color: "text-yellow-400", bg: "bg-yellow-400/5 border-yellow-400/10" },
+                { label: "30+ days", value: unclaimedAge.over30days ?? 0, color: "text-orange-400", bg: "bg-orange-400/5 border-orange-400/10" },
+                { label: "90+ days", value: unclaimedAge.over90days ?? 0, color: "text-red-400",    bg: "bg-red-400/5 border-red-400/10"       },
               ].map(s => (
                 <div key={s.label} className={`rounded-xl border p-3 text-center ${s.bg}`}>
                   <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
@@ -343,12 +321,10 @@ const AnalyticsPage = () => {
                 </div>
               ))}
             </div>
-            {/* Avg age */}
             <div className="flex items-center justify-between bg-gray-800/60 rounded-xl p-3 border border-white/5">
               <span className="text-gray-400 text-xs">Avg. age of unclaimed items</span>
               <span className="text-white text-sm font-bold">{unclaimedAge.avgAgeDays ?? 0} days</span>
             </div>
-            {/* Oldest items list */}
             {unclaimedAge.oldest?.length > 0 && (
               <div className="space-y-2">
                 <p className="text-gray-600 text-[10px] uppercase tracking-widest font-medium">Oldest unclaimed</p>
@@ -363,9 +339,7 @@ const AnalyticsPage = () => {
                       item.days >= 90 ? "bg-red-400/10 text-red-400" :
                       item.days >= 30 ? "bg-orange-400/10 text-orange-400" :
                       "bg-yellow-400/10 text-yellow-400"
-                    }`}>
-                      {item.days}d
-                    </span>
+                    }`}>{item.days}d</span>
                   </div>
                 ))}
               </div>
@@ -379,32 +353,26 @@ const AnalyticsPage = () => {
           </div>
         </div>
 
-        {/* Lost vs Found Match Rate */}
         <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
           <div className="px-5 py-4 border-b border-white/5">
             <h3 className="text-white text-sm font-semibold">Lost vs Found Match Rate</h3>
             <p className="text-gray-500 text-xs mt-0.5">Percentage of lost items that were eventually resolved</p>
           </div>
           <div className="p-5 space-y-4">
-            {/* Big match rate */}
             <div className="text-center py-2">
               <p className="text-6xl font-bold text-emerald-400 tracking-tight">{matchRate.matchRate ?? 0}%</p>
               <p className="text-gray-400 text-sm mt-2">of lost items resolved</p>
             </div>
-            {/* Progress bar */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs text-gray-500">
                 <span>Resolved ({matchRate.totalResolved ?? 0})</span>
                 <span>Unresolved ({matchRate.unresolved ?? 0})</span>
               </div>
               <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full transition-all duration-700"
-                  style={{ width: `${Math.min(matchRate.matchRate ?? 0, 100)}%` }}
-                />
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full transition-all duration-700"
+                  style={{ width: `${Math.min(matchRate.matchRate ?? 0, 100)}%` }} />
               </div>
             </div>
-            {/* Monthly resolved trend */}
             <div className="h-36 pt-2">
               <p className="text-gray-600 text-[10px] uppercase tracking-widest font-medium mb-2">Monthly resolved items</p>
               <ResponsiveContainer width="100%" height="100%">
@@ -417,7 +385,6 @@ const AnalyticsPage = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            {/* Stats row */}
             <div className="grid grid-cols-2 gap-3 pt-1 border-t border-white/5">
               <div className="bg-emerald-400/5 border border-emerald-400/10 rounded-xl p-3 text-center">
                 <p className="text-emerald-400 text-xl font-bold">{matchRate.totalResolved ?? 0}</p>
@@ -484,7 +451,6 @@ const AnalyticsPage = () => {
         </div>
 
         <div className="flex flex-col gap-4">
-          {/* Avg Claim Resolution */}
           <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 space-y-4">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-violet-400/10 border border-violet-400/20 flex items-center justify-center shrink-0">
@@ -521,7 +487,6 @@ const AnalyticsPage = () => {
             </div>
           </div>
 
-          {/* Top Reporters */}
           <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex-1">
             <div className="px-5 py-4 border-b border-white/5">
               <h3 className="text-white text-sm font-semibold">Top Reporters</h3>

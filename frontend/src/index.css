@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  *:focus,
+  *:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+  }
+}
+
 /* ── React-Toastify: mobile responsive ─────────────────────────────────── */
 @media (max-width: 640px) {
   .Toastify__toast-container {
@@ -27,4 +37,21 @@
   .Toastify__close-button {
     align-self: center !important;
   }
+}
+
+/* Remove all focus rings and outlines globally */
+*:focus,
+*:focus-visible,
+*:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+  ring: none !important;
+}
+
+/* Override Flowbite focus ring */
+[class*="focus:ring"],
+[class*="focus-visible:ring"] {
+  --tw-ring-shadow: none !important;
+  --tw-ring-offset-shadow: none !important;
+  box-shadow: none !important;
 }

@@ -292,7 +292,7 @@ const LostItemsManagement = () => {
                           <FaCheckCircle size={10} /> Sent
                         </span>
                       ) : (
-                        <button onClick={() => handleOpenEmailModal(item)} className="p-1.5 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors" title="Send Email">
+                        <button onClick={() => handleOpenEmailModal(item)} className="p-1.5 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-colors" title="Send Email">
                           <FaEnvelope size={13} />
                         </button>
                       )}
@@ -357,7 +357,7 @@ const LostItemsManagement = () => {
                   <FaCheckCircle size={11} /> Sent
                 </span>
               ) : (
-                <button onClick={() => handleOpenEmailModal(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-blue-400 hover:bg-blue-500/10 rounded-lg text-xs font-medium">
+                <button onClick={() => handleOpenEmailModal(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded-lg text-xs font-medium">
                   <FaEnvelope size={11} /> Email
                 </button>
               )}
@@ -682,7 +682,7 @@ const LostItemsManagement = () => {
                   Cancel
                 </button>
                 <button type="submit" disabled={isSendingEmail}
-                  className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                   {isSendingEmail ? <><Spinner /> Sending...</> : <><FaEnvelope size={12} /> Send Email</>}
                 </button>
               </div>
