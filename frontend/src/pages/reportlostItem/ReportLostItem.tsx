@@ -6,6 +6,7 @@ import { useState, useRef } from "react";
 import { useCategoryQuery, useCreateLostItemMutation } from "../../redux/api/api";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 
 const MAX_SIZE_MB = 5;
 
@@ -309,6 +310,16 @@ const ReportLostItem = () => {
                         className={`${inputCls} resize-none`}
                         placeholder="Describe the item — color, brand, size, distinguishing marks, etc." />
                     </Field>
+
+                    {/* Item match suggestions */}
+                    {selectedMenucategoryId && (
+                      <ItemMatchSuggestions
+                        categoryId={selectedMenucategoryId}
+                        categoryName={selectedMenu}
+                        itemName={(document.querySelector('input[name="lostItemName"]') as HTMLInputElement)?.value ?? ""}
+                        location={(document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? ""}
+                      />
+                    )}
                   </div>
                 )}
 

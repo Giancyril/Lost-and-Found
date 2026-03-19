@@ -11,6 +11,7 @@ import Modals from "../modal/Modal";
 import { ToastContainer } from "react-toastify";
 import { FaCog, FaSignOutAlt, FaTachometerAlt, FaChevronDown } from "react-icons/fa";
 import { useState, useRef, useEffect } from "react";
+import NotificationBell from "../notifications/NotificationBell";
 
 export function Navbars() {
   const navigate = useNavigate();
@@ -83,6 +84,7 @@ export function Navbars() {
 
         {/* Right side */}
         <div className="flex md:order-2 items-center gap-2">
+          <NotificationBell />
           {users?.email && users?.role === "ADMIN" ? (
 
             <div ref={profileRef} className="relative">

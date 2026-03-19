@@ -12,6 +12,7 @@ import {
   useGetAuditLogsQuery,
   useSendClaimApprovedEmailMutation,
 } from "../../redux/api/api";
+import ExportButton from "../../components/export/ExportButton";
 
 type Tab       = "claims" | "audit";
 type ModalTab  = "details" | "history";
@@ -307,7 +308,7 @@ const ClaimsManagement = () => {
                       </span>
                     ) : (
                       <button onClick={() => handleOpenClaimEmail(claim)}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 text-blue-300 hover:text-white text-xs font-medium rounded-lg transition-colors">
+                        className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-600/40 text-emerald-300 hover:text-white text-xs font-medium rounded-lg transition-colors">
                         <FaEnvelope size={11} /> Email
                       </button>
                     )
@@ -387,7 +388,7 @@ const ClaimsManagement = () => {
                               </span>
                             ) : (
                               <button onClick={() => handleOpenClaimEmail(claim)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/40 text-blue-300 hover:text-white text-xs font-medium rounded-lg transition-colors">
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-600/40 text-emerald-300 hover:text-white text-xs font-medium rounded-lg transition-colors">
                                 <FaEnvelope size={11} /> Email
                               </button>
                             )
@@ -412,11 +413,27 @@ const ClaimsManagement = () => {
       {/* AUDIT LOG TAB */}
       {activeTab === "audit" && (
         <div className="space-y-4">
-          <div className="relative">
-            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
-            <input value={auditSearch} onChange={(e) => { setAuditSearch(e.target.value); setAuditPage(1); }}
-              placeholder="Search by item name, admin, or status..."
-              className="w-full bg-gray-900 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500/40 transition-colors" />
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
+              <input value={auditSearch} onChange={(e) => { setAuditSearch(e.target.value); setAuditPage(1); }}
+                placeholder="Search by item name, admin, or status..."
+                className="w-full bg-gray-900 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500/40 transition-colors" />
+            </div>
+            <ExportButton
+              label="Export"
+              filename="nbsc-audit-log"
+              pdfTitle="NBSC Lost & Found — Claim Audit Log"
+              getRows={() => filteredLogs.map((log: any) => ({
+                "Item": log.claim?.foundItem?.foundItemName ?? "Unknown",
+                "Action": log.action ?? "",
+                "From Status": log.fromStatus ?? "",
+                "To Status": log.toStatus ?? "",
+                "Performed By": log.performedBy ?? "",
+                "Date & Time": formatDateTime(log.createdAt),
+                "Note": log.note ?? "",
+              }))}
+            />
           </div>
           <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
             <div className="md:hidden divide-y divide-white/5">

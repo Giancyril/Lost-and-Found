@@ -1,13 +1,14 @@
 import { useState } from "react";
 import {
   FaTrophy, FaMedal, FaClock,
-  FaBoxOpen, FaCheckCircle,
+  FaBoxOpen, FaCheckCircle, FaPrint,
 } from "react-icons/fa";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { useAdminStatsQuery } from "../../redux/api/api";
+import ExportButton, { printAnalyticsReport } from "../../components/export/ExportButton";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -70,7 +71,8 @@ const AnalyticsPage = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Summary stat pills */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1">
         {[
           { label: "Total Found",   value: stats?.foundItems   ?? 0, color: "text-cyan-400",   bg: "bg-cyan-400/10 border-cyan-400/20"      },
           { label: "Total Lost",    value: stats?.lostItems    ?? 0, color: "text-red-400",    bg: "bg-red-400/10 border-red-400/20"        },
@@ -82,6 +84,39 @@ const AnalyticsPage = () => {
             <p className="text-gray-500 text-xs font-medium">{s.label}</p>
           </div>
         ))}
+        </div>
+        <div className="flex items-center gap-2 self-start pt-1">
+          <button
+            onClick={() => printAnalyticsReport(stats)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all duration-200"
+          >
+            <FaPrint size={10} /> Print Report
+          </button>
+          <ExportButton
+            label="Monthly Trends"
+            filename="nbsc-monthly-trends"
+            pdfTitle="NBSC Lost & Found — Monthly Trends"
+            getRows={() => monthlyStats.map((m: any) => ({
+              Month: m.month,
+              "Found Items": m.found ?? 0,
+              "Lost Reports": m.lost ?? 0,
+              Claims: m.claims ?? 0,
+              Resolved: m.resolved ?? 0,
+              "Resolution Rate (%)": m.resolutionRate ?? 0,
+            }))}
+          />
+          <ExportButton
+            label="Categories"
+            filename="nbsc-category-breakdown"
+            pdfTitle="NBSC Lost & Found — Category Breakdown"
+            getRows={() => catBreakdown.map((c: any) => ({
+              Category: c.name,
+              "Found Items": c.found ?? 0,
+              "Lost Reports": c.lost ?? 0,
+              Total: c.total ?? 0,
+            }))}
+          />
+        </div>
       </div>
 
       {/* Monthly Trends Chart */}
