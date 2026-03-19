@@ -404,45 +404,13 @@ const FoundItemsPage = () => {
             <div className="w-16 h-16 rounded-2xl bg-gray-900 border border-white/5 flex items-center justify-center mx-auto mb-4">
               <FaSearch className="text-gray-600" size={20} />
             </div>
-            {categoryFilter !== "ALL" && !fuzzyTerm ? (
-              <>
-                <p className="text-white font-semibold mb-1">No found items in <span className="text-emerald-400">{categoryFilter}</span></p>
-                <p className="text-gray-500 text-sm mb-4">Be the first to report one</p>
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  <Link to="/reportFoundItem"
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors">
-                    Report a Found Item
-                  </Link>
-                  <button onClick={() => setCategoryFilter("ALL")}
-                    className="px-5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-sm font-medium rounded-lg transition-colors">
-                    View All Categories
-                  </button>
-                </div>
-              </>
-            ) : fuzzyTerm ? (
-              <>
-                <p className="text-white font-semibold mb-1">No results for <span className="text-blue-400">"{fuzzyTerm}"</span></p>
-                <p className="text-gray-500 text-sm mb-4">Try Smart Search for AI-powered matching</p>
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  <Link to="/ai-search"
-                    className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
-                    Try Smart Search
-                  </Link>
-                  <button onClick={() => { clearSearch(); setCategoryFilter("ALL"); }}
-                    className="px-5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-sm font-medium rounded-lg transition-colors">
-                    Clear filters
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-white font-semibold mb-1">Nothing here yet</p>
-                <p className="text-gray-500 text-sm mb-4">Check back soon, or report a found item you came across</p>
-                <Link to="/reportFoundItem"
-                  className="inline-block px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors">
-                  Report a Found Item
-                </Link>
-              </>
+            <p className="text-white font-semibold mb-1">No found items</p>
+            <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
+            {(fuzzyTerm || categoryFilter !== "ALL") && (
+              <button onClick={() => { clearSearch(); setCategoryFilter("ALL"); }}
+                className="mt-4 px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
+                Clear filters
+              </button>
             )}
           </div>
         ) : viewMode === "grid" ? (
