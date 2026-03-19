@@ -128,18 +128,19 @@ const Login = () => {
         {/* ── Login card ── */}
         <div className="relative z-10 w-full max-w-md px-6 -mt-16">
           <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/50 p-8">
-            <div className="mb-8 text-center">
-              <img
-                src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
-                alt="NBSC Logo"
-                className="w-20 h-20 object-contain mx-auto mb-3"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-              />
-              <p className="text-white font-bold text-base tracking-wide">NBSC SAS Lost &amp; Found</p>
-              <p className="text-gray-500 text-xs mt-1 tracking-wide">Student Affairs Services · Admin Portal</p>
-              <div className="mt-5 pt-5 border-t border-white/6">
-                <p className="text-gray-400 text-sm">Sign in to your account</p>
+            <div className="mb-7 text-center">
+              {/* Logo */}
+              <div className="flex flex-col items-center gap-2 mb-5">
+                <img
+                  src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
+                  alt="NBSC Logo"
+                  className="w-16 h-16 object-contain"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+                <p className="text-white font-bold text-sm tracking-wide">NBSC SAS Lost &amp; Found</p>
               </div>
+              <h2 className="text-lg font-bold text-white"></h2>
+              <p className="text-gray-500 text-sm mt-1">Enter your credentials to access the admin panel</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -200,7 +201,7 @@ const Login = () => {
                 <>
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 text-sm mt-4 shadow-lg shadow-blue-900/30"
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 text-sm mt-1 shadow-lg shadow-blue-900/30"
                   >
                     Sign In
                   </button>

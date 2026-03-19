@@ -1,5 +1,3 @@
-import nodemailer from "nodemailer";
-
 export const sendEmail = async (config: {
   fromName: string;
   fromEmail: string;
@@ -7,20 +5,27 @@ export const sendEmail = async (config: {
   subject: string;
   html: string;
 }) => {
-  const transporter = nodemailer.createTransport({
-    host:   process.env.SMTP_HOST     || "smtp.gmail.com",
-    port:   Number(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: process.env.SMTP_USERNAME,
-      pass: process.env.SMTP_PASSWORD,
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error("RESEND_API_KEY is not set");
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      from: `${config.fromName} <onboarding@resend.dev>`,
+      to:      config.toEmail,
+      subject: config.subject,
+      html:    config.html,
+    }),
   });
 
-  await transporter.sendMail({
-    from:    `"${config.fromName}" <${process.env.SMTP_FROM_EMAIL || config.fromEmail}>`,
-    to:      config.toEmail,
-    subject: config.subject,
-    html:    config.html,
-  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(JSON.stringify(error));
+  }
+
+  return response.json();
 };
