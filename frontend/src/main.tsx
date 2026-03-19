@@ -9,7 +9,7 @@ import Login from "./pages/login/Login.tsx";
 import FoundItemsPage from "./pages/foundItems/FoundItems.tsx";
 import SingleFoundItem from "./pages/foundItems/SingleFoundItem.tsx";
 import LostItemsPage from "./pages/lostItems/LostItems.tsx";
-import MyClaimReqPage from "./pages/myClaimRequest/MyClaimReqPage.tsx";
+
 import SingleLostItem from "./pages/lostItems/SingleLostItem.tsx";
 import DashboardLayout from "./dashboard/DashboardLayout.tsx";
 import Dashboard from "./dashboard/Dashboard.tsx";
@@ -189,14 +189,7 @@ const router = createBrowserRouter([
       </DashboardLayout>
     ),
   },
-  {
-    path: "/dashboard/myClaimRequest",
-    element: (
-      <DashboardLayout>
-        <MyClaimReqPage />
-      </DashboardLayout>
-    ),
-  },
+
 ]);
 
 createRoot(document.getElementById("root")!).render(
