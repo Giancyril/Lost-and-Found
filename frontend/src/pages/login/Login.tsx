@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { useState, useEffect } from "react";
 import FloatingLines from "../../components/FloatingLines";
+import { FaShieldAlt } from "react-icons/fa";
 
 const LOCKOUT_DURATION = 5 * 60 * 1000; // 5 minutes in ms
 const MAX_ATTEMPTS = 3;
@@ -129,6 +130,16 @@ const Login = () => {
         <div className="relative z-10 w-full max-w-md px-6 -mt-16">
           <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/50 p-8">
             <div className="mb-7 text-center">
+              {/* Logo */}
+              <div className="flex items-center justify-center gap-2.5 mb-5">
+                <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+                  <FaShieldAlt className="text-blue-400" size={16} />
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-black text-sm tracking-widest leading-none">NBSC SAS</p>
+                  <p className="text-gray-500 text-[10px] leading-tight">Lost &amp; Found System</p>
+                </div>
+              </div>
               <h2 className="text-lg font-bold text-white">Staff Sign In</h2>
               <p className="text-gray-500 text-sm mt-1">Enter your credentials to access the admin panel</p>
             </div>

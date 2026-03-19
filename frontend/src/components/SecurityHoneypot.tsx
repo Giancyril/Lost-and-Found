@@ -6,8 +6,8 @@ let _warned = false;
 // ── Honeypot: traps bots/inspectors who find hidden elements ─────────────────
 const SecurityHoneypot = () => {
   useEffect(() => {
-    // ── 1. Console warning banner (production only, once per page load) ───────
-    if (!_warned && import.meta.env.PROD) {
+    // ── 1. Console warning banner (dev only, once per page load) ────────────
+    if (!_warned && !import.meta.env.PROD) {
       _warned = true;
       console.log("%c⚠ STOP!", "color:#ff4444;font-size:48px;font-weight:900;");
       console.log(
