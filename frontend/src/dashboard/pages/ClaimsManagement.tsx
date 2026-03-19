@@ -48,6 +48,7 @@ const ClaimsManagement = () => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailClaim, setEmailClaim]             = useState<any>(null);
   const [isSendingEmail, setIsSendingEmail]     = useState(false);
+  const [claimEmailToAddress, setClaimEmailToAddress] = useState("");
   const [claimEmailSentIds, setClaimEmailSentIds] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem("claimEmailSentIds");
@@ -62,12 +63,6 @@ const ClaimsManagement = () => {
       return next;
     });
   };
-
-  const [claimEmailForm, setClaimEmailForm] = useState({
-    toEmail: "", smtpHost: "smtp.gmail.com", smtpPort: 587,
-    smtpUsername: "", smtpPassword: "", fromName: "NBSC SAS Lost & Found",
-    fromEmail: "", smtpSecure: false,
-  });
 
   const { data: allClaims, isLoading }               = useGetAllClaimsQuery(undefined);
   const { data: auditData, isLoading: auditLoading } = useGetAuditLogsQuery({});
@@ -129,7 +124,7 @@ const ClaimsManagement = () => {
 
   const handleOpenClaimEmail = (claim: any) => {
     setEmailClaim(claim);
-    setClaimEmailForm(prev => ({ ...prev, toEmail: claim.schoolEmail || "" }));
+    setClaimEmailToAddress(claim.schoolEmail || "");
     setIsEmailModalOpen(true);
   };
 
@@ -139,17 +134,9 @@ const ClaimsManagement = () => {
     setIsSendingEmail(true);
     try {
       await sendClaimApprovedEmail({
-        smtp: {
-          host:      claimEmailForm.smtpHost,
-          port:      claimEmailForm.smtpPort,
-          secure:    claimEmailForm.smtpSecure,
-          username:  claimEmailForm.smtpUsername,
-          password:  claimEmailForm.smtpPassword,
-          fromName:  claimEmailForm.fromName,
-          fromEmail: claimEmailForm.fromEmail,
-        },
+        smtp: {},
         recipient: {
-          toEmail:       claimEmailForm.toEmail,
+          toEmail:       claimEmailToAddress,
           claimantName:  emailClaim.claimantName || "Student",
           itemName:      emailClaim.foundItem?.foundItemName || "Unknown Item",
           location:      emailClaim.foundItem?.location || "Unknown",
@@ -161,7 +148,7 @@ const ClaimsManagement = () => {
       if (emailClaim) markClaimEmailSent(emailClaim.id);
       setIsEmailModalOpen(false);
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to send email. Check your SMTP settings.");
+      toast.error(err?.data?.message || "Failed to send email.");
     } finally {
       setIsSendingEmail(false);
     }
@@ -824,8 +811,8 @@ const ClaimsManagement = () => {
                   Recipient Email <span className="text-red-400">*</span>
                   {emailClaim?.schoolEmail && <span className="ml-2 text-[10px] text-emerald-400 font-normal normal-case tracking-normal">✓ Pre-filled</span>}
                 </label>
-                <input type="email" required placeholder="claimant@nbsc.edu.ph" value={claimEmailForm.toEmail}
-                  onChange={e => setClaimEmailForm(p => ({ ...p, toEmail: e.target.value }))}
+                <input type="email" required placeholder="claimant@nbsc.edu.ph" value={claimEmailToAddress}
+                  onChange={e => setClaimEmailToAddress(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/30" />
               </div>
               <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl px-3.5 py-2.5">

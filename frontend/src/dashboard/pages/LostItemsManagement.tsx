@@ -51,12 +51,8 @@ const LostItemsManagement = () => {
 
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailItem, setEmailItem]               = useState<LostItem | null>(null);
-  const [emailForm, setEmailForm] = useState({
-    toEmail: "", smtpHost: "smtp.gmail.com", smtpPort: 587,
-    smtpUsername: "", smtpPassword: "", fromName: "NBSC SAS Lost & Found",
-    fromEmail: "", smtpSecure: false,
-  });
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailToAddress, setEmailToAddress]     = useState("");
+  const [isSendingEmail, setIsSendingEmail]     = useState(false);
   const [emailSentIds, setEmailSentIds] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem("lostItemEmailSentIds");
@@ -124,7 +120,7 @@ const LostItemsManagement = () => {
 
   const handleOpenEmailModal = (item: LostItem) => {
     setEmailItem(item);
-    setEmailForm(prev => ({ ...prev, toEmail: item.schoolEmail || "" }));
+    setEmailToAddress(item.schoolEmail || "");
     setIsEmailModalOpen(true);
   };
 
@@ -134,17 +130,9 @@ const LostItemsManagement = () => {
     setIsSendingEmail(true);
     try {
       await sendLostItemEmail({
-        smtp: {
-          host:      emailForm.smtpHost,
-          port:      emailForm.smtpPort,
-          secure:    emailForm.smtpSecure,
-          username:  emailForm.smtpUsername,
-          password:  emailForm.smtpPassword,
-          fromName:  emailForm.fromName,
-          fromEmail: emailForm.fromEmail,
-        },
+        smtp: {},
         recipient: {
-          toEmail:      emailForm.toEmail,
+          toEmail:      emailToAddress,
           reporterName: emailItem.reporterName || emailItem.user?.username || "Student",
           itemName:     emailItem.lostItemName,
           location:     emailItem.location,
@@ -156,7 +144,7 @@ const LostItemsManagement = () => {
       if (emailItem) markEmailSent(emailItem.id);
       setIsEmailModalOpen(false);
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to send email. Check your SMTP settings.");
+      toast.error(err?.data?.message || "Failed to send email.");
     } finally {
       setIsSendingEmail(false);
     }
@@ -579,111 +567,54 @@ const LostItemsManagement = () => {
       {/* Email Modal */}
       {isEmailModalOpen && emailItem && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl w-full max-w-md border border-gray-700 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
-              <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <FaEnvelope className="text-blue-400" size={14} /> Send Report Confirmation Email
-                </h2>
-                <p className="text-gray-400 text-xs mt-0.5">Send a thank you email to the reporter of this lost item</p>
+          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                  <FaEnvelope size={11} className="text-emerald-400" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-white">Send Report Confirmation</h2>
+                  <p className="text-gray-500 text-[11px]">Notify the reporter their lost item was received</p>
+                </div>
               </div>
-              <button onClick={() => setIsEmailModalOpen(false)} className="text-gray-400 hover:text-white p-1">
-                <FaTimes size={15} />
+              <button onClick={() => setIsEmailModalOpen(false)}
+                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                <FaTimes size={12} />
               </button>
             </div>
             <form onSubmit={handleSendEmail} className="p-5 space-y-4">
-              <div className="bg-gray-900 rounded-xl p-3 border border-gray-700 flex items-center gap-3">
+              <div className="bg-gray-800/60 border border-white/5 rounded-xl p-3 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <FaSearch size={14} className="text-blue-400" />
+                  <FaSearch size={13} className="text-blue-400" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-white text-sm font-semibold truncate">{emailItem.lostItemName}</p>
-                  <p className="text-gray-500 text-xs"> {emailItem.location} ·  {new Date(emailItem.date).toLocaleDateString()}</p>
-                  {emailItem.schoolEmail && (
-                    <p className="text-blue-400 text-xs mt-0.5 flex items-center gap-1">
-                      <FaEnvelope size={9} /> {emailItem.schoolEmail}
-                    </p>
-                  )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-white text-xs font-semibold truncate">{emailItem.lostItemName}</p>
+                  <p className="text-gray-500 text-[10px]">{emailItem.location} · {new Date(emailItem.date).toLocaleDateString()}</p>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">
                   Recipient Email <span className="text-red-400">*</span>
-                  {emailItem.schoolEmail && (
-                    <span className="ml-2 text-[10px] text-green-400 font-normal normal-case tracking-normal">
-                      ✓ Pre-filled from school email
-                    </span>
-                  )}
+                  {emailItem.schoolEmail && <span className="ml-2 text-[10px] text-emerald-400 font-normal normal-case tracking-normal">✓ Pre-filled</span>}
                 </label>
-                <input type="email" required placeholder="reporter@email.com" value={emailForm.toEmail}
-                  onChange={e => setEmailForm(p => ({ ...p, toEmail: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+                <input type="email" required placeholder="reporter@nbsc.edu.ph" value={emailToAddress}
+                  onChange={e => setEmailToAddress(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/30" />
               </div>
-              <details className="group">
-                <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 flex items-center gap-2 py-1 select-none">
-                  <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
-                  SMTP Configuration
-                </summary>
-                <div className="mt-3 space-y-3 pl-4 border-l border-gray-700">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">SMTP Host</label>
-                      <input type="text" value={emailForm.smtpHost} onChange={e => setEmailForm(p => ({ ...p, smtpHost: e.target.value }))}
-                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">SMTP Port</label>
-                      <input type="number" value={emailForm.smtpPort} onChange={e => setEmailForm(p => ({ ...p, smtpPort: +e.target.value }))}
-                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between bg-gray-900 border border-gray-700 rounded-lg px-3 py-2">
-                    <div>
-                      <p className="text-xs text-gray-400 font-medium">SSL/TLS (secure)</p>
-                      <p className="text-[10px] text-gray-600 mt-0.5">Port <strong className="text-gray-500">587</strong> → OFF · Port <strong className="text-gray-500">465</strong> → ON</p>
-                    </div>
-                    <button type="button" onClick={() => setEmailForm(p => ({ ...p, smtpSecure: !p.smtpSecure }))}
-                      className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ml-3 ${emailForm.smtpSecure ? "bg-blue-600" : "bg-gray-600"}`}>
-                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${emailForm.smtpSecure ? "translate-x-5" : "translate-x-0.5"}`} />
-                    </button>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">SMTP Username</label>
-                    <input type="text" placeholder="your@gmail.com" value={emailForm.smtpUsername} onChange={e => setEmailForm(p => ({ ...p, smtpUsername: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">SMTP Password / App Password</label>
-                    <input type="password" placeholder="••••••••" value={emailForm.smtpPassword} onChange={e => setEmailForm(p => ({ ...p, smtpPassword: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">From Name</label>
-                      <input type="text" value={emailForm.fromName} onChange={e => setEmailForm(p => ({ ...p, fromName: e.target.value }))}
-                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">From Email</label>
-                      <input type="email" placeholder="noreply@school.edu" value={emailForm.fromEmail} onChange={e => setEmailForm(p => ({ ...p, fromEmail: e.target.value }))}
-                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                    </div>
-                  </div>
-                </div>
-              </details>
-              <div className="bg-blue-900/20 border border-blue-600/20 rounded-xl px-4 py-3">
-                <p className="text-blue-300 text-xs leading-relaxed">
-                  📧 This will send a professionally formatted <strong>thank you confirmation email</strong> to the reporter, acknowledging receipt of their lost item report for <strong>"{emailItem.lostItemName}"</strong>.
+              <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl px-3.5 py-2.5">
+                <p className="text-emerald-300/80 text-xs leading-relaxed">
+                  Sends a formatted confirmation email to the reporter of <strong>"{emailItem.lostItemName}"</strong>.
                 </p>
               </div>
-              <div className="flex gap-3 pt-1">
+              <div className="flex gap-2 pt-1">
                 <button type="button" onClick={() => setIsEmailModalOpen(false)} disabled={isSendingEmail}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+                  className="flex-1 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 py-2 rounded-xl text-xs font-medium transition-colors">
                   Cancel
                 </button>
                 <button type="submit" disabled={isSendingEmail}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-                  {isSendingEmail ? <><Spinner /> Sending...</> : <><FaEnvelope size={12} /> Send Email</>}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+                  {isSendingEmail ? <><Spinner color="text-white" /> Sending...</> : <><FaEnvelope size={10} /> Send Email</>}
                 </button>
               </div>
             </form>
