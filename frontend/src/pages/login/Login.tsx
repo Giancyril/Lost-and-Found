@@ -200,7 +200,7 @@ const Login = () => {
                 <>
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 text-sm mt-1 shadow-lg shadow-blue-900/30"
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 text-sm mt-4 shadow-lg shadow-blue-900/30"
                   >
                     Sign In
                   </button>
