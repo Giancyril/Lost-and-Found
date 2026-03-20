@@ -26,6 +26,8 @@ const createFoundItem = async (req: Request, res: Response) => {
 
 const getFoundItem = async (req: Request, res: Response) => {
   try {
+    // ── EGRESS FIX: cache public list for 60 seconds ──────────────────────────
+    res.set("Cache-Control", "public, max-age=60");
     const meta = await utils.calculateMeta(req.query);
     const result = await foundItemService.getFoundItem(req.query);
     sendResponse(res, {
@@ -123,8 +125,6 @@ const deleteMyFoundItem = async (req: Request, res: Response) => {
     });
   }
 };
-
-// ── Archive ───────────────────────────────────────────────────────────────────
 
 const archiveFoundItem = async (req: Request, res: Response) => {
   try {

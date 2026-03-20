@@ -50,6 +50,8 @@ const createLostItem = async (req: Request, res: Response) => {
 
 const getLostItem = async (req: Request, res: Response) => {
   try {
+    // ── EGRESS FIX: cache public list for 60 seconds ──────────────────────────
+    res.set("Cache-Control", "public, max-age=60");
     const meta = await utils.calculateMeta(req.query);
     const result = await lostTItemServices.getLostItem(req.query);
     sendResponse(res, {
@@ -69,7 +71,6 @@ const getLostItem = async (req: Request, res: Response) => {
   }
 };
 
-// ✅ admin — all lost items including resolved
 const getAllLostItems = async (req: Request, res: Response) => {
   try {
     const meta = await utils.calculateMeta(req.query);
@@ -175,7 +176,7 @@ export const lostItemController = {
   toggleFoundStatus,
   createLostItem,
   getLostItem,
-  getAllLostItems, // ✅ added
+  getAllLostItems,
   getSingleLostItem,
   getMyLostItem,
   editMyLostItem,
