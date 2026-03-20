@@ -1,23 +1,23 @@
 import prisma from "../../config/prisma";
 
 interface CreatePostData {
-  itemName: string;
-  description: string;
-  location: string;
-  dateLost: string;
-  imageUrl?: string;
+  itemName:     string;
+  description:  string;
+  location:     string;
+  dateLost:     string;
+  imageUrl?:    string;
   reporterName?: string;
   contactHint?: string;
 }
 
 interface GetPostsParams {
-  page?: number;
-  limit?: number;
+  page?:       number;
+  limit?:      number;
   searchTerm?: string;
 }
 
 interface CreateTipData {
-  details: string;
+  details:   string;
   location?: string;
 }
 
@@ -53,7 +53,22 @@ const getPosts = async ({ page = 1, limit = 12, searchTerm = "" }: GetPostsParam
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
-      include: { _count: { select: { tips: true } } },
+      // ── EGRESS FIX: exclude imageUrl (base64) from list ───────────────────
+      select: {
+        id:           true,
+        itemName:     true,
+        description:  true,
+        location:     true,
+        dateLost:     true,
+        reporterName: true,
+        contactHint:  true,
+        isResolved:   true,
+        isDeleted:    true,
+        createdAt:    true,
+        updatedAt:    true,
+        // imageUrl excluded — too large for list view
+        _count: { select: { tips: true } },
+      },
     }),
     prisma.bulletinPost.count({ where }),
   ]);
@@ -62,6 +77,14 @@ const getPosts = async ({ page = 1, limit = 12, searchTerm = "" }: GetPostsParam
     data,
     meta: { total, page, limit, totalPage: Math.ceil(total / limit) },
   };
+};
+
+const getSinglePost = async (id: string) => {
+  // Single post view — include imageUrl here since it's just one record
+  return prisma.bulletinPost.findFirst({
+    where: { id, isDeleted: false },
+    include: { _count: { select: { tips: true } } },
+  });
 };
 
 const createTip = async (postId: string, data: CreateTipData) => {
@@ -76,7 +99,7 @@ const createTip = async (postId: string, data: CreateTipData) => {
 
 const getTips = async (postId: string) => {
   return prisma.bulletinTip.findMany({
-    where: { bulletinPostId: postId },
+    where:   { bulletinPostId: postId },
     orderBy: { createdAt: "desc" },
   });
 };
@@ -84,7 +107,7 @@ const getTips = async (postId: string) => {
 const deletePost = async (id: string) => {
   return prisma.bulletinPost.update({
     where: { id },
-    data: { isDeleted: true, deletedAt: new Date() },
+    data:  { isDeleted: true, deletedAt: new Date() },
   });
 };
 
@@ -95,13 +118,14 @@ const deleteTip = async (tipId: string) => {
 const resolvePost = async (id: string) => {
   return prisma.bulletinPost.update({
     where: { id },
-    data: { isResolved: true },
+    data:  { isResolved: true },
   });
 };
 
 export const bulletinPostService = {
   createPost,
   getPosts,
+  getSinglePost,
   createTip,
   getTips,
   deletePost,
