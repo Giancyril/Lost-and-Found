@@ -18,6 +18,9 @@ import { getAuditLogs } from "../utils/auditLog";
 import { aiSearchController } from "../modules/aiSearch/aiSearch.controller";
 import { aiSearchValidation } from "../modules/aiSearch/aiSearch.validate";
 import { sendLostItemEmail, sendClaimApprovedEmail } from "../utils/emailController";
+import { bulletinPostController } from "../modules/bulletinPost/bulletinPost.controller";
+import { createPostSchema, createTipSchema } from "../modules/bulletinPost/bulletinPost.validate";
+import { postCreationLimiter, tipSubmissionLimiter } from "../midddlewares/bulletinRateLimit";
 
 const router = express.Router();
 
@@ -84,5 +87,14 @@ router.post("/ai-search", validateRequest(aiSearchValidation.aiSearchSchema), ai
 // ── Email / Mailer ──
 router.post("/email/lost-item",      auth(), sendLostItemEmail);
 router.post("/email/claim-approved", auth(), sendClaimApprovedEmail);
+
+////////////////////////////////////////////////// bulletin posts //////////////////////////////////////////////
+router.post("/bulletin-posts",                    postCreationLimiter,  validateRequest(createPostSchema), bulletinPostController.createPost);
+router.get("/bulletin-posts",                                           bulletinPostController.getPosts);
+router.post("/bulletin-posts/:id/tips",           tipSubmissionLimiter, validateRequest(createTipSchema),  bulletinPostController.createTip);
+router.get("/bulletin-posts/:id/tips",                                  bulletinPostController.getTips);
+router.delete("/bulletin-posts/:id",              auth(),               bulletinPostController.deletePost);
+router.delete("/bulletin-posts/:id/tips/:tipId",  auth(),               bulletinPostController.deleteTip);
+router.put("/bulletin-posts/:id/resolve",         auth(),               bulletinPostController.resolvePost);
 
 export default router;

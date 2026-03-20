@@ -230,6 +230,39 @@ const api = baseApi.injectEndpoints({
     aiSearch: builder.mutation({
       query: (data: { query: string }) => ({ url: "/ai-search", method: "POST", body: data }),
     }),
+
+    // bulletin posts
+    getBulletinPosts: builder.query({
+      query: (params: { page?: number; limit?: number; searchTerm?: string }) => ({ url: "/bulletin-posts", method: "GET", params }),
+      providesTags: ["bulletinPosts"],
+    }),
+    createBulletinPost: builder.mutation({
+      query: (data: any) => ({ url: "/bulletin-posts", method: "POST", body: data }),
+      invalidatesTags: ["bulletinPosts"],
+    }),
+    getBulletinTips: builder.query({
+      query: (id: string) => ({ url: `/bulletin-posts/${id}/tips`, method: "GET" }),
+    }),
+    createBulletinTip: builder.mutation({
+      query: ({ id, ...data }: { id: string; details: string; location?: string }) => ({
+        url: `/bulletin-posts/${id}/tips`, method: "POST", body: data,
+      }),
+      invalidatesTags: ["bulletinPosts"],
+    }),
+    deleteBulletinPost: builder.mutation({
+      query: (id: string) => ({ url: `/bulletin-posts/${id}`, method: "DELETE" }),
+      invalidatesTags: ["bulletinPosts"],
+    }),
+    deleteBulletinTip: builder.mutation({
+      query: ({ postId, tipId }: { postId: string; tipId: string }) => ({
+        url: `/bulletin-posts/${postId}/tips/${tipId}`, method: "DELETE",
+      }),
+      invalidatesTags: ["bulletinPosts"],
+    }),
+    resolveBulletinPost: builder.mutation({
+      query: (id: string) => ({ url: `/bulletin-posts/${id}/resolve`, method: "PUT" }),
+      invalidatesTags: ["bulletinPosts"],
+    }),
   }),
 });
 
@@ -284,4 +317,11 @@ export const {
   useGetStaleFoundItemsQuery,
   useArchiveFoundItemMutation,
   useRestoreFoundItemMutation,
+  useGetBulletinPostsQuery,
+  useCreateBulletinPostMutation,
+  useGetBulletinTipsQuery,
+  useCreateBulletinTipMutation,
+  useDeleteBulletinPostMutation,
+  useDeleteBulletinTipMutation,
+  useResolveBulletinPostMutation,
 } = api;

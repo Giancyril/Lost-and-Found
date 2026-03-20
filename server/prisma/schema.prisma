@@ -124,6 +124,36 @@ model ClaimAuditLog {
   @@map("claimAuditLogs")
 }
 
+model BulletinPost {
+  id           String        @id @default(uuid())
+  itemName     String
+  description  String
+  location     String
+  dateLost     DateTime
+  imageUrl     String        @default("")
+  reporterName String        @default("")
+  contactHint  String        @default("")
+  isResolved   Boolean       @default(false)
+  isDeleted    Boolean       @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  tips         BulletinTip[]
+
+  @@map("bulletinPosts")
+}
+
+model BulletinTip {
+  id             String       @id @default(uuid())
+  bulletinPostId String
+  bulletinPost   BulletinPost @relation(fields: [bulletinPostId], references: [id])
+  location       String       @default("")
+  details        String
+  createdAt      DateTime     @default(now())
+
+  @@map("bulletinTips")
+}
+
 enum status {
   PENDING
   APPROVED

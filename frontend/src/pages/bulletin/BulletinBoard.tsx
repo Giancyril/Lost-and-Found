@@ -1,84 +1,28 @@
-import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
 import {
-  FaSearch, FaMapMarkerAlt, FaCalendarAlt,
-  FaLightbulb, FaTimes, FaChevronLeft, FaChevronRight,
-  FaCheckCircle,
-  FaEye, FaTag, FaWallet, FaMobileAlt, FaLaptop, FaKey,
-  FaBriefcase, FaHeadphones, FaGlasses, FaBook, FaIdCard,
-  FaUmbrella, FaTshirt, FaCamera, FaClock, FaTint, FaTrash,
+  FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight,
+  FaLightbulb, FaTimes, FaEye, FaTrash, FaPlus, FaCheckCircle,
+  FaUser, FaTag, FaImage,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
+import {
+  useGetBulletinPostsQuery,
+  useCreateBulletinPostMutation,
+  useGetBulletinTipsQuery,
+  useCreateBulletinTipMutation,
+  useDeleteBulletinPostMutation,
+  useDeleteBulletinTipMutation,
+  useResolveBulletinPostMutation,
+} from "../../redux/api/api";
 import { useUserVerification } from "../../auth/auth";
+import type { BulletinPost, BulletinTip } from "../../types/types";
 
-// ── Category icon resolver ────────────────────────────────────────────────────
-const getCategoryIcon = (name: string) => {
-  const n = name?.toLowerCase() ?? "";
-  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch"))
-    return <FaWallet size={9} className="text-amber-400" />;
-  if (n.includes("phone") || n.includes("mobile") || n.includes("celphone") || n.includes("cellphone"))
-    return <FaMobileAlt size={9} className="text-cyan-400" />;
-  if (n.includes("laptop") || n.includes("computer") || n.includes("electronic") || n.includes("device") || n.includes("gadget"))
-    return <FaLaptop size={9} className="text-indigo-400" />;
-  if (n.includes("key"))
-    return <FaKey size={9} className="text-orange-400" />;
-  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage"))
-    return <FaBriefcase size={9} className="text-amber-400" />;
-  if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod"))
-    return <FaHeadphones size={9} className="text-green-400" />;
-  if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass"))
-    return <FaGlasses size={9} className="text-teal-400" />;
-  if (n.includes("book") || n.includes("stationery") || n.includes("notebook"))
-    return <FaBook size={9} className="text-yellow-400" />;
-  if (n.includes("id") || n.includes("card") || n.includes("document"))
-    return <FaIdCard size={9} className="text-blue-400" />;
-  if (n.includes("umbrella"))
-    return <FaUmbrella size={9} className="text-blue-400" />;
-  if (n.includes("cloth") || n.includes("shirt") || n.includes("uniform") || n.includes("wear"))
-    return <FaTshirt size={9} className="text-purple-400" />;
-  if (n.includes("camera") || n.includes("photo"))
-    return <FaCamera size={9} className="text-violet-400" />;
-  if (n.includes("watch") || n.includes("clock"))
-    return <FaClock size={9} className="text-gray-300" />;
-  if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask"))
-    return <FaTint size={9} className="text-cyan-400" />;
-  return <FaTag size={9} className="text-blue-400" />;
-};
+const MAX_SIZE_MB = 5;
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-// ── Tip storage helpers ───────────────────────────────────────────────────────
-const saveTipLocally = (lostItemId: string, tip: { location: string; details: string; time: string }) => {
-  try {
-    const existing = JSON.parse(localStorage.getItem("bulletin_tips") || "{}");
-    if (!existing[lostItemId]) existing[lostItemId] = [];
-    existing[lostItemId].push(tip);
-    localStorage.setItem("bulletin_tips", JSON.stringify(existing));
-  } catch {}
-};
-
-const getTipsForItem = (lostItemId: string): { location: string; details: string; time: string }[] => {
-  try {
-    const existing = JSON.parse(localStorage.getItem("bulletin_tips") || "{}");
-    return existing[lostItemId] || [];
-  } catch { return []; }
-};
-
-const deleteTipLocally = (lostItemId: string, index: number): { location: string; details: string; time: string }[] => {
-  try {
-    const existing = JSON.parse(localStorage.getItem("bulletin_tips") || "{}");
-    if (existing[lostItemId]) {
-      existing[lostItemId].splice(index, 1);
-      localStorage.setItem("bulletin_tips", JSON.stringify(existing));
-      return existing[lostItemId];
-    }
-    return [];
-  } catch { return []; }
-};
-
-const timeAgo = (dateStr: string) => {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(diff / 60000);
+const timeAgo = (d: string) => {
+  const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
   if (m < 1) return "Just now";
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
@@ -86,211 +30,488 @@ const timeAgo = (dateStr: string) => {
   return `${Math.floor(h / 24)}d ago`;
 };
 
-// ── Tip Modal ──────────────────────────────────────────────────────────────────
-const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
-  const [location, setLocation]   = useState("");
-  const [details, setDetails]     = useState("");
-  const [submitted, setSubmitted] = useState(false);
+const todayStr = () => new Date().toISOString().split("T")[0];
 
-  const handleSubmit = (e: React.FormEvent) => {
+// ── Shared spinner ────────────────────────────────────────────────────────────
+const Spinner = ({ className = "h-3.5 w-3.5" }: { className?: string }) => (
+  <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+  </svg>
+);
+
+// ── Error handler helper ──────────────────────────────────────────────────────
+// RTK Query errors surface in the .unwrap() rejection, not the catch of the
+// non-unwrapped call. Using .unwrap() lets us distinguish HTTP status codes.
+const handleApiError = (err: any, fallback = "Something went wrong.") => {
+  const status = err?.status ?? err?.originalStatus;
+  if (status === 429) {
+    toast.error("Too many requests. Please try again later.");
+  } else if (status === 401) {
+    toast.error("You are not authorized to perform this action.");
+  } else {
+    const msg = err?.data?.message ?? fallback;
+    toast.error(msg);
+  }
+};
+
+// ── Post Modal ────────────────────────────────────────────────────────────────
+const PostModal = ({ onClose }: { onClose: () => void }) => {
+  const [createPost, { isLoading }] = useCreateBulletinPostMutation();
+  const [itemName,     setItemName]     = useState("");
+  const [description,  setDescription]  = useState("");
+  const [location,     setLocation]     = useState("");
+  const [dateLost,     setDateLost]     = useState(todayStr());
+  const [reporterName, setReporterName] = useState("");
+  const [contactHint,  setContactHint]  = useState("");
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageError,   setImageError]   = useState("");
+  const [errors,       setErrors]       = useState<Record<string, string>>({});
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (files: FileList | null) => {
+    if (!files || !files[0]) return;
+    const file = files[0];
+    setImageError("");
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setImageError("Only JPEG, PNG, or WebP images are allowed.");
+      return;
+    }
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      setImageError(`Image must be under ${MAX_SIZE_MB} MB.`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!itemName.trim())
+      e.itemName = "Item name is required";
+    if (description.trim().length < 10)
+      e.description = "Description must be at least 10 characters";
+    if (!location.trim())
+      e.location = "Location is required";
+    if (!dateLost)
+      e.dateLost = "Date is required";
+    else if (new Date(dateLost) > new Date())
+      e.dateLost = "Date cannot be in the future";
+    return e;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!details.trim()) return;
-    saveTipLocally(item.id, {
-      location: location.trim() || "Location not specified",
-      details:  details.trim(),
-      time:     new Date().toISOString(),
-    });
-    setSubmitted(true);
-    toast.success("Your tip has been submitted anonymously!");
-    setTimeout(onClose, 1800);
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    try {
+      await createPost({
+        itemName:     itemName.trim(),
+        description:  description.trim(),
+        location:     location.trim(),
+        dateLost,
+        imageUrl:     imagePreview || undefined,
+        reporterName: reporterName.trim() || undefined,
+        contactHint:  contactHint.trim() || undefined,
+      }).unwrap();
+      toast.success("Your post has been submitted!");
+      onClose();
+    } catch (err: any) {
+      handleApiError(err, "Failed to submit post.");
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-2xl w-full max-w-md border border-gray-800 shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-          <div>
-            <h3 className="text-white font-bold text-base flex items-center gap-2">
-              <FaLightbulb className="text-blue-400" size={14} /> Submit a Tip
-            </h3>
-            <p className="text-gray-500 text-xs mt-0.5">Your tip is completely anonymous</p>
+      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <FaPlus size={11} className="text-amber-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Post a Lost Item</h3>
+              <p className="text-gray-500 text-[11px]">No login required — community will help</p>
+            </div>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white p-1 transition-colors">
-            <FaTimes size={15} />
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+          >
+            <FaTimes size={12} />
           </button>
         </div>
 
-        <div className="p-5">
-          <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
-            <img
-              src={item?.img || "/bgimg.png"}
-              alt={item?.lostItemName}
-              onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-              className="w-12 h-12 rounded-lg object-cover shrink-0"
+        <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
+          {/* Item name */}
+          <div>
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+              Item Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={itemName}
+              onChange={e => setItemName(e.target.value)}
+              maxLength={100}
+              placeholder="e.g. Blue backpack, iPhone 13, Student ID..."
+              className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
             />
-            <div className="min-w-0">
-              <p className="text-white text-sm font-semibold truncate">{item?.lostItemName}</p>
-              <p className="text-gray-400 text-xs mt-0.5 flex items-center gap-1">
-                <FaMapMarkerAlt size={9} /> {item?.location}
-              </p>
-            </div>
-            <span className="shrink-0 px-2 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-bold rounded-full border border-red-500/20">Lost</span>
+            {errors.itemName && <p className="text-red-400 text-xs mt-1">{errors.itemName}</p>}
           </div>
 
-          {submitted ? (
-            <div className="text-center py-6">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
-                <FaCheckCircle className="text-emerald-400" size={24} />
-              </div>
-              <p className="text-white font-semibold">Tip Submitted!</p>
-              <p className="text-gray-500 text-xs mt-1">Thank you for helping reunite lost items</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-white uppercase tracking-widest mb-1.5">
-                  Where did you see it? <span className="text-gray-500 font-normal normal-case tracking-normal">(optional)</span>
-                </label>
-                <div className="relative">
-                  <FaMapMarkerAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={e => setLocation(e.target.value)}
-                    placeholder="e.g. Room 205, Library, Canteen..."
-                    className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/40 focus:border-yellow-500/40"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-white uppercase tracking-widest mb-1.5">
-                  What did you see? <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  value={details}
-                  onChange={e => setDetails(e.target.value)}
-                  rows={4}
-                  required
-                  minLength={10}
-                  placeholder="Describe what you saw, when, and any other helpful details..."
-                  className="w-full p-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-yellow-500/40 focus:border-yellow-500/40"
-                />
-                <p className="text-gray-600 text-[10px] mt-1">{details.length} / min. 10 characters</p>
-              </div>
-
-              <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-3">
-                <p className="text-blue-300/80 text-xs leading-relaxed">
-                  Your tip is submitted <strong>completely anonymously</strong>. No personal information is collected or stored.
-                </p>
-              </div>
-
-              <div className="flex gap-3 pt-1">
-                <button type="button" onClick={onClose}
-                  className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-sm font-medium rounded-xl transition-colors">
-                  Cancel
-                </button>
-                <button type="submit" disabled={details.trim().length < 10}
-                  className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
-                  Submit Tip
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ── Tips Viewer Modal ──────────────────────────────────────────────────────────
-const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () => void; isAdmin?: boolean }) => {
-  const [tips, setTips] = useState(() => getTipsForItem(item.id));
-  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null);
-
-  const handleDeleteTip = (index: number) => {
-    const updated = deleteTipLocally(item.id, index);
-    setTips([...updated]);
-    setConfirmDeleteIdx(null);
-    toast.success("Tip removed successfully");
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-2xl w-full max-w-md border border-gray-800 shadow-2xl max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
+          {/* Description */}
           <div>
-            <h3 className="text-white font-bold text-base flex items-center gap-2">
-              <FaEye className="text-cyan-400" size={14} /> Community Tips
-              {isAdmin && (
-                <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded-full font-semibold">
-                  Admin
-                </span>
-              )}
-            </h3>
-            <p className="text-gray-500 text-xs mt-0.5">
-              {item?.lostItemName} · {tips.length} {tips.length === 1 ? "tip" : "tips"}
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+              Description <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              rows={3}
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              maxLength={500}
+              placeholder="Describe the item — color, brand, distinguishing features..."
+              className="w-full p-3 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+            />
+            <p className="text-gray-700 text-[10px] mt-0.5">{description.length}/500</p>
+            {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description}</p>}
+          </div>
+
+          {/* Location + Date row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Last Seen Location <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <FaMapMarkerAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
+                <input
+                  type="text"
+                  value={location}
+                  onChange={e => setLocation(e.target.value)}
+                  maxLength={100}
+                  placeholder="Room 205, Library..."
+                  className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                />
+              </div>
+              {errors.location && <p className="text-red-400 text-xs mt-1">{errors.location}</p>}
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Date Lost <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="date"
+                value={dateLost}
+                onChange={e => setDateLost(e.target.value)}
+                max={todayStr()}
+                className="w-full px-3 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+              />
+              {errors.dateLost && <p className="text-red-400 text-xs mt-1">{errors.dateLost}</p>}
+            </div>
+          </div>
+
+          {/* Optional fields */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Your Name{" "}
+                <span className="text-gray-600 font-normal normal-case">(optional)</span>
+              </label>
+              <div className="relative">
+                <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={10} />
+                <input
+                  type="text"
+                  value={reporterName}
+                  onChange={e => setReporterName(e.target.value)}
+                  maxLength={80}
+                  placeholder="Juan dela Cruz"
+                  className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Section/Grade{" "}
+                <span className="text-gray-600 font-normal normal-case">(optional)</span>
+              </label>
+              <div className="relative">
+                <FaTag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={10} />
+                <input
+                  type="text"
+                  value={contactHint}
+                  onChange={e => setContactHint(e.target.value)}
+                  maxLength={100}
+                  placeholder="BSIT 2A"
+                  className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Photo upload */}
+          <div>
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+              Photo <span className="text-gray-600 font-normal normal-case">(optional)</span>
+            </label>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={e => handleFile(e.target.files)}
+            />
+            {imagePreview ? (
+              <div className="relative w-full h-32 rounded-xl overflow-hidden border border-white/10">
+                <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagePreview("");
+                    setImageError("");
+                    if (fileRef.current) fileRef.current.value = "";
+                  }}
+                  className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-red-500 transition-colors"
+                >
+                  <FaTimes size={10} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="w-full h-24 border-2 border-dashed border-white/10 hover:border-amber-500/40 rounded-xl flex flex-col items-center justify-center gap-1.5 text-gray-500 hover:text-amber-400 transition-all"
+              >
+                <FaImage size={18} />
+                <span className="text-xs">Click to upload (JPEG, PNG, WebP · max 5 MB)</span>
+              </button>
+            )}
+            {imageError && <p className="text-red-400 text-xs mt-1">{imageError}</p>}
+          </div>
+
+          <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl px-3.5 py-2.5">
+            <p className="text-amber-300/70 text-[11px] leading-relaxed">
+              ℹ️ Your post will be visible to the community. The SAS office may contact you if a match is found.
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white p-1 transition-colors">
-            <FaTimes size={15} />
+
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
+            >
+              {isLoading ? (
+                <><Spinner /> Posting...</>
+              ) : (
+                <><FaPlus size={10} /> Post Item</>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ── Tip Modal ─────────────────────────────────────────────────────────────────
+const TipModal = ({ post, onClose }: { post: BulletinPost; onClose: () => void }) => {
+  const [createTip, { isLoading }] = useCreateBulletinTipMutation();
+  const [details,  setDetails]  = useState("");
+  const [location, setLocation] = useState("");
+  const [error,    setError]    = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (details.trim().length < 10) {
+      setError("Please provide at least 10 characters.");
+      return;
+    }
+    try {
+      await createTip({
+        id:       post.id,
+        details:  details.trim(),
+        location: location.trim() || undefined,
+      }).unwrap();
+      toast.success("Tip submitted — thank you!");
+      onClose();
+    } catch (err: any) {
+      handleApiError(err, "Failed to submit tip.");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+              <FaLightbulb size={11} className="text-emerald-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">I Saw This Item</h3>
+              <p className="text-gray-500 text-[11px] truncate max-w-[200px]">{post.itemName}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+          >
+            <FaTimes size={12} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5">
-          {tips.length === 0 ? (
+        <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
+          <div>
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+              What did you see? <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              rows={4}
+              value={details}
+              onChange={e => { setDetails(e.target.value); setError(""); }}
+              maxLength={500}
+              placeholder="Describe where and when you saw this item..."
+              className="w-full p-3 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            />
+            <p className="text-gray-700 text-[10px] mt-0.5">{details.length}/500</p>
+            {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+              Location{" "}
+              <span className="text-gray-600 font-normal normal-case">(optional)</span>
+            </label>
+            <div className="relative">
+              <FaMapMarkerAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
+              <input
+                type="text"
+                value={location}
+                onChange={e => setLocation(e.target.value)}
+                maxLength={100}
+                placeholder="e.g. Near the canteen, Room 101..."
+                className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
+            >
+              {isLoading ? (
+                <><Spinner /> Submitting...</>
+              ) : (
+                <><FaLightbulb size={10} /> Submit Tip</>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ── Tips Viewer Modal ─────────────────────────────────────────────────────────
+const TipsViewerModal = ({
+  post,
+  isAdmin,
+  onClose,
+}: {
+  post: BulletinPost;
+  isAdmin: boolean;
+  onClose: () => void;
+}) => {
+  const { data, isLoading } = useGetBulletinTipsQuery(post.id);
+  const [deleteTip] = useDeleteBulletinTipMutation();
+  const tips: BulletinTip[] = data?.data ?? [];
+
+  const handleDelete = async (tipId: string) => {
+    if (!confirm("Delete this tip?")) return;
+    try {
+      await deleteTip({ postId: post.id, tipId }).unwrap();
+      toast.success("Tip deleted.");
+    } catch (err: any) {
+      handleApiError(err, "Failed to delete tip.");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl max-h-[85vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+              <FaEye size={11} className="text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Community Tips</h3>
+              <p className="text-gray-500 text-[11px] truncate max-w-[200px]">{post.itemName}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+          >
+            <FaTimes size={12} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-5 space-y-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Spinner className="h-6 w-6 text-gray-500" />
+            </div>
+          ) : tips.length === 0 ? (
             <div className="text-center py-10">
-              <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-3">
-                <FaEye className="text-cyan-400 opacity-40" size={22} />
-              </div>
-              <p className="text-white text-sm font-semibold">No tips yet</p>
-              <p className="text-gray-500 text-xs mt-1.5 leading-relaxed max-w-xs mx-auto">
-                No one has submitted a tip for this item yet. If you've seen it, click{" "}
-                <strong className="text-blue-400">"I Saw This"</strong> to help!
-              </p>
+              <FaLightbulb size={28} className="text-gray-700 mx-auto mb-2" />
+              <p className="text-gray-500 text-sm">No tips yet.</p>
+              <p className="text-gray-600 text-xs mt-1">Be the first to share a sighting.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {tips.map((tip, i) => (
-                <div key={i} className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-4 pt-3 pb-2">
-                    <FaMapMarkerAlt size={10} className="text-orange-400 shrink-0" />
-                    <span className="text-orange-300 text-xs font-medium truncate">{tip.location}</span>
-                    <span className="text-gray-600 text-[10px] ml-auto shrink-0">{timeAgo(tip.time)}</span>
-                    {isAdmin && (
-                      confirmDeleteIdx === i ? (
-                        <div className="flex items-center gap-1 ml-1 shrink-0">
-                          <button
-                            onClick={() => handleDeleteTip(i)}
-                            className="flex items-center gap-1 px-2 py-0.5 bg-red-500 hover:bg-red-400 text-white text-[10px] font-semibold rounded-lg transition-all"
-                          >
-                            <FaTrash size={8} /> Confirm
-                          </button>
-                          <button
-                            onClick={() => setConfirmDeleteIdx(null)}
-                            className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-[10px] font-medium rounded-lg transition-all"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setConfirmDeleteIdx(i)}
-                          title="Delete tip"
-                          className="ml-1 w-6 h-6 flex items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500 border border-red-500/20 text-red-400 hover:text-white transition-all shrink-0"
-                        >
-                          <FaTrash size={9} />
-                        </button>
-                      )
-                    )}
-                  </div>
-                  <div className="px-4 pb-3">
-                    <p className="text-gray-300 text-sm leading-relaxed">{tip.details}</p>
-                    <p className="text-gray-600 text-[10px] mt-2">Anonymous tip</p>
-                  </div>
+            tips.map(tip => (
+              <div key={tip.id} className="bg-gray-800/60 border border-white/5 rounded-xl p-3.5 flex gap-3">
+                <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <FaLightbulb size={10} className="text-emerald-400" />
                 </div>
-              ))}
-            </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm leading-relaxed">{tip.details}</p>
+                  {tip.location && (
+                    <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                      <FaMapMarkerAlt size={9} /> {tip.location}
+                    </p>
+                  )}
+                  <p className="text-gray-600 text-[10px] mt-1">{timeAgo(tip.createdAt)}</p>
+                </div>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleDelete(tip.id)}
+                    className="w-6 h-6 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center text-red-400 hover:text-red-300 transition-colors shrink-0 self-start mt-0.5"
+                  >
+                    <FaTrash size={9} />
+                  </button>
+                )}
+              </div>
+            ))
           )}
         </div>
       </div>
@@ -298,312 +519,313 @@ const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () =>
   );
 };
 
-// ── Main Bulletin Board Page ───────────────────────────────────────────────────
-const BulletinBoard = () => {
-  const [searchTerm, setSearchTerm]         = useState("");
-  const [fuzzyTerm, setFuzzyTerm]           = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("ALL");
-  const [currentPage, setCurrentPage]       = useState(1);
-  const [sortBy, setSortBy]                 = useState("date");
-  const [sortOrder, setSortOrder]           = useState("desc");
-  const [tipItem, setTipItem]               = useState<any>(null);
-  const [viewTipsItem, setViewTipsItem]     = useState<any>(null);
-  const [limit]                             = useState(12);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+// ── Main Page ─────────────────────────────────────────────────────────────────
+export default function BulletinBoard() {
+  const user: any = useUserVerification();
+  const isAdmin = user?.role === "ADMIN";
 
-  const users: any = useUserVerification();
-  const isAdmin    = users?.role === "ADMIN";
+  const [searchTerm,      setSearchTerm]      = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page,            setPage]            = useState(1);
+  const LIMIT = 12;
 
-  const { data: lostItems, isLoading } = useGetLostItemsQuery({
-    searchTerm,
-    page: currentPage,
-    limit,
-    sortBy,
-    sortOrder,
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  const { data, isLoading, isFetching } = useGetBulletinPostsQuery({
+    page,
+    limit: LIMIT,
+    searchTerm: debouncedSearch || undefined,
   });
 
-  const { data: categoriesData } = useCategoryQuery("");
+  const [deletePost]  = useDeleteBulletinPostMutation();
+  const [resolvePost] = useResolveBulletinPostMutation();
 
-  const handleFuzzyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setFuzzyTerm(v);
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => { setSearchTerm(v); setCurrentPage(1); }, 400);
+  const posts: BulletinPost[] = data?.data ?? [];
+  const meta = data?.meta ?? { total: 0, page: 1, totalPage: 1 };
+
+  const [showPostModal,  setShowPostModal]  = useState(false);
+  const [tipTarget,      setTipTarget]      = useState<BulletinPost | null>(null);
+  const [viewTipsTarget, setViewTipsTarget] = useState<BulletinPost | null>(null);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this post? This cannot be undone.")) return;
+    try {
+      await deletePost(id).unwrap();
+      toast.success("Post deleted.");
+    } catch (err: any) {
+      handleApiError(err, "Failed to delete post.");
+    }
   };
 
-  const clearSearch = () => { setFuzzyTerm(""); setSearchTerm(""); setCurrentPage(1); };
-
-  const filteredItems = categoryFilter === "ALL"
-    ? lostItems?.data ?? []
-    : (lostItems?.data ?? []).filter((i: any) =>
-        i?.category?.name?.toLowerCase() === categoryFilter.toLowerCase()
-      );
-
-  const totalPages = lostItems?.meta?.totalPage || 1;
-  const getTipCount = (id: string) => getTipsForItem(id).length;
+  const handleResolve = async (id: string) => {
+    if (!confirm("Mark this post as resolved?")) return;
+    try {
+      await resolvePost(id).unwrap();
+      toast.success("Post marked as resolved.");
+    } catch (err: any) {
+      handleApiError(err, "Failed to resolve post.");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-950 relative overflow-x-hidden pb-16">
+    <div className="min-h-screen bg-gray-950 text-white">
+      <ToastContainer position="top-right" theme="dark" autoClose={3000} />
 
-      {/* Fixed ambient glow orbs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -left-20 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -right-20 w-64 h-64 bg-indigo-600/5 rounded-full blur-3xl" />
-      </div>
+      {/* Modals */}
+      {showPostModal  && <PostModal onClose={() => setShowPostModal(false)} />}
+      {tipTarget      && <TipModal post={tipTarget} onClose={() => setTipTarget(null)} />}
+      {viewTipsTarget && (
+        <TipsViewerModal
+          post={viewTipsTarget}
+          isAdmin={isAdmin}
+          onClose={() => setViewTipsTarget(null)}
+        />
+      )}
 
-      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="relative z-10 px-6 sm:px-10 lg:px-16 pt-10 sm:pt-16 pb-6 sm:pb-12 flex flex-col items-center text-center">
-
-        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight mb-3 max-w-2xl">
-          Missing Items{" "}
-          <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
-            Bulletin Board
-          </span>
-        </h1>
-
-        <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full mb-4" />
-
-        <p className="text-gray-400 text-sm leading-relaxed mb-5 max-w-xl">
-          Browse items reported missing within the NBSC campus. If you have seen any of these belongings, submit an anonymous sighting report to help the SAS office reunite them with their owners.
-        </p>
-
-      </div>
-
-      {/* ── Search & filters ─────────────────────────────────────────────────── */}
-      <div className="relative z-10 px-6 sm:px-10 lg:px-16 pb-6">
-        <div className="space-y-3">
-
-          {/* Search input */}
-          <div>
-            <div className="relative">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
-              <input
-                type="text"
-                value={fuzzyTerm}
-                onChange={handleFuzzyChange}
-                placeholder="Search lost items by name, location, or description..."
-                className="w-full pl-11 pr-28 py-3.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-              />
-              {fuzzyTerm && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all whitespace-nowrap"
-                >
-                  <FaTimes size={9} />
-                  <span>Clear</span>
-                </button>
-              )}
-            </div>
-            {fuzzyTerm && (
-              <p className="text-xs text-gray-500 mt-2 pl-1">
-                Showing results for{" "}
-                <span className="text-blue-400 font-medium">"{fuzzyTerm}"</span>
-                {" "}— results update as you type
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden border-b border-white/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none" />
+        <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium mb-4">
+                <FaLightbulb size={10} /> Community Bulletin Board
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                Lost Something?
+              </h1>
+              <p className="text-gray-400 mt-2 text-sm max-w-md">
+                Post your lost item and let the community help you find it. No account needed.
               </p>
-            )}
+            </div>
+            <button
+              onClick={() => setShowPostModal(true)}
+              className="inline-flex items-center gap-2 px-5 py-3 bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-amber-900/30 shrink-0"
+            >
+              <FaPlus size={12} /> Post Lost Item
+            </button>
           </div>
 
-          {/* Dropdowns */}
-          <div className="flex items-center gap-2">
-            <select
-              value={`${sortBy}-${sortOrder}`}
-              onChange={e => {
-                const [f, o] = e.target.value.split("-");
-                setSortBy(f); setSortOrder(o); setCurrentPage(1);
-              }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-xl bg-gray-800 focus:ring-2 focus:ring-blue-500/40 focus:outline-none transition-all"
-            >
-              <option value="date-desc" className="bg-gray-900">Date Lost (Newest)</option>
-              <option value="date-asc"  className="bg-gray-900">Date Lost (Oldest)</option>
-              <option value="lostItemName-asc"  className="bg-gray-900">Name (A-Z)</option>
-              <option value="lostItemName-desc" className="bg-gray-900">Name (Z-A)</option>
-            </select>
-            <select
-              value={categoryFilter}
-              onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
-              className="flex-1 min-w-0 p-2.5 text-sm text-white border border-gray-700 rounded-xl bg-gray-800 focus:ring-2 focus:ring-blue-500/40 focus:outline-none transition-all"
-            >
-              <option value="ALL" className="bg-gray-900">All Categories</option>
-              {categoriesData?.data?.map((cat: any) => (
-                <option key={cat.id} value={cat.name} className="bg-gray-900">{cat.name}</option>
-              ))}
-            </select>
+          {/* Search */}
+          <div className="mt-8 relative max-w-md">
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={13} />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search by item name, description, or location..."
+              className="w-full pl-11 pr-4 py-3 bg-gray-900 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+            />
           </div>
         </div>
       </div>
 
-      {/* ── Cards grid ───────────────────────────────────────────────────────── */}
-      <div className="relative z-10 px-6 sm:px-10 lg:px-16">
+      {/* ── Content ──────────────────────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4 py-10">
+
+        {/* Stats bar */}
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-gray-500 text-sm">
+            {meta.total > 0
+              ? <>{meta.total} post{meta.total !== 1 ? "s" : ""} found</>
+              : "No posts yet"}
+          </p>
+          {isFetching && !isLoading && <Spinner className="h-4 w-4 text-gray-500" />}
+        </div>
+
+        {/* ── Post grid ── */}
         {isLoading ? (
-          <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-gray-900 rounded-xl overflow-hidden border border-white/5">
-                <div className="h-48 bg-gray-800" />
+              <div key={i} className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden animate-pulse">
+                <div className="h-40 bg-gray-800" />
                 <div className="p-4 space-y-2">
-                  <div className="h-4 bg-gray-800 rounded" />
-                  <div className="h-3 bg-gray-800 rounded w-3/4" />
-                  <div className="h-8 bg-gray-800 rounded mt-3" />
+                  <div className="h-4 bg-gray-800 rounded w-3/4" />
+                  <div className="h-3 bg-gray-800 rounded w-1/2" />
+                  <div className="h-3 bg-gray-800 rounded w-2/3" />
                 </div>
               </div>
             ))}
           </div>
-        ) : filteredItems.length === 0 ? (
+        ) : posts.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-20 h-20 rounded-full bg-gray-900 border border-white/5 flex items-center justify-center mx-auto mb-4">
-              <FaSearch className="text-gray-600 text-2xl" />
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+              <FaLightbulb size={24} className="text-amber-400" />
             </div>
-            <p className="text-white font-semibold mb-2">No lost items found</p>
-            <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
-            {(fuzzyTerm || categoryFilter !== "ALL") && (
-              <button onClick={() => { clearSearch(); setCategoryFilter("ALL"); }}
-                className="mt-4 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
-                Clear filters
+            <h3 className="text-white font-bold text-lg mb-1">
+              {debouncedSearch ? `No results for "${debouncedSearch}"` : "No posts yet"}
+            </h3>
+            <p className="text-gray-500 text-sm mb-5">
+              {debouncedSearch
+                ? "Try a different search term."
+                : "Be the first to post a lost item."}
+            </p>
+            {!debouncedSearch && (
+              <button
+                onClick={() => setShowPostModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold rounded-xl transition-all"
+              >
+                <FaPlus size={11} /> Post Lost Item
               </button>
             )}
           </div>
         ) : (
-          <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredItems.map((item: any) => {
-              const tipCount    = getTipCount(item.id);
-              const daysAgoLost = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
-              return (
-                <div key={item.id}
-                  className="group bg-gray-900 rounded-xl overflow-hidden border border-white/5 hover:border-blue-500/40 hover:shadow-xl hover:shadow-black/40 transition-all duration-200 flex flex-col">
-
-                  {/* Image */}
-                  <div className="relative h-48 overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {posts.map(post => (
+              <div
+                key={post.id}
+                className={`bg-gray-900 border rounded-2xl overflow-hidden flex flex-col transition-all hover:border-white/15 ${
+                  post.isResolved ? "border-emerald-500/20 opacity-75" : "border-white/5"
+                }`}
+              >
+                {/* Image */}
+                <div className="relative h-40 bg-gray-800 shrink-0">
+                  {post.imageUrl ? (
                     <img
-                      src={item?.img || "/bgimg.png"}
-                      alt={item?.lostItemName}
-                      onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      src={post.imageUrl}
+                      alt={post.itemName}
+                      className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
-
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                      <span className="px-2 py-0.5 bg-red-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-red-500/40">
-                        Lost
-                      </span>
-                      {item?.isFound && (
-                        <span className="px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-emerald-500/40">
-                          Found!
-                        </span>
-                      )}
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FaImage size={28} className="text-gray-700" />
                     </div>
+                  )}
 
-                    <div className="absolute top-3 right-3">
-                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm border ${
-                        daysAgoLost > 30 ? "bg-orange-500/80 text-white border-orange-400/40" :
-                        daysAgoLost > 7  ? "bg-yellow-500/80 text-gray-900 border-yellow-400/40" :
-                                           "bg-white/10 text-white border-white/20"
-                      }`}>
-                        {daysAgoLost === 0 ? "Today" : `${daysAgoLost}d ago`}
+                  {/* Badges */}
+                  <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+                      Community Post
+                    </span>
+                    {post.isResolved && (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold flex items-center gap-1">
+                        <FaCheckCircle size={8} /> Resolved
                       </span>
-                    </div>
-
-                    {tipCount > 0 && (
-                      <div className="absolute bottom-3 right-3">
-                        <span className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/90 text-gray-900 text-[10px] font-bold rounded-full">
-                          <FaLightbulb size={8} /> {tipCount} tip{tipCount !== 1 ? "s" : ""}
-                        </span>
-                      </div>
                     )}
                   </div>
 
-                  {/* Content */}
-                  <div className="p-4 flex flex-col flex-1">
-                    <h3 className="text-white text-sm font-bold mb-1 line-clamp-1 group-hover:text-blue-400 transition-colors">
-                      {item?.lostItemName}
-                    </h3>
-                    <p className="text-gray-500 text-xs mb-3 line-clamp-2 leading-relaxed">{item?.description}</p>
-
-                    <div className="space-y-1.5 mt-auto mb-3">
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <FaMapMarkerAlt size={9} className="text-gray-600 shrink-0" />
-                        <span className="line-clamp-1">{item?.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <FaCalendarAlt size={9} className="text-gray-600 shrink-0" />
-                        <span>{item?.date?.split("T")[0]}</span>
-                      </div>
-                      {item?.category?.name && (
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span className="text-gray-600 shrink-0">{getCategoryIcon(item.category.name)}</span>
-                          <span>{item.category.name}</span>
-                        </div>
+                  {/* Admin controls */}
+                  {isAdmin && (
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      {!post.isResolved && (
+                        <button
+                          onClick={() => handleResolve(post.id)}
+                          title="Mark Resolved"
+                          className="w-6 h-6 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 flex items-center justify-center text-emerald-400 transition-colors"
+                        >
+                          <FaCheckCircle size={10} />
+                        </button>
                       )}
+                      <button
+                        onClick={() => handleDelete(post.id)}
+                        title="Delete Post"
+                        className="w-6 h-6 rounded-lg bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-red-400 transition-colors"
+                      >
+                        <FaTrash size={9} />
+                      </button>
                     </div>
+                  )}
+                </div>
 
-                    <div className="grid grid-cols-3 gap-1.5">
-                      <button
-                        onClick={() => setTipItem(item)}
-                        disabled={!!item?.isFound}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        <FaLightbulb size={10} /> I Saw This
-                      </button>
-                      <button
-                        onClick={() => setViewTipsItem(item)}
-                        className="flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-xl transition-all"
-                        title={tipCount > 0 ? `${tipCount} tip${tipCount !== 1 ? "s" : ""}` : "No tips yet"}
-                      >
-                        <FaEye size={9} />
-                        <span className="text-[10px]">{tipCount}</span>
-                      </button>
-                      <Link to={`/lostItems/${item.id}`}
-                        className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
-                        Details
-                      </Link>
-                    </div>
+                {/* Body */}
+                <div className="p-4 flex flex-col flex-1 gap-2">
+                  <h3 className="text-white font-bold text-sm leading-tight line-clamp-1">
+                    {post.itemName}
+                  </h3>
+                  <p className="text-gray-500 text-xs leading-relaxed line-clamp-2">
+                    {post.description}
+                  </p>
+
+                  <div className="space-y-1 mt-auto pt-2">
+                    <p className="text-gray-600 text-[11px] flex items-center gap-1.5">
+                      <FaMapMarkerAlt size={9} className="text-gray-500 shrink-0" />
+                      <span className="truncate">{post.location}</span>
+                    </p>
+                    <p className="text-gray-600 text-[11px] flex items-center gap-1.5">
+                      <FaCalendarAlt size={9} className="text-gray-500 shrink-0" />
+                      {new Date(post.dateLost).toLocaleDateString("en-PH", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                    {post.reporterName && (
+                      <p className="text-gray-600 text-[11px] flex items-center gap-1.5">
+                        <FaUser size={9} className="text-gray-500 shrink-0" />
+                        <span className="truncate">{post.reporterName}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-1">
+                    <button
+                      onClick={() => setViewTipsTarget(post)}
+                      className="flex items-center gap-1.5 text-gray-500 hover:text-blue-400 text-[11px] transition-colors"
+                    >
+                      <FaEye size={10} />
+                      {post._count?.tips ?? 0} tip{(post._count?.tips ?? 0) !== 1 ? "s" : ""}
+                    </button>
+                    <button
+                      disabled={post.isResolved}
+                      onClick={() => !post.isResolved && setTipTarget(post)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                        post.isResolved
+                          ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                          : "bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/20"
+                      }`}
+                    >
+                      <FaLightbulb size={9} /> I Saw This
+                    </button>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
-      </div>
 
-      {/* ── Pagination ───────────────────────────────────────────────────────── */}
-      {totalPages > 1 && (
-        <div className="relative z-10 flex flex-col items-center mt-12 space-y-3">
-          <p className="text-gray-500 text-sm">Page {currentPage} of {totalPages}</p>
-          <nav className="inline-flex items-center gap-1 bg-gray-900 rounded-2xl p-2 border border-white/10">
-            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-xl text-gray-300 bg-white/5 hover:bg-white/10 disabled:text-gray-600 disabled:cursor-not-allowed transition-all">
-              <FaChevronLeft size={11} className="mr-1.5" /> Prev
+        {/* Pagination */}
+        {meta.totalPage > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-10">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="w-9 h-9 rounded-xl bg-gray-900 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              <FaChevronLeft size={12} />
             </button>
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
-              <button key={p} onClick={() => setCurrentPage(p)}
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${
-                  currentPage === p ? "bg-blue-600 text-white" : "text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white"
-                }`}>
+
+            {Array.from({ length: meta.totalPage }, (_, i) => i + 1).map(p => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`w-9 h-9 rounded-xl border text-xs font-bold transition-all ${
+                  p === page
+                    ? "bg-amber-600 border-amber-500 text-white"
+                    : "bg-gray-900 border-white/10 text-gray-400 hover:text-white hover:border-white/20"
+                }`}
+              >
                 {p}
               </button>
             ))}
-            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-xl text-gray-300 bg-white/5 hover:bg-white/10 disabled:text-gray-600 disabled:cursor-not-allowed transition-all">
-              Next <FaChevronRight size={11} className="ml-1.5" />
+
+            <button
+              onClick={() => setPage(p => Math.min(meta.totalPage, p + 1))}
+              disabled={page === meta.totalPage}
+              className="w-9 h-9 rounded-xl bg-gray-900 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              <FaChevronRight size={12} />
             </button>
-          </nav>
-        </div>
-      )}
-
-      {/* ── Modals ───────────────────────────────────────────────────────────── */}
-      {tipItem && (
-        <TipModal item={tipItem} onClose={() => setTipItem(null)} />
-      )}
-      {viewTipsItem && (
-        <TipsViewerModal
-          item={viewTipsItem}
-          onClose={() => setViewTipsItem(null)}
-          isAdmin={isAdmin}
-        />
-      )}
-
-      <ToastContainer position="top-right" autoClose={3000} theme="dark" />
+          </div>
+        )}
+      </div>
     </div>
   );
-};
-
-export default BulletinBoard;
+}

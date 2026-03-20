@@ -65,3 +65,25 @@ export type Claim = {
   events?: ClaimEvent[];
   user?: { username: string; email: string };
 };
+
+export interface BulletinPost {
+  id: string;
+  itemName: string;
+  description: string;
+  location: string;
+  dateLost: string;
+  imageUrl: string;
+  reporterName: string;
+  contactHint: string;
+  isResolved: boolean;
+  createdAt: string;
+  _count?: { tips: number };
+}
+
+export interface BulletinTip {
+  id: string;
+  bulletinPostId: string;
+  location: string;
+  details: string;
+  createdAt: string;
+}

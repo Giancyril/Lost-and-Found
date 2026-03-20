@@ -10,7 +10,8 @@
     "studio": "npx prisma studio",
     "postinstall": "prisma generate",
     "build": "prisma generate && tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "tsc": "tsc"
   },
   "keywords": [],
@@ -29,6 +30,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.3.1",
     "http-status-codes": "^2.3.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^8.0.2",
@@ -39,6 +41,10 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/nodemailer": "^7.0.11"
+    "@types/jest": "^30.0.0",
+    "@types/nodemailer": "^7.0.11",
+    "fast-check": "^4.6.0",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.6"
   }
 }
