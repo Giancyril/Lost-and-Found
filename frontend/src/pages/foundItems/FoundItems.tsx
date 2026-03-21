@@ -306,8 +306,8 @@ const FoundItemsPage = () => {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1.5 h-5 bg-emerald-500 rounded-full" />
-                <p className="text-emerald-400 text-[11px] font-bold uppercase tracking-widest">Found Items</p>
+                <div className="w-1.5 h-5 bg-blue-500 rounded-full" />
+                <p className="text-blue-400 text-[11px] font-bold uppercase tracking-widest">Found Items</p>
               </div>
               <h1 className="text-white text-2xl sm:text-3xl font-bold tracking-tight">Items Found on Campus</h1>
               <p className="text-gray-500 text-sm mt-1 max-w-lg">
