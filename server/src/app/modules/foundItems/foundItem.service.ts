@@ -2,29 +2,34 @@ import { FoundItem, Prisma } from "@prisma/client";
 import { TFilter } from "../../global/interface";
 import { JwtPayload } from "jsonwebtoken";
 import prisma from "../../config/prisma";
+import { uploadBase64ToStorage } from "../../utils/storage";
 
 const createFoundItem = async (
   data: FoundItem & { lostItemId?: string; reporterName?: string },
   userId?: string
 ) => {
+  // ── STORAGE FIX: convert base64 img to Storage URL before saving ──────────
+  let imgUrl = data.img ?? "";
+  if (imgUrl.startsWith("data:")) {
+    imgUrl = await uploadBase64ToStorage(imgUrl, "found", `found-${Date.now()}`);
+  }
+
   const createData: any = {
-    categoryId:   data.categoryId,
-    description:  data.description,
-    date:         data.date,
-    claimProcess: data.claimProcess || "Visit the SAS office with valid ID to claim this item.",
-    img:          data.img,
+    categoryId:    data.categoryId,
+    description:   data.description,
+    date:          data.date,
+    claimProcess:  data.claimProcess || "Visit the SAS office with valid ID to claim this item.",
+    img:           imgUrl,
     foundItemName: data.foundItemName,
-    location:     data.location,
-    reporterName: data.reporterName || "",
+    location:      data.location,
+    reporterName:  data.reporterName || "",
   };
   if (userId) createData.userId = userId;
 
   const result = await prisma.foundItem.create({
     data: createData,
     include: {
-      user: {
-        select: { id: true, username: true, createdAt: true, updatedAt: true },
-      },
+      user:     { select: { id: true, username: true, createdAt: true, updatedAt: true } },
       category: true,
     },
   });
@@ -32,7 +37,7 @@ const createFoundItem = async (
   if (data.lostItemId) {
     await prisma.lostItem.update({
       where: { id: data.lostItemId },
-      data: { isFound: true },
+      data:  { isFound: true },
     });
   }
 
@@ -42,15 +47,15 @@ const createFoundItem = async (
 const getFoundItem = async (data: TFilter) => {
   const {
     searchTerm,
-    page = 1,
-    limit = 10,
-    sortBy = "foundItemName",
+    page      = 1,
+    limit     = 10,
+    sortBy    = "foundItemName",
     sortOrder = "asc",
     foundItemName,
   } = data;
 
   const whereConditions: Prisma.FoundItemWhereInput = {
-    isDeleted: false,
+    isDeleted:  false,
     isArchived: false,
   };
 
@@ -65,33 +70,15 @@ const getFoundItem = async (data: TFilter) => {
     ];
   }
 
+  // img is now a short Storage URL (~100 bytes) — safe to include in lists
   const result = await prisma.foundItem.findMany({
-    where: whereConditions,
+    where:   whereConditions,
     orderBy: { [sortBy]: sortOrder },
-    skip: (Number(page) - 1) * Number(limit),
-    take: Number(limit),
-    // ── EGRESS FIX: exclude img (base64) from list view ──────────────────────
-    select: {
-      id:           true,
-      foundItemName: true,
-      description:  true,
-      location:     true,
-      date:         true,
-      createdAt:    true,
-      updatedAt:    true,
-      claimProcess: true,
-      isClaimed:    true,
-      isDeleted:    true,
-      isArchived:   true,
-      reporterName: true,
-      // img intentionally excluded — fetch via getSingleFoundItem
-      userId:       true,
-      categoryId:   true,
-      user: {
-        select: { id: true, username: true, email: true },
-      },
+    skip:    (Number(page) - 1) * Number(limit),
+    take:    Number(limit),
+    include: {
+      user:     { select: { id: true, username: true, email: true } },
       category: true,
-      claim:    true,
     },
   });
 
@@ -99,53 +86,24 @@ const getFoundItem = async (data: TFilter) => {
 };
 
 const getSingleFoundItem = async (id: string) => {
-  // Single item view — include img (base64) here since it's just one record
-  const result = await prisma.foundItem.findFirst({
+  return prisma.foundItem.findFirst({
     where: { id, isDeleted: false },
     include: {
-      user: {
-        select: { id: true, email: true, username: true, role: true },
-      },
+      user:     { select: { id: true, email: true, username: true, role: true } },
       category: true,
       claim: {
         orderBy: { createdAt: "desc" },
-        include: {
-          auditLogs: { orderBy: { createdAt: "asc" } },
-        },
+        include: { auditLogs: { orderBy: { createdAt: "asc" } } },
       },
     },
   });
-  return result;
 };
 
 const getMyFoundItem = async (user: JwtPayload) => {
-  // ── EGRESS FIX: exclude img from list, use select ─────────────────────────
-  const result = await prisma.foundItem.findMany({
-    where: { userId: user.id, isDeleted: false },
-    select: {
-      id:           true,
-      foundItemName: true,
-      description:  true,
-      location:     true,
-      date:         true,
-      createdAt:    true,
-      updatedAt:    true,
-      claimProcess: true,
-      isClaimed:    true,
-      isDeleted:    true,
-      isArchived:   true,
-      reporterName: true,
-      userId:       true,
-      categoryId:   true,
-      // img excluded from list
-      user: {
-        select: { id: true, username: true, email: true, role: true },
-      },
-      category: true,
-      claim:    true,
-    },
+  return prisma.foundItem.findMany({
+    where:   { userId: user.id, isDeleted: false },
+    include: { user: true, category: true },
   });
-  return result;
 };
 
 const editMyFoundItem = async (data: any) => {
@@ -155,99 +113,60 @@ const editMyFoundItem = async (data: any) => {
   if (data?.date)                       updateData.date          = data.date;
   if (data?.description)                updateData.description   = data.description;
   if (data?.reporterName !== undefined) updateData.reporterName  = data.reporterName;
+  // Upload new image to Storage if base64 provided
+  if (data?.img?.startsWith("data:")) {
+    updateData.img = await uploadBase64ToStorage(data.img, "found", data.id);
+  }
 
-  const result = await prisma.foundItem.update({
-    where: { id: data.id },
-    data: updateData,
-  });
-  return result;
+  return prisma.foundItem.update({ where: { id: data.id }, data: updateData });
 };
 
 const deleteMyFoundItem = async (id: string) => {
-  const result = await prisma.foundItem.update({
+  return prisma.foundItem.update({
     where: { id },
-    data: { isDeleted: true, deletedAt: new Date() },
+    data:  { isDeleted: true, deletedAt: new Date() },
   });
-  return result;
 };
 
 const archiveFoundItem = async (id: string) => {
   return prisma.foundItem.update({
     where: { id },
-    data: { isArchived: true, archivedAt: new Date() },
+    data:  { isArchived: true, archivedAt: new Date() },
   });
 };
 
 const restoreFoundItem = async (id: string) => {
   return prisma.foundItem.update({
     where: { id },
-    data: { isArchived: false, archivedAt: null },
+    data:  { isArchived: false, archivedAt: null },
   });
 };
 
 const getArchivedFoundItems = async () => {
-  const result = await prisma.foundItem.findMany({
-    where: { isDeleted: false, isArchived: true },
+  return prisma.foundItem.findMany({
+    where:   { isDeleted: false, isArchived: true },
     orderBy: { archivedAt: "desc" },
-    // ── EGRESS FIX: exclude img ───────────────────────────────────────────────
-    select: {
-      id:           true,
-      foundItemName: true,
-      description:  true,
-      location:     true,
-      date:         true,
-      createdAt:    true,
-      updatedAt:    true,
-      claimProcess: true,
-      isClaimed:    true,
-      isDeleted:    true,
-      isArchived:   true,
-      archivedAt:   true,
-      reporterName: true,
-      userId:       true,
-      categoryId:   true,
-      user: {
-        select: { id: true, username: true, email: true },
-      },
+    include: {
+      user:     { select: { id: true, username: true, email: true } },
       category: true,
-      claim: {
-        select: { id: true, status: true, claimantName: true },
-      },
+      claim:    { select: { id: true, status: true, claimantName: true } },
     },
   });
-  return result;
 };
 
 const getStalFoundItems = async () => {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const result = await prisma.foundItem.findMany({
+  return prisma.foundItem.findMany({
     where: {
       isDeleted:  false,
       isArchived: false,
       isClaimed:  false,
       createdAt:  { lte: thirtyDaysAgo },
     },
-    // ── EGRESS FIX: exclude img ───────────────────────────────────────────────
-    select: {
-      id:           true,
-      foundItemName: true,
-      description:  true,
-      location:     true,
-      date:         true,
-      createdAt:    true,
-      updatedAt:    true,
-      isClaimed:    true,
-      isDeleted:    true,
-      isArchived:   true,
-      reporterName: true,
-      userId:       true,
-      categoryId:   true,
-      category:     true,
-    },
+    include: { category: true },
   });
-  return result;
 };
 
 export const foundItemService = {
