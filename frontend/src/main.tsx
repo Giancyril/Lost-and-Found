@@ -28,6 +28,7 @@ import HeatmapPage from "./dashboard/pages/HeatmapPage.tsx";
 import AnalyticsPage from "./dashboard/pages/AnalyticsPage.tsx";
 import ArchievePage from "./dashboard/pages/ArchievePage.tsx"; 
 import ReportPage from "./dashboard/pages/ReportPage.tsx";    
+import BulletinBoard from "./pages/bulletin/BulletinBoard.tsx";
 
 
 const router = createBrowserRouter([
@@ -74,6 +75,10 @@ const router = createBrowserRouter([
       {
         path: "/ai-search",
         element: <AiSearch />,
+      },
+      {
+        path: "/bulletin",
+        element: <BulletinBoard />,
       },
     ],
   },

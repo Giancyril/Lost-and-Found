@@ -66,7 +66,7 @@ const getPosts = async ({ page = 1, limit = 12, searchTerm = "" }: GetPostsParam
         isDeleted:    true,
         createdAt:    true,
         updatedAt:    true,
-        // imageUrl excluded — too large for list view
+        imageUrl:     true,
         _count: { select: { tips: true } },
       },
     }),
