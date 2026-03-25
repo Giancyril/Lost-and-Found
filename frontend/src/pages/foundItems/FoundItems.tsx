@@ -1,3 +1,4 @@
+import imageCompression from "browser-image-compression";
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -253,12 +254,20 @@ const FoundItemsPage = () => {
   };
   const clearSearch = () => { setFuzzyTerm(""); setSearchTerm(""); setCurrentPage(1); };
 
-  const handleAddFileChange = (files: FileList | null) => {
+  const handleAddFileChange = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setAddUploadError("");
-    const file = files[0];
+    let file = files[0];
     if (!file.type.startsWith("image/")) { setAddUploadError("Only image files are allowed."); return; }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) { setAddUploadError(`File must be under ${MAX_SIZE_MB}MB.`); return; }
+
+    try {
+      const options = { maxSizeMB: 0.4, maxWidthOrHeight: 1200, useWebWorker: true };
+      file = await imageCompression(file, options);
+    } catch (error) {
+      console.error("Image compression error:", error);
+    }
+
     setAddSelectedFile(file);
     const reader = new FileReader();
     reader.onloadend = () => setAddPreview(reader.result as string);
@@ -279,7 +288,7 @@ const FoundItemsPage = () => {
         foundItemName: data.foundItemName, description: data.description,
         location: data.location, date: addStartDate, claimProcess: data.claimProcess,
       });
-      if (res?.data?.success === false) { toast.error("Failed to submit found item."); return; }
+      if (res.error || res?.data?.success === false) { toast.error("Failed to submit found item."); return; }
       if (addSelectedFile && res?.data?.data?.id) {
         const formData = new FormData();
         formData.append("images", addSelectedFile);
@@ -828,7 +837,9 @@ const FoundItemsPage = () => {
                     </div>
                     <div className="px-4 py-2.5 border-t border-gray-700 flex items-center justify-between">
                       <span className="text-xs text-gray-400 truncate">{addSelectedFile?.name}</span>
-                      <span className="text-xs text-gray-500 ml-3 shrink-0">{addSelectedFile ? (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB" : ""}</span>
+                      <span className="text-xs text-gray-500 ml-3 shrink-0">
+                        {addSelectedFile ? (addSelectedFile.size < 1024 * 1024 ? (addSelectedFile.size / 1024).toFixed(1) + " KB" : (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB") : ""}
+                      </span>
                     </div>
                     <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
                   </div>

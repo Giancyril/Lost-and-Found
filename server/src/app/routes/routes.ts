@@ -66,7 +66,7 @@ router.get("/my/foundItem", auth(), foundItemController.getMyFoundItem);
 router.put("/my/foundItem", auth(), foundItemController.editMyFoundItem);
 router.delete("/my/foundItem/:id", auth(), foundItemController.deleteMyFoundItem);
 
-////////////////////////////////////////////////// claims //////////////////////////////////////////////
+////////////////////////////////////    ////////////// claims //////////////////////////////////////////////
 router.post("/claims", validateRequest(ItemClaimSchema.createClaim), claimsController.createClaim);
 router.get("/claims", auth(), claimsController.getClaim);
 router.get("/my/claims", auth(), claimsController.getMyClaim);

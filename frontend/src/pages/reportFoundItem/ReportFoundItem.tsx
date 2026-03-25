@@ -1,4 +1,4 @@
-"use client";
+import imageCompression from "browser-image-compression";
 import { useForm } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import Modals from "../../components/modal/Modal";
@@ -48,7 +48,7 @@ const ReportFoundItem = () => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (files: FileList | null) => {
+  const handleFileChange = async (files: FileList | null) => {
     if (!files) return;
     setUploadError("");
     const incoming = Array.from(files);
@@ -65,11 +65,21 @@ const ReportFoundItem = () => {
       return true;
     });
 
-    const combined = [...selectedFiles, ...valid].slice(0, MAX_IMAGES);
+    const compressedFiles = await Promise.all(valid.map(async (file) => {
+      try {
+        const options = { maxSizeMB: 0.4, maxWidthOrHeight: 1200, useWebWorker: true };
+        return await imageCompression(file, options);
+      } catch (error) {
+        console.error("Image compression error:", error);
+        return file;
+      }
+    }));
+
+    const combined = [...selectedFiles, ...compressedFiles].slice(0, MAX_IMAGES);
     if (selectedFiles.length + valid.length > MAX_IMAGES) {
       setUploadError(`Maximum ${MAX_IMAGES} images allowed.`);
     }
-    setSelectedFiles(combined);
+    setSelectedFiles(combined as File[]);
     setPreviews(combined.map((f) => URL.createObjectURL(f)));
   };
 
@@ -95,7 +105,7 @@ const ReportFoundItem = () => {
 
       const res: any = await createFoundItem(foundData);
 
-      if (res?.data?.success === false) {
+      if (res.error || res?.data?.success === false) {
         Modals({ message: "Failed to submit found item", status: false });
         return;
       }

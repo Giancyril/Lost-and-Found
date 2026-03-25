@@ -1,3 +1,4 @@
+import imageCompression from "browser-image-compression";
 import { useForm } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import { toast } from "react-toastify";
@@ -148,12 +149,20 @@ const ReportLostItem = () => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (files: FileList | null) => {
+  const handleFileChange = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploadError("");
-    const file = files[0];
+    let file = files[0];
     if (!file.type.startsWith("image/")) { setUploadError("Only image files are allowed."); return; }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) { setUploadError(`File must be under ${MAX_SIZE_MB}MB.`); return; }
+
+    try {
+      const options = { maxSizeMB: 0.4, maxWidthOrHeight: 1200, useWebWorker: true };
+      file = await imageCompression(file, options);
+    } catch (error) {
+      console.error("Image compression error:", error);
+    }
+
     setSelectedFile(file);
     const reader = new FileReader();
     reader.onloadend = () => setPreview(reader.result as string);
@@ -194,7 +203,7 @@ const ReportLostItem = () => {
         reporterName: data.reporterName || "",
         schoolEmail: data.schoolEmail || "",
       });
-      if (res?.data?.success === false) { toast.error("Failed to report lost item"); return; }
+      if (res.error || res?.data?.success === false) { toast.error("Failed to report lost item"); return; }
       toast.success("Lost item reported successfully");
       reset();
       setSelectedFile(null); setPreview(""); setUploadError("");
@@ -369,7 +378,7 @@ const ReportLostItem = () => {
                               <span className="text-xs text-gray-400 truncate">{selectedFile?.name}</span>
                             </div>
                             <span className="text-xs text-gray-500 ml-3 shrink-0">
-                              {selectedFile ? (selectedFile.size / 1024 / 1024).toFixed(1) + " MB" : ""}
+                              {selectedFile ? (selectedFile.size < 1024 * 1024 ? (selectedFile.size / 1024).toFixed(1) + " KB" : (selectedFile.size / 1024 / 1024).toFixed(1) + " MB") : ""}
                             </span>
                           </div>
                           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e.target.files)} />
