@@ -7,9 +7,13 @@ import { StatusCodes } from "http-status-codes";
 export const sendLostItemEmail = async (req: Request, res: Response) => {
   try {
     const { smtp, recipient } = req.body;
-    const fromName = smtp?.fromName || process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
 
-    console.log("[email] sendLostItemEmail → to:", recipient?.toEmail, "| SMTP_USER:", process.env.SMTP_USERNAME, "| SMTP_PASS set:", !!process.env.SMTP_PASSWORD);
+    if (!recipient || !recipient.toEmail) {
+      return sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: "Recipient email is required", data: null });
+    }
+
+    const fromName = smtp?.fromName || process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
+    console.log("[email] sendLostItemEmail → to:", recipient?.toEmail, "| SENDGRID_KEY set:", !!process.env.SENDGRID_API_KEY);
 
     const template = lostItemReportedTemplate({
       reporterName: recipient.reporterName,
@@ -29,7 +33,7 @@ export const sendLostItemEmail = async (req: Request, res: Response) => {
 
     sendResponse(res, { statusCode: StatusCodes.OK, success: true, message: "Lost item report email sent successfully", data: null });
   } catch (error: any) {
-    console.error("[email] sendLostItemEmail error:", error?.message, error?.code, error?.response);
+    console.error("[email] sendLostItemEmail error:", error?.message, error?.code, error?.response?.body);
     sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: error?.message || "Failed to send email", data: null });
   }
 };
@@ -37,9 +41,13 @@ export const sendLostItemEmail = async (req: Request, res: Response) => {
 export const sendClaimApprovedEmail = async (req: Request, res: Response) => {
   try {
     const { smtp, recipient } = req.body;
-    const fromName = smtp?.fromName || process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
 
-    console.log("[email] sendClaimApprovedEmail → to:", recipient?.toEmail, "| SMTP_USER:", process.env.SMTP_USERNAME, "| SMTP_PASS set:", !!process.env.SMTP_PASSWORD);
+    if (!recipient || !recipient.toEmail) {
+      return sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: "Recipient email is required", data: null });
+    }
+
+    const fromName = smtp?.fromName || process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
+    console.log("[email] sendClaimApprovedEmail → to:", recipient?.toEmail, "| SENDGRID_KEY set:", !!process.env.SENDGRID_API_KEY);
 
     const template = itemClaimedTemplate({
       claimantName:  recipient.claimantName,
@@ -59,7 +67,7 @@ export const sendClaimApprovedEmail = async (req: Request, res: Response) => {
 
     sendResponse(res, { statusCode: StatusCodes.OK, success: true, message: "Claim approved email sent successfully", data: null });
   } catch (error: any) {
-    console.error("[email] sendClaimApprovedEmail error:", error?.message, error?.code, error?.response);
+    console.error("[email] sendClaimApprovedEmail error:", error?.message, error?.code, error?.response?.body);
     sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: error?.message || "Failed to send email", data: null });
   }
 };

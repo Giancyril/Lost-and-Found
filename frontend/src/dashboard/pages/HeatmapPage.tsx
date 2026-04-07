@@ -75,7 +75,7 @@ const HeatmapPage = () => {
           {(["all", "found", "lost"] as Filter[]).map((f) => (
             <button key={f} onClick={() => setFilter(f)}
               className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
-                filter === f ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "text-gray-500 hover:text-white"
+                filter === f ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"
               }`}>
               {f}
             </button>

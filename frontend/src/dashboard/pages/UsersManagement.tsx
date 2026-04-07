@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaTrash, FaSearch, FaShieldAlt, FaBan, FaPlus, FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaTrash, FaSearch, FaShieldAlt, FaBan, FaPlus, FaTimes, FaEye, FaEyeSlash, FaChevronDown } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import {
@@ -29,13 +29,13 @@ const Spinner = () => (
 );
 
 const UsersManagement = () => {
-  const [searchTerm, setSearchTerm]     = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [searchTerm, setSearchTerm]         = useState("");
+  const [statusFilter, setStatusFilter]     = useState<string>("ALL");
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingUser, setDeletingUser]           = useState<User | null>(null);
   const [isDeleteLoading, setIsDeleteLoading]     = useState(false);
 
-  // Create Admin modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreating, setIsCreating]               = useState(false);
   const [showPassword, setShowPassword]           = useState(false);
@@ -53,7 +53,6 @@ const UsersManagement = () => {
     lastLogin: undefined, itemsReported: 0, claimsMade: 0, profileImage: apiUser.userImg || undefined,
   });
 
-  // ── Only show ADMIN users ──
   const allUsers   = allUsersData?.data ? allUsersData.data.map(transformUser) : [];
   const adminUsers = allUsers.filter((u: User) => u.role === "ADMIN");
 
@@ -88,41 +87,58 @@ const UsersManagement = () => {
   const handleCreateAdmin = async (data: any) => {
     setIsCreating(true);
     try {
-      // Step 1: Register the user
-      const res: any = await registerUser({
-        username: data.username,
-        email:    data.email,
-        password: data.password,
-      });
-
-      if (res?.error) {
-        toast.error(res.error?.data?.message || "Failed to create account.");
-        return;
-      }
-
-      // Step 2: Promote to ADMIN using the new user's id
+      const res: any = await registerUser({ username: data.username, email: data.email, password: data.password });
+      if (res?.error) { toast.error(res.error?.data?.message || "Failed to create account."); return; }
       const newUserId = res?.data?.data?.id;
       if (newUserId) {
         await changeUserRole({ id: newUserId, role: "ADMIN" }).unwrap();
       } else {
-        toast.error("Account created but could not promote to Admin. Please set role manually.");
-        setIsCreateModalOpen(false);
-        reset();
-        return;
+        toast.error("Account created but could not promote to Admin.");
+        setIsCreateModalOpen(false); reset(); return;
       }
-
       toast.success(`Admin account for "${data.username}" created successfully!`);
-      setIsCreateModalOpen(false);
-      reset();
+      setIsCreateModalOpen(false); reset();
     } catch { toast.error("Failed to create admin account."); }
     finally { setIsCreating(false); }
   };
 
-  const getStatusColor = (status: string) => 
-  status === "ACTIVE" 
-    ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]" 
-    : "bg-gray-800/40 text-gray-400 border-white/5";
-  const formatDate     = (d: string)      => new Date(d).toLocaleDateString();
+  const getStatusBg = (status: string) =>
+    status === "ACTIVE"
+      ? "bg-green-500/15 text-green-400 border border-green-500/30"
+      : "bg-yellow-500/15 text-yellow-400 border border-yellow-500/30";
+
+  const formatDate = (d: string) => new Date(d).toLocaleDateString();
+
+  // Custom status dropdown component
+  const StatusDropdown = ({ user }: { user: User }) => (
+    <div className="relative">
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === user.id ? null : user.id); }}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition-all ${getStatusBg(user.status)}`}
+      >
+        <span className={`w-1.5 h-1.5 rounded-full ${user.status === "ACTIVE" ? "bg-green-400" : "bg-yellow-400"}`} />
+        {user.status === "ACTIVE" ? "Active" : "Suspended"}
+        <FaChevronDown size={8} className="opacity-60" />
+      </button>
+      {openDropdownId === user.id && (
+        <div className="absolute z-30 top-full mt-1.5 left-0 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[130px]">
+          <button
+            onClick={(e) => { e.stopPropagation(); handleStatusChange(user.id, "ACTIVE"); setOpenDropdownId(null); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-green-400 hover:bg-green-500/10 transition-colors"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Active
+          </button>
+          <div className="h-px bg-white/5" />
+          <button
+            onClick={(e) => { e.stopPropagation(); handleStatusChange(user.id, "SUSPENDED"); setOpenDropdownId(null); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-yellow-400 hover:bg-yellow-500/10 transition-colors"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" /> Suspended
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   if (isLoading) return (
     <div className="space-y-4 sm:space-y-6 animate-pulse">
@@ -132,7 +148,7 @@ const UsersManagement = () => {
   );
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto" onClick={() => setOpenDropdownId(null)}>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
@@ -168,10 +184,8 @@ const UsersManagement = () => {
               <option value="ACTIVE">Active</option>
               <option value="SUSPENDED">Suspended</option>
             </select>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg text-sm transition-all duration-200 shrink-0"
-            >
+            <button onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg text-sm transition-all duration-200 shrink-0">
               <FaPlus size={11} /> Create Admin
             </button>
           </div>
@@ -205,11 +219,7 @@ const UsersManagement = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <select value={user.status} onChange={(e) => handleStatusChange(user.id, e.target.value)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium text-white border-0 cursor-pointer focus:outline-none ${getStatusColor(user.status)}`}>
-                      <option value="ACTIVE">Active</option>
-                      <option value="SUSPENDED">Suspended</option>
-                    </select>
+                    <StatusDropdown user={user} />
                   </td>
                   <td className="px-6 py-4 text-gray-300">{formatDate(user.createdAt)}</td>
                   <td className="px-6 py-4">
@@ -241,13 +251,13 @@ const UsersManagement = () => {
           <div key={user.id} className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0">
-                  <FaShieldAlt className="text-red-400" size={12} />
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+                  <FaShieldAlt className="text-blue-400" size={12} />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <p className="text-white font-medium truncate text-sm">{user.name}</p>
-                    <span className="px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 text-[9px] font-bold rounded-full uppercase shrink-0">Admin</span>
+                    <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-bold rounded-full uppercase shrink-0">Admin</span>
                   </div>
                   <p className="text-gray-400 text-xs truncate">{user.email}</p>
                 </div>
@@ -258,12 +268,8 @@ const UsersManagement = () => {
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <p className="text-gray-600 text-[10px] mb-1">Status</p>
-                <select value={user.status} onChange={(e) => handleStatusChange(user.id, e.target.value)}
-                  className={`w-full px-2 py-1 rounded-lg text-[11px] font-medium text-white border-0 ${getStatusColor(user.status)}`}>
-                  <option value="ACTIVE">Active</option>
-                  <option value="SUSPENDED">Suspended</option>
-                </select>
+                <p className="text-gray-600 text-[10px] mb-1.5">Status</p>
+                <StatusDropdown user={user} />
               </div>
               <div>
                 <p className="text-gray-600 text-[10px] mb-1">Joined</p>
@@ -274,7 +280,7 @@ const UsersManagement = () => {
         ))}
       </div>
 
-      {/* ── Create Admin Modal ── */}
+      {/* Create Admin Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-2xl w-full max-w-md border border-gray-700 shadow-2xl">
@@ -289,58 +295,27 @@ const UsersManagement = () => {
                 <FaTimes size={15} />
               </button>
             </div>
-
             <form onSubmit={handleSubmit(handleCreateAdmin)} className="p-5 space-y-4">
-              {/* Username */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
-                  Username <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. sas_admin"
-                  {...register("username", {
-                    required: "Username is required",
-                    minLength: { value: 3, message: "Min. 3 characters" },
-                    pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Letters, numbers, underscores only" },
-                  })}
-                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                />
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Username <span className="text-red-400">*</span></label>
+                <input type="text" placeholder="e.g. sas_admin"
+                  {...register("username", { required: "Username is required", minLength: { value: 3, message: "Min. 3 characters" }, pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Letters, numbers, underscores only" } })}
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
                 {errors.username && <p className="text-red-400 text-xs mt-1">{errors.username.message as string}</p>}
               </div>
-
-              {/* Email */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
-                  Email <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="email"
-                  placeholder="admin@nbsc.edu.ph"
-                  {...register("email", {
-                    required: "Email is required",
-                    pattern: { value: /^\S+@\S+$/i, message: "Invalid email address" },
-                  })}
-                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                />
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Email <span className="text-red-400">*</span></label>
+                <input type="email" placeholder="admin@nbsc.edu.ph"
+                  {...register("email", { required: "Email is required", pattern: { value: /^\S+@\S+$/i, message: "Invalid email address" } })}
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
                 {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message as string}</p>}
               </div>
-
-              {/* Password */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
-                  Password <span className="text-red-400">*</span>
-                </label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Password <span className="text-red-400">*</span></label>
                 <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Min. 6 characters"
-                    {...register("password", {
-                      required: "Password is required",
-                      minLength: { value: 6, message: "Min. 6 characters" },
-                    })}
-                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 pr-10"
-                  />
+                  <input type={showPassword ? "text" : "password"} placeholder="Min. 6 characters"
+                    {...register("password", { required: "Password is required", minLength: { value: 6, message: "Min. 6 characters" } })}
+                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 pr-10" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
                     {showPassword ? <FaEyeSlash size={13} /> : <FaEye size={13} />}
@@ -348,8 +323,6 @@ const UsersManagement = () => {
                 </div>
                 {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password.message as string}</p>}
               </div>
-
-              {/* Role badge — always Admin */}
               <div className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-3">
                 <FaShieldAlt className="text-blue-400 shrink-0" size={13} />
                 <div>
@@ -357,12 +330,9 @@ const UsersManagement = () => {
                   <p className="text-gray-500 text-[11px] mt-0.5">This account will have full dashboard access</p>
                 </div>
               </div>
-
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => { setIsCreateModalOpen(false); reset(); }} disabled={isCreating}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
-                  Cancel
-                </button>
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">Cancel</button>
                 <button type="submit" disabled={isCreating}
                   className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                   {isCreating ? <><Spinner /> Creating...</> : <><FaPlus size={11} /> Create Admin</>}
@@ -374,74 +344,62 @@ const UsersManagement = () => {
       )}
 
       {/* Delete Modal */}
-{isDeleteModalOpen && (
-  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
-
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-            <FaTrash size={11} className="text-red-400" />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-white">Delete Admin Account</h2>
-            <p className="text-gray-500 text-[11px]">This action cannot be undone</p>
-          </div>
-        </div>
-        <button onClick={handleDeleteCancel} disabled={isDeleteLoading}
-          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors disabled:opacity-50">
-          <FaTimes size={12} />
-        </button>
-      </div>
-
-      <div className="p-5 space-y-4">
-        {/* User preview card */}
-        {deletingUser && (
-          <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
-            <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
-              <FaShieldAlt size={10} className="text-red-400" />
-              <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Account to Delete</p>
-            </div>
-            <div className="p-3 space-y-2">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-                  <FaShieldAlt size={11} className="text-red-400" />
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                  <FaTrash size={11} className="text-red-400" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-white text-sm font-semibold truncate">{deletingUser.name}</p>
-                  <p className="text-gray-400 text-xs truncate">{deletingUser.email}</p>
+                <div>
+                  <h2 className="text-sm font-bold text-white">Delete Admin Account</h2>
+                  <p className="text-gray-500 text-[11px]">This action cannot be undone</p>
                 </div>
               </div>
-              <p className="text-[10px] text-gray-600 pt-0.5">
-                Joined: <span className="text-gray-500">{formatDate(deletingUser.createdAt)}</span>
-              </p>
+              <button onClick={handleDeleteCancel} disabled={isDeleteLoading}
+                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors disabled:opacity-50">
+                <FaTimes size={12} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {deletingUser && (
+                <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+                    <FaShieldAlt size={10} className="text-red-400" />
+                    <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Account to Delete</p>
+                  </div>
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                        <FaShieldAlt size={11} className="text-red-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">{deletingUser.name}</p>
+                        <p className="text-gray-400 text-xs truncate">{deletingUser.email}</p>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-gray-600 pt-0.5">Joined: <span className="text-gray-500">{formatDate(deletingUser.createdAt)}</span></p>
+                  </div>
+                </div>
+              )}
+              <div className="bg-red-500/5 border border-red-500/15 rounded-xl px-3.5 py-2.5">
+                <p className="text-red-300/80 text-xs leading-relaxed">
+                  Deleting this account will <strong>permanently remove</strong> it and all associated data. This cannot be reversed.
+                </p>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={handleDeleteCancel} disabled={isDeleteLoading}
+                  className="flex-1 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 py-2 rounded-xl text-xs font-medium transition-colors">Cancel</button>
+                <button type="button" onClick={handleDeleteConfirm} disabled={isDeleteLoading}
+                  className="flex-1 bg-red-500 hover:bg-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+                  {isDeleteLoading ? <><Spinner /> Deleting...</> : <><FaTrash size={10} /> Delete Account</>}
+                </button>
+              </div>
             </div>
           </div>
-        )}
-
-        {/* Warning notice */}
-        <div className="bg-red-500/5 border border-red-500/15 rounded-xl px-3.5 py-2.5">
-          <p className="text-red-300/80 text-xs leading-relaxed">
-            Deleting this account will <strong>permanently remove</strong> it and all associated data. This cannot be reversed.
-          </p>
         </div>
-
-        {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          <button type="button" onClick={handleDeleteCancel} disabled={isDeleteLoading}
-            className="flex-1 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 py-2 rounded-xl text-xs font-medium transition-colors">
-            Cancel
-          </button>
-          <button type="button" onClick={handleDeleteConfirm} disabled={isDeleteLoading}
-            className="flex-1 bg-red-500 hover:bg-red-400 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
-            {isDeleteLoading ? <><Spinner /> Deleting...</> : <><FaTrash size={10} /> Delete Account</>}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 };

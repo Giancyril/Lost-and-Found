@@ -194,14 +194,14 @@ const ClaimsManagement = () => {
       <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit">
         <button onClick={() => setActiveTab("claims")}
           className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-            activeTab === "claims" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "text-gray-500 hover:text-white"
+            activeTab === "claims" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"
           }`}>
           <FaClipboardList size={12} /> Claims
           <span className="ml-1 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{claims.length}</span>
         </button>
         <button onClick={() => { setActiveTab("audit"); setAuditPage(1); }}
           className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-            activeTab === "audit" ? "bg-violet-500/10 text-violet-400 border border-violet-500/20" : "text-gray-500 hover:text-white"
+            activeTab === "audit" ? "bg-violet-500/10 text-violet-400" : "text-gray-500 hover:text-white"
           }`}>
           <FaHistory size={12} /> Audit Log
           <span className="ml-1 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{auditLogs.length}</span>
