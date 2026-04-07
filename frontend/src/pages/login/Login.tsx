@@ -137,7 +137,7 @@ const Login = () => {
                   className="w-16 h-16 object-contain"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
-                <p className="text-white font-bold text-sm tracking-wide">NBSC SAS Lost &amp; Found</p>
+                <p className="text-white font-bold text-sm tracking-wide"> SAS Lost &amp; Found Management System</p>
               </div>
               <h2 className="text-lg font-bold text-white"></h2>
               <p className="text-gray-500 text-sm mt-1">Enter your credentials to access the admin panel</p>
@@ -153,7 +153,7 @@ const Login = () => {
                   {...register("username", { required: "Email is required" })}
                   disabled={isLocked}
                   className="w-full bg-gray-800/80 border border-white/10 text-white placeholder-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                  placeholder="admin@nbsc.edu.ph"
+                  placeholder=" "
                 />
                 {errors.username && (
                   <p className="text-red-400 text-xs mt-1">{errors.username?.message as string}</p>

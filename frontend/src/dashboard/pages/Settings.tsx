@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
-  FaSave, FaEye, FaEyeSlash, FaShieldAlt, FaBell,
-  FaDatabase, FaEnvelope, FaGlobe, FaUser, FaCheck,
+  FaSave, FaEye, FaEyeSlash, FaShieldAlt,
+  FaDatabase, FaGlobe, FaUser, FaCheck,
   FaKey, FaAt, FaIdBadge,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -14,7 +14,7 @@ import {
 import { removeUserLocalStorage, useUserVerification } from "../../auth/auth";
 import { useNavigate } from "react-router-dom";
 
-type Tab = "account" | "general" | "notifications" | "security" | "system" | "email";
+type Tab = "account" | "general" | "security" | "system";
 
 const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) => (
   <button
@@ -98,15 +98,14 @@ const Settings = () => {
   const user = useUserVerification();
   const [activeTab, setActiveTab] = useState<Tab>("account");
   const [showPassword, setShowPassword] = useState(false);
-  const [showSmtpPassword, setShowSmtpPassword] = useState(false);
   const [savedIndicator, setSavedIndicator] = useState(false);
 
   const [changePassword, { isLoading: isPasswordLoading }] = useChangePasswordMutation();
-  const [changeEmail, { isLoading: isEmailLoading }] = useChangeEmailMutation();
+  const [changeEmail,    { isLoading: isEmailLoading }]    = useChangeEmailMutation();
   const [changeUsername, { isLoading: isUsernameLoading }] = useChangeUsernameMutation();
 
   const passwordForm = useForm();
-  const emailForm = useForm();
+  const emailForm    = useForm();
   const usernameForm = useForm();
 
   const [settings, setSettings] = useState({
@@ -117,11 +116,6 @@ const Settings = () => {
     siteUrl: "https://lostandfound.com",
     timezone: "UTC",
     language: "en",
-    emailNotifications: true,
-    smsNotifications: false,
-    newItemNotifications: true,
-    claimNotifications: true,
-    reminderNotifications: true,
     enableTwoFactor: false,
     passwordExpiry: 90,
     sessionTimeout: 30,
@@ -131,13 +125,6 @@ const Settings = () => {
     maxImageSize: 5,
     autoDeleteExpiredItems: true,
     requireItemApproval: false,
-    smtpHost: "smtp.gmail.com",
-    smtpPort: 587,
-    smtpUsername: "",
-    smtpPassword: "",
-    smtpSecure: true,
-    fromName: "Lost & Found System",
-    fromEmail: "noreply@lostandfound.com",
   });
 
   const set = (key: string, value: any) => setSettings(p => ({ ...p, [key]: value }));
@@ -161,7 +148,7 @@ const Settings = () => {
       const res: any = await changeEmail(data);
       if (res?.error?.data?.message) { toast.error(res.error.data.message); return; }
       if (res?.data?.statusCode === 200) {
-        toast.success(`Email changed! Please log in again.`);
+        toast.success("Email changed! Please log in again.");
         emailForm.reset(); removeUserLocalStorage(); navigate("/login");
       }
     } catch { toast.error("Failed to change email."); }
@@ -172,25 +159,23 @@ const Settings = () => {
       const res: any = await changeUsername(data);
       if (res?.error?.data?.message) { toast.error(res.error.data.message); return; }
       if (res?.data?.statusCode === 200) {
-        toast.success(`Username changed! Please log in again.`);
+        toast.success("Username changed! Please log in again.");
         usernameForm.reset(); removeUserLocalStorage(); navigate("/login");
       }
     } catch { toast.error("Failed to change username."); }
   };
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode; accent: string }[] = [
-    { id: "account",       label: "Account",       icon: <FaUser size={13} />,      accent: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
-    { id: "general",       label: "General",       icon: <FaGlobe size={13} />,     accent: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20" },
-    { id: "notifications", label: "Notifications", icon: <FaBell size={13} />,      accent: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
-    { id: "security",      label: "Security",      icon: <FaShieldAlt size={13} />, accent: "text-green-400 bg-green-500/10 border-green-500/20" },
-    { id: "system",        label: "System",        icon: <FaDatabase size={13} />,  accent: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
-    { id: "email",         label: "Email / SMTP",  icon: <FaEnvelope size={13} />,  accent: "text-rose-400 bg-rose-500/10 border-rose-500/20" },
+    { id: "account",  label: "Account",  icon: <FaUser size={13} />,      accent: "text-blue-400 bg-blue-500/10 border-blue-500/20"   },
+    { id: "general",  label: "General",  icon: <FaGlobe size={13} />,     accent: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20"   },
+    { id: "security", label: "Security", icon: <FaShieldAlt size={13} />, accent: "text-green-400 bg-green-500/10 border-green-500/20" },
+    { id: "system",   label: "System",   icon: <FaDatabase size={13} />,  accent: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
   ];
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex items-center justify-end">
         <button
           onClick={handleSave}
@@ -207,7 +192,7 @@ const Settings = () => {
         </button>
       </div>
 
-      {/* ── Mobile Tab Bar (horizontal scroll) ── */}
+      {/* Mobile Tab Bar */}
       <div className="lg:hidden bg-gray-800 border border-gray-700 rounded-2xl p-2">
         <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-hide">
           {tabs.map(tab => {
@@ -233,7 +218,7 @@ const Settings = () => {
 
       <div className="flex flex-col lg:flex-row gap-5">
 
-        {/* ── Desktop Sidebar ── */}
+        {/* Desktop Sidebar */}
         <aside className="hidden lg:block lg:w-56 shrink-0">
           <div className="bg-gray-800 border border-gray-700 rounded-2xl p-2 lg:sticky lg:top-4">
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 px-3 py-2">Navigation</p>
@@ -260,13 +245,12 @@ const Settings = () => {
           </div>
         </aside>
 
-        {/* ── Main Content ── */}
+        {/* Main Content */}
         <main className="flex-1 min-w-0 space-y-5">
 
-          {/* ══ ACCOUNT ══ */}
+          {/* ACCOUNT */}
           {activeTab === "account" && (
             <>
-              {/* Current User Info */}
               <SectionCard>
                 <div className="flex items-center gap-4 mb-5">
                   <div className="w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/30
@@ -296,7 +280,6 @@ const Settings = () => {
                 </div>
               </SectionCard>
 
-              {/* Change Password */}
               <SectionCard>
                 <div className="flex items-center gap-2.5 mb-5">
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
@@ -346,7 +329,6 @@ const Settings = () => {
                 </form>
               </SectionCard>
 
-              {/* Change Email */}
               <SectionCard>
                 <div className="flex items-center gap-2.5 mb-5">
                   <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
@@ -376,7 +358,6 @@ const Settings = () => {
                 </form>
               </SectionCard>
 
-              {/* Change Username */}
               <SectionCard>
                 <div className="flex items-center gap-2.5 mb-5">
                   <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
@@ -409,7 +390,7 @@ const Settings = () => {
             </>
           )}
 
-          {/* ══ GENERAL ══ */}
+          {/* GENERAL */}
           {activeTab === "general" && (
             <SectionCard>
               <h2 className="text-sm font-bold text-white mb-5 flex items-center gap-2">
@@ -466,24 +447,7 @@ const Settings = () => {
             </SectionCard>
           )}
 
-          {/* ══ NOTIFICATIONS ══ */}
-          {activeTab === "notifications" && (
-            <SectionCard>
-              <h2 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
-                <FaBell className="text-amber-400" size={13} /> Notification Preferences
-              </h2>
-              <p className="text-xs text-gray-500 mb-5">Control when and how you receive notifications</p>
-              <div className="divide-y divide-gray-700/50">
-                <NotificationRow label="Email Notifications"   description="Receive alerts via email"                      checked={settings.emailNotifications}   onChange={v => set("emailNotifications", v)} />
-                <NotificationRow label="SMS Notifications"     description="Receive alerts via SMS"                        checked={settings.smsNotifications}     onChange={v => set("smsNotifications", v)} />
-                <NotificationRow label="New Item Alerts"       description="Notify when new items are reported"            checked={settings.newItemNotifications}  onChange={v => set("newItemNotifications", v)} />
-                <NotificationRow label="Claim Alerts"          description="Notify when items are claimed"                 checked={settings.claimNotifications}   onChange={v => set("claimNotifications", v)} />
-                <NotificationRow label="Reminder Alerts"       description="Send reminders for pending items"              checked={settings.reminderNotifications} onChange={v => set("reminderNotifications", v)} />
-              </div>
-            </SectionCard>
-          )}
-
-          {/* ══ SECURITY ══ */}
+          {/* SECURITY */}
           {activeTab === "security" && (
             <SectionCard>
               <h2 className="text-sm font-bold text-white mb-5 flex items-center gap-2">
@@ -504,13 +468,13 @@ const Settings = () => {
                 </div>
               </div>
               <div className="border-t border-gray-700/50 pt-5">
-                <NotificationRow label="Two-Factor Authentication" description="Require 2FA for all users"                   checked={settings.enableTwoFactor}        onChange={v => set("enableTwoFactor", v)} />
-                <NotificationRow label="Force Password Change"     description="Require users to change default passwords"   checked={settings.requirePasswordChange}   onChange={v => set("requirePasswordChange", v)} />
+                <NotificationRow label="Two-Factor Authentication" description="Require 2FA for all users"                 checked={settings.enableTwoFactor}       onChange={v => set("enableTwoFactor", v)} />
+                <NotificationRow label="Force Password Change"     description="Require users to change default passwords" checked={settings.requirePasswordChange} onChange={v => set("requirePasswordChange", v)} />
               </div>
             </SectionCard>
           )}
 
-          {/* ══ SYSTEM ══ */}
+          {/* SYSTEM */}
           {activeTab === "system" && (
             <SectionCard>
               <h2 className="text-sm font-bold text-white mb-5 flex items-center gap-2">
@@ -527,70 +491,12 @@ const Settings = () => {
                 </div>
               </div>
               <div className="border-t border-gray-700/50 pt-5">
-                <NotificationRow label="Auto-delete Expired Items" description="Automatically remove items past expiry date"       checked={settings.autoDeleteExpiredItems} onChange={v => set("autoDeleteExpiredItems", v)} />
-                <NotificationRow label="Require Item Approval"     description="Items must be reviewed before becoming visible"   checked={settings.requireItemApproval}    onChange={v => set("requireItemApproval", v)} />
+                <NotificationRow label="Auto-delete Expired Items" description="Automatically remove items past expiry date"     checked={settings.autoDeleteExpiredItems} onChange={v => set("autoDeleteExpiredItems", v)} />
+                <NotificationRow label="Require Item Approval"     description="Items must be reviewed before becoming visible" checked={settings.requireItemApproval}    onChange={v => set("requireItemApproval", v)} />
               </div>
             </SectionCard>
           )}
 
-          {/* ══ EMAIL ══ */}
-          {activeTab === "email" && (
-            <SectionCard>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                  <FaEnvelope className="text-rose-400" size={13} /> SMTP Configuration
-                </h2>
-                <button
-                  onClick={() => { toast.info("Testing email…"); setTimeout(() => toast.success("Email test successful!"), 2000); }}
-                  className="px-4 py-2 bg-green-600/20 hover:bg-green-600 border border-green-600/40
-                    text-green-400 hover:text-white rounded-xl text-xs font-semibold transition-all duration-200"
-                >
-                  Send Test
-                </button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <FieldLabel>SMTP Host</FieldLabel>
-                  <InputField type="text" value={settings.smtpHost} onChange={e => set("smtpHost", e.target.value)} placeholder="smtp.gmail.com" />
-                </div>
-                <div>
-                  <FieldLabel>SMTP Port</FieldLabel>
-                  <InputField type="number" value={settings.smtpPort} onChange={e => set("smtpPort", +e.target.value)} />
-                </div>
-                <div>
-                  <FieldLabel>SMTP Username</FieldLabel>
-                  <InputField type="text" value={settings.smtpUsername} onChange={e => set("smtpUsername", e.target.value)} placeholder="your@email.com" />
-                </div>
-                <div>
-                  <FieldLabel>SMTP Password</FieldLabel>
-                  <div className="relative">
-                    <InputField
-                      type={showSmtpPassword ? "text" : "password"}
-                      value={settings.smtpPassword}
-                      onChange={e => set("smtpPassword", e.target.value)}
-                      placeholder="••••••••"
-                      className="pr-10"
-                    />
-                    <button type="button" onClick={() => setShowSmtpPassword(!showSmtpPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
-                      {showSmtpPassword ? <FaEyeSlash size={13} /> : <FaEye size={13} />}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <FieldLabel>From Name</FieldLabel>
-                  <InputField type="text" value={settings.fromName} onChange={e => set("fromName", e.target.value)} />
-                </div>
-                <div>
-                  <FieldLabel>From Email</FieldLabel>
-                  <InputField type="email" value={settings.fromEmail} onChange={e => set("fromEmail", e.target.value)} />
-                </div>
-              </div>
-              <div className="mt-5 pt-5 border-t border-gray-700/50">
-                <NotificationRow label="Use SSL / TLS" description="Enable secure encrypted email transmission" checked={settings.smtpSecure} onChange={v => set("smtpSecure", v)} />
-              </div>
-            </SectionCard>
-          )}
         </main>
       </div>
     </div>
