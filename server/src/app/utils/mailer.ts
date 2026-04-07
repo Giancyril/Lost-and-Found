@@ -1,13 +1,6 @@
-// @ts-ignore
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 export const sendEmail = async (config: {
   fromName:  string;
@@ -16,8 +9,8 @@ export const sendEmail = async (config: {
   subject:   string;
   html:      string;
 }) => {
-  await transporter.sendMail({
-    from:    `"${config.fromName}" <${process.env.GMAIL_USER}>`,
+  await sgMail.send({
+    from:    { name: config.fromName, email: config.fromEmail },
     to:      config.toEmail,
     subject: config.subject,
     html:    config.html,
