@@ -370,14 +370,14 @@ const FoundItemsManagement = () => {
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center justify-end gap-2 pt-1">
+        <div className="flex gap-2 pt-1">
           <button type="button" onClick={handleEditCancel} disabled={isEditLoading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+            className="flex-1 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 py-2 rounded-xl text-xs font-medium transition-colors">
             Cancel
           </button>
           <button type="submit" disabled={isEditLoading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500 border border-yellow-500/30 text-yellow-400 hover:text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-            {isEditLoading ? <><Spinner /> Updating...</> : <><FaEdit size={10} /> Update Item</>}
+            className="flex-1 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+            {isEditLoading ? <><Spinner /> Updating...</> : <> Update Item</>}
           </button>
         </div>
       </form>
@@ -438,14 +438,14 @@ const FoundItemsManagement = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2 pt-1">
+        <div className="flex gap-2 pt-1">
           <button type="button" onClick={handleDeleteCancel} disabled={isDeleteLoading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+            className="flex-1 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 py-2 rounded-xl text-xs font-medium transition-colors">
             Cancel
           </button>
           <button type="button" onClick={handleDeleteConfirm} disabled={isDeleteLoading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-red-500/10 hover:bg-red-500 border border-red-500/30 text-red-400 hover:text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-            {isDeleteLoading ? <><Spinner /> Deleting...</> : <><FaTrash size={10} /> Delete Item</>}
+            className="flex-1 bg-red-500 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+            {isDeleteLoading ? <><Spinner /> Deleting...</> : <> Delete Item</>}
           </button>
         </div>
       </div>
@@ -504,14 +504,14 @@ const FoundItemsManagement = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2 pt-1">
+        <div className="flex gap-2 pt-1">
           <button type="button" onClick={handleArchiveCancel} disabled={isArchiveLoading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+            className="flex-1 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 py-2 rounded-xl text-xs font-medium transition-colors">
             Cancel
           </button>
           <button type="button" onClick={handleArchiveConfirm} disabled={isArchiveLoading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-orange-500/10 hover:bg-orange-500 border border-orange-500/30 text-orange-400 hover:text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-            {isArchiveLoading ? <><Spinner /> Archiving...</> : <><FaArchive size={10} /> Archive Item</>}
+            className="flex-1 bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+            {isArchiveLoading ? <><Spinner /> Archiving...</> : <> Archive Item</>}
           </button>
         </div>
       </div>

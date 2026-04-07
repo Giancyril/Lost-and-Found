@@ -155,16 +155,16 @@ const PostModal = ({ onClose }: { onClose: () => void }) => {
               <div className="relative">
                 <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={10} />
                 <input type="text" value={reporterName} onChange={e => setReporterName(e.target.value)} maxLength={80}
-                  placeholder="Juan dela Cruz"
+                  placeholder=" "
                   className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Section/Grade <span className="text-gray-600 font-normal normal-case">(optional)</span></label>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Course <span className="text-gray-600 font-normal normal-case">(optional)</span></label>
               <div className="relative">
                 <FaTag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={10} />
                 <input type="text" value={contactHint} onChange={e => setContactHint(e.target.value)} maxLength={100}
-                  placeholder="BSIT 2A"
+                  placeholder=" "
                   className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
               </div>
             </div>
@@ -190,7 +190,7 @@ const PostModal = ({ onClose }: { onClose: () => void }) => {
             {imageError && <p className="text-red-400 text-xs mt-1">{imageError}</p>}
           </div>
           <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl px-3.5 py-2.5">
-            <p className="text-amber-300/70 text-[11px] leading-relaxed">ℹ️ Your post will be visible to the community. The SAS office may contact you if a match is found.</p>
+            <p className="text-amber-300/70 text-[11px] leading-relaxed"> Your post will be visible to the community. The SAS office may contact you if a match is found.</p>
           </div>
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">Cancel</button>
@@ -384,7 +384,7 @@ export default function BulletinBoard() {
                 <FaLightbulb size={10} /> Community Bulletin Board
               </div>
               <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">Lost Something?</h1>
-              <p className="text-gray-400 mt-2 text-sm max-w-md">Post your lost item and let the community help you find it. No account needed.</p>
+              <p className="text-gray-400 mt-2 text-sm max-w-md">Lost something on campus? Post your missing item details and let the student community help reunite you with your belongings.</p>
             </div>
             <button onClick={() => setShowPostModal(true)}
               className="inline-flex items-center gap-2 px-5 py-3 bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-amber-900/30 shrink-0">

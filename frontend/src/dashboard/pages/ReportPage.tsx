@@ -101,43 +101,68 @@ const ReportPage = () => {
 
       <div className="space-y-4 max-w-7xl mx-auto">
 
-        {/* ── Controls bar — screen only ── */}
-        <div className="no-print bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+       {/* ── Controls bar — screen only ── */}
+        <div className="no-print bg-gray-900/50 border border-white/5 backdrop-blur-sm rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
           <div>
             <h2 className="text-white font-bold text-base flex items-center gap-2">
               <FaChartBar className="text-cyan-400" size={15} /> Summary Report
             </h2>
-            <p className="text-gray-500 text-xs mt-0.5">Generate and export a printable summary</p>
+            <p className="text-gray-500 text-[11px] mt-0.5">Generate and export a printable summary</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-            <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-xl p-1 flex-wrap">
-              {(["week", "month", "custom"] as Period[]).map(p => (
-                <button key={p} onClick={() => setPeriod(p)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    period === p ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "text-gray-500 hover:text-white"
-                  }`}>
-                  {p === "week" ? "This Week" : p === "month" ? "This Month" : "Custom"}
-                </button>
-              ))}
-            </div>
-            {period === "custom" && (
-              <div className="flex items-center gap-2">
-                <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)}
-                  className="bg-gray-800 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none focus:border-cyan-500/40" />
-                <span className="text-gray-600 text-xs">to</span>
-                <input type="date" value={toDate} onChange={e => setToDate(e.target.value)}
-                  className="bg-gray-800 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none focus:border-cyan-500/40" />
-              </div>
-            )}
+
+          <div className="flex items-center gap-3 flex-wrap">
+          {/* --- SEGMENTED CONTROL --- */}
+          <div className="flex bg-black/20 border border-white/5 rounded-2xl p-1">
+            {(["week", "month", "custom"] as Period[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-5 py-2 rounded-xl text-xs font-semibold transition-all duration-300 outline-none select-none ${
+                  period === p
+                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm"
+                    : "text-gray-500 hover:text-gray-300 border border-transparent"
+                }`}
+              >
+                {p === "week" ? "This Week" : p === "month" ? "This Month" : "Custom"}
+              </button>
+            ))}
+          </div>
+
+          {/* --- SMOOTH TRANSITION DATE INPUTS --- */}
+          <div 
+            className={`flex items-center gap-2 overflow-hidden transition-all duration-500 ease-in-out ${
+              period === "custom" 
+                ? "max-w-[500px] opacity-100 translate-x-0" 
+                : "max-w-0 opacity-0 -translate-x-4 pointer-events-none"
+            }`}
+          >
+            <input 
+              type="date" 
+              value={fromDate} 
+              onChange={e => setFromDate(e.target.value)}
+              className="bg-gray-800/40 border border-white/10 rounded-xl px-3 py-1.5 text-white text-[11px] focus:outline-none focus:border-cyan-500/40 transition-colors cursor-pointer [color-scheme:dark]" 
+            />
+            <span className="text-gray-600 text-[10px] font-medium uppercase tracking-wider">to</span>
+            <input 
+              type="date" 
+              value={toDate} 
+              onChange={e => setToDate(e.target.value)}
+              className="bg-gray-800/40 border border-white/10 rounded-xl px-3 py-1.5 text-white text-[11px] focus:outline-none focus:border-cyan-500/40 transition-colors cursor-pointer [color-scheme:dark]" 
+            />
+          </div>
+
+          {/* Print & Download Buttons */}
+          <div className="flex items-center gap-2 ml-auto">
             <button onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/10 text-gray-300 hover:text-white text-xs font-medium rounded-xl transition-all">
-              <FaPrint size={11} /> Print
+              className="flex items-center gap-1.5 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 text-gray-300 hover:text-white text-xs font-medium rounded-xl transition-all active:scale-95">
+              <FaPrint size={12} /> <span className="hidden sm:inline">Print</span>
             </button>
             <button onClick={handleDownload}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-xl transition-all">
-              <FaDownload size={11} /> Download PDF
+              className="flex items-center gap-1.5 px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-xl transition-all active:scale-95">
+              <FaDownload size={12} /> <span className="hidden sm:inline">Download</span>
             </button>
           </div>
+        </div>
         </div>
 
         {/* ── PRINTABLE REPORT ── */}

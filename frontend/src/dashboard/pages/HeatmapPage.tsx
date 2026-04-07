@@ -69,7 +69,7 @@ const HeatmapPage = () => {
         <div className="relative flex-1">
           <FaSearch size={12} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search location..."
-            className="w-full bg-gray-900 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/40 transition-colors" />
+            className="w-full bg-gray-900 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-cyan-500/40 transition-colors" />
         </div>
         <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
           {(["all", "found", "lost"] as Filter[]).map((f) => (

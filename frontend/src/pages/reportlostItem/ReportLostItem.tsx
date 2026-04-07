@@ -250,13 +250,13 @@ const ReportLostItem = () => {
                     <div className="grid gap-5 sm:grid-cols-2">
                       <Field label="Your Name" required error={errors.reporterName?.message as string} icon={<IconUser />}>
                         <input {...register("reporterName", { required: "Your name is required" })}
-                          type="text" className={inputCls} placeholder="e.g. Juan dela Cruz" />
+                          type="text" className={inputCls} placeholder=" " />
                       </Field>
                       <Field label="Institutional Email" required error={errors.schoolEmail?.message as string} icon={<IconMail />}>
                         <input {...register("schoolEmail", {
                           required: "School email is required",
                           pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
-                        })} type="email" className={inputCls} placeholder="juan@nbsc.edu.ph" />
+                        })} type="email" className={inputCls} placeholder=" " />
                       </Field>
                     </div>
                     <div className="rounded-lg bg-blue-950/40 border border-blue-800/40 px-4 py-3 flex gap-3 items-start">

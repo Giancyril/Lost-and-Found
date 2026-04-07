@@ -104,40 +104,41 @@ const ArchivePage = () => {
 
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit">
-        <div
-          role="button"
-          tabIndex={-1}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => handleTabChange("stale")}
-          className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer select-none ${
-            activeTab === "stale"
-              ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-              : "text-gray-500 hover:text-white"
-          }`}
-        >
-          <FaClock size={11} /> Stale Items
-          <span className="ml-1 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
-            {staleItems.length}
-          </span>
-        </div>
-        <div
-          role="button"
-          tabIndex={-1}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => handleTabChange("archived")}
-          className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer select-none ${
-            activeTab === "archived"
-              ? "bg-gray-500/10 text-gray-300 border border-gray-500/20"
-              : "text-gray-500 hover:text-white"
-          }`}
-        >
-          <FaArchive size={11} /> Archived
-          <span className="ml-1 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
-            {archivedItems.length}
-          </span>
-        </div>
-      </div>
+<div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit">
+  <div
+    role="button"
+    tabIndex={-1}
+    onMouseDown={(e) => e.preventDefault()}
+    onClick={() => handleTabChange("stale")}
+    className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer select-none outline-none ring-0 focus:ring-0 focus:outline-none active:opacity-70 ${
+      activeTab === "stale"
+        ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
+        : "text-gray-500 hover:text-white border border-transparent"
+    }`}
+  >
+    <FaClock size={11} /> Stale Items
+    <span className="ml-1 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
+      {staleItems.length}
+    </span>
+  </div>
+
+  <div
+    role="button"
+    tabIndex={-1}
+    onMouseDown={(e) => e.preventDefault()}
+    onClick={() => handleTabChange("archived")}
+    className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer select-none outline-none ring-0 focus:ring-0 focus:outline-none active:opacity-70 ${
+      activeTab === "archived"
+        ? "bg-gray-500/10 text-gray-300 border border-gray-500/20"
+        : "text-gray-500 hover:text-white border border-transparent"
+    }`}
+  >
+    <FaArchive size={11} /> Archived
+    <span className="ml-1 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
+      {archivedItems.length}
+    </span>
+  </div>
+</div>
 
       {/* Info banner */}
       {activeTab === "stale" && (

@@ -152,7 +152,7 @@ const CategoriesManagement = () => {
       {/* Add button */}
       <div className="flex justify-end">
         <button onClick={() => setShowAddForm(true)}
-          className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium">
+          className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium">
           <FaPlus size={12} /> Add Category
         </button>
       </div>

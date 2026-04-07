@@ -165,7 +165,6 @@ export function Navbars() {
           <div className="flex flex-col md:flex-row md:items-center md:gap-8 lg:gap-14">
             {[
               { label: "Home",             href: "/"               },
-              { label: "Bulletin",         href: "/bulletin"       },
               { label: "Report Lost Item", href: "/reportlostItem" },
               { label: "Lost Items",       href: "/lostItems"      },
               { label: "Found Items",      href: "/foundItems"     },
