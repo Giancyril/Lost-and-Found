@@ -10,6 +10,16 @@
     --tw-ring-shadow: 0 0 #0000 !important;
     --tw-ring-offset-shadow: 0 0 #0000 !important;
   }
+
+  html {
+    background-color: #020817;
+    color: #fff;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background-color: #020817;
+  }
 }
 
 /* ── React-Toastify: mobile responsive ─────────────────────────────────── */
