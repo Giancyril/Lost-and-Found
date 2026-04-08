@@ -5,14 +5,14 @@ export const lostItemReportedTemplate = (data: {
   date: string;
   description: string;
 }) => ({
-  subject: `Lost Item Report Received — ${data.itemName}`,
+  subject: `Found Item Report Received — ${data.itemName}`,
   html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <title>Lost Item Report</title>
+      <title>Found Item Report</title>
     </head>
     <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 0;">
@@ -32,7 +32,7 @@ export const lostItemReportedTemplate = (data: {
                     <tr>
                       <td>
                         <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">NBSC SAS Lost &amp; Found</p>
-                        <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;">Lost Item Report Received</h1>
+                        <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;">Found Item Report Received</h1>
                       </td>
                       <td align="right" valign="top">
                         <span style="display:inline-block;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid #bfdbfe;">📋 REPORT</span>
@@ -48,7 +48,7 @@ export const lostItemReportedTemplate = (data: {
 
                   <p style="margin:0 0 8px;font-size:16px;font-weight:600;color:#0f172a;">Hello, ${data.reporterName}</p>
                   <p style="margin:0 0 28px;font-size:14px;color:#64748b;line-height:1.7;">
-                    We have successfully received your lost item report. Our team will review the details and notify you as soon as a matching found item is identified.
+                    We have successfully received your found item report. Our team will review the details and notify you as soon as the owner or responsible staff can be contacted.
                   </p>
 
                   <!-- DETAIL CARD -->
@@ -93,7 +93,7 @@ export const lostItemReportedTemplate = (data: {
                     <tr>
                       <td style="padding:16px 20px;">
                         <p style="margin:0;font-size:13px;color:#1e40af;line-height:1.6;">
-                          <strong>What happens next?</strong> The SAS office will review your report and cross-reference it with found items on campus.
+                          <strong>What happens next?</strong> The SAS office will review your report and contact the owner or relevant department to coordinate return of the item.
                         </p>
                       </td>
                     </tr>

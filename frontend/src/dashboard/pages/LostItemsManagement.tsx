@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FaEdit, FaTrash, FaEye, FaSearch, 
   FaCheck, FaTimes, FaEnvelope, 
-  FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt, 
+  FaMapMarkerAlt, FaCalendarAlt, 
   FaClipboardList, FaBoxOpen, FaTag } from "react-icons/fa";
 import { IoMdRadioButtonOn } from "react-icons/io";
 import { MdCheckCircle } from "react-icons/md";
@@ -12,7 +12,6 @@ import {
   useMarkLostItemAsFoundMutation,
   useEditMyLostItemMutation,
   useCategoryQuery,
-  useSendLostItemEmailMutation,
 } from "../../redux/api/api";
 
 interface LostItem {
@@ -48,26 +47,6 @@ const LostItemsManagement = () => {
   const [deletingItem, setDeletingItem]           = useState<LostItem | null>(null);
   const [isDeleteLoading, setIsDeleteLoading]     = useState(false);
   const [editFormData, setEditFormData] = useState({ lostItemName: "", description: "", location: "", date: "", categoryId: "" });
-
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [emailItem, setEmailItem]               = useState<LostItem | null>(null);
-  const [emailToAddress, setEmailToAddress]     = useState("");
-  const [isSendingEmail, setIsSendingEmail]     = useState(false);
-  const [emailSentIds, setEmailSentIds] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem("lostItemEmailSentIds");
-      return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
-    } catch { return new Set<string>(); }
-  });
-
-  const markEmailSent = (id: string) => {
-    setEmailSentIds(prev => {
-      const next = new Set(prev).add(id);
-      localStorage.setItem("lostItemEmailSentIds", JSON.stringify([...next]));
-      return next;
-    });
-  };
-  const [sendLostItemEmail] = useSendLostItemEmailMutation();
 
   const { data: lostItemsData, isLoading, error } = useGetAllLostItemsQuery({ searchTerm, sortBy: "lostItemName", sortOrder: "asc" });
   const { data: categoriesData } = useCategoryQuery({});
@@ -116,38 +95,6 @@ const LostItemsManagement = () => {
       toast.success(currentStatus ? "Item marked as active successfully." : "Item marked as resolved successfully.");
     } catch { toast.error("Failed to update item status"); }
     finally { setMarkingAsFoundId(null); }
-  };
-
-  const handleOpenEmailModal = (item: LostItem) => {
-    setEmailItem(item);
-    setEmailToAddress(item.schoolEmail || "");
-    setIsEmailModalOpen(true);
-  };
-
-  const handleSendEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailItem) return;
-    setIsSendingEmail(true);
-    try {
-      await sendLostItemEmail({
-        smtp: {},
-        recipient: {
-          toEmail:      emailToAddress,
-          reporterName: emailItem.reporterName || emailItem.user?.username || "Student",
-          itemName:     emailItem.lostItemName,
-          location:     emailItem.location,
-          date:         new Date(emailItem.date).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }),
-          description:  emailItem.description,
-        },
-      }).unwrap();
-      toast.success("Email sent successfully!");
-      if (emailItem) markEmailSent(emailItem.id);
-      setIsEmailModalOpen(false);
-    } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to send email.");
-    } finally {
-      setIsSendingEmail(false);
-    }
   };
 
   if (isLoading) return (
@@ -275,15 +222,6 @@ const LostItemsManagement = () => {
                         title={item.isFound ? "Mark as Active" : "Mark as Resolved"}>
                         {markingAsFoundId === item.id ? <Spinner color={item.isFound ? "text-orange-500" : "text-green-500"} /> : item.isFound ? <FaTimes size={13} /> : <FaCheck size={13} />}
                       </button>
-                      {emailSentIds.has(item.id) ? (
-                        <span className="flex items-center gap-1 px-2 py-1 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-[10px] font-semibold whitespace-nowrap">
-                          <FaCheckCircle size={10} /> Sent
-                        </span>
-                      ) : (
-                        <button onClick={() => handleOpenEmailModal(item)} className="p-1.5 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-colors" title="Send Email">
-                          <FaEnvelope size={13} />
-                        </button>
-                      )}
                       <button onClick={() => handleDelete(item)} className="p-1.5 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors" title="Delete"><FaTrash size={13} /></button>
                     </div>
                   </td>
@@ -340,15 +278,6 @@ const LostItemsManagement = () => {
                 {markingAsFoundId === item.id ? <Spinner color={item.isFound ? "text-orange-500" : "text-green-500"} />
                   : item.isFound ? <><FaTimes size={11} /> Reopen</> : <><FaCheck size={11} /> Resolve</>}
               </button>
-              {emailSentIds.has(item.id) ? (
-                <span className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-xs font-semibold">
-                  <FaCheckCircle size={11} /> Sent
-                </span>
-              ) : (
-                <button onClick={() => handleOpenEmailModal(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded-lg text-xs font-medium">
-                  <FaEnvelope size={11} /> Email
-                </button>
-              )}
               <button onClick={() => handleDelete(item)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-red-500 hover:bg-red-500/10 rounded-lg text-xs font-medium">
                 <FaTrash size={11} /> Delete
               </button>
@@ -565,62 +494,6 @@ const LostItemsManagement = () => {
 )}
 
       {/* Email Modal */}
-      {isEmailModalOpen && emailItem && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                  <FaEnvelope size={11} className="text-emerald-400" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-white">Send Report Confirmation</h2>
-                  <p className="text-gray-500 text-[11px]">Notify the reporter their lost item was received</p>
-                </div>
-              </div>
-              <button onClick={() => setIsEmailModalOpen(false)}
-                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                <FaTimes size={12} />
-              </button>
-            </div>
-            <form onSubmit={handleSendEmail} className="p-5 space-y-4">
-              <div className="bg-gray-800/60 border border-white/5 rounded-xl p-3 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <FaSearch size={13} className="text-blue-400" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-white text-xs font-semibold truncate">{emailItem.lostItemName}</p>
-                  <p className="text-gray-500 text-[10px]">{emailItem.location} · {new Date(emailItem.date).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                  Recipient Email <span className="text-red-400">*</span>
-                  {emailItem.schoolEmail && <span className="ml-2 text-[10px] text-emerald-400 font-normal normal-case tracking-normal">✓ Pre-filled</span>}
-                </label>
-                <input type="email" required placeholder="reporter@nbsc.edu.ph" value={emailToAddress}
-                  onChange={e => setEmailToAddress(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/30" />
-              </div>
-              <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl px-3.5 py-2.5">
-                <p className="text-emerald-300/80 text-xs leading-relaxed">
-                  Sends a formatted confirmation email to the reporter of <strong>"{emailItem.lostItemName}"</strong>.
-                </p>
-              </div>
-              <div className="flex gap-2 pt-1">
-                <button type="button" onClick={() => setIsEmailModalOpen(false)} disabled={isSendingEmail}
-                  className="flex-1 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 py-2 rounded-xl text-xs font-medium transition-colors">
-                  Cancel
-                </button>
-                <button type="submit" disabled={isSendingEmail}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
-                  {isSendingEmail ? <><Spinner color="text-white" /> Sending...</> : <><FaEnvelope size={10} /> Send Email</>}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
