@@ -62,14 +62,11 @@ const AiSearch: React.FC = () => {
 
         {/* ── Hero ── */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-xs font-medium tracking-widest uppercase mb-6">
-            <FaRobot size={10} /> Powered by Gemini AI
-          </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">
             Smart Item Search
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-            Describe what you lost or found in natural language. Our AI will intelligently match it across all reported items.
+            Describe what you lost or found in natural language 
           </p>
         </div>
 
@@ -95,7 +92,7 @@ const AiSearch: React.FC = () => {
               className="flex items-center justify-center gap-2.5 px-6 py-3.5 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:text-gray-500 text-gray-950 font-semibold text-sm rounded-xl transition-all duration-200 shrink-0"
             >
               {isLoading ? <FaSpinner className="animate-spin" size={14} /> : <FaSearch size={14} />}
-              {isLoading ? "Searching..." : "Search with AI"}
+              {isLoading ? "Searching..." : "Search"}
             </button>
           </div>
           {searchQuery && (

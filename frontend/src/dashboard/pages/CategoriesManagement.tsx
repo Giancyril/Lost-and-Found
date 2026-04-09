@@ -115,16 +115,9 @@ const CategoriesManagement = () => {
 
       {/* Header row */}
       <div className="flex items-center justify-between gap-4">
-        <div className="grid grid-cols-2 gap-3 flex-1">
-          {[
-            { label: "Total Categories", value: categories.length,          color: "text-white"      },
-            { label: "Added This Week",  value: categories.filter(c => new Date(c.createdAt) > new Date(Date.now() - 7 * 86400000)).length, color: "text-emerald-400" },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="bg-gray-900 border border-white/5 rounded-2xl p-4">
-              <p className={`text-2xl font-bold ${color}`}>{value}</p>
-              <p className="text-gray-500 text-xs mt-0.5">{label}</p>
-            </div>
-          ))}
+        <div>
+          <h1 className="text-white text-xl font-bold tracking-tight">Categories</h1>
+          <p className="text-gray-500 text-xs mt-0.5">Manage item categories for lost and found</p>
         </div>
         <button onClick={() => setShowAddForm(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shrink-0">
