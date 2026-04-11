@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
+import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import "react-toastify/dist/ReactToastify.css";
 import {
   FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaUser, FaTag,
@@ -284,6 +285,9 @@ const SingleFoundItem = () => {
   const [isClaimModalOpen, setIsClaimModalOpen]       = useState(false);
   const [isTimelineOpen, setIsTimelineOpen]           = useState(false);
 
+  // ✅ Fix 1: lostDate state moved here (was incorrectly inside ImageCarousel)
+  const [lostDate, setLostDate]                       = useState("");
+
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
   const onSubmit = async (data: any) => {
@@ -292,7 +296,7 @@ const SingleFoundItem = () => {
       const claimData = {
         foundItemId,
         distinguishingFeatures: data.distinguishingFeatures,
-        lostDate: new Date(data.lostDate).toISOString(),
+        lostDate: new Date(lostDate + "T00:00:00").toISOString(),
         claimantName: data.claimantName,
         schoolEmail: data.schoolEmail,
       };
@@ -307,6 +311,7 @@ const SingleFoundItem = () => {
         }
         setIsClaimModalOpen(false);
         reset();
+        setLostDate("");
       } else {
         toast.error("Failed to submit claim. Please try again.");
       }
@@ -362,39 +367,35 @@ const SingleFoundItem = () => {
   return (
     <>
       <div className="min-h-screen bg-gray-950">
-  {/* Header */}
-  <div className="border-b border-gray-800 bg-gray-950">
-    <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
-      {/* Container: justify-between pushes content to opposite ends */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        
-        {/* Left Side: Title and Subtitle */}
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">
-            {foundItemData?.foundItemName || "Found Item"}
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">Item lost details</p>
-        </div>
+        {/* Header */}
+        <div className="border-b border-gray-800 bg-gray-950">
+          <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              {/* Left Side: Title and Subtitle */}
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">
+                  {foundItemData?.foundItemName || "Found Item"}
+                </h1>
+                <p className="text-gray-500 text-sm mt-1">Item lost details</p>
+              </div>
 
-        {/* Right Side: Lifecycle Button */}
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
-          <button
-            onClick={() => setIsTimelineOpen(true)}
-            className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all"
-          >
-            <FaClipboardList size={10} /> View Lifecycle
-            {claimCount > 0 && (
-              <span className="ml-0.5 bg-violet-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-none">
-                {claimCount}
-              </span>
-            )}
-          </button>
+              {/* Right Side: Lifecycle Button */}
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
+                <button
+                  onClick={() => setIsTimelineOpen(true)}
+                  className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all"
+                >
+                  <FaClipboardList size={10} /> View Lifecycle
+                  {claimCount > 0 && (
+                    <span className="ml-0.5 bg-violet-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-none">
+                      {claimCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-
-      
-    </div>
-  </div>
-</div>
 
         {/* Main Content */}
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
@@ -402,7 +403,6 @@ const SingleFoundItem = () => {
 
             {/* Left: Image with Status Overlay */}
             <div className="relative flex flex-col h-full rounded-2xl overflow-hidden">
-              
               {/* Status Badge Overlay */}
               <div className="absolute top-3 left-3 z-10">
                 {isClaimed ? (
@@ -509,8 +509,14 @@ const SingleFoundItem = () => {
                 <h3 className="text-base font-bold text-white">{isAdmin ? "Process Claim" : "Submit a Claim"}</h3>
                 <p className="text-gray-500 text-xs mt-0.5">{isAdmin ? "Verify ownership and mark item as claimed" : "Provide your details to prove ownership"}</p>
               </div>
-              <button onClick={() => { setIsClaimModalOpen(false); reset(); }} className="text-gray-500 hover:text-white ml-4"><FaTimes size={15} /></button>
+              <button
+                onClick={() => { setIsClaimModalOpen(false); reset(); setLostDate(""); }}
+                className="text-gray-500 hover:text-white ml-4"
+              >
+                <FaTimes size={15} />
+              </button>
             </div>
+
             <div className="px-4 py-4">
               <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
                 {hideImage ? (
@@ -526,10 +532,11 @@ const SingleFoundItem = () => {
                 )}
                 <div>
                   <p className="text-white text-sm font-semibold">{foundItemData?.foundItemName}</p>
-                  <p className="text-gray-400 text-xs mt-0.5"> {foundItemData?.location}</p>
-                  <p className="text-gray-400 text-xs"> Found: {foundItemData?.date?.split("T")[0]}</p>
+                  <p className="text-gray-400 text-xs mt-0.5">{foundItemData?.location}</p>
+                  <p className="text-gray-400 text-xs">Found: {foundItemData?.date?.split("T")[0]}</p>
                 </div>
               </div>
+
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Full Name *</label>
@@ -541,11 +548,12 @@ const SingleFoundItem = () => {
                   </div>
                   {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
                 </div>
+
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">School ID / Email *</label>
                   <div className="relative">
                     <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
-                    <input type="email" placeholder=" "
+                    <input type="email" placeholder="yourname@nbsc.edu.ph"
                       {...register("schoolEmail", {
                         required: "School email is required",
                         pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email (@nbsc.edu.ph)" },
@@ -554,12 +562,18 @@ const SingleFoundItem = () => {
                   </div>
                   {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
                 </div>
+
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date Item Was Lost *</label>
-                  <input type="date" {...register("lostDate", { required: "Please provide the date" })}
-                    className="w-full p-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
-                  {errors.lostDate && <p className="text-red-400 text-xs mt-1">{errors.lostDate.message as string}</p>}
+                  <CustomDatePicker
+                    value={lostDate}
+                    onChange={setLostDate}
+                    max={new Date().toISOString().split("T")[0]}
+                    placeholder="Select date lost"
+                    openUp
+                  />
                 </div>
+
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Proof of Ownership *</label>
                   <textarea rows={4}
@@ -571,13 +585,17 @@ const SingleFoundItem = () => {
                     className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm resize-none placeholder-gray-600" />
                   {errors.distinguishingFeatures && <p className="text-red-400 text-xs mt-1">{errors.distinguishingFeatures.message as string}</p>}
                 </div>
+
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
-                    {isAdmin ? " Your claim will be sent to the SAS office for review." : " Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
+                    {isAdmin
+                      ? "Your claim will be sent to the SAS office for review."
+                      : "Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
                   </p>
                 </div>
+
                 <div className="flex gap-3 pt-1">
-                  <button type="button" onClick={() => { setIsClaimModalOpen(false); reset(); }}
+                  <button type="button" onClick={() => { setIsClaimModalOpen(false); reset(); setLostDate(""); }}
                     className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium">
                     Cancel
                   </button>

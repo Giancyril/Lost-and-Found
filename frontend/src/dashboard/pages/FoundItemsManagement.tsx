@@ -24,6 +24,7 @@ interface FoundItem {
   isClaimed: boolean;
   isArchived?: boolean;
   img?: string;
+  reporterName?: string;  
   schoolEmail?: string;
   user?: { username: string; email?: string };
 }
@@ -328,7 +329,9 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
 
                 {/* Reported by */}
                 <div className="min-w-0">
-                  <p className="text-gray-300 text-xs truncate">{item.user?.username || "—"}</p>
+                  <p className="text-gray-300 text-xs truncate">
+                    {item.user?.username || item.reporterName || "—"}
+                  </p>
                   {(item.schoolEmail || item.user?.email) && (
                     <p className="text-blue-300/70 text-[10px] truncate">
                       {item.schoolEmail || item.user?.email}
@@ -388,7 +391,9 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Date Found</p><p className="text-gray-300 mt-0.5">{new Date(item.date).toLocaleDateString()}</p></div>
               <div>
   <p className="text-gray-600 text-[10px] uppercase tracking-widest">Reporter</p>
-  <p className="text-gray-300 mt-0.5">{item.user?.username || "—"}</p>
+  <p className="text-gray-300 mt-0.5">
+    {item.user?.username || item.reporterName || "—"}
+  </p>
   {(item.schoolEmail || item.user?.email) && (
     <p className="text-blue-300/70 text-[10px] mt-0.5">
       {item.schoolEmail || item.user?.email}

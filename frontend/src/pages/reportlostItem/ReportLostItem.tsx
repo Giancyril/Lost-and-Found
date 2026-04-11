@@ -5,8 +5,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useState, useRef } from "react";
 import { useCategoryQuery, useCreateLostItemMutation } from "../../redux/api/api";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 
 const MAX_SIZE_MB = 5;
@@ -141,7 +140,7 @@ const ReportLostItem = () => {
 
   const [createLostItem, { isLoading }] = useCreateLostItemMutation();
   const { data: Category } = useCategoryQuery("");
-  const [startDate, setStartDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
@@ -199,7 +198,7 @@ const ReportLostItem = () => {
         categoryId: selectedMenucategoryId,
         img: preview || "",
         location: data.location,
-        date: startDate,
+        date: new Date(startDate + "T00:00:00"),
         reporterName: data.reporterName || "",
         schoolEmail: data.schoolEmail || "",
       });
@@ -222,7 +221,7 @@ const ReportLostItem = () => {
         <div className="w-full max-w-2xl mx-auto">
 
           {/* Card */}
-          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 overflow-hidden"
+          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800"
             style={{ borderTop: "2px solid #3b82f6", boxShadow: "0 0 30px rgba(59,130,246,0.15), 0 25px 50px rgba(0,0,0,0.5)" }}>
 
             <div className="p-6 sm:p-10">
@@ -283,14 +282,12 @@ const ReportLostItem = () => {
                           type="text" className={inputCls} placeholder="e.g. Library, Room 205" />
                       </Field>
                       <Field label="Date Lost" icon={<IconCalendar />}>
-                        <DatePicker wrapperClassName="w-full"
-                          className={inputCls}
-                          selected={startDate}
-                          onChange={(date: any) => setStartDate(date)}
-                          dateFormat="MMMM d, yyyy"
-                          placeholderText="Select date"
-                          showYearDropdown showMonthDropdown dropdownMode="select"
-                          maxDate={new Date()} />
+                        <CustomDatePicker
+                          value={startDate}
+                          onChange={setStartDate}
+                          max={new Date().toISOString().split("T")[0]}
+                          placeholder="Select date lost"
+                        />
                       </Field>
                       <Field label="Item Category" required error={categoryTouched && !selectedMenucategoryId ? "Category is required" : ""} icon={<IconGrid />}>
                         <div className="relative">
@@ -393,7 +390,7 @@ const ReportLostItem = () => {
                         { label: "Item", value: (document.querySelector('input[name="lostItemName"]') as HTMLInputElement)?.value },
                         { label: "Location", value: (document.querySelector('input[name="location"]') as HTMLInputElement)?.value },
                         { label: "Category", value: selectedMenu },
-                        { label: "Date", value: startDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) },
+                        { label: "Date", value: startDate ? new Date(startDate + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "" },
                       ].map(({ label, value }) => value ? (
                         <div key={label} className="flex items-center justify-between text-sm">
                           <span className="text-gray-500">{label}</span>

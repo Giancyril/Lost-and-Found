@@ -4,9 +4,8 @@ import { Spinner } from "flowbite-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast, ToastContainer } from "react-toastify";
+import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import "react-toastify/dist/ReactToastify.css";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import {
   FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaUser, FaTag,
   FaTimes, FaBoxOpen, FaChevronLeft, FaChevronRight,
@@ -98,7 +97,7 @@ const SingleLostItem = () => {
   const [createFoundItem, { isLoading: submitLoading }] = useCreateFoundItemMutation();
 
   const [isModalOpen, setIsModalOpen]     = useState(false);
-  const [foundDate, setFoundDate]         = useState(new Date());
+  const [foundDate, setFoundDate] = useState(new Date().toISOString().split("T")[0]);
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [reportedFound, setReportedFound] = useState<boolean>(false);
 
@@ -112,7 +111,7 @@ const SingleLostItem = () => {
         description:   data.description,
         img:           lostItem?.img || "",
         location:      data.location,
-        date:          foundDate,
+        date: new Date(foundDate + "T00:00:00"),
         claimProcess:  "Visit the SAS office with valid ID to claim this item.",
         categoryId:    lostItem?.category?.id,
         lostItemId:    lostItemId,
@@ -311,10 +310,13 @@ const SingleLostItem = () => {
 
                 <div>
                   <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date you found it</label>
-                  <DatePicker wrapperClassName="w-full"
-                    className="w-full p-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
-                    selected={foundDate} onChange={(date: any) => setFoundDate(date)}
-                    dateFormat="yyyy-MM-dd" maxDate={new Date()} showYearDropdown showMonthDropdown dropdownMode="select" />
+                  <CustomDatePicker
+                  value={foundDate}
+                  onChange={setFoundDate}
+                  max={new Date().toISOString().split("T")[0]}
+                  placeholder="Select date found"
+                  openUp
+                />
                 </div>
 
                 <div>

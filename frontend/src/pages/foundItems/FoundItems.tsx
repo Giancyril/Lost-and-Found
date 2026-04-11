@@ -11,8 +11,7 @@ import {
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import { useForm } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import {
@@ -56,13 +55,16 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const [submitted, setSubmitted] = useState(false);
 
+  // ✅ Controlled lostDate state for CustomDatePicker
+  const [lostDate, setLostDate] = useState("");
+
   const onSubmit = async (data: any) => {
     try {
       const res: any = await createClaim({
         foundItemId:            item.id,
         claimantName:           data.claimantName,
         schoolEmail:            data.schoolEmail,
-        lostDate:               new Date(data.lostDate).toISOString(),
+        lostDate:               new Date(lostDate + "T00:00:00").toISOString(),
         distinguishingFeatures: data.distinguishingFeatures,
       });
       if (res?.data?.success) {
@@ -157,15 +159,21 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
                 {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
               </div>
 
-              {/* Date Lost */}
+              {/* ✅ Date Lost — replaced plain <input type="date"> with CustomDatePicker */}
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
                   Date Item Was Lost <span className="text-red-400">*</span>
                 </label>
-                <input type="date"
-                  {...register("lostDate", { required: "Please provide the date" })}
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
-                {errors.lostDate && <p className="text-red-400 text-xs mt-1">{errors.lostDate.message as string}</p>}
+                <CustomDatePicker
+                  value={lostDate}
+                  onChange={setLostDate}
+                  max={new Date().toISOString().split("T")[0]}
+                  placeholder="Select date lost"
+                  openUp
+                />
+                {!lostDate && (
+                  <p className="text-red-400 text-xs mt-1">Please select the date</p>
+                )}
               </div>
 
               {/* Proof */}
@@ -191,11 +199,11 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
 
               {/* Actions */}
               <div className="flex gap-2 pt-1">
-                <button type="button" onClick={() => { reset(); onClose(); }}
+                <button type="button" onClick={() => { reset(); setLostDate(""); onClose(); }}
                   className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={claimLoading}
+                <button type="submit" disabled={claimLoading || !lostDate}
                   className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
                   {claimLoading
                     ? <><svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Submitting...</>
@@ -232,7 +240,10 @@ const FoundItemsPage = () => {
   const [addPreview, setAddPreview]             = useState<string>("");
   const [addUploadError, setAddUploadError]     = useState("");
   const [addIsDragging, setAddIsDragging]       = useState(false);
-  const [addStartDate, setAddStartDate]         = useState(new Date());
+
+  // ✅ Add modal date: use string state + CustomDatePicker instead of DatePicker
+  const [addStartDate, setAddStartDate]         = useState(new Date().toISOString().split("T")[0]);
+
   const [addSelectedMenucategoryId, setAddSelectedMenucategoryId] = useState("");
   const [addSelectedMenu, setAddSelectedMenu]   = useState("");
   const addFileInputRef = useRef<HTMLInputElement>(null);
@@ -277,7 +288,8 @@ const FoundItemsPage = () => {
   const closeAddModal = () => {
     setIsAddModalOpen(false); addReset();
     setAddSelectedFile(null); setAddPreview(""); setAddUploadError("");
-    setAddSelectedMenu(""); setAddSelectedMenucategoryId(""); setAddStartDate(new Date());
+    setAddSelectedMenu(""); setAddSelectedMenucategoryId("");
+    setAddStartDate(new Date().toISOString().split("T")[0]);
   };
 
   const onAddSubmit = async (data: any) => {
@@ -286,7 +298,9 @@ const FoundItemsPage = () => {
       const res: any = await createFoundItem({
         img: addPreview || "", categoryId: addSelectedMenucategoryId,
         foundItemName: data.foundItemName, description: data.description,
-        location: data.location, date: addStartDate, claimProcess: data.claimProcess,
+        location: data.location,
+        date: new Date(addStartDate + "T00:00:00"),
+        claimProcess: data.claimProcess,
       });
       if (res.error || res?.data?.success === false) { toast.error("Failed to submit found item."); return; }
       if (addSelectedFile && res?.data?.data?.id) {
@@ -324,7 +338,6 @@ const FoundItemsPage = () => {
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
-      
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-300">
                 <FaClipboardList size={10} className="text-blue-400" /> Submit a claim to retrieve
               </div>
@@ -639,7 +652,7 @@ const FoundItemsPage = () => {
                     </div>
                     <div className="col-span-1">
                       {isClaimed ? (
-                        <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-full">
+                        <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full">
                           Claimed
                         </span>
                       ) : (
@@ -728,125 +741,133 @@ const FoundItemsPage = () => {
               </button>
             </div>
             <div className="overflow-y-auto flex-1 px-6 py-5">
-            <form id="add-found-form" onSubmit={handleAddSubmit(onAddSubmit)} className="space-y-4">
-              {/* Row 1 */}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <form id="add-found-form" onSubmit={handleAddSubmit(onAddSubmit)} className="space-y-4">
+                {/* Row 1 */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
+                      Item Name <span className="text-red-400">*</span>
+                    </label>
+                    <input {...addRegister("foundItemName", { required: "Item name is required" })} type="text"
+                      className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
+                      placeholder="e.g. Black JanSport bag" />
+                    {addErrors.foundItemName && <p className="text-red-400 text-xs">{addErrors.foundItemName?.message as string}</p>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                      Category <span className="text-red-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <select className={`w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm appearance-none pr-9 ${!addSelectedMenucategoryId ? "text-gray-500" : "text-white"}`}
+                        value={addSelectedMenucategoryId}
+                        onChange={e => { const cat = categoriesData?.data?.find((c: any) => c.id === e.target.value); if (cat) { setAddSelectedMenu(cat.name); setAddSelectedMenucategoryId(cat.id); } }}>
+                        <option value="" disabled>Select a category</option>
+                        {categoriesData?.data?.map((cat: any) => (<option key={cat.id} value={cat.id} className="text-white bg-gray-800">{cat.name}</option>))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400"><svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
+                    </div>
+                    {!addSelectedMenu && <p className="text-red-400 text-xs">Category is required</p>}
+                  </div>
+                </div>
+
+                {/* Row 2 */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                      Where Found <span className="text-red-400">*</span>
+                    </label>
+                    <input {...addRegister("location", { required: "Location is required" })} type="text"
+                      className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
+                      placeholder="e.g. Library, Room 205" />
+                    {addErrors.location && <p className="text-red-400 text-xs">{addErrors.location?.message as string}</p>}
+                  </div>
+
+                  {/* ✅ Add modal date: replaced react-datepicker with CustomDatePicker */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                      Date Found
+                    </label>
+                    <CustomDatePicker
+                      value={addStartDate}
+                      onChange={setAddStartDate}
+                      max={new Date().toISOString().split("T")[0]}
+                      placeholder="Select date found"
+                    />
+                  </div>
+                </div>
+
+                {/* Description */}
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
-                    Item Name <span className="text-red-400">*</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Description <span className="text-red-400">*</span>
                   </label>
-                  <input {...addRegister("foundItemName", { required: "Item name is required" })} type="text"
+                  <textarea {...addRegister("description", { required: "Description is required" })} rows={2}
+                    className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none"
+                    placeholder="Color, brand, size, distinguishing marks…" />
+                  {addErrors.description && <p className="text-red-400 text-xs">{addErrors.description?.message as string}</p>}
+                </div>
+
+                {/* Claim Instructions */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    Claim Instructions <span className="text-red-400">*</span>
+                  </label>
+                  <input {...addRegister("claimProcess", { required: "Claim instructions required" })} type="text"
                     className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
-                    placeholder="e.g. Black JanSport bag" />
-                  {addErrors.foundItemName && <p className="text-red-400 text-xs">{addErrors.foundItemName?.message as string}</p>}
+                    placeholder="e.g. Visit the SAS office with a valid school ID" />
+                  {addErrors.claimProcess && <p className="text-red-400 text-xs">{addErrors.claimProcess?.message as string}</p>}
                 </div>
+
+                {/* Photo */}
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
-                    Category <span className="text-red-400">*</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    Item Photo <span className="text-red-400">*</span>
                   </label>
-                  <div className="relative">
-                    <select className={`w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm appearance-none pr-9 ${!addSelectedMenucategoryId ? "text-gray-500" : "text-white"}`}
-                      value={addSelectedMenucategoryId}
-                      onChange={e => { const cat = categoriesData?.data?.find((c: any) => c.id === e.target.value); if (cat) { setAddSelectedMenu(cat.name); setAddSelectedMenucategoryId(cat.id); } }}>
-                      <option value="" disabled>Select a category</option>
-                      {categoriesData?.data?.map((cat: any) => (<option key={cat.id} value={cat.id} className="text-white bg-gray-800">{cat.name}</option>))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400"><svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
-                  </div>
-                  {!addSelectedMenu && <p className="text-red-400 text-xs">Category is required</p>}
-                </div>
-              </div>
-              {/* Row 2 */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                    Where Found <span className="text-red-400">*</span>
-                  </label>
-                  <input {...addRegister("location", { required: "Location is required" })} type="text"
-                    className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
-                    placeholder="e.g. Library, Room 205" />
-                  {addErrors.location && <p className="text-red-400 text-xs">{addErrors.location?.message as string}</p>}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                    Date Found
-                  </label>
-                  <DatePicker wrapperClassName="w-full"
-                    className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
-                    selected={addStartDate} onChange={(date: any) => setAddStartDate(date)}
-                    dateFormat="MMMM d, yyyy" showYearDropdown showMonthDropdown dropdownMode="select" maxDate={new Date()} />
-                </div>
-              </div>
-              {/* Description */}
-              <div className="flex flex-col gap-1.5">
-                <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  Description <span className="text-red-400">*</span>
-                </label>
-                <textarea {...addRegister("description", { required: "Description is required" })} rows={2}
-                  className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none"
-                  placeholder="Color, brand, size, distinguishing marks…" />
-                {addErrors.description && <p className="text-red-400 text-xs">{addErrors.description?.message as string}</p>}
-              </div>
-              {/* Claim Instructions */}
-              <div className="flex flex-col gap-1.5">
-                <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                  Claim Instructions <span className="text-red-400">*</span>
-                </label>
-                <input {...addRegister("claimProcess", { required: "Claim instructions required" })} type="text"
-                  className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
-                  placeholder="e.g. Visit the SAS office with a valid school ID" />
-                {addErrors.claimProcess && <p className="text-red-400 text-xs">{addErrors.claimProcess?.message as string}</p>}
-              </div>
-              {/* Photo */}
-              <div className="flex flex-col gap-1.5">
-                <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                  Item Photo <span className="text-red-400">*</span>
-                </label>
-                {!addPreview ? (
-                  <div className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${addIsDragging ? "border-blue-500 bg-blue-900/10" : "border-gray-700 bg-gray-800/40 hover:border-blue-500/60 hover:bg-gray-800/70"}`}
-                    onClick={() => addFileInputRef.current?.click()}
-                    onDragOver={e => { e.preventDefault(); setAddIsDragging(true); }}
-                    onDragLeave={() => setAddIsDragging(false)}
-                    onDrop={e => { e.preventDefault(); setAddIsDragging(false); handleAddFileChange(e.dataTransfer.files); }}>
-                    <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
-                    <div className="flex flex-col items-center gap-2.5">
-                      <div className="w-12 h-12 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400">
-                        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-300"><span className="text-blue-400 font-semibold">Click to upload</span> or drag & drop</p>
-                        <p className="text-xs text-gray-600 mt-0.5">JPG, PNG, WEBP · Max {MAX_SIZE_MB}MB</p>
+                  {!addPreview ? (
+                    <div className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${addIsDragging ? "border-blue-500 bg-blue-900/10" : "border-gray-700 bg-gray-800/40 hover:border-blue-500/60 hover:bg-gray-800/70"}`}
+                      onClick={() => addFileInputRef.current?.click()}
+                      onDragOver={e => { e.preventDefault(); setAddIsDragging(true); }}
+                      onDragLeave={() => setAddIsDragging(false)}
+                      onDrop={e => { e.preventDefault(); setAddIsDragging(false); handleAddFileChange(e.dataTransfer.files); }}>
+                      <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
+                      <div className="flex flex-col items-center gap-2.5">
+                        <div className="w-12 h-12 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400">
+                          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-300"><span className="text-blue-400 font-semibold">Click to upload</span> or drag & drop</p>
+                          <p className="text-xs text-gray-600 mt-0.5">JPG, PNG, WEBP · Max {MAX_SIZE_MB}MB</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="rounded-xl overflow-hidden border border-gray-700 bg-gray-800">
-                    <div className="relative group">
-                      <img src={addPreview} alt="Preview" className="w-full max-h-44 object-cover" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/55 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
-                        <button type="button" onClick={() => addFileInputRef.current?.click()} className="bg-white/90 hover:bg-white text-gray-900 text-xs font-semibold px-4 py-2 rounded-lg">Change</button>
-                        <button type="button" onClick={() => { setAddSelectedFile(null); setAddPreview(""); }} className="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-4 py-2 rounded-lg">Remove</button>
+                  ) : (
+                    <div className="rounded-xl overflow-hidden border border-gray-700 bg-gray-800">
+                      <div className="relative group">
+                        <img src={addPreview} alt="Preview" className="w-full max-h-44 object-cover" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/55 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
+                          <button type="button" onClick={() => addFileInputRef.current?.click()} className="bg-white/90 hover:bg-white text-gray-900 text-xs font-semibold px-4 py-2 rounded-lg">Change</button>
+                          <button type="button" onClick={() => { setAddSelectedFile(null); setAddPreview(""); }} className="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-4 py-2 rounded-lg">Remove</button>
+                        </div>
                       </div>
+                      <div className="px-4 py-2.5 border-t border-gray-700 flex items-center justify-between">
+                        <span className="text-xs text-gray-400 truncate">{addSelectedFile?.name}</span>
+                        <span className="text-xs text-gray-500 ml-3 shrink-0">
+                          {addSelectedFile ? (addSelectedFile.size < 1024 * 1024 ? (addSelectedFile.size / 1024).toFixed(1) + " KB" : (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB") : ""}
+                        </span>
+                      </div>
+                      <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
                     </div>
-                    <div className="px-4 py-2.5 border-t border-gray-700 flex items-center justify-between">
-                      <span className="text-xs text-gray-400 truncate">{addSelectedFile?.name}</span>
-                      <span className="text-xs text-gray-500 ml-3 shrink-0">
-                        {addSelectedFile ? (addSelectedFile.size < 1024 * 1024 ? (addSelectedFile.size / 1024).toFixed(1) + " KB" : (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB") : ""}
-                      </span>
-                    </div>
-                    <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
-                  </div>
-                )}
-                {addUploadError && <p className="text-red-400 text-xs">{addUploadError}</p>}
-              </div>
-            </form>
+                  )}
+                  {addUploadError && <p className="text-red-400 text-xs">{addUploadError}</p>}
+                </div>
+              </form>
             </div>
             {/* Sticky footer */}
             <div className="px-6 py-4 border-t border-white/5 flex gap-3 shrink-0 bg-gray-900 rounded-b-2xl">
