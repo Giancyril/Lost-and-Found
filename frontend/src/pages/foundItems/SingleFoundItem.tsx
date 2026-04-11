@@ -545,7 +545,7 @@ const SingleFoundItem = () => {
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">School ID / Email *</label>
                   <div className="relative">
                     <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
-                    <input type="email" placeholder="e.g. juandelacruz@nbsc.edu.ph"
+                    <input type="email" placeholder=" "
                       {...register("schoolEmail", {
                         required: "School email is required",
                         pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email (@nbsc.edu.ph)" },

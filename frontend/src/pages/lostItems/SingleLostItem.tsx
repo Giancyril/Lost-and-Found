@@ -295,7 +295,7 @@ const SingleLostItem = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Your name <span className="text-red-400">*</span></label>
-                    <input type="text" placeholder="e.g. Juan dela Cruz"
+                    <input type="text" placeholder=" "
                       {...register("reporterName", { required: "Please enter your name" })}
                       className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm placeholder-gray-600" />
                     {errors.reporterName && <p className="text-red-400 text-xs mt-1">{errors.reporterName.message as string}</p>}

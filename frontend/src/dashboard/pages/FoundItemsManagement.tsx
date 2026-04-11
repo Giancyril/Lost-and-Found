@@ -197,6 +197,8 @@ const FoundItemsManagement = () => {
   );
 
   const items = foundItemsData?.data || [];
+  console.warn("Found items data:", foundItemsData);
+console.warn("First item:", JSON.stringify(items[0], null, 2));
   const filteredItems = items.filter((item: FoundItem) => {
     const matchesSearch   = item.foundItemName.toLowerCase().includes(searchTerm.toLowerCase()) || item.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus   = statusFilter === "ALL" || (statusFilter === "CLAIMED" && item.isClaimed) || (statusFilter === "ACTIVE" && !item.isClaimed);
@@ -327,6 +329,11 @@ const FoundItemsManagement = () => {
                 {/* Reported by */}
                 <div className="min-w-0">
                   <p className="text-gray-300 text-xs truncate">{item.user?.username || "—"}</p>
+                  {(item.schoolEmail || item.user?.email) && (
+                    <p className="text-blue-300/70 text-[10px] truncate">
+                      {item.schoolEmail || item.user?.email}
+                    </p>
+                  )}
                 </div>
 
                 {/* Actions */}
@@ -379,7 +386,15 @@ const FoundItemsManagement = () => {
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Category</p><p className="text-gray-300 mt-0.5">{item.category?.name || "—"}</p></div>
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Location</p><p className="text-gray-300 mt-0.5">{item.location}</p></div>
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Date Found</p><p className="text-gray-300 mt-0.5">{new Date(item.date).toLocaleDateString()}</p></div>
-              <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Reporter</p><p className="text-gray-300 mt-0.5">{item.user?.username || "—"}</p></div>
+              <div>
+  <p className="text-gray-600 text-[10px] uppercase tracking-widest">Reporter</p>
+  <p className="text-gray-300 mt-0.5">{item.user?.username || "—"}</p>
+  {(item.schoolEmail || item.user?.email) && (
+    <p className="text-blue-300/70 text-[10px] mt-0.5">
+      {item.schoolEmail || item.user?.email}
+    </p>
+  )}
+</div>
             </div>
             <div className="flex gap-2 pt-1">
               <button onClick={() => handleEdit(item)} className="flex-1 flex items-center justify-center gap-1 py-2 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 rounded-xl text-xs font-semibold"><FaEdit size={10} /> Edit</button>

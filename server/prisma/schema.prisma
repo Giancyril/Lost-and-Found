@@ -59,6 +59,7 @@ model FoundItem {
   isDeleted     Boolean       @default(false)
   deletedAt     DateTime?
   reporterName  String        @default("")
+  schoolEmail   String        @default("") 
   isArchived    Boolean       @default(false)  // ← NEW
   archivedAt    DateTime?                       // ← NEW
 
