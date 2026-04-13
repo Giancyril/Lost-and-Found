@@ -148,6 +148,14 @@ const notifyMatch = async (
     return;
   }
 
+  const senderEmail = process.env.SMTP_FROM_EMAIL;
+if (!senderEmail) {
+  console.error("[SmartMatch] SMTP_FROM_EMAIL env var is not set — cannot send notification");
+  return;
+}
+
+const senderName = process.env.SMTP_FROM_NAME ?? "NBSC Lost & Found";
+
   // FIX 2: Deduplication — skip if we already sent this exact pair
   const isDuplicate = await alreadyNotified(lostItem.id, foundItem.id);
   if (isDuplicate) {
@@ -166,8 +174,8 @@ const notifyMatch = async (
 
   try {
     await sendEmail({
-      fromName:  "NBSC Lost & Found",
-      fromEmail: process.env.SENDER_EMAIL!,
+      fromName:  senderName,
+      fromEmail: senderEmail,
       toEmail:   lostItem.schoolEmail,
       subject:   template.subject,
       html:      template.html,
