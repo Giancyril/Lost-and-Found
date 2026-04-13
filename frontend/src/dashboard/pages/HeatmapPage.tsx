@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, } from "react";
 import { MapContainer, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { useGetLocationStatsQuery } from "../../redux/api/api";
 import {
@@ -8,10 +8,6 @@ import {
 import { getCoordinates, CAMPUS_CENTER, CAMPUS_ZOOM } from "../../utils/campusLocations";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import {
-  XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, AreaChart, Area
-} from "recharts";
 
 // Fix Leaflet default icon issue with bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
