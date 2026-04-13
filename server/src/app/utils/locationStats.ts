@@ -6,8 +6,11 @@ import { StatusCodes } from "http-status-codes";
 
 export const locationStats = async (req: Request, res: Response) => {
   try {
-    const foundItems = await foundItemService.getFoundItem({});
-    const lostItems  = await lostTItemServices.getLostItem();
+    // Revert to simple location-only stats
+    const [foundItems, lostItems] = await Promise.all([
+      foundItemService.getFoundItem({ limit: 5000 }),
+      lostTItemServices.getLostItem({ limit: 5000 })
+    ]);
 
     const counts: Record<string, { found: number; lost: number; total: number }> = {};
 
@@ -19,13 +22,13 @@ export const locationStats = async (req: Request, res: Response) => {
     }
 
     for (const item of lostItems) {
-      const loc = ((item as any).location || "Unknown").trim();
+      const loc = (item.location || "Unknown").trim();
       if (!counts[loc]) counts[loc] = { found: 0, lost: 0, total: 0 };
       counts[loc].lost++;
       counts[loc].total++;
     }
 
-    const result = Object.entries(counts)
+    const locationData = Object.entries(counts)
       .map(([location, data]) => ({ location, ...data }))
       .sort((a, b) => b.total - a.total);
 
@@ -33,7 +36,7 @@ export const locationStats = async (req: Request, res: Response) => {
       statusCode: StatusCodes.OK,
       success: true,
       message: "Location stats retrieved successfully",
-      data: result,
+      data: locationData,
     });
   } catch (error: any) {
     sendResponse(res, {

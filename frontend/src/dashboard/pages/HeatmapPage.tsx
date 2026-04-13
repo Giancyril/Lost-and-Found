@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { useGetLocationStatsQuery } from "../../redux/api/api";
 import {
@@ -8,13 +8,17 @@ import {
 import { getCoordinates, CAMPUS_CENTER, CAMPUS_ZOOM } from "../../utils/campusLocations";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import {
+  XAxis, YAxis, Tooltip, ResponsiveContainer,
+  CartesianGrid, AreaChart, Area
+} from "recharts";
 
 // Fix Leaflet default icon issue with bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl:       "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl:     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
 type Filter = "all" | "found" | "lost";
@@ -22,27 +26,27 @@ type ViewMode = "map" | "list";
 
 interface LocationStat {
   location: string;
-  found:    number;
-  lost:     number;
-  total:    number;
-  lat?:     number;
-  lng?:     number;
+  found: number;
+  lost: number;
+  total: number;
+  lat?: number;
+  lng?: number;
 }
 
 // ── Heat color helpers ────────────────────────────────────────────────────────
 const getHeatColor = (val: number, max: number) => {
   const pct = val / max;
-  if (pct >= 0.75) return { hex: "#ef4444", label: "Hot",  badge: "bg-red-500/10 text-red-400 border-red-500/20",          bar: "bg-red-500"    };
-  if (pct >= 0.5)  return { hex: "#f97316", label: "Warm", badge: "bg-orange-400/10 text-orange-400 border-orange-400/20", bar: "bg-orange-400" };
+  if (pct >= 0.75) return { hex: "#ef4444", label: "Hot", badge: "bg-red-500/10 text-red-400 border-red-500/20", bar: "bg-red-500" };
+  if (pct >= 0.5) return { hex: "#f97316", label: "Warm", badge: "bg-orange-400/10 text-orange-400 border-orange-400/20", bar: "bg-orange-400" };
   if (pct >= 0.25) return { hex: "#eab308", label: "Mild", badge: "bg-yellow-400/10 text-yellow-400 border-yellow-400/20", bar: "bg-yellow-400" };
-  return               { hex: "#06b6d4", label: "Low",  badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",         bar: "bg-cyan-500"   };
+  return { hex: "#06b6d4", label: "Low", badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20", bar: "bg-cyan-500" };
 };
 
 // ── Heatmap layer using canvas circles ───────────────────────────────────────
 function HeatLayer({ points, filter, max }: {
   points: LocationStat[];
   filter: Filter;
-  max:    number;
+  max: number;
 }) {
   const map = useMap();
   const layerRef = useRef<L.LayerGroup | null>(null);
@@ -56,26 +60,26 @@ function HeatLayer({ points, filter, max }: {
       const value = filter === "found" ? p.found : filter === "lost" ? p.lost : p.total;
       if (value === 0) return;
 
-      const pct    = value / max;
-      const color  = getHeatColor(value, max);
+      const pct = value / max;
+      const color = getHeatColor(value, max);
       const radius = 20 + pct * 40;
 
       // Outer glow
       L.circleMarker([p.lat, p.lng], {
-        radius:      radius + 10,
-        color:       "transparent",
-        fillColor:   color.hex,
+        radius: radius + 10,
+        color: "transparent",
+        fillColor: color.hex,
         fillOpacity: 0.08,
-        weight:      0,
+        weight: 0,
       }).addTo(layer);
 
       // Main circle
       L.circleMarker([p.lat, p.lng], {
         radius,
-        color:       color.hex,
-        fillColor:   color.hex,
+        color: color.hex,
+        fillColor: color.hex,
         fillOpacity: 0.35,
-        weight:      1.5,
+        weight: 1.5,
       })
         .bindPopup(`
           <div style="font-family:sans-serif;min-width:160px;padding:4px 0">
@@ -88,7 +92,7 @@ function HeatLayer({ points, filter, max }: {
           </div>
         `, {
           className: "custom-popup",
-          maxWidth:  220,
+          maxWidth: 220,
         })
         .addTo(layer);
     });
@@ -111,15 +115,26 @@ function FlyTo({ lat, lng }: { lat: number; lng: number }) {
 // ── Main component ────────────────────────────────────────────────────────────
 const HeatmapPage = () => {
   const { data, isLoading } = useGetLocationStatsQuery(undefined);
-  const [filter, setFilter]   = useState<Filter>("all");
-  const [search, setSearch]   = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("map");
+  const [filter, setFilter] = useState<Filter>("all");
+  const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [focusPoint, setFocusPoint] = useState<{ lat: number; lng: number } | null>(null);
 
-  const raw: LocationStat[] = (data?.data ?? []).map((r: any) => {
+  const stats = data?.data ?? [];
+
+  const raw: LocationStat[] = stats.map((r: LocationStat) => {
+    let location = r.location;
+    const roomMatch = location.match(/(?:room|rm\.?)\s*(\d+)/i);
+    if (roomMatch) {
+      const num = parseInt(roomMatch[1], 10);
+      if (num >= 201 && num <= 210) location = `SWDC Building - Room ${num}`;
+      else if (num >= 301 && num <= 320) location = `Business Admin - Room ${num}`;
+    }
+
     const coords = getCoordinates(r.location);
     return {
       ...r,
+      location,
       lat: coords?.[0],
       lng: coords?.[1],
     };
@@ -129,13 +144,13 @@ const HeatmapPage = () => {
     .filter(r => r.location.toLowerCase().includes(search.toLowerCase()))
     .filter(r => {
       if (filter === "found") return r.found > 0;
-      if (filter === "lost")  return r.lost  > 0;
+      if (filter === "lost") return r.lost > 0;
       return true;
     });
 
-  const mappable  = filtered.filter(r => r.lat && r.lng);
-  const unmapped  = filtered.filter(r => !r.lat || !r.lng);
-  const maxTotal  = Math.max(...filtered.map(r => r.total), 1);
+  const mappable = filtered.filter(r => r.lat && r.lng);
+  const unmapped = filtered.filter(r => !r.lat || !r.lng);
+  const maxTotal = Math.max(...filtered.map(r => r.total), 1);
   const maxFilter = Math.max(...filtered.map(r =>
     filter === "found" ? r.found : filter === "lost" ? r.lost : r.total
   ), 1);
@@ -148,7 +163,7 @@ const HeatmapPage = () => {
   if (isLoading) return (
     <div className="space-y-4 animate-pulse">
       <div className="grid grid-cols-3 gap-3">
-        {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-800/60 rounded-2xl" />)}
+        {[1, 2, 3].map(i => <div key={i} className="h-24 bg-gray-800/60 rounded-2xl" />)}
       </div>
       <div className="h-[500px] bg-gray-800/60 rounded-2xl" />
     </div>
@@ -173,9 +188,9 @@ const HeatmapPage = () => {
       {/* ── Stats ── */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
-          { label: "Total Reports", value: totals.total, icon: <FaMapMarkedAlt size={13} className="text-cyan-400" />,          color: "text-cyan-400",    bg: "bg-cyan-500/10"    },
-          { label: "Found Items",   value: totals.found, icon: <FaBoxOpen size={13} className="text-emerald-400" />,             color: "text-emerald-400", bg: "bg-emerald-500/10" },
-          { label: "Lost Items",    value: totals.lost,  icon: <FaExclamationTriangle size={13} className="text-red-400" />,     color: "text-red-400",     bg: "bg-red-500/10"     },
+          { label: "Total Reports", value: totals.total, icon: <FaMapMarkedAlt size={13} className="text-cyan-400" />, color: "text-cyan-400", bg: "bg-cyan-500/10" },
+          { label: "Found Items", value: totals.found, icon: <FaBoxOpen size={13} className="text-emerald-400" />, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+          { label: "Lost Items", value: totals.lost, icon: <FaExclamationTriangle size={13} className="text-red-400" />, color: "text-red-400", bg: "bg-red-500/10" },
         ].map(s => (
           <div key={s.label} className="bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-5 flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
             <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${s.bg} shrink-0`}>{s.icon}</div>
@@ -188,36 +203,39 @@ const HeatmapPage = () => {
       </div>
 
       {/* ── Controls ── */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-        <div className="relative flex-1">
-          <FaSearch size={12} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search location..."
-            className="w-full bg-gray-900 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-cyan-500/40 focus:outline-none transition-colors" />
-        </div>
-        <div className="flex gap-2">
-          {/* Filter */}
-          <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
-            {(["all", "found", "lost"] as Filter[]).map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
-                  filter === f ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"
-                }`}>
-                {f}
+      <div className="flex flex-col space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center justify-between">
+          <div className="relative flex-grow">
+            <FaSearch size={12} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search location..."
+              className="w-full bg-gray-900 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-cyan-500/40 focus:outline-none transition-colors" />
+          </div>
+          <div className="flex flex-wrap gap-2 sm:ml-auto">
+            {/* Filter */}
+            <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
+              {(["all", "found", "lost"] as Filter[]).map(f => (
+                <button key={f} onClick={() => setFilter(f)}
+                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${filter === f ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"
+                    }`}>
+                  {f}
+                </button>
+              ))}
+            </div>
+            {/* View toggle */}
+            <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
+              <button onClick={() => setViewMode("map")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "map" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                <FaMap size={10} /> Map
               </button>
-            ))}
-          </div>
-          {/* View toggle */}
-          <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
-            <button onClick={() => setViewMode("map")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "map" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
-              <FaMap size={10} /> Map
-            </button>
-            <button onClick={() => setViewMode("list")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "list" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
-              <FaList size={10} /> List
-            </button>
+              <button onClick={() => setViewMode("list")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "list" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                <FaList size={10} /> List
+              </button>
+            </div>
           </div>
         </div>
+
+
       </div>
 
       {/* ── Map View ── */}
@@ -257,9 +275,9 @@ const HeatmapPage = () => {
               {mappable.length === 0 ? (
                 <div className="py-10 text-center text-gray-600 text-sm">No locations found</div>
               ) : mappable.map(r => {
-                const heat  = getHeatColor(r.total, maxTotal);
+                const heat = getHeatColor(r.total, maxTotal);
                 const value = filter === "found" ? r.found : filter === "lost" ? r.lost : r.total;
-                const pct   = Math.round((value / maxFilter) * 100);
+                const pct = Math.round((value / maxFilter) * 100);
                 return (
                   <button key={r.location} onClick={() => setFocusPoint({ lat: r.lat!, lng: r.lng! })}
                     className="w-full text-left px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors group">
@@ -317,14 +335,14 @@ const HeatmapPage = () => {
           ) : (
             <div className="divide-y divide-white/5">
               {filtered.map((row, idx) => {
-                const heat  = getHeatColor(row.total, maxTotal);
-                const pct   = Math.round((row.total / maxTotal) * 100);
+                const heat = getHeatColor(row.total, maxTotal);
+                const pct = Math.round((row.total / maxTotal) * 100);
                 const hasPt = !!(row.lat && row.lng);
                 return (
                   <div key={row.location} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors group">
                     <div className="col-span-1 text-center">
                       {idx === 0
-                        ? <span className="text-lg">🔥</span>
+                        ? <span className="text-gray-400 text-sm font-bold font-mono">#1</span>
                         : <span className="text-gray-600 text-sm font-mono">{idx + 1}</span>}
                     </div>
                     <div className="col-span-4">
@@ -376,10 +394,10 @@ const HeatmapPage = () => {
         </div>
         <div className="flex flex-wrap gap-3">
           {[
-            { label: "Hot (≥75%)",  bar: "bg-red-500"    },
+            { label: "Hot (≥75%)", bar: "bg-red-500" },
             { label: "Warm (≥50%)", bar: "bg-orange-400" },
             { label: "Mild (≥25%)", bar: "bg-yellow-400" },
-            { label: "Low (<25%)",  bar: "bg-cyan-500"   },
+            { label: "Low (<25%)", bar: "bg-cyan-500" },
           ].map(l => (
             <div key={l.label} className="flex items-center gap-2 text-[11px] text-gray-500">
               <div className={`w-3 h-3 rounded-full ${l.bar}`} /> {l.label}

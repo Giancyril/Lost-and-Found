@@ -58,6 +58,8 @@ const getFoundItem = async (data: TFilter) => {
     sortBy    = "foundItemName",
     sortOrder = "asc",
     foundItemName,
+    startDate,
+    endDate,
   } = data;
 
   const whereConditions: Prisma.FoundItemWhereInput = {
@@ -74,6 +76,12 @@ const getFoundItem = async (data: TFilter) => {
       { location:      { contains: searchTerm, mode: "insensitive" } },
       { description:   { contains: searchTerm, mode: "insensitive" } },
     ];
+  }
+
+  if (startDate || endDate) {
+    whereConditions.date = {};
+    if (startDate) whereConditions.date.gte = new Date(startDate);
+    if (endDate)   whereConditions.date.lte = new Date(endDate);
   }
 
   // img is now a short Storage URL (~100 bytes) — safe to include in lists

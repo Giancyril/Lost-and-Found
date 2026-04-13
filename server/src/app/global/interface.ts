@@ -15,4 +15,6 @@ export type TFilter = {
   sortBy?: string;
   sortOrder?: string;
   foundItemName?: string;
+  startDate?: string;
+  endDate?: string;
 };

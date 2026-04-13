@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { useGetLocationStatsQuery } from "../../redux/api/api";
 import {
@@ -8,6 +8,10 @@ import {
 import { getCoordinates, CAMPUS_CENTER, CAMPUS_ZOOM } from "../../utils/campusLocations";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { 
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
+  CartesianGrid, Cell, AreaChart, Area 
+} from "recharts";
 
 // Fix Leaflet default icon issue with bundlers
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: string })._getIconUrl;
@@ -116,7 +120,9 @@ const HeatmapPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [focusPoint, setFocusPoint] = useState<{ lat: number; lng: number } | null>(null);
 
-  const raw: LocationStat[] = (data?.data ?? []).map((r: LocationStat) => {
+  const stats = data?.data ?? [];
+
+  const raw: LocationStat[] = stats.map((r: LocationStat) => {
     let location = r.location;
     const roomMatch = location.match(/(?:room|rm\.?)\s*(\d+)/i);
     if (roomMatch) {
@@ -197,36 +203,40 @@ const HeatmapPage = () => {
       </div>
 
       {/* ── Controls ── */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-        <div className="relative flex-1">
-          <FaSearch size={12} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search location..."
-            className="w-full bg-gray-900 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-cyan-500/40 focus:outline-none transition-colors" />
-        </div>
-        <div className="flex gap-2">
-          {/* Filter */}
-          <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
-            {(["all", "found", "lost"] as Filter[]).map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
-                  filter === f ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"
-                }`}>
-                {f}
+      <div className="flex flex-col space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center justify-between">
+          <div className="relative flex-grow">
+            <FaSearch size={12} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search location..."
+              className="w-full bg-gray-900 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-cyan-500/40 focus:outline-none transition-colors" />
+          </div>
+          <div className="flex flex-wrap gap-2 sm:ml-auto">
+            {/* Filter */}
+            <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
+              {(["all", "found", "lost"] as Filter[]).map(f => (
+                <button key={f} onClick={() => setFilter(f)}
+                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
+                    filter === f ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"
+                  }`}>
+                  {f}
+                </button>
+              ))}
+            </div>
+            {/* View toggle */}
+            <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
+              <button onClick={() => setViewMode("map")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "map" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                <FaMap size={10} /> Map
               </button>
-            ))}
-          </div>
-          {/* View toggle */}
-          <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
-            <button onClick={() => setViewMode("map")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "map" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
-              <FaMap size={10} /> Map
-            </button>
-            <button onClick={() => setViewMode("list")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "list" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
-              <FaList size={10} /> List
-            </button>
+              <button onClick={() => setViewMode("list")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "list" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                <FaList size={10} /> List
+              </button>
+            </div>
           </div>
         </div>
+
+
       </div>
 
       {/* ── Map View ── */}

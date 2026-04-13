@@ -66,6 +66,8 @@ const getLostItem = async (query: any = {}) => {
     limit     = 10,
     sortBy    = "lostItemName",
     sortOrder = "asc",
+    startDate,
+    endDate,
   } = query;
 
   const whereConditions: any = { isDeleted: false, isFound: false };
@@ -76,6 +78,12 @@ const getLostItem = async (query: any = {}) => {
       { location:     { contains: searchTerm, mode: "insensitive" } },
       { description:  { contains: searchTerm, mode: "insensitive" } },
     ];
+  }
+
+  if (startDate || endDate) {
+    whereConditions.date = {};
+    if (startDate) whereConditions.date.gte = new Date(startDate);
+    if (endDate)   whereConditions.date.lte = new Date(endDate);
   }
 
   // img is now a short Storage URL — safe to include in list queries

@@ -124,7 +124,7 @@ const api = baseApi.injectEndpoints({
 
     // location stats (heatmap)
     getLocationStats: builder.query({
-      query: () => ({ url: "/admin/location-stats", method: "GET" }),
+      query: (params?: { startDate?: string; endDate?: string }) => ({ url: "/admin/location-stats", method: "GET", params }),
     }),
 
     // audit logs
