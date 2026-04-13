@@ -10,7 +10,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 // Fix Leaflet default icon issue with bundlers
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: string })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
   iconUrl:       "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
@@ -113,13 +113,22 @@ const HeatmapPage = () => {
   const { data, isLoading } = useGetLocationStatsQuery(undefined);
   const [filter, setFilter]   = useState<Filter>("all");
   const [search, setSearch]   = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("map");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [focusPoint, setFocusPoint] = useState<{ lat: number; lng: number } | null>(null);
 
-  const raw: LocationStat[] = (data?.data ?? []).map((r: any) => {
+  const raw: LocationStat[] = (data?.data ?? []).map((r: LocationStat) => {
+    let location = r.location;
+    const roomMatch = location.match(/(?:room|rm\.?)\s*(\d+)/i);
+    if (roomMatch) {
+      const num = parseInt(roomMatch[1], 10);
+      if (num >= 201 && num <= 210) location = `SWDC Building - Room ${num}`;
+      else if (num >= 301 && num <= 320) location = `Business Admin - Room ${num}`;
+    }
+
     const coords = getCoordinates(r.location);
     return {
       ...r,
+      location,
       lat: coords?.[0],
       lng: coords?.[1],
     };
@@ -324,7 +333,7 @@ const HeatmapPage = () => {
                   <div key={row.location} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors group">
                     <div className="col-span-1 text-center">
                       {idx === 0
-                        ? <span className="text-lg">🔥</span>
+                        ? <span className="text-gray-400 text-sm font-bold font-mono">#1</span>
                         : <span className="text-gray-600 text-sm font-mono">{idx + 1}</span>}
                     </div>
                     <div className="col-span-4">
