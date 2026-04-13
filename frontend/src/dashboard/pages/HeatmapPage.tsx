@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { useGetLocationStatsQuery } from "../../redux/api/api";
 import {
-  FaMapMarkedAlt, FaSearch, FaBoxOpen, FaExclamationTriangle,
+  FaMapMarkedAlt, FaSearch, FaExclamationTriangle,
   FaCheckCircle, FaLayerGroup, FaThermometerHalf, FaList, FaMap,
 } from "react-icons/fa";
 import { getCoordinates, CAMPUS_CENTER, CAMPUS_ZOOM } from "../../utils/campusLocations";
@@ -10,11 +10,11 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 // Fix Leaflet default icon issue with bundlers
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: string })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  iconUrl:       "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl:     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
 type Filter = "all" | "found" | "lost";
@@ -22,27 +22,27 @@ type ViewMode = "map" | "list";
 
 interface LocationStat {
   location: string;
-  found: number;
-  lost: number;
-  total: number;
-  lat?: number;
-  lng?: number;
+  found:    number;
+  lost:     number;
+  total:    number;
+  lat?:     number;
+  lng?:     number;
 }
 
 // ── Heat color helpers ────────────────────────────────────────────────────────
 const getHeatColor = (val: number, max: number) => {
   const pct = val / max;
-  if (pct >= 0.75) return { hex: "#ef4444", label: "Hot", badge: "bg-red-500/10 text-red-400 border-red-500/20", bar: "bg-red-500" };
-  if (pct >= 0.5) return { hex: "#f97316", label: "Warm", badge: "bg-orange-400/10 text-orange-400 border-orange-400/20", bar: "bg-orange-400" };
+  if (pct >= 0.75) return { hex: "#ef4444", label: "Hot",  badge: "bg-red-500/10 text-red-400 border-red-500/20",          bar: "bg-red-500"    };
+  if (pct >= 0.5)  return { hex: "#f97316", label: "Warm", badge: "bg-orange-400/10 text-orange-400 border-orange-400/20", bar: "bg-orange-400" };
   if (pct >= 0.25) return { hex: "#eab308", label: "Mild", badge: "bg-yellow-400/10 text-yellow-400 border-yellow-400/20", bar: "bg-yellow-400" };
-  return { hex: "#06b6d4", label: "Low", badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20", bar: "bg-cyan-500" };
+  return               { hex: "#06b6d4", label: "Low",  badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",         bar: "bg-cyan-500"   };
 };
 
 // ── Heatmap layer using canvas circles ───────────────────────────────────────
 function HeatLayer({ points, filter, max }: {
   points: LocationStat[];
   filter: Filter;
-  max: number;
+  max:    number;
 }) {
   const map = useMap();
   const layerRef = useRef<L.LayerGroup | null>(null);
@@ -56,26 +56,26 @@ function HeatLayer({ points, filter, max }: {
       const value = filter === "found" ? p.found : filter === "lost" ? p.lost : p.total;
       if (value === 0) return;
 
-      const pct = value / max;
-      const color = getHeatColor(value, max);
+      const pct    = value / max;
+      const color  = getHeatColor(value, max);
       const radius = 20 + pct * 40;
 
       // Outer glow
       L.circleMarker([p.lat, p.lng], {
-        radius: radius + 10,
-        color: "transparent",
-        fillColor: color.hex,
+        radius:      radius + 10,
+        color:       "transparent",
+        fillColor:   color.hex,
         fillOpacity: 0.08,
-        weight: 0,
+        weight:      0,
       }).addTo(layer);
 
       // Main circle
       L.circleMarker([p.lat, p.lng], {
         radius,
-        color: color.hex,
-        fillColor: color.hex,
+        color:       color.hex,
+        fillColor:   color.hex,
         fillOpacity: 0.35,
-        weight: 1.5,
+        weight:      1.5,
       })
         .bindPopup(`
           <div style="font-family:sans-serif;min-width:160px;padding:4px 0">
@@ -88,7 +88,7 @@ function HeatLayer({ points, filter, max }: {
           </div>
         `, {
           className: "custom-popup",
-          maxWidth: 220,
+          maxWidth:  220,
         })
         .addTo(layer);
     });
@@ -111,12 +111,12 @@ function FlyTo({ lat, lng }: { lat: number; lng: number }) {
 // ── Main component ────────────────────────────────────────────────────────────
 const HeatmapPage = () => {
   const { data, isLoading } = useGetLocationStatsQuery(undefined);
-  const [filter, setFilter] = useState<Filter>("all");
-  const [search, setSearch] = useState("");
+  const [filter, setFilter]   = useState<Filter>("all");
+  const [search, setSearch]   = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [focusPoint, setFocusPoint] = useState<{ lat: number; lng: number } | null>(null);
 
-  const stats = data?.data ?? [];
+  const stats = (data as any)?.data ?? [];
 
   const raw: LocationStat[] = stats.map((r: LocationStat) => {
     let location = r.location;
@@ -140,13 +140,13 @@ const HeatmapPage = () => {
     .filter(r => r.location.toLowerCase().includes(search.toLowerCase()))
     .filter(r => {
       if (filter === "found") return r.found > 0;
-      if (filter === "lost") return r.lost > 0;
+      if (filter === "lost")  return r.lost  > 0;
       return true;
     });
 
-  const mappable = filtered.filter(r => r.lat && r.lng);
-  const unmapped = filtered.filter(r => !r.lat || !r.lng);
-  const maxTotal = Math.max(...filtered.map(r => r.total), 1);
+  const mappable  = filtered.filter(r => r.lat && r.lng);
+  const unmapped  = filtered.filter(r => !r.lat || !r.lng);
+  const maxTotal  = Math.max(...filtered.map(r => r.total), 1);
   const maxFilter = Math.max(...filtered.map(r =>
     filter === "found" ? r.found : filter === "lost" ? r.lost : r.total
   ), 1);
@@ -157,16 +157,16 @@ const HeatmapPage = () => {
   );
 
   if (isLoading) return (
-    <div className="space-y-4 animate-pulse">
-      <div className="grid grid-cols-3 gap-3">
-        {[1, 2, 3].map(i => <div key={i} className="h-24 bg-gray-800/60 rounded-2xl" />)}
+    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto animate-pulse">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-800/60 rounded-2xl" />)}
       </div>
-      <div className="h-[500px] bg-gray-800/60 rounded-2xl" />
+      <div className="h-[520px] bg-gray-800/60 rounded-2xl" />
     </div>
   );
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Custom popup styles */}
       <style>{`
@@ -182,37 +182,35 @@ const HeatmapPage = () => {
       `}</style>
 
       {/* ── Stats ── */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
-          { label: "Total Reports", value: totals.total, icon: <FaMapMarkedAlt size={13} className="text-cyan-400" />, color: "text-cyan-400", bg: "bg-cyan-500/10" },
-          { label: "Found Items", value: totals.found, icon: <FaBoxOpen size={13} className="text-emerald-400" />, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-          { label: "Lost Items", value: totals.lost, icon: <FaExclamationTriangle size={13} className="text-red-400" />, color: "text-red-400", bg: "bg-red-500/10" },
+          { label: "Total Reports", value: totals.total, color: "text-cyan-400",    bg: "bg-cyan-500/10 border-cyan-500/20"      },
+          { label: "Found Items",   value: totals.found, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+          { label: "Lost Items",    value: totals.lost,  color: "text-red-400",     bg: "bg-red-500/10 border-red-500/20"         },
         ].map(s => (
-          <div key={s.label} className="bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-5 flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${s.bg} shrink-0`}>{s.icon}</div>
-            <div className="text-center sm:text-left">
-              <p className={`text-xl sm:text-2xl font-bold ${s.color}`}>{s.value}</p>
-              <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">{s.label}</p>
-            </div>
+          <div key={s.label} className={`rounded-2xl border p-4 flex flex-col gap-1 ${s.bg} bg-gray-900`}>
+            <p className={`text-2xl sm:text-3xl font-bold ${s.color}`}>{s.value}</p>
+            <p className="text-gray-500 text-xs font-medium">{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* ── Controls ── */}
       <div className="flex flex-col space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
           <div className="relative flex-grow">
             <FaSearch size={12} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search location..."
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Explore locations..."
               className="w-full bg-gray-900 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-cyan-500/40 focus:outline-none transition-colors" />
           </div>
-          <div className="flex flex-wrap gap-2 sm:ml-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
             {/* Filter */}
             <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
               {(["all", "found", "lost"] as Filter[]).map(f => (
                 <button key={f} onClick={() => setFilter(f)}
-                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${filter === f ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"
-                    }`}>
+                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
+                    filter === f ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"
+                  }`}>
                   {f}
                 </button>
               ))}
@@ -230,8 +228,6 @@ const HeatmapPage = () => {
             </div>
           </div>
         </div>
-
-
       </div>
 
       {/* ── Map View ── */}
@@ -271,9 +267,9 @@ const HeatmapPage = () => {
               {mappable.length === 0 ? (
                 <div className="py-10 text-center text-gray-600 text-sm">No locations found</div>
               ) : mappable.map(r => {
-                const heat = getHeatColor(r.total, maxTotal);
+                const heat  = getHeatColor(r.total, maxTotal);
                 const value = filter === "found" ? r.found : filter === "lost" ? r.lost : r.total;
-                const pct = Math.round((value / maxFilter) * 100);
+                const pct   = Math.round((value / maxFilter) * 100);
                 return (
                   <button key={r.location} onClick={() => setFocusPoint({ lat: r.lat!, lng: r.lng! })}
                     className="w-full text-left px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors group">
@@ -331,43 +327,61 @@ const HeatmapPage = () => {
           ) : (
             <div className="divide-y divide-white/5">
               {filtered.map((row, idx) => {
-                const heat = getHeatColor(row.total, maxTotal);
-                const pct = Math.round((row.total / maxTotal) * 100);
+                const heat  = getHeatColor(row.total, maxTotal);
+                const pct   = Math.round((row.total / maxTotal) * 100);
                 const hasPt = !!(row.lat && row.lng);
                 return (
-                  <div key={row.location} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors group">
-                    <div className="col-span-1 text-center">
+                  <div key={row.location} className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-4 items-start sm:items-center px-4 sm:px-5 py-4 hover:bg-white/[0.02] transition-colors group relative">
+                    {/* Index - hidden on mobile */}
+                    <div className="hidden sm:block col-span-1 text-center">
                       {idx === 0
                         ? <span className="text-gray-400 text-sm font-bold font-mono">#1</span>
                         : <span className="text-gray-600 text-sm font-mono">{idx + 1}</span>}
                     </div>
-                    <div className="col-span-4">
-                      <p className="text-white text-sm font-medium truncate group-hover:text-cyan-400 transition-colors">{row.location}</p>
+
+                    {/* Location Info */}
+                    <div className="col-span-12 sm:col-span-4 w-full">
+                      <div className="flex items-center justify-between sm:block">
+                        <p className="text-white text-sm font-medium truncate group-hover:text-cyan-400 transition-colors">{row.location}</p>
+                        <span className={`sm:hidden px-2 py-0.5 rounded-full text-[9px] font-bold border ${heat.badge}`}>{heat.label}</span>
+                      </div>
                       <p className="text-gray-600 text-[11px] mt-0.5">{row.total} report{row.total !== 1 ? "s" : ""}</p>
                     </div>
-                    <div className="col-span-3 flex items-center gap-2">
-                      <div className="flex-1 bg-gray-800 rounded-full h-2 overflow-hidden">
-                        <div className={`h-2 rounded-full transition-all duration-700 ${heat.bar}`} style={{ width: `${pct}%` }} />
+
+                    {/* Frequency Bar - Simplified on mobile */}
+                    <div className="col-span-12 sm:col-span-3 flex items-center gap-2 w-full">
+                      <div className="flex-1 bg-gray-800 rounded-full h-1.5 sm:h-2 overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-700 ${heat.bar}`} style={{ width: `${pct}%` }} />
                       </div>
-                      <span className="text-gray-500 text-[11px] w-8 text-right shrink-0">{pct}%</span>
+                      <span className="text-gray-500 text-[10px] sm:text-[11px] w-8 text-right shrink-0">{pct}%</span>
                     </div>
-                    <div className="col-span-1 text-center">
-                      {row.found > 0
-                        ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs font-semibold"><FaCheckCircle size={9} /> {row.found}</span>
-                        : <span className="text-gray-700 text-xs">—</span>}
+
+                    {/* Statistics - Stacked on mobile */}
+                    <div className="col-span-12 sm:col-span-2 flex sm:contents gap-4 w-full sm:w-auto">
+                      <div className="flex-1 sm:col-span-1 sm:text-center">
+                        <p className="sm:hidden text-[9px] text-gray-600 uppercase mb-1">Found</p>
+                        {row.found > 0
+                          ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs font-semibold"><FaCheckCircle size={9} /> {row.found}</span>
+                          : <span className="text-gray-700 text-xs">—</span>}
+                      </div>
+                      <div className="flex-1 sm:col-span-1 sm:text-center">
+                        <p className="sm:hidden text-[9px] text-gray-600 uppercase mb-1">Lost</p>
+                        {row.lost > 0
+                          ? <span className="inline-flex items-center gap-1 text-red-400 text-xs font-semibold"><FaExclamationTriangle size={9} /> {row.lost}</span>
+                          : <span className="text-gray-700 text-xs">—</span>}
+                      </div>
                     </div>
-                    <div className="col-span-1 text-center">
-                      {row.lost > 0
-                        ? <span className="inline-flex items-center gap-1 text-red-400 text-xs font-semibold"><FaExclamationTriangle size={9} /> {row.lost}</span>
-                        : <span className="text-gray-700 text-xs">—</span>}
-                    </div>
-                    <div className="col-span-1 text-center">
+
+                    {/* Heat Badge - Desktop only */}
+                    <div className="hidden sm:block col-span-1 text-center">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-medium border ${heat.badge}`}>{heat.label}</span>
                     </div>
-                    <div className="col-span-1 text-center">
+
+                    {/* Action */}
+                    <div className="col-span-12 sm:col-span-1 w-full sm:text-center">
                       {hasPt ? (
                         <button onClick={() => { setViewMode("map"); setFocusPoint({ lat: row.lat!, lng: row.lng! }); }}
-                          className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors">
+                          className="w-full sm:w-auto text-[10px] bg-cyan-500/10 sm:bg-transparent py-2 sm:py-0 rounded-lg text-cyan-400 hover:text-cyan-300 transition-colors uppercase sm:capitalize font-bold sm:font-normal">
                           View
                         </button>
                       ) : (
@@ -390,10 +404,10 @@ const HeatmapPage = () => {
         </div>
         <div className="flex flex-wrap gap-3">
           {[
-            { label: "Hot (≥75%)", bar: "bg-red-500" },
+            { label: "Hot (≥75%)",  bar: "bg-red-500"    },
             { label: "Warm (≥50%)", bar: "bg-orange-400" },
             { label: "Mild (≥25%)", bar: "bg-yellow-400" },
-            { label: "Low (<25%)", bar: "bg-cyan-500" },
+            { label: "Low (<25%)",  bar: "bg-cyan-500"   },
           ].map(l => (
             <div key={l.label} className="flex items-center gap-2 text-[11px] text-gray-500">
               <div className={`w-3 h-3 rounded-full ${l.bar}`} /> {l.label}

@@ -24,7 +24,7 @@ import MyLostItems from "./dashboard/myLostItems/MyLostItems.tsx";
 import ReportLostItem from "./pages/reportlostItem/ReportLostItem.tsx";
 import ReportFoundItem from "./pages/reportFoundItem/ReportFoundItem.tsx";
 import AiSearch from "./pages/aiSearch/AiSearch.tsx";
-import HeatmapPage from "./pages/heatmap/HeatmapPage.tsx";
+import HeatmapPage from "./dashboard/pages/HeatmapPage.tsx";
 import AnalyticsPage from "./dashboard/pages/AnalyticsPage.tsx";
 import ArchievePage from "./dashboard/pages/ArchievePage.tsx"; 
 import ReportPage from "./dashboard/pages/ReportPage.tsx";    

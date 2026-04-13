@@ -6,27 +6,29 @@ import { StatusCodes } from "http-status-codes";
 
 export const locationStats = async (req: Request, res: Response) => {
   try {
-    // Revert to simple location-only stats
-    const [foundItems, lostItems] = await Promise.all([
-      foundItemService.getFoundItem({ limit: 5000 }),
-      lostTItemServices.getLostItem({ limit: 5000 })
+    const queryParams = { limit: 5000 };
+
+    const [allFound, allLost] = await Promise.all([
+      foundItemService.getFoundItem(queryParams),
+      lostTItemServices.getLostItem(queryParams)
     ]);
 
     const counts: Record<string, { found: number; lost: number; total: number }> = {};
 
-    for (const item of foundItems) {
-      const loc = (item.location || "Unknown").trim();
-      if (!counts[loc]) counts[loc] = { found: 0, lost: 0, total: 0 };
-      counts[loc].found++;
-      counts[loc].total++;
-    }
+    const processItems = (items: any[], type: "found" | "lost") => {
+      for (const item of items) {
+        const loc = (item.location || "Unknown").trim();
+        if (!counts[loc]) counts[loc] = { found: 0, lost: 0, total: 0 };
+        
+        if (type === "found") counts[loc].found++;
+        else counts[loc].lost++;
+        
+        counts[loc].total++;
+      }
+    };
 
-    for (const item of lostItems) {
-      const loc = (item.location || "Unknown").trim();
-      if (!counts[loc]) counts[loc] = { found: 0, lost: 0, total: 0 };
-      counts[loc].lost++;
-      counts[loc].total++;
-    }
+    processItems(allFound, "found");
+    processItems(allLost, "lost");
 
     const locationData = Object.entries(counts)
       .map(([location, data]) => ({ location, ...data }))
