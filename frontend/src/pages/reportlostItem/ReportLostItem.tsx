@@ -1,5 +1,4 @@
-import imageCompression from "browser-image-compression";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
@@ -7,6 +6,7 @@ import { useState, useRef } from "react";
 import { useCategoryQuery, useCreateLostItemMutation } from "../../redux/api/api";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
+import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
 
 const MAX_SIZE_MB = 5;
 
@@ -126,7 +126,7 @@ const StepIndicator = ({ current }: { current: number }) => (
 
 // ── Main component ──────────────────────────────────────────────────────────
 const ReportLostItem = () => {
-  const { register, formState: { errors }, reset, trigger, getValues } = useForm();
+  const { register, formState: { errors }, reset, trigger, getValues, control, setValue } = useForm();
 
   const [step, setStep] = useState(0);
   const [selectedMenu, setselectedMenu] = useState("");
@@ -278,8 +278,20 @@ const ReportLostItem = () => {
                           type="text" className={inputCls} placeholder="e.g. Black laptop bag" />
                       </Field>
                       <Field label="Last Seen Location" required error={errors.location?.message as string} icon={<IconPin />}>
-                        <input {...register("location", { required: "Location is required" })}
-                          type="text" className={inputCls} placeholder="e.g. Library, Room 205" />
+                        <Controller
+                          name="location"
+                          control={control}
+                          rules={{ required: "Location is required" }}
+                          render={({ field }) => (
+                            <LocationAutocomplete
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              className={inputCls}
+                              placeholder="e.g. Library, Room 205"
+                            />
+                          )}
+                        />
                       </Field>
                       <Field label="Date Lost" icon={<IconCalendar />}>
                         <CustomDatePicker

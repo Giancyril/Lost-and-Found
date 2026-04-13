@@ -1,5 +1,4 @@
-import imageCompression from "browser-image-compression";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import Modals from "../../components/modal/Modal";
 import { ToastContainer } from "react-toastify";
@@ -13,6 +12,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useUserVerification } from "../../auth/auth";
 import { FaBoxOpen, FaMapMarkerAlt, FaPhone } from "react-icons/fa";
+import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
 
 const MAX_IMAGES = 6;
 const MAX_SIZE_MB = 5;
@@ -26,6 +26,7 @@ const ReportFoundItem = () => {
     register,
     formState: { errors },
     reset,
+    control,
   } = useForm();
 
   const [selectedMenu, setselectedMenu] = useState("");
@@ -225,11 +226,19 @@ const ReportFoundItem = () => {
                 {/* Location */}
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Where Found</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-                    placeholder="e.g. Library, Canteen, Room 205"
-                    {...register("location", { required: "Location is required" })}
+                  <Controller
+                    name="location"
+                    control={control}
+                    rules={{ required: "Location is required" }}
+                    render={({ field }) => (
+                      <LocationAutocomplete
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                        placeholder="e.g. Library, Canteen, Room 205"
+                      />
+                    )}
                   />
                   {errors.location && (
                     <p className="text-red-400 text-xs mt-1">{errors.location?.message as string}</p>
