@@ -3,6 +3,7 @@ import { TFilter } from "../../global/interface";
 import { JwtPayload } from "jsonwebtoken";
 import prisma from "../../config/prisma";
 import { uploadBase64ToStorage } from "../../utils/storage";
+import { matchService } from "../matching/match.service";
 
 const createFoundItem = async (
   data: FoundItem & { lostItemId?: string; reporterName?: string },
@@ -40,6 +41,11 @@ const createFoundItem = async (
       data:  { isFound: true },
     });
   }
+
+  // Trigger smart matching in background
+  matchService.findMatchesForFoundItem(result).catch(err => 
+    console.error("[SmartMatch] Error during matching:", err)
+  );
 
   return result;
 };

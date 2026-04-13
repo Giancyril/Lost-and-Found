@@ -2,6 +2,7 @@ import { LostItem } from "@prisma/client";
 import { JwtPayload } from "jsonwebtoken";
 import prisma from "../../config/prisma";
 import { uploadBase64ToStorage } from "../../utils/storage";
+import { matchService } from "../matching/match.service";
 
 const toggleFoundStatus = async (id: string) => {
   const currentItem = await prisma.lostItem.findUnique({
@@ -42,13 +43,20 @@ const createLostItem = async (
   };
   if (userId) createData.userId = userId;
 
-  return prisma.lostItem.create({
+  const result = await prisma.lostItem.create({
     data: createData,
     include: {
       user:     { select: { id: true, username: true, createdAt: true, updatedAt: true } },
       category: true,
     },
   });
+
+  // Trigger smart matching in background
+  matchService.findMatchesForLostItem(result).catch(err => 
+    console.error("[SmartMatch] Error during matching:", err)
+  );
+
+  return result;
 };
 
 const getLostItem = async (query: any = {}) => {
