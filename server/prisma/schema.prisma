@@ -60,8 +60,10 @@ model FoundItem {
   deletedAt     DateTime?
   reporterName  String        @default("")
   schoolEmail   String        @default("") 
-  isArchived    Boolean       @default(false)  // ← NEW
-  archivedAt    DateTime?                       // ← NEW
+  isArchived    Boolean       @default(false)  
+  archivedAt    DateTime?                       
+
+  matchNotifications MatchNotification[]
 
   @@map("foundItems")
 }
@@ -84,6 +86,8 @@ model LostItem {
   user         User?         @relation(fields: [userId], references: [id])
   reporterName String        @default("")
   schoolEmail  String        @default("")
+
+  matchNotifications MatchNotification[]
 
   @@map("lostItems")
 }
@@ -153,6 +157,19 @@ model BulletinTip {
   createdAt      DateTime     @default(now())
 
   @@map("bulletinTips")
+}
+
+model MatchNotification {
+  id          String   @id @default(uuid())
+  lostItemId  String
+  foundItemId String
+  sentAt      DateTime @default(now())
+
+  lostItem    LostItem  @relation(fields: [lostItemId], references: [id])
+  foundItem   FoundItem @relation(fields: [foundItemId], references: [id])
+
+  @@unique([lostItemId, foundItemId])
+  @@map("matchNotifications")
 }
 
 enum status {

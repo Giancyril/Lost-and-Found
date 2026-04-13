@@ -133,6 +133,10 @@ const api = baseApi.injectEndpoints({
       providesTags: ["auditLogs"],
     }),
 
+    getMatchNotifications: builder.query({
+      query: () => ({ url: "/admin/match-notifications", method: "GET" }),
+      providesTags: ["matchNotifications"],
+    }),
     // user management
     blockUser: builder.mutation({
       query: (id: string) => ({ url: `/block/user/${id}`, method: "PUT" }),
@@ -324,4 +328,5 @@ export const {
   useDeleteBulletinPostMutation,
   useDeleteBulletinTipMutation,
   useResolveBulletinPostMutation,
+  useGetMatchNotificationsQuery,
 } = api;

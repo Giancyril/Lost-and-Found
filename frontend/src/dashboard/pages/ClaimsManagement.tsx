@@ -3,7 +3,7 @@ import {
   FaEye, FaSearch, FaCheck, FaTimes, FaUser, FaBoxOpen,
   FaHistory, FaClipboardList, FaChevronLeft, FaChevronRight,
   FaEnvelope, FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt,
-  FaTag,
+  FaTag, FaBolt,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -11,10 +11,11 @@ import {
   useUpdateClaimStatusMutation,
   useGetAuditLogsQuery,
   useSendClaimApprovedEmailMutation,
+  useGetMatchNotificationsQuery,
 } from "../../redux/api/api";
 import ExportButton from "../../components/export/ExportButton";
 
-type Tab       = "claims" | "audit";
+type Tab       = "claims" | "audit" | "matches";
 type ModalTab  = "details" | "history";
 const AUDIT_PAGE_SIZE = 10;
 
@@ -64,6 +65,8 @@ const ClaimsManagement = () => {
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [auditSearch, setAuditSearch]   = useState("");
   const [auditPage, setAuditPage]       = useState(1);
+  const [matchSearch, setMatchSearch]   = useState("");
+  const [matchPage, setMatchPage]       = useState(1);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedClaim, setSelectedClaim]         = useState<any>(null);
@@ -89,11 +92,13 @@ const ClaimsManagement = () => {
 
   const { data: allClaims, isLoading }               = useGetAllClaimsQuery(undefined);
   const { data: auditData, isLoading: auditLoading } = useGetAuditLogsQuery({});
+  const { data: matchData, isLoading: matchLoading } = useGetMatchNotificationsQuery({});
   const [updateClaimStatus]                          = useUpdateClaimStatusMutation();
   const [sendClaimApprovedEmail]                     = useSendClaimApprovedEmailMutation();
 
   const claims    = allClaims?.data  || [];
   const auditLogs = auditData?.data  || [];
+  const matches   = matchData?.data  || [];
 
   const getClaimHistory = (claimId: string) =>
     auditLogs.filter((log: any) => log.claimId === claimId)
@@ -114,6 +119,17 @@ const ClaimsManagement = () => {
   );
   const totalAuditPages = Math.max(1, Math.ceil(filteredLogs.length / AUDIT_PAGE_SIZE));
   const paginatedLogs   = filteredLogs.slice((auditPage - 1) * AUDIT_PAGE_SIZE, auditPage * AUDIT_PAGE_SIZE);
+
+  // ── Match log filtering + pagination ────────────────────────────────────────
+  const filteredMatches = matches.filter((m: any) =>
+    m.lostItem?.lostItemName?.toLowerCase().includes(matchSearch.toLowerCase()) ||
+    m.foundItem?.foundItemName?.toLowerCase().includes(matchSearch.toLowerCase()) ||
+    m.lostItem?.schoolEmail?.toLowerCase().includes(matchSearch.toLowerCase()) ||
+    m.lostItem?.location?.toLowerCase().includes(matchSearch.toLowerCase()) ||
+    m.foundItem?.location?.toLowerCase().includes(matchSearch.toLowerCase())
+  );
+  const totalMatchPages = Math.max(1, Math.ceil(filteredMatches.length / AUDIT_PAGE_SIZE));
+  const paginatedMatches = filteredMatches.slice((matchPage - 1) * AUDIT_PAGE_SIZE, matchPage * AUDIT_PAGE_SIZE);
 
   const handleViewDetails = (claim: any) => { setSelectedClaim(claim); setModalTab("details"); setIsDetailModalOpen(true); };
   const handleStatusChange = (claimId: string, status: string) => {
@@ -177,14 +193,14 @@ const ClaimsManagement = () => {
   return (
     <div className="space-y-5">
 
-      {/* Tabs */}
+      {/* ── Tabs ── */}
       <div className="flex gap-1 p-1 bg-gray-900 border border-white/5 rounded-xl w-fit">
         <button
           onClick={() => setActiveTab("claims")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
             activeTab === "claims"
               ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-              : "text-gray-400"
+              : "text-gray-400 hover:text-white"
           }`}
         >
           <FaClipboardList size={11} /> Claims
@@ -192,14 +208,25 @@ const ClaimsManagement = () => {
         </button>
         <button
           onClick={() => { setActiveTab("audit"); setAuditPage(1); }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
             activeTab === "audit"
               ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
-              : "text-gray-400"
+              : "text-gray-400 hover:text-white"
           }`}
         >
           <FaHistory size={11} /> Audit Log
           <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{auditLogs.length}</span>
+        </button>
+        <button
+          onClick={() => { setActiveTab("matches"); setMatchPage(1); }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            activeTab === "matches"
+              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <FaBolt size={11} /> Match Log
+          <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{matches.length}</span>
         </button>
       </div>
 
@@ -481,12 +508,195 @@ const ClaimsManagement = () => {
         </div>
       )}
 
-      {/* Detail Modal */}
+      {/* ── MATCH LOG TAB ── */}
+      {activeTab === "matches" && (
+        <div className="space-y-4">
+
+          {/* Stats row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold tracking-tight text-emerald-400">{matches.length}</p>
+                <p className="text-gray-500 text-xs mt-1 font-medium">Total Matches Fired</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <FaBolt size={13} className="text-emerald-400" />
+              </div>
+            </div>
+            <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold tracking-tight text-cyan-400">
+                  {matches.filter((m: any) => {
+                    const sentAt = new Date(m.sentAt).getTime();
+                    return Date.now() - sentAt < 86400000;
+                  }).length}
+                </p>
+                <p className="text-gray-500 text-xs mt-1 font-medium">Sent in Last 24h</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                <FaEnvelope size={13} className="text-cyan-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
+            <input value={matchSearch} onChange={e => { setMatchSearch(e.target.value); setMatchPage(1); }}
+              placeholder="Search by item name, location, or email..."
+              className="w-full pl-9 pr-4 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/40 transition-colors" />
+          </div>
+
+          {/* Table */}
+          <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FaBolt size={11} className="text-emerald-400" />
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Smart Match Notifications</h2>
+              </div>
+              <span className="text-[10px] text-gray-600">{filteredMatches.length} records</span>
+            </div>
+
+            {matchLoading ? (
+              <div className="space-y-2 p-4">
+                {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-800/60 rounded-xl animate-pulse" />)}
+              </div>
+            ) : filteredMatches.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-gray-600">
+                <div className="w-14 h-14 rounded-2xl bg-gray-800/60 border border-white/5 flex items-center justify-center mb-4">
+                  <FaBolt size={20} className="opacity-30" />
+                </div>
+                <p className="text-sm text-gray-500 font-medium">No matches fired yet</p>
+                <p className="text-xs text-gray-600 mt-1">Matches appear here when the engine finds a lost↔found pair</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop */}
+                <div className="hidden md:block">
+                  <div className="grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/5 bg-gray-800/30">
+                    <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lost Item</div>
+                    <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Found Item</div>
+                    <div className="col-span-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Notified</div>
+                    <div className="col-span-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Category</div>
+                    <div className="col-span-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sent</div>
+                  </div>
+                  <div className="divide-y divide-white/[0.04]">
+                    {paginatedMatches.map((m: any) => (
+                      <div key={m.id} className="grid grid-cols-12 gap-3 items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+
+                        {/* Lost item */}
+                        <div className="col-span-3 min-w-0">
+                          <p className="text-white text-xs font-semibold truncate">{m.lostItem?.lostItemName ?? "—"}</p>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-0.5">
+                            <FaMapMarkerAlt size={7} className="text-red-400 shrink-0" />
+                            <span className="truncate">{m.lostItem?.location ?? "—"}</span>
+                          </div>
+                        </div>
+
+                        {/* Arrow */}
+                        <div className="col-span-3 min-w-0">
+                          <p className="text-white text-xs font-semibold truncate">{m.foundItem?.foundItemName ?? "—"}</p>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-0.5">
+                            <FaMapMarkerAlt size={7} className="text-emerald-400 shrink-0" />
+                            <span className="truncate">{m.foundItem?.location ?? "—"}</span>
+                          </div>
+                        </div>
+
+                        {/* Email notified */}
+                        <div className="col-span-2 min-w-0">
+                          {m.lostItem?.schoolEmail ? (
+                            <div className="flex items-center gap-1 text-[10px] text-blue-300">
+                              <FaEnvelope size={8} className="text-blue-400 shrink-0" />
+                              <span className="truncate">{m.lostItem.schoolEmail}</span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-600 text-[10px] italic">No email</span>
+                          )}
+                        </div>
+
+                        {/* Category */}
+                        <div className="col-span-2">
+                          <span className="text-[10px] px-2 py-0.5 bg-white/5 border border-white/5 text-gray-300 rounded-lg">
+                            {m.lostItem?.category?.name ?? m.foundItem?.category?.name ?? "—"}
+                          </span>
+                        </div>
+
+                        {/* Sent at */}
+                        <div className="col-span-2">
+                          <p className="text-gray-400 text-[10px]">{formatDateTime(m.sentAt)}</p>
+                          <p className="text-gray-600 text-[10px] mt-0.5">{timeAgo(m.sentAt)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mobile */}
+                <div className="md:hidden divide-y divide-white/[0.04]">
+                  {paginatedMatches.map((m: any) => (
+                    <div key={m.id} className="p-4 space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="text-[10px] px-1.5 py-0.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full font-bold">Lost</span>
+                            <p className="text-white text-xs font-semibold truncate">{m.lostItem?.lostItemName ?? "—"}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-bold">Found</span>
+                            <p className="text-white text-xs truncate">{m.foundItem?.foundItemName ?? "—"}</p>
+                          </div>
+                        </div>
+                        <p className="text-gray-600 text-[10px] shrink-0">{timeAgo(m.sentAt)}</p>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-blue-300">
+                        <FaEnvelope size={8} className="text-blue-400 shrink-0" />
+                        <span className="truncate">{m.lostItem?.schoolEmail ?? "No email on file"}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <FaTag size={7} className="text-gray-600" />
+                          {m.lostItem?.category?.name ?? "—"}
+                        </div>
+                        <span>{formatDateTime(m.sentAt)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {filteredMatches.length > AUDIT_PAGE_SIZE && (
+            <div className="flex items-center justify-between">
+              <p className="text-gray-600 text-xs">
+                {(matchPage - 1) * AUDIT_PAGE_SIZE + 1}–{Math.min(matchPage * AUDIT_PAGE_SIZE, filteredMatches.length)} of {filteredMatches.length}
+              </p>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setMatchPage(p => Math.max(1, p - 1))} disabled={matchPage === 1}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all">
+                  <FaChevronLeft size={9} /> Prev
+                </button>
+                {Array.from({ length: totalMatchPages }, (_, i) => i + 1).map(page => (
+                  <button key={page} onClick={() => setMatchPage(page)}
+                    className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${page === matchPage ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "text-gray-500 hover:text-white hover:bg-white/5"}`}>
+                    {page}
+                  </button>
+                ))}
+                <button onClick={() => setMatchPage(p => Math.min(totalMatchPages, p + 1))} disabled={matchPage === totalMatchPages}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all">
+                  Next <FaChevronRight size={9} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Detail Modal (unchanged) ── */}
       {isDetailModalOpen && selectedClaim && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-
-            {/* Modal Header */}
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
@@ -505,11 +715,7 @@ const ClaimsManagement = () => {
                 </button>
               </div>
             </div>
-
-            {/* Shared Tab Container */}
             <div className="mx-5 mt-4 mb-5 bg-gray-800/40 border border-white/5 rounded-xl overflow-hidden">
-
-              {/* Tab Headers */}
               <div className="flex border-b border-white/5">
                 {([
                   { key: "details" as ModalTab, label: "Details", icon: <FaBoxOpen size={10} /> },
@@ -518,23 +724,16 @@ const ClaimsManagement = () => {
                   <button key={tab.key} onClick={() => setModalTab(tab.key)}
                     className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px ${
                       modalTab === tab.key
-                        ? tab.key === "details"
-                          ? "border-cyan-400 text-cyan-400"
-                          : "border-violet-400 text-violet-400"
+                        ? tab.key === "details" ? "border-cyan-400 text-cyan-400" : "border-violet-400 text-violet-400"
                         : "border-transparent text-gray-500"
                     }`}>
-                    {tab.icon}
-                    {tab.label}
+                    {tab.icon}{tab.label}
                     {tab.key === "history" && getClaimHistory(selectedClaim.id).length > 0 && (
-                      <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
-                        {getClaimHistory(selectedClaim.id).length}
-                      </span>
+                      <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{getClaimHistory(selectedClaim.id).length}</span>
                     )}
                   </button>
                 ))}
               </div>
-
-              {/* Details Tab Content */}
               {modalTab === "details" && (
                 <div className="p-4 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -548,12 +747,8 @@ const ClaimsManagement = () => {
                           className="w-16 h-16 rounded-xl object-cover shrink-0 border border-white/5" />
                         <div className="min-w-0 space-y-1">
                           <p className="text-white text-sm font-semibold truncate">{selectedClaim.foundItem?.foundItemName}</p>
-                          <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                            <FaTag size={8} className="text-blue-400" />{selectedClaim.foundItem?.category?.name ?? "—"}
-                          </div>
-                          <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                            <FaMapMarkerAlt size={8} className="text-blue-400" /><span className="truncate">{selectedClaim.foundItem?.location ?? "—"}</span>
-                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400"><FaTag size={8} className="text-blue-400" />{selectedClaim.foundItem?.category?.name ?? "—"}</div>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400"><FaMapMarkerAlt size={8} className="text-blue-400" /><span className="truncate">{selectedClaim.foundItem?.location ?? "—"}</span></div>
                         </div>
                       </div>
                     </div>
@@ -564,9 +759,7 @@ const ClaimsManagement = () => {
                       </div>
                       <div className="p-3 space-y-2">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                            <FaUser size={11} className="text-emerald-400" />
-                          </div>
+                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"><FaUser size={11} className="text-emerald-400" /></div>
                           <div className="min-w-0">
                             <p className="text-white text-sm font-semibold truncate">{selectedClaim.claimantName || "—"}</p>
                             <p className="text-blue-300 text-[10px] truncate">{selectedClaim.schoolEmail || "No email"}</p>
@@ -575,9 +768,7 @@ const ClaimsManagement = () => {
                         <div className="grid grid-cols-2 gap-2 text-[10px]">
                           <div>
                             <p className="text-gray-500 uppercase tracking-widest mb-0.5">Date Lost</p>
-                            <div className="flex items-center gap-1 text-gray-300">
-                              <FaCalendarAlt size={8} className="text-blue-400" />{formatDate(selectedClaim.lostDate)}
-                            </div>
+                            <div className="flex items-center gap-1 text-gray-300"><FaCalendarAlt size={8} className="text-blue-400" />{formatDate(selectedClaim.lostDate)}</div>
                           </div>
                           <div>
                             <p className="text-gray-500 uppercase tracking-widest mb-0.5">Submitted</p>
@@ -587,14 +778,10 @@ const ClaimsManagement = () => {
                       </div>
                     </div>
                   </div>
-
                   <div className="bg-gray-800/60 border border-white/5 rounded-xl p-3">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Proof of Ownership</p>
-                    <p className="text-gray-200 text-sm leading-relaxed">
-                      {selectedClaim.distinguishingFeatures || <span className="text-gray-500 italic text-xs">No details provided</span>}
-                    </p>
+                    <p className="text-gray-200 text-sm leading-relaxed">{selectedClaim.distinguishingFeatures || <span className="text-gray-500 italic text-xs">No details provided</span>}</p>
                   </div>
-
                   {selectedClaim.status === "PENDING" && (
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => { handleStatusChange(selectedClaim.id, "REJECTED"); setIsDetailModalOpen(false); }}
@@ -608,17 +795,13 @@ const ClaimsManagement = () => {
                     </div>
                   )}
                   {selectedClaim.status !== "PENDING" && (
-                    <div className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-xs ${
-                      selectedClaim.status === "APPROVED" ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-400" : "bg-red-500/5 border-red-500/20 text-red-400"
-                    }`}>
+                    <div className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-xs ${selectedClaim.status === "APPROVED" ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-400" : "bg-red-500/5 border-red-500/20 text-red-400"}`}>
                       {selectedClaim.status === "APPROVED" ? <FaCheckCircle size={12} /> : <FaTimes size={12} />}
                       This claim has been <strong className="ml-1">{selectedClaim.status.toLowerCase()}</strong>.
                     </div>
                   )}
                 </div>
               )}
-
-              {/* History Tab Content */}
               {modalTab === "history" && (
                 <div className="p-4">
                   {(() => {
@@ -644,9 +827,7 @@ const ClaimsManagement = () => {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-white text-xs font-semibold">
-                                    {event.action === "SUBMITTED" ? "Claim Submitted" : `Changed to ${event.toStatus}`}
-                                  </p>
+                                  <p className="text-white text-xs font-semibold">{event.action === "SUBMITTED" ? "Claim Submitted" : `Changed to ${event.toStatus}`}</p>
                                   <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(event.toStatus)}`}>{event.toStatus}</span>
                                   {idx === allEvents.length - 1 && <span className="text-[10px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 px-1.5 py-0.5 rounded-full">Latest</span>}
                                 </div>
@@ -661,26 +842,18 @@ const ClaimsManagement = () => {
                   })()}
                 </div>
               )}
-
             </div>
-            {/* End Shared Tab Container */}
-
           </div>
         </div>
       )}
 
-      {/* Status Confirm Modal */}
+      {/* ── Status Confirm Modal (unchanged) ── */}
       {isStatusModalOpen && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl p-5">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                <FaCheck size={12} className="text-blue-400" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-white">Confirm Status Change</h2>
-                <p className="text-gray-500 text-xs">Update this claim's status</p>
-              </div>
+              <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center"><FaCheck size={12} className="text-blue-400" /></div>
+              <div><h2 className="text-sm font-bold text-white">Confirm Status Change</h2><p className="text-gray-500 text-xs">Update this claim's status</p></div>
             </div>
             {selectedClaim && (
               <div className="flex items-center gap-3 p-3 bg-gray-800/60 border border-white/5 rounded-xl mb-4">
@@ -698,9 +871,7 @@ const ClaimsManagement = () => {
             )}
             <div className="flex gap-2">
               <button onClick={() => { setIsStatusModalOpen(false); setSelectedClaim(null); setNewStatus(""); }} disabled={isStatusLoading}
-                className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors">
-                Cancel
-              </button>
+                className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors">Cancel</button>
               <button onClick={handleStatusConfirm} disabled={isStatusLoading}
                 className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
                 {isStatusLoading ? <><Spinner /> Updating...</> : "Confirm"}
@@ -710,24 +881,16 @@ const ClaimsManagement = () => {
         </div>
       )}
 
-      {/* Email Modal */}
+      {/* ── Email Modal (unchanged) ── */}
       {isEmailModalOpen && emailClaim && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                  <FaEnvelope size={11} className="text-emerald-400" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-white">Send Approval Email</h2>
-                  <p className="text-gray-500 text-[11px]">Notify the claimant</p>
-                </div>
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center"><FaEnvelope size={11} className="text-emerald-400" /></div>
+                <div><h2 className="text-sm font-bold text-white">Send Approval Email</h2><p className="text-gray-500 text-[11px]">Notify the claimant</p></div>
               </div>
-              <button onClick={() => setIsEmailModalOpen(false)}
-                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                <FaTimes size={12} />
-              </button>
+              <button onClick={() => setIsEmailModalOpen(false)} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"><FaTimes size={12} /></button>
             </div>
             <form onSubmit={handleSendClaimEmail} className="p-5 space-y-4">
               <div className="flex items-center gap-3 p-3 bg-gray-800/60 border border-white/5 rounded-xl">
@@ -745,9 +908,7 @@ const ClaimsManagement = () => {
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setIsEmailModalOpen(false)} disabled={isSendingEmail}
-                  className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors">
-                  Cancel
-                </button>
+                  className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors">Cancel</button>
                 <button type="submit" disabled={isSendingEmail}
                   className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
                   {isSendingEmail ? <><Spinner /> Sending...</> : <><FaEnvelope size={10} /> Send Email</>}

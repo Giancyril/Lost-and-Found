@@ -21,6 +21,7 @@ import { sendLostItemEmail, sendClaimApprovedEmail } from "../utils/emailControl
 import { bulletinPostController } from "../modules/bulletinPost/bulletinPost.controller";
 import { createPostSchema, createTipSchema } from "../modules/bulletinPost/bulletinPost.validate";
 import { postCreationLimiter, tipSubmissionLimiter } from "../midddlewares/bulletinRateLimit";
+import { getMatchNotifications } from "../utils/getMatchNotifications";
 
 const router = express.Router();
 
@@ -80,6 +81,7 @@ router.get("/admin/audit-logs", auth(), getAuditLogs);
 router.put("/block/user/:id", auth(), userController.blockUser);
 router.put("/change-role/:id", auth(), userController.changeUserRole);
 router.delete("/delete-user/:id", auth(), userController.softDeleteUser);
+router.get("/admin/match-notifications", auth(), getMatchNotifications);
 
 ////////////////////////////////////////////////// AI search //////////////////////////////////////////////
 router.post("/ai-search", validateRequest(aiSearchValidation.aiSearchSchema), aiSearchController.aiSearch);
