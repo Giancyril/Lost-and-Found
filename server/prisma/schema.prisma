@@ -160,10 +160,10 @@ model BulletinTip {
 }
 
 model MatchNotification {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   lostItemId  String
   foundItemId String
-  sentAt      DateTime @default(now())
+  sentAt      DateTime  @default(now())
 
   lostItem    LostItem  @relation(fields: [lostItemId], references: [id])
   foundItem   FoundItem @relation(fields: [foundItemId], references: [id])

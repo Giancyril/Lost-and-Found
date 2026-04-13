@@ -6,26 +6,30 @@ export const getMatchNotifications = async (req: Request, res: Response) => {
     const notifications = await prisma.matchNotification.findMany({
       orderBy: { sentAt: "desc" },
       take: 100,
-      include: {
+      select: {
+        id:          true,
+        sentAt:      true,
+        lostItemId:  true,
+        foundItemId: true,
         lostItem: {
           select: {
-            id:          true,
+            id:           true,
             lostItemName: true,
-            location:    true,
-            date:        true,
-            schoolEmail: true,
+            location:     true,
+            date:         true,
+            schoolEmail:  true,
             reporterName: true,
-            category:    { select: { name: true } },
+            category:     { select: { name: true } },
           },
         },
         foundItem: {
           select: {
-            id:           true,
+            id:            true,
             foundItemName: true,
-            location:     true,
-            date:         true,
-            img:          true,
-            category:     { select: { name: true } },
+            location:      true,
+            date:          true,
+            img:           true,
+            category:      { select: { name: true } },
           },
         },
       },

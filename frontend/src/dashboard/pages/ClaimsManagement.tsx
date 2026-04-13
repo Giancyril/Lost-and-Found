@@ -120,7 +120,6 @@ const ClaimsManagement = () => {
   const totalAuditPages = Math.max(1, Math.ceil(filteredLogs.length / AUDIT_PAGE_SIZE));
   const paginatedLogs   = filteredLogs.slice((auditPage - 1) * AUDIT_PAGE_SIZE, auditPage * AUDIT_PAGE_SIZE);
 
-  // ── Match log filtering + pagination ────────────────────────────────────────
   const filteredMatches = matches.filter((m: any) =>
     m.lostItem?.lostItemName?.toLowerCase().includes(matchSearch.toLowerCase()) ||
     m.foundItem?.foundItemName?.toLowerCase().includes(matchSearch.toLowerCase()) ||
@@ -128,10 +127,10 @@ const ClaimsManagement = () => {
     m.lostItem?.location?.toLowerCase().includes(matchSearch.toLowerCase()) ||
     m.foundItem?.location?.toLowerCase().includes(matchSearch.toLowerCase())
   );
-  const totalMatchPages = Math.max(1, Math.ceil(filteredMatches.length / AUDIT_PAGE_SIZE));
+  const totalMatchPages  = Math.max(1, Math.ceil(filteredMatches.length / AUDIT_PAGE_SIZE));
   const paginatedMatches = filteredMatches.slice((matchPage - 1) * AUDIT_PAGE_SIZE, matchPage * AUDIT_PAGE_SIZE);
 
-  const handleViewDetails = (claim: any) => { setSelectedClaim(claim); setModalTab("details"); setIsDetailModalOpen(true); };
+  const handleViewDetails  = (claim: any) => { setSelectedClaim(claim); setModalTab("details"); setIsDetailModalOpen(true); };
   const handleStatusChange = (claimId: string, status: string) => {
     const claim = claims.find((c: any) => c.id === claimId);
     setSelectedClaim(claim); setNewStatus(status); setIsStatusModalOpen(true);
@@ -274,7 +273,7 @@ const ClaimsManagement = () => {
               <span className="text-[10px] text-gray-600">{filteredClaims.length} results</span>
             </div>
 
-            {/* Desktop */}
+            {/* Desktop table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -350,37 +349,88 @@ const ClaimsManagement = () => {
               </table>
             </div>
 
-            {/* Mobile */}
+            {/* ── Mobile cards (improved) ── */}
             <div className="md:hidden divide-y divide-white/[0.04]">
               {filteredClaims.map((claim: any) => (
                 <div key={claim.id} className="p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <img src={claim.foundItem?.img || "/default-item.png"} alt={claim.foundItem?.foundItemName}
-                      className="w-11 h-11 rounded-xl object-cover shrink-0 border border-white/5" />
+
+                  {/* Row 1: image + name + status badge */}
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={claim.foundItem?.img || "/default-item.png"}
+                      alt={claim.foundItem?.foundItemName}
+                      className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/5"
+                    />
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-semibold truncate">{claim.foundItem?.foundItemName}</p>
-                      <p className="text-gray-500 text-xs truncate">{claim.claimantName || "—"}</p>
-                    </div>
-                    <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border ${getStatusBadge(claim.status)}`}>{claim.status}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <StatusSelect value={claim.status} onChange={v => handleStatusChange(claim.id, v)} />
-                    <button onClick={() => handleViewDetails(claim)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 border border-white/5 text-gray-300 text-xs font-medium rounded-lg">
-                      <FaEye size={10} /> Verify
-                    </button>
-                    <div className={claim.status === "APPROVED" ? "" : "invisible pointer-events-none"}>
-                      {claimEmailSentIds.has(claim.id) ? (
-                        <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
-                          <FaCheckCircle size={10} /> Sent
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-white text-sm font-semibold leading-tight truncate">
+                          {claim.foundItem?.foundItemName}
+                        </p>
+                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(claim.status)}`}>
+                          {claim.status}
                         </span>
-                      ) : (
-                        <button onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">
-                          <FaEnvelope size={10} /> Email
-                        </button>
+                      </div>
+                      {claim.foundItem?.category?.name && (
+                        <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
+                          {claim.foundItem.category.name}
+                        </span>
                       )}
                     </div>
+                  </div>
+
+                  {/* Row 2: claimant info */}
+                  <div className="bg-gray-800/50 border border-white/5 rounded-xl px-3 py-2.5 space-y-1.5">
+                    <div className="flex items-center gap-2 text-xs text-gray-300">
+                      <FaUser size={9} className="text-gray-500 shrink-0" />
+                      <span className="font-medium truncate">{claim.claimantName || "—"}</span>
+                    </div>
+                    {claim.schoolEmail && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <FaEnvelope size={9} className="text-gray-500 shrink-0" />
+                        <span className="text-blue-300 text-[11px] truncate">{claim.schoolEmail}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <FaCalendarAlt size={9} className="text-gray-600 shrink-0" />
+                      <span className="text-[11px]">Lost: {formatDate(claim.lostDate)}</span>
+                    </div>
+                  </div>
+
+                  {/* Row 3: proof snippet */}
+                  {claim.distinguishingFeatures && (
+                    <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-2 px-0.5">
+                      "{claim.distinguishingFeatures}"
+                    </p>
+                  )}
+
+                  {/* Row 4: actions */}
+                  <div className="flex items-center gap-2 pt-0.5">
+                    {/* Status selector */}
+                    <StatusSelect value={claim.status} onChange={v => handleStatusChange(claim.id, v)} />
+
+                    {/* Verify button */}
+                    <button
+                      onClick={() => handleViewDetails(claim)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors"
+                    >
+                      <FaEye size={10} /> Verify
+                    </button>
+
+                    {/* Email button — only for APPROVED */}
+                    {claim.status === "APPROVED" && (
+                      claimEmailSentIds.has(claim.id) ? (
+                        <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
+                          <FaCheckCircle size={9} /> Sent
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg transition-colors"
+                        >
+                          <FaEnvelope size={9} /> Email
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               ))}
@@ -511,8 +561,6 @@ const ClaimsManagement = () => {
       {/* ── MATCH LOG TAB ── */}
       {activeTab === "matches" && (
         <div className="space-y-4">
-
-          {/* Stats row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between">
               <div>
@@ -526,10 +574,7 @@ const ClaimsManagement = () => {
             <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold tracking-tight text-cyan-400">
-                  {matches.filter((m: any) => {
-                    const sentAt = new Date(m.sentAt).getTime();
-                    return Date.now() - sentAt < 86400000;
-                  }).length}
+                  {matches.filter((m: any) => Date.now() - new Date(m.sentAt).getTime() < 86400000).length}
                 </p>
                 <p className="text-gray-500 text-xs mt-1 font-medium">Sent in Last 24h</p>
               </div>
@@ -539,7 +584,6 @@ const ClaimsManagement = () => {
             </div>
           </div>
 
-          {/* Search */}
           <div className="relative">
             <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
             <input value={matchSearch} onChange={e => { setMatchSearch(e.target.value); setMatchPage(1); }}
@@ -547,7 +591,6 @@ const ClaimsManagement = () => {
               className="w-full pl-9 pr-4 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/40 transition-colors" />
           </div>
 
-          {/* Table */}
           <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
             <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -583,8 +626,6 @@ const ClaimsManagement = () => {
                   <div className="divide-y divide-white/[0.04]">
                     {paginatedMatches.map((m: any) => (
                       <div key={m.id} className="grid grid-cols-12 gap-3 items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
-
-                        {/* Lost item */}
                         <div className="col-span-3 min-w-0">
                           <p className="text-white text-xs font-semibold truncate">{m.lostItem?.lostItemName ?? "—"}</p>
                           <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-0.5">
@@ -592,8 +633,6 @@ const ClaimsManagement = () => {
                             <span className="truncate">{m.lostItem?.location ?? "—"}</span>
                           </div>
                         </div>
-
-                        {/* Arrow */}
                         <div className="col-span-3 min-w-0">
                           <p className="text-white text-xs font-semibold truncate">{m.foundItem?.foundItemName ?? "—"}</p>
                           <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-0.5">
@@ -601,8 +640,6 @@ const ClaimsManagement = () => {
                             <span className="truncate">{m.foundItem?.location ?? "—"}</span>
                           </div>
                         </div>
-
-                        {/* Email notified */}
                         <div className="col-span-2 min-w-0">
                           {m.lostItem?.schoolEmail ? (
                             <div className="flex items-center gap-1 text-[10px] text-blue-300">
@@ -613,15 +650,11 @@ const ClaimsManagement = () => {
                             <span className="text-gray-600 text-[10px] italic">No email</span>
                           )}
                         </div>
-
-                        {/* Category */}
                         <div className="col-span-2">
                           <span className="text-[10px] px-2 py-0.5 bg-white/5 border border-white/5 text-gray-300 rounded-lg">
                             {m.lostItem?.category?.name ?? m.foundItem?.category?.name ?? "—"}
                           </span>
                         </div>
-
-                        {/* Sent at */}
                         <div className="col-span-2">
                           <p className="text-gray-400 text-[10px]">{formatDateTime(m.sentAt)}</p>
                           <p className="text-gray-600 text-[10px] mt-0.5">{timeAgo(m.sentAt)}</p>
@@ -666,7 +699,6 @@ const ClaimsManagement = () => {
             )}
           </div>
 
-          {/* Pagination */}
           {filteredMatches.length > AUDIT_PAGE_SIZE && (
             <div className="flex items-center justify-between">
               <p className="text-gray-600 text-xs">
@@ -693,7 +725,7 @@ const ClaimsManagement = () => {
         </div>
       )}
 
-      {/* ── Detail Modal (unchanged) ── */}
+      {/* ── Detail Modal ── */}
       {isDetailModalOpen && selectedClaim && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -847,7 +879,7 @@ const ClaimsManagement = () => {
         </div>
       )}
 
-      {/* ── Status Confirm Modal (unchanged) ── */}
+      {/* ── Status Confirm Modal ── */}
       {isStatusModalOpen && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl p-5">
@@ -881,7 +913,7 @@ const ClaimsManagement = () => {
         </div>
       )}
 
-      {/* ── Email Modal (unchanged) ── */}
+      {/* ── Email Modal ── */}
       {isEmailModalOpen && emailClaim && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">

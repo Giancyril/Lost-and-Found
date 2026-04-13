@@ -3,6 +3,7 @@ import sendResponse from "../../global/response";
 import { StatusCodes } from "http-status-codes";
 import { lostTItemServices } from "./lostItem.service";
 import { utils } from "../../utils/utils";
+import { matchService } from "../matching/match.service";
 
 const toggleFoundStatus = async (req: Request, res: Response) => {
   try {
@@ -32,6 +33,13 @@ const createLostItem = async (req: Request, res: Response) => {
     const item = req.body;
     const userId = req.user?.id;
     const result = await lostTItemServices.createLostItem(userId, item);
+
+    if (result?.id) {
+      matchService.findMatchesForLostItem(result).catch((err) =>
+        console.error("[SmartMatch] Error matching lost item:", err)
+      );
+    }
+
     sendResponse(res, {
       statusCode: StatusCodes.CREATED,
       success: true,

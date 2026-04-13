@@ -3,11 +3,19 @@ import sendResponse from "../../global/response";
 import { Request, Response } from "express";
 import { foundItemService } from "./foundItem.service";
 import { utils } from "../../utils/utils";
+import { matchService } from "../matching/match.service";
 
 const createFoundItem = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const result = await foundItemService.createFoundItem(req.body, userId);
+
+    if (result?.id) {
+      matchService.findMatchesForFoundItem(result).catch((err) =>
+        console.error("[SmartMatch] Error matching found item:", err)
+      );
+    }
+
     sendResponse(res, {
       statusCode: StatusCodes.CREATED,
       success: true,
