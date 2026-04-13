@@ -177,8 +177,6 @@ const ClaimsManagement = () => {
   return (
     <div className="space-y-5">
 
-     
-
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-gray-900 border border-white/5 rounded-xl w-fit">
         <button
@@ -301,18 +299,22 @@ const ClaimsManagement = () => {
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
                             <FaEye size={10} /> Verify
                           </button>
-                          {claim.status === "APPROVED" && (
-                            claimEmailSentIds.has(claim.id) ? (
-                              <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
-                                <FaCheckCircle size={10} /> Sent
-                              </span>
+                          <div className="w-[72px] flex justify-center">
+                            {claim.status === "APPROVED" ? (
+                              claimEmailSentIds.has(claim.id) ? (
+                                <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
+                                  <FaCheckCircle size={10} /> Sent
+                                </span>
+                              ) : (
+                                <button onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg transition-colors">
+                                  <FaEnvelope size={10} /> Email
+                                </button>
+                              )
                             ) : (
-                              <button onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg transition-colors">
-                                <FaEnvelope size={10} /> Email
-                              </button>
-                            )
-                          )}
+                              <span className="w-full" />
+                            )}
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -340,12 +342,18 @@ const ClaimsManagement = () => {
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 border border-white/5 text-gray-300 text-xs font-medium rounded-lg">
                       <FaEye size={10} /> Verify
                     </button>
-                    {claim.status === "APPROVED" && !claimEmailSentIds.has(claim.id) && (
-                      <button onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">
-                        <FaEnvelope size={10} /> Email
-                      </button>
-                    )}
+                    <div className={claim.status === "APPROVED" ? "" : "invisible pointer-events-none"}>
+                      {claimEmailSentIds.has(claim.id) ? (
+                        <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
+                          <FaCheckCircle size={10} /> Sent
+                        </span>
+                      ) : (
+                        <button onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg">
+                          <FaEnvelope size={10} /> Email
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -477,6 +485,8 @@ const ClaimsManagement = () => {
       {isDetailModalOpen && selectedClaim && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+
+            {/* Modal Header */}
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
@@ -496,146 +506,165 @@ const ClaimsManagement = () => {
               </div>
             </div>
 
-            <div className="flex gap-1 px-5 pt-3">
-              {[{ key: "details" as ModalTab, label: "Details", icon: <FaBoxOpen size={10} />, color: "cyan" },
-                { key: "history" as ModalTab, label: "History", icon: <FaHistory size={10} />, color: "violet" }].map(tab => (
-                <button key={tab.key} onClick={() => setModalTab(tab.key)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    modalTab === tab.key
-                      ? `bg-${tab.color}-500/10 text-${tab.color}-400 border border-${tab.color}-500/20`
-                      : "text-gray-500 hover:text-white"
-                  }`}>
-                  {tab.icon}{tab.label}
-                  {tab.key === "history" && getClaimHistory(selectedClaim.id).length > 0 && (
-                    <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{getClaimHistory(selectedClaim.id).length}</span>
+            {/* Shared Tab Container */}
+            <div className="mx-5 mt-4 mb-5 bg-gray-800/40 border border-white/5 rounded-xl overflow-hidden">
+
+              {/* Tab Headers */}
+              <div className="flex border-b border-white/5">
+                {([
+                  { key: "details" as ModalTab, label: "Details", icon: <FaBoxOpen size={10} /> },
+                  { key: "history" as ModalTab, label: "History", icon: <FaHistory size={10} /> },
+                ] as const).map(tab => (
+                  <button key={tab.key} onClick={() => setModalTab(tab.key)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px ${
+                      modalTab === tab.key
+                        ? tab.key === "details"
+                          ? "border-cyan-400 text-cyan-400"
+                          : "border-violet-400 text-violet-400"
+                        : "border-transparent text-gray-500"
+                    }`}>
+                    {tab.icon}
+                    {tab.label}
+                    {tab.key === "history" && getClaimHistory(selectedClaim.id).length > 0 && (
+                      <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
+                        {getClaimHistory(selectedClaim.id).length}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Details Tab Content */}
+              {modalTab === "details" && (
+                <div className="p-4 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+                      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+                        <FaBoxOpen size={10} className="text-cyan-400" />
+                        <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Found Item</p>
+                      </div>
+                      <div className="flex gap-3 p-3">
+                        <img src={selectedClaim.foundItem?.img || "/default-item.png"} alt={selectedClaim.foundItem?.foundItemName}
+                          className="w-16 h-16 rounded-xl object-cover shrink-0 border border-white/5" />
+                        <div className="min-w-0 space-y-1">
+                          <p className="text-white text-sm font-semibold truncate">{selectedClaim.foundItem?.foundItemName}</p>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                            <FaTag size={8} className="text-blue-400" />{selectedClaim.foundItem?.category?.name ?? "—"}
+                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                            <FaMapMarkerAlt size={8} className="text-blue-400" /><span className="truncate">{selectedClaim.foundItem?.location ?? "—"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+                      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+                        <FaUser size={10} className="text-emerald-400" />
+                        <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Claimant</p>
+                      </div>
+                      <div className="p-3 space-y-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                            <FaUser size={11} className="text-emerald-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-white text-sm font-semibold truncate">{selectedClaim.claimantName || "—"}</p>
+                            <p className="text-blue-300 text-[10px] truncate">{selectedClaim.schoolEmail || "No email"}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-[10px]">
+                          <div>
+                            <p className="text-gray-500 uppercase tracking-widest mb-0.5">Date Lost</p>
+                            <div className="flex items-center gap-1 text-gray-300">
+                              <FaCalendarAlt size={8} className="text-blue-400" />{formatDate(selectedClaim.lostDate)}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 uppercase tracking-widest mb-0.5">Submitted</p>
+                            <p className="text-gray-300">{formatDate(selectedClaim.createdAt)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-800/60 border border-white/5 rounded-xl p-3">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Proof of Ownership</p>
+                    <p className="text-gray-200 text-sm leading-relaxed">
+                      {selectedClaim.distinguishingFeatures || <span className="text-gray-500 italic text-xs">No details provided</span>}
+                    </p>
+                  </div>
+
+                  {selectedClaim.status === "PENDING" && (
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => { handleStatusChange(selectedClaim.id, "REJECTED"); setIsDetailModalOpen(false); }}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold rounded-lg transition-all">
+                        <FaTimes size={10} /> Reject
+                      </button>
+                      <button onClick={() => { handleStatusChange(selectedClaim.id, "APPROVED"); setIsDetailModalOpen(false); }}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg transition-all">
+                        <FaCheck size={10} /> Approve
+                      </button>
+                    </div>
                   )}
-                </button>
-              ))}
-            </div>
-
-            {modalTab === "details" && (
-              <div className="p-5 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
-                      <FaBoxOpen size={10} className="text-cyan-400" />
-                      <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Found Item</p>
+                  {selectedClaim.status !== "PENDING" && (
+                    <div className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-xs ${
+                      selectedClaim.status === "APPROVED" ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-400" : "bg-red-500/5 border-red-500/20 text-red-400"
+                    }`}>
+                      {selectedClaim.status === "APPROVED" ? <FaCheckCircle size={12} /> : <FaTimes size={12} />}
+                      This claim has been <strong className="ml-1">{selectedClaim.status.toLowerCase()}</strong>.
                     </div>
-                    <div className="flex gap-3 p-3">
-                      <img src={selectedClaim.foundItem?.img || "/default-item.png"} alt={selectedClaim.foundItem?.foundItemName}
-                        className="w-16 h-16 rounded-xl object-cover shrink-0 border border-white/5" />
-                      <div className="min-w-0 space-y-1">
-                        <p className="text-white text-sm font-semibold truncate">{selectedClaim.foundItem?.foundItemName}</p>
-                        <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                          <FaTag size={8} className="text-blue-400" />{selectedClaim.foundItem?.category?.name ?? "—"}
-                        </div>
-                        <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                          <FaMapMarkerAlt size={8} className="text-blue-400" /><span className="truncate">{selectedClaim.foundItem?.location ?? "—"}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
-                      <FaUser size={10} className="text-emerald-400" />
-                      <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Claimant</p>
-                    </div>
-                    <div className="p-3 space-y-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                          <FaUser size={11} className="text-emerald-400" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-white text-sm font-semibold truncate">{selectedClaim.claimantName || "—"}</p>
-                          <p className="text-blue-300 text-[10px] truncate">{selectedClaim.schoolEmail || "No email"}</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-[10px]">
-                        <div>
-                          <p className="text-gray-500 uppercase tracking-widest mb-0.5">Date Lost</p>
-                          <div className="flex items-center gap-1 text-gray-300">
-                            <FaCalendarAlt size={8} className="text-blue-400" />{formatDate(selectedClaim.lostDate)}
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-gray-500 uppercase tracking-widest mb-0.5">Submitted</p>
-                          <p className="text-gray-300">{formatDate(selectedClaim.createdAt)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
-                <div className="bg-gray-800/60 border border-white/5 rounded-xl p-3">
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Proof of Ownership</p>
-                  <p className="text-gray-200 text-sm leading-relaxed">
-                    {selectedClaim.distinguishingFeatures || <span className="text-gray-500 italic text-xs">No details provided</span>}
-                  </p>
-                </div>
-                {selectedClaim.status === "PENDING" && (
-                  <div className="flex items-center justify-end gap-2">
-                    <button onClick={() => { handleStatusChange(selectedClaim.id, "REJECTED"); setIsDetailModalOpen(false); }}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold rounded-lg transition-all">
-                      <FaTimes size={10} /> Reject
-                    </button>
-                    <button onClick={() => { handleStatusChange(selectedClaim.id, "APPROVED"); setIsDetailModalOpen(false); }}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg transition-all">
-                      <FaCheck size={10} /> Approve
-                    </button>
-                  </div>
-                )}
-                {selectedClaim.status !== "PENDING" && (
-                  <div className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-xs ${
-                    selectedClaim.status === "APPROVED" ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-400" : "bg-red-500/5 border-red-500/20 text-red-400"
-                  }`}>
-                    {selectedClaim.status === "APPROVED" ? <FaCheckCircle size={12} /> : <FaTimes size={12} />}
-                    This claim has been <strong className="ml-1">{selectedClaim.status.toLowerCase()}</strong>.
-                  </div>
-                )}
-              </div>
-            )}
+              )}
 
-            {modalTab === "history" && (
-              <div className="p-5">
-                {(() => {
-                  const history = getClaimHistory(selectedClaim.id);
-                  const submitted = { id: "submitted", action: "SUBMITTED", fromStatus: "—", toStatus: "PENDING", performedBy: selectedClaim.claimantName || "Student", createdAt: selectedClaim.createdAt, note: "" };
-                  const allEvents = [submitted, ...history];
-                  if (allEvents.length === 1) return (
-                    <div className="flex flex-col items-center py-10 text-gray-600">
-                      <FaHistory size={22} className="mb-3 opacity-40" />
-                      <p className="text-sm text-gray-400">No status changes yet</p>
-                    </div>
-                  );
-                  return (
-                    <div className="relative">
-                      <div className="absolute left-3 top-4 bottom-4 w-px bg-white/5" />
-                      <div className="space-y-5">
-                        {allEvents.map((event: any, idx: number) => (
-                          <div key={event.id} className="relative flex items-start gap-3.5 pl-0.5">
-                            <div className="relative z-10">
-                              {event.action === "SUBMITTED"
-                                ? <div className="w-6 h-6 rounded-full bg-cyan-400/10 border-2 border-cyan-400 flex items-center justify-center shrink-0"><FaClipboardList size={9} className="text-cyan-400" /></div>
-                                : getTimelineIcon(event.toStatus)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-white text-xs font-semibold">
-                                  {event.action === "SUBMITTED" ? "Claim Submitted" : `Changed to ${event.toStatus}`}
-                                </p>
-                                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(event.toStatus)}`}>{event.toStatus}</span>
-                                {idx === allEvents.length - 1 && <span className="text-[10px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 px-1.5 py-0.5 rounded-full">Latest</span>}
+              {/* History Tab Content */}
+              {modalTab === "history" && (
+                <div className="p-4">
+                  {(() => {
+                    const history = getClaimHistory(selectedClaim.id);
+                    const submitted = { id: "submitted", action: "SUBMITTED", fromStatus: "—", toStatus: "PENDING", performedBy: selectedClaim.claimantName || "Student", createdAt: selectedClaim.createdAt, note: "" };
+                    const allEvents = [submitted, ...history];
+                    if (allEvents.length === 1) return (
+                      <div className="flex flex-col items-center py-10 text-gray-600">
+                        <FaHistory size={22} className="mb-3 opacity-40" />
+                        <p className="text-sm text-gray-400">No status changes yet</p>
+                      </div>
+                    );
+                    return (
+                      <div className="relative">
+                        <div className="absolute left-3 top-4 bottom-4 w-px bg-white/5" />
+                        <div className="space-y-5">
+                          {allEvents.map((event: any, idx: number) => (
+                            <div key={event.id} className="relative flex items-start gap-3.5 pl-0.5">
+                              <div className="relative z-10">
+                                {event.action === "SUBMITTED"
+                                  ? <div className="w-6 h-6 rounded-full bg-cyan-400/10 border-2 border-cyan-400 flex items-center justify-center shrink-0"><FaClipboardList size={9} className="text-cyan-400" /></div>
+                                  : getTimelineIcon(event.toStatus)}
                               </div>
-                              <p className="text-gray-500 text-[10px] mt-0.5">By <span className="text-gray-300">{event.performedBy}</span></p>
-                              <p className="text-gray-700 text-[10px] mt-1">{formatDateTime(event.createdAt)} · {timeAgo(event.createdAt)}</p>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-white text-xs font-semibold">
+                                    {event.action === "SUBMITTED" ? "Claim Submitted" : `Changed to ${event.toStatus}`}
+                                  </p>
+                                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(event.toStatus)}`}>{event.toStatus}</span>
+                                  {idx === allEvents.length - 1 && <span className="text-[10px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 px-1.5 py-0.5 rounded-full">Latest</span>}
+                                </div>
+                                <p className="text-gray-500 text-[10px] mt-0.5">By <span className="text-gray-300">{event.performedBy}</span></p>
+                                <p className="text-gray-700 text-[10px] mt-1">{formatDateTime(event.createdAt)} · {timeAgo(event.createdAt)}</p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
+                    );
+                  })()}
+                </div>
+              )}
+
+            </div>
+            {/* End Shared Tab Container */}
+
           </div>
         </div>
       )}
