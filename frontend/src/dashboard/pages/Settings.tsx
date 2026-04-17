@@ -180,35 +180,6 @@ const Settings = () => {
 
       <div className="flex flex-col lg:flex-row gap-5">
 
-        {/* Sidebar — desktop */}
-        <aside className="hidden lg:block lg:w-52 shrink-0">
-          <div className="bg-gray-900 border border-white/5 rounded-2xl p-2 sticky top-4">
-            {/* User card */}
-            <div className="flex items-center gap-3 px-3 py-3 mb-1">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shrink-0">
-                <span className="text-white text-sm font-black">{initials}</span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-white text-xs font-bold truncate">{(user as any)?.username || "Admin"}</p>
-                <p className="text-gray-500 text-[10px] truncate">{(user as any)?.role || "ADMIN"}</p>
-              </div>
-            </div>
-            <div className="h-px bg-white/5 mb-1" />
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 px-3 py-2">Navigation</p>
-            <nav className="flex flex-col gap-0.5">
-              {tabs.map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-left text-xs font-semibold transition-all ${
-                    activeTab === tab.id ? `${tab.accent} border` : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
-                  }`}>
-                  <span className={activeTab === tab.id ? "" : "opacity-60"}>{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </aside>
-
         {/* Main content */}
         <main className="flex-1 min-w-0 space-y-4">
 

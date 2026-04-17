@@ -196,7 +196,7 @@ const ClaimsManagement = () => {
       <div className="flex gap-1 p-1 bg-gray-900 border border-white/5 rounded-xl w-fit">
         <button
           onClick={() => setActiveTab("claims")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold ${
             activeTab === "claims"
               ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
               : "text-gray-400 hover:text-white"
@@ -207,7 +207,7 @@ const ClaimsManagement = () => {
         </button>
         <button
           onClick={() => { setActiveTab("audit"); setAuditPage(1); }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold ${
             activeTab === "audit"
               ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
               : "text-gray-400 hover:text-white"
@@ -218,7 +218,7 @@ const ClaimsManagement = () => {
         </button>
         <button
           onClick={() => { setActiveTab("matches"); setMatchPage(1); }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold ${
             activeTab === "matches"
               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
               : "text-gray-400 hover:text-white"

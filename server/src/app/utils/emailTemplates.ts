@@ -359,7 +359,7 @@ export const smartMatchNotificationTemplate = (data: {
                     <tr>
                       <td style="padding:16px 20px;">
                         <p style="margin:0;font-size:13px;color:#5b21b6;line-height:1.6;">
-                          <strong>Is this your item?</strong> Please visit the SAS office at your earliest convenience to verify and claim your item. Bring a valid ID for identification.
+                          <strong>Is this your item?</strong> Please visit the SAS office at your earliest convenience to verify and claim your item. Bring your school ID for identification.
                         </p>
                       </td>
                     </tr>
@@ -392,4 +392,4 @@ export const smartMatchNotificationTemplate = (data: {
     </body>
     </html>
   `,
-});
+});

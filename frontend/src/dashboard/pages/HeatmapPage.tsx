@@ -185,8 +185,8 @@ const HeatmapPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
           { label: "Total Reports", value: totals.total, color: "text-cyan-400",    bg: "bg-cyan-500/10 border-cyan-500/20"      },
-          { label: "Found Items",   value: totals.found, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
-          { label: "Lost Items",    value: totals.lost,  color: "text-red-400",     bg: "bg-red-500/10 border-red-500/20"         },
+          { label: "Found Items",   value: totals.found, color: "text-emerald-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
+          { label: "Lost Items",    value: totals.lost,  color: "text-red-400",     bg: "bg-cyan-500/10 border-cyan-500/20"         },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-4 flex flex-col gap-1 ${s.bg} bg-gray-900`}>
             <p className={`text-2xl sm:text-3xl font-bold ${s.color}`}>{s.value}</p>
