@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
-  FaTimes, FaQrcode, FaCheck, FaExclamationTriangle,
+  FaTimes, FaCheck, FaExclamationTriangle,
   FaCamera, FaSync, FaUserCheck, FaSpinner,
 } from "react-icons/fa";
 
@@ -167,13 +167,7 @@ function ScanResultCard({
       </div>
 
       <div className="w-full space-y-3 mb-8">
-        {student.department && (
-          <div className="group relative overflow-hidden px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500/30 transition-all duration-300">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-blue-500/10 transition-all" />
-            <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Department / Section</p>
-            <p className="text-sm font-semibold text-blue-300 relative z-10 break-words">{student.department}</p>
-          </div>
-        )}
+         {/* Email first */}
         <div className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
           <div className="min-w-0">
             <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Email Address</p>
@@ -187,6 +181,15 @@ function ScanResultCard({
             </span>
           )}
         </div>
+
+        {/* Department second */}
+        {student.department && (
+          <div className="group relative overflow-hidden px-4 py-3 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500/30 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-blue-500/10 transition-all" />
+            <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Department</p>
+            <p className="text-sm font-semibold text-blue-300 relative z-10 break-words">{student.department}</p>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-3 w-full">
@@ -400,9 +403,6 @@ export default function BarcodeScannerModal({ onScan, onClose, useFetchStudent }
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center">
-              <FaQrcode size={13} className="text-blue-400" />
-            </div>
             <div>
               <h3 className="text-sm font-bold text-white">Scan Student ID</h3>
               <p className="text-[10px] text-gray-500">Use back camera for best results</p>

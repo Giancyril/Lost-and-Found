@@ -204,8 +204,6 @@ const Settings = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* 3 info cards — stacked on mobile, side by side on sm+ */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
                     { label: "Username", value: (user as any)?.username || "—" },
@@ -220,6 +218,42 @@ const Settings = () => {
                 </div>
               </div>
 
+              {/* Change Email | Change Username — side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <SectionCard icon={<FaIdBadge size={11} />} iconColor="text-purple-400" iconBg="bg-purple-500/10" title="Change Username" subtitle="You'll be signed out after updating">
+                  <form onSubmit={usernameForm.handleSubmit(handleChangeUsername)}>
+                    <div className="space-y-4">
+                      <div>
+                        <FieldLabel>New Username</FieldLabel>
+                        <InputField type="text" placeholder="Letters, numbers, underscores"
+                          {...usernameForm.register("username", { required: "Required", minLength: { value: 3, message: "Min. 3 characters" }, pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Letters, numbers, underscores only" } })} />
+                        {usernameForm.formState.errors.username && (
+                          <p className="text-red-400 text-xs mt-1">{usernameForm.formState.errors.username?.message as string}</p>
+                        )}
+                      </div>
+                      <SubmitButton loading={isUsernameLoading}><FaIdBadge size={10} /> Update Username</SubmitButton>
+                    </div>
+                  </form>
+                </SectionCard>
+                <SectionCard icon={<FaAt size={11} />} iconColor="text-cyan-400" iconBg="bg-cyan-500/10" title="Change Email" subtitle="You'll be signed out after updating">
+                  <form onSubmit={emailForm.handleSubmit(handleChangeEmail)}>
+                    <div className="space-y-4">
+                      <div>
+                        <FieldLabel>New Email Address</FieldLabel>
+                        <InputField type="email" placeholder="Enter new email address"
+                          {...emailForm.register("email", { required: "Required", pattern: { value: /^\S+@\S+$/i, message: "Invalid email" } })} />
+                        {emailForm.formState.errors.email && (
+                          <p className="text-red-400 text-xs mt-1">{emailForm.formState.errors.email?.message as string}</p>
+                        )}
+                      </div>
+                      <SubmitButton loading={isEmailLoading}><FaAt size={10} /> Update Email</SubmitButton>
+                    </div>
+                  </form>
+                </SectionCard>
+              </div>
+
+              {/* Change Password — full width below */}
               <SectionCard icon={<FaKey size={11} />} title="Change Password" subtitle="Update your account password">
                 <form onSubmit={passwordForm.handleSubmit(handleChangePassword)} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -261,34 +295,6 @@ const Settings = () => {
                     </div>
                   </div>
                   <SubmitButton loading={isPasswordLoading}><FaKey size={10} /> Update Password</SubmitButton>
-                </form>
-              </SectionCard>
-
-              <SectionCard icon={<FaAt size={11} />} iconColor="text-cyan-400" iconBg="bg-cyan-500/10" title="Change Email" subtitle="You'll be signed out after updating">
-                <form onSubmit={emailForm.handleSubmit(handleChangeEmail)} className="space-y-4">
-                  <div className="w-full sm:max-w-sm">
-                    <FieldLabel>New Email Address</FieldLabel>
-                    <InputField type="email" placeholder=" "
-                      {...emailForm.register("email", { required: "Required", pattern: { value: /^\S+@\S+$/i, message: "Invalid email" } })} />
-                    {emailForm.formState.errors.email && (
-                      <p className="text-red-400 text-xs mt-1">{emailForm.formState.errors.email?.message as string}</p>
-                    )}
-                  </div>
-                  <SubmitButton loading={isEmailLoading}><FaAt size={10} /> Update Email</SubmitButton>
-                </form>
-              </SectionCard>
-
-              <SectionCard icon={<FaIdBadge size={11} />} iconColor="text-purple-400" iconBg="bg-purple-500/10" title="Change Username" subtitle="You'll be signed out after updating">
-                <form onSubmit={usernameForm.handleSubmit(handleChangeUsername)} className="space-y-4">
-                  <div className="w-full sm:max-w-sm">
-                    <FieldLabel>New Username</FieldLabel>
-                    <InputField type="text" placeholder=" "
-                      {...usernameForm.register("username", { required: "Required", minLength: { value: 3, message: "Min. 3 characters" }, pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Letters, numbers, underscores only" } })} />
-                    {usernameForm.formState.errors.username && (
-                      <p className="text-red-400 text-xs mt-1">{usernameForm.formState.errors.username?.message as string}</p>
-                    )}
-                  </div>
-                  <SubmitButton loading={isUsernameLoading}><FaIdBadge size={10} /> Update Username</SubmitButton>
                 </form>
               </SectionCard>
             </>
