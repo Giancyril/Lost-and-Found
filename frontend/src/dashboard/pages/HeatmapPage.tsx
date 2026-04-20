@@ -217,14 +217,14 @@ const HeatmapPage = () => {
             </div>
             {/* View toggle */}
             <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
-              <button onClick={() => setViewMode("map")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "map" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
-                <FaMap size={10} /> Map
-              </button>
               <button onClick={() => setViewMode("list")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "list" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
                 <FaList size={10} /> List
               </button>
+              <button onClick={() => setViewMode("map")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "map" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                <FaMap size={10} /> Map
+              </button>           
             </div>
           </div>
         </div>

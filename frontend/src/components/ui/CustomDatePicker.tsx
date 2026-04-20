@@ -6,12 +6,14 @@ export function CustomDatePicker({
   onChange,
   placeholder = "Select date",
   max,
+  min,
   openUp = false,
 }: {
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
   max?: string;
+  min?: string;
   openUp?: boolean;
 }) {
   const [open,      setOpen]      = useState(false);
@@ -50,10 +52,12 @@ export function CustomDatePicker({
   };
 
   const isDisabled = (day: number) => {
-    if (!max) return false;
     const mm = String(viewMonth + 1).padStart(2, "0");
     const dd = String(day).padStart(2, "0");
-    return `${viewYear}-${mm}-${dd}` > max;
+    const dateStr = `${viewYear}-${mm}-${dd}`;
+    if (max && dateStr > max) return true;
+    if (min && dateStr < min) return true;
+    return false;
   };
 
   const pick = (day: number) => {
@@ -76,32 +80,35 @@ export function CustomDatePicker({
   const display = (() => {
     if (!value) return placeholder;
     const [y, m, d] = value.split("-").map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" });
+    return new Date(y, m - 1, d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
   })();
 
   return (
     <div ref={ref} className="relative">
       <div
         onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center gap-2.5 px-4 py-2.5 bg-gray-800/60 border rounded-lg cursor-pointer select-none transition-all ${
+        className={`w-full flex items-center gap-2 px-3 py-2 bg-gray-800/60 border rounded-xl cursor-pointer select-none transition-all ${
           open ? "border-blue-500 ring-2 ring-blue-500/60" : "border-gray-700 hover:border-gray-600"
         } ${value ? "text-white" : "text-gray-500"}`}
       >
-        <FaCalendarAlt size={12} className={value ? "text-blue-400 shrink-0" : "text-gray-600 shrink-0"} />
-        <span className="text-sm flex-1 truncate">{display}</span>
+        <FaCalendarAlt size={11} className={value ? "text-blue-400 shrink-0" : "text-gray-600 shrink-0"} />
+        <span className="text-xs flex-1 truncate whitespace-nowrap">{display}</span>
         {value && (
           <span
             role="button"
             onClick={e => { e.stopPropagation(); onChange(""); }}
             className="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer shrink-0"
           >
-            <FaTimes size={10} />
+            <FaTimes size={9} />
           </span>
         )}
       </div>
 
       {open && (
-        <div className={`absolute z-50 ${openUp ? "bottom-full mb-2" : "top-full mt-2"} left-0 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 w-72 overflow-hidden`}>
+        <div className={`absolute z-[999] ${openUp ? "bottom-full mb-2" : "top-full mt-2"} bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 w-72 overflow-hidden
+          /* mobile: center on screen, desktop: align left */
+          left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0
+        `}>
           <div className="p-4">
             {/* Month/Year nav */}
             <div className="flex items-center justify-between mb-4">

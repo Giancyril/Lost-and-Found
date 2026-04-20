@@ -5,6 +5,7 @@ import {
   FaClock, FaTrophy,
 } from "react-icons/fa";
 import { useAdminStatsQuery, useGetLocationStatsQuery } from "../../redux/api/api";
+import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 
 type Period = "week" | "month" | "custom";
 
@@ -128,27 +129,33 @@ const ReportPage = () => {
             ))}
           </div>
 
-          {/* --- SMOOTH TRANSITION DATE INPUTS --- */}
-          <div 
-            className={`flex items-center gap-2 overflow-hidden transition-all duration-500 ease-in-out ${
-              period === "custom" 
-                ? "max-w-[500px] opacity-100 translate-x-0" 
-                : "max-w-0 opacity-0 -translate-x-4 pointer-events-none"
+         {/* --- SMOOTH TRANSITION DATE INPUTS --- */}
+          <div
+            className={`flex items-center gap-2 transition-all duration-500 ease-in-out whitespace-nowrap ${
+              period === "custom"
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none"
             }`}
+            style={{ overflow: period === "custom" ? "visible" : "hidden", maxWidth: period === "custom" ? "600px" : "0px" }}
           >
-            <input 
-              type="date" 
-              value={fromDate} 
-              onChange={e => setFromDate(e.target.value)}
-              className="bg-gray-800/40 border border-white/10 rounded-xl px-3 py-1.5 text-white text-[11px] focus:outline-none focus:border-cyan-500/40 transition-colors cursor-pointer [color-scheme:dark]" 
-            />
-            <span className="text-gray-600 text-[10px] font-medium uppercase tracking-wider">to</span>
-            <input 
-              type="date" 
-              value={toDate} 
-              onChange={e => setToDate(e.target.value)}
-              className="bg-gray-800/40 border border-white/10 rounded-xl px-3 py-1.5 text-white text-[11px] focus:outline-none focus:border-cyan-500/40 transition-colors cursor-pointer [color-scheme:dark]" 
-            />
+            <div className="w-36 sm:w-40 shrink-0">
+              <CustomDatePicker
+                value={fromDate}
+                onChange={setFromDate}
+                max={toDate || new Date().toISOString().split("T")[0]}
+                placeholder="From date"
+              />
+            </div>
+            <span className="text-gray-600 text-[10px] font-medium uppercase tracking-wider shrink-0">to</span>
+            <div className="w-36 sm:w-40 shrink-0">
+              <CustomDatePicker
+                value={toDate}
+                onChange={setToDate}
+                min={fromDate}
+                max={new Date().toISOString().split("T")[0]}
+                placeholder="To date"
+              />
+            </div>
           </div>
 
           {/* Print & Download Buttons */}
