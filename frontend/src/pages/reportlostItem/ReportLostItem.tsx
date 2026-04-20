@@ -11,7 +11,6 @@ import {
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
-import { useUserVerification } from "../../auth/auth";
 import {
   FaQrcode, FaUserCheck, FaTimes, FaSearch, FaSpinner
 } from "react-icons/fa";
@@ -125,9 +124,37 @@ const StepIndicator = ({ current }: { current: number }) => (
   </div>
 );
 
+// ── Help Modal Pages ──────────────────────────────────────────────────────────
+const HELP_PAGES = [
+  // Page 0 — Fetch Student Info
+  {
+    tag: <><FaSearch size={8} /> Fetch Student Info</>,
+    steps: [
+      { n: "1", title: "Enter a Name or Email", desc: "Type the student's full name or institutional email in the fields above." },
+      { n: "2", title: "Click Fetch Student Info", desc: "The system will search the student masterlist and auto-fill the fields if a match is found." },
+      { n: "3", title: "Verify the Details", desc: "Check that the name, email, and department are correct before proceeding." },
+    ],
+    tip: null,
+  },
+  // Page 1 — Scan ID (all steps together)
+  {
+    tag: <><FaQrcode size={8} /> Scan ID</>,
+    steps: [
+      { n: "1", title: "Click Scan ID", desc: "Press the Scan ID button to open the camera scanner." },
+      { n: "2", title: "Point at the Barcode", desc: "Hold the student's ID barcode steady within the scanning frame. Use the back camera for best results." },
+      { n: "3", title: "Auto-fill Complete", desc: "Once scanned, the student's name, email, and department will be automatically filled in." },
+    ],
+    tip: (
+      <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/20">
+        <p className="text-gray-400 text-[11px] leading-relaxed text-justify">
+          Make sure <span className="text-blue-400 font-semibold">camera permission</span> is enabled for Scan ID. If the scan fails, use <span className="text-blue-400 font-semibold">Fetch Student Info</span> instead.
+        </p>
+      </div>
+    ),
+  },
+];
+
 const ReportLostItem = () => {
-  const users: any = useUserVerification();
-  const isAdmin = users?.role === "ADMIN";
   const { register, formState: { errors }, reset, trigger, getValues, control, setValue } = useForm();
 
   const [step, setStep] = useState(0);
@@ -135,6 +162,10 @@ const ReportLostItem = () => {
   const [selectedMenucategoryId, setselectedMenucategoryId] = useState("");
   const [categoryTouched, setCategoryTouched] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [helpPage, setHelpPage] = useState(0);
+
+  const closeHelp = () => { setShowHelpModal(false); setHelpPage(0); };
+  const openHelp  = () => { setHelpPage(0); setShowHelpModal(true); };
 
   const handleMenuChange = (menuName: string, categoryId: string) => {
     setselectedMenu(menuName);
@@ -259,16 +290,18 @@ const ReportLostItem = () => {
     } catch { toast.error("Failed to report lost item"); }
   };
 
+  const totalHelpPages = HELP_PAGES.length;
+  const currentHelpPage = HELP_PAGES[helpPage];
+  const isLastHelpPage = helpPage === totalHelpPages - 1;
+
   return (
     <>
-      {/* ── FIXED: px-2 sm:px-4 prevents edge clipping on mobile ── */}
       <section
         className="min-h-screen flex items-center justify-center bg-gray-950 py-10 px-2 sm:px-4"
         style={{ backgroundImage: "radial-gradient(ellipse at 60% 0%, rgba(59,130,246,0.07) 0%, transparent 60%)" }}
       >
         <div className="w-full max-w-2xl mx-auto">
           <div className="bg-gray-900 rounded-2xl border border-gray-800">
-            {/* ── FIXED: p-4 sm:p-10 — tighter horizontal padding on mobile ── */}
             <div className="p-4 sm:p-10">
 
               {/* Header */}
@@ -307,7 +340,7 @@ const ReportLostItem = () => {
                     <div className="flex justify-end items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setShowHelpModal(true)}
+                        onClick={openHelp}
                         className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-400 hover:text-white flex items-center justify-center transition-all"
                         title="How to use"
                       >
@@ -322,40 +355,59 @@ const ReportLostItem = () => {
                         {isFetchingByDetails ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
                         Fetch Student Info
                       </button>
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => setShowScanner(true)}
-                          className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider whitespace-nowrap active:scale-95"
-                        >
-                          <FaQrcode className="w-2.5 h-2.5" /> Scan Student ID
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowScanner(true)}
+                        className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider whitespace-nowrap active:scale-95"
+                      >
+                        <FaQrcode className="w-2.5 h-2.5" /> Scan Student ID
+                      </button>
                     </div>
 
-                    {/* Merged Help Modal */}
+                    {/* ── Help Modal ── */}
                     {showHelpModal && (
                       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl">
-                          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-                            <h3 className="text-sm font-bold text-white">How to Identify a Student</h3>
-                            <button onClick={() => setShowHelpModal(false)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                        <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col">
+
+                          {/* Modal header */}
+                          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
+                            <h3 className="text-sm font-bold text-white">How to Use</h3>
+                            <button
+                              onClick={closeHelp}
+                              className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                            >
                               <FaTimes size={12} />
                             </button>
                           </div>
-                          <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
-                            <div>
-                              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                                <FaSearch size={8} /> Fetch Student Info
+
+                          {/* Page indicator dots */}
+                          <div className="flex items-center justify-center gap-1.5 pt-4 px-5 shrink-0">
+                            {HELP_PAGES.map((_, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setHelpPage(i)}
+                                className={`h-1.5 rounded-full transition-all duration-300 ${
+                                  i === helpPage ? "bg-blue-400 w-5" : "bg-gray-700 w-1.5 hover:bg-gray-500"
+                                }`}
+                              />
+                            ))}
+                          </div>
+
+                          {/* Page content — fixed height, no scroll */}
+                          <div className="px-5 py-5 flex-1 flex flex-col justify-between min-h-[260px]">
+                            <div className="space-y-4">
+                              {/* Section tag */}
+                              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
+                                {currentHelpPage.tag}
                               </p>
+
+                              {/* Steps */}
                               <div className="space-y-3">
-                                {[
-                                  { step: "1", title: "Enter a Name or Email", desc: "Type the student's full name or institutional email in the fields above." },
-                                  { step: "2", title: "Click Fetch Student Info", desc: "The system will search the student masterlist and auto-fill the fields if a match is found." },
-                                  { step: "3", title: "Verify the Details", desc: "Check that the name, email, and department are correct before proceeding." },
-                                ].map(({ step, title, desc }) => (
-                                  <div key={step} className="flex gap-3">
-                                    <div className="shrink-0 w-6 h-6 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-black">{step}</div>
+                                {currentHelpPage.steps.map(({ n, title, desc }) => (
+                                  <div key={n} className="flex gap-3">
+                                    <div className="shrink-0 w-6 h-6 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-black">
+                                      {n}
+                                    </div>
                                     <div>
                                       <p className="text-white text-xs font-semibold">{title}</p>
                                       <p className="text-gray-500 text-[11px] mt-0.5 leading-relaxed">{desc}</p>
@@ -363,39 +415,55 @@ const ReportLostItem = () => {
                                   </div>
                                 ))}
                               </div>
-                            </div>
-                            <div className="border-t border-gray-800" />
-                            <div>
-                              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                                <FaQrcode size={8} /> Scan ID
-                              </p>
-                              <div className="space-y-3">
-                                {[
-                                  { step: "1", title: "Click Scan ID", desc: "Press the Scan ID button to open the camera scanner." },
-                                  { step: "2", title: "Point at the Barcode", desc: "Hold the student's ID barcode steady within the scanning frame. Use the back camera for best results." },
-                                  { step: "3", title: "Auto-fill Complete", desc: "Once scanned, the student's name, email, and department will be automatically filled in." },
-                                ].map(({ step, title, desc }) => (
-                                  <div key={step} className="flex gap-3">
-                                    <div className="shrink-0 w-6 h-6 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-black">{step}</div>
-                                    <div>
-                                      <p className="text-white text-xs font-semibold">{title}</p>
-                                      <p className="text-gray-500 text-[11px] mt-0.5 leading-relaxed">{desc}</p>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/20">
-                              <p className="text-gray-400 text-[11px] leading-relaxed">
-                                Make sure <span className="text-blue-400 font-semibold">camera permission</span> is enabled for Scan ID. If the scan fails, use <span className="text-blue-400 font-semibold">Fetch Student Info</span> instead.
-                              </p>
+
+                              {/* Optional tip */}
+                              {currentHelpPage.tip && (
+                                <div className="mt-3">{currentHelpPage.tip}</div>
+                              )}
                             </div>
                           </div>
-                          <div className="px-5 pb-5 pt-3 border-t border-gray-800">
-                            <button onClick={() => setShowHelpModal(false)} className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all">
-                              Got it
+
+                          {/* Footer nav */}
+                          <div className="px-5 pb-5 pt-2 border-t border-gray-800 shrink-0 flex items-center justify-between gap-2">
+                            {/* Back button */}
+                            <button
+                              onClick={() => setHelpPage((p) => Math.max(0, p - 1))}
+                              disabled={helpPage === 0}
+                              className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                              Back
                             </button>
+
+                            <div className="flex items-center gap-2">
+                              {/* Skip — only on non-last pages */}
+                              {!isLastHelpPage && (
+                                <button
+                                  onClick={closeHelp}
+                                  className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors"
+                                >
+                                  Skip
+                                </button>
+                              )}
+
+                              {/* Next / Got it */}
+                              {isLastHelpPage ? (
+                                <button
+                                  onClick={closeHelp}
+                                  className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors"
+                                >
+                                  Got it
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setHelpPage((p) => p + 1)}
+                                  className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors"
+                                >
+                                  Next
+                                </button>
+                              )}
+                            </div>
                           </div>
+
                         </div>
                       </div>
                     )}
@@ -481,7 +549,7 @@ const ReportLostItem = () => {
                     <Field label="Description" required error={errors.description?.message as string} icon={<IconText />}>
                       <textarea {...register("description", { required: "Description is required" })}
                         rows={1} className={`${inputCls} resize-none`}
-                        placeholder="Describe the item color, brand, size,etc." />
+                        placeholder="Describe the item color, brand, size, etc." />
                     </Field>
                     {selectedMenucategoryId && (
                       <ItemMatchSuggestions
