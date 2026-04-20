@@ -42,9 +42,26 @@ const Faq = () => {
   ];
 
   return (
-    <div className="py-16 lg:py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-      <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
+    <div className="py-16 lg:py-20 relative overflow-hidden bg-gray-950">
+
+      {/* ── Background — exact match to Banner ── */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-gray-950 to-gray-900" />
+        <div
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.05) 60px, rgba(255,255,255,0.05) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.05) 60px, rgba(255,255,255,0.05) 61px)`,
+          }}
+        />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl" />
+      </div>
+
+      {/* ── Content ── */}
+      <div className="relative z-10 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12">
+
+          {/* Left — heading */}
           <div className="flex flex-col text-left lg:basis-1/2">
             <p className="inline-block font-semibold text-blue-400 mb-4">FAQ</p>
             <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
@@ -53,24 +70,25 @@ const Faq = () => {
                 Questions
               </span>
             </h2>
-            <p className="text-gray-300 text-lg">
+            <p className="text-gray-400 text-lg">
               Everything you need to know about the NBSC SAS Lost & Found system.
             </p>
           </div>
 
+          {/* Right — accordion */}
           <ul className="lg:basis-1/2 space-y-2">
             {faqs.map((faq, index) => (
               <li
                 key={index}
-                className="bg-gradient-to-br from-gray-800/50 via-gray-900/50 to-black/50 rounded-lg border border-gray-700 overflow-hidden"
+                className="bg-white/5 border border-white/10 rounded-lg overflow-hidden backdrop-blur-sm"
               >
                 <button
-                  className="relative flex gap-4 items-center w-full p-6 text-base font-semibold text-left hover:bg-gray-700/30 transition-all duration-200"
+                  className="relative flex gap-4 items-center w-full p-6 text-base font-semibold text-left hover:bg-white/5 transition-all duration-200"
                   onClick={() => toggleFaq(index)}
                   aria-expanded={expandedIndex === index}
                 >
                   <span className="flex-1 text-white text-left">{faq.question}</span>
-                  <div className="text-blue-400">
+                  <div className="text-blue-400 shrink-0">
                     {expandedIndex === index ? <FaMinus /> : <FaPlus />}
                   </div>
                 </button>
@@ -80,16 +98,17 @@ const Faq = () => {
                   }`}
                 >
                   <div
-                    className={`px-6 pb-6 leading-relaxed transform transition-transform duration-500 ${
+                    className={`px-6 pb-6 transform transition-transform duration-500 ${
                       expandedIndex === index ? "translate-y-0" : "-translate-y-4"
                     }`}
                   >
-                    <div className="text-gray-300 leading-relaxed">{faq.answer}</div>
+                    <div className="text-gray-400 leading-relaxed">{faq.answer}</div>
                   </div>
                 </div>
               </li>
             ))}
           </ul>
+
         </div>
       </div>
     </div>

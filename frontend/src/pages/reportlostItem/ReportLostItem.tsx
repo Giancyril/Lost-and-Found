@@ -407,7 +407,10 @@ const ReportLostItem = () => {
                          <div className={`relative flex items-center ${inputCls} ring-0 focus-within:ring-2 focus-within:ring-blue-500/50`}>
                            <span className="text-gray-500 mr-2"><IconUser size={16} /></span>
                            <input {...register("reporterName", { required: "Your name is required" })}
-                             type="text" className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm" placeholder=" " />
+                              type="text"
+                              autoComplete="off"
+                              className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm" 
+                              placeholder=" " />
                          </div>
                          {errors.reporterName && <p className="text-red-400 text-xs mt-1">{errors.reporterName.message as string}</p>}
                        </div>
@@ -416,29 +419,24 @@ const ReportLostItem = () => {
                          <div className={`relative flex items-center ${inputCls} ring-0 focus-within:ring-2 focus-within:ring-blue-500/50`}>
                            <span className="text-gray-500 mr-2"><IconMail size={16} /></span>
                            <input {...register("schoolEmail", {
-                             required: "School email is required",
-                             pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
-                           })} type="email" className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm" placeholder=" " />
+                              required: "School email is required",
+                              pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+                            })} 
+                              type="email"
+                              autoComplete="off"
+                              className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm" 
+                              placeholder=" " />
                          </div>
                          {errors.schoolEmail && <p className="text-red-400 text-[10px] mt-1">{errors.schoolEmail.message as string}</p>}
                        </div>
                     </div>
 
                     <div className="space-y-1.5 mt-2">
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Department / Course</label>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Department</label>
                         <div className={`relative flex items-center ${inputCls} bg-gray-800/40 opacity-80 ring-0`}>
                            <span className="text-gray-500 mr-2"><IconBuilding size={16} /></span>
                            <input {...register("department")} type="text" readOnly className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm italic" placeholder="Auto-filled from masterlist..." />
                         </div>
-                    </div>
-
-                    <div className="rounded-xl bg-blue-900/10 border border-blue-500/20 px-4 py-3 flex gap-3 items-start">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
-                        <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
-                      </svg>
-                      <p className="text-blue-300/80 text-xs leading-relaxed font-medium">
-                        Your institutional email is required to verify your identity and notify you when your item is found.
-                      </p>
                     </div>
                   </div>
                 )}
@@ -498,7 +496,7 @@ const ReportLostItem = () => {
                     </div>
                     <Field label="Description" required error={errors.description?.message as string} icon={<IconText />}>
                       <textarea {...register("description", { required: "Description is required" })}
-                        rows={3}
+                        rows={1}
                         className={`${inputCls} resize-none`}
                         placeholder="Describe the item — color, brand, size, distinguishing marks, etc." />
                     </Field>
