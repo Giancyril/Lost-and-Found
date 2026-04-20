@@ -594,7 +594,7 @@ const LostItemsPage = () => {
               const pages = [];
               const max = 5;
               let start = Math.max(1, currentPage - Math.floor(max / 2));
-              let end   = Math.min(totalPages, start + max - 1);
+              const end   = Math.min(totalPages, start + max - 1);
               if (end - start + 1 < max) start = Math.max(1, end - max + 1);
               if (start > 1) {
                 pages.push(<button key={1} onClick={() => setCurrentPage(1)} className="px-3 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">1</button>);

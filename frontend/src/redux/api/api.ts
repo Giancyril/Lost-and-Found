@@ -267,6 +267,17 @@ const api = baseApi.injectEndpoints({
       query: (id: string) => ({ url: `/bulletin-posts/${id}/resolve`, method: "PUT" }),
       invalidatesTags: ["bulletinPosts"],
     }),
+    
+    // students
+    getStudentById: builder.query({
+      query: (id: string) => ({ url: `/students/${id}`, method: "GET" }),
+    }),
+    getStudentByDetails: builder.query({
+      query: (params: { name?: string; email?: string }) => ({ url: "/students/details", method: "GET", params }),
+    }),
+    upsertStudent: builder.mutation({
+      query: (data: any) => ({ url: "/students/upsert", method: "POST", body: data }),
+    }),
   }),
 });
 
@@ -329,4 +340,9 @@ export const {
   useDeleteBulletinTipMutation,
   useResolveBulletinPostMutation,
   useGetMatchNotificationsQuery,
+  useGetStudentByIdQuery,
+  useLazyGetStudentByIdQuery,
+  useGetStudentByDetailsQuery,
+  useLazyGetStudentByDetailsQuery,
+  useUpsertStudentMutation,
 } = api;

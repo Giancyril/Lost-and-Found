@@ -1,12 +1,24 @@
 import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
-import { toast } from "react-toastify";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { useState, useRef } from "react";
-import { useCategoryQuery, useCreateLostItemMutation } from "../../redux/api/api";
+import {
+  useCategoryQuery,
+  useCreateLostItemMutation,
+  useGetStudentByIdQuery,
+  useLazyGetStudentByDetailsQuery,
+} from "../../redux/api/api";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
+import { useUserVerification } from "../../auth/auth";
+import {
+  FaQrcode, FaUserCheck, FaTimes, FaSearch, FaSpinner
+} from "react-icons/fa";
+import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
+import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
+import imageCompression from "browser-image-compression";
+import { logToSheet } from "../../utils/sheetsLogger";
 
 const MAX_SIZE_MB = 5;
 
@@ -46,41 +58,47 @@ const inputCls =
   "w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500 transition-all duration-200 text-sm";
 
 // ── Icons ───────────────────────────────────────────────────────────────────
-const IconUser = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconUser = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
   </svg>
 );
-const IconMail = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconMail = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
   </svg>
 );
-const IconTag = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconTag = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" />
   </svg>
 );
-const IconText = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconText = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
   </svg>
 );
-const IconPin = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconPin = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" />
   </svg>
 );
-const IconCalendar = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconCalendar = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" />
   </svg>
 );
-const IconGrid = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconGrid = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" />
   </svg>
 );
+const IconBuilding = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect width="16" height="20" x="4" y="2" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" />
+  </svg>
+);
+
 const IconImage = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
@@ -96,13 +114,12 @@ const StepIndicator = ({ current }: { current: number }) => (
       <div key={i} className="flex items-center">
         <div className="flex flex-col items-center gap-1">
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300 ${
-              i < current
-                ? "bg-blue-600 border-blue-600 text-white"
-                : i === current
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300 ${i < current
+              ? "bg-blue-600 border-blue-600 text-white"
+              : i === current
                 ? "bg-blue-600/20 border-blue-500 text-blue-400"
                 : "bg-gray-800 border-gray-700 text-gray-600"
-            }`}
+              }`}
           >
             {i < current ? (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -126,6 +143,8 @@ const StepIndicator = ({ current }: { current: number }) => (
 
 // ── Main component ──────────────────────────────────────────────────────────
 const ReportLostItem = () => {
+  const users: any = useUserVerification();
+  const isAdmin = users?.role === "ADMIN";
   const { register, formState: { errors }, reset, trigger, getValues, control, setValue } = useForm();
 
   const [step, setStep] = useState(0);
@@ -141,6 +160,79 @@ const ReportLostItem = () => {
   const [createLostItem, { isLoading }] = useCreateLostItemMutation();
   const { data: Category } = useCategoryQuery("");
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedStudent, setScannedStudent] = useState<ScannedStudent | null>(null);
+  const scannedAtRef = useRef<string>("");
+
+  const useFetchStudent = (id: string) => {
+  const trimmed = id?.trim() ?? "";
+  const isValidId = Boolean(
+    trimmed &&
+    trimmed.length >= 4 &&
+    // skip ISO date format YYYY-MM-DD only
+    !/^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+  );
+  return useGetStudentByIdQuery(trimmed, { skip: !isValidId });
+};
+
+  const handleScan = (student: ScannedStudent) => {
+    const scanTime = new Date().toISOString();
+    scannedAtRef.current = scanTime;
+    setScannedStudent(student);
+    setValue("reporterName", student.name);
+    setValue("schoolEmail", student.email);
+    setValue("department", student.department || "");
+    setShowScanner(false);
+    if (student.name && student.name !== "Unknown Student") {
+      toast.success(`Student identified: ${student.name}`);
+    } else {
+      toast.success(`ID Scanned: ${student.id}`);
+    }
+  };
+
+  const clearScan = () => {
+    setScannedStudent(null);
+    scannedAtRef.current = "";
+    setValue("reporterName", "");
+    setValue("schoolEmail", "");
+    setValue("department", "");
+  };
+
+  const [getStudentByDetails, { isFetching: isFetchingByDetails }] = useLazyGetStudentByDetailsQuery();
+
+  const handleFetchDetails = async () => {
+  const name = getValues("reporterName");
+  const email = getValues("schoolEmail");
+  if (!name && !email) {
+    toast.info("Please enter a name or email to fetch details");
+    return;
+  }
+  // Prevent sending date strings as name
+  if (name && /^\d{8}$|^\d{4}-\d{2}-\d{2}$/.test(name.trim())) {
+    toast.warn("Please enter a valid name");
+    return;
+  }
+  try {
+    const res = await getStudentByDetails({ name, email }).unwrap();
+    const student = res.data ?? res;
+    if (student) {
+      setValue("reporterName", student.name);
+      setValue("schoolEmail", student.email);
+      setValue("department", student.department || "");
+      setScannedStudent({
+        id: student.id,
+        name: student.name,
+        email: student.email,
+        department: student.department || "",
+        raw: "manual_fetch"
+      });
+      toast.success(`Found: ${student.name}`);
+    }
+  } catch {
+    toast.error("Student not found in masterlist");
+  }
+};
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
@@ -202,13 +294,40 @@ const ReportLostItem = () => {
         reporterName: data.reporterName || "",
         schoolEmail: data.schoolEmail || "",
       });
-      if (res.error || res?.data?.success === false) { toast.error("Failed to report lost item"); return; }
+
+      if (res.error || res?.data?.success === false) {
+        toast.error("Failed to report lost item");
+        return;
+      }
+
+      const reportId = res.data.id || res.data.data?.id;
+
+      // ── Log to Sheets ───────────────────────────────────────────────────
+      logToSheet({
+        sheetName: "Lost Items",
+        studentId: scannedStudent?.id || "N/A",
+        reporterName: data.reporterName || "",
+        email: data.schoolEmail || "",
+        itemName: data.lostItemName,
+        description: data.description,
+        location: data.location,
+        date: startDate,
+        type: "LOST",
+        reportId: reportId || "UNKNOWN",
+        scannedAt: scannedAtRef.current || new Date().toISOString(),
+      }).catch(console.error);
+
       toast.success("Lost item reported successfully");
       reset();
-      setSelectedFile(null); setPreview(""); setUploadError("");
-      setselectedMenu(""); setselectedMenucategoryId("");
+      setSelectedFile(null);
+      setPreview("");
+      setUploadError("");
+      setselectedMenu("");
+      setselectedMenucategoryId("");
       setCategoryTouched(false);
       setStep(0);
+      setScannedStudent(null);
+      scannedAtRef.current = "";
     } catch {
       toast.error("Failed to report lost item");
     }
@@ -221,22 +340,29 @@ const ReportLostItem = () => {
         <div className="w-full max-w-2xl mx-auto">
 
           {/* Card */}
-          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800"
-            style={{ borderTop: "2px solid #3b82f6", boxShadow: "0 0 30px rgba(59,130,246,0.15), 0 25px 50px rgba(0,0,0,0.5)" }}>
+          <div className="bg-gray-900 rounded-2xl border border-gray-800">
 
             <div className="p-6 sm:p-10">
 
               {/* Header */}
-              <div className="mb-6 text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600/15 border border-blue-500/30 mb-4">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /><path d="M11 8v6M8 11h6" />
-                  </svg>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4">
+
+                  <div>
+                    <h1 className="text-2xl font-bold text-white tracking-tight">Report a Lost Item</h1>
+                    <p className="text-gray-500 text-sm mt-1">
+                      Help us reunite you with your belongings. Fill in the details carefully.
+                    </p>
+                  </div>
                 </div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Report a Lost Item</h1>
-                <p className="text-gray-500 text-sm mt-1 max-w-sm mx-auto">
-                  Help us reunite you with your belongings. Fill in the details carefully.
-                </p>
+                {step === 0 && isAdmin && (
+                  <button
+                    onClick={() => setShowScanner(true)}
+                    className="inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[10px] sm:text-xs font-bold sm:font-semibold rounded-lg sm:rounded-xl transition-all whitespace-nowrap"
+                  >
+                    <FaQrcode className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Scan ID
+                  </button>
+                )}
               </div>
 
               <StepIndicator current={step} />
@@ -245,24 +371,72 @@ const ReportLostItem = () => {
 
                 {/* ── Step 0: Reporter Info ── */}
                 {step === 0 && (
-                  <div className="space-y-5">
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <Field label="Your Name" required error={errors.reporterName?.message as string} icon={<IconUser />}>
-                        <input {...register("reporterName", { required: "Your name is required" })}
-                          type="text" className={inputCls} placeholder=" " />
-                      </Field>
-                      <Field label="Institutional Email" required error={errors.schoolEmail?.message as string} icon={<IconMail />}>
-                        <input {...register("schoolEmail", {
-                          required: "School email is required",
-                          pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
-                        })} type="email" className={inputCls} placeholder=" " />
-                      </Field>
+                  <div className="space-y-6">
+                    {scannedStudent && (
+                      <div className="flex items-center justify-between p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 animate-fadeIn">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
+                            <FaUserCheck size={18} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white uppercase">{scannedStudent.name}</p>
+                            <p className="text-[10px] font-bold text-blue-500/60 uppercase tracking-widest">Student ID: {scannedStudent.id}</p>
+                          </div>
+                        </div>
+                        <button onClick={clearScan} className="p-2 text-gray-500 hover:text-red-400 transition-colors">
+                          <FaTimes size={14} />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end mb-4">
+                      <button
+                        type="button"
+                        onClick={handleFetchDetails}
+                        disabled={isFetchingByDetails}
+                        className="px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {isFetchingByDetails ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
+                        Fetch Student Info
+                      </button>
                     </div>
-                    <div className="rounded-lg bg-blue-950/40 border border-blue-800/40 px-4 py-3 flex gap-3 items-start">
+
+                    <div className="grid gap-5 sm:grid-cols-2">
+                       <div className="space-y-1.5">
+                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] block">Your Name *</label>
+                         <div className={`relative flex items-center ${inputCls} ring-0 focus-within:ring-2 focus-within:ring-blue-500/50`}>
+                           <span className="text-gray-500 mr-2"><IconUser size={16} /></span>
+                           <input {...register("reporterName", { required: "Your name is required" })}
+                             type="text" className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm" placeholder=" " />
+                         </div>
+                         {errors.reporterName && <p className="text-red-400 text-xs mt-1">{errors.reporterName.message as string}</p>}
+                       </div>
+                       <div className="space-y-1.5">
+                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] block">Institutional Email *</label>
+                         <div className={`relative flex items-center ${inputCls} ring-0 focus-within:ring-2 focus-within:ring-blue-500/50`}>
+                           <span className="text-gray-500 mr-2"><IconMail size={16} /></span>
+                           <input {...register("schoolEmail", {
+                             required: "School email is required",
+                             pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+                           })} type="email" className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm" placeholder=" " />
+                         </div>
+                         {errors.schoolEmail && <p className="text-red-400 text-[10px] mt-1">{errors.schoolEmail.message as string}</p>}
+                       </div>
+                    </div>
+
+                    <div className="space-y-1.5 mt-2">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Department / Course</label>
+                        <div className={`relative flex items-center ${inputCls} bg-gray-800/40 opacity-80 ring-0`}>
+                           <span className="text-gray-500 mr-2"><IconBuilding size={16} /></span>
+                           <input {...register("department")} type="text" readOnly className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm italic" placeholder="Auto-filled from masterlist..." />
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl bg-blue-900/10 border border-blue-500/20 px-4 py-3 flex gap-3 items-start">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
                         <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
                       </svg>
-                      <p className="text-blue-300/80 text-xs leading-relaxed">
+                      <p className="text-blue-300/80 text-xs leading-relaxed font-medium">
                         Your institutional email is required to verify your identity and notify you when your item is found.
                       </p>
                     </div>
@@ -347,9 +521,8 @@ const ReportLostItem = () => {
                     <Field label="Item Photo" required error={uploadError} icon={<IconImage />}>
                       {!preview ? (
                         <div
-                          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-200 ${
-                            isDragging ? "border-blue-500 bg-blue-900/10" : "border-gray-700 bg-gray-800/40 hover:border-blue-500/70 hover:bg-gray-800/70"
-                          }`}
+                          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-200 ${isDragging ? "border-blue-500 bg-blue-900/10" : "border-gray-700 bg-gray-800/40 hover:border-blue-500/70 hover:bg-gray-800/70"
+                            }`}
                           onClick={() => fileInputRef.current?.click()}
                           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                           onDragLeave={() => setIsDragging(false)}
@@ -423,7 +596,7 @@ const ReportLostItem = () => {
                   )}
                   {step < 2 ? (
                     <button type="button" onClick={nextStep}
-                      className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-blue-900/30">
+                      className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg">
                       Continue
                     </button>
                   ) : isLoading ? (
@@ -432,7 +605,7 @@ const ReportLostItem = () => {
                     </div>
                   ) : (
                     <button type="button" onClick={onSubmit}
-                      className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-blue-900/30">
+                      className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg">
                       Submit Report
                     </button>
                   )}
@@ -448,6 +621,13 @@ const ReportLostItem = () => {
         </div>
       </section>
       <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
+      {showScanner && (
+        <BarcodeScannerModal
+          onScan={handleScan}
+          onClose={() => setShowScanner(false)}
+          useFetchStudent={useFetchStudent}
+        />
+      )}
     </>
   );
 };

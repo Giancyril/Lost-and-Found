@@ -1,21 +1,45 @@
 import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import Modals from "../../components/modal/Modal";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import { useState, useRef } from "react";
 import {
   useCategoryQuery,
   useCreateFoundItemMutation,
   useUploadItemImagesMutation,
+  useGetStudentByIdQuery,
+  useLazyGetStudentByDetailsQuery,
 } from "../../redux/api/api";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useUserVerification } from "../../auth/auth";
-import { FaBoxOpen, FaMapMarkerAlt, FaPhone } from "react-icons/fa";
+import {
+  FaBoxOpen, FaMapMarkerAlt, FaPhone, FaUserCheck,
+  FaQrcode, FaTimes, FaSearch, FaSpinner
+} from "react-icons/fa";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
+import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
+import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
+import imageCompression from "browser-image-compression";
+import { logToSheet } from "../../utils/sheetsLogger";
 
 const MAX_IMAGES = 6;
 const MAX_SIZE_MB = 5;
+
+const inputCls =
+  "w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/60 focus:border-emerald-500 transition-all duration-200 text-sm";
+
+const IconUser = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const IconBuilding = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect width="16" height="20" x="4" y="2" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" />
+  </svg>
+);
 
 const ReportFoundItem = () => {
   const users: any = useUserVerification();
@@ -27,6 +51,8 @@ const ReportFoundItem = () => {
     formState: { errors },
     reset,
     control,
+    setValue,
+    getValues,
   } = useForm();
 
   const [selectedMenu, setselectedMenu] = useState("");
@@ -84,6 +110,68 @@ const ReportFoundItem = () => {
     setPreviews(combined.map((f) => URL.createObjectURL(f)));
   };
 
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedStudent, setScannedStudent] = useState<ScannedStudent | null>(null);
+  const scannedAtRef = useRef<string>("");
+
+  const useFetchStudent = (id: string) => {
+  const trimmed = id?.trim() ?? "";
+  const isValidId = Boolean(
+    trimmed &&
+    trimmed.length >= 4 &&
+    // skip ISO date format YYYY-MM-DD only
+    !/^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+  );
+  return useGetStudentByIdQuery(trimmed, { skip: !isValidId });
+};
+
+  const handleScan = (student: ScannedStudent) => {
+    const scanTime = new Date().toISOString();
+    scannedAtRef.current = scanTime;
+    setScannedStudent(student);
+    setValue("reporterName", student.name);
+    setValue("department", student.department || "");
+    setShowScanner(false);
+    if (student.name && student.name !== "Unknown Student") {
+      toast.success(`Student identified: ${student.name}`);
+    } else {
+      toast.success(`ID Scanned: ${student.id}`);
+    }
+  };
+
+  const clearScan = () => {
+    setScannedStudent(null);
+    scannedAtRef.current = "";
+    setValue("reporterName", "");
+  };
+
+  const [getStudentByDetails, { isFetching: isFetchingByDetails }] = useLazyGetStudentByDetailsQuery();
+
+  const handleFetchDetails = async () => {
+    const name = getValues("reporterName");
+    if (!name) {
+      toast.info("Please enter a name to fetch details");
+      return;
+    }
+    try {
+      const res = await getStudentByDetails({ name, email: "" }).unwrap();
+      const student = res.data ?? res;
+      if (student) {
+        setValue("reporterName", student.name);
+        setScannedStudent({
+          id: student.id,
+          name: student.name,
+          email: student.email,
+          department: student.department || "",
+          raw: "manual_fetch"
+        });
+        toast.success(`Found: ${student.name}`);
+      }
+    } catch {
+      toast.error("Student not found in masterlist");
+    }
+  };
+
   const removeFile = (idx: number) => {
     const updated = selectedFiles.filter((_, i) => i !== idx);
     setSelectedFiles(updated);
@@ -110,6 +198,23 @@ const ReportFoundItem = () => {
         Modals({ message: "Failed to submit found item", status: false });
         return;
       }
+
+      const reportId = res.data?.id || res.data?.data?.id || "UNKNOWN";
+
+      // ── Log to Sheets ───────────────────────────────────────────────────
+      logToSheet({
+        sheetName: "Found Items",
+        studentId: scannedStudent?.id || "N/A",
+        reporterName: data.reporterName || "OFFICE",
+        email: scannedStudent?.email || "N/A",
+        itemName: data.foundItemName,
+        description: data.description,
+        location: data.location,
+        date: startDate.toISOString().split("T")[0],
+        type: "FOUND",
+        reportId: reportId,
+        scannedAt: scannedAtRef.current || new Date().toISOString(),
+      }).catch(console.error);
 
       // Upload images if any were selected
       if (selectedFiles.length > 0 && res?.data?.data?.id) {
@@ -141,7 +246,7 @@ const ReportFoundItem = () => {
     return (
       <section className="min-h-screen flex items-center justify-center bg-gray-950 py-4 px-3">
         <div className="w-full max-w-xs mx-auto">
-          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-6 sm:p-10 text-center">
+          <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6 sm:p-10 text-center">
             <div className="w-16 h-16 bg-green-500/10 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-5">
               <FaBoxOpen className="text-green-400 text-2xl" />
             </div>
@@ -182,31 +287,110 @@ const ReportFoundItem = () => {
     <>
       <section className="min-h-screen flex items-center justify-center bg-gray-950 py-4 px-3">
         <div className="w-full max-w-lg mx-auto">
-          <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 p-4 sm:p-8">
+          <div className="bg-gray-900 rounded-2xl border border-gray-800 p-4 sm:p-8">
 
             {/* Header */}
-            <div className="mb-8 text-center">
-              <h1 className="text-2xl font-bold text-white mb-1">Submit a Found Item</h1>
-              <p className="text-gray-500 text-sm">
-                Fill out the details below to report an item found on campus.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
+              <div className="flex items-center gap-4 text-left">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-green-600/15 border border-green-500/30">
+                  <FaBoxOpen className="text-green-400" size={22} />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-white tracking-tight leading-tight">Submit a Found Item</h1>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Log a discovered item into the system.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {scannedStudent ? (
+                  <button
+                    onClick={clearScan}
+                    className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-black rounded-lg transition-all"
+                  >
+                    <FaTimes size={10} /> Clear Scan
+                  </button>
+                ) : (
+                  isAdmin && (
+                    <button
+                      onClick={() => setShowScanner(true)}
+                      className="inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-4 sm:py-2 bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/25 text-emerald-400 text-[10px] sm:text-xs font-bold sm:font-semibold rounded-lg sm:rounded-xl transition-all whitespace-nowrap"
+                    >
+                      <FaQrcode className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Scan Finder ID
+                    </button>
+                  )
+                )}
+              </div>
             </div>
+
+            {scannedStudent && (
+              <div className="group relative overflow-hidden bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 mb-6 animate-fadeIn transition-all duration-300">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-emerald-500/10 transition-all duration-500" />
+                <div className="flex items-center justify-between relative z-10 w-full text-left">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                      <FaUserCheck size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-white tracking-tight uppercase">{scannedStudent.name}</h4>
+                      <p className="text-[10px] font-bold text-emerald-400/70 uppercase tracking-widest mt-0.5">ID: {scannedStudent.id}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={clearScan}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all hover:rotate-90"
+                  >
+                    <FaTimes size={12} />
+                  </button>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
 
-                {/* Item Name */}
-                <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Item Name</label>
-                  <input
-                    {...register("foundItemName", { required: "Item name is required" })}
-                    type="text"
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-                    placeholder="e.g. Black laptop, Blue water bottle"
-                  />
-                  {errors.foundItemName && (
-                    <p className="text-red-400 text-xs mt-1">{errors.foundItemName?.message as string}</p>
+                <div className="md:col-span-2 flex justify-end mb-2">
+                  <button
+                    type="button"
+                    onClick={handleFetchDetails}
+                    disabled={isFetchingByDetails}
+                    className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-[9px] font-black text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {isFetchingByDetails ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
+                    Fetch Student Info
+                  </button>
+                </div>
+
+                {/* Reported By */}
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Reported By</label>
+                  <div className={`relative flex items-center ${inputCls} ring-0 focus-within:ring-2 focus-within:ring-emerald-500/50`}>
+                    <span className="text-gray-500 mr-2"><IconUser size={16} /></span>
+                    <input
+                      {...register("reporterName", { required: "Finder's name is required" })}
+                      type="text"
+                      className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm"
+                      placeholder="Enter name or scan ID"
+                    />
+                  </div>
+                  {errors.reporterName && (
+                    <p className="text-red-400 text-xs mt-1 text-left">{errors.reporterName?.message as string}</p>
                   )}
+                </div>
+
+                {/* Department / Course */}
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Department / Course</label>
+                  <div className={`relative flex items-center ${inputCls} bg-gray-800/40 opacity-80 ring-0`}>
+                    <span className="text-gray-500 mr-2"><IconBuilding size={16} /></span>
+                    <input
+                      {...register("department")}
+                      type="text"
+                      readOnly
+                      className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm italic"
+                      placeholder="Auto-filled from masterlist..."
+                    />
+                  </div>
                 </div>
 
                 {/* Description */}
@@ -322,11 +506,10 @@ const ReportFoundItem = () => {
 
                 {/* Drop zone */}
                 <div
-                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${
-                    isDragging
+                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${isDragging
                       ? "border-blue-500 bg-blue-900/10"
                       : "border-gray-700 bg-gray-800/50 hover:border-blue-500 hover:bg-gray-800"
-                  }`}
+                    }`}
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                   onDragLeave={() => setIsDragging(false)}
@@ -363,11 +546,10 @@ const ReportFoundItem = () => {
                       {previews.map((src, idx) => (
                         <div
                           key={idx}
-                          className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all duration-200 cursor-pointer ${
-                            idx === primaryIdx
+                          className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all duration-200 cursor-pointer ${idx === primaryIdx
                               ? "border-blue-500 ring-2 ring-blue-500/30"
                               : "border-gray-700 hover:border-gray-500"
-                          }`}
+                            }`}
                           onClick={() => setPrimaryIdx(idx)}
                           title="Click to set as cover photo"
                         >
@@ -410,6 +592,13 @@ const ReportFoundItem = () => {
         </div>
       </section>
       <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
+      {showScanner && (
+        <BarcodeScannerModal
+          onScan={handleScan}
+          onClose={() => setShowScanner(false)}
+          useFetchStudent={useFetchStudent}
+        />
+      )}
     </>
   );
 };

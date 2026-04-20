@@ -22,6 +22,7 @@ import { bulletinPostController } from "../modules/bulletinPost/bulletinPost.con
 import { createPostSchema, createTipSchema } from "../modules/bulletinPost/bulletinPost.validate";
 import { postCreationLimiter, tipSubmissionLimiter } from "../midddlewares/bulletinRateLimit";
 import { getMatchNotifications } from "../utils/getMatchNotifications";
+import { studentRoutes } from "../modules/student/student.routes";
 
 const router = express.Router();
 
@@ -98,5 +99,7 @@ router.get("/bulletin-posts/:id/tips",                                  bulletin
 router.delete("/bulletin-posts/:id",              auth(),               bulletinPostController.deletePost);
 router.delete("/bulletin-posts/:id/tips/:tipId",  auth(),               bulletinPostController.deleteTip);
 router.put("/bulletin-posts/:id/resolve",         auth(),               bulletinPostController.resolvePost);
+
+router.use("/students", studentRoutes);
 
 export default router;

@@ -172,6 +172,17 @@ model MatchNotification {
   @@map("matchNotifications")
 }
 
+model Student {
+  id         String   @id
+  name       String
+  email      String   @unique
+  department String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("students")
+}
+
 enum status {
   PENDING
   APPROVED
