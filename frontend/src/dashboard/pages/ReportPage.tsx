@@ -202,10 +202,6 @@ const ReportPage = () => {
                   </p>
                   <p className="r-text text-white text-xl sm:text-2xl font-bold leading-tight">{dateRange}</p>
                 </div>
-                <div className="sm:text-right">
-                  <p className="r-muted text-gray-600 text-[10px]">Prepared by: System Admin</p>
-                  <p className="r-muted text-gray-600 text-[10px] mt-0.5">NBSC Lost & Found System</p>
-                </div>
               </div>
             </div>
 

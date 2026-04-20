@@ -25,14 +25,14 @@ const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: (v: b
 
 const InputField = ({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement> & { className?: string }) => (
   <input {...props}
-    className={`w-full px-4 py-2.5 bg-gray-800 border border-white/8 rounded-xl text-white text-sm
+    className={`w-full px-4 py-2.5 bg-gray-800 border border-gray-700/50 rounded-xl text-white text-sm
       placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/30
       transition-all ${className}`} />
 );
 
 const SelectField = ({ className = "", children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { className?: string }) => (
   <select {...props}
-    className={`w-full px-4 py-2.5 bg-gray-800 border border-white/8 rounded-xl text-white text-sm
+    className={`w-full px-4 py-2.5 bg-gray-800 border border-gray-700/50 rounded-xl text-white text-sm
       focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all ${className}`}>
     {children}
   </select>
@@ -59,8 +59,8 @@ const SectionCard = ({ icon, iconColor = "text-blue-400", iconBg = "bg-blue-500/
   icon: React.ReactNode; iconColor?: string; iconBg?: string;
   title: string; subtitle?: string; children: React.ReactNode;
 }) => (
-  <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-    <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3">
+  <div className="bg-gray-900 border border-gray-700/50 rounded-2xl overflow-hidden">
+    <div className="px-5 py-4 border-b border-gray-700/50 flex items-center gap-3">
       <div className={`w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center ${iconColor}`}>{icon}</div>
       <div>
         <h3 className="text-sm font-bold text-white leading-tight">{title}</h3>
@@ -74,7 +74,7 @@ const SectionCard = ({ icon, iconColor = "text-blue-400", iconBg = "bg-blue-500/
 const NotificationRow = ({ label, description, checked, onChange }: {
   label: string; description: string; checked: boolean; onChange: (v: boolean) => void;
 }) => (
-  <div className="flex items-center justify-between gap-4 py-3.5 border-b border-white/[0.04] last:border-0">
+  <div className="flex items-center justify-between gap-4 py-3.5 border-b border-gray-700/30 last:border-0">
     <div className="min-w-0">
       <p className="text-sm font-medium text-white">{label}</p>
       <p className="text-xs text-gray-500 mt-0.5">{description}</p>
@@ -88,6 +88,7 @@ const Settings = () => {
   const user = useUserVerification();
   const [activeTab, setActiveTab] = useState<Tab>("account");
   const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [savedIndicator, setSavedIndicator] = useState(false);
 
   const [changePassword, { isLoading: isPasswordLoading }] = useChangePasswordMutation();
@@ -141,16 +142,16 @@ const Settings = () => {
   };
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode; accent: string }[] = [
-    { id: "account",  label: "Account",  icon: <FaUser size={12} />,      accent: "text-blue-400 bg-blue-500/10 border-blue-500/20"      },
-    { id: "general",  label: "General",  icon: <FaGlobe size={12} />,     accent: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20"      },
+    { id: "account",  label: "Account",  icon: <FaUser size={12} />,      accent: "text-blue-400 bg-blue-500/10 border-blue-500/20"         },
+    { id: "general",  label: "General",  icon: <FaGlobe size={12} />,     accent: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20"          },
     { id: "security", label: "Security", icon: <FaShieldAlt size={12} />, accent: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-    { id: "system",   label: "System",   icon: <FaDatabase size={12} />,  accent: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
+    { id: "system",   label: "System",   icon: <FaDatabase size={12} />,  accent: "text-purple-400 bg-purple-500/10 border-purple-500/20"    },
   ];
 
   const initials = ((user as any)?.username?.[0] || "A").toUpperCase();
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 px-2 sm:px-0">
 
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
@@ -166,49 +167,54 @@ const Settings = () => {
         </button>
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-1 p-1 bg-gray-900 border border-white/5 rounded-xl w-full sm:w-fit">
-        {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-              activeTab === tab.id ? `${tab.accent} border` : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
-            }`}>
-            {tab.icon}{tab.label}
-          </button>
-        ))}
+      {/* Tab bar — scrollable on mobile */}
+      <div className="overflow-x-auto scrollbar-hide">
+        <div className="flex gap-1 p-1 bg-gray-900 border border-gray-700/50 rounded-xl w-full sm:w-fit">
+          {tabs.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 rounded-lg text-xs font-semibold transition-all flex-1 sm:flex-none whitespace-nowrap ${
+                activeTab === tab.id ? `${tab.accent} border` : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+              }`}>
+              {tab.icon}
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-5">
-
-        {/* Main content */}
-        <main className="flex-1 min-w-0 space-y-4">
+      <div className="flex flex-col gap-5">
+        <main className="w-full space-y-4">
 
           {/* ACCOUNT */}
           {activeTab === "account" && (
             <>
               {/* Profile card */}
-              <div className="bg-gray-900 border border-white/5 rounded-2xl p-5">
+              <div className="bg-gray-900 border border-gray-700/50 rounded-2xl p-4 sm:p-5">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xl font-black shrink-0">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xl font-black shrink-0">
                     {initials}
                   </div>
                   <div className="min-w-0">
                     <p className="text-white font-bold truncate">{(user as any)?.username || "Admin"}</p>
-                    <p className="text-gray-400 text-sm truncate">{(user as any)?.email || "—"}</p>
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-[10px] font-bold uppercase">
-                      {(user as any)?.role || "Admin"}
-                    </span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-gray-400 text-sm truncate">{(user as any)?.email || "—"}</p>
+                      <span className="shrink-0 px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-[10px] font-bold uppercase">
+                        {(user as any)?.role || "Admin"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+
+                {/* 3 info cards — stacked on mobile, side by side on sm+ */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
                     { label: "Username", value: (user as any)?.username || "—" },
                     { label: "Email",    value: (user as any)?.email    || "—" },
                     { label: "Role",     value: (user as any)?.role     || "—" },
                   ].map(item => (
-                    <div key={item.label} className="bg-gray-800/60 border border-white/5 rounded-xl p-2.5">
-                      <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold">{item.label}</p>
-                      <p className="text-white text-xs font-semibold mt-0.5 truncate">{item.value}</p>
+                    <div key={item.label} className="bg-gray-800/60 border border-gray-700/50 rounded-xl p-2.5">
+                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{item.label}</p>
+                      <p className="text-white text-xs font-semibold mt-0.5 break-all">{item.value}</p>
                     </div>
                   ))}
                 </div>
@@ -220,8 +226,12 @@ const Settings = () => {
                     <div>
                       <FieldLabel>Current Password</FieldLabel>
                       <div className="relative">
-                        <InputField type={showPassword ? "text" : "password"} placeholder="••••••••"
-                          {...passwordForm.register("currentPassword", { required: "Required" })} className="pr-10" />
+                        <InputField
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter current password"
+                          {...passwordForm.register("currentPassword", { required: "Required" })}
+                          className="pr-10"
+                        />
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
                           {showPassword ? <FaEyeSlash size={12} /> : <FaEye size={12} />}
@@ -233,8 +243,18 @@ const Settings = () => {
                     </div>
                     <div>
                       <FieldLabel>New Password</FieldLabel>
-                      <InputField type="password" placeholder="Min. 6 characters"
-                        {...passwordForm.register("newPassword", { required: "Required", minLength: { value: 6, message: "Min. 6 characters" } })} />
+                      <div className="relative">
+                        <InputField
+                          type={showNewPassword ? "text" : "password"}
+                          placeholder="Enter new password"
+                          {...passwordForm.register("newPassword", { required: "Required", minLength: { value: 6, message: "Password must be 6 or more characters" } })}
+                          className="pr-10"
+                        />
+                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
+                          {showNewPassword ? <FaEyeSlash size={12} /> : <FaEye size={12} />}
+                        </button>
+                      </div>
                       {passwordForm.formState.errors.newPassword && (
                         <p className="text-red-400 text-xs mt-1">{passwordForm.formState.errors.newPassword?.message as string}</p>
                       )}
@@ -246,9 +266,9 @@ const Settings = () => {
 
               <SectionCard icon={<FaAt size={11} />} iconColor="text-cyan-400" iconBg="bg-cyan-500/10" title="Change Email" subtitle="You'll be signed out after updating">
                 <form onSubmit={emailForm.handleSubmit(handleChangeEmail)} className="space-y-4">
-                  <div className="max-w-sm">
+                  <div className="w-full sm:max-w-sm">
                     <FieldLabel>New Email Address</FieldLabel>
-                    <InputField type="email" placeholder="you@example.com"
+                    <InputField type="email" placeholder=" "
                       {...emailForm.register("email", { required: "Required", pattern: { value: /^\S+@\S+$/i, message: "Invalid email" } })} />
                     {emailForm.formState.errors.email && (
                       <p className="text-red-400 text-xs mt-1">{emailForm.formState.errors.email?.message as string}</p>
@@ -260,9 +280,9 @@ const Settings = () => {
 
               <SectionCard icon={<FaIdBadge size={11} />} iconColor="text-purple-400" iconBg="bg-purple-500/10" title="Change Username" subtitle="You'll be signed out after updating">
                 <form onSubmit={usernameForm.handleSubmit(handleChangeUsername)} className="space-y-4">
-                  <div className="max-w-sm">
+                  <div className="w-full sm:max-w-sm">
                     <FieldLabel>New Username</FieldLabel>
-                    <InputField type="text" placeholder="letters, numbers, underscores"
+                    <InputField type="text" placeholder=" "
                       {...usernameForm.register("username", { required: "Required", minLength: { value: 3, message: "Min. 3 characters" }, pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Letters, numbers, underscores only" } })} />
                     {usernameForm.formState.errors.username && (
                       <p className="text-red-400 text-xs mt-1">{usernameForm.formState.errors.username?.message as string}</p>
@@ -309,7 +329,7 @@ const Settings = () => {
                 <div className="sm:col-span-2">
                   <FieldLabel>Site Description</FieldLabel>
                   <textarea value={settings.siteDescription} onChange={e => set("siteDescription", e.target.value)} rows={3}
-                    className="w-full px-4 py-2.5 bg-gray-800 border border-white/8 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all resize-none" />
+                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700/50 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all resize-none" />
                 </div>
               </div>
             </SectionCard>
@@ -320,9 +340,9 @@ const Settings = () => {
             <SectionCard icon={<FaShieldAlt size={11} />} iconColor="text-emerald-400" iconBg="bg-emerald-500/10" title="Security Settings" subtitle="Configure authentication and access policies">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                 {[
-                  { label: "Password Expiry (days)", key: "passwordExpiry" },
-                  { label: "Session Timeout (min)",  key: "sessionTimeout" },
-                  { label: "Max Login Attempts",     key: "maxLoginAttempts" },
+                  { label: "Password Expiry (days)", key: "passwordExpiry"    },
+                  { label: "Session Timeout (min)",  key: "sessionTimeout"    },
+                  { label: "Max Login Attempts",     key: "maxLoginAttempts"  },
                 ].map(({ label, key }) => (
                   <div key={key}>
                     <FieldLabel>{label}</FieldLabel>
@@ -330,7 +350,7 @@ const Settings = () => {
                   </div>
                 ))}
               </div>
-              <div className="border-t border-white/[0.04] pt-4">
+              <div className="border-t border-gray-700/50 pt-4">
                 <NotificationRow label="Two-Factor Authentication" description="Require 2FA for all admin accounts" checked={settings.enableTwoFactor} onChange={v => set("enableTwoFactor", v)} />
                 <NotificationRow label="Force Password Change" description="Require users to change default passwords" checked={settings.requirePasswordChange} onChange={v => set("requirePasswordChange", v)} />
               </div>
@@ -350,12 +370,13 @@ const Settings = () => {
                   <InputField type="number" value={settings.maxImageSize} onChange={e => set("maxImageSize", +e.target.value)} />
                 </div>
               </div>
-              <div className="border-t border-white/[0.04] pt-4">
+              <div className="border-t border-gray-700/50 pt-4">
                 <NotificationRow label="Auto-delete Expired Items" description="Automatically remove items past their expiry date" checked={settings.autoDeleteExpiredItems} onChange={v => set("autoDeleteExpiredItems", v)} />
                 <NotificationRow label="Require Item Approval" description="Items must be reviewed by admin before going public" checked={settings.requireItemApproval} onChange={v => set("requireItemApproval", v)} />
               </div>
             </SectionCard>
           )}
+
         </main>
       </div>
     </div>
