@@ -29,31 +29,34 @@ interface Notification {
 }
 
 const menuItems = [
-  { title: "Overview",    icon: FaTachometerAlt,       path: "/dashboard",            exact: true },
-  { title: "Lost Items",  icon: FaExclamationTriangle, path: "/dashboard/lost-items"              },
-  { title: "Found Items", icon: FaSearch,              path: "/dashboard/found-items"             },
-  { title: "Claims",      icon: FaClipboardList,       path: "/dashboard/claims"                  },
-  { title: "Analytics",   icon: FaChartLine,           path: "/dashboard/analytics"               },
-  { title: "Heatmap",     icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                 },
-  { title: "Users",       icon: FaUsers,               path: "/dashboard/users"                   },
-  { title: "Categories",  icon: FaBoxOpen,             path: "/dashboard/categories"              },
-  { title: "Archive Log", icon: FaArchive,             path: "/dashboard/archive"                 },
-  { title: "Report",      icon: FaFileAlt,             path: "/dashboard/report"                  },
-  { title: "Settings",    icon: FaCog,                 path: "/dashboard/settings"                },
+  { title: "Overview",    icon: FaTachometerAlt,       path: "/dashboard",               exact: true },
+  // Item Management
+  { title: "Lost Items",  icon: FaExclamationTriangle, path: "/dashboard/lost-items"                },
+  { title: "Found Items", icon: FaSearch,              path: "/dashboard/found-items"               },
+  { title: "Claims",      icon: FaClipboardList,       path: "/dashboard/claims"                    },
+  { title: "Archive Log", icon: FaArchive,             path: "/dashboard/archive"                   },
+  // Insights
+  { title: "Analytics",   icon: FaChartLine,           path: "/dashboard/analytics"                 },
+  { title: "Heatmap",     icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                   },
+  { title: "Report",      icon: FaFileAlt,             path: "/dashboard/report"                    },
+  // Administration
+  { title: "Users",       icon: FaUsers,               path: "/dashboard/users"                     },
+  { title: "Categories",  icon: FaBoxOpen,             path: "/dashboard/categories"                },
+  { title: "Settings",    icon: FaCog,                 path: "/dashboard/settings"                  },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
-  "/dashboard":             { title: "Overview",    subtitle: "Welcome back! Here's an overview of today's activity." },
-  "/dashboard/lost-items":  { title: "Lost Items",  subtitle: "Track items reported as lost"                          },
-  "/dashboard/found-items": { title: "Found Items", subtitle: "Manage all reported found items"                       },
-  "/dashboard/claims":      { title: "Claims",      subtitle: "Review and verify item claims"                         },
-  "/dashboard/analytics":   { title: "Analytics",   subtitle: "Monthly trends, category breakdown & top reporters"    },
-  "/dashboard/heatmap":     { title: "Heatmap",     subtitle: "See where items are most commonly lost or found"       },
-  "/dashboard/users":       { title: "Users",       subtitle: "Manage registered users"                               },
-  "/dashboard/categories":  { title: "Categories",  subtitle: "Organize item categories"                              },
-  "/dashboard/archive":     { title: "Archive Log", subtitle: "Manage stale & archived found items"                   },
-  "/dashboard/report":      { title: "Report",      subtitle: "Weekly/monthly summary report"                         },
-  "/dashboard/settings":    { title: "Settings",    subtitle: "Configure system preferences"                          },
+  "/dashboard":             { title: "Overview",    subtitle: "Welcome back! Here's an overview of today's activity."        },
+  "/dashboard/lost-items":  { title: "Lost Items",  subtitle: "Track and manage items reported as lost on campus."           },
+  "/dashboard/found-items": { title: "Found Items", subtitle: "Review and manage all recovered items awaiting claim."        },
+  "/dashboard/claims":      { title: "Claims",      subtitle: "Review, verify and process submitted ownership claims."       },
+  "/dashboard/archive":     { title: "Archive Log", subtitle: "Browse archived items and restore or permanently remove them." },
+  "/dashboard/analytics":   { title: "Analytics",   subtitle: "Monthly trends, category breakdown and top reporters."       },
+  "/dashboard/heatmap":     { title: "Heatmap",     subtitle: "Visualize where items are most commonly lost or found."       },
+  "/dashboard/report":      { title: "Report",      subtitle: "Generate and export weekly or monthly summary reports."       },
+  "/dashboard/users":       { title: "Users",       subtitle: "View and manage all registered system users."                },
+  "/dashboard/categories":  { title: "Categories",  subtitle: "Create and organize item categories for better sorting."     },
+  "/dashboard/settings":    { title: "Settings",    subtitle: "Configure system preferences and account settings."          },
 };
 
 const timeAgo = (dateStr: string) => {
@@ -93,6 +96,7 @@ const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>(() => {
     try { const saved = localStorage.getItem("admin_notifications"); return saved ? JSON.parse(saved) : []; } catch { return []; }
   });
+  const location      = useLocation();
   const bellRef       = useRef<HTMLDivElement>(null);
   const latestClaimTs = useRef<string | null>(getSavedLatestTs("claims"));
   const latestFoundTs = useRef<string | null>(getSavedLatestTs("found"));
@@ -104,11 +108,8 @@ const NotificationBell = () => {
   const { data: foundData }  = useGetFoundItemsQuery({},        pollOpts);
   const { data: lostData }   = useGetLostItemsQuery({},         pollOpts);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => { if (bellRef.current && !bellRef.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  // Close on route change
+  useEffect(() => { setOpen(false); }, [location.pathname]);
 
   const toArray = (data: any): any[] => { if (!data) return []; if (Array.isArray(data)) return data; if (Array.isArray(data.data)) return data.data; return []; };
 
@@ -158,50 +159,56 @@ const NotificationBell = () => {
           </span>
         )}
       </button>
+
       {open && (
-        <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-[68px] sm:top-11 w-auto sm:w-96 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
-            <div className="flex items-center gap-2">
-              <FaBell size={13} className="text-cyan-400" />
-              <p className="text-white text-sm font-semibold">Notifications</p>
-              {unreadCount > 0 && <span className="bg-red-500/20 text-red-400 border border-red-500/20 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount} new</span>}
-            </div>
-            <div className="flex items-center gap-2">
-              {unreadCount > 0 && <button onClick={markAllRead} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">Mark all read</button>}
-              {notifications.length > 0 && <button onClick={clearAll} className="text-gray-600 hover:text-gray-400 text-xs transition-colors">Clear</button>}
-              <button onClick={() => setOpen(false)} className="sm:hidden text-gray-500 hover:text-white ml-1"><FaTimes size={13} /></button>
-            </div>
-          </div>
-          <div className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto divide-y divide-white/5">
-            {notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-600">
-                <FaBell size={24} className="mb-3 opacity-30" />
-                <p className="text-sm">No notifications yet</p>
-                <p className="text-xs mt-1 opacity-60">New claims and items will appear here</p>
+        <>
+          {/* Invisible backdrop to close on outside click */}
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+
+          <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-[68px] sm:top-11 w-auto sm:w-96 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <FaBell size={13} className="text-cyan-400" />
+                <p className="text-white text-sm font-semibold">Notifications</p>
+                {unreadCount > 0 && <span className="bg-red-500/20 text-red-400 border border-red-500/20 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount} new</span>}
               </div>
-            ) : (
-              [...notifications].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).map(notif => (
-                <Link key={notif.id} to={notif.link} onClick={() => { markOneRead(notif.id); setOpen(false); }}
-                  className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${!notif.read ? "bg-white/[0.02]" : ""}`}>
-                  {notifIcon(notif.type)}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className={`text-xs font-semibold truncate ${!notif.read ? "text-white" : "text-gray-300"}`}>{notif.title}</p>
-                      {!notif.read && <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />}
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && <button onClick={markAllRead} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">Mark all read</button>}
+                {notifications.length > 0 && <button onClick={clearAll} className="text-gray-600 hover:text-gray-400 text-xs transition-colors">Clear</button>}
+                <button onClick={() => setOpen(false)} className="sm:hidden text-gray-500 hover:text-white ml-1"><FaTimes size={13} /></button>
+              </div>
+            </div>
+            <div className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto divide-y divide-white/5">
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-600">
+                  <FaBell size={24} className="mb-3 opacity-30" />
+                  <p className="text-sm">No notifications yet</p>
+                  <p className="text-xs mt-1 opacity-60">New claims and items will appear here</p>
+                </div>
+              ) : (
+                [...notifications].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).map(notif => (
+                  <Link key={notif.id} to={notif.link} onClick={() => { markOneRead(notif.id); setOpen(false); }}
+                    className={`flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors ${!notif.read ? "bg-white/[0.02]" : ""}`}>
+                    {notifIcon(notif.type)}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={`text-xs font-semibold truncate ${!notif.read ? "text-white" : "text-gray-300"}`}>{notif.title}</p>
+                        {!notif.read && <span className="shrink-0 w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1" />}
+                      </div>
+                      <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">{notif.subtitle}</p>
+                      <p className="text-gray-700 text-[10px] mt-1">{timeAgo(notif.time)}</p>
                     </div>
-                    <p className="text-gray-500 text-xs mt-0.5 line-clamp-2 leading-relaxed">{notif.subtitle}</p>
-                    <p className="text-gray-700 text-[10px] mt-1">{timeAgo(notif.time)}</p>
-                  </div>
-                </Link>
-              ))
+                  </Link>
+                ))
+              )}
+            </div>
+            {notifications.length > 0 && (
+              <div className="px-4 py-2.5 border-t border-white/5">
+                <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">View all activity →</Link>
+              </div>
             )}
           </div>
-          {notifications.length > 0 && (
-            <div className="px-4 py-2.5 border-t border-white/5">
-              <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">View all activity →</Link>
-            </div>
-          )}
-        </div>
+        </>
       )}
     </div>
   );
@@ -211,12 +218,10 @@ const NotificationBell = () => {
 const ProfileDropdown = ({ initials, user, handleSignOut }: { initials: string; user: any; handleSignOut: () => void }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const location = useLocation();
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  // Close on route change
+  useEffect(() => { setOpen(false); }, [location.pathname]);
 
   return (
     <div ref={ref} className="relative">
@@ -233,31 +238,36 @@ const ProfileDropdown = ({ initials, user, handleSignOut }: { initials: string; 
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-          <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/5">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-sm font-bold shrink-0">{initials}</div>
-            <div className="min-w-0">
-              <p className="text-white text-sm font-medium truncate">{user?.username || user?.name || "Admin"}</p>
-              <p className="text-gray-400 text-xs truncate">{user?.email || ""}</p>
+        <>
+          {/* Invisible backdrop to close on outside click */}
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+
+          <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+            <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/5">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-sm font-bold shrink-0">{initials}</div>
+              <div className="min-w-0">
+                <p className="text-white text-sm font-medium truncate">{user?.username || user?.name || "Admin"}</p>
+                <p className="text-gray-400 text-xs truncate">{user?.email || ""}</p>
+              </div>
+            </div>
+            <div className="py-1">
+              <Link to="/dashboard/settings" onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
+                <FaCog size={13} className="text-gray-500 shrink-0" /> Settings
+              </Link>
+              <Link to="/" onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
+                <FaHome size={13} className="text-gray-500 shrink-0" /> Back to Home
+              </Link>
+            </div>
+            <div className="border-t border-white/5 py-1">
+              <button type="button" onClick={() => { setOpen(false); handleSignOut(); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm">
+                <FaSignOutAlt size={13} className="shrink-0" /> Sign out
+              </button>
             </div>
           </div>
-          <div className="py-1">
-            <Link to="/dashboard/settings" onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
-              <FaCog size={13} className="text-gray-500 shrink-0" /> Settings
-            </Link>
-            <Link to="/" onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
-              <FaHome size={13} className="text-gray-500 shrink-0" /> Back to Home
-            </Link>
-          </div>
-          <div className="border-t border-white/5 py-1">
-            <button type="button" onClick={() => { setOpen(false); handleSignOut(); }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm">
-              <FaSignOutAlt size={13} className="shrink-0" /> Sign out
-            </button>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
@@ -268,7 +278,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen]           = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+
   const user = useUserVerification() as any;
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   const isActive = (path: string, exact?: boolean) =>
     exact ? location.pathname === path : (location.pathname === path || location.pathname.startsWith(path + "/"));
@@ -337,24 +351,39 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
           {!sidebarCollapsed && <p className="text-[10px] uppercase tracking-widest text-gray-600 font-medium px-2 mb-3">Menu</p>}
-          {menuItems.map(item => {
+
+          {menuItems.map((item, idx) => {
             const active = isActive(item.path, item.exact);
             const Icon   = item.icon;
+
+            // Section dividers
+            const showDivider =
+              (!sidebarCollapsed && idx === 1) ? "Item Management" :
+              (!sidebarCollapsed && idx === 5) ? "Insights" :
+              (!sidebarCollapsed && idx === 8) ? "Administration" : null;
+
             return (
-              <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
-                title={sidebarCollapsed ? item.title : undefined}
-                className={`relative flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group
-                  ${active ? "bg-cyan-500/10 text-cyan-400" : "text-gray-400 hover:text-white hover:bg-white/5"}
-                  ${sidebarCollapsed ? "justify-center" : ""}`}>
-                {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-cyan-400 rounded-full" />}
-                <Icon size={14} className={active ? "text-cyan-400" : "text-gray-500 group-hover:text-gray-300"} />
-                {!sidebarCollapsed && <span>{item.title}</span>}
-                {sidebarCollapsed && (
-                  <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-xl">
-                    {item.title}
-                  </span>
+              <div key={item.path}>
+                {showDivider && (
+                  <p className="text-[9px] uppercase tracking-widest text-gray-700 font-semibold px-2 pt-4 pb-1.5">
+                    {showDivider}
+                  </p>
                 )}
-              </Link>
+                <Link to={item.path} onClick={() => setSidebarOpen(false)}
+                  title={sidebarCollapsed ? item.title : undefined}
+                  className={`relative flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group
+                    ${active ? "bg-cyan-500/10 text-cyan-400" : "text-gray-400 hover:text-white hover:bg-white/5"}
+                    ${sidebarCollapsed ? "justify-center" : ""}`}>
+                  {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-cyan-400 rounded-full" />}
+                  <Icon size={14} className={active ? "text-cyan-400" : "text-gray-500 group-hover:text-gray-300"} />
+                  {!sidebarCollapsed && <span>{item.title}</span>}
+                  {sidebarCollapsed && (
+                    <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-gray-800 border border-white/10 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-xl">
+                      {item.title}
+                    </span>
+                  )}
+                </Link>
+              </div>
             );
           })}
         </nav>

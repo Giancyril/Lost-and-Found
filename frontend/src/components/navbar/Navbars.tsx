@@ -133,12 +133,7 @@ export function Navbars() {
                       className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors text-sm">
                       <FaTachometerAlt size={13} className="text-blue-400 shrink-0" />
                       Admin Dashboard
-                    </Link>
-                    <Link to="/dashboard/settings" onClick={() => setProfileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors text-sm">
-                      <FaCog size={13} className="text-blue-400 shrink-0" />
-                      Account Settings
-                    </Link>
+                    </Link>                  
                     {/* Portal link in dropdown too */}
                     <a
                       href="/portal"
@@ -150,6 +145,11 @@ export function Navbars() {
                       <FaTv size={13} className="text-blue-400 shrink-0" />
                       Display Portal
                     </a>
+                    <Link to="/dashboard/settings" onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors text-sm">
+                      <FaCog size={13} className="text-blue-400 shrink-0" />
+                      Account Settings
+                    </Link>
                   </div>
 
                   <div className="border-t border-gray-700 py-1">

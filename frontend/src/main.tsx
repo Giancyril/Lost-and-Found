@@ -29,6 +29,7 @@ import ArchievePage from "./dashboard/pages/ArchievePage.tsx";
 import ReportPage from "./dashboard/pages/ReportPage.tsx";
 import BulletinBoard from "./pages/bulletin/BulletinBoard.tsx";
 import PortalDisplay from "./pages/portal/PortalDisplay.tsx";
+import AboutUs from "./components/aboutUs/aboutUs.tsx";
 
 const router = createBrowserRouter([
   {
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { path: "/",               element: <Home /> },
+      { path: "/about",          element: <AboutUs /> },
       { path: "/register",       element: <Navigate to="/" replace /> },
       { path: "/login",          element: <Login /> },
       { path: "/foundItems",     element: <FoundItemsPage /> },

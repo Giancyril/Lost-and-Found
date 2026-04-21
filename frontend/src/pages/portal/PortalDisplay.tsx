@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useGetLostItemsQuery, useGetFoundItemsQuery } from "../../redux/api/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -38,7 +38,6 @@ const getFoundImg = (item: FoundItem) =>
 const formatDate = (d: string) =>
   new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-// Fixed: avoid <T,> generic arrow in TSX to prevent parse errors
 function chunk<T>(arr: T[], size: number): T[][] {
   return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
     arr.slice(i * size, i * size + size)
@@ -49,41 +48,6 @@ function chunk<T>(arr: T[], size: number): T[][] {
 const RESTRICTED_CATEGORIES = ["wallets & purses", "wallet", "purse"];
 const isRestrictedCategory = (cat?: string) =>
   RESTRICTED_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
-
-// ── Progress bar ──────────────────────────────────────────────────────────────
-const ProgressBar = ({ duration, active }: { duration: number; active: boolean }) => {
-  const [width, setWidth] = useState(0);
-  const startRef = useRef<number | null>(null);
-  const rafRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!active) {
-      setWidth(0);
-      return;
-    }
-    setWidth(0);
-    startRef.current = null;
-    const animate = (ts: number) => {
-      if (!startRef.current) startRef.current = ts;
-      const elapsed = ts - startRef.current;
-      setWidth(Math.min((elapsed / duration) * 100, 100));
-      if (elapsed < duration) rafRef.current = requestAnimationFrame(animate);
-    };
-    rafRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [active, duration]); // always 2 deps — stable
-
-  return (
-    <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-10">
-      <div
-        className="h-full transition-none"
-        style={{ width: `${width}%`, background: "linear-gradient(90deg, #3b82f6, #06b6d4)" }}
-      />
-    </div>
-  );
-};
 
 // ── Item Card ─────────────────────────────────────────────────────────────────
 const ItemCard = ({
@@ -180,7 +144,7 @@ const ItemCard = ({
   );
 };
 
-// ── Slide renderer (a single "page" of 2 cards) ──────────────────────────────
+// ── Slide renderer ────────────────────────────────────────────────────────────
 const SlideContent = ({
   pair, accentColor, accent,
 }: {
@@ -253,7 +217,6 @@ const Panel = ({
         </div>
       </div>
 
-      {/* Horizontal sliding carousel */}
       <div className="flex-1 min-h-0 overflow-hidden relative">
         {(pairs.length === 0 ? [[]] : pairs).map((pair, i) => {
           const offset = i - activeIdx;
@@ -277,10 +240,7 @@ const Panel = ({
 };
 
 // ── Ticker ────────────────────────────────────────────────────────────────────
-const Ticker = ({ lostCount, foundCount }: {
-  lostCount: number;
-  foundCount: number;
-}) => {
+const Ticker = ({ lostCount, foundCount }: { lostCount: number; foundCount: number }) => {
   const items = [
     `${lostCount} item${lostCount !== 1 ? "s" : ""} currently reported lost`,
     `${foundCount} item${foundCount !== 1 ? "s" : ""} recovered and awaiting claim`,
@@ -321,7 +281,6 @@ const PortalDisplay = () => {
   );
 
   const [slideIndex, setSlideIndex] = useState(0);
-  const [isActive, setIsActive] = useState(true);
 
   const lostItems: LostItem[] = (lostData?.data ?? []).filter((i: LostItem) => !(i as any).isFound);
   const foundItems: FoundItem[] = (foundData?.data ?? []).filter((i: FoundItem) => !i.isClaimed);
@@ -344,19 +303,13 @@ const PortalDisplay = () => {
     category: i.category?.name,
   }));
 
-  // Advance slide — just update the index, CSS handles the transition
   const advanceSlide = useCallback(() => {
-  setIsActive(false);
-  setSlideIndex(prev => prev + 1);
-  setTimeout(() => setIsActive(true), 100);
-}, []);
+    setSlideIndex(prev => prev + 1);
+  }, []);
 
   useEffect(() => {
-    setIsActive(true);
     const slideTimer = setInterval(advanceSlide, SLIDE_DURATION);
-    return () => {
-      clearInterval(slideTimer);
-    };
+    return () => clearInterval(slideTimer);
   }, [advanceSlide]);
 
   return (
@@ -377,7 +330,6 @@ const PortalDisplay = () => {
         }
         .animate-ticker { animation: ticker 30s linear infinite; }
 
-        /* Mobile: stack panels vertically */
         @media (max-width: 639px) {
           .portal-panels {
             grid-template-columns: 1fr !important;
@@ -392,12 +344,8 @@ const PortalDisplay = () => {
       `}</style>
 
       <div className="fixed inset-0 bg-slate-900 flex flex-col overflow-hidden select-none">
-        {/* Progress bar */}
-        <div className="relative h-1 shrink-0">
-          <ProgressBar duration={SLIDE_DURATION} active={isActive} />
-        </div>
 
-        {/* Split panels — fills all remaining space, stacks on mobile */}
+        {/* Split panels */}
         <div className="flex-1 grid grid-cols-2 portal-panels min-h-0 divide-x divide-white/5">
           <Panel
             title="Lost Items"
@@ -416,10 +364,7 @@ const PortalDisplay = () => {
         </div>
 
         {/* Ticker */}
-        <Ticker
-          lostCount={lostItems.length}
-          foundCount={foundItems.length}
-        />
+        <Ticker lostCount={lostItems.length} foundCount={foundItems.length} />
       </div>
     </>
   );

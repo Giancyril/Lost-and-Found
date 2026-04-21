@@ -1,4 +1,5 @@
 import { FaFacebook, FaEnvelope, FaInfoCircle } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const Footers = () => {
   return (
@@ -17,9 +18,13 @@ const Footers = () => {
               <div className="mt-0.5 w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
                 <FaInfoCircle size={11} />
               </div>
-              <p className="text-gray-500 text-sm leading-relaxed">
+              {/* Using Link ensures this works from ANY page in your app */}
+              <Link 
+                to="/about" 
+                className="text-gray-500 hover:text-blue-400 text-sm text-left leading-relaxed transition-colors duration-200"
+              >
                 SAS Lost &amp; Found Management System
-              </p>
+              </Link>
             </div>
           </div>
 
