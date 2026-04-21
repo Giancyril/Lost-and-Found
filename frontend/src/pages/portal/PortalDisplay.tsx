@@ -199,11 +199,19 @@ const Panel = ({
   return (
     <div className="flex flex-col h-full bg-slate-900">
       <div className={`flex items-center justify-between px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 border-b ${accent.border} bg-slate-800/50`}>
-        <div>
+        <div className="flex-1">
           <h2 className={`text-sm sm:text-base md:text-lg font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] ${accent.text}`}>{title}</h2>
-          <p className="text-slate-500 text-xs sm:text-sm mt-0.5">{total} item{total !== 1 ? "s" : ""} on record</p>
+          
+          {/* Clarification Text Added Here */}
+          <p className="text-slate-300 text-xs sm:text-sm font-semibold leading-tight mt-1.5 max-w-[95%]">
+            {accentColor === "red" 
+              ? "Reported Missing: These items are not currently held at the SAS Office" 
+              : "Recovered Items: These are held at the SAS Office and ready for claim"}
+          </p>
+
+          <p className="text-slate-500 text-[10px] sm:text-xs mt-1 font-medium">{total} item{total !== 1 ? "s" : ""} on record</p>
         </div>
-        <div className="flex items-center gap-1 sm:gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0 ml-4">
           {pairs.map((_, i) => (
             <div
               key={i}
