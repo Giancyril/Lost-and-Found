@@ -249,20 +249,13 @@ const Panel = ({
 };
 
 // ── Ticker ────────────────────────────────────────────────────────────────────
-const Ticker = ({ lostCount, foundCount, foundItems }: {
+const Ticker = ({ lostCount, foundCount }: {
   lostCount: number;
   foundCount: number;
-  foundItems: { name: string; date: string }[];
 }) => {
-  const unclaimedEntries = foundItems.map(i => {
-    const days = Math.floor((Date.now() - new Date(i.date).getTime()) / 86400000);
-    return `${i.name} — unclaimed for ${days} day${days !== 1 ? "s" : ""}`;
-  });
-
   const items = [
     `${lostCount} item${lostCount !== 1 ? "s" : ""} currently reported lost`,
     `${foundCount} item${foundCount !== 1 ? "s" : ""} recovered and awaiting claim`,
-    ...unclaimedEntries,
     "Visit the SAS Office to report or claim an item",
     "Bring a valid school ID when claiming found items",
     "NBSC Student Affairs Office — Lost & Found Management System",
@@ -290,8 +283,6 @@ const PortalDisplay = () => {
   const SLIDE_DURATION = 5000;
   const REFETCH_INTERVAL = 60000;
 
-  const [clicked, setClicked] = useState(false);
-
   const { data: lostData } = useGetLostItemsQuery(
     { page: 1, limit: 50, sortBy: "date", sortOrder: "desc" },
     { pollingInterval: REFETCH_INTERVAL }
@@ -304,13 +295,6 @@ const PortalDisplay = () => {
   const [slideIndex, setSlideIndex] = useState(0);
   const [isActive, setIsActive] = useState(true);
 
-  // Auto-fullscreen on user click (required by browsers)
-  const handleClick = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    }
-    setClicked(true);
-  };
 
   const lostItems: LostItem[] = (lostData?.data ?? []).filter((i: LostItem) => !(i as any).isFound);
   const foundItems: FoundItem[] = (foundData?.data ?? []).filter((i: FoundItem) => !i.isClaimed);
@@ -394,20 +378,6 @@ const PortalDisplay = () => {
         }
       `}</style>
 
-      {/* Click-to-fullscreen overlay — shown only before first click */}
-      {!clicked && (
-        <div
-          onClick={handleClick}
-          className="fixed inset-0 z-50 bg-slate-900 flex flex-col items-center justify-center cursor-pointer gap-4"
-        >
-          <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" className="text-slate-400 sm:w-12 sm:h-12">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-          </svg>
-          <p className="text-slate-400 text-base sm:text-lg font-semibold tracking-wide">Click anywhere to start</p>
-          <p className="text-slate-600 text-sm">NBSC Lost & Found Portal</p>
-        </div>
-      )}
-
       <div className="fixed inset-0 bg-slate-900 flex flex-col overflow-hidden select-none">
         {/* Progress bar */}
         <div className="relative h-1 shrink-0">
@@ -436,7 +406,6 @@ const PortalDisplay = () => {
         <Ticker
           lostCount={lostItems.length}
           foundCount={foundItems.length}
-          foundItems={foundMapped}
         />
       </div>
     </>
