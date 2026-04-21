@@ -87,10 +87,10 @@ const ProgressBar = ({ duration, active }: { duration: number; active: boolean }
 
 // ── Item Card ─────────────────────────────────────────────────────────────────
 const ItemCard = ({
-  name, description, location, date, img, category, badge, badgeColor, isNew,
+  name, description, location, date, img, category, badge, badgeColor,
 }: {
   name: string; description: string; location: string; date: string;
-  img: string; category?: string; badge: string; badgeColor: string; isNew?: boolean;
+  img: string; category?: string; badge: string; badgeColor: string;
 }) => {
   const restricted = badgeColor === "blue" && isRestrictedCategory(category);
 
@@ -101,7 +101,6 @@ const ItemCard = ({
           ? "bg-slate-800 border-red-500/20"
           : "bg-slate-800 border-blue-400/30"
       }`}
-      style={{ animation: isNew ? "cardIn 0.5s ease forwards" : "none", opacity: isNew ? 0 : 1 }}
     >
       <div className="relative h-40 sm:h-48 md:h-56 bg-slate-900 shrink-0 overflow-hidden">
         {restricted ? (
@@ -181,6 +180,40 @@ const ItemCard = ({
   );
 };
 
+// ── Slide renderer (a single "page" of 2 cards) ──────────────────────────────
+const SlideContent = ({
+  pair, accentColor, accent,
+}: {
+  pair: { name: string; description: string; location: string; date: string; img: string; category?: string }[];
+  accentColor: "red" | "blue";
+  accent: { border: string; text: string; dot: string };
+}) => (
+  <div className="w-full h-full grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 content-start shrink-0">
+    {pair.length === 0 ? (
+      <div className="col-span-2 flex flex-col items-center justify-center h-full opacity-30">
+        <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-slate-500 mb-2 sm:mb-3" strokeWidth="1">
+          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+        </svg>
+        <p className="text-slate-400 text-sm sm:text-base md:text-lg">No items to display</p>
+      </div>
+    ) : (
+      pair.map((item, i) => (
+        <ItemCard
+          key={i}
+          {...item}
+          badge={accentColor === "red" ? "Lost" : "Found"}
+          badgeColor={accentColor}
+        />
+      ))
+    )}
+    {pair.length === 1 && (
+      <div className={`rounded-2xl border border-dashed ${accent.border} opacity-20 flex items-center justify-center`}>
+        <p className={`text-xs sm:text-sm ${accent.text} font-semibold uppercase tracking-widest`}>No more items</p>
+      </div>
+    )}
+  </div>
+);
+
 // ── Panel ─────────────────────────────────────────────────────────────────────
 const Panel = ({
   title, accentColor, items, slideIndex, total,
@@ -196,7 +229,8 @@ const Panel = ({
     : { border: "border-blue-400/40", text: "text-blue-300", dot: "bg-blue-400" };
 
   const pairs = chunk(items, 2);
-  const currentPair = pairs[slideIndex % Math.max(pairs.length, 1)] ?? [];
+  const totalPairs = Math.max(pairs.length, 1);
+  const activeIdx = slideIndex % totalPairs;
 
   return (
     <div className="flex flex-col h-full bg-slate-900">
@@ -210,7 +244,7 @@ const Panel = ({
             <div
               key={i}
               className={`rounded-full transition-all duration-300 ${
-                i === slideIndex % Math.max(pairs.length, 1)
+                i === activeIdx
                   ? `w-3 sm:w-4 h-1 sm:h-1.5 ${accent.dot}`
                   : "w-1 sm:w-1.5 h-1 sm:h-1.5 bg-slate-600"
               }`}
@@ -219,30 +253,24 @@ const Panel = ({
         </div>
       </div>
 
-      <div className="flex-1 p-2 sm:p-3 md:p-5 grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 content-start min-h-0 overflow-hidden">
-        {currentPair.length === 0 ? (
-          <div className="col-span-2 flex flex-col items-center justify-center h-full opacity-30">
-            <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-slate-500 mb-2 sm:mb-3" strokeWidth="1">
-              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-            </svg>
-            <p className="text-slate-400 text-sm sm:text-base md:text-lg">No items to display</p>
-          </div>
-        ) : (
-          currentPair.map((item, i) => (
-            <ItemCard
-              key={`${slideIndex}-${i}`}
-              {...item}
-              badge={accentColor === "red" ? "Lost" : "Found"}
-              badgeColor={accentColor}
-              isNew
-            />
-          ))
-        )}
-        {currentPair.length === 1 && (
-          <div className={`rounded-2xl border border-dashed ${accent.border} opacity-20 flex items-center justify-center`}>
-            <p className={`text-xs sm:text-sm ${accent.text} font-semibold uppercase tracking-widest`}>No more items</p>
-          </div>
-        )}
+      {/* Horizontal sliding carousel */}
+      <div className="flex-1 min-h-0 overflow-hidden relative">
+        {(pairs.length === 0 ? [[]] : pairs).map((pair, i) => {
+          const offset = i - activeIdx;
+          return (
+            <div
+              key={i}
+              className="absolute inset-0 p-2 sm:p-3 md:p-5"
+              style={{
+                transform: `translateX(${offset * 100}%)`,
+                transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+                willChange: "transform",
+              }}
+            >
+              <SlideContent pair={pair} accentColor={accentColor} accent={accent} />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -295,7 +323,6 @@ const PortalDisplay = () => {
   const [slideIndex, setSlideIndex] = useState(0);
   const [isActive, setIsActive] = useState(true);
 
-
   const lostItems: LostItem[] = (lostData?.data ?? []).filter((i: LostItem) => !(i as any).isFound);
   const foundItems: FoundItem[] = (foundData?.data ?? []).filter((i: FoundItem) => !i.isClaimed);
 
@@ -323,22 +350,19 @@ const PortalDisplay = () => {
     1
   );
 
-  // Stable tick: only depends on maxSlides (a number, always stable type)
+  // Advance slide — just update the index, CSS handles the transition
   const advanceSlide = useCallback(() => {
     setIsActive(false);
-    setTimeout(() => {
-      setSlideIndex(prev => (prev + 1) % maxSlides);
-      setIsActive(true);
-    }, 400);
+    setSlideIndex(prev => (prev + 1) % maxSlides);
+    // Brief pause then restart progress bar
+    setTimeout(() => setIsActive(true), 100);
   }, [maxSlides]);
 
   useEffect(() => {
-    setIsActive(false);
-    const resetTimer = setTimeout(() => setIsActive(true), 50);
+    setIsActive(true);
     const slideTimer = setInterval(advanceSlide, SLIDE_DURATION);
     return () => {
       clearInterval(slideTimer);
-      clearTimeout(resetTimer);
     };
   }, [advanceSlide]);
 
@@ -354,10 +378,6 @@ const PortalDisplay = () => {
         }
         :fullscreen, ::backdrop { background-color: #0f172a !important; }
         :-webkit-full-screen { background-color: #0f172a !important; }
-        @keyframes cardIn {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
         @keyframes ticker {
           from { transform: translateX(0); }
           to   { transform: translateX(-50%); }
