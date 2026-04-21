@@ -344,19 +344,12 @@ const PortalDisplay = () => {
     category: i.category?.name,
   }));
 
-  const maxSlides = Math.max(
-    Math.ceil(lostMapped.length / 2),
-    Math.ceil(foundMapped.length / 2),
-    1
-  );
-
   // Advance slide — just update the index, CSS handles the transition
   const advanceSlide = useCallback(() => {
-    setIsActive(false);
-    setSlideIndex(prev => (prev + 1) % maxSlides);
-    // Brief pause then restart progress bar
-    setTimeout(() => setIsActive(true), 100);
-  }, [maxSlides]);
+  setIsActive(false);
+  setSlideIndex(prev => prev + 1);
+  setTimeout(() => setIsActive(true), 100);
+}, []);
 
   useEffect(() => {
     setIsActive(true);
