@@ -321,13 +321,13 @@ const SingleLostItem = () => {
 
                 <div>
                   <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Additional details</label>
-                  <textarea rows={3} placeholder="Any extra details about the condition or exactly where it was found"
+                  <textarea rows={2} placeholder=" "
                     {...register("description")}
                     className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm resize-none placeholder-gray-600" />
                 </div>
 
                 <div className="flex items-start gap-2.5 bg-blue-500/5 border border-blue-500/15 rounded-lg px-4 py-3">
-                  <p className="text-blue-300/80 text-xs leading-relaxed">Your report will be submitted to the SAS office. The owner can visit and claim it with proof of ownership.</p>
+                  <p className="text-blue-300/80 text-xs leading-relaxed text-justify">Your report will be submitted to the SAS office. The owner can visit and claim it with proof of ownership.</p>
                 </div>
 
                 <div className="flex gap-3 pt-1">

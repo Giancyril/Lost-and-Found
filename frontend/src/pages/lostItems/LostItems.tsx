@@ -1,12 +1,12 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight,
   FaLightbulb, FaTimes, FaEye, FaTag, FaTrash,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
-  FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle, 
-  FaTh, FaList,
+  FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
+  FaTh, FaList, FaCheck, FaChevronDown,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -72,6 +72,67 @@ const shouldHideImage = (cat: string | undefined, isAdmin: boolean) => {
   return HIDDEN_IMAGE_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
 };
 
+// ── Custom Select ─────────────────────────────────────────────────────────────
+interface SelectOption { value: string; label: string; icon?: React.ReactNode; }
+
+const CustomSelect = ({ options, value, onChange }: {
+  options: SelectOption[]; value: string; onChange: (v: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative flex-1 min-w-0">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm rounded-xl border transition-all duration-150 outline-none bg-gray-900
+          ${open ? "border-blue-500/50 ring-2 ring-blue-500/10 text-white" : "border-white/5 hover:border-white/10 text-gray-300"}`}
+      >
+        <span className="flex items-center gap-2 truncate min-w-0">
+          {selected?.icon && <span className="shrink-0">{selected.icon}</span>}
+          <span className="truncate text-sm">{selected?.label ?? <span className="text-gray-500">Select…</span>}</span>
+        </span>
+        <FaChevronDown size={9} className={`shrink-0 text-gray-500 transition-transform duration-200 ${open ? "rotate-180 text-blue-400" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1.5 w-full min-w-[160px] bg-[#0d1f3c] border border-blue-900/40 rounded-xl shadow-2xl shadow-black/70 overflow-hidden">
+          {/* subtle top accent line */}
+          <div className="h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+          <div className="py-1 max-h-60 overflow-y-auto overscroll-contain">
+            {options.map(opt => {
+              const isActive = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left transition-colors duration-100
+                    ${isActive ? "bg-blue-500/10 text-blue-300" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
+                >
+                  <span className="flex items-center gap-2 truncate min-w-0">
+                    {opt.icon && <span className={`shrink-0 ${isActive ? "" : "opacity-60"}`}>{opt.icon}</span>}
+                    <span className="truncate">{opt.label}</span>
+                  </span>
+                  {isActive && <FaCheck size={8} className="shrink-0 text-blue-400" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Tip Submit Modal ──────────────────────────────────────────────────────────
 const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
   const [location, setLocation] = useState("");
@@ -102,7 +163,6 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
           </button>
         </div>
         <div className="p-5">
-          {/* Item preview */}
           <div className="flex items-center gap-3 bg-gray-800/60 border border-white/5 rounded-xl p-3 mb-4">
             <img src={item?.img || "/bgimg.png"} alt={item?.lostItemName}
               onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
@@ -212,18 +272,13 @@ const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () =>
                     {isAdmin && (
                       confirmIdx === i ? (
                         <div className="flex gap-1 ml-1 shrink-0">
-                          <button onClick={() => handleDelete(i)}
-                            className="flex items-center gap-1 px-2 py-0.5 bg-red-500 hover:bg-red-400 text-white text-[9px] font-bold rounded transition-all">
+                          <button onClick={() => handleDelete(i)} className="flex items-center gap-1 px-2 py-0.5 bg-red-500 hover:bg-red-400 text-white text-[9px] font-bold rounded transition-all">
                             <FaTrash size={7} /> Yes
                           </button>
-                          <button onClick={() => setConfirmIdx(null)}
-                            className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-[9px] rounded transition-all">
-                            No
-                          </button>
+                          <button onClick={() => setConfirmIdx(null)} className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-[9px] rounded transition-all">No</button>
                         </div>
                       ) : (
-                        <button onClick={() => setConfirmIdx(i)}
-                          className="ml-1 w-5 h-5 flex items-center justify-center rounded bg-red-500/10 hover:bg-red-500 border border-red-500/20 text-red-400 hover:text-white transition-all shrink-0">
+                        <button onClick={() => setConfirmIdx(i)} className="ml-1 w-5 h-5 flex items-center justify-center rounded bg-red-500/10 hover:bg-red-500 border border-red-500/20 text-red-400 hover:text-white transition-all shrink-0">
                           <FaTrash size={8} />
                         </button>
                       )
@@ -278,6 +333,26 @@ const LostItemsPage = () => {
   const totalPages = lostItems?.meta?.totalPage || 1;
   const getTipCount = (id: string) => getTipsForItem(id).length;
 
+  // ── Dropdown option arrays ──
+  const sortOptions = [
+    { value: "date-desc",          label: "Date Lost (Newest)" },
+    { value: "date-asc",           label: "Date Lost (Oldest)" },
+    { value: "lostItemName-asc",   label: "Name (A–Z)" },
+    { value: "lostItemName-desc",  label: "Name (Z–A)" },
+    { value: "location-asc",       label: "Location (A–Z)" },
+  ];
+
+  const categoryOptions = [
+    { value: "ALL", label: "All Categories", icon: <FaTag size={9} className="text-gray-400" /> },
+    ...(categoriesData?.data?.map((cat: any) => ({
+      value: cat.name,
+      label: cat.name,
+      icon: getCategoryIcon(cat.name),
+    })) ?? []),
+  ];
+
+  const sortValue = `${sortBy}-${sortOrder}`;
+
   return (
     <div className="min-h-screen bg-gray-950 pb-16">
 
@@ -294,8 +369,6 @@ const LostItemsPage = () => {
               <p className="text-gray-500 text-sm mt-1 max-w-lg">
                 Browse items reported missing. Seen something? Submit an anonymous sighting to help reunite owners with their belongings.
               </p>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
             </div>
           </div>
         </div>
@@ -316,39 +389,38 @@ const LostItemsPage = () => {
               </button>
             )}
           </div>
+
           <div className="flex items-center gap-2">
-            <select value={`${sortBy}-${sortOrder}`}
-              onChange={e => { const [f, o] = e.target.value.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }}
-              className="flex-1 min-w-0 py-2.5 px-3 text-sm text-white border border-white/5 rounded-xl bg-gray-900 focus:ring-2 focus:ring-blue-500/30 focus:outline-none">
-              <option value="date-desc">Date Lost (Newest)</option>
-              <option value="date-asc">Date Lost (Oldest)</option>
-              <option value="lostItemName-asc">Name (A–Z)</option>
-              <option value="lostItemName-desc">Name (Z–A)</option>
-              <option value="location-asc">Location (A–Z)</option>
-            </select>
-            <select value={categoryFilter} onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
-              className="flex-1 min-w-0 py-2.5 px-3 text-sm text-white border border-white/5 rounded-xl bg-gray-900 focus:ring-2 focus:ring-blue-500/30 focus:outline-none">
-              <option value="ALL">All Categories</option>
-              {categoriesData?.data?.map((cat: any) => (
-                <option key={cat.id} value={cat.name}>{cat.name}</option>
-              ))}
-            </select>
+            {/* ── Custom Sort dropdown ── */}
+            <CustomSelect
+              options={sortOptions}
+              value={sortValue}
+              onChange={(v) => {
+                const [f, o] = v.split("-");
+                setSortBy(f); setSortOrder(o); setCurrentPage(1);
+              }}
+            />
+
+            {/* ── Custom Category dropdown ── */}
+            <CustomSelect
+              options={categoryOptions}
+              value={categoryFilter}
+              onChange={(v) => { setCategoryFilter(v); setCurrentPage(1); }}
+            />
+
             {/* View toggle */}
             <div className="flex gap-0.5 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
-              <button
-                onClick={() => setViewMode("grid")}
-                title="Grid view"
+              <button onClick={() => setViewMode("grid")} title="Grid view"
                 className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "text-gray-500 hover:text-white"}`}>
                 <FaTh size={12} />
               </button>
-              <button
-                onClick={() => setViewMode("list")}
-                title="List view"
+              <button onClick={() => setViewMode("list")} title="List view"
                 className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "text-gray-500 hover:text-white"}`}>
                 <FaList size={12} />
               </button>
             </div>
           </div>
+
           {fuzzyTerm && (
             <p className="text-xs text-gray-600 pl-1">
               Results for <span className="text-blue-400 font-medium">"{fuzzyTerm}"</span> — updating as you type
@@ -391,7 +463,6 @@ const LostItemsPage = () => {
             )}
           </div>
         ) : viewMode === "grid" ? (
-          /* ── GRID VIEW ── */
           <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredItems.map((item: any) => {
               const tipCount = getTipCount(item.id);
@@ -406,7 +477,6 @@ const LostItemsPage = () => {
                           <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
                         </div>
                         <p className="text-gray-500 text-xs">Image Hidden</p>
-                        <p className="text-gray-600 text-[10px] text-center px-6 leading-relaxed">Submit a claim to verify ownership</p>
                       </div>
                     ) : (
                       <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "") : "") || item?.img || "/bgimg.png"}
@@ -417,7 +487,7 @@ const LostItemsPage = () => {
                     <div className="absolute top-3 left-3">
                       <span className="px-2 py-0.5 bg-red-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-red-500/30">Lost</span>
                     </div>
-                    <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
+                    <div className="absolute top-3 right-3">
                       <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm border ${daysAgo > 30 ? "bg-orange-500/80 text-white border-orange-400/30" : daysAgo > 7 ? "bg-yellow-500/80 text-gray-900 border-yellow-400/30" : "bg-black/50 text-white border-white/15"}`}>
                         {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
                       </span>
@@ -433,22 +503,16 @@ const LostItemsPage = () => {
                     <p className="text-gray-500 text-xs mb-3 line-clamp-2 leading-relaxed">{item?.description}</p>
                     <div className="space-y-1.5 mt-auto mb-3">
                       <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                          <FaMapMarkerAlt className="text-blue-400" size={8} />
-                        </div>
+                        <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaMapMarkerAlt className="text-blue-400" size={8} /></div>
                         <span className="line-clamp-1">{item?.location}</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                          <FaCalendarAlt className="text-blue-400" size={8} />
-                        </div>
+                        <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></div>
                         <span>{item?.date?.split("T")[0] ?? "—"}</span>
                       </div>
                       {item?.category?.name && (
                         <div className="flex items-center gap-2 text-xs text-gray-400">
-                          <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                            {getCategoryIcon(item.category.name)}
-                          </div>
+                          <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">{getCategoryIcon(item.category.name)}</div>
                           <span>{item.category.name}</span>
                         </div>
                       )}
@@ -457,7 +521,7 @@ const LostItemsPage = () => {
                     <div className="grid grid-cols-3 gap-1.5">
                       <button onClick={() => setTipItem(item)} disabled={!!item?.isFound}
                         className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                         I Saw This
+                        I Saw This
                       </button>
                       <button onClick={() => setViewTipsItem(item)}
                         className="flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[11px] font-medium rounded-lg transition-all">
@@ -471,9 +535,7 @@ const LostItemsPage = () => {
             })}
           </div>
         ) : (
-          /* ── LIST VIEW ── */
           <div className="space-y-2">
-            {/* List header */}
             <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-white/5">
               <div className="col-span-4">Item</div>
               <div className="col-span-2">Location</div>
@@ -488,7 +550,6 @@ const LostItemsPage = () => {
               const hideImg     = shouldHideImage(item?.category?.name, isAdmin);
               return (
                 <div key={item.id} className="group bg-gray-900 border border-white/5 hover:border-blue-500/30 rounded-xl transition-all duration-150 hover:bg-gray-900/80">
-                  {/* Mobile list card */}
                   <div className="sm:hidden flex items-center gap-3 p-3">
                     <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-800 shrink-0">
                       {hideImg ? (
@@ -516,16 +577,13 @@ const LostItemsPage = () => {
                         I Saw This
                       </button>
                       <div className="flex gap-1">
-                        <button onClick={() => setViewTipsItem(item)}
-                          className="px-2.5 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[10px] rounded-lg transition-all">
+                        <button onClick={() => setViewTipsItem(item)} className="px-2.5 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[10px] rounded-lg transition-all">
                           <FaEye size={8} className="inline mr-1" />{tipCount}
                         </button>
                         <Link to={`/lostItems/${item.id}`} className="flex items-center px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] rounded-lg transition-all">Details</Link>
                       </div>
                     </div>
                   </div>
-
-                  {/* Desktop list row */}
                   <div className="hidden sm:grid grid-cols-12 gap-4 items-center px-4 py-3">
                     <div className="col-span-4 flex items-center gap-3 min-w-0">
                       <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0">
@@ -591,22 +649,16 @@ const LostItemsPage = () => {
               <FaChevronLeft size={10} className="mr-1.5" /> Prev
             </button>
             {(() => {
-              const pages = [];
-              const max = 5;
+              const pages = []; const max = 5;
               let start = Math.max(1, currentPage - Math.floor(max / 2));
-              const end   = Math.min(totalPages, start + max - 1);
+              const end = Math.min(totalPages, start + max - 1);
               if (end - start + 1 < max) start = Math.max(1, end - max + 1);
               if (start > 1) {
                 pages.push(<button key={1} onClick={() => setCurrentPage(1)} className="px-3 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">1</button>);
                 if (start > 2) pages.push(<span key="e1" className="px-1 text-gray-700 text-xs">…</span>);
               }
               for (let i = start; i <= end; i++) {
-                pages.push(
-                  <button key={i} onClick={() => setCurrentPage(i)}
-                    className={`px-3 py-2 text-xs font-medium rounded-lg transition-all ${currentPage === i ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
-                    {i}
-                  </button>
-                );
+                pages.push(<button key={i} onClick={() => setCurrentPage(i)} className={`px-3 py-2 text-xs font-medium rounded-lg transition-all ${currentPage === i ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>{i}</button>);
               }
               if (end < totalPages) {
                 if (end < totalPages - 1) pages.push(<span key="e2" className="px-1 text-gray-700 text-xs">…</span>);
@@ -622,10 +674,8 @@ const LostItemsPage = () => {
         </div>
       )}
 
-      {/* ── Modals ── */}
       {tipItem      && <TipModal item={tipItem} onClose={() => setTipItem(null)} />}
       {viewTipsItem && <TipsViewerModal item={viewTipsItem} onClose={() => setViewTipsItem(null)} isAdmin={isAdmin} />}
-
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
     </div>
   );

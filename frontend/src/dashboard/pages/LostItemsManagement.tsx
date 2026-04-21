@@ -15,6 +15,7 @@ import {
   useEditMyLostItemMutation,
   useCategoryQuery,
 } from "../../redux/api/api";
+import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 
 interface LostItem {
   id: string;
@@ -374,7 +375,7 @@ const LostItemsManagement = () => {
       {/* Edit Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
@@ -390,79 +391,48 @@ const LostItemsManagement = () => {
                 <FaTimes size={12} />
               </button>
             </div>
-            <form onSubmit={handleEditSubmit} className="p-5 space-y-4">
+            <form onSubmit={handleEditSubmit} className="p-5 space-y-4 overflow-visible flex-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
-                    <FaBoxOpen size={10} className="text-cyan-400" />
-                    <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Item Name</p>
-                  </div>
-                  <div className="p-3">
-                    <input type="text" value={editFormData.lostItemName}
-                      onChange={e => setEditFormData({ ...editFormData, lostItemName: e.target.value })}
-                      disabled={isEditLoading} placeholder="e.g. Blue Backpack"
-                      className="w-full bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none" required />
-                  </div>
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5"><FaBoxOpen size={10} className="text-cyan-400" /><p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Item Name</p></div>
+                  <div className="p-3"><input type="text" value={editFormData.lostItemName} onChange={e => setEditFormData({ ...editFormData, lostItemName: e.target.value })} disabled={isEditLoading} placeholder="e.g. Blue Backpack" className="w-full bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none" required /></div>
                 </div>
                 <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
-                    <FaMapMarkerAlt size={10} className="text-blue-400" />
-                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Last Known Location</p>
-                  </div>
-                  <div className="p-3">
-                    <input type="text" value={editFormData.location}
-                      onChange={e => setEditFormData({ ...editFormData, location: e.target.value })}
-                      disabled={isEditLoading} placeholder="e.g. Canteen Area"
-                      className="w-full bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none" required />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
-                    <FaCalendarAlt size={10} className="text-emerald-400" />
-                    <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Date Lost</p>
-                  </div>
-                  <div className="p-3">
-                    <input type="date" value={editFormData.date}
-                      onChange={e => setEditFormData({ ...editFormData, date: e.target.value })}
-                      disabled={isEditLoading} className="w-full bg-transparent text-white text-sm focus:outline-none [color-scheme:dark]" required />
-                  </div>
-                </div>
-                <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
-                    <FaTag size={10} className="text-orange-400" />
-                    <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">Category</p>
-                  </div>
-                  <div className="p-3">
-                    <select value={editFormData.categoryId}
-                      onChange={e => setEditFormData({ ...editFormData, categoryId: e.target.value })}
-                      disabled={isEditLoading} className="w-full bg-transparent text-white text-sm focus:outline-none appearance-none" required>
-                      <option value="" className="bg-gray-900">Select category</option>
-                      {categoriesData?.data?.map((c: any) => (
-                        <option key={c.id} value={c.id} className="bg-gray-900">{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5"><FaMapMarkerAlt size={10} className="text-blue-400" /><p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Last Known Location</p></div>
+                  <div className="p-3"><input type="text" value={editFormData.location} onChange={e => setEditFormData({ ...editFormData, location: e.target.value })} disabled={isEditLoading} placeholder="e.g. Canteen Area" className="w-full bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none" required /></div>
                 </div>
               </div>
               <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
-                  <FaClipboardList size={10} className="text-violet-400" />
-                  <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Description</p>
-                </div>
+                <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5"><FaTag size={10} className="text-orange-400" /><p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">Category</p></div>
                 <div className="p-3">
-                  <textarea value={editFormData.description}
-                    onChange={e => setEditFormData({ ...editFormData, description: e.target.value })}
-                    disabled={isEditLoading} rows={3} placeholder="Describe the item..."
-                    className="w-full bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none resize-none" required />
+                  <select value={editFormData.categoryId} onChange={e => setEditFormData({ ...editFormData, categoryId: e.target.value })} disabled={isEditLoading} className="w-full bg-transparent text-white text-sm focus:outline-none appearance-none" required>
+                    <option value="" className="bg-gray-900">Select category</option>
+                    {categoriesData?.data?.map((c: any) => (<option key={c.id} value={c.id} className="bg-gray-900">{c.name}</option>))}
+                  </select>
                 </div>
               </div>
+              <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+                <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5"><FaClipboardList size={10} className="text-violet-400" /><p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Description</p></div>
+                <div className="p-3"><textarea value={editFormData.description} onChange={e => setEditFormData({ ...editFormData, description: e.target.value })} disabled={isEditLoading} rows={3} placeholder="Describe the item..." className="w-full bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none resize-none" required /></div>
+              </div>
+              <div className="bg-gray-800/60 border border-white/5 rounded-xl">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+                <FaCalendarAlt size={10} className="text-emerald-400" />
+                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Date Lost</p>
+              </div>
+              <div className="p-3">
+                <CustomDatePicker
+              value={editFormData.date}
+              onChange={(v) => setEditFormData({ ...editFormData, date: v })}
+              max={new Date().toISOString().split("T")[0]}
+              placeholder="Select date lost"
+              openUp
+            />
+              </div>
+            </div>
               <div className="flex gap-2 pt-1">
-                <button type="button" onClick={handleEditCancel} disabled={isEditLoading}
-                  className="flex-1 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 py-2.5 rounded-xl text-xs font-medium transition-colors">Cancel</button>
-                <button type="submit" disabled={isEditLoading}
-                  className="flex-1 bg-yellow-500/10 hover:bg-yellow-500 border border-yellow-500/30 text-yellow-400 hover:text-white disabled:opacity-50 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5">
+                <button type="button" onClick={handleEditCancel} disabled={isEditLoading} className="flex-1 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 py-2.5 rounded-xl text-xs font-medium transition-colors">Cancel</button>
+                <button type="submit" disabled={isEditLoading} className="flex-1 bg-yellow-500/10 hover:bg-yellow-500 border border-yellow-500/30 text-yellow-400 hover:text-white disabled:opacity-50 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5">
                   {isEditLoading ? <><Spinner /> Updating...</> : <><FaEdit size={10} /> Update Item</>}
                 </button>
               </div>
