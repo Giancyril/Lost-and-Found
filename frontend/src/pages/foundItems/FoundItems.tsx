@@ -245,6 +245,8 @@ const FoundItemsPage = () => {
   const [addSelectedFile, setAddSelectedFile]   = useState<File | null>(null);
   const [addPreview, setAddPreview]             = useState<string>("");
   const [addUploadError, setAddUploadError]     = useState("");
+  // ── NEW: dedicated error for missing photo ──
+  const [addPhotoError, setAddPhotoError]       = useState("");
   const [addIsDragging, setAddIsDragging]       = useState(false);
   const [addStartDate, setAddStartDate]         = useState(new Date().toISOString().split("T")[0]);
   const [addSelectedMenucategoryId, setAddSelectedMenucategoryId] = useState("");
@@ -271,6 +273,7 @@ const FoundItemsPage = () => {
   const handleAddFileChange = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setAddUploadError("");
+    setAddPhotoError(""); // clear photo error when user picks a file
     let file = files[0];
     if (!file.type.startsWith("image/")) { setAddUploadError("Only image files are allowed."); return; }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) { setAddUploadError(`File must be under ${MAX_SIZE_MB}MB.`); return; }
@@ -283,13 +286,22 @@ const FoundItemsPage = () => {
 
   const closeAddModal = () => {
     setIsAddModalOpen(false); addReset();
-    setAddSelectedFile(null); setAddPreview(""); setAddUploadError("");
+    setAddSelectedFile(null); setAddPreview(""); setAddUploadError(""); setAddPhotoError(""); // ← clears photo error too
     setAddSelectedMenu(""); setAddSelectedMenucategoryId("");
     setAddStartDate(new Date().toISOString().split("T")[0]);
   };
 
   const onAddSubmit = async (data: any) => {
     if (!addSelectedMenucategoryId) return;
+
+    // ── Photo is required — block submission if none uploaded ──
+    if (!addSelectedFile && !addPreview) {
+      setAddPhotoError("A photo of the item is required.");
+      return;
+    }
+    setAddPhotoError("");
+    // ──────────────────────────────────────────────────────────
+
     try {
       const res: any = await createFoundItem({
         img: addPreview || "", categoryId: addSelectedMenucategoryId,
@@ -355,7 +367,7 @@ const FoundItemsPage = () => {
               </div>
               {isAdmin && (
                 <button onClick={() => setIsAddModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-blue-900/30">
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all">
                   <FaPlus size={10} /> Add Found Item
                 </button>
               )}
@@ -614,15 +626,31 @@ const FoundItemsPage = () => {
                   <input {...addRegister("claimProcess", { required: "Claim instructions required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder="e.g. Visit the SAS office with a valid school ID" />
                   {addErrors.claimProcess && <p className="text-red-400 text-xs">{addErrors.claimProcess?.message as string}</p>}
                 </div>
+
+                {/* ── Item Photo — required ── */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>Item Photo <span className="text-red-400">*</span></label>
+                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    Item Photo <span className="text-red-400">*</span>
+                  </label>
                   {!addPreview ? (
-                    <div className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${addIsDragging ? "border-blue-500 bg-blue-900/10" : "border-gray-700 bg-gray-800/40 hover:border-blue-500/60 hover:bg-gray-800/70"}`}
-                      onClick={() => addFileInputRef.current?.click()} onDragOver={e => { e.preventDefault(); setAddIsDragging(true); }} onDragLeave={() => setAddIsDragging(false)} onDrop={e => { e.preventDefault(); setAddIsDragging(false); handleAddFileChange(e.dataTransfer.files); }}>
+                    <div
+                      className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
+                        ${addPhotoError ? "border-red-500/60 bg-red-900/5" : addIsDragging ? "border-blue-500 bg-blue-900/10" : "border-gray-700 bg-gray-800/40 hover:border-blue-500/60 hover:bg-gray-800/70"}`}
+                      onClick={() => addFileInputRef.current?.click()}
+                      onDragOver={e => { e.preventDefault(); setAddIsDragging(true); }}
+                      onDragLeave={() => setAddIsDragging(false)}
+                      onDrop={e => { e.preventDefault(); setAddIsDragging(false); handleAddFileChange(e.dataTransfer.files); }}
+                    >
                       <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
                       <div className="flex flex-col items-center gap-2.5">
-                        <div className="w-12 h-12 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400"><svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg></div>
-                        <div><p className="text-sm text-gray-300"><span className="text-blue-400 font-semibold">Click to upload</span> or drag & drop</p><p className="text-xs text-gray-600 mt-0.5">JPG, PNG, WEBP · Max {MAX_SIZE_MB}MB</p></div>
+                        <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center ${addPhotoError ? "bg-red-900/20 border-red-500/30 text-red-400" : "bg-gray-800 border-gray-700 text-gray-400"}`}>
+                          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-300"><span className="text-blue-400 font-semibold">Click to upload</span> or drag & drop</p>
+                          <p className="text-xs text-gray-600 mt-0.5">JPG, PNG, WEBP · Max {MAX_SIZE_MB}MB</p>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -641,13 +669,21 @@ const FoundItemsPage = () => {
                       <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
                     </div>
                   )}
+                  {/* show compression/format error OR the missing-photo error */}
                   {addUploadError && <p className="text-red-400 text-xs">{addUploadError}</p>}
+                  {addPhotoError  && !addUploadError && <p className="text-red-400 text-xs">{addPhotoError}</p>}
                 </div>
               </form>
             </div>
             <div className="px-6 py-4 border-t border-white/5 flex gap-3 shrink-0 bg-gray-900 rounded-b-2xl">
               <button type="button" onClick={closeAddModal} disabled={isBusy} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
-              <button type="submit" form="add-found-form" disabled={isBusy} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+              {/* ── Submit disabled when busy OR no photo uploaded ── */}
+              <button
+                type="submit"
+                form="add-found-form"
+                disabled={isBusy || (!addSelectedFile && !addPreview)}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+              >
                 {isBusy ? <><Spinner size="sm" /> Submitting…</> : "Submit Found Item"}
               </button>
             </div>

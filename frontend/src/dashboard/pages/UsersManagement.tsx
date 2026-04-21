@@ -355,7 +355,7 @@ const UsersManagement = () => {
                 </div>
               )}
               <div className="flex items-start gap-2.5 px-3.5 py-2.5 bg-red-500/5 border border-red-500/15 rounded-xl">
-                <p className="text-red-300/80 text-xs leading-relaxed">
+                <p className="text-red-300/80 text-xs leading-relaxed text-justify">
                   Deleting this account will <strong>permanently remove</strong> it and all associated data.
                 </p>
               </div>

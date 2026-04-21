@@ -1,7 +1,7 @@
 import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import { toast, ToastContainer } from "react-toastify";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   useCategoryQuery,
   useCreateLostItemMutation,
@@ -12,7 +12,11 @@ import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
 import {
-  FaQrcode, FaUserCheck, FaTimes, FaSearch, FaSpinner
+  FaQrcode, FaUserCheck, FaTimes, FaSearch, FaSpinner,
+  FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
+  FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
+  FaTshirt, FaCamera, FaClock, FaTint, FaTag,
+  FaCheck, FaChevronDown,
 } from "react-icons/fa";
 import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
 import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
@@ -21,6 +25,104 @@ import { logToSheet } from "../../utils/sheetsLogger";
 
 const MAX_SIZE_MB = 5;
 
+// ── Category icon resolver ────────────────────────────────────────────────────
+const getCategoryIcon = (name: string) => {
+  const n = name?.toLowerCase() ?? "";
+  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch"))   return <FaWallet    size={10} className="text-amber-400" />;
+  if (n.includes("phone") || n.includes("mobile") || n.includes("celphone")) return <FaMobileAlt size={10} className="text-cyan-400" />;
+  if (n.includes("laptop") || n.includes("computer") || n.includes("electronic") || n.includes("device") || n.includes("gadget")) return <FaLaptop size={10} className="text-indigo-400" />;
+  if (n.includes("key"))                                                     return <FaKey        size={10} className="text-orange-400" />;
+  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage"))  return <FaBriefcase  size={10} className="text-amber-400" />;
+  if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod")) return <FaHeadphones size={10} className="text-green-400" />;
+  if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass")) return <FaGlasses size={10} className="text-teal-400" />;
+  if (n.includes("book") || n.includes("stationery") || n.includes("notebook")) return <FaBook size={10} className="text-yellow-400" />;
+  if (n.includes("id") || n.includes("card") || n.includes("document"))     return <FaIdCard     size={10} className="text-blue-400" />;
+  if (n.includes("umbrella"))                                                return <FaUmbrella   size={10} className="text-blue-400" />;
+  if (n.includes("cloth") || n.includes("shirt") || n.includes("uniform") || n.includes("wear")) return <FaTshirt size={10} className="text-purple-400" />;
+  if (n.includes("camera") || n.includes("photo"))                          return <FaCamera     size={10} className="text-violet-400" />;
+  if (n.includes("watch") || n.includes("clock"))                           return <FaClock      size={10} className="text-gray-300" />;
+  if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask")) return <FaTint size={10} className="text-cyan-400" />;
+  return <FaTag size={10} className="text-blue-400" />;
+};
+
+// ── Custom Select ─────────────────────────────────────────────────────────────
+interface SelectOption { value: string; label: string; icon?: React.ReactNode; }
+
+const CustomSelect = ({
+  options, value, onChange, placeholder = "Select…", error,
+}: {
+  options: SelectOption[]; value: string; onChange: (v: string) => void;
+  placeholder?: string; error?: boolean;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-lg border transition-all duration-150 outline-none bg-gray-800/60
+          ${open
+            ? "border-blue-500 ring-2 ring-blue-500/60 text-white"
+            : error
+              ? "border-red-500/60 text-gray-400 hover:border-red-400/80"
+              : "border-gray-700 text-gray-400 hover:border-gray-600 hover:text-white"
+          }`}
+      >
+        <span className="flex items-center gap-2.5 truncate min-w-0">
+          {selected?.icon && <span className="shrink-0">{selected.icon}</span>}
+          <span className={`truncate text-sm ${selected ? "text-white" : "text-gray-500"}`}>
+            {selected?.label ?? placeholder}
+          </span>
+        </span>
+        <FaChevronDown
+          size={10}
+          className={`shrink-0 transition-transform duration-200 ${open ? "rotate-180 text-blue-400" : "text-gray-500"}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1.5 w-full bg-[#0d1f3c] border border-blue-900/40 rounded-xl shadow-2xl shadow-black/70 overflow-hidden">
+          <div className="h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+          <div className="py-1 max-h-60 overflow-y-auto overscroll-contain">
+            {options.map(opt => {
+              const isActive = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm text-left transition-colors duration-100
+                    ${isActive ? "bg-blue-500/10 text-blue-300" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
+                >
+                  <span className="flex items-center gap-2.5 truncate min-w-0">
+                    {opt.icon && (
+                      <span className={`shrink-0 ${isActive ? "" : "opacity-60"}`}>{opt.icon}</span>
+                    )}
+                    <span className="truncate">{opt.label}</span>
+                  </span>
+                  {isActive && <FaCheck size={9} className="shrink-0 text-blue-400" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Field wrapper ─────────────────────────────────────────────────────────────
 const Field = ({
   label, required, error, icon, children,
 }: {
@@ -126,7 +228,6 @@ const StepIndicator = ({ current }: { current: number }) => (
 
 // ── Help Modal Pages ──────────────────────────────────────────────────────────
 const HELP_PAGES = [
-  // Page 0 — Fetch Student Info
   {
     tag: <><FaSearch size={8} /> Fetch Student Info</>,
     steps: [
@@ -136,7 +237,6 @@ const HELP_PAGES = [
     ],
     tip: null,
   },
-  // Page 1 — Scan ID (all steps together)
   {
     tag: <><FaQrcode size={8} /> Scan ID</>,
     steps: [
@@ -290,6 +390,15 @@ const ReportLostItem = () => {
     } catch { toast.error("Failed to report lost item"); }
   };
 
+  // ── Build category options for CustomSelect ──
+  const categoryOptions: { value: string; label: string; icon: React.ReactNode }[] = (
+    Category?.data?.map((cat: any) => ({
+      value: cat.id,
+      label: cat.name,
+      icon: getCategoryIcon(cat.name),
+    })) ?? []
+  );
+
   const totalHelpPages = HELP_PAGES.length;
   const currentHelpPage = HELP_PAGES[helpPage];
   const isLastHelpPage = helpPage === totalHelpPages - 1;
@@ -368,46 +477,27 @@ const ReportLostItem = () => {
                     {showHelpModal && (
                       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                         <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col">
-
-                          {/* Modal header */}
                           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
                             <h3 className="text-sm font-bold text-white">How to Use</h3>
-                            <button
-                              onClick={closeHelp}
-                              className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                            >
+                            <button onClick={closeHelp} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
                               <FaTimes size={12} />
                             </button>
                           </div>
-
-                          {/* Page indicator dots */}
                           <div className="flex items-center justify-center gap-1.5 pt-4 px-5 shrink-0">
                             {HELP_PAGES.map((_, i) => (
-                              <button
-                                key={i}
-                                onClick={() => setHelpPage(i)}
-                                className={`h-1.5 rounded-full transition-all duration-300 ${
-                                  i === helpPage ? "bg-blue-400 w-5" : "bg-gray-700 w-1.5 hover:bg-gray-500"
-                                }`}
-                              />
+                              <button key={i} onClick={() => setHelpPage(i)}
+                                className={`h-1.5 rounded-full transition-all duration-300 ${i === helpPage ? "bg-blue-400 w-5" : "bg-gray-700 w-1.5 hover:bg-gray-500"}`} />
                             ))}
                           </div>
-
-                          {/* Page content — fixed height, no scroll */}
                           <div className="px-5 py-5 flex-1 flex flex-col justify-between min-h-[260px]">
                             <div className="space-y-4">
-                              {/* Section tag */}
                               <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
                                 {currentHelpPage.tag}
                               </p>
-
-                              {/* Steps */}
                               <div className="space-y-3">
                                 {currentHelpPage.steps.map(({ n, title, desc }) => (
                                   <div key={n} className="flex gap-3">
-                                    <div className="shrink-0 w-6 h-6 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-black">
-                                      {n}
-                                    </div>
+                                    <div className="shrink-0 w-6 h-6 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-black">{n}</div>
                                     <div>
                                       <p className="text-white text-xs font-semibold">{title}</p>
                                       <p className="text-gray-500 text-[11px] mt-0.5 leading-relaxed">{desc}</p>
@@ -415,55 +505,25 @@ const ReportLostItem = () => {
                                   </div>
                                 ))}
                               </div>
-
-                              {/* Optional tip */}
-                              {currentHelpPage.tip && (
-                                <div className="mt-3">{currentHelpPage.tip}</div>
-                              )}
+                              {currentHelpPage.tip && <div className="mt-3">{currentHelpPage.tip}</div>}
                             </div>
                           </div>
-
-                          {/* Footer nav */}
                           <div className="px-5 pb-5 pt-2 border-t border-gray-800 shrink-0 flex items-center justify-between gap-2">
-                            {/* Back button */}
-                            <button
-                              onClick={() => setHelpPage((p) => Math.max(0, p - 1))}
-                              disabled={helpPage === 0}
-                              className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            >
+                            <button onClick={() => setHelpPage((p) => Math.max(0, p - 1))} disabled={helpPage === 0}
+                              className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                               Back
                             </button>
-
                             <div className="flex items-center gap-2">
-                              {/* Skip — only on non-last pages */}
                               {!isLastHelpPage && (
-                                <button
-                                  onClick={closeHelp}
-                                  className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors"
-                                >
-                                  Skip
-                                </button>
+                                <button onClick={closeHelp} className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors">Skip</button>
                               )}
-
-                              {/* Next / Got it */}
                               {isLastHelpPage ? (
-                                <button
-                                  onClick={closeHelp}
-                                  className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors"
-                                >
-                                  Got it
-                                </button>
+                                <button onClick={closeHelp} className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors">Got it</button>
                               ) : (
-                                <button
-                                  onClick={() => setHelpPage((p) => p + 1)}
-                                  className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors"
-                                >
-                                  Next
-                                </button>
+                                <button onClick={() => setHelpPage((p) => p + 1)} className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors">Next</button>
                               )}
                             </div>
                           </div>
-
                         </div>
                       </div>
                     )}
@@ -525,32 +585,33 @@ const ReportLostItem = () => {
                       <Field label="Date Lost" icon={<IconCalendar />}>
                         <CustomDatePicker value={startDate} onChange={setStartDate} max={new Date().toISOString().split("T")[0]} placeholder="Select date lost" />
                       </Field>
-                      <Field label="Item Category" required error={categoryTouched && !selectedMenucategoryId ? "Category is required" : ""} icon={<IconGrid />}>
-                        <div className="relative">
-                          <select
-                            className={`${inputCls} appearance-none pr-10 ${!selectedMenucategoryId ? "text-gray-500" : "text-white"}`}
-                            value={selectedMenucategoryId}
-                            onChange={(e) => {
-                              const cat = Category?.data?.find((c: any) => c.id === e.target.value);
-                              if (cat) handleMenuChange(cat.name, cat.id);
-                            }}
-                          >
-                            <option value="" disabled>Select a category</option>
-                            {Category?.data?.map((cat: any) => (
-                              <option key={cat.id} value={cat.id} className="text-white bg-gray-800">{cat.name}</option>
-                            ))}
-                          </select>
-                          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
-                            <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
-                          </div>
-                        </div>
+
+                      {/* ── Category — CustomSelect replacing native <select> ── */}
+                      <Field
+                        label="Item Category"
+                        required
+                        error={categoryTouched && !selectedMenucategoryId ? "Category is required" : ""}
+                        icon={<IconGrid />}
+                      >
+                        <CustomSelect
+                          options={categoryOptions}
+                          value={selectedMenucategoryId}
+                          onChange={(id) => {
+                            const cat = Category?.data?.find((c: any) => c.id === id);
+                            if (cat) handleMenuChange(cat.name, cat.id);
+                          }}
+                          placeholder="Select a category"
+                          error={categoryTouched && !selectedMenucategoryId}
+                        />
                       </Field>
                     </div>
+
                     <Field label="Description" required error={errors.description?.message as string} icon={<IconText />}>
                       <textarea {...register("description", { required: "Description is required" })}
                         rows={1} className={`${inputCls} resize-none`}
                         placeholder="Describe the item color, brand, size, etc." />
                     </Field>
+
                     {selectedMenucategoryId && (
                       <ItemMatchSuggestions
                         categoryId={selectedMenucategoryId} categoryName={selectedMenu}
@@ -567,7 +628,11 @@ const ReportLostItem = () => {
                     <Field label="Item Photo" required error={uploadError} icon={<IconImage />}>
                       {!preview ? (
                         <div
-                          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-200 ${isDragging ? "border-blue-500 bg-blue-900/10" : "border-gray-700 bg-gray-800/40 hover:border-blue-500/70 hover:bg-gray-800/70"}`}
+                          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-200 ${
+                            uploadError ? "border-red-500/60 bg-red-900/5"
+                            : isDragging ? "border-blue-500 bg-blue-900/10"
+                            : "border-gray-700 bg-gray-800/40 hover:border-blue-500/70 hover:bg-gray-800/70"
+                          }`}
                           onClick={() => fileInputRef.current?.click()}
                           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                           onDragLeave={() => setIsDragging(false)}
@@ -575,7 +640,7 @@ const ReportLostItem = () => {
                         >
                           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e.target.files)} />
                           <div className="flex flex-col items-center gap-3">
-                            <div className="w-14 h-14 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400">
+                            <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center ${uploadError ? "bg-red-900/20 border-red-500/30 text-red-400" : "bg-gray-800 border-gray-700 text-gray-400"}`}>
                               <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                               </svg>
@@ -647,7 +712,8 @@ const ReportLostItem = () => {
                     </div>
                   ) : (
                     <button type="button" onClick={onSubmit}
-                      className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg">
+                      disabled={!selectedFile}
+                      className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all duration-200 shadow-lg">
                       Submit Report
                     </button>
                   )}

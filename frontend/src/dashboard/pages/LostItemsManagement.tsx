@@ -478,7 +478,7 @@ const LostItemsManagement = () => {
                 </div>
               )}
               <div className="bg-red-500/5 border border-red-500/15 rounded-xl px-3.5 py-2.5">
-                <p className="text-red-300/80 text-xs leading-relaxed">This will <strong>permanently remove</strong> the item and all associated data.</p>
+                <p className="text-red-300/80 text-xs leading-relaxed text-justify">This will <strong>permanently remove</strong> the item and all associated data.</p>
               </div>
               <div className="flex gap-2">
                 <button onClick={handleDeleteCancel} disabled={isDeleteLoading}

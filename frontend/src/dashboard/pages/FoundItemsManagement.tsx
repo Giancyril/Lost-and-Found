@@ -459,7 +459,7 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
                 </div>
               )}
               <div className="bg-red-500/5 border border-red-500/15 rounded-xl px-3.5 py-2.5">
-                <p className="text-red-300/80 text-xs">This will <strong>permanently remove</strong> the item and all associated data.</p>
+                <p className="text-red-300/80 text-xs text-justify">This will <strong>permanently remove</strong> the item and all associated data.</p>
               </div>
               <div className="flex gap-2">
                 <button onClick={handleDeleteCancel} className="flex-1 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 py-2.5 rounded-xl text-xs font-medium transition-colors">Cancel</button>
