@@ -9,13 +9,14 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import Modals from "../modal/Modal";
 import { ToastContainer } from "react-toastify";
-import { FaCog, FaSignOutAlt, FaTachometerAlt, FaChevronDown } from "react-icons/fa";
+import { FaCog, FaSignOutAlt, FaTachometerAlt, FaChevronDown, FaTv } from "react-icons/fa";
 import { useState, useRef, useEffect } from "react";
 import NotificationBell from "../notifications/NotificationBell";
 
 export function Navbars() {
   const navigate = useNavigate();
   const users: any = useUserVerification();
+  const isAdmin = users?.role === "ADMIN";
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -85,8 +86,10 @@ export function Navbars() {
         {/* Right side */}
         <div className="flex md:order-2 items-center gap-2">
           <NotificationBell />
-          {users?.email && users?.role === "ADMIN" ? (
 
+          
+
+          {users?.email && isAdmin ? (
             <div ref={profileRef} className="relative">
               {/* Trigger button */}
               <button
@@ -136,6 +139,17 @@ export function Navbars() {
                       <FaCog size={13} className="text-blue-400 shrink-0" />
                       Account Settings
                     </Link>
+                    {/* Portal link in dropdown too */}
+                    <a
+                      href="/portal"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors text-sm"
+                    >
+                      <FaTv size={13} className="text-blue-400 shrink-0" />
+                      Display Portal
+                    </a>
                   </div>
 
                   <div className="border-t border-gray-700 py-1">
@@ -169,7 +183,6 @@ export function Navbars() {
               { label: "Lost Items",       href: "/lostItems"      },
               { label: "Found Items",      href: "/foundItems"     },
               { label: "Smart Search",     href: "/ai-search"      },
-              
             ].map(({ label, href }) => (
               <NavbarLink key={href} href={href}
                 className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
