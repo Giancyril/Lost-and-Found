@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useGetLostItemsQuery, useGetFoundItemsQuery } from "../../redux/api/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -59,13 +59,9 @@ const ItemCard = ({
   const restricted = badgeColor === "blue" && isRestrictedCategory(category);
 
   return (
-    <div
-      className={`relative flex flex-col border rounded-2xl overflow-hidden h-full ${
-        badgeColor === "red"
-          ? "bg-slate-800 border-red-500/20"
-          : "bg-slate-800 border-blue-400/30"
-      }`}
-    >
+    <div className={`relative flex flex-col border rounded-2xl overflow-hidden h-full ${
+      badgeColor === "red" ? "bg-slate-800 border-red-500/20" : "bg-slate-800 border-blue-400/30"
+    }`}>
       <div className="relative h-40 sm:h-48 md:h-56 bg-slate-900 shrink-0 overflow-hidden">
         {restricted ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2 sm:gap-3 bg-slate-900">
@@ -80,12 +76,7 @@ const ItemCard = ({
             </div>
           </div>
         ) : img ? (
-          <img
-            src={img}
-            alt={name}
-            onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-            className="w-full h-full object-cover"
-          />
+          <img src={img} alt={name} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-slate-600" strokeWidth="1">
@@ -100,16 +91,12 @@ const ItemCard = ({
             badgeColor === "red"
               ? "bg-red-900/80 text-red-300 border-red-700/30"
               : "bg-blue-800/90 text-blue-200 border-blue-500/50"
-          }`}>
-            {badge}
-          </span>
+          }`}>{badge}</span>
         </div>
 
         {category && (
           <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-            <span className="px-2 py-1 text-xs font-semibold bg-black/50 text-gray-300 border border-white/10 rounded-full backdrop-blur-sm">
-              {category}
-            </span>
+            <span className="px-2 py-1 text-xs font-semibold bg-black/50 text-gray-300 border border-white/10 rounded-full backdrop-blur-sm">{category}</span>
           </div>
         )}
       </div>
@@ -144,7 +131,7 @@ const ItemCard = ({
   );
 };
 
-// ── Slide renderer ────────────────────────────────────────────────────────────
+// ── Slide Content ─────────────────────────────────────────────────────────────
 const SlideContent = ({
   pair, accentColor, accent,
 }: {
@@ -162,12 +149,7 @@ const SlideContent = ({
       </div>
     ) : (
       pair.map((item, i) => (
-        <ItemCard
-          key={i}
-          {...item}
-          badge={accentColor === "red" ? "Lost" : "Found"}
-          badgeColor={accentColor}
-        />
+        <ItemCard key={i} {...item} badge={accentColor === "red" ? "Lost" : "Found"} badgeColor={accentColor} />
       ))
     )}
     {pair.length === 1 && (
@@ -178,7 +160,7 @@ const SlideContent = ({
   </div>
 );
 
-// ── Panel ─────────────────────────────────────────────────────────────────────
+// ── Infinite Panel ────────────────────────────────────────────────────────────
 const Panel = ({
   title, accentColor, items, slideIndex, total,
 }: {
@@ -192,56 +174,124 @@ const Panel = ({
     ? { border: "border-red-500/30", text: "text-red-400", dot: "bg-red-500" }
     : { border: "border-blue-400/40", text: "text-blue-300", dot: "bg-blue-400" };
 
-  const pairs = chunk(items, 2);
-  const totalPairs = Math.max(pairs.length, 1);
-  const activeIdx = slideIndex % totalPairs;
+  const realPairs = chunk(items, 2);
+  const n = realPairs.length;
+
+  // pos is 1-based into extendedPairs: [cloneLast, ...real, cloneFirst]
+  // real slides occupy positions 1..n
+  const [pos, setPos]           = useState(1);
+  const [animated, setAnimated] = useState(true);
+  const isSnapping              = useRef(false);
+
+  // Whenever the parent advances slideIndex, move forward by exactly 1
+  const prevSlideIndex = useRef(slideIndex);
+  useEffect(() => {
+    if (n === 0) return;
+    if (slideIndex === prevSlideIndex.current) return;
+    prevSlideIndex.current = slideIndex;
+
+    setAnimated(true);
+    setPos(p => p + 1);           // always move right
+  }, [slideIndex, n]);
+
+  // After the CSS transition ends, silently snap clones back to their real twin
+  const handleTransitionEnd = useCallback(() => {
+    if (n === 0 || isSnapping.current) return;
+
+    setPos(p => {
+      // Landed on cloneFirst (pos = n+1) → snap to real first (pos = 1)
+      // Landed on cloneLast  (pos = 0)   → snap to real last  (pos = n)
+      if (p === n + 1 || p === 0) {
+        isSnapping.current = true;
+        return p === n + 1 ? 1 : n;
+      }
+      return p;
+    });
+
+    // Turn animation off for the snap frame, then re-enable
+    setAnimated(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        isSnapping.current = false;
+        setAnimated(true);
+      });
+    });
+  }, [n]);
+
+  if (n === 0) {
+    return (
+      <div className="flex flex-col h-full bg-slate-900">
+        <div className={`flex items-center justify-between px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 border-b ${accent.border} bg-slate-800/50`}>
+          <div className="flex-1">
+            <h2 className={`text-sm sm:text-base md:text-lg font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] ${accent.text}`}>{title}</h2>
+            <p className="text-slate-300 text-xs sm:text-sm font-semibold leading-tight mt-1.5 max-w-[95%]">
+              {accentColor === "red"
+                ? "Reported Missing: These items are not currently held at the SAS Office"
+                : "Recovered Items: These are held at the SAS Office and ready for claim"}
+            </p>
+            <p className="text-slate-500 text-[10px] sm:text-xs mt-1 font-medium">0 items on record</p>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center opacity-30">
+          <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-slate-500" strokeWidth="1">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  // dot indicator: pos 1..n maps to real index 0..n-1, with wraparound for clones
+  const dotIdx = ((pos - 1 + n) % n + n) % n;
+
+  // Extended slides: [cloneLast, real[0], ..., real[n-1], cloneFirst]
+  const extendedPairs = [realPairs[n - 1], ...realPairs, realPairs[0]];
 
   return (
     <div className="flex flex-col h-full bg-slate-900">
+      {/* Header */}
       <div className={`flex items-center justify-between px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 border-b ${accent.border} bg-slate-800/50`}>
         <div className="flex-1">
           <h2 className={`text-sm sm:text-base md:text-lg font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] ${accent.text}`}>{title}</h2>
-          
-          {/* Clarification Text Added Here */}
           <p className="text-slate-300 text-xs sm:text-sm font-semibold leading-tight mt-1.5 max-w-[95%]">
-            {accentColor === "red" 
-              ? "Reported Missing: These items are not currently held at the SAS Office" 
+            {accentColor === "red"
+              ? "Reported Missing: These items are not currently held at the SAS Office"
               : "Recovered Items: These are held at the SAS Office and ready for claim"}
           </p>
-
           <p className="text-slate-500 text-[10px] sm:text-xs mt-1 font-medium">{total} item{total !== 1 ? "s" : ""} on record</p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0 ml-4">
-          {pairs.map((_, i) => (
-            <div
-              key={i}
-              className={`rounded-full transition-all duration-300 ${
-                i === activeIdx
-                  ? `w-3 sm:w-4 h-1 sm:h-1.5 ${accent.dot}`
-                  : "w-1 sm:w-1.5 h-1 sm:h-1.5 bg-slate-600"
-              }`}
-            />
+          {realPairs.map((_, i) => (
+            <div key={i} className={`rounded-full transition-all duration-300 ${
+              i === dotIdx
+                ? `w-3 sm:w-4 h-1 sm:h-1.5 ${accent.dot}`
+                : "w-1 sm:w-1.5 h-1 sm:h-1.5 bg-slate-600"
+            }`} />
           ))}
         </div>
       </div>
 
+      {/* Carousel track */}
       <div className="flex-1 min-h-0 overflow-hidden relative">
-        {(pairs.length === 0 ? [[]] : pairs).map((pair, i) => {
-          const offset = i - activeIdx;
-          return (
+        <div
+          className="absolute inset-0 flex"
+          style={{
+            width: `${extendedPairs.length * 100}%`,
+            transform: `translateX(${-(pos / extendedPairs.length) * 100}%)`,
+            transition: animated ? "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
+          }}
+          onTransitionEnd={handleTransitionEnd}
+        >
+          {extendedPairs.map((pair, i) => (
             <div
               key={i}
-              className="absolute inset-0 p-2 sm:p-3 md:p-5"
-              style={{
-                transform: `translateX(${offset * 100}%)`,
-                transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-                willChange: "transform",
-              }}
+              className="p-2 sm:p-3 md:p-5"
+              style={{ width: `${100 / extendedPairs.length}%`, flexShrink: 0 }}
             >
               <SlideContent pair={pair} accentColor={accentColor} accent={accent} />
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -337,7 +387,6 @@ const PortalDisplay = () => {
           to   { transform: translateX(-50%); }
         }
         .animate-ticker { animation: ticker 30s linear infinite; }
-
         @media (max-width: 639px) {
           .portal-panels {
             grid-template-columns: 1fr !important;
@@ -352,26 +401,10 @@ const PortalDisplay = () => {
       `}</style>
 
       <div className="fixed inset-0 bg-slate-900 flex flex-col overflow-hidden select-none">
-
-        {/* Split panels */}
         <div className="flex-1 grid grid-cols-2 portal-panels min-h-0 divide-x divide-white/5">
-          <Panel
-            title="Lost Items"
-            accentColor="red"
-            items={lostMapped}
-            slideIndex={slideIndex}
-            total={lostItems.length}
-          />
-          <Panel
-            title="Found Items"
-            accentColor="blue"
-            items={foundMapped}
-            slideIndex={slideIndex}
-            total={foundItems.length}
-          />
+          <Panel title="Lost Items"  accentColor="red"  items={lostMapped}  slideIndex={slideIndex} total={lostItems.length}  />
+          <Panel title="Found Items" accentColor="blue" items={foundMapped} slideIndex={slideIndex} total={foundItems.length} />
         </div>
-
-        {/* Ticker */}
         <Ticker lostCount={lostItems.length} foundCount={foundItems.length} />
       </div>
     </>

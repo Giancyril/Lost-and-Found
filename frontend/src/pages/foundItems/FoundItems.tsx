@@ -70,8 +70,8 @@ const CustomSelect = ({ options, value, onChange }: {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm rounded-xl border transition-all duration-150 outline-none bg-gray-900
-          ${open ? "border-blue-500/50 ring-2 ring-blue-500/10 text-white" : "border-white/5 hover:border-white/10 text-gray-300"}`}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm rounded-xl border transition-all duration-150 outline-none bg-gray-800/60
+        ${open ? "border-blue-500 ring-2 ring-blue-500/50 text-white" : "border-gray-700 hover:border-gray-600 text-gray-300"}`}
       >
         <span className="flex items-center gap-2 truncate min-w-0">
           {selected?.icon && <span className="shrink-0">{selected.icon}</span>}
@@ -595,13 +595,20 @@ const FoundItemsPage = () => {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>Category <span className="text-red-400">*</span></label>
-                    <div className="relative">
-                      <select className={`w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm appearance-none pr-9 ${!addSelectedMenucategoryId ? "text-gray-500" : "text-white"}`} value={addSelectedMenucategoryId} onChange={e => { const cat = categoriesData?.data?.find((c: any) => c.id === e.target.value); if (cat) { setAddSelectedMenu(cat.name); setAddSelectedMenucategoryId(cat.id); } }}>
-                        <option value="" disabled>Select a category</option>
-                        {categoriesData?.data?.map((cat: any) => (<option key={cat.id} value={cat.id} className="text-white bg-gray-800">{cat.name}</option>))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400"><svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
-                    </div>
+                    <CustomSelect
+                      options={
+                        categoriesData?.data?.map((cat: any) => ({
+                          value: cat.id,
+                          label: cat.name,
+                          icon: getCategoryIcon(cat.name),
+                        })) ?? []
+                      }
+                      value={addSelectedMenucategoryId}
+                      onChange={(id) => {
+                        const cat = categoriesData?.data?.find((c: any) => c.id === id);
+                        if (cat) { setAddSelectedMenu(cat.name); setAddSelectedMenucategoryId(cat.id); }
+                      }}
+                    />
                     {!addSelectedMenu && <p className="text-red-400 text-xs">Category is required</p>}
                   </div>
                 </div>
