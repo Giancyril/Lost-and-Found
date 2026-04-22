@@ -5,7 +5,7 @@ export const lostItemReportedTemplate = (data: {
   date: string;
   description: string;
 }) => ({
-  subject: `Found Item Report Received — ${data.itemName}`,
+  subject: `Found Item Report Submitted — ${data.itemName}`,
   html: `
     <!DOCTYPE html>
     <html lang="en">
@@ -35,7 +35,7 @@ export const lostItemReportedTemplate = (data: {
                         <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;">Found Item Report Received</h1>
                       </td>
                       <td align="right" valign="top">
-                        <span style="display:inline-block;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid #bfdbfe;">📋 REPORT</span>
+                        <span style="display:inline-block;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;padding:6px 14px;border-radius:16px;border:1px solid #bfdbfe;white-space:nowrap;"> REPORT</span>
                       </td>
                     </tr>
                   </table>
@@ -67,11 +67,11 @@ export const lostItemReportedTemplate = (data: {
                           </tr>
                           <tr style="border-bottom:1px solid #f1f5f9;">
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Last Seen</td>
-                            <td style="padding:12px 0;font-size:13px;color:#334155;">📍 ${data.location}</td>
+                            <td style="padding:12px 0;font-size:13px;color:#334155;"> ${data.location}</td>
                           </tr>
                           <tr style="border-bottom:1px solid #f1f5f9;">
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Date Lost</td>
-                            <td style="padding:12px 0;font-size:13px;color:#334155;">📅 ${data.date}</td>
+                            <td style="padding:12px 0;font-size:13px;color:#334155;"> ${data.date}</td>
                           </tr>
                           <tr style="border-bottom:1px solid #f1f5f9;">
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Description</td>
@@ -80,7 +80,7 @@ export const lostItemReportedTemplate = (data: {
                           <tr>
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Status</td>
                             <td style="padding:12px 0;">
-                              <span style="background:#fef9c3;color:#854d0e;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid #fde68a;">⏳ Under Review</span>
+                              <span style="background:#fef9c3;color:#854d0e;font-size:11px;font-weight:700;padding:6px 14px;border-radius:16px;border:1px solid #fde68a;display:inline-block;white-space:nowrap;">⏳ Under Review</span>
                             </td>
                           </tr>
                         </table>
@@ -135,7 +135,7 @@ export const itemClaimedTemplate = (data: {
   claimDate: string;
   contactNumber: string;
 }) => ({
-  subject: `Item Successfully Received — ${data.itemName} Has Been Claimed`,
+  subject: `Item Successfully Claimed — ${data.itemName}`,
   html: `
     <!DOCTYPE html>
     <html lang="en">
@@ -165,7 +165,7 @@ export const itemClaimedTemplate = (data: {
                         <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;">Your Item Has Been Received</h1>
                       </td>
                       <td align="right" valign="top">
-                        <span style="display:inline-block;background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid #bbf7d0;">✓ RECEIVED</span>
+                        <span style="display:inline-block;background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:700;padding:6px 14px;border-radius:16px;border:1px solid #bbf7d0;white-space:nowrap;">✓ RECEIVED</span>
                       </td>
                     </tr>
                   </table>
@@ -200,16 +200,16 @@ export const itemClaimedTemplate = (data: {
                           </tr>
                           <tr style="border-bottom:1px solid #f1f5f9;">
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Found At</td>
-                            <td style="padding:12px 0;font-size:13px;color:#334155;">📍 ${data.location}</td>
+                            <td style="padding:12px 0;font-size:13px;color:#334155;"> ${data.location}</td>
                           </tr>
                           <tr style="border-bottom:1px solid #f1f5f9;">
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Date Claimed</td>
-                            <td style="padding:12px 0;font-size:13px;color:#334155;">📅 ${data.claimDate}</td>
+                            <td style="padding:12px 0;font-size:13px;color:#334155;"> ${data.claimDate}</td>
                           </tr>
                           <tr>
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Status</td>
                             <td style="padding:12px 0;">
-                              <span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid #bbf7d0;">✓ Successfully Received</span>
+                              <span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:6px 14px;border-radius:16px;border:1px solid #bbf7d0;display:inline-block;white-space:nowrap;">✓ Successfully Received</span>
                             </td>
                           </tr>
                         </table>
@@ -305,7 +305,7 @@ export const smartMatchNotificationTemplate = (data: {
                         <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;">Potential Item Match Found!</h1>
                       </td>
                       <td align="right" valign="top">
-                        <span style="display:inline-block;background:#f5f3ff;color:#7c3aed;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid #ddd6fe;">✨ SMART MATCH</span>
+                        <span style="display:inline-block;background:#f5f3ff;color:#7c3aed;font-size:11px;font-weight:700;padding:6px 14px;border-radius:16px;border:1px solid #ddd6fe;white-space:nowrap;"> SMART MATCH</span>
                       </td>
                     </tr>
                   </table>
@@ -337,16 +337,16 @@ export const smartMatchNotificationTemplate = (data: {
                           </tr>
                           <tr style="border-bottom:1px solid #f1f5f9;">
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Found At</td>
-                            <td style="padding:12px 0;font-size:13px;color:#334155;">📍 ${data.location}</td>
+                            <td style="padding:12px 0;font-size:13px;color:#334155;"> ${data.location}</td>
                           </tr>
                           <tr style="border-bottom:1px solid #f1f5f9;">
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Date Found</td>
-                            <td style="padding:12px 0;font-size:13px;color:#334155;">📅 ${data.date}</td>
+                            <td style="padding:12px 0;font-size:13px;color:#334155;"> ${data.date}</td>
                           </tr>
                           <tr>
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Match Conf.</td>
                             <td style="padding:12px 0;">
-                              <span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid #bbf7d0;">High Confidence</span>
+                              <span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:6px 14px;border-radius:16px;border:1px solid #bbf7d0;display:inline-block;white-space:nowrap;">🎯 High Confidence Match</span>
                             </td>
                           </tr>
                         </table>

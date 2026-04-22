@@ -6,6 +6,8 @@ import { utils } from "../../utils/utils";
 import { matchService } from "../matching/match.service";
 import { uploadFileToStorage } from "../../utils/storage";
 import sharp from "sharp";
+import { sendEmail } from "../../utils/mailer";
+import { lostItemReportedTemplate } from "../../utils/emailTemplates";
 
 const createFoundItem = async (req: Request, res: Response) => {
   try {
@@ -13,6 +15,32 @@ const createFoundItem = async (req: Request, res: Response) => {
     const result = await foundItemService.createFoundItem(req.body, userId);
 
     if (result?.id) {
+      // Send confirmation email to the reporter
+      try {
+        const fromName = process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
+        const fromEmail = process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
+        
+        const template = lostItemReportedTemplate({
+          reporterName: req.body.reporterName || "Unknown",
+          itemName: req.body.foundItemName,
+          location: req.body.location,
+          date: new Date(req.body.date).toLocaleDateString(),
+          description: req.body.description,
+        });
+
+        await sendEmail({
+          fromName,
+          fromEmail,
+          toEmail: req.body.schoolEmail,
+          subject: template.subject,
+          html: template.html,
+        });
+        
+        console.log("[Email] Found item confirmation sent to:", req.body.schoolEmail);
+      } catch (emailError) {
+        console.error("[Email] Failed to send found item confirmation:", emailError);
+      }
+
       matchService.findMatchesForFoundItem(result).catch((err) =>
         console.error("[SmartMatch] Error matching found item:", err)
       );

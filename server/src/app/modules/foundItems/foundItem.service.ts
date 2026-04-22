@@ -99,6 +99,23 @@ const getFoundItem = async (data: TFilter) => {
           user:     { select: { id: true, username: true, email: true, role: true } },
           category: true,
         },
+        select: {
+          id: true,
+          foundItemName: true,
+          description: true,
+          location: true,
+          date: true,
+          isClaimed: true,
+          isArchived: true,
+          isDeleted: true,
+          img: true,
+          reporterName: true,
+          schoolEmail: true,
+          createdAt: true,
+          updatedAt: true,
+          category: { select: { id: true, name: true } },
+          user: { select: { id: true, username: true, email: true, role: true } },
+        },
       });
       return result;
     } catch (error: any) {

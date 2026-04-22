@@ -4,6 +4,8 @@ import { StatusCodes } from "http-status-codes";
 import { lostTItemServices } from "./lostItem.service";
 import { utils } from "../../utils/utils";
 import { matchService } from "../matching/match.service";
+import { sendEmail } from "../../utils/mailer";
+import { lostItemReportedTemplate } from "../../utils/emailTemplates";
 
 const toggleFoundStatus = async (req: Request, res: Response) => {
   try {
@@ -35,6 +37,32 @@ const createLostItem = async (req: Request, res: Response) => {
     const result = await lostTItemServices.createLostItem(userId, item);
 
     if (result?.id) {
+      // Send confirmation email to the reporter
+      try {
+        const fromName = process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
+        const fromEmail = process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
+        
+        const template = lostItemReportedTemplate({
+          reporterName: req.body.reporterName || "Unknown",
+          itemName: req.body.lostItemName,
+          location: req.body.location,
+          date: new Date(req.body.date).toLocaleDateString(),
+          description: req.body.description,
+        });
+
+        await sendEmail({
+          fromName,
+          fromEmail,
+          toEmail: req.body.schoolEmail,
+          subject: template.subject,
+          html: template.html,
+        });
+        
+        console.log("[Email] Lost item confirmation sent to:", req.body.schoolEmail);
+      } catch (emailError) {
+        console.error("[Email] Failed to send lost item confirmation:", emailError);
+      }
+
       matchService.findMatchesForLostItem(result).catch((err) =>
         console.error("[SmartMatch] Error matching lost item:", err)
       );

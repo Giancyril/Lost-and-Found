@@ -875,19 +875,24 @@ const FoundItemsPage = () => {
       {/* ── Add Found Item Modal ── */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl shadow-blue-900/20 flex flex-col max-h-[92vh]"
-            style={{ borderTop: "2px solid #3b82f6", boxShadow: "0 0 30px rgba(59,130,246,0.15), 0 25px 50px rgba(0,0,0,0.5)" }}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
+          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl sm:max-w-4xl lg:max-w-5xl flex flex-col max-h-[92vh]"
+            style={{ borderTop: "2px solid #3b82f6" }}>
+            <div className="flex flex-col gap-3 px-4 sm:px-6 py-4 border-b border-white/5 shrink-0">
+              {/* Top row: icon+title and close button */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-bold text-white truncate">Log a Found Item</h2>
+                    <p className="text-gray-500 text-[11px] mt-0.5 truncate">Record an item recovered on campus</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-sm font-bold text-white">Log a Found Item</h2>
-                  <p className="text-gray-500 text-[11px] mt-0.5">Record an item recovered on campus</p>
-                </div>
+                <button onClick={closeAddModal} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0"><FaTimes size={12} /></button>
               </div>
-              <div className="flex items-center gap-2">
+              {/* Second row: action buttons, always visible and wrappable */}
+              <div className="flex items-center gap-2 flex-wrap sm:justify-end">
                 {scannedStudent ? (
                   <button
                     onClick={clearScan}
@@ -900,20 +905,19 @@ const FoundItemsPage = () => {
                     <button
                       onClick={handleFetchDetails}
                       disabled={isFetchingByDetails}
-                      className="px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                      className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50"
                     >
                       {isFetchingByDetails ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
                       Fetch Student Info
                     </button>
                     <button
                       onClick={() => setShowScanner(true)}
-                      className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider whitespace-nowrap active:scale-95"
+                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider active:scale-95"
                     >
                       <FaQrcode className="w-2.5 h-2.5" /> Scan Student ID
                     </button>
                   </>
                 )}
-                <button onClick={closeAddModal} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"><FaTimes size={12} /></button>
               </div>
             </div>
             <div className="overflow-y-auto flex-1 px-6 py-5">
@@ -941,7 +945,7 @@ const FoundItemsPage = () => {
               )}
               <form id="add-found-form" onSubmit={handleAddSubmit(onAddSubmit)} className="space-y-4">
                 {/* Reporter Information */}
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -979,7 +983,7 @@ const FoundItemsPage = () => {
                 </div>
 
                 {/* Item Details */}
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>Item Name <span className="text-red-400">*</span></label>
                     <input {...addRegister("foundItemName", { required: "Item name is required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder=" " />
@@ -1021,13 +1025,13 @@ const FoundItemsPage = () => {
                     {!addSelectedMenu && <p className="text-red-400 text-xs">Category is required</p>}
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>Where Found <span className="text-red-400">*</span></label>
                     <input {...addRegister("location", { required: "Location is required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder="e.g. Library, Room 205" />
                     {addErrors.location && <p className="text-red-400 text-xs">{addErrors.location?.message as string}</p>}
                   </div>
-                  <div className="flex flex-col gap-1.5">
+                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>Date Found</label>
                     <CustomDatePicker value={addStartDate} onChange={setAddStartDate} max={new Date().toISOString().split("T")[0]} placeholder="Select date found" />
                   </div>
