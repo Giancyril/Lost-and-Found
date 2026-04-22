@@ -95,10 +95,6 @@ const getFoundItem = async (data: TFilter) => {
         orderBy: { [sortBy]: sortOrder },
         skip:    (Number(page) - 1) * Number(limit),
         take:    Number(limit),
-        include: {
-          user:     { select: { id: true, username: true, email: true, role: true } },
-          category: true,
-        },
         select: {
           id: true,
           foundItemName: true,

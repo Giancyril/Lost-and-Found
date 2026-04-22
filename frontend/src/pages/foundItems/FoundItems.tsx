@@ -27,6 +27,7 @@ import {
 import { useUserVerification } from "../../auth/auth";
 import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
 import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
+import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import { logToSheet } from "../../utils/sheetsLogger";
 
 // ── Category configuration with auto-fill data ─────────────────────────────
@@ -944,6 +945,12 @@ const FoundItemsPage = () => {
                 </div>
               )}
               <form id="add-found-form" onSubmit={handleAddSubmit(onAddSubmit)} className="space-y-4">
+                <ItemMatchSuggestions
+                  categoryId={addSelectedMenucategoryId}
+                  categoryName={addSelectedMenu}
+                  itemName={(document.querySelector('input[name="foundItemName"]') as HTMLInputElement)?.value ?? ""}
+                  location={(document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? ""}
+                />
                 {/* Reporter Information */}
                 <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   <div className="flex flex-col gap-1.5">

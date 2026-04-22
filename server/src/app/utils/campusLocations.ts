@@ -1,5 +1,3 @@
-// Predefined coordinate map for NBSC campus locations
-// Update these coordinates to match your actual campus map
 export const CAMPUS_COORDINATES: Record<string, [number, number]> = {
   // ── Buildings ──
   "library":              [8.359250, 124.867972],
@@ -17,7 +15,6 @@ export const CAMPUS_COORDINATES: Record<string, [number, number]> = {
 
   // ── Rooms / Floors ──
   // (Mapped dynamically in getCoordinates)
-
 
   // ── Areas ──
   "parking lot":          [8.3533, 124.8616],
@@ -45,7 +42,7 @@ export const CAMPUS_COORDINATES: Record<string, [number, number]> = {
   "college of business":            [8.359083, 124.868472],
   "business administration":        [8.359083, 124.868472],
   "ite building":                   [8.3540, 124.8619],
-  "ics":                            [8.3540, 124.8619],
+  "ics building":                   [8.3540, 124.8619],
 
   // ── Default fallback — center of campus ──
   "unknown":              [8.3596, 124.8682],
