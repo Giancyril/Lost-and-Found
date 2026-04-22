@@ -25,6 +25,40 @@ import { logToSheet } from "../../utils/sheetsLogger";
 
 const MAX_SIZE_MB = 5;
 
+// ── Category configuration with auto-fill data ─────────────────────────────
+const CATEGORY_CONFIG = {
+  bags: {
+    itemName: 'Bag',
+    description: 'Please select a color to auto-generate a detailed description.',
+    colors: ['Black', 'Brown', 'Blue', 'Gray', 'Red', 'Green', 'Navy', 'Tan', 'White', 'Other'],
+    conditions: ['Scratches', 'Stickers', 'Keychains', 'None']
+  },
+  calculators: {
+    itemName: 'Calculator',
+    description: 'Please select a color to auto-generate a detailed description. ',
+    colors: ['Black', 'Gray', 'Blue', 'Silver', 'White', 'Other'],
+    conditions: ['Scratches', 'Stickers', 'Engravings', 'None']
+  },
+  keys: {
+    itemName: 'Keys',
+    description: 'Please select a color to auto-generate a detailed description.',
+    colors: ['Silver', 'Gold', 'Bronze', 'Black', 'Blue', 'Red', 'Other'],
+    conditions: ['Scratches', 'Stickers', 'Keychains', 'None']
+  },
+  umbrellas: {
+    itemName: 'Umbrella',
+    description: 'Please select a color to auto-generate a detailed description.',
+    colors: ['Black', 'Blue', 'Red', 'Yellow', 'Green', 'Pink', 'Purple', 'Clear', 'Patterned', 'Other'],
+    conditions: ['Scratches', 'Stickers', 'Bent Frame', 'None']
+  },
+  watches: {
+    itemName: 'Watch',
+    description: 'Please select a color to auto-generate a detailed description. ',
+    colors: ['Black', 'Brown', 'Silver', 'Gold', 'Blue', 'White', 'Rose Gold', 'Other'],
+    conditions: ['Scratches', 'Stickers', 'Engravings', 'None']
+  }
+};
+
 // ── Category icon resolver ────────────────────────────────────────────────────
 const getCategoryIcon = (name: string) => {
   const n = name?.toLowerCase() ?? "";
@@ -255,7 +289,15 @@ const HELP_PAGES = [
 ];
 
 const ReportLostItem = () => {
-  const { register, formState: { errors }, reset, trigger, getValues, control, setValue } = useForm();
+  const { register, formState: { errors }, reset, trigger, getValues, control, setValue, watch } = useForm({ mode: "onChange" });
+
+  const reporterName = watch("reporterName");
+  const schoolEmail = watch("schoolEmail");
+  const lostItemName = watch("lostItemName");
+  const location = watch("location");
+  const description = watch("description");
+  const color = watch("color");
+  const condition = watch("condition");
 
   const [step, setStep] = useState(0);
   const [selectedMenu, setselectedMenu] = useState("");
@@ -263,6 +305,8 @@ const ReportLostItem = () => {
   const [categoryTouched, setCategoryTouched] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [helpPage, setHelpPage] = useState(0);
+  const [selectedColor, setSelectedColor] = useState("");
+  const [, setSelectedCondition] = useState("");
 
   const closeHelp = () => { setShowHelpModal(false); setHelpPage(0); };
   const openHelp  = () => { setHelpPage(0); setShowHelpModal(true); };
@@ -270,6 +314,23 @@ const ReportLostItem = () => {
   const handleMenuChange = (menuName: string, categoryId: string) => {
     setselectedMenu(menuName);
     setselectedMenucategoryId(categoryId);
+    
+    // Auto-fill functionality
+    const categoryKey = menuName.toLowerCase();
+    const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
+    
+    if (config) {
+      // Auto-fill item name
+      setValue("lostItemName", config.itemName);
+      
+      // Auto-fill description (base description without color)
+      setValue("description", config.description);
+      
+      // Reset color field when category changes
+      setValue("color", "");
+      setSelectedColor("");
+      setSelectedCondition("");
+    }
   };
 
   const [createLostItem, { isLoading }] = useCreateLostItemMutation();
@@ -358,7 +419,9 @@ const ReportLostItem = () => {
 
   const nextStep = async () => {
     if (step >= 2) return;
-    const fields = step === 0 ? ["reporterName", "schoolEmail"] : ["lostItemName", "description", "location"];
+    const fields = step === 0 
+      ? ["reporterName", "schoolEmail"] 
+      : ["lostItemName", "description", "location", ...(selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] ? ["color"] : []), ...(selectedColor ? ["condition"] : [])];
     const valid = await trigger(fields as any);
     if (step === 1) { setCategoryTouched(true); if (!selectedMenucategoryId || !valid) return; }
     if (valid) setStep((s) => s + 1);
@@ -386,6 +449,7 @@ const ReportLostItem = () => {
       toast.success("Lost item reported successfully");
       reset(); setSelectedFile(null); setPreview(""); setUploadError("");
       setselectedMenu(""); setselectedMenucategoryId(""); setCategoryTouched(false);
+      setSelectedColor(""); setSelectedCondition("");
       setStep(0); setScannedStudent(null); scannedAtRef.current = "";
     } catch { toast.error("Failed to report lost item"); }
   };
@@ -612,6 +676,157 @@ const ReportLostItem = () => {
                         placeholder="Describe the item color, brand, size, etc." />
                     </Field>
 
+                    {/* Color dropdown for specific categories */}
+                    {selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && (
+                      <Field label="Color" required error={errors.color?.message as string} icon={<IconTag />}>
+                        <Controller
+                          name="color"
+                          control={control}
+                          rules={{ required: "Color is required" }}
+                          render={({ field }) => (
+                            <CustomSelect
+                              options={CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.map(color => ({
+                                value: color,
+                                label: color,
+                                icon: null
+                              }))}
+                              value={field.value || ""}
+                              onChange={(colorValue) => {
+                                field.onChange(colorValue);
+                                setSelectedColor(colorValue);
+                                setSelectedCondition(''); // Reset condition when color changes
+                                
+                                // Update description with color information
+                                const categoryKey = selectedMenu.toLowerCase();
+                                const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
+                                if (config && colorValue) {
+                                  let colorDescription = '';
+                                  
+                                  // Generate professional descriptions based on category and color
+                                  switch (categoryKey) {
+                                    case 'bags':
+                                      colorDescription = `I am reporting a lost ${colorValue.toLowerCase()} bag. `;
+                                      break;
+                                    case 'calculators':
+                                      colorDescription = `I am reporting a lost ${colorValue.toLowerCase()} calculator. `;
+                                      break;
+                                    case 'keys':
+                                      colorDescription = `I am reporting lost ${colorValue.toLowerCase()} keys. `;
+                                      break;
+                                    case 'umbrellas':
+                                      colorDescription = `I am reporting a lost ${colorValue.toLowerCase()} umbrella. `;
+                                      break;
+                                    case 'watches':
+                                      colorDescription = `I am reporting a lost ${colorValue.toLowerCase()} watch. `;
+                                      break;
+                                    default:
+                                      colorDescription = `I am reporting a lost ${colorValue.toLowerCase()} ${config.itemName.toLowerCase()}. `;
+                                  }
+                                  
+                                  setValue("description", colorDescription);
+                                }
+                              }}
+                            />
+                          )}
+                        />
+                      </Field>
+                    )}
+                    
+                    {/* Condition dropdown */}
+                    {selectedColor && (
+                      <Field label="Condition" required error={errors.condition?.message as string} icon={<IconTag />}>
+                        <Controller
+                          name="condition"
+                          control={control}
+                          rules={{ required: "Condition is required" }}
+                          render={({ field }) => (
+                            <CustomSelect
+                              options={CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].conditions.map(condition => ({
+                                value: condition,
+                                label: condition,
+                                icon: null
+                              }))}
+                              value={field.value || ""}
+                              onChange={(conditionValue) => {
+                                field.onChange(conditionValue);
+                                setSelectedCondition(conditionValue);
+                                
+                                // Update description with condition information
+                                const categoryKey = selectedMenu.toLowerCase();
+                                const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
+                                if (config && selectedColor && conditionValue) {
+                                  let enhancedDescription = '';
+                                  
+                                  // Generate enhanced descriptions based on category, color, and condition
+                                  switch (categoryKey) {
+                                    case 'bags':
+                                      if (conditionValue === 'Scratches') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} bag with scratches. `;
+                                      } else if (conditionValue === 'Stickers') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} bag with stickers. `;
+                                      } else if (conditionValue === 'Keychains') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} bag with keychains. `;
+                                      } else {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} bag in good condition. `;
+                                      }
+                                      break;
+                                    case 'calculators':
+                                      if (conditionValue === 'Scratches') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} calculator with scratches.`;
+                                      } else if (conditionValue === 'Stickers') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} calculator with stickers. `;
+                                      } else if (conditionValue === 'Engravings') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} calculator with engravings. `;
+                                      } else {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} calculator in good condition. `;
+                                      }
+                                      break;
+                                    case 'keys':
+                                      if (conditionValue === 'Scratches') {
+                                        enhancedDescription = `I am reporting lost ${selectedColor.toLowerCase()} keys with scratches. `;
+                                      } else if (conditionValue === 'Stickers') {
+                                        enhancedDescription = `I am reporting lost ${selectedColor.toLowerCase()} keys with stickers. `;
+                                      } else if (conditionValue === 'Keychains') {
+                                        enhancedDescription = `I am reporting lost ${selectedColor.toLowerCase()} keys with attached keychains. `;
+                                      } else {
+                                        enhancedDescription = `I am reporting lost ${selectedColor.toLowerCase()} keys in good condition. `;
+                                      }
+                                      break;
+                                    case 'umbrellas':
+                                      if (conditionValue === 'Scratches') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} umbrella with scratches. `;
+                                      } else if (conditionValue === 'Stickers') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} umbrella with stickers. `;
+                                      } else if (conditionValue === 'Bent Frame') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} umbrella with a bent frame. `;
+                                      } else {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} umbrella in good condition. `;
+                                      }
+                                      break;
+                                    case 'watches':
+                                      if (conditionValue === 'Scratches') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} watch with scratches. `;
+                                      } else if (conditionValue === 'Stickers') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} watch with stickers. `;
+                                      } else if (conditionValue === 'Engravings') {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} watch with engravings. `;
+                                      } else {
+                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} watch in good condition. `;
+                                      }
+                                      break;
+                                    default:
+                                      enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} ${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()}. Please add details like the brand, size, condition details, and any special features.`;
+                                  }
+                                  
+                                  setValue("description", enhancedDescription);
+                                }
+                              }}
+                            />
+                          )}
+                        />
+                      </Field>
+                    )}
+
                     {selectedMenucategoryId && (
                       <ItemMatchSuggestions
                         categoryId={selectedMenucategoryId} categoryName={selectedMenu}
@@ -703,7 +918,14 @@ const ReportLostItem = () => {
                   )}
                   {step < 2 ? (
                     <button type="button" onClick={nextStep}
-                      className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all duration-200 shadow-lg">
+                      disabled={
+                        step === 0 
+                          ? Boolean(!reporterName || !schoolEmail || !!errors.reporterName || !!errors.schoolEmail)
+                          : Boolean(!lostItemName || !location || !description || !selectedMenucategoryId || !!errors.lostItemName || !!errors.location || !!errors.description || 
+                             (selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && (!color || !!errors.color)) || 
+                             (selectedColor && (!condition || !!errors.condition)))
+                      }
+                      className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all duration-200 shadow-lg">
                       Continue
                     </button>
                   ) : isLoading ? (

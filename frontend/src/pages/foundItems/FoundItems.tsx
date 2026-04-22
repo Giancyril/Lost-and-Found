@@ -23,6 +23,40 @@ import {
 } from "../../redux/api/api";
 import { useUserVerification } from "../../auth/auth";
 
+// ── Category configuration with auto-fill data ─────────────────────────────
+const CATEGORY_CONFIG = {
+  bags: {
+    itemName: 'Bag',
+    description: 'Please select a color to auto-generate a detailed description.',
+    colors: ['Black', 'Brown', 'Blue', 'Gray', 'Red', 'Green', 'Navy', 'Tan', 'White', 'Other'],
+    conditions: ['Scratches', 'Stickers', 'Keychains', 'None']
+  },
+  calculators: {
+    itemName: 'Calculator',
+    description: 'Please select a color to auto-generate a detailed description.',
+    colors: ['Black', 'Gray', 'Blue', 'Silver', 'White', 'Other'],
+    conditions: ['Scratches', 'Stickers', 'Engravings', 'None']
+  },
+  keys: {
+    itemName: 'Keys',
+    description: 'Please select a color to auto-generate a detailed description.',
+    colors: ['Silver', 'Gold', 'Bronze', 'Black', 'Blue', 'Red', 'Other'],
+    conditions: ['Scratches', 'Stickers', 'Keychains', 'None']
+  },
+  umbrellas: {
+    itemName: 'Umbrella',
+    description: 'Please select a color to auto-generate a detailed description.',
+    colors: ['Black', 'Blue', 'Red', 'Yellow', 'Green', 'Pink', 'Purple', 'Clear', 'Patterned', 'Other'],
+    conditions: ['Scratches', 'Stickers', 'Bent Frame', 'None']
+  },
+  watches: {
+    itemName: 'Watch',
+    description: 'Please select a color to auto-generate a detailed description.',
+    colors: ['Black', 'Brown', 'Silver', 'Gold', 'Blue', 'White', 'Rose Gold', 'Other'],
+    conditions: ['Scratches', 'Stickers', 'Engravings', 'None']
+  }
+};
+
 // ── Category icon resolver ────────────────────────────────────────────────────
 const getCategoryIcon = (name: string) => {
   const n = name?.toLowerCase() ?? "";
@@ -251,6 +285,8 @@ const FoundItemsPage = () => {
   const [addStartDate, setAddStartDate]         = useState(new Date().toISOString().split("T")[0]);
   const [addSelectedMenucategoryId, setAddSelectedMenucategoryId] = useState("");
   const [addSelectedMenu, setAddSelectedMenu]   = useState("");
+  const [addSelectedColor, setAddSelectedColor] = useState("");
+  const [addSelectedCondition, setAddSelectedCondition] = useState("");
   const addFileInputRef = useRef<HTMLInputElement>(null);
   const MAX_SIZE_MB = 5;
 
@@ -288,6 +324,7 @@ const FoundItemsPage = () => {
     setIsAddModalOpen(false); addReset();
     setAddSelectedFile(null); setAddPreview(""); setAddUploadError(""); setAddPhotoError(""); // ← clears photo error too
     setAddSelectedMenu(""); setAddSelectedMenucategoryId("");
+    setAddSelectedColor(""); setAddSelectedCondition("");
     setAddStartDate(new Date().toISOString().split("T")[0]);
   };
 
@@ -606,7 +643,27 @@ const FoundItemsPage = () => {
                       value={addSelectedMenucategoryId}
                       onChange={(id) => {
                         const cat = categoriesData?.data?.find((c: any) => c.id === id);
-                        if (cat) { setAddSelectedMenu(cat.name); setAddSelectedMenucategoryId(cat.id); }
+                        if (cat) { 
+                          setAddSelectedMenu(cat.name); 
+                          setAddSelectedMenucategoryId(cat.id);
+                          
+                          // Auto-fill functionality
+                          const categoryKey = cat.name.toLowerCase();
+                          const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
+                          
+                          if (config) {
+                            // Auto-fill item name using setValue from useForm
+                            const form = document.querySelector('#add-found-form') as HTMLFormElement;
+                            if (form) {
+                              const itemNameInput = form.querySelector('input[name="foundItemName"]') as HTMLInputElement;
+                              const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement;
+                              
+                              if (itemNameInput) itemNameInput.value = config.itemName;
+                              // Auto-fill description (base description without color)
+                              if (descriptionInput) descriptionInput.value = config.description;
+                            }
+                          }
+                        }
                       }}
                     />
                     {!addSelectedMenu && <p className="text-red-400 text-xs">Category is required</p>}
@@ -614,7 +671,7 @@ const FoundItemsPage = () => {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Where Found <span className="text-red-400">*</span></label>
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>Where Found <span className="text-red-400">*</span></label>
                     <input {...addRegister("location", { required: "Location is required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder="e.g. Library, Room 205" />
                     {addErrors.location && <p className="text-red-400 text-xs">{addErrors.location?.message as string}</p>}
                   </div>
@@ -624,16 +681,169 @@ const FoundItemsPage = () => {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Description <span className="text-red-400">*</span></label>
+                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Description <span className="text-red-400">*</span>
+                  </label>
                   <textarea {...addRegister("description", { required: "Description is required" })} rows={2} className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none" placeholder=" " />
                   {addErrors.description && <p className="text-red-400 text-xs">{addErrors.description?.message as string}</p>}
                 </div>
+
+                {/* Color dropdown for specific categories */}
+                {addSelectedMenu && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
+                      Color
+                    </label>
+                    <CustomSelect
+                      options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.map(color => ({
+                        value: color,
+                        label: color,
+                        icon: null
+                      }))}
+                      value={addSelectedColor}
+                      onChange={(colorValue) => {
+                        setAddSelectedColor(colorValue);
+                        setAddSelectedCondition(''); // Reset condition when color changes
+                        
+                        // Update description with color information
+                        const categoryKey = addSelectedMenu.toLowerCase();
+                        const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
+                        if (config && colorValue) {
+                          let colorDescription = '';
+                          
+                          // Generate professional descriptions based on category and color
+                          switch (categoryKey) {
+                            case 'bags':
+                              colorDescription = `A ${colorValue.toLowerCase()} bag was found. `;
+                              break;
+                            case 'calculators':
+                              colorDescription = `A ${colorValue.toLowerCase()} calculator was found. `;
+                              break;
+                            case 'keys':
+                              colorDescription = `Some ${colorValue.toLowerCase()} keys were found. `;
+                              break;
+                            case 'umbrellas':
+                              colorDescription = `A ${colorValue.toLowerCase()} umbrella was found. `;
+                              break;
+                            case 'watches':
+                              colorDescription = `A ${colorValue.toLowerCase()} watch was found. `;
+                              break;
+                            default:
+                              colorDescription = `A ${colorValue.toLowerCase()} ${config.itemName.toLowerCase()} was found.`;
+                          }
+                          
+                          const form = document.querySelector('#add-found-form') as HTMLFormElement;
+                          if (form) {
+                            const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement;
+                            if (descriptionInput) descriptionInput.value = colorDescription;
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+                  
+                  {/* Condition dropdown - appears after color selection */}
+                  {addSelectedColor && (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
+                        Condition
+                      </label>
+                      <CustomSelect
+                        options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].conditions.map(condition => ({
+                          value: condition,
+                          label: condition,
+                          icon: null
+                        }))}
+                        value={addSelectedCondition}
+                        onChange={(conditionValue) => {
+                          setAddSelectedCondition(conditionValue);
+                          
+                          // Update description with condition information
+                          const categoryKey = addSelectedMenu.toLowerCase();
+                          const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
+                          if (config && addSelectedColor && conditionValue) {
+                            let enhancedDescription = '';
+                            
+                            // Generate enhanced descriptions based on category, color, and condition
+                            switch (categoryKey) {
+                              case 'bags':
+                                if (conditionValue === 'Scratches') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with scratches was found. `;
+                                } else if (conditionValue === 'Stickers') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with stickers was found. `;
+                                } else if (conditionValue === 'Keychains') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with keychains was found. `;
+                                } else {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag in good condition was found. `;
+                                }
+                                break;
+                              case 'calculators':
+                                if (conditionValue === 'Scratches') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with scratches was found. Please describe the brand, model, scratch locations, and any other features to verify ownership.`;
+                                } else if (conditionValue === 'Stickers') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with stickers was found. Please describe the brand, model, sticker details, and any other features to verify ownership.`;
+                                } else if (conditionValue === 'Engravings') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with engravings was found. Please describe the brand, model, engraving details, and any other features to verify ownership.`;
+                                } else {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator in good condition was found. Please describe the brand, model, and any other features to verify ownership.`;
+                                }
+                                break;
+                              case 'keys':
+                                if (conditionValue === 'Scratches') {
+                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with scratches were found. Please describe the keychain, number of keys, scratch locations, and any other features to verify ownership.`;
+                                } else if (conditionValue === 'Stickers') {
+                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with stickers were found. Please describe the keychain, number of keys, sticker details, and any other features to verify ownership.`;
+                                } else if (conditionValue === 'Keychains') {
+                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with attached keychains were found. Please describe the keychains, number of keys, and any other features to verify ownership.`;
+                                } else {
+                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys in good condition were found. Please describe the keychain, number of keys, and any other features to verify ownership.`;
+                                }
+                                break;
+                              case 'umbrellas':
+                                if (conditionValue === 'Scratches') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with scratches was found. Please describe its size, patterns, scratch locations, and any other features to verify ownership.`;
+                                } else if (conditionValue === 'Stickers') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with stickers was found. Please describe its size, patterns, sticker details, and any other features to verify ownership.`;
+                                } else if (conditionValue === 'Bent Frame') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with a bent frame was found. Please describe its size, patterns, bend locations, and any other features to verify ownership.`;
+                                } else {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella in good condition was found. Please describe its size, patterns, handle type, and any other features to verify ownership.`;
+                                }
+                                break;
+                              case 'watches':
+                                if (conditionValue === 'Scratches') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with scratches was found. Please describe the brand, strap material, scratch locations, and any other features to verify ownership.`;
+                                } else if (conditionValue === 'Stickers') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with stickers was found. Please describe the brand, strap material, sticker details, and any other features to verify ownership.`;
+                                } else if (conditionValue === 'Engravings') {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with engravings was found. Please describe the brand, strap material, engraving details, and any other features to verify ownership.`;
+                                } else {
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch in good condition was found. Please describe the brand, strap material, and any other features to verify ownership.`;
+                                }
+                                break;
+                              default:
+                                enhancedDescription = `A ${addSelectedColor.toLowerCase()} ${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()} was found. Please describe the brand, size, condition details, and any other features to verify ownership.`;
+                            }
+                            
+                            const form = document.querySelector('#add-found-form') as HTMLFormElement;
+                            if (form) {
+                              const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement;
+                              if (descriptionInput) descriptionInput.value = enhancedDescription;
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Claim Instructions <span className="text-red-400">*</span></label>
-                  <input {...addRegister("claimProcess", { required: "Claim instructions required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder="e.g. Visit the SAS office with a valid school ID" />
+                  <input {...addRegister("claimProcess", { required: "Claim instructions required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder="e.g. Visit SAS office with a valid school ID" />
                   {addErrors.claimProcess && <p className="text-red-400 text-xs">{addErrors.claimProcess?.message as string}</p>}
                 </div>
-
                 {/* ── Item Photo — required ── */}
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
@@ -673,7 +883,7 @@ const FoundItemsPage = () => {
                         <span className="text-xs text-gray-400 truncate">{addSelectedFile?.name}</span>
                         <span className="text-xs text-gray-500 ml-3 shrink-0">{addSelectedFile ? (addSelectedFile.size < 1024 * 1024 ? (addSelectedFile.size / 1024).toFixed(1) + " KB" : (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB") : ""}</span>
                       </div>
-                      <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
+                      <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleAddFileChange(e.target.files)} />
                     </div>
                   )}
                   {/* show compression/format error OR the missing-photo error */}
@@ -691,7 +901,7 @@ const FoundItemsPage = () => {
                 disabled={isBusy || (!addSelectedFile && !addPreview)}
                 className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
               >
-                {isBusy ? <><Spinner size="sm" /> Submitting…</> : "Submit Found Item"}
+                {isBusy ? (<><Spinner size="sm" /> Submitting…</>) : "Submit Found Item"}
               </button>
             </div>
           </div>
