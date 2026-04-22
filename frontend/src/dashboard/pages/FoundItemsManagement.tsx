@@ -315,9 +315,9 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
                   <p className="text-blue-400 text-xs truncate font-medium">
                     {item.user?.username || item.reporterName || "SAS Office"}
                   </p>
-                  {item.user?.email || item.schoolEmail ? (
+                  {item.schoolEmail || item.user?.email ? (
                     <p className="text-gray-500 text-[10px] truncate mt-0.5">
-                      {item.user?.email || item.schoolEmail}
+                      {item.schoolEmail || item.user?.email}
                     </p>
                   ) : null}
                 </div>

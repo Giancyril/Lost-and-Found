@@ -18,7 +18,7 @@ interface SheetLogData {
 }
 
 const SHEET_ID = "1-uxgLmMS13UbC_BvcVjxeGjlJUgykvRIbb4D0y7zrPI";
-const WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyZidlLQjVrtumhghlJTwQaJjELdRGAkNnUESpmrEZHApS12E5VHbiym0yULFYvccC/exec";
 
 export const logToSheet = async (data: SheetLogData): Promise<void> => {
   if (!WEBHOOK_URL) {

@@ -25,15 +25,15 @@ export const adminStats = async (req: Request, res: Response) => {
     const isThisMonth = (d: string) => new Date(d) >= monthStart;
 
     // ── Found items ───────────────────────────────────────────────
-    result.foundItems     = foundItems.length;
-    result.claimedItems   = foundItems.filter((i: any) => i.isClaimed).length;
-    result.foundThisWeek  = foundItems.filter((i: any) => isThisWeek(i.createdAt)).length;
-    result.foundThisMonth = foundItems.filter((i: any) => isThisMonth(i.createdAt)).length;
+    result.foundItems     = foundItems?.length || 0;
+    result.claimedItems   = foundItems?.filter((i: any) => i.isClaimed).length || 0;
+    result.foundThisWeek  = foundItems?.filter((i: any) => isThisWeek(i.createdAt)).length || 0;
+    result.foundThisMonth = foundItems?.filter((i: any) => isThisMonth(i.createdAt)).length || 0;
 
     // ── Lost items ────────────────────────────────────────────────
-    result.lostItems         = lostItemsActive.length;
-    result.lostThisWeek      = lostItemsActive.filter((i: any) => isThisWeek(i.createdAt)).length;
-    result.lostThisMonth     = lostItemsActive.filter((i: any) => isThisMonth(i.createdAt)).length;
+    result.lostItems         = lostItemsActive?.length || 0;
+    result.lostThisWeek      = lostItemsActive?.filter((i: any) => isThisWeek(i.createdAt)).length || 0;
+    result.lostThisMonth     = lostItemsActive?.filter((i: any) => isThisMonth(i.createdAt)).length || 0;
     result.resolvedLostItems = allLostItems.filter((i: any) => i.isFound).length;
 
     // ── Claims ────────────────────────────────────────────────────
@@ -48,12 +48,12 @@ export const adminStats = async (req: Request, res: Response) => {
     result.userData   = totalUsers;
 
     // ── Totals ────────────────────────────────────────────────────
-    result.total               = foundItems.length + lostItemsActive.length;
+    result.total               = (foundItems?.length || 0) + (lostItemsActive?.length || 0);
     result.itemsLoggedThisWeek = result.foundThisWeek + result.lostThisWeek;
 
     // ── Disposal rate ─────────────────────────────────────────────
-    result.disposalRate = foundItems.length > 0
-      ? Math.round((result.claimedItems / foundItems.length) * 100) : 0;
+    result.disposalRate = (foundItems?.length || 0) > 0
+      ? Math.round((result.claimedItems / (foundItems?.length || 0)) * 100) : 0;
 
     // ── Resolution rate ───────────────────────────────────────────
     result.resolutionRate = allLostItems.length > 0
@@ -77,7 +77,7 @@ export const adminStats = async (req: Request, res: Response) => {
       if (monthlyMap[key]) monthlyMap[key][field]++;
     };
 
-    foundItems.forEach((i: any)   => addToMonth(i.createdAt, "found"));
+    foundItems?.forEach((i: any)   => addToMonth(i.createdAt, "found"));
     allLostItems.forEach((i: any) => addToMonth(i.createdAt, "lost"));
     claims.forEach((c: any)       => addToMonth(c.createdAt, "claims"));
     allLostItems
@@ -92,7 +92,7 @@ export const adminStats = async (req: Request, res: Response) => {
     // ── Category breakdown ────────────────────────────────────────
     const categoryCount: Record<string, { name: string; found: number; lost: number; total: number }> = {};
 
-    foundItems.forEach((i: any) => {
+    foundItems?.forEach((i: any) => {
       const name = i.category?.name ?? "Uncategorized";
       if (!categoryCount[name]) categoryCount[name] = { name, found: 0, lost: 0, total: 0 };
       categoryCount[name].found++;
@@ -111,7 +111,7 @@ export const adminStats = async (req: Request, res: Response) => {
 
     // ── Top reporters ─────────────────────────────────────────────
     const reporterCount: Record<string, { name: string; count: number }> = {};
-    foundItems.forEach((i: any) => {
+    foundItems?.forEach((i: any) => {
       const name = i.reporterName ?? i.user?.username ?? "Anonymous";
       if (!reporterCount[name]) reporterCount[name] = { name, count: 0 };
       reporterCount[name].count++;
@@ -139,7 +139,7 @@ export const adminStats = async (req: Request, res: Response) => {
     const peakDays: Record<number, { day: string; found: number; lost: number; total: number }> = {};
     for (let i = 0; i < 7; i++) peakDays[i] = { day: DAY_LABELS[i], found: 0, lost: 0, total: 0 };
 
-    foundItems.forEach((i: any) => {
+    foundItems?.forEach((i: any) => {
       const d = new Date(i.createdAt).getDay();
       peakDays[d].found++;
       peakDays[d].total++;
@@ -166,7 +166,7 @@ export const adminStats = async (req: Request, res: Response) => {
       return "Evening";
     };
 
-    foundItems.forEach((i: any) => {
+    foundItems?.forEach((i: any) => {
       const block = getTimeBlock(new Date(i.createdAt).getHours());
       timeBlocks[block].found++;
       timeBlocks[block].total++;
@@ -179,7 +179,7 @@ export const adminStats = async (req: Request, res: Response) => {
     result.peakReportingHours = Object.values(timeBlocks);
 
     // ── Unclaimed items age ───────────────────────────────────────
-    const unclaimedItems = foundItems.filter((i: any) => !i.isClaimed);
+    const unclaimedItems = foundItems?.filter((i: any) => !i.isClaimed) || [];
     const ageMs   = (i: any) => now.getTime() - new Date(i.createdAt).getTime();
     const ageDays = (i: any) => Math.floor(ageMs(i) / (1000 * 60 * 60 * 24));
 

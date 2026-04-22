@@ -27,8 +27,8 @@ export const locationStats = async (req: Request, res: Response) => {
       }
     };
 
-    processItems(allFound, "found");
-    processItems(allLost, "lost");
+    processItems(allFound || [], "found");
+    processItems(allLost || [], "lost");
 
     const locationData = Object.entries(counts)
       .map(([location, data]) => ({ location, ...data }))

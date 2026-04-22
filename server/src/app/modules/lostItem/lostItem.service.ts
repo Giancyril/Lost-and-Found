@@ -87,16 +87,35 @@ const getLostItem = async (query: any = {}) => {
   }
 
   // img is now a short Storage URL — safe to include in list queries
-  return prisma.lostItem.findMany({
-    where:   whereConditions,
-    orderBy: { [sortBy]: sortOrder },
-    skip:    (Number(page) - 1) * Number(limit),
-    take:    Number(limit),
-    include: {
-      user:     { select: { id: true, username: true, email: true, role: true } },
-      category: true,
-    },
-  });
+  let retryCount = 0;
+  const maxRetries = 3;
+  
+  while (retryCount < maxRetries) {
+    try {
+      const result = await prisma.lostItem.findMany({
+        where:   whereConditions,
+        orderBy: { [sortBy]: sortOrder },
+        skip:    (Number(page) - 1) * Number(limit),
+        take:    Number(limit),
+        include: {
+          user:     { select: { id: true, username: true, email: true, role: true } },
+          category: true,
+        },
+      });
+      return result;
+    } catch (error: any) {
+      retryCount++;
+      console.error(`getLostItem attempt ${retryCount} failed:`, error.message);
+      
+      if (retryCount >= maxRetries) {
+        console.error('getLostItem: Max retries reached, throwing error');
+        throw new Error('Database connection failed. Please try again.');
+      }
+      
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+    }
+  }
 };
 
 const getAllLostItems = async (query: any = {}) => {

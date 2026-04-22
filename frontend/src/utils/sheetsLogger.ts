@@ -18,8 +18,12 @@ interface SheetLogData {
 }
 
 export const logToSheet = async (data: SheetLogData) => {
+  // ── FIX: Use the production API URL; never fall back to localhost ──
+  const API_BASE_URL =
+    import.meta.env.VITE_SERVER_URL ||
+    "https://lost-and-found-jqmn.onrender.com";
+
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
     const response = await fetch(`${API_BASE_URL}/api/sheets/log`, {
       method: "POST",
       headers: {
@@ -36,5 +40,6 @@ export const logToSheet = async (data: SheetLogData) => {
     console.log(`Logged to ${data.sheetName} successfully:`, result);
   } catch (error) {
     console.error(`Error logging to ${data.sheetName}:`, error);
+    // Silently swallow — sheet logging should never block the main flow
   }
 };

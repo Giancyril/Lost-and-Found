@@ -24,6 +24,7 @@ const createFoundItem = async (
     foundItemName: data.foundItemName,
     location:      data.location,
     reporterName:  data.reporterName || "",
+    schoolEmail:   data.schoolEmail || "",
   };
   if (userId) createData.userId = userId;
 
@@ -84,19 +85,35 @@ const getFoundItem = async (data: TFilter) => {
     if (endDate)   whereConditions.date.lte = new Date(endDate);
   }
 
-  // img is now a short Storage URL (~100 bytes) — safe to include in lists
-  const result = await prisma.foundItem.findMany({
-    where:   whereConditions,
-    orderBy: { [sortBy]: sortOrder },
-    skip:    (Number(page) - 1) * Number(limit),
-    take:    Number(limit),
-    include: {
-      user:     { select: { id: true, username: true, email: true } },
-      category: true,
-    },
-  });
-
-  return result;
+  let retryCount = 0;
+  const maxRetries = 3;
+  
+  while (retryCount < maxRetries) {
+    try {
+      const result = await prisma.foundItem.findMany({
+        where:   whereConditions,
+        orderBy: { [sortBy]: sortOrder },
+        skip:    (Number(page) - 1) * Number(limit),
+        take:    Number(limit),
+        include: {
+          user:     { select: { id: true, username: true, email: true, role: true } },
+          category: true,
+        },
+      });
+      return result;
+    } catch (error: any) {
+      retryCount++;
+      console.error(`getFoundItem attempt ${retryCount} failed:`, error.message);
+      
+      if (retryCount >= maxRetries) {
+        console.error('getFoundItem: Max retries reached, throwing error');
+        throw new Error('Database connection failed. Please try again.');
+      }
+      
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+    }
+  }
 };
 
 const getSingleFoundItem = async (id: string) => {
@@ -168,7 +185,7 @@ const getArchivedFoundItems = async () => {
   });
 };
 
-const getStalFoundItems = async () => {
+const getStaleFoundItems = async () => {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -183,6 +200,13 @@ const getStalFoundItems = async () => {
   });
 };
 
+const updateFoundItemImage = async (id: string, imageUrl: string) => {
+  return prisma.foundItem.update({
+    where: { id },
+    data: { img: imageUrl },
+  });
+};
+
 export const foundItemService = {
   createFoundItem,
   getFoundItem,
@@ -193,5 +217,6 @@ export const foundItemService = {
   archiveFoundItem,
   restoreFoundItem,
   getArchivedFoundItems,
-  getStalFoundItems,
+  getStaleFoundItems,
+  updateFoundItemImage,
 };

@@ -4,6 +4,8 @@ import { Request, Response } from "express";
 import { foundItemService } from "./foundItem.service";
 import { utils } from "../../utils/utils";
 import { matchService } from "../matching/match.service";
+import { uploadFileToStorage } from "../../utils/storage";
+import sharp from "sharp";
 
 const createFoundItem = async (req: Request, res: Response) => {
   try {
@@ -195,12 +197,83 @@ const getArchivedFoundItems = async (req: Request, res: Response) => {
 
 const getStaleFoundItems = async (req: Request, res: Response) => {
   try {
-    const result = await foundItemService.getStalFoundItems();
+    const result = await foundItemService.getStaleFoundItems();
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
       message: "Stale items retrieved successfully",
       data: result,
+    });
+  } catch (error: any) {
+    sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success: false,
+      message: error?.message,
+      data: null,
+    });
+  }
+};
+
+const uploadFoundItemImages = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const files = req.files as Express.Multer.File[];
+    const { primaryIndex } = req.body;
+
+    if (!files || files.length === 0) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.BAD_REQUEST,
+        success: false,
+        message: "No images provided",
+        data: null,
+      });
+    }
+
+    // Upload each image to storage
+    const uploadedUrls = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Compress image using sharp
+      let compressedBuffer = file.buffer;
+      try {
+        compressedBuffer = await sharp(file.buffer)
+          .resize(1200, 1200, { 
+            fit: 'inside',
+            withoutEnlargement: true 
+          })
+          .jpeg({ 
+            quality: 80,
+            progressive: true 
+          })
+          .toBuffer();
+      } catch (error) {
+        console.error("Image compression error:", error);
+        // Fall back to original buffer if compression fails
+        compressedBuffer = file.buffer;
+      }
+      
+      const url = await uploadFileToStorage(
+        compressedBuffer,
+        file.mimetype,
+        "found",
+        id
+      );
+      uploadedUrls.push(url);
+    }
+
+    // Update the found item with the primary image URL
+    const primaryImageUrl = uploadedUrls[parseInt(primaryIndex) || 0];
+    await foundItemService.updateFoundItemImage(id, primaryImageUrl);
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Images uploaded successfully",
+      data: {
+        urls: uploadedUrls,
+        primaryImageUrl,
+      },
     });
   } catch (error: any) {
     sendResponse(res, {
@@ -223,4 +296,5 @@ export const foundItemController = {
   restoreFoundItem,
   getArchivedFoundItems,
   getStaleFoundItems,
+  uploadFoundItemImages,
 };

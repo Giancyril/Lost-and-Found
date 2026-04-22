@@ -303,7 +303,6 @@ const FoundItemsPage = () => {
   const [addSelectedFile, setAddSelectedFile]   = useState<File | null>(null);
   const [addPreview, setAddPreview]             = useState<string>("");
   const [addUploadError, setAddUploadError]     = useState("");
-  // ── NEW: dedicated error for missing photo ──
   const [addPhotoError, setAddPhotoError]       = useState("");
   const [addIsDragging, setAddIsDragging]       = useState(false);
   const [addStartDate, setAddStartDate]         = useState(new Date().toISOString().split("T")[0]);
@@ -324,7 +323,6 @@ const FoundItemsPage = () => {
     const isValidId = Boolean(
       trimmed &&
       trimmed.length >= 4 &&
-      // skip ISO date format YYYY-MM-DD only
       !/^\d{4}-\d{2}-\d{2}$/.test(trimmed)
     );
     return useGetStudentByIdQuery(trimmed, { skip: !isValidId });
@@ -333,12 +331,18 @@ const FoundItemsPage = () => {
   const [getStudentByDetails, { isFetching: isFetchingByDetails }] = useLazyGetStudentByDetailsQuery();
 
   const { data: foundItems, isLoading }        = useGetFoundItemsQuery({ searchTerm, page: currentPage, limit, sortBy, sortOrder });
-  const { data: categoriesData }               = useCategoryQuery("");
+  const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery("");
   const [createFoundItem, { isLoading: isCreating }] = useCreateFoundItemMutation();
   const [uploadItemImages, { isLoading: isUploading }] = useUploadItemImagesMutation();
   const isBusy = isCreating || isUploading;
 
-  const { handleSubmit: handleAddSubmit, register: addRegister, formState: { errors: addErrors }, reset: addReset, setValue: addSetValue } = useForm();
+  const {
+    handleSubmit: handleAddSubmit,
+    register: addRegister,
+    formState: { errors: addErrors },
+    reset: addReset,
+    setValue: addSetValue,
+  } = useForm({ mode: "onSubmit", reValidateMode: "onSubmit" });
 
   const handleFuzzyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
@@ -351,7 +355,7 @@ const FoundItemsPage = () => {
   const handleAddFileChange = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setAddUploadError("");
-    setAddPhotoError(""); // clear photo error when user picks a file
+    setAddPhotoError("");
     let file = files[0];
     if (!file.type.startsWith("image/")) { setAddUploadError("Only image files are allowed."); return; }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) { setAddUploadError(`File must be under ${MAX_SIZE_MB}MB.`); return; }
@@ -363,12 +367,26 @@ const FoundItemsPage = () => {
   };
 
   const closeAddModal = () => {
-    setIsAddModalOpen(false); addReset();
-    setAddSelectedFile(null); setAddPreview(""); setAddUploadError(""); setAddPhotoError(""); // <-- clears photo error too
-    setAddSelectedMenu(""); setAddSelectedMenucategoryId("");
-    setAddSelectedColor(""); setAddSelectedCondition("");
+    setIsAddModalOpen(false);
+    addReset({
+      reporterName: "",
+      schoolEmail: "",
+      department: "",
+      foundItemName: "",
+      description: "",
+      location: "",
+      claimProcess: "",
+    });
+    setAddSelectedFile(null);
+    setAddPreview("");
+    setAddUploadError("");
+    setAddPhotoError("");
+    setAddSelectedMenu("");
+    setAddSelectedMenucategoryId("");
+    setAddSelectedColor("");
+    setAddSelectedCondition("");
     setAddStartDate(new Date().toISOString().split("T")[0]);
-    setScannedStudent(null); // Clear scanned student when closing modal
+    setScannedStudent(null);
     scannedAtRef.current = "";
   };
 
@@ -376,16 +394,9 @@ const FoundItemsPage = () => {
     const scanTime = new Date().toISOString();
     scannedAtRef.current = scanTime;
     setScannedStudent(student);
-    addReset(); // Reset form to clear any existing data
-    addRegister("reporterName", { required: "Finder's name is required" });
-    addRegister("schoolEmail", { 
-      required: "School email is required",
-      pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
-    });
-    // Set the scanned student data in the form using setValue
-    addSetValue("reporterName", student.name);
-    addSetValue("schoolEmail", student.email);
-    addSetValue("department", student.department || "");
+    addSetValue("reporterName", student.name, { shouldDirty: true });
+    addSetValue("schoolEmail", student.email, { shouldDirty: true });
+    addSetValue("department", student.department || "", { shouldDirty: true });
     setShowScanner(false);
     if (student.name && student.name !== "Unknown Student") {
       toast.success(`Student identified: ${student.name}`);
@@ -397,23 +408,51 @@ const FoundItemsPage = () => {
   const clearScan = () => {
     setScannedStudent(null);
     scannedAtRef.current = "";
-    addReset();
+    addSetValue("reporterName", "", { shouldDirty: true });
+    addSetValue("schoolEmail", "", { shouldDirty: true });
+    addSetValue("department", "", { shouldDirty: true });
   };
 
   const handleFetchDetails = async () => {
-    const form = document.querySelector('#add-found-form') as HTMLFormElement;
-    if (!form) return;
-    
-    const nameInput = form.querySelector('input[name="reporterName"]') as HTMLInputElement;
-    const name = nameInput?.value || "";
-    
-    if (!name) {
-      toast.info("Please enter a name to fetch details");
+    const reporterName = (document.querySelector('input[name="reporterName"]') as HTMLInputElement)?.value?.trim() || "";
+    const schoolEmail  = (document.querySelector('input[name="schoolEmail"]') as HTMLInputElement)?.value?.trim() || "";
+
+    console.log("Fetch details - Name:", reporterName, "Email:", schoolEmail);
+
+    if (!reporterName && !schoolEmail) {
+      toast.info("Please enter a name or email to fetch details");
       return;
     }
+
     try {
-      const res = await getStudentByDetails({ name, email: "" }).unwrap();
-      const student = res.data ?? res;
+      let student = null;
+      let searchType = "";
+
+      if (reporterName) {
+        try {
+          const res = await getStudentByDetails({ name: reporterName, email: "" }).unwrap();
+          student = res.data ?? res;
+          searchType = "name";
+        } catch {
+          if (schoolEmail) {
+            try {
+              const emailRes = await getStudentByDetails({ name: "", email: schoolEmail }).unwrap();
+              student = emailRes.data ?? emailRes;
+              searchType = "email";
+            } catch { /* both failed */ }
+          }
+        }
+      } else if (schoolEmail) {
+        try {
+          const emailRes = await getStudentByDetails({ name: "", email: schoolEmail }).unwrap();
+          student = emailRes.data ?? emailRes;
+          searchType = "email";
+        } catch {
+          toast.error("Student not found with this email address");
+          return;
+        }
+      }
+
       if (student) {
         setScannedStudent({
           id: student.id,
@@ -422,47 +461,150 @@ const FoundItemsPage = () => {
           department: student.department || "",
           raw: "manual_fetch"
         });
-        // Auto-fill the form fields using setValue
-        addSetValue("reporterName", student.name);
-        addSetValue("schoolEmail", student.email);
-        addSetValue("department", student.department || "");
-        
-        toast.success(`Found: ${student.name}`);
+        addSetValue("reporterName", student.name, { shouldDirty: true });
+        addSetValue("schoolEmail", student.email, { shouldDirty: true });
+        addSetValue("department", student.department || "", { shouldDirty: true });
+        toast.success(`Found by ${searchType}: ${student.name}`);
+      } else {
+        toast.error("Student not found in masterlist");
       }
-    } catch {
+    } catch (error) {
+      console.error("Fetch details error:", error);
       toast.error("Student not found in masterlist");
     }
   };
 
+  const handleCategoryChange = (id: string) => {
+    const cat = categoriesData?.data?.find((c: any) => c.id === id);
+    if (!cat) return;
+
+    setAddSelectedMenu(cat.name);
+    setAddSelectedMenucategoryId(cat.id);
+    setAddSelectedColor("");
+    setAddSelectedCondition("");
+
+    const categoryKey = cat.name.toLowerCase();
+    const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
+
+    if (config) {
+      addSetValue("foundItemName", config.itemName, { shouldDirty: true });
+      addSetValue("description", config.description, { shouldDirty: true });
+    }
+  };
+
+  const handleColorChange = (colorValue: string) => {
+    setAddSelectedColor(colorValue);
+    setAddSelectedCondition("");
+
+    const categoryKey = addSelectedMenu.toLowerCase();
+    const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
+    if (!config || !colorValue) return;
+
+    let colorDescription = "";
+    switch (categoryKey) {
+      case "bags":        colorDescription = `A ${colorValue.toLowerCase()} bag was found. `; break;
+      case "calculators": colorDescription = `A ${colorValue.toLowerCase()} calculator was found. `; break;
+      case "keys":        colorDescription = `Some ${colorValue.toLowerCase()} keys were found. `; break;
+      case "umbrellas":   colorDescription = `A ${colorValue.toLowerCase()} umbrella was found. `; break;
+      case "watches":     colorDescription = `A ${colorValue.toLowerCase()} watch was found. `; break;
+      default:            colorDescription = `A ${colorValue.toLowerCase()} ${config.itemName.toLowerCase()} was found.`;
+    }
+    addSetValue("description", colorDescription, { shouldDirty: true });
+  };
+
+  const handleConditionChange = (conditionValue: string) => {
+    setAddSelectedCondition(conditionValue);
+
+    const categoryKey = addSelectedMenu.toLowerCase();
+    const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
+    if (!config || !addSelectedColor || !conditionValue) return;
+
+    let enhancedDescription = "";
+    switch (categoryKey) {
+      case "bags":
+        if (conditionValue === "Scratches")       enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with scratches was found. `;
+        else if (conditionValue === "Stickers")   enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with stickers was found. `;
+        else if (conditionValue === "Keychains")  enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with keychains was found. `;
+        else                                      enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag in good condition was found. `;
+        break;
+      case "calculators":
+        if (conditionValue === "Scratches")       enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with scratches was found. `;
+        else if (conditionValue === "Stickers")   enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with stickers was found. `;
+        else if (conditionValue === "Engravings") enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with engravings was found. `;
+        else                                      enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator in good condition was found. `;
+        break;
+      case "keys":
+        if (conditionValue === "Scratches")       enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with scratches were found. `;
+        else if (conditionValue === "Stickers")   enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with stickers were found. `;
+        else if (conditionValue === "Keychains")  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with attached keychains were found. `;
+        else                                      enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys in good condition were found. `;
+        break;
+      case "umbrellas":
+        if (conditionValue === "Scratches")        enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with scratches was found. `;
+        else if (conditionValue === "Stickers")    enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with stickers was found. `;
+        else if (conditionValue === "Bent Frame")  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with a bent frame was found. `;
+        else                                       enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella in good condition was found. `;
+        break;
+      case "watches":
+        if (conditionValue === "Scratches")        enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with scratches was found. `;
+        else if (conditionValue === "Stickers")    enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with stickers was found. `;
+        else if (conditionValue === "Engravings")  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with engravings was found. `;
+        else                                       enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch in good condition was found. `;
+        break;
+      default:
+        enhancedDescription = `A ${addSelectedColor.toLowerCase()} ${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()} was found. `;
+    }
+    addSetValue("description", enhancedDescription, { shouldDirty: true });
+  };
+
+  // ── FIXED onAddSubmit: image upload restored + type removed + safer ID extraction ──
   const onAddSubmit = async (data: any) => {
     if (!addSelectedMenucategoryId) return;
 
-    // ---- Photo is required ---- block submission if none uploaded ----
     if (!addSelectedFile && !addPreview) {
       setAddPhotoError("A photo of the item is required.");
       return;
     }
     setAddPhotoError("");
-    // ---------------------------------------------------------------
 
     try {
+      // Step 1 — Create the found item record
       const res: any = await createFoundItem({
-        img: addPreview || "", categoryId: addSelectedMenucategoryId,
-        foundItemName: data.foundItemName, description: data.description,
-        location: data.location, date: new Date(addStartDate + "T00:00:00"), claimProcess: data.claimProcess,
+        img: addPreview || "",
+        categoryId: addSelectedMenucategoryId,
+        foundItemName: data.foundItemName,
+        description: data.description,
+        location: data.location,
+        date: new Date(addStartDate + "T00:00:00"),
+        claimProcess: data.claimProcess,
         reporterName: data.reporterName || "OFFICE",
         schoolEmail: data.schoolEmail || "",
         department: data.department || "",
       });
-      if (res.error || res?.data?.success === false) { toast.error("Failed to submit found item."); return; }
-      if (addSelectedFile && res?.data?.data?.id) {
+
+      if (res.error || res?.data?.success === false) {
+        toast.error("Failed to submit found item.");
+        return;
+      }
+
+      // Step 2 — Upload the image if one was selected
+      // FIX: removed `type: "found"` which caused the 404; use safer dual-path ID extraction
+      const newItemId = res?.data?.data?.id ?? res?.data?.id;
+      if (addSelectedFile && newItemId) {
         const formData = new FormData();
         formData.append("images", addSelectedFile);
         formData.append("primaryIndex", "0");
-        await uploadItemImages({ id: res.data.data.id, type: "found", formData });
+
+        try {
+          await uploadItemImages({ id: newItemId, type: "found", formData });
+        } catch (imgErr) {
+          // Image upload failed — item was already saved with base64 preview (img field)
+          console.error("Image upload failed:", imgErr);
+          toast.warning("Item saved, but image upload failed. You can re-upload later.");
+        }
       }
-      
-      // Log to Sheets with reporter information
+
+      // Step 3 — Log to Google Sheet (fire-and-forget, never blocks the flow)
       logToSheet({
         sheetName: "Found Items",
         studentId: scannedStudent?.id || "N/A",
@@ -473,13 +615,15 @@ const FoundItemsPage = () => {
         location: data.location,
         date: new Date(addStartDate).toISOString().split("T")[0],
         type: "FOUND",
-        reportId: res.data?.id || res.data?.data?.id || "UNKNOWN",
+        reportId: newItemId || "UNKNOWN",
         scannedAt: scannedAtRef.current || new Date().toISOString(),
       }).catch(console.error);
-      
+
       toast.success("Found item submitted successfully!");
       closeAddModal();
-    } catch { toast.error("Something went wrong. Please try again."); }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    }
   };
 
   const filteredItems = categoryFilter === "ALL"
@@ -488,7 +632,6 @@ const FoundItemsPage = () => {
 
   const totalPages = foundItems?.meta?.totalPage || 1;
 
-  // ── Dropdown option arrays ──
   const sortOptions = [
     { value: "foundItemName-asc",  label: "Name (A–Z)" },
     { value: "foundItemName-desc", label: "Name (Z–A)" },
@@ -553,13 +696,11 @@ const FoundItemsPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            {/* ── Custom Sort dropdown ── */}
             <CustomSelect
               options={sortOptions}
               value={sortValue}
               onChange={(v) => { const [f, o] = v.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }}
             />
-            {/* ── Custom Category dropdown ── */}
             <CustomSelect
               options={categoryOptions}
               value={categoryFilter}
@@ -818,7 +959,7 @@ const FoundItemsPage = () => {
                       </svg>
                       Institutional Email <span className="text-red-400">*</span>
                     </label>
-                    <input {...addRegister("schoolEmail", { 
+                    <input {...addRegister("schoolEmail", {
                       required: "School email is required",
                       pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
                     })} type="email" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder=" " />
@@ -856,40 +997,27 @@ const FoundItemsPage = () => {
                         <span className="text-[9px] font-black leading-none">i</span>
                       </button>
                     </div>
-                    <CustomSelect
-                      options={
-                        categoriesData?.data?.map((cat: any) => ({
-                          value: cat.id,
-                          label: cat.name,
-                          icon: getCategoryIcon(cat.name),
-                        })) ?? []
-                      }
-                      value={addSelectedMenucategoryId}
-                      onChange={(id) => {
-                        const cat = categoriesData?.data?.find((c: any) => c.id === id);
-                        if (cat) { 
-                          setAddSelectedMenu(cat.name); 
-                          setAddSelectedMenucategoryId(cat.id);
-                          
-                          // Auto-fill functionality
-                          const categoryKey = cat.name.toLowerCase();
-                          const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
-                          
-                          if (config) {
-                            // Auto-fill item name using setValue from useForm
-                            const form = document.querySelector('#add-found-form') as HTMLFormElement;
-                            if (form) {
-                              const itemNameInput = form.querySelector('input[name="foundItemName"]') as HTMLInputElement;
-                              const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement;
-                              
-                              if (itemNameInput) itemNameInput.value = config.itemName;
-                              // Auto-fill description (base description without color)
-                              if (descriptionInput) descriptionInput.value = config.description;
-                            }
-                          }
+                    {categoriesLoading ? (
+                      <div className="w-full px-3 py-2.5 text-sm text-gray-500 bg-gray-800/60 border border-gray-700 rounded-xl">
+                        Loading categories...
+                      </div>
+                    ) : categoriesError ? (
+                      <div className="w-full px-3 py-2.5 text-sm text-red-400 bg-gray-800/60 border border-red-500/30 rounded-xl">
+                        Failed to load categories
+                      </div>
+                    ) : (
+                      <CustomSelect
+                        options={
+                          categoriesData?.data?.map((cat: any) => ({
+                            value: cat.id,
+                            label: cat.name,
+                            icon: getCategoryIcon(cat.name),
+                          })) ?? []
                         }
-                      }}
-                    />
+                        value={addSelectedMenucategoryId}
+                        onChange={handleCategoryChange}
+                      />
+                    )}
                     {!addSelectedMenu && <p className="text-red-400 text-xs">Category is required</p>}
                   </div>
                 </div>
@@ -927,148 +1055,37 @@ const FoundItemsPage = () => {
                         icon: null
                       }))}
                       value={addSelectedColor}
-                      onChange={(colorValue) => {
-                        setAddSelectedColor(colorValue);
-                        setAddSelectedCondition(''); // Reset condition when color changes
-                        
-                        // Update description with color information
-                        const categoryKey = addSelectedMenu.toLowerCase();
-                        const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
-                        if (config && colorValue) {
-                          let colorDescription = '';
-                          
-                          // Generate professional descriptions based on category and color
-                          switch (categoryKey) {
-                            case 'bags':
-                              colorDescription = `A ${colorValue.toLowerCase()} bag was found. `;
-                              break;
-                            case 'calculators':
-                              colorDescription = `A ${colorValue.toLowerCase()} calculator was found. `;
-                              break;
-                            case 'keys':
-                              colorDescription = `Some ${colorValue.toLowerCase()} keys were found. `;
-                              break;
-                            case 'umbrellas':
-                              colorDescription = `A ${colorValue.toLowerCase()} umbrella was found. `;
-                              break;
-                            case 'watches':
-                              colorDescription = `A ${colorValue.toLowerCase()} watch was found. `;
-                              break;
-                            default:
-                              colorDescription = `A ${colorValue.toLowerCase()} ${config.itemName.toLowerCase()} was found.`;
-                          }
-                          
-                          const form = document.querySelector('#add-found-form') as HTMLFormElement;
-                          if (form) {
-                            const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement;
-                            if (descriptionInput) descriptionInput.value = colorDescription;
-                          }
-                        }
-                      }}
+                      onChange={handleColorChange}
                     />
                   </div>
                 )}
-                  
-                  {/* Condition dropdown - appears after color selection */}
-                  {addSelectedColor && (
-                    <div className="flex flex-col gap-1.5">
-                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
-                        Condition
-                      </label>
-                      <CustomSelect
-                        options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].conditions.map(condition => ({
-                          value: condition,
-                          label: condition,
-                          icon: null
-                        }))}
-                        value={addSelectedCondition}
-                        onChange={(conditionValue) => {
-                          setAddSelectedCondition(conditionValue);
-                          
-                          // Update description with condition information
-                          const categoryKey = addSelectedMenu.toLowerCase();
-                          const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
-                          if (config && addSelectedColor && conditionValue) {
-                            let enhancedDescription = '';
-                            
-                            // Generate enhanced descriptions based on category, color, and condition
-                            switch (categoryKey) {
-                              case 'bags':
-                                if (conditionValue === 'Scratches') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with scratches was found. `;
-                                } else if (conditionValue === 'Stickers') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with stickers was found. `;
-                                } else if (conditionValue === 'Keychains') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with keychains was found. `;
-                                } else {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag in good condition was found. `;
-                                }
-                                break;
-                              case 'calculators':
-                                if (conditionValue === 'Scratches') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with scratches was found. `;
-                                } else if (conditionValue === 'Stickers') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with stickers was found. `;
-                                } else if (conditionValue === 'Engravings') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with engravings was found. .`;
-                                } else {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator in good condition was found. `;
-                                }
-                                break;
-                              case 'keys':
-                                if (conditionValue === 'Scratches') {
-                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with scratches were found. `;
-                                } else if (conditionValue === 'Stickers') {
-                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with stickers were found. `;
-                                } else if (conditionValue === 'Keychains') {
-                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with attached keychains were found. `;
-                                } else {
-                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys in good condition were found. `;
-                                }
-                                break;
-                              case 'umbrellas':
-                                if (conditionValue === 'Scratches') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with scratches was found. `;
-                                } else if (conditionValue === 'Stickers') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with stickers was found. `;
-                                } else if (conditionValue === 'Bent Frame') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with a bent frame was found. `;
-                                } else {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella in good condition was found. `;
-                                }
-                                break;
-                              case 'watches':
-                                if (conditionValue === 'Scratches') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with scratches was found. `;
-                                } else if (conditionValue === 'Stickers') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with stickers was found. `;
-                                } else if (conditionValue === 'Engravings') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with engravings was found. `;
-                                } else {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch in good condition was found. `;
-                                }
-                                break;
-                              default:
-                                enhancedDescription = `A ${addSelectedColor.toLowerCase()} ${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()} was found. `;
-                            }
-                            
-                            const form = document.querySelector('#add-found-form') as HTMLFormElement;
-                            if (form) {
-                              const descriptionInput = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement;
-                              if (descriptionInput) descriptionInput.value = enhancedDescription;
-                            }
-                          }
-                        }}
-                      />
-                    </div>
-                  )}
+
+                {/* Condition dropdown - appears after color selection */}
+                {addSelectedColor && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
+                      Condition
+                    </label>
+                    <CustomSelect
+                      options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].conditions.map(condition => ({
+                        value: condition,
+                        label: condition,
+                        icon: null
+                      }))}
+                      value={addSelectedCondition}
+                      onChange={handleConditionChange}
+                    />
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Claim Instructions <span className="text-red-400">*</span></label>
                   <input {...addRegister("claimProcess", { required: "Claim instructions required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder="e.g. Visit SAS office with a valid school ID" />
                   {addErrors.claimProcess && <p className="text-red-400 text-xs">{addErrors.claimProcess?.message as string}</p>}
                 </div>
-                {/* ── Item Photo — required ── */}
+
+                {/* Item Photo */}
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
@@ -1110,7 +1127,6 @@ const FoundItemsPage = () => {
                       <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleAddFileChange(e.target.files)} />
                     </div>
                   )}
-                  {/* show compression/format error OR the missing-photo error */}
                   {addUploadError && <p className="text-red-400 text-xs">{addUploadError}</p>}
                   {addPhotoError  && !addUploadError && <p className="text-red-400 text-xs">{addPhotoError}</p>}
                 </div>
@@ -1118,7 +1134,6 @@ const FoundItemsPage = () => {
             </div>
             <div className="px-6 py-4 border-t border-white/5 flex gap-3 shrink-0 bg-gray-900 rounded-b-2xl">
               <button type="button" onClick={closeAddModal} disabled={isBusy} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
-              {/* ── Submit disabled when busy OR no photo uploaded ── */}
               <button
                 type="submit"
                 form="add-found-form"

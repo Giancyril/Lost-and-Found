@@ -35,21 +35,40 @@ const calculateMeta = async (data: any) => {
   const { page = 1, limit = 10, itemType = 'found' } = data;
   
   let total;
-  if (itemType === 'lost') {
-    total = await prisma.lostItem.count({
-      where: { isDeleted: false }
-    });
-  } else {
-    total = await prisma.foundItem.count({
-      where: { isDeleted: false }
-    });
+  let retryCount = 0;
+  const maxRetries = 3;
+  
+  while (retryCount < maxRetries) {
+    try {
+      if (itemType === 'lost') {
+        total = await prisma.lostItem.count({
+          where: { isDeleted: false }
+        });
+      } else {
+        total = await prisma.foundItem.count({
+          where: { isDeleted: false }
+        });
+      }
+      break; // Success, exit retry loop
+    } catch (error: any) {
+      retryCount++;
+      console.error(`calculateMeta attempt ${retryCount} failed:`, error.message);
+      
+      if (retryCount >= maxRetries) {
+        console.error('calculateMeta: Max retries reached, throwing error');
+        throw new Error('Database connection failed. Please try again.');
+      }
+      
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+    }
   }
 
   const meta = {
-    total,
+    total: total || 0,
     page: Number(page),
     limit: Number(limit),
-    totalPages: Math.ceil(total / Number(limit)),
+    totalPages: Math.ceil((total || 0) / Number(limit)),
   };
   return meta;
 };

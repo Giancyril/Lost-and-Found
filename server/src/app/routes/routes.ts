@@ -24,6 +24,7 @@ import { postCreationLimiter, tipSubmissionLimiter } from "../midddlewares/bulle
 import { getMatchNotifications } from "../utils/getMatchNotifications";
 import { studentRoutes } from "../modules/student/student.routes";
 import sheetsRoutes from "../modules/sheets/sheets.routes";
+import { uploadImages } from "../midddlewares/upload";
 
 const router = express.Router();
 
@@ -48,6 +49,7 @@ router.post("/found-items/public", foundItemController.createFoundItem);
 router.post("/found-items", validateRequest(FoundItemSchema.createFoundItem), auth(), foundItemController.createFoundItem);
 router.get("/found-items", foundItemController.getFoundItem);
 router.get("/found-item/:id", foundItemController.getSingleFoundItem);
+router.post("/found-items/:id/images", uploadImages.array('images', 5), foundItemController.uploadFoundItemImages);
 
 // ── Archive routes (admin only) ──
 router.get("/found-items/archived",        auth(), foundItemController.getArchivedFoundItems);

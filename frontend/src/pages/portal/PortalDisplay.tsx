@@ -329,14 +329,36 @@ const PortalDisplay = () => {
   const SLIDE_DURATION = 5000;
   const REFETCH_INTERVAL = 60000;
 
-  const { data: lostData } = useGetLostItemsQuery(
+  const { data: lostData, error: lostError, isLoading: lostLoading, refetch: refetchLost } = useGetLostItemsQuery(
     { page: 1, limit: 50, sortBy: "date", sortOrder: "desc" },
-    { pollingInterval: REFETCH_INTERVAL }
+    { 
+      pollingInterval: REFETCH_INTERVAL,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+      retry: 3,
+      retryDelay: 1000
+    }
   );
-  const { data: foundData } = useGetFoundItemsQuery(
+  const { data: foundData, error: foundError, isLoading: foundLoading, refetch: refetchFound } = useGetFoundItemsQuery(
     { page: 1, limit: 50, sortBy: "date", sortOrder: "desc" },
-    { pollingInterval: REFETCH_INTERVAL }
+    { 
+      pollingInterval: REFETCH_INTERVAL,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+      retry: 3,
+      retryDelay: 1000
+    }
   );
+
+  // Debug logging
+  console.log('PortalDisplay Debug:', {
+    lostData: lostData?.data?.length,
+    foundData: foundData?.data?.length,
+    lostError,
+    foundError,
+    lostLoading,
+    foundLoading
+  });
 
   const [slideIndex, setSlideIndex] = useState(0);
 
@@ -369,6 +391,91 @@ const PortalDisplay = () => {
     const slideTimer = setInterval(advanceSlide, SLIDE_DURATION);
     return () => clearInterval(slideTimer);
   }, [advanceSlide]);
+
+  // Show loading state
+  if (lostLoading || foundLoading) {
+    return (
+      <>
+        <style>{`
+          html, body, #root {
+            background-color: #0f172a !important;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+          }
+        `}</style>
+        <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
+          <div className="text-white text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-lg">Loading portal data...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Show error state
+  if (lostError || foundError) {
+    return (
+      <>
+        <style>{`
+          html, body, #root {
+            background-color: #0f172a !important;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+          }
+        `}</style>
+        <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
+          <div className="text-white text-center max-w-md px-4">
+            <div className="text-red-400 text-6xl mb-4">!</div>
+            <h2 className="text-xl font-bold mb-2">Portal Loading Error</h2>
+            <p className="text-gray-400 mb-4">
+              {lostError && `Lost items error: ${lostError.message || 'Unknown error'}`}
+              {foundError && `Found items error: ${foundError.message || 'Unknown error'}`}
+            </p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Show empty state
+  if (lostItems.length === 0 && foundItems.length === 0) {
+    return (
+      <>
+        <style>{`
+          html, body, #root {
+            background-color: #0f172a !important;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+          }
+        `}</style>
+        <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
+          <div className="text-white text-center max-w-md px-4">
+            <div className="text-gray-400 text-6xl mb-4">[]</div>
+            <h2 className="text-xl font-bold mb-2">No Items Available</h2>
+            <p className="text-gray-400 mb-4">
+              There are currently no lost or found items to display in the portal.
+            </p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
