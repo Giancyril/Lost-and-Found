@@ -338,7 +338,7 @@ const FoundItemsPage = () => {
   const [uploadItemImages, { isLoading: isUploading }] = useUploadItemImagesMutation();
   const isBusy = isCreating || isUploading;
 
-  const { handleSubmit: handleAddSubmit, register: addRegister, formState: { errors: addErrors }, reset: addReset } = useForm();
+  const { handleSubmit: handleAddSubmit, register: addRegister, formState: { errors: addErrors }, reset: addReset, setValue: addSetValue } = useForm();
 
   const handleFuzzyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
@@ -382,17 +382,10 @@ const FoundItemsPage = () => {
       required: "School email is required",
       pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
     });
-    // Set the scanned student data in the form
-    const form = document.querySelector('#add-found-form') as HTMLFormElement;
-    if (form) {
-      const reporterNameInput = form.querySelector('input[name="reporterName"]') as HTMLInputElement;
-      const schoolEmailInput = form.querySelector('input[name="schoolEmail"]') as HTMLInputElement;
-      const departmentInput = form.querySelector('input[name="department"]') as HTMLInputElement;
-      
-      if (reporterNameInput) reporterNameInput.value = student.name;
-      if (schoolEmailInput) schoolEmailInput.value = student.email;
-      if (departmentInput) departmentInput.value = student.department || "";
-    }
+    // Set the scanned student data in the form using setValue
+    addSetValue("reporterName", student.name);
+    addSetValue("schoolEmail", student.email);
+    addSetValue("department", student.department || "");
     setShowScanner(false);
     if (student.name && student.name !== "Unknown Student") {
       toast.success(`Student identified: ${student.name}`);
@@ -429,12 +422,10 @@ const FoundItemsPage = () => {
           department: student.department || "",
           raw: "manual_fetch"
         });
-        // Auto-fill the form fields
-        const schoolEmailInput = form.querySelector('input[name="schoolEmail"]') as HTMLInputElement;
-        const departmentInput = form.querySelector('input[name="department"]') as HTMLInputElement;
-        
-        if (schoolEmailInput) schoolEmailInput.value = student.email;
-        if (departmentInput) departmentInput.value = student.department || "";
+        // Auto-fill the form fields using setValue
+        addSetValue("reporterName", student.name);
+        addSetValue("schoolEmail", student.email);
+        addSetValue("department", student.department || "");
         
         toast.success(`Found: ${student.name}`);
       }
@@ -1016,50 +1007,50 @@ const FoundItemsPage = () => {
                                 break;
                               case 'calculators':
                                 if (conditionValue === 'Scratches') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with scratches was found. Please describe the brand, model, scratch locations, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with scratches was found. `;
                                 } else if (conditionValue === 'Stickers') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with stickers was found. Please describe the brand, model, sticker details, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with stickers was found. `;
                                 } else if (conditionValue === 'Engravings') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with engravings was found. Please describe the brand, model, engraving details, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with engravings was found. .`;
                                 } else {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator in good condition was found. Please describe the brand, model, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator in good condition was found. `;
                                 }
                                 break;
                               case 'keys':
                                 if (conditionValue === 'Scratches') {
-                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with scratches were found. Please describe the keychain, number of keys, scratch locations, and any other features to verify ownership.`;
+                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with scratches were found. `;
                                 } else if (conditionValue === 'Stickers') {
-                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with stickers were found. Please describe the keychain, number of keys, sticker details, and any other features to verify ownership.`;
+                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with stickers were found. `;
                                 } else if (conditionValue === 'Keychains') {
-                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with attached keychains were found. Please describe the keychains, number of keys, and any other features to verify ownership.`;
+                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with attached keychains were found. `;
                                 } else {
-                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys in good condition were found. Please describe the keychain, number of keys, and any other features to verify ownership.`;
+                                  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys in good condition were found. `;
                                 }
                                 break;
                               case 'umbrellas':
                                 if (conditionValue === 'Scratches') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with scratches was found. Please describe its size, patterns, scratch locations, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with scratches was found. `;
                                 } else if (conditionValue === 'Stickers') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with stickers was found. Please describe its size, patterns, sticker details, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with stickers was found. `;
                                 } else if (conditionValue === 'Bent Frame') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with a bent frame was found. Please describe its size, patterns, bend locations, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with a bent frame was found. `;
                                 } else {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella in good condition was found. Please describe its size, patterns, handle type, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella in good condition was found. `;
                                 }
                                 break;
                               case 'watches':
                                 if (conditionValue === 'Scratches') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with scratches was found. Please describe the brand, strap material, scratch locations, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with scratches was found. `;
                                 } else if (conditionValue === 'Stickers') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with stickers was found. Please describe the brand, strap material, sticker details, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with stickers was found. `;
                                 } else if (conditionValue === 'Engravings') {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with engravings was found. Please describe the brand, strap material, engraving details, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with engravings was found. `;
                                 } else {
-                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch in good condition was found. Please describe the brand, strap material, and any other features to verify ownership.`;
+                                  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch in good condition was found. `;
                                 }
                                 break;
                               default:
-                                enhancedDescription = `A ${addSelectedColor.toLowerCase()} ${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()} was found. Please describe the brand, size, condition details, and any other features to verify ownership.`;
+                                enhancedDescription = `A ${addSelectedColor.toLowerCase()} ${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()} was found. `;
                             }
                             
                             const form = document.querySelector('#add-found-form') as HTMLFormElement;
