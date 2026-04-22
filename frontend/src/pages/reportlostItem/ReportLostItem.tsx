@@ -158,14 +158,15 @@ const CustomSelect = ({
 
 // ── Field wrapper ─────────────────────────────────────────────────────────────
 const Field = ({
-  label, required, error, icon, children,
+  label, required, error, icon, children, infoButton,
 }: {
-  label: string; required?: boolean; error?: string; icon: React.ReactNode; children: React.ReactNode;
+  label: string; required?: boolean; error?: string; icon: React.ReactNode; children: React.ReactNode; infoButton?: React.ReactNode;
 }) => (
   <div className="flex flex-col gap-1.5">
     <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-widest">
       {icon}{label}
       {required && <span className="text-red-500 normal-case tracking-normal font-normal">*</span>}
+      {infoButton}
     </label>
     {children}
     {error && (
@@ -288,6 +289,23 @@ const HELP_PAGES = [
   },
 ];
 
+// Category Help Modal Content
+const CATEGORY_HELP_CONTENT = {
+  tag: <><IconGrid size={8} /> Item Categories</>,
+  steps: [
+    { n: "1", title: "Select a Category", desc: "Choose the most appropriate category for your lost item from the dropdown menu." },
+    { n: "2", title: "Auto-fill Features", desc: "Some categories will automatically fill in the item name and provide color/condition options." },
+    { n: "3", title: "Enhanced Description", desc: "The system will help generate a detailed description based on your selections." },
+  ],
+  tip: (
+    <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/20">
+      <p className="text-gray-400 text-[11px] leading-relaxed text-justify">
+        Selecting the right category helps us match your item with found items faster. Categories like <span className="text-blue-400 font-semibold">bags</span>, <span className="text-blue-400 font-semibold">calculators</span>, <span className="text-blue-400 font-semibold">keys</span>, <span className="text-blue-400 font-semibold">umbrellas</span>, and <span className="text-blue-400 font-semibold">watches</span> have special auto-fill features.
+      </p>
+    </div>
+  ),
+};
+
 const ReportLostItem = () => {
   const { register, formState: { errors }, reset, trigger, getValues, control, setValue, watch } = useForm({ mode: "onChange" });
 
@@ -305,6 +323,7 @@ const ReportLostItem = () => {
   const [categoryTouched, setCategoryTouched] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [helpPage, setHelpPage] = useState(0);
+  const [showCategoryHelp, setShowCategoryHelp] = useState(false);
   const [selectedColor, setSelectedColor] = useState("");
   const [, setSelectedCondition] = useState("");
 
@@ -656,6 +675,16 @@ const ReportLostItem = () => {
                         required
                         error={categoryTouched && !selectedMenucategoryId ? "Category is required" : ""}
                         icon={<IconGrid />}
+                        infoButton={
+                          <button
+                            type="button"
+                            onClick={() => setShowCategoryHelp(true)}
+                            className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-400 hover:text-white flex items-center justify-center transition-all ml-2"
+                            title="About categories"
+                          >
+                            <span className="text-[9px] font-black leading-none">i</span>
+                          </button>
+                        }
                       >
                         <CustomSelect
                           options={categoryOptions}
@@ -953,6 +982,42 @@ const ReportLostItem = () => {
       <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
       {showScanner && (
         <BarcodeScannerModal onScan={handleScan} onClose={() => setShowScanner(false)} useFetchStudent={useFetchStudent} />
+      )}
+
+      {/* Category Help Modal */}
+      {showCategoryHelp && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
+              <h3 className="text-sm font-bold text-white">About Categories</h3>
+              <button onClick={() => setShowCategoryHelp(false)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                <FaTimes size={12} />
+              </button>
+            </div>
+            <div className="px-5 py-5 flex-1 flex flex-col justify-between min-h-[260px]">
+              <div className="space-y-4">
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
+                  {CATEGORY_HELP_CONTENT.tag}
+                </p>
+                <div className="space-y-3">
+                  {CATEGORY_HELP_CONTENT.steps.map(({ n, title, desc }) => (
+                    <div key={n} className="flex gap-3">
+                      <div className="shrink-0 w-6 h-6 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-black">{n}</div>
+                      <div>
+                        <p className="text-white text-xs font-semibold">{title}</p>
+                        <p className="text-gray-500 text-[11px] mt-0.5 leading-relaxed">{desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {CATEGORY_HELP_CONTENT.tip && <div className="mt-3">{CATEGORY_HELP_CONTENT.tip}</div>}
+              </div>
+            </div>
+            <div className="px-5 pb-5 pt-2 border-t border-gray-800 shrink-0 flex items-center justify-center">
+              <button onClick={() => setShowCategoryHelp(false)} className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors">Got it</button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

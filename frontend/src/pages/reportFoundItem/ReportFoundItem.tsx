@@ -41,6 +41,29 @@ const IconBuilding = ({ size = 13 }: { size?: number }) => (
   </svg>
 );
 
+const IconGrid = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" />
+  </svg>
+);
+
+// Category Help Modal Content
+const CATEGORY_HELP_CONTENT = {
+  tag: <><IconGrid size={8} /> Item Categories</>,
+  steps: [
+    { n: "1", title: "Select a Category", desc: "Choose the most appropriate category for the found item from the dropdown menu." },
+    { n: "2", title: "Help with Matching", desc: "The correct category helps us match the found item with lost items more effectively." },
+    { n: "3", title: "Better Organization", desc: "Proper categorization keeps the found items board organized and easy to search." },
+  ],
+  tip: (
+    <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+      <p className="text-gray-400 text-[11px] leading-relaxed text-justify">
+        Selecting the right category helps owners find their items faster. Common categories include <span className="text-emerald-400 font-semibold">bags</span>, <span className="text-emerald-400 font-semibold">calculators</span>, <span className="text-emerald-400 font-semibold">keys</span>, <span className="text-emerald-400 font-semibold">umbrellas</span>, and <span className="text-emerald-400 font-semibold">watches</span>.
+      </p>
+    </div>
+  ),
+};
+
 const ReportFoundItem = () => {
   const users: any = useUserVerification();
   const isAdmin = users?.role === "ADMIN";
@@ -57,6 +80,7 @@ const ReportFoundItem = () => {
 
   const [selectedMenu, setselectedMenu] = useState("");
   const [selectedMenucategoryId, setselectedMenucategoryId] = useState("");
+  const [showCategoryHelp, setShowCategoryHelp] = useState(false);
   const handleMenuChange = (menuName: string, categoryId: string) => {
     setselectedMenu(menuName);
     setselectedMenucategoryId(categoryId);
@@ -462,7 +486,17 @@ const ReportFoundItem = () => {
 
                 {/* Category */}
                 <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Item Category</label>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <label className="text-xs font-bold text-white uppercase tracking-widest">Item Category</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowCategoryHelp(true)}
+                      className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-400 hover:text-white flex items-center justify-center transition-all"
+                      title="About categories"
+                    >
+                      <span className="text-[9px] font-black leading-none">i</span>
+                    </button>
+                  </div>
                   <div className="relative">
                     <select
                       className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer text-sm"
@@ -598,6 +632,42 @@ const ReportFoundItem = () => {
           onClose={() => setShowScanner(false)}
           useFetchStudent={useFetchStudent}
         />
+      )}
+
+      {/* Category Help Modal */}
+      {showCategoryHelp && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
+              <h3 className="text-sm font-bold text-white">About Categories</h3>
+              <button onClick={() => setShowCategoryHelp(false)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                <FaTimes size={12} />
+              </button>
+            </div>
+            <div className="px-5 py-5 flex-1 flex flex-col justify-between min-h-[260px]">
+              <div className="space-y-4">
+                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                  {CATEGORY_HELP_CONTENT.tag}
+                </p>
+                <div className="space-y-3">
+                  {CATEGORY_HELP_CONTENT.steps.map(({ n, title, desc }) => (
+                    <div key={n} className="flex gap-3">
+                      <div className="shrink-0 w-6 h-6 rounded-full border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-black">{n}</div>
+                      <div>
+                        <p className="text-white text-xs font-semibold">{title}</p>
+                        <p className="text-gray-500 text-[11px] mt-0.5 leading-relaxed">{desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {CATEGORY_HELP_CONTENT.tip && <div className="mt-3">{CATEGORY_HELP_CONTENT.tip}</div>}
+              </div>
+            </div>
+            <div className="px-5 pb-5 pt-2 border-t border-gray-800 shrink-0 flex items-center justify-center">
+              <button onClick={() => setShowCategoryHelp(false)} className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors">Got it</button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

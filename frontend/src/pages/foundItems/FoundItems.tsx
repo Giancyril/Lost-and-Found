@@ -83,6 +83,23 @@ const shouldHideImage = (cat: string | undefined, isAdmin: boolean) => {
   return HIDDEN_IMAGE_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
 };
 
+// Category Help Modal Content
+const CATEGORY_HELP_CONTENT = {
+  tag: <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg> Item Categories</>,
+  steps: [
+    { n: "1", title: "Select a Category", desc: "Choose the most appropriate category for the found item from the dropdown menu." },
+    { n: "2", title: "Help with Matching", desc: "The correct category helps us match the found item with lost items more effectively." },
+    { n: "3", title: "Better Organization", desc: "Proper categorization keeps the found items board organized and easy to search." },
+  ],
+  tip: (
+    <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+      <p className="text-gray-400 text-[11px] leading-relaxed text-justify">
+        Selecting the right category helps owners find their items faster. Common categories include <span className="text-emerald-400 font-semibold">bags</span>, <span className="text-emerald-400 font-semibold">calculators</span>, <span className="text-emerald-400 font-semibold">keys</span>, <span className="text-emerald-400 font-semibold">umbrellas</span>, and <span className="text-emerald-400 font-semibold">watches</span>.
+      </p>
+    </div>
+  ),
+};
+
 // ── Custom Select ─────────────────────────────────────────────────────────────
 interface SelectOption { value: string; label: string; icon?: React.ReactNode; }
 
@@ -276,6 +293,7 @@ const FoundItemsPage = () => {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isAddModalOpen, setIsAddModalOpen]     = useState(false);
+  const [showCategoryHelp, setShowCategoryHelp] = useState(false);
   const [addSelectedFile, setAddSelectedFile]   = useState<File | null>(null);
   const [addPreview, setAddPreview]             = useState<string>("");
   const [addUploadError, setAddUploadError]     = useState("");
@@ -631,7 +649,17 @@ const FoundItemsPage = () => {
                     {addErrors.foundItemName && <p className="text-red-400 text-xs">{addErrors.foundItemName?.message as string}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>Category <span className="text-red-400">*</span></label>
+                    <div className="flex items-center gap-1.5">
+                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>Category <span className="text-red-400">*</span></label>
+                      <button
+                        type="button"
+                        onClick={() => setShowCategoryHelp(true)}
+                        className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-400 hover:text-white flex items-center justify-center transition-all"
+                        title="About categories"
+                      >
+                        <span className="text-[9px] font-black leading-none">i</span>
+                      </button>
+                    </div>
                     <CustomSelect
                       options={
                         categoriesData?.data?.map((cat: any) => ({
@@ -903,6 +931,42 @@ const FoundItemsPage = () => {
               >
                 {isBusy ? (<><Spinner size="sm" /> Submitting…</>) : "Submit Found Item"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Help Modal */}
+      {showCategoryHelp && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
+              <h3 className="text-sm font-bold text-white">About Categories</h3>
+              <button onClick={() => setShowCategoryHelp(false)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                <FaTimes size={12} />
+              </button>
+            </div>
+            <div className="px-5 py-5 flex-1 flex flex-col justify-between min-h-[260px]">
+              <div className="space-y-4">
+                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                  {CATEGORY_HELP_CONTENT.tag}
+                </p>
+                <div className="space-y-3">
+                  {CATEGORY_HELP_CONTENT.steps.map(({ n, title, desc }) => (
+                    <div key={n} className="flex gap-3">
+                      <div className="shrink-0 w-6 h-6 rounded-full border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-black">{n}</div>
+                      <div>
+                        <p className="text-white text-xs font-semibold">{title}</p>
+                        <p className="text-gray-500 text-[11px] mt-0.5 leading-relaxed">{desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {CATEGORY_HELP_CONTENT.tip && <div className="mt-3">{CATEGORY_HELP_CONTENT.tip}</div>}
+              </div>
+            </div>
+            <div className="px-5 pb-5 pt-2 border-t border-gray-800 shrink-0 flex items-center justify-center">
+              <button onClick={() => setShowCategoryHelp(false)} className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors">Got it</button>
             </div>
           </div>
         </div>
