@@ -18,24 +18,22 @@ interface SheetLogData {
 }
 
 export const logToSheet = async (data: SheetLogData) => {
-  const WEBHOOK_URL = import.meta.env.VITE_SHEETS_WEBHOOK_URL;
-
-  if (!WEBHOOK_URL) {
-    console.warn("VITE_SHEETS_WEBHOOK_URL is not defined. Skipping sheet logging.");
-    return;
-  }
-
   try {
-    const response = await fetch(WEBHOOK_URL, {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const response = await fetch(`${API_BASE_URL}/api/sheets/log`, {
       method: "POST",
-      mode: "no-cors", 
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
 
-    console.log(`Logged to ${data.sheetName} successfully`, response);
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log(`Logged to ${data.sheetName} successfully:`, result);
   } catch (error) {
     console.error(`Error logging to ${data.sheetName}:`, error);
   }

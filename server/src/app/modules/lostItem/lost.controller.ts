@@ -60,7 +60,7 @@ const getLostItem = async (req: Request, res: Response) => {
   try {
     // ── EGRESS FIX: cache public list for 60 seconds ──────────────────────────
     res.set("Cache-Control", "public, max-age=60");
-    const meta = await utils.calculateMeta(req.query);
+    const meta = await utils.calculateMeta({ ...req.query, itemType: 'lost' });
     const result = await lostTItemServices.getLostItem(req.query);
     sendResponse(res, {
       statusCode: StatusCodes.OK,
@@ -81,7 +81,7 @@ const getLostItem = async (req: Request, res: Response) => {
 
 const getAllLostItems = async (req: Request, res: Response) => {
   try {
-    const meta = await utils.calculateMeta(req.query);
+    const meta = await utils.calculateMeta({ ...req.query, itemType: 'lost' });
     const result = await lostTItemServices.getAllLostItems(req.query);
     sendResponse(res, {
       statusCode: StatusCodes.OK,

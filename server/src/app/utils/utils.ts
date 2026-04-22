@@ -32,13 +32,24 @@ const verifyToken = (token: string): JwtPayload => {
 };
 
 const calculateMeta = async (data: any) => {
-  const { page = 1, limit = 10 } = data;
-  const res = (await prisma.foundItem.findMany({})).length;
+  const { page = 1, limit = 10, itemType = 'found' } = data;
+  
+  let total;
+  if (itemType === 'lost') {
+    total = await prisma.lostItem.count({
+      where: { isDeleted: false }
+    });
+  } else {
+    total = await prisma.foundItem.count({
+      where: { isDeleted: false }
+    });
+  }
 
   const meta = {
-    total: res,
+    total,
     page: Number(page),
     limit: Number(limit),
+    totalPages: Math.ceil(total / Number(limit)),
   };
   return meta;
 };

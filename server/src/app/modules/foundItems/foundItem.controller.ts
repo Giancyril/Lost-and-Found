@@ -36,7 +36,7 @@ const getFoundItem = async (req: Request, res: Response) => {
   try {
     // ── EGRESS FIX: cache public list for 60 seconds ──────────────────────────
     res.set("Cache-Control", "public, max-age=60");
-    const meta = await utils.calculateMeta(req.query);
+    const meta = await utils.calculateMeta({ ...req.query, itemType: 'found' });
     const result = await foundItemService.getFoundItem(req.query);
     sendResponse(res, {
       statusCode: StatusCodes.OK,

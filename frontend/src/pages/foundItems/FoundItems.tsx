@@ -98,9 +98,9 @@ const CATEGORY_HELP_CONTENT = {
     { n: "3", title: "Better Organization", desc: "Proper categorization keeps the found items board organized and easy to search." },
   ],
   tip: (
-    <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+    <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/20">
       <p className="text-gray-400 text-[11px] leading-relaxed text-justify">
-        Selecting the right category helps owners find their items faster. Common categories include <span className="text-emerald-400 font-semibold">bags</span>, <span className="text-emerald-400 font-semibold">calculators</span>, <span className="text-emerald-400 font-semibold">keys</span>, <span className="text-emerald-400 font-semibold">umbrellas</span>, and <span className="text-emerald-400 font-semibold">watches</span>.
+        Selecting the right category helps owners find their items faster. Common categories include <span className="text-blue-400 font-semibold">bags</span>, <span className="text-blue-400 font-semibold">calculators</span>, <span className="text-blue-400 font-semibold">keys</span>, <span className="text-blue-400 font-semibold">umbrellas</span>, and <span className="text-blue-400 font-semibold">watches</span>.
       </p>
     </div>
   ),
@@ -222,8 +222,8 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
           </div>
           {submitted ? (
             <div className="text-center py-8">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
-                <FaCheckCircle className="text-emerald-400" size={24} />
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-3">
+                <FaCheckCircle className="text-blue-400" size={24} />
               </div>
               <p className="text-white font-semibold">Claim Submitted!</p>
               <p className="text-gray-500 text-xs mt-1.5 leading-relaxed max-w-xs mx-auto">The SAS office will review your proof and contact you via your school email.</p>
@@ -635,7 +635,7 @@ const FoundItemsPage = () => {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
                     <div className="absolute top-3 left-3">
-                      {isClaimed ? <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-emerald-500/30"><FaCheckCircle size={8} /> Claimed</span>
+                      {isClaimed ? <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-blue-500/30"><FaCheckCircle size={8} /> Claimed</span>
                         : <span className="px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-blue-500/30">Available</span>}
                     </div>
                     <div className="absolute top-3 right-3">
@@ -706,7 +706,7 @@ const FoundItemsPage = () => {
                     <div className="col-span-2"><p className="text-gray-400 text-xs flex items-center gap-1.5 truncate"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaUser className="text-blue-400" size={8} /></span>{item?.user?.username ?? item?.reporterName ?? "SAS Office"}</p></div>
                     <div className="col-span-2">{item?.category?.name ? <span className="flex items-center gap-1.5 text-xs text-gray-400"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">{getCategoryIcon(item.category.name)}</span><span className="truncate">{item.category.name}</span></span> : <span className="text-gray-600 text-xs">—</span>}</div>
                     <div className="col-span-1"><p className="text-gray-400 text-xs flex items-center gap-1.5"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></span>{dateStr}</p></div>
-                    <div className="col-span-1">{isClaimed ? <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full">Claimed</span> : <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-full">Available</span>}</div>
+                    <div className="col-span-1">{isClaimed ? <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-full">Claimed</span> : <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-full">Available</span>}</div>
                     <div className="col-span-2 flex items-center justify-end gap-1.5">
                       {!isClaimed && <button onClick={() => setClaimItem(item)} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-semibold rounded-lg transition-all whitespace-nowrap">Claim Item</button>}
                       <Link to={`/foundItems/${item.id}`} className="flex items-center px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] rounded-lg transition-all">Details</Link>
@@ -747,7 +747,7 @@ const FoundItemsPage = () => {
             style={{ borderTop: "2px solid #3b82f6", boxShadow: "0 0 30px rgba(59,130,246,0.15), 0 25px 50px rgba(0,0,0,0.5)" }}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
                 </div>
                 <div>
@@ -786,16 +786,16 @@ const FoundItemsPage = () => {
             </div>
             <div className="overflow-y-auto flex-1 px-6 py-5">
               {scannedStudent && (
-                <div className="group relative overflow-hidden bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 mb-6 animate-fadeIn transition-all duration-300">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-emerald-500/10 transition-all duration-500" />
+                <div className="group relative overflow-hidden bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6 animate-fadeIn transition-all duration-300">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-blue-500/10 transition-all duration-500" />
                   <div className="flex items-center justify-between relative z-10 w-full text-left">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner group-hover:scale-110 transition-transform duration-300">
                         <FaUserCheck size={18} />
                       </div>
                       <div>
                         <h4 className="text-sm font-black text-white tracking-tight uppercase">{scannedStudent.name}</h4>
-                        <p className="text-[10px] font-bold text-emerald-400/70 uppercase tracking-widest mt-0.5">ID: {scannedStudent.id}</p>
+                        <p className="text-[10px] font-bold text-blue-400/70 uppercase tracking-widest mt-0.5">ID: {scannedStudent.id}</p>
                       </div>
                     </div>
                     <button
@@ -1153,13 +1153,13 @@ const FoundItemsPage = () => {
             </div>
             <div className="px-5 py-5 flex-1 flex flex-col justify-between min-h-[260px]">
               <div className="space-y-4">
-                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
                   {CATEGORY_HELP_CONTENT.tag}
                 </p>
                 <div className="space-y-3">
                   {CATEGORY_HELP_CONTENT.steps.map(({ n, title, desc }) => (
                     <div key={n} className="flex gap-3">
-                      <div className="shrink-0 w-6 h-6 rounded-full border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-black">{n}</div>
+                      <div className="shrink-0 w-6 h-6 rounded-full border bg-blue-500/10 border-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-black">{n}</div>
                       <div>
                         <p className="text-white text-xs font-semibold">{title}</p>
                         <p className="text-gray-500 text-[11px] mt-0.5 leading-relaxed">{desc}</p>

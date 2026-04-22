@@ -87,12 +87,12 @@ export function CustomDatePicker({
     <div ref={ref} className="relative">
       <div
         onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center gap-2 px-3 py-2 bg-gray-800/60 border rounded-xl cursor-pointer select-none transition-all ${
-          open ? "border-blue-500 ring-2 ring-blue-500/60" : "border-gray-700 hover:border-gray-600"
+        className={`w-full flex items-center gap-2 px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg cursor-pointer select-none transition-all duration-200 text-sm ${
+          open ? "ring-2 ring-blue-500/60 focus:border-blue-500" : "hover:border-gray-600"
         } ${value ? "text-white" : "text-gray-500"}`}
       >
         <FaCalendarAlt size={11} className={value ? "text-blue-400 shrink-0" : "text-gray-600 shrink-0"} />
-        <span className="text-xs flex-1 truncate whitespace-nowrap">{display}</span>
+        <span className="text-sm flex-1 truncate whitespace-nowrap">{display}</span>
         {value && (
           <span
             role="button"

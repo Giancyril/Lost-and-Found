@@ -23,6 +23,7 @@ import { createPostSchema, createTipSchema } from "../modules/bulletinPost/bulle
 import { postCreationLimiter, tipSubmissionLimiter } from "../midddlewares/bulletinRateLimit";
 import { getMatchNotifications } from "../utils/getMatchNotifications";
 import { studentRoutes } from "../modules/student/student.routes";
+import sheetsRoutes from "../modules/sheets/sheets.routes";
 
 const router = express.Router();
 
@@ -101,5 +102,6 @@ router.delete("/bulletin-posts/:id/tips/:tipId",  auth(),               bulletin
 router.put("/bulletin-posts/:id/resolve",         auth(),               bulletinPostController.resolvePost);
 
 router.use("/students", studentRoutes);
+router.use("/sheets", sheetsRoutes);
 
 export default router;
