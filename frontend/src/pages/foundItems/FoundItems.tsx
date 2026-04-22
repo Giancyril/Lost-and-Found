@@ -8,6 +8,7 @@ import {
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
   FaClipboardList, FaUser, FaEnvelope, FaCheck, FaChevronDown,
+  FaQrcode, FaSpinner, FaUserCheck,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -20,8 +21,13 @@ import {
   useCreateFoundItemMutation,
   useUploadItemImagesMutation,
   useCreateClaimMutation,
+  useGetStudentByIdQuery,
+  useLazyGetStudentByDetailsQuery,
 } from "../../redux/api/api";
 import { useUserVerification } from "../../auth/auth";
+import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
+import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
+import { logToSheet } from "../../utils/sheetsLogger";
 
 // ── Category configuration with auto-fill data ─────────────────────────────
 const CATEGORY_CONFIG = {
@@ -308,6 +314,24 @@ const FoundItemsPage = () => {
   const addFileInputRef = useRef<HTMLInputElement>(null);
   const MAX_SIZE_MB = 5;
 
+  // Scanner and fetch functionality
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedStudent, setScannedStudent] = useState<ScannedStudent | null>(null);
+  const scannedAtRef = useRef<string>("");
+
+  const useFetchStudent = (id: string) => {
+    const trimmed = id?.trim() ?? "";
+    const isValidId = Boolean(
+      trimmed &&
+      trimmed.length >= 4 &&
+      // skip ISO date format YYYY-MM-DD only
+      !/^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+    );
+    return useGetStudentByIdQuery(trimmed, { skip: !isValidId });
+  };
+
+  const [getStudentByDetails, { isFetching: isFetchingByDetails }] = useLazyGetStudentByDetailsQuery();
+
   const { data: foundItems, isLoading }        = useGetFoundItemsQuery({ searchTerm, page: currentPage, limit, sortBy, sortOrder });
   const { data: categoriesData }               = useCategoryQuery("");
   const [createFoundItem, { isLoading: isCreating }] = useCreateFoundItemMutation();
@@ -340,28 +364,104 @@ const FoundItemsPage = () => {
 
   const closeAddModal = () => {
     setIsAddModalOpen(false); addReset();
-    setAddSelectedFile(null); setAddPreview(""); setAddUploadError(""); setAddPhotoError(""); // ← clears photo error too
+    setAddSelectedFile(null); setAddPreview(""); setAddUploadError(""); setAddPhotoError(""); // <-- clears photo error too
     setAddSelectedMenu(""); setAddSelectedMenucategoryId("");
     setAddSelectedColor(""); setAddSelectedCondition("");
     setAddStartDate(new Date().toISOString().split("T")[0]);
+    setScannedStudent(null); // Clear scanned student when closing modal
+    scannedAtRef.current = "";
+  };
+
+  const handleScan = (student: ScannedStudent) => {
+    const scanTime = new Date().toISOString();
+    scannedAtRef.current = scanTime;
+    setScannedStudent(student);
+    addReset(); // Reset form to clear any existing data
+    addRegister("reporterName", { required: "Finder's name is required" });
+    addRegister("schoolEmail", { 
+      required: "School email is required",
+      pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+    });
+    // Set the scanned student data in the form
+    const form = document.querySelector('#add-found-form') as HTMLFormElement;
+    if (form) {
+      const reporterNameInput = form.querySelector('input[name="reporterName"]') as HTMLInputElement;
+      const schoolEmailInput = form.querySelector('input[name="schoolEmail"]') as HTMLInputElement;
+      const departmentInput = form.querySelector('input[name="department"]') as HTMLInputElement;
+      
+      if (reporterNameInput) reporterNameInput.value = student.name;
+      if (schoolEmailInput) schoolEmailInput.value = student.email;
+      if (departmentInput) departmentInput.value = student.department || "";
+    }
+    setShowScanner(false);
+    if (student.name && student.name !== "Unknown Student") {
+      toast.success(`Student identified: ${student.name}`);
+    } else {
+      toast.success(`ID Scanned: ${student.id}`);
+    }
+  };
+
+  const clearScan = () => {
+    setScannedStudent(null);
+    scannedAtRef.current = "";
+    addReset();
+  };
+
+  const handleFetchDetails = async () => {
+    const form = document.querySelector('#add-found-form') as HTMLFormElement;
+    if (!form) return;
+    
+    const nameInput = form.querySelector('input[name="reporterName"]') as HTMLInputElement;
+    const name = nameInput?.value || "";
+    
+    if (!name) {
+      toast.info("Please enter a name to fetch details");
+      return;
+    }
+    try {
+      const res = await getStudentByDetails({ name, email: "" }).unwrap();
+      const student = res.data ?? res;
+      if (student) {
+        setScannedStudent({
+          id: student.id,
+          name: student.name,
+          email: student.email,
+          department: student.department || "",
+          raw: "manual_fetch"
+        });
+        // Auto-fill the form fields
+        const schoolEmailInput = form.querySelector('input[name="schoolEmail"]') as HTMLInputElement;
+        const departmentInput = form.querySelector('input[name="department"]') as HTMLInputElement;
+        
+        if (schoolEmailInput) schoolEmailInput.value = student.email;
+        if (departmentInput) departmentInput.value = student.department || "";
+        
+        toast.success(`Found: ${student.name}`);
+      }
+    } catch {
+      toast.error("Student not found in masterlist");
+    }
   };
 
   const onAddSubmit = async (data: any) => {
     if (!addSelectedMenucategoryId) return;
 
-    // ── Photo is required — block submission if none uploaded ──
+    // ---- Photo is required ---- block submission if none uploaded ----
     if (!addSelectedFile && !addPreview) {
       setAddPhotoError("A photo of the item is required.");
       return;
     }
     setAddPhotoError("");
-    // ──────────────────────────────────────────────────────────
+    // ---------------------------------------------------------------
 
     try {
       const res: any = await createFoundItem({
         img: addPreview || "", categoryId: addSelectedMenucategoryId,
         foundItemName: data.foundItemName, description: data.description,
         location: data.location, date: new Date(addStartDate + "T00:00:00"), claimProcess: data.claimProcess,
+        reporterName: data.reporterName || "OFFICE",
+        schoolEmail: data.schoolEmail || "",
+        department: data.department || "",
       });
       if (res.error || res?.data?.success === false) { toast.error("Failed to submit found item."); return; }
       if (addSelectedFile && res?.data?.data?.id) {
@@ -370,6 +470,22 @@ const FoundItemsPage = () => {
         formData.append("primaryIndex", "0");
         await uploadItemImages({ id: res.data.data.id, type: "found", formData });
       }
+      
+      // Log to Sheets with reporter information
+      logToSheet({
+        sheetName: "Found Items",
+        studentId: scannedStudent?.id || "N/A",
+        reporterName: data.reporterName || "OFFICE",
+        email: data.schoolEmail || scannedStudent?.email || "N/A",
+        itemName: data.foundItemName,
+        description: data.description,
+        location: data.location,
+        date: new Date(addStartDate).toISOString().split("T")[0],
+        type: "FOUND",
+        reportId: res.data?.id || res.data?.data?.id || "UNKNOWN",
+        scannedAt: scannedAtRef.current || new Date().toISOString(),
+      }).catch(console.error);
+      
       toast.success("Found item submitted successfully!");
       closeAddModal();
     } catch { toast.error("Something went wrong. Please try again."); }
@@ -550,7 +666,7 @@ const FoundItemsPage = () => {
         ) : (
           <div className="space-y-2">
             <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-white/5">
-              <div className="col-span-3">Item</div><div className="col-span-2">Location</div><div className="col-span-2">Category</div><div className="col-span-2">Date Found</div><div className="col-span-1">Status</div><div className="col-span-2 text-right">Actions</div>
+              <div className="col-span-2">Item</div><div className="col-span-2">Location</div><div className="col-span-2">Reported By</div><div className="col-span-2">Category</div><div className="col-span-1">Date</div><div className="col-span-1">Status</div><div className="col-span-2 text-right">Actions</div>
             </div>
             {filteredItems.map((item: any) => {
               const isClaimed = item?.isClaimed;
@@ -576,7 +692,7 @@ const FoundItemsPage = () => {
                     </div>
                   </div>
                   <div className="hidden sm:grid grid-cols-12 gap-4 items-center px-4 py-3">
-                    <div className="col-span-3 flex items-center gap-3 min-w-0">
+                    <div className="col-span-2 flex items-center gap-3 min-w-0">
                       <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0">
                         {hideImg ? <div className="w-full h-full flex items-center justify-center"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg></div>
                           : <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? "") : "") || item?.img || "/bgimg.png"} alt={item?.foundItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} className="w-full h-full object-cover" />}
@@ -587,8 +703,9 @@ const FoundItemsPage = () => {
                       </div>
                     </div>
                     <div className="col-span-2"><p className="text-gray-400 text-xs flex items-center gap-1.5 truncate"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaMapMarkerAlt className="text-blue-400" size={8} /></span>{item?.location}</p></div>
+                    <div className="col-span-2"><p className="text-gray-400 text-xs flex items-center gap-1.5 truncate"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaUser className="text-blue-400" size={8} /></span>{item?.user?.username ?? item?.reporterName ?? "SAS Office"}</p></div>
                     <div className="col-span-2">{item?.category?.name ? <span className="flex items-center gap-1.5 text-xs text-gray-400"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">{getCategoryIcon(item.category.name)}</span><span className="truncate">{item.category.name}</span></span> : <span className="text-gray-600 text-xs">—</span>}</div>
-                    <div className="col-span-2"><p className="text-gray-400 text-xs flex items-center gap-1.5"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></span>{dateStr} · <span className={`font-semibold ${daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-600"}`}>{daysAgo === 0 ? "Today" : `${daysAgo}d ago`}</span></p></div>
+                    <div className="col-span-1"><p className="text-gray-400 text-xs flex items-center gap-1.5"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></span>{dateStr}</p></div>
                     <div className="col-span-1">{isClaimed ? <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full">Claimed</span> : <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-full">Available</span>}</div>
                     <div className="col-span-2 flex items-center justify-end gap-1.5">
                       {!isClaimed && <button onClick={() => setClaimItem(item)} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-semibold rounded-lg transition-all whitespace-nowrap">Claim Item</button>}
@@ -638,10 +755,98 @@ const FoundItemsPage = () => {
                   <p className="text-gray-500 text-[11px] mt-0.5">Record an item recovered on campus</p>
                 </div>
               </div>
-              <button onClick={closeAddModal} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"><FaTimes size={12} /></button>
+              <div className="flex items-center gap-2">
+                {scannedStudent ? (
+                  <button
+                    onClick={clearScan}
+                    className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-black rounded-lg transition-all"
+                  >
+                    <FaTimes size={10} /> Clear Scan
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleFetchDetails}
+                      disabled={isFetchingByDetails}
+                      className="px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {isFetchingByDetails ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
+                      Fetch Student Info
+                    </button>
+                    <button
+                      onClick={() => setShowScanner(true)}
+                      className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider whitespace-nowrap active:scale-95"
+                    >
+                      <FaQrcode className="w-2.5 h-2.5" /> Scan Student ID
+                    </button>
+                  </>
+                )}
+                <button onClick={closeAddModal} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"><FaTimes size={12} /></button>
+              </div>
             </div>
             <div className="overflow-y-auto flex-1 px-6 py-5">
+              {scannedStudent && (
+                <div className="group relative overflow-hidden bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 mb-6 animate-fadeIn transition-all duration-300">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-emerald-500/10 transition-all duration-500" />
+                  <div className="flex items-center justify-between relative z-10 w-full text-left">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                        <FaUserCheck size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-white tracking-tight uppercase">{scannedStudent.name}</h4>
+                        <p className="text-[10px] font-bold text-emerald-400/70 uppercase tracking-widest mt-0.5">ID: {scannedStudent.id}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={clearScan}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all hover:rotate-90"
+                    >
+                      <FaTimes size={12} />
+                    </button>
+                  </div>
+                </div>
+              )}
               <form id="add-found-form" onSubmit={handleAddSubmit(onAddSubmit)} className="space-y-4">
+                {/* Reporter Information */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                      </svg>
+                      Your Name <span className="text-red-400">*</span>
+                    </label>
+                    <input {...addRegister("reporterName", { required: "Finder's name is required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder="Enter name or scan ID" />
+                    {addErrors.reporterName && <p className="text-red-400 text-xs">{addErrors.reporterName?.message as string}</p>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-10 5L2 7" />
+                      </svg>
+                      Institutional Email <span className="text-red-400">*</span>
+                    </label>
+                    <input {...addRegister("schoolEmail", { 
+                      required: "School email is required",
+                      pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+                    })} type="email" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder=" " />
+                    {addErrors.schoolEmail && <p className="text-red-400 text-xs">{addErrors.schoolEmail?.message as string}</p>}
+                  </div>
+                </div>
+
+                {/* Department (auto-filled) */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="16" height="20" x="4" y="2" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" />
+                    </svg>
+                    Department / Course
+                  </label>
+                  <input {...addRegister("department")} type="text" readOnly className="w-full px-4 py-2.5 bg-gray-800/40 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm italic" placeholder="Auto-filled from masterlist..." />
+                </div>
+
+                {/* Item Details */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>Item Name <span className="text-red-400">*</span></label>
@@ -970,6 +1175,11 @@ const FoundItemsPage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Scanner Modal */}
+      {showScanner && (
+        <BarcodeScannerModal onScan={handleScan} onClose={() => setShowScanner(false)} useFetchStudent={useFetchStudent} />
       )}
 
       {claimItem && <QuickClaimModal item={claimItem} onClose={() => setClaimItem(null)} />}

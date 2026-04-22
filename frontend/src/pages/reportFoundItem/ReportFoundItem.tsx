@@ -153,7 +153,15 @@ const ReportFoundItem = () => {
     const scanTime = new Date().toISOString();
     scannedAtRef.current = scanTime;
     setScannedStudent(student);
+    reset();
+    register("reporterName", { required: "Finder's name is required" });
+    register("schoolEmail", { 
+      required: "School email is required",
+      pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+    });
+    // Set the scanned student data
     setValue("reporterName", student.name);
+    setValue("schoolEmail", student.email);
     setValue("department", student.department || "");
     setShowScanner(false);
     if (student.name && student.name !== "Unknown Student") {
@@ -167,6 +175,8 @@ const ReportFoundItem = () => {
     setScannedStudent(null);
     scannedAtRef.current = "";
     setValue("reporterName", "");
+    setValue("schoolEmail", "");
+    setValue("department", "");
   };
 
   const [getStudentByDetails, { isFetching: isFetchingByDetails }] = useLazyGetStudentByDetailsQuery();
@@ -182,6 +192,8 @@ const ReportFoundItem = () => {
       const student = res.data ?? res;
       if (student) {
         setValue("reporterName", student.name);
+        setValue("schoolEmail", student.email);
+        setValue("department", student.department || "");
         setScannedStudent({
           id: student.id,
           name: student.name,
@@ -386,20 +398,55 @@ const ReportFoundItem = () => {
                 </div>
 
                 {/* Reported By */}
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Reported By</label>
-                  <div className={`relative flex items-center ${inputCls} ring-0 focus-within:ring-2 focus-within:ring-emerald-500/50`}>
-                    <span className="text-gray-500 mr-2"><IconUser size={16} /></span>
-                    <input
-                      {...register("reporterName", { required: "Finder's name is required" })}
-                      type="text"
-                      className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm"
-                      placeholder="Enter name or scan ID"
-                    />
+                <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] block">Your Name *</label>
+                    <div className={`relative flex items-center ${inputCls} ring-0 focus-within:ring-2 focus-within:ring-emerald-500/50`}>
+                      <span className="text-gray-500 mr-2"><IconUser size={16} /></span>
+                      <input
+                        {...register("reporterName", { required: "Finder's name is required" })}
+                        type="text"
+                        className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm"
+                        placeholder="Enter name or scan ID"
+                      />
+                    </div>
+                    {errors.reporterName && (
+                      <p className="text-red-400 text-xs mt-1 text-left">{errors.reporterName?.message as string}</p>
+                    )}
                   </div>
-                  {errors.reporterName && (
-                    <p className="text-red-400 text-xs mt-1 text-left">{errors.reporterName?.message as string}</p>
-                  )}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] block">Institutional Email *</label>
+                    <div className={`relative flex items-center ${inputCls} ring-0 focus-within:ring-2 focus-within:ring-emerald-500/50`}>
+                      <span className="text-gray-500 mr-2"><IconMail size={16} /></span>
+                      <input {...register("schoolEmail", {
+                        required: "School email is required",
+                        pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+                      })}
+                        type="email" autoComplete="off"
+                        className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm" placeholder=" " />
+                    </div>
+                    {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
+                  </div>
+                </div>
+
+                {/* Fetch + Scan button row */}
+                <div className="flex justify-end items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleFetchDetails}
+                    disabled={isFetchingByDetails}
+                    className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-[9px] font-black text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {isFetchingByDetails ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
+                    Fetch Student Info
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowScanner(true)}
+                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/25 text-emerald-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider whitespace-nowrap active:scale-95"
+                  >
+                    <FaQrcode className="w-2.5 h-2.5" /> Scan Student ID
+                  </button>
                 </div>
 
                 {/* Department / Course */}
