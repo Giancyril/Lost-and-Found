@@ -129,7 +129,9 @@ const CustomSelect = ({
         <div className="absolute z-50 mt-1.5 w-full bg-[#0d1f3c] border border-blue-900/40 rounded-xl shadow-2xl shadow-black/70 overflow-hidden">
           <div className="h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
           <div className="py-1 max-h-60 overflow-y-auto overscroll-contain">
-            {options.map(opt => {
+            {options.length === 0 ? (
+              <div className="px-4 py-3 text-xs text-gray-500 text-center">No categories available</div>
+            ) : options.map(opt => {
               const isActive = opt.value === value;
               return (
                 <button
@@ -353,7 +355,7 @@ const ReportLostItem = () => {
   };
 
   const [createLostItem, { isLoading }] = useCreateLostItemMutation();
-  const { data: Category } = useCategoryQuery("");
+  const { data: Category, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery(undefined);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
 
   const [showScanner, setShowScanner] = useState(false);
@@ -655,13 +657,13 @@ const ReportLostItem = () => {
                     <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
                       <Field label="Item Name" required error={errors.lostItemName?.message as string} icon={<IconTag />}>
                         <input {...register("lostItemName", { required: "Item name is required" })}
-                          type="text" className={inputCls} placeholder="e.g. Black laptop bag" />
+                          type="text" className={inputCls} placeholder=" " />
                       </Field>
                       <Field label="Last Seen Location" required error={errors.location?.message as string} icon={<IconPin />}>
                         <Controller
                           name="location" control={control} rules={{ required: "Location is required" }}
                           render={({ field }) => (
-                            <LocationAutocomplete value={field.value || ""} onChange={field.onChange} onBlur={field.onBlur} className={inputCls} placeholder="e.g. Library, Room 205" />
+                            <LocationAutocomplete value={field.value || ""} onChange={field.onChange} onBlur={field.onBlur} className={inputCls} placeholder="e.g. SWDC Building - Room 205" />
                           )}
                         />
                       </Field>
@@ -686,16 +688,26 @@ const ReportLostItem = () => {
                           </button>
                         }
                       >
-                        <CustomSelect
-                          options={categoryOptions}
-                          value={selectedMenucategoryId}
-                          onChange={(id) => {
-                            const cat = Category?.data?.find((c: any) => c.id === id);
-                            if (cat) handleMenuChange(cat.name, cat.id);
-                          }}
-                          placeholder="Select a category"
-                          error={categoryTouched && !selectedMenucategoryId}
-                        />
+                        {categoriesLoading ? (
+                          <div className="w-full px-4 py-2.5 text-sm text-gray-500 bg-gray-800/60 border border-gray-700 rounded-lg">
+                            Loading categories...
+                          </div>
+                        ) : categoriesError ? (
+                          <div className="w-full px-4 py-2.5 text-sm text-red-400 bg-gray-800/60 border border-red-500/30 rounded-lg">
+                            Failed to load categories
+                          </div>
+                        ) : (
+                          <CustomSelect
+                            options={categoryOptions}
+                            value={selectedMenucategoryId}
+                            onChange={(id) => {
+                              const cat = Category?.data?.find((c: any) => c.id === id);
+                              if (cat) handleMenuChange(cat.name, cat.id);
+                            }}
+                            placeholder="Select a category"
+                            error={categoryTouched && !selectedMenucategoryId}
+                          />
+                        )}
                       </Field>
                     </div>
 
