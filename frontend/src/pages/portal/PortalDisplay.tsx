@@ -62,7 +62,7 @@ const ItemCard = ({
     <div className={`relative flex flex-col border rounded-2xl overflow-hidden h-full ${
       badgeColor === "red" ? "bg-slate-800 border-red-500/20" : "bg-slate-800 border-blue-400/30"
     }`}>
-      <div className="relative h-40 sm:h-48 md:h-56 bg-slate-900 shrink-0 overflow-hidden">
+      <div className="relative h-32 sm:h-40 md:h-48 lg:h-56 bg-slate-900 shrink-0 overflow-hidden">
         {restricted ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2 sm:gap-3 bg-slate-900">
             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
@@ -70,9 +70,9 @@ const ItemCard = ({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
               </svg>
             </div>
-            <div className="text-center px-3">
-              <p className="text-slate-300 text-sm sm:text-base font-bold">Image Hidden</p>
-              <p className="text-slate-500 text-xs sm:text-sm mt-1 leading-relaxed">Claim in person at the SAS Office</p>
+            <div className="text-center px-2 sm:px-3">
+              <p className="text-slate-300 text-xs sm:text-sm font-bold">Image Hidden</p>
+              <p className="text-slate-500 text-[10px] sm:text-xs mt-1 leading-relaxed">Claim in person at the SAS Office</p>
             </div>
           </div>
         ) : img ? (
@@ -86,8 +86,8 @@ const ItemCard = ({
           </div>
         )}
 
-        <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
-          <span className={`px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-black uppercase tracking-widest rounded-full border backdrop-blur-sm ${
+        <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
+          <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full border backdrop-blur-sm ${
             badgeColor === "red"
               ? "bg-red-900/80 text-red-300 border-red-700/30"
               : "bg-blue-800/90 text-blue-200 border-blue-500/50"
@@ -95,32 +95,32 @@ const ItemCard = ({
         </div>
 
         {category && (
-          <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-            <span className="px-2 py-1 text-xs font-semibold bg-black/50 text-gray-300 border border-white/10 rounded-full backdrop-blur-sm">{category}</span>
+          <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2">
+            <span className="px-1.5 py-0.5 text-[10px] sm:text-xs font-semibold bg-black/50 text-gray-300 border border-white/10 rounded-full backdrop-blur-sm">{category}</span>
           </div>
         )}
       </div>
 
       <div className="h-px bg-white/10 shrink-0" />
 
-      <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5 gap-2 sm:gap-3">
-        <h3 className={`font-black text-base sm:text-lg md:text-xl lg:text-2xl leading-tight line-clamp-1 ${restricted ? "text-slate-400" : "text-white"}`}>
+      <div className="flex flex-col flex-1 p-2 sm:p-3 md:p-4 lg:p-5 gap-1.5 sm:gap-2 md:gap-3">
+        <h3 className={`font-black text-sm sm:text-base md:text-lg lg:text-xl leading-tight line-clamp-1 ${restricted ? "text-slate-400" : "text-white"}`}>
           {name}
         </h3>
         {restricted ? (
-          <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">Visit the SAS Office to claim this item.</p>
+          <p className="text-slate-400 text-[10px] sm:text-xs leading-relaxed">Visit the SAS Office to claim this item.</p>
         ) : (
-          <p className="text-slate-300 text-xs sm:text-sm md:text-base leading-relaxed line-clamp-2">{description || "No description provided."}</p>
+          <p className="text-slate-300 text-[10px] sm:text-xs md:text-sm leading-relaxed line-clamp-2">{description || "No description provided."}</p>
         )}
-        <div className="mt-auto pt-2 sm:pt-4 border-t border-white/5 space-y-1.5 sm:space-y-2.5">
-          <div className="flex items-center gap-2 text-xs sm:text-sm md:text-base text-slate-300">
-            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="shrink-0 text-blue-400">
+        <div className="mt-auto pt-1.5 sm:pt-2 md:pt-4 border-t border-white/5 space-y-1 sm:space-y-1.5 md:space-y-2.5">
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs md:text-sm text-slate-300">
+            <svg width="10" height="10" className="sm:w-3 sm:h-3 shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" />
             </svg>
             <span className="truncate">{location}</span>
           </div>
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-400">
-            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="shrink-0 text-slate-500">
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-400">
+            <svg width="10" height="10" className="sm:w-3 sm:h-3 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <rect width="18" height="18" x="3" y="4" rx="2" /><line x1="3" x2="21" y1="10" y2="10" />
             </svg>
             <span>{formatDate(date)}</span>
@@ -139,9 +139,9 @@ const SlideContent = ({
   accentColor: "red" | "blue";
   accent: { border: string; text: string; dot: string };
 }) => (
-  <div className="w-full h-full grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 content-start shrink-0">
+  <div className="w-full h-full grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 content-start shrink-0">
     {pair.length === 0 ? (
-      <div className="col-span-2 flex flex-col items-center justify-center h-full opacity-30">
+      <div className="col-span-1 sm:col-span-2 flex flex-col items-center justify-center h-full opacity-30">
         <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-slate-500 mb-2 sm:mb-3" strokeWidth="1">
           <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
         </svg>
@@ -153,7 +153,7 @@ const SlideContent = ({
       ))
     )}
     {pair.length === 1 && (
-      <div className={`rounded-2xl border border-dashed ${accent.border} opacity-20 flex items-center justify-center`}>
+      <div className={`col-span-1 sm:col-span-2 rounded-2xl border border-dashed ${accent.border} opacity-20 flex items-center justify-center`}>
         <p className={`text-xs sm:text-sm ${accent.text} font-semibold uppercase tracking-widest`}>No more items</p>
       </div>
     )}
@@ -215,28 +215,28 @@ const Panel = ({
   return (
     <div className="flex flex-col h-full bg-slate-900 overflow-hidden">
       {/* Fixed Height Header to prevent overlap */}
-      <div className={`flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b ${accent.border} bg-slate-800/50 h-[80px] sm:h-[100px] shrink-0`}>
-        <div className="flex-1 min-w-0 pr-4">
-          <h2 className={`text-xs sm:text-sm md:text-base font-black uppercase tracking-widest ${accent.text} truncate`}>
+      <div className={`flex items-center justify-between px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 border-b ${accent.border} bg-slate-800/50 h-[60px] sm:h-[80px] md:h-[100px] shrink-0`}>
+        <div className="flex-1 min-w-0 pr-2 sm:pr-4">
+          <h2 className={`text-[10px] sm:text-xs md:text-base font-black uppercase tracking-widest ${accent.text} truncate`}>
             {title}
           </h2>
-          <p className="text-slate-300 text-[10px] sm:text-xs font-semibold leading-tight mt-1 line-clamp-1">
+          <p className="text-slate-300 text-[9px] sm:text-[10px] md:text-xs font-semibold leading-tight mt-0.5 sm:mt-1 line-clamp-1">
             {accentColor === "red"
               ? "Reported Missing: Not held at SAS Office"
               : "Recovered Items: Held at SAS Office"}
           </p>
-          <p className="text-slate-500 text-[9px] sm:text-[10px] mt-1 font-bold uppercase tracking-tight">
+          <p className="text-slate-500 text-[8px] sm:text-[9px] md:text-[10px] mt-0.5 sm:mt-1 font-bold uppercase tracking-tight">
             {total} {total === 1 ? "item" : "items"} on record
           </p>
         </div>
         
         {/* Pagination Dots */}
-        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+        <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 shrink-0">
           {realPairs.map((_, i) => (
             <div key={i} className={`rounded-full transition-all duration-300 ${
               i === dotIdx
-                ? `w-3 sm:w-4 h-1 sm:h-1.5 ${accent.dot}`
-                : "w-1 sm:w-1.5 h-1 sm:h-1.5 bg-slate-600"
+                ? `w-2 sm:w-3 md:w-4 h-0.5 sm:h-1 md:h-1.5 ${accent.dot}`
+                : "w-0.5 sm:w-1 md:w-1.5 h-0.5 sm:h-1 md:h-1.5 bg-slate-600"
             }`} />
           ))}
         </div>
@@ -264,7 +264,7 @@ const Panel = ({
             {extendedPairs.map((pair, i) => (
               <div
                 key={i}
-                className="p-2 sm:p-3 md:p-4 lg:p-5"
+                className="p-1.5 sm:p-2 md:p-3 lg:p-4"
                 style={{ width: `${100 / extendedPairs.length}%`, flexShrink: 0 }}
               >
                 <SlideContent pair={pair} accentColor={accentColor} accent={accent} />
@@ -389,41 +389,43 @@ const Header = () => {
     <div className="flex items-center gap-3">
       
       {/* Date & Time */}
-      <div className="hidden sm:flex flex-col items-end pr-3 border-r border-white/10">
-        <span className="text-slate-400 text-xs">
+      <div className="flex flex-col items-end pr-2 sm:pr-3 border-r border-white/10">
+        <span className="text-slate-400 text-[9px] sm:text-xs">
           {formatDate(currentTime)}
         </span>
 
-        <span className="text-white text-xl font-bold tracking-wide tabular-nums leading-tight">
+        <span className="text-white text-lg sm:text-xl font-bold tracking-wide tabular-nums leading-tight">
           {formatTime(currentTime)}
         </span>
       </div>
 
       {/* Refined Weather Card */}
-      <div className="min-w-[140px] bg-slate-700/70 border border-white/10 rounded-xl px-2 py-1.5 backdrop-blur-md shadow-lg">
+      <div className="min-w-[120px] sm:min-w-[140px] bg-slate-700/70 border border-white/10 rounded-xl px-1.5 sm:px-2 py-1.5 backdrop-blur-md shadow-lg">
         {weatherLoading ? (
           <div className="flex items-center justify-center h-8">
             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             
             {/* Weather Icon moved to left */}
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-600/40 text-xl shrink-0">
+            <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-slate-600/40 text-lg sm:text-xl shrink-0">
               {getWeatherIcon(weather?.icon || "")}
             </div>
 
             {/* Weather Info aligned to the right */}
             <div className="flex flex-col flex-1 text-right">
-              <span className="text-slate-300 text-[9px] font-bold uppercase tracking-wider">
+              <span className="text-slate-300 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider">
                 Weather
               </span>
 
-              <div className="flex items-center justify-end gap-1 text-slate-400 text-[10px]">
-                <span>Manolo Fortich</span>
+              <div className="flex items-center justify-end gap-1 text-slate-400 text-[9px] sm:text-[10px]">
+                <span className="hidden sm:inline">Manolo Fortich</span>
+                <span className="sm:hidden">MF</span>
                 <svg
-                  width="7"
-                  height="7"
+                  width="6"
+                  height="6"
+                  className="sm:w-7 sm:h-7"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -435,10 +437,10 @@ const Header = () => {
               </div>
 
               <div className="flex items-baseline justify-end gap-1">
-                <span className="text-lg font-black text-white leading-none">
+                <span className="text-base sm:text-lg font-black text-white leading-none">
                   {weather?.temp ?? "--"}°
                 </span>
-                <span className="text-slate-300 text-[10px]">
+                <span className="text-slate-300 text-[9px] sm:text-[10px] hidden sm:inline">
                   {weather?.condition ?? "N/A"}
                 </span>
               </div>

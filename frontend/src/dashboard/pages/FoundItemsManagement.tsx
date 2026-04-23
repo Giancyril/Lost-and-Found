@@ -187,7 +187,8 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
     const matchesSearch   = item.foundItemName.toLowerCase().includes(searchTerm.toLowerCase()) || item.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus   = statusFilter === "ALL" || (statusFilter === "CLAIMED" && item.isClaimed) || (statusFilter === "ACTIVE" && !item.isClaimed);
     const matchesCategory = categoryFilter === "ALL" || item.category?.name === categoryFilter;
-    return matchesSearch && matchesStatus && matchesCategory;
+    const isNotArchived   = !item.isArchived; // Exclude archived items from main list
+    return matchesSearch && matchesStatus && matchesCategory && isNotArchived;
   });
 
   const STATUS_TABS = [

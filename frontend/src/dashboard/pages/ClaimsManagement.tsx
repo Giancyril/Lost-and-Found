@@ -353,10 +353,7 @@ const ClaimsManagement = () => {
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
                             <FaEye size={10} /> Verify
                           </button>
-                          <button onClick={() => handleDeleteClaim(claim)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors">
-                            <FaTrash size={10} /> Delete
-                          </button>
+                          
                           <div className="w-[72px] flex justify-center">
                             {claim.status === "APPROVED" ? (
                               claimEmailSentIds.has(claim.id) ? (
@@ -373,6 +370,10 @@ const ClaimsManagement = () => {
                               <span className="w-full" />
                             )}
                           </div>
+                          <button onClick={() => handleDeleteClaim(claim)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors">
+                            <FaTrash size={10} /> Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -449,12 +450,7 @@ const ClaimsManagement = () => {
                     </button>
 
                     {/* Delete button */}
-                    <button
-                      onClick={() => handleDeleteClaim(claim)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors"
-                    >
-                      <FaTrash size={9} /> Delete
-                    </button>
+                    
 
                     {/* Email button — only for APPROVED */}
                     {claim.status === "APPROVED" && (
@@ -471,6 +467,13 @@ const ClaimsManagement = () => {
                         </button>
                       )
                     )}
+
+                    <button
+                      onClick={() => handleDeleteClaim(claim)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors"
+                    >
+                      <FaTrash size={9} /> Delete
+                    </button>
                   </div>
                 </div>
               ))}
