@@ -80,7 +80,7 @@ const QRCodeSlide = () => {
               </div>
               <div className="text-center">
                 <p className="text-red-400 font-bold text-sm uppercase tracking-widest">Scan to Report</p>
-                <p className="text-slate-400 text-xs mt-0.5">YOUR MISSING ITEMS</p>
+                <p className="text-slate-400 font-bold text-xs mt-0.5">YOUR MISSING ITEMS</p>
               </div>
             </div>
             <div className="hidden md:block h-48 w-px bg-slate-700 shrink-0" />
@@ -90,7 +90,7 @@ const QRCodeSlide = () => {
                 {[
                   { num: "01", title: "Scan the QR Code", desc: "Point your phone camera at the code to open the reporting form." },
                   { num: "02", title: "Fill in Item Details", desc: "Provide a description, location last seen, and date of loss." },
-                  { num: "03", title: "Submit Your Report", desc: "Visit the SAS Office regularly to check for updates on your lost item." },
+                  { num: "03", title: "Submit Your Report", desc: "Visit the system to check for updates on your lost item." },
                 ].map(step => (
                   <div key={step.num} className="flex items-start gap-3 bg-slate-800/60 border border-white/5 rounded-xl px-4 py-2.5">
                     <span className="text-blue-500 font-black text-sm shrink-0 mt-0.5">{step.num}</span>
@@ -106,14 +106,13 @@ const QRCodeSlide = () => {
                   <circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" />
                 </svg>
                 <p className="text-blue-300 text-xs leading-relaxed">
-                  <span className="font-bold">Claiming a found item?</span> Bring a valid school ID to the SAS Office during office hours.
+                  <span className="font-bold">Claiming a found item?</span> Bring a school ID to the SAS Office during office hours.
                 </p>
               </div>
             </div>
           </div>
           <div className="w-full flex items-center justify-between pt-2 border-t border-white/5">
-            <p className="text-slate-500 text-[10px] uppercase tracking-widest font-semibold">SAS Office • Admin Building</p>
-            <p className="text-slate-500 text-[10px] uppercase tracking-widest font-semibold">Available 24/7 Online</p>
+           
           </div>
         </div>
       </div>
@@ -454,7 +453,7 @@ const Ticker = ({ lostCount, foundCount }: { lostCount: number; foundCount: numb
     `${lostCount} item${lostCount !== 1 ? "s" : ""} currently reported lost`,
     `${foundCount} item${foundCount !== 1 ? "s" : ""} recovered and awaiting claim`,
     "Visit the SAS Office to report or claim an item",
-    "Bring a valid school ID when claiming found items",
+    "Bring a school ID when claiming found items",
     "NBSC Student Affairs Office — Lost & Found Management System",
   ];
   const repeated = [...items, ...items];
