@@ -246,24 +246,21 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
     console.log('Sharing URL:', shareUrl);
     console.log('Sharing message:', message);
     
-    // Try Web Share API first (best for mobile/desktop)
+    // Try different Facebook approaches
     if (navigator.share) {
+      // Web Share API for modern browsers
       navigator.share({
         title: `Lost: ${item?.lostItemName ?? "Unknown item"}`,
+        text: message,
         url: shareUrl,
       })
       .then(() => console.log('Web Share successful'))
-      .catch((error) => {
-        console.log('Web Share failed, trying Facebook URL:', error);
-        // Fallback to Facebook URL (no quote to avoid JS conflicts)
-        const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-        window.open(fbUrl, '_blank', 'width=600,height=400');
-      });
+      .catch((error) => console.log('Web Share failed:', error));
     } else {
-      // Fallback for browsers without Web Share API (no quote to avoid JS conflicts)
-      const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-      console.log('Facebook URL:', fbUrl);
-      window.open(fbUrl, '_blank', 'width=600,height=400');
+      // Try Facebook's direct post method
+      const fbPostUrl = `https://www.facebook.com/dialog/share?app_id=966242223394747&display=popup&href=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(message)}`;
+      console.log('Facebook Post URL:', fbPostUrl);
+      window.open(fbPostUrl, '_blank', 'width=600,height=400');
     }
   };
 
