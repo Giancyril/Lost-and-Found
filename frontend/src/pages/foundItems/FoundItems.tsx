@@ -13,7 +13,7 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import {
   useGetFoundItemsQuery,
@@ -28,6 +28,7 @@ import { useUserVerification } from "../../auth/auth";
 import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
 import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
+import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
 import { logToSheet } from "../../utils/sheetsLogger";
 
 // ── Category configuration with auto-fill data ─────────────────────────────
@@ -314,7 +315,6 @@ const FoundItemsPage = () => {
   const addFileInputRef = useRef<HTMLInputElement>(null);
   const MAX_SIZE_MB = 5;
 
-  // Scanner and fetch functionality
   const [showScanner, setShowScanner] = useState(false);
   const [scannedStudent, setScannedStudent] = useState<ScannedStudent | null>(null);
   const scannedAtRef = useRef<string>("");
@@ -343,6 +343,7 @@ const FoundItemsPage = () => {
     formState: { errors: addErrors },
     reset: addReset,
     setValue: addSetValue,
+    control: addControl,
   } = useForm({ mode: "onSubmit", reValidateMode: "onSubmit" });
 
   const handleFuzzyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -376,7 +377,6 @@ const FoundItemsPage = () => {
       foundItemName: "",
       description: "",
       location: "",
-      claimProcess: "",
     });
     setAddSelectedFile(null);
     setAddPreview("");
@@ -417,8 +417,6 @@ const FoundItemsPage = () => {
   const handleFetchDetails = async () => {
     const reporterName = (document.querySelector('input[name="reporterName"]') as HTMLInputElement)?.value?.trim() || "";
     const schoolEmail  = (document.querySelector('input[name="schoolEmail"]') as HTMLInputElement)?.value?.trim() || "";
-
-    console.log("Fetch details - Name:", reporterName, "Email:", schoolEmail);
 
     if (!reporterName && !schoolEmail) {
       toast.info("Please enter a name or email to fetch details");
@@ -478,15 +476,12 @@ const FoundItemsPage = () => {
   const handleCategoryChange = (id: string) => {
     const cat = categoriesData?.data?.find((c: any) => c.id === id);
     if (!cat) return;
-
     setAddSelectedMenu(cat.name);
     setAddSelectedMenucategoryId(cat.id);
     setAddSelectedColor("");
     setAddSelectedCondition("");
-
     const categoryKey = cat.name.toLowerCase();
     const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
-
     if (config) {
       addSetValue("foundItemName", config.itemName, { shouldDirty: true });
       addSetValue("description", config.description, { shouldDirty: true });
@@ -496,11 +491,9 @@ const FoundItemsPage = () => {
   const handleColorChange = (colorValue: string) => {
     setAddSelectedColor(colorValue);
     setAddSelectedCondition("");
-
     const categoryKey = addSelectedMenu.toLowerCase();
     const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
     if (!config || !colorValue) return;
-
     let colorDescription = "";
     switch (categoryKey) {
       case "bags":        colorDescription = `A ${colorValue.toLowerCase()} bag was found. `; break;
@@ -515,11 +508,9 @@ const FoundItemsPage = () => {
 
   const handleConditionChange = (conditionValue: string) => {
     setAddSelectedCondition(conditionValue);
-
     const categoryKey = addSelectedMenu.toLowerCase();
     const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
     if (!config || !addSelectedColor || !conditionValue) return;
-
     let enhancedDescription = "";
     switch (categoryKey) {
       case "bags":
@@ -558,18 +549,14 @@ const FoundItemsPage = () => {
     addSetValue("description", enhancedDescription, { shouldDirty: true });
   };
 
-  // ── FIXED onAddSubmit: image upload restored + type removed + safer ID extraction ──
   const onAddSubmit = async (data: any) => {
     if (!addSelectedMenucategoryId) return;
-
     if (!addSelectedFile && !addPreview) {
       setAddPhotoError("A photo of the item is required.");
       return;
     }
     setAddPhotoError("");
-
     try {
-      // Step 1 — Create the found item record
       const res: any = await createFoundItem({
         img: addPreview || "",
         categoryId: addSelectedMenucategoryId,
@@ -577,35 +564,24 @@ const FoundItemsPage = () => {
         description: data.description,
         location: data.location,
         date: new Date(addStartDate + "T00:00:00"),
-        claimProcess: data.claimProcess,
+        claimProcess: "Visit the SAS office with a valid school ID to claim this item.",
         reporterName: data.reporterName || "OFFICE",
         schoolEmail: data.schoolEmail || "",
         department: data.department || "",
       });
-
-      if (res.error || res?.data?.success === false) {
-        toast.error("Failed to submit found item.");
-        return;
-      }
-
-      // Step 2 — Upload the image if one was selected
-      // FIX: removed `type: "found"` which caused the 404; use safer dual-path ID extraction
+      if (res.error || res?.data?.success === false) { toast.error("Failed to submit found item."); return; }
       const newItemId = res?.data?.data?.id ?? res?.data?.id;
       if (addSelectedFile && newItemId) {
         const formData = new FormData();
         formData.append("images", addSelectedFile);
         formData.append("primaryIndex", "0");
-
         try {
           await uploadItemImages({ id: newItemId, type: "found", formData });
         } catch (imgErr) {
-          // Image upload failed — item was already saved with base64 preview (img field)
           console.error("Image upload failed:", imgErr);
           toast.warning("Item saved, but image upload failed. You can re-upload later.");
         }
       }
-
-      // Step 3 — Log to Google Sheet (fire-and-forget, never blocks the flow)
       logToSheet({
         sheetName: "Found Items",
         studentId: scannedStudent?.id || "N/A",
@@ -619,7 +595,6 @@ const FoundItemsPage = () => {
         reportId: newItemId || "UNKNOWN",
         scannedAt: scannedAtRef.current || new Date().toISOString(),
       }).catch(console.error);
-
       toast.success("Found item submitted successfully!");
       closeAddModal();
     } catch {
@@ -878,8 +853,9 @@ const FoundItemsPage = () => {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl sm:max-w-4xl lg:max-w-5xl flex flex-col max-h-[92vh]"
             style={{ borderTop: "2px solid #3b82f6" }}>
+
+            {/* ── Modal header ── */}
             <div className="flex flex-col gap-3 px-4 sm:px-6 py-4 border-b border-white/5 shrink-0">
-              {/* Top row: icon+title and close button */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
@@ -890,42 +866,29 @@ const FoundItemsPage = () => {
                     <p className="text-gray-500 text-[11px] mt-0.5 truncate">Record an item recovered on campus</p>
                   </div>
                 </div>
-                <button onClick={closeAddModal} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0"><FaTimes size={12} /></button>
+                <button onClick={closeAddModal} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0">
+                  <FaTimes size={12} />
+                </button>
               </div>
-              {/* Second row: action buttons, always visible and wrappable */}
               <div className="flex items-center gap-2 flex-wrap sm:justify-end">
-                {scannedStudent ? (
-                  <button
-                    onClick={clearScan}
-                    className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-black rounded-lg transition-all"
-                  >
-                    <FaTimes size={10} /> Clear Scan
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={handleFetchDetails}
-                      disabled={isFetchingByDetails}
-                      className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50"
-                    >
-                      {isFetchingByDetails ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
-                      Fetch Student Info
-                    </button>
-                    <button
-                      onClick={() => setShowScanner(true)}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider active:scale-95"
-                    >
-                      <FaQrcode className="w-2.5 h-2.5" /> Scan Student ID
-                    </button>
-                  </>
-                )}
+                <button onClick={handleFetchDetails} disabled={isFetchingByDetails}
+                  className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50">
+                  {isFetchingByDetails ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
+                  Fetch Student Info
+                </button>
+                <button onClick={() => setShowScanner(true)}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider active:scale-95">
+                  <FaQrcode className="w-2.5 h-2.5" /> Scan Student ID
+                </button>
               </div>
-            </div>
+            </div>{/* ── end modal header ── */}
+
+            {/* ── Modal body ── */}
             <div className="overflow-y-auto flex-1 px-6 py-5">
               {scannedStudent && (
-                <div className="group relative overflow-hidden bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6 animate-fadeIn transition-all duration-300">
+                <div className="group relative overflow-hidden bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6 transition-all duration-300">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-blue-500/10 transition-all duration-500" />
-                  <div className="flex items-center justify-between relative z-10 w-full text-left">
+                  <div className="flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner group-hover:scale-110 transition-transform duration-300">
                         <FaUserCheck size={18} />
@@ -935,15 +898,13 @@ const FoundItemsPage = () => {
                         <p className="text-[10px] font-bold text-blue-400/70 uppercase tracking-widest mt-0.5">ID: {scannedStudent.id}</p>
                       </div>
                     </div>
-                    <button
-                      onClick={clearScan}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all hover:rotate-90"
-                    >
+                    <button onClick={clearScan} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all hover:rotate-90">
                       <FaTimes size={12} />
                     </button>
                   </div>
                 </div>
               )}
+
               <form id="add-found-form" onSubmit={handleAddSubmit(onAddSubmit)} className="space-y-4">
                 <ItemMatchSuggestions
                   categoryId={addSelectedMenucategoryId}
@@ -951,108 +912,72 @@ const FoundItemsPage = () => {
                   itemName={(document.querySelector('input[name="foundItemName"]') as HTMLInputElement)?.value ?? ""}
                   location={(document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? ""}
                 />
-                {/* Reporter Information */}
+
+                {/* ── Reporter Information ── */}
                 <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-                      </svg>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                       Your Name <span className="text-red-400">*</span>
                     </label>
-                    <input {...addRegister("reporterName", { required: "Finder's name is required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder="Enter name or scan ID" />
+                    <input {...addRegister("reporterName", { required: "Finder's name is required" })} type="text" placeholder="Enter name or scan ID" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
                     {addErrors.reporterName && <p className="text-red-400 text-xs">{addErrors.reporterName?.message as string}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-10 5L2 7" />
-                      </svg>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
                       Institutional Email <span className="text-red-400">*</span>
                     </label>
-                    <input {...addRegister("schoolEmail", {
-                      required: "School email is required",
-                      pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
-                    })} type="email" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder=" " />
+                    <input {...addRegister("schoolEmail", { required: "School email is required", pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" } })} type="email" placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
                     {addErrors.schoolEmail && <p className="text-red-400 text-xs">{addErrors.schoolEmail?.message as string}</p>}
                   </div>
                 </div>
 
-                {/* Department (auto-filled) */}
+                {/* ── Department ── */}
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect width="16" height="20" x="4" y="2" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" />
-                    </svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
                     Department / Course
                   </label>
-                  <input {...addRegister("department")} type="text" readOnly className="w-full px-4 py-2.5 bg-gray-800/40 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm italic" placeholder="Auto-filled from masterlist..." />
+                  <input {...addRegister("department")} type="text" readOnly placeholder="Auto-filled from masterlist..." className="w-full px-4 py-2.5 bg-gray-800/40 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none transition-all text-sm italic" />
                 </div>
 
-                {/* Item Details */}
+                {/* ── Item Name + Category ── */}
                 <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>Item Name <span className="text-red-400">*</span></label>
-                    <input {...addRegister("foundItemName", { required: "Item name is required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder=" " />
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
+                      Item Name <span className="text-red-400">*</span>
+                    </label>
+                    <input {...addRegister("foundItemName", { required: "Item name is required" })} type="text" placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
                     {addErrors.foundItemName && <p className="text-red-400 text-xs">{addErrors.foundItemName?.message as string}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-1.5">
-                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>Category <span className="text-red-400">*</span></label>
-                      <button
-                        type="button"
-                        onClick={() => setShowCategoryHelp(true)}
-                        className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-400 hover:text-white flex items-center justify-center transition-all"
-                        title="About categories"
-                      >
+                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                        Category <span className="text-red-400">*</span>
+                      </label>
+                      <button type="button" onClick={() => setShowCategoryHelp(true)} className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-400 hover:text-white flex items-center justify-center transition-all" title="About categories">
                         <span className="text-[9px] font-black leading-none">i</span>
                       </button>
                     </div>
                     {categoriesLoading ? (
-                      <div className="w-full px-3 py-2.5 text-sm text-gray-500 bg-gray-800/60 border border-gray-700 rounded-xl">
-                        Loading categories...
-                      </div>
+                      <div className="w-full px-3 py-2.5 text-sm text-gray-500 bg-gray-800/60 border border-gray-700 rounded-xl">Loading categories...</div>
                     ) : categoriesError ? (
-                      <div className="w-full px-3 py-2.5 text-sm text-red-400 bg-gray-800/60 border border-red-500/30 rounded-xl">
-                        Failed to load categories
-                      </div>
+                      <div className="w-full px-3 py-2.5 text-sm text-red-400 bg-gray-800/60 border border-red-500/30 rounded-xl">Failed to load categories</div>
                     ) : (
                       <CustomSelect
-                        options={
-                          categoriesData?.data?.map((cat: any) => ({
-                            value: cat.id,
-                            label: cat.name,
-                            icon: getCategoryIcon(cat.name),
-                          })) ?? []
-                        }
+                        options={categoriesData?.data?.map((cat: any) => ({ value: cat.id, label: cat.name, icon: getCategoryIcon(cat.name) })) ?? []}
                         value={addSelectedMenucategoryId}
                         onChange={handleCategoryChange}
                       />
                     )}
                     {!addSelectedMenu && <p className="text-red-400 text-xs">Category is required</p>}
                   </div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>Where Found <span className="text-red-400">*</span></label>
-                    <input {...addRegister("location", { required: "Location is required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder="e.g. Library, Room 205" />
-                    {addErrors.location && <p className="text-red-400 text-xs">{addErrors.location?.message as string}</p>}
-                  </div>
-                   <div className="flex flex-col gap-1.5">
-                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>Date Found</label>
-                    <CustomDatePicker value={addStartDate} onChange={setAddStartDate} max={new Date().toISOString().split("T")[0]} placeholder="Select date found" />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Description <span className="text-red-400">*</span>
-                  </label>
-                  <textarea {...addRegister("description", { required: "Description is required" })} rows={2} className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none" placeholder=" " />
-                  {addErrors.description && <p className="text-red-400 text-xs">{addErrors.description?.message as string}</p>}
-                </div>
+                </div>{/* ── end Item Name + Category grid ── */}
 
-                {/* Color dropdown for specific categories */}
+                {/* ── Color (only for configured categories) ── */}
                 {addSelectedMenu && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && (
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
@@ -1060,18 +985,14 @@ const FoundItemsPage = () => {
                       Color
                     </label>
                     <CustomSelect
-                      options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.map(color => ({
-                        value: color,
-                        label: color,
-                        icon: null
-                      }))}
+                      options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.map(color => ({ value: color, label: color, icon: null }))}
                       value={addSelectedColor}
                       onChange={handleColorChange}
                     />
                   </div>
                 )}
 
-                {/* Condition dropdown - appears after color selection */}
+                {/* ── Condition (only after color is selected) ── */}
                 {addSelectedColor && (
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
@@ -1079,24 +1000,58 @@ const FoundItemsPage = () => {
                       Condition
                     </label>
                     <CustomSelect
-                      options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].conditions.map(condition => ({
-                        value: condition,
-                        label: condition,
-                        icon: null
-                      }))}
+                      options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].conditions.map(condition => ({ value: condition, label: condition, icon: null }))}
                       value={addSelectedCondition}
                       onChange={handleConditionChange}
                     />
                   </div>
                 )}
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Claim Instructions <span className="text-red-400">*</span></label>
-                  <input {...addRegister("claimProcess", { required: "Claim instructions required" })} type="text" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" placeholder="e.g. Visit SAS office with a valid school ID" />
-                  {addErrors.claimProcess && <p className="text-red-400 text-xs">{addErrors.claimProcess?.message as string}</p>}
+                {/* ── Where Found + Date Found ── */}
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+                  {/* ── Where Found — now using LocationAutocomplete ── */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                      Where Found <span className="text-red-400">*</span>
+                    </label>
+                    <Controller
+                      name="location"
+                      control={addControl}
+                      rules={{ required: "Location is required" }}
+                      render={({ field }) => (
+                        <LocationAutocomplete
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
+                          placeholder="e.g. Library, Room 205"
+                        />
+                      )}
+                    />
+                    {addErrors.location && <p className="text-red-400 text-xs">{addErrors.location?.message as string}</p>}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                      Date Found
+                    </label>
+                    <CustomDatePicker value={addStartDate} onChange={setAddStartDate} max={new Date().toISOString().split("T")[0]} placeholder="Select date found" />
+                  </div>
                 </div>
 
-                {/* Item Photo */}
+                {/* ── Description ── */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Description <span className="text-red-400">*</span>
+                  </label>
+                  <textarea {...addRegister("description", { required: "Description is required" })} rows={2} placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none" />
+                  {addErrors.description && <p className="text-red-400 text-xs">{addErrors.description?.message as string}</p>}
+                </div>
+
+                {/* ── Item Photo ── */}
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
@@ -1139,18 +1094,27 @@ const FoundItemsPage = () => {
                     </div>
                   )}
                   {addUploadError && <p className="text-red-400 text-xs">{addUploadError}</p>}
-                  {addPhotoError  && !addUploadError && <p className="text-red-400 text-xs">{addPhotoError}</p>}
+                  {addPhotoError && !addUploadError && <p className="text-red-400 text-xs">{addPhotoError}</p>}
+                </div>
+
+                {/* ── Claim Instructions (static) ── */}
+                <div className="flex items-start gap-3 px-3.5 py-3 bg-blue-500/5 border border-blue-500/15 rounded-xl">
+                  <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Claim Instructions</p>
+                    <p className="text-blue-300/70 text-[11px] leading-relaxed">Visit the SAS office with a valid school ID to claim this item.</p>
+                  </div>
                 </div>
               </form>
-            </div>
+            </div>{/* ── end modal body ── */}
+
+            {/* ── Modal footer ── */}
             <div className="px-6 py-4 border-t border-white/5 flex gap-3 shrink-0 bg-gray-900 rounded-b-2xl">
               <button type="button" onClick={closeAddModal} disabled={isBusy} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
-              <button
-                type="submit"
-                form="add-found-form"
-                disabled={isBusy || (!addSelectedFile && !addPreview)}
-                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
-              >
+              <button type="submit" form="add-found-form" disabled={isBusy || (!addSelectedFile && !addPreview)}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                 {isBusy ? (<><Spinner size="sm" /> Submitting…</>) : "Submit Found Item"}
               </button>
             </div>
@@ -1158,7 +1122,7 @@ const FoundItemsPage = () => {
         </div>
       )}
 
-      {/* Category Help Modal */}
+      {/* ── Category Help Modal ── */}
       {showCategoryHelp && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col">
@@ -1170,9 +1134,7 @@ const FoundItemsPage = () => {
             </div>
             <div className="px-5 py-5 flex-1 flex flex-col justify-between min-h-[260px]">
               <div className="space-y-4">
-                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
-                  {CATEGORY_HELP_CONTENT.tag}
-                </p>
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1.5">{CATEGORY_HELP_CONTENT.tag}</p>
                 <div className="space-y-3">
                   {CATEGORY_HELP_CONTENT.steps.map(({ n, title, desc }) => (
                     <div key={n} className="flex gap-3">
@@ -1194,7 +1156,7 @@ const FoundItemsPage = () => {
         </div>
       )}
 
-      {/* Scanner Modal */}
+      {/* ── Scanner Modal ── */}
       {showScanner && (
         <BarcodeScannerModal onScan={handleScan} onClose={() => setShowScanner(false)} useFetchStudent={useFetchStudent} />
       )}
