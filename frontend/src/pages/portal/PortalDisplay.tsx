@@ -250,15 +250,15 @@ const Panel = ({
   return (
     <div className="flex flex-col h-full bg-slate-900">
       {/* Header */}
-      <div className={`flex items-center justify-between px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 border-b ${accent.border} bg-slate-800/50`}>
-        <div className="flex-1">
-          <h2 className={`text-sm sm:text-base md:text-lg font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] ${accent.text}`}>{title}</h2>
-          <p className="text-slate-300 text-xs sm:text-sm font-semibold leading-tight mt-1.5 max-w-[95%]">
+      <div className={`flex items-center justify-between px-2 sm:px-3 md:px-4 py-2 sm:py-3 md:py-4 border-b ${accent.border} bg-slate-800/50`}>
+        <div>
+          <h2 className={`text-xs sm:text-sm md:text-base font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] ${accent.text}`}>{title}</h2>
+          <p className="text-slate-300 text-xs font-semibold leading-tight mt-1.5 max-w-[95%]">
             {accentColor === "red"
               ? "Reported Missing: These items are not currently held at the SAS Office"
               : "Recovered Items: These are held at the SAS Office and ready for claim"}
           </p>
-          <p className="text-slate-500 text-[10px] sm:text-xs mt-1 font-medium">{total} item{total !== 1 ? "s" : ""} on record</p>
+          <p className="text-slate-500 text-[10px] mt-1 font-medium">{total} item{total !== 1 ? "s" : ""} on record</p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0 ml-4">
           {realPairs.map((_, i) => (
@@ -300,44 +300,49 @@ const Panel = ({
 // ── Header Component ─────────────────────────────────────────────────────────────
 const Header = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [weather, setWeather] = useState<{ temp: number; condition: string; icon: string } | null>(null);
+  const [weather, setWeather] = useState<{
+    temp: number;
+    condition: string;
+    icon: string;
+  } | null>(null);
+
   const [weatherLoading, setWeatherLoading] = useState(true);
 
-  // Update time every second
+  // Live Clock
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
+
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch weather data (using OpenWeatherMap API as example)
+  // Weather Fetch
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        // Note: In production, you should use environment variables for API keys
-        // This is a demo implementation - you'll need to replace with actual API key and location
         const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?q=Manila&appid=YOUR_API_KEY&units=metric`
+          `https://api.openweathermap.org/data/2.5/weather?q=Manolo Fortich&appid=8e2117fb762222012f8606202d5df1fd&units=metric`
         );
-        
+
         if (!response.ok) {
-          throw new Error('Weather API unavailable');
+          throw new Error("Weather API unavailable");
         }
-        
+
         const data = await response.json();
+
         setWeather({
           temp: Math.round(data.main.temp),
           condition: data.weather[0].main,
-          icon: data.weather[0].icon
+          icon: data.weather[0].icon,
         });
       } catch (error) {
-        console.log('Weather data unavailable, using fallback');
-        // Fallback weather data
+        console.log("Weather fetch failed, using fallback.");
+
         setWeather({
-          temp: 28,
-          condition: 'Partly Cloudy',
-          icon: '02d'
+          temp: 30,
+          condition: "Cloudy",
+          icon: "03d",
         });
       } finally {
         setWeatherLoading(false);
@@ -345,111 +350,126 @@ const Header = () => {
     };
 
     fetchWeather();
-    // Refresh weather every 10 minutes
+
     const weatherTimer = setInterval(fetchWeather, 600000);
+
     return () => clearInterval(weatherTimer);
   }, []);
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit',
-      hour12: true 
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
     });
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
   const getWeatherIcon = (icon: string) => {
     const iconMap: { [key: string]: string } = {
-      '01d': '☀️', '01n': '🌙',
-      '02d': '⛅', '02n': '☁️',
-      '03d': '☁️', '03n': '☁️',
-      '04d': '☁️', '04n': '☁️',
-      '09d': '🌧️', '09n': '🌧️',
-      '10d': '🌦️', '10n': '🌧️',
-      '11d': '⛈️', '11n': '⛈️',
-      '13d': '❄️', '13n': '❄️',
-      '50d': '🌫️', '50n': '🌫️'
+      "01d": "☀️",
+      "01n": "🌙",
+      "02d": "⛅",
+      "02n": "☁️",
+      "03d": "☁️",
+      "03n": "☁️",
+      "04d": "☁️",
+      "04n": "☁️",
+      "09d": "🌧️",
+      "09n": "🌧️",
+      "10d": "🌦️",
+      "10n": "🌧️",
+      "11d": "⛈️",
+      "11n": "⛈️",
+      "13d": "❄️",
+      "13n": "❄️",
+      "50d": "🌫️",
+      "50n": "🌫️",
     };
-    return iconMap[icon] || '🌡️';
+
+    return iconMap[icon] || "🌤️";
   };
 
   return (
-    <div className="h-16 sm:h-18 md:h-20 bg-slate-800 border-b border-white/10 flex items-center justify-between px-4 sm:px-6 md:px-8 shrink-0">
-      {/* Left side - SAS Lost and Found */}
-      <div className="flex items-center gap-3">
-        <img 
-          src="/sas lost and found logo.png" 
-          alt="SAS Lost and Found Logo" 
-          className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain"
-          onError={(e) => {
-            // Fallback to original SVG if image fails to load
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-            const fallback = target.nextElementSibling as HTMLElement;
-            if (fallback) fallback.style.display = 'flex';
-          }}
-        />
-        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-blue-500 rounded-lg flex items-center justify-center" style={{display: 'none'}}>
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-white" strokeWidth="2">
-            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-        </div>
-        <div>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-tight">
-            SAS Lost and Found
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-400 font-medium">
-            NBSC Student Affairs Office
-          </p>
-        </div>
+  <div className="h-20 md:h-24 bg-slate-800 border-b border-white/10 px-4 sm:px-6 md:px-8 flex items-center justify-between shrink-0">
+    
+    {/* LEFT SIDE (if any) */}
+    <div></div>
+
+    {/* RIGHT SIDE */}
+    <div className="flex items-center gap-3">
+      
+      {/* Date & Time */}
+      <div className="hidden sm:flex flex-col items-end pr-3 border-r border-white/10">
+        <span className="text-slate-400 text-xs">
+          {formatDate(currentTime)}
+        </span>
+
+        <span className="text-white text-xl font-bold tracking-wide tabular-nums leading-tight">
+          {formatTime(currentTime)}
+        </span>
       </div>
 
-      {/* Right side - Time, Date, and Weather */}
-      <div className="flex items-center gap-4 sm:gap-6 md:gap-8">
-        {/* Time */}
-        <div className="text-right">
-          <div className="text-lg sm:text-xl md:text-2xl font-bold text-white tabular-nums">
-            {formatTime(currentTime)}
+      {/* Refined Weather Card */}
+      <div className="min-w-[140px] bg-slate-700/70 border border-white/10 rounded-xl px-2 py-1.5 backdrop-blur-md shadow-lg">
+        {weatherLoading ? (
+          <div className="flex items-center justify-center h-8">
+            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
           </div>
-          <div className="text-xs sm:text-sm text-slate-400 font-medium">
-            {formatDate(currentTime)}
-          </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            
+            {/* Weather Icon moved to left */}
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-600/40 text-xl shrink-0">
+              {getWeatherIcon(weather?.icon || "")}
+            </div>
 
-        {/* Weather */}
-        <div className="flex items-center gap-2 bg-slate-700/50 px-3 py-2 rounded-lg border border-white/5">
-          {weatherLoading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b border-white"></div>
-          ) : weather ? (
-            <>
-              <span className="text-xl sm:text-2xl">{getWeatherIcon(weather.icon)}</span>
-              <div className="text-right">
-                <div className="text-sm sm:text-base font-bold text-white">
-                  {weather.temp}°C
-                </div>
-                <div className="text-xs text-slate-400">
-                  {weather.condition}
-                </div>
+            {/* Weather Info aligned to the right */}
+            <div className="flex flex-col flex-1 text-right">
+              <span className="text-slate-300 text-[9px] font-bold uppercase tracking-wider">
+                Weather
+              </span>
+
+              <div className="flex items-center justify-end gap-1 text-slate-400 text-[10px]">
+                <span>Manolo Fortich</span>
+                <svg
+                  width="7"
+                  height="7"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
               </div>
-            </>
-          ) : (
-            <div className="text-xs text-slate-500">Weather unavailable</div>
-          )}
-        </div>
+
+              <div className="flex items-baseline justify-end gap-1">
+                <span className="text-lg font-black text-white leading-none">
+                  {weather?.temp ?? "--"}°
+                </span>
+                <span className="text-slate-300 text-[10px]">
+                  {weather?.condition ?? "N/A"}
+                </span>
+              </div>
+            </div>
+
+          </div>
+        )}
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 // ── Ticker ────────────────────────────────────────────────────────────────────
