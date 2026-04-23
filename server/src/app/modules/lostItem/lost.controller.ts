@@ -6,6 +6,7 @@ import { utils } from "../../utils/utils";
 import { matchService } from "../matching/match.service";
 import { sendEmail } from "../../utils/mailer";
 import { lostItemReportedTemplate } from "../../utils/emailTemplates";
+import { logToSheet } from "../sheets/sheets.service";
 
 const toggleFoundStatus = async (req: Request, res: Response) => {
   try {
@@ -37,6 +38,26 @@ const createLostItem = async (req: Request, res: Response) => {
     const result = await lostTItemServices.createLostItem(userId, item);
 
     if (result?.id) {
+      // Log to Google Sheets
+      try {
+        await logToSheet({
+          sheetName: "Lost Items",
+          studentId: req.body.studentId || "N/A",
+          reporterName: req.body.reporterName || "SAS Office",
+          email: req.body.schoolEmail || "N/A",
+          itemName: req.body.lostItemName,
+          description: req.body.description || "",
+          location: req.body.location,
+          date: req.body.date,
+          type: "LOST",
+          reportId: result.id.toString(),
+          scannedAt: new Date().toISOString()
+        });
+        console.log("[Sheets] Lost item logged to Google Sheets:", result.id);
+      } catch (sheetsError) {
+        console.error("[Sheets] Failed to log lost item to Google Sheets:", sheetsError);
+      }
+
       // Send confirmation email to the reporter
       try {
         const fromName = process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";

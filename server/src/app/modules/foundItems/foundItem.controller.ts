@@ -8,6 +8,7 @@ import { uploadFileToStorage } from "../../utils/storage";
 import sharp from "sharp";
 import { sendEmail } from "../../utils/mailer";
 import { lostItemReportedTemplate } from "../../utils/emailTemplates";
+import { logToSheet } from "../sheets/sheets.service";
 
 const createFoundItem = async (req: Request, res: Response) => {
   try {
@@ -15,6 +16,26 @@ const createFoundItem = async (req: Request, res: Response) => {
     const result = await foundItemService.createFoundItem(req.body, userId);
 
     if (result?.id) {
+      // Log to Google Sheets
+      try {
+        await logToSheet({
+          sheetName: "Found Items",
+          studentId: req.body.studentId || "N/A",
+          reporterName: req.body.reporterName || "SAS Office",
+          email: req.body.schoolEmail || "N/A",
+          itemName: req.body.foundItemName,
+          description: req.body.description || "",
+          location: req.body.location,
+          date: req.body.date,
+          type: "FOUND",
+          reportId: result.id.toString(),
+          scannedAt: new Date().toISOString()
+        });
+        console.log("[Sheets] Found item logged to Google Sheets:", result.id);
+      } catch (sheetsError) {
+        console.error("[Sheets] Failed to log found item to Google Sheets:", sheetsError);
+      }
+
       // Send confirmation email to the reporter
       try {
         const fromName = process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
