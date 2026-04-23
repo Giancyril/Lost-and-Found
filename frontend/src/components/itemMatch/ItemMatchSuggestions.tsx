@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useGetFoundItemsQuery } from "../../redux/api/api";
-import { FaMapMarkerAlt, FaCalendarAlt, FaLightbulb, FaArrowRight } from "react-icons/fa";
+import { FaMapMarkerAlt, FaCalendarAlt, FaArrowRight } from "react-icons/fa";
 
 interface Props {
   categoryId: string;
@@ -37,7 +37,7 @@ const nameScore = (input: string, itemName: string): number => {
   ).length;
 };
 
-const ItemMatchSuggestions = ({ categoryId, categoryName, itemName, location }: Props) => {
+const ItemMatchSuggestions = ({ categoryId, itemName, location }: Props) => {
   const { data, isLoading } = useGetFoundItemsQuery(
     { categoryId, limit: 20, sortBy: "date", sortOrder: "desc" },
     { skip: !categoryId }
@@ -71,15 +71,12 @@ const ItemMatchSuggestions = ({ categoryId, categoryName, itemName, location }: 
     <div className="rounded-xl border border-blue-500/20 bg-blue-950/20 overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-blue-500/10">
-        <div className="w-6 h-6 rounded-lg bg-blue-500/15 border border-blue-500/20 flex items-center justify-center shrink-0">
-          <FaLightbulb size={10} className="text-blue-400" />
-        </div>
         <div className="flex-1 min-w-0">
-          <p className="text-blue-300 text-xs font-semibold">Possible Matches Found</p>
+          <p className="text-blue-300 text-xs font-semibold">Recognize These Items?</p>
           <p className="text-blue-400/60 text-[10px]">
             {hasAnyScore
-              ? `Sorted by relevance — same location & category as your report`
-              : `Recent unclaimed ${categoryName} items — could one be yours?`}
+              ? `These unclaimed items may belong to someone you know.`
+              : `These items remain unclaimed, do any look familiar?`}
           </p>
         </div>
       </div>
@@ -141,11 +138,11 @@ const ItemMatchSuggestions = ({ categoryId, categoryName, itemName, location }: 
       {/* Footer */}
       <div className="px-4 py-2.5 border-t border-blue-500/10 flex items-center justify-between">
         <p className="text-[10px] text-blue-400/50">
-          If you see your item, submit a claim from its page.
+          If you know the owner, direct them to the item's page to file a claim or visit the SAS Office.
         </p>
         <Link to="/foundItems" target="_blank" rel="noopener noreferrer"
           className="text-[10px] text-blue-400 hover:text-blue-300 font-medium transition-colors whitespace-nowrap">
-          Browse all →
+          Browse all
         </Link>
       </div>
     </div>
