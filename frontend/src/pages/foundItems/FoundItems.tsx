@@ -62,6 +62,12 @@ const CATEGORY_CONFIG = {
     description: 'Please select a color to auto-generate a detailed description.',
     colors: ['Black', 'Brown', 'Silver', 'Gold', 'Blue', 'White', 'Rose Gold', 'Other'],
     conditions: ['Scratches', 'Stickers', 'Engravings', 'None']
+  },
+  money: {
+    itemName: 'Money',
+    description: '',
+    colors: [],
+    conditions: []
   }
 };
 
@@ -103,7 +109,7 @@ const CATEGORY_HELP_CONTENT = {
   tip: (
     <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/20">
       <p className="text-gray-400 text-[11px] leading-relaxed text-justify">
-        Selecting the right category helps us match your item with found items faster. Categories like <span className="text-blue-400 font-semibold">bags</span>, <span className="text-blue-400 font-semibold">calculators</span>, <span className="text-blue-400 font-semibold">keys</span>, <span className="text-blue-400 font-semibold">umbrellas</span>, and <span className="text-blue-400 font-semibold">watches</span> have special auto-fill features.
+        Selecting the right category helps us match your item with found items faster. Categories like <span className="text-blue-400 font-semibold">bags</span>, <span className="text-blue-400 font-semibold">calculators</span>, <span className="text-blue-400 font-semibold">keys</span>, <span className="text-blue-400 font-semibold">umbrellas</span>, <span className="text-blue-400 font-semibold">watches</span>, and <span className="text-blue-400 font-semibold">money</span> have special auto-fill features.
       </p>
     </div>
   ),
@@ -502,6 +508,7 @@ const FoundItemsPage = () => {
       case "keys":        colorDescription = `Some ${colorValue.toLowerCase()} keys were found. `; break;
       case "umbrellas":   colorDescription = `A ${colorValue.toLowerCase()} umbrella was found. `; break;
       case "watches":     colorDescription = `A ${colorValue.toLowerCase()} watch was found. `; break;
+      case "money":       colorDescription = `${colorValue} was found. `; break;
       default:            colorDescription = `A ${colorValue.toLowerCase()} ${config.itemName.toLowerCase()} was found.`;
     }
     addSetValue("description", colorDescription, { shouldDirty: true });
@@ -543,6 +550,13 @@ const FoundItemsPage = () => {
         else if (conditionValue === "Stickers")    enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with stickers was found. `;
         else if (conditionValue === "Engravings")  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with engravings was found. `;
         else                                       enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch in good condition was found. `;
+        break;
+      case "money":
+        if (conditionValue === "Coins")                    enhancedDescription = `${addSelectedColor} in the form of coins was found. `;
+        else if (conditionValue === "Bills")                 enhancedDescription = `${addSelectedColor} in the form of bills was found. `;
+        else if (conditionValue === "Mixed Coins and Bills") enhancedDescription = `${addSelectedColor} in the form of mixed coins and bills was found. `;
+        else if (conditionValue === "Wallet/Purse")         enhancedDescription = `${addSelectedColor} found in a wallet/purse was found. `;
+        else                                                 enhancedDescription = `${addSelectedColor} was found. `;
         break;
       default:
         enhancedDescription = `A ${addSelectedColor.toLowerCase()} ${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()} was found. `;
@@ -969,8 +983,8 @@ const FoundItemsPage = () => {
                   </div>
                 </div>{/* ── end Item Name + Category grid ── */}
 
-                {/* ── Color (only for configured categories) ── */}
-                {addSelectedMenu && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && (
+                {/* ── Color (only for configured categories with colors) ── */}
+                {addSelectedMenu && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.length > 0 && (
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
@@ -1000,13 +1014,6 @@ const FoundItemsPage = () => {
                 )}
 
                 {/* ── Where Found + Date Found ── */}
-                <ItemMatchSuggestions
-                  categoryId={addSelectedMenucategoryId}
-                  categoryName={addSelectedMenu}
-                  itemName={(document.querySelector('input[name="foundItemName"]') as HTMLInputElement)?.value ?? ""}
-                  location={(document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? ""}
-                />
-
                 <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   {/* ── Where Found — now using LocationAutocomplete ── */}
                   <div className="flex flex-col gap-1.5">
@@ -1106,6 +1113,22 @@ const FoundItemsPage = () => {
                     <p className="text-blue-300/70 text-[11px] leading-relaxed">Visit the SAS office with a valid school ID to claim this item.</p>
                   </div>
                 </div>
+
+                {/* ── Possible Matches Found ── */}
+                {(() => {
+                  const itemName = (document.querySelector('input[name="foundItemName"]') as HTMLInputElement)?.value ?? "";
+                  const location = (document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? "";
+                  const description = (document.querySelector('textarea[name="description"]') as HTMLTextAreaElement)?.value ?? "";
+                  const allFieldsFilled = itemName.trim() !== "" && location.trim() !== "" && description.trim() !== "" && addSelectedMenucategoryId !== "";
+                  return allFieldsFilled && !(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? (
+                    <ItemMatchSuggestions
+                      categoryId={addSelectedMenucategoryId}
+                      categoryName={addSelectedMenu}
+                      itemName={itemName}
+                      location={location}
+                    />
+                  ) : null;
+                })()}
               </form>
             </div>{/* ── end modal body ── */}
 
