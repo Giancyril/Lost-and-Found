@@ -246,15 +246,13 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
     console.log('Sharing URL:', shareUrl);
     console.log('Sharing message:', message);
     
-    // Try different Facebook share approaches
-    const fbUrl1 = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(message)}`;
-    const fbUrl2 = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&t=${encodeURIComponent(`Lost: ${item?.lostItemName ?? "Unknown item"}`)}&d=${encodeURIComponent(message)}`;
+    // Simplified Facebook share to avoid Relay/Comet issues
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(message)}`;
     
-    console.log('Facebook URL 1:', fbUrl1);
-    console.log('Facebook URL 2:', fbUrl2);
+    console.log('Facebook URL:', fbUrl);
     
-    // Try the second approach with title parameter
-    window.open(fbUrl2, '_blank', 'width=600,height=400');
+    // Use simplified approach to avoid Suspense boundary
+    window.open(fbUrl, '_blank', 'width=600,height=400');
   };
 
   const handleMessengerShare = () => {
