@@ -316,6 +316,9 @@ const ReportLostItem = () => {
   const schoolEmail = watch("schoolEmail");
   const lostItemName = watch("lostItemName");
   const location = watch("location");
+
+  // Track previous email value to prevent auto-fill loop
+  const [prevEmailValue, setPrevEmailValue] = useState("");
   const description = watch("description");
   const color = watch("color");
   const condition = watch("condition");
@@ -629,12 +632,36 @@ const ReportLostItem = () => {
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] block">Institutional Email *</label>
                         <div className={`relative flex items-center ${inputCls} ring-0 focus-within:ring-2 focus-within:ring-blue-500/50`}>
                           <span className="text-gray-500 mr-2"><IconMail size={16} /></span>
-                          <input {...register("schoolEmail", {
+                          <Controller
+                          name="schoolEmail"
+                          control={control}
+                          rules={{
                             required: "School email is required",
                             pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
-                          })}
-                            type="email" autoComplete="off"
-                            className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm" placeholder=" " />
+                          }}
+                          render={({ field }) => (
+                            <input
+                              {...field}
+                              type="email"
+                              autoComplete="off"
+                              className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm"
+                              placeholder=" "
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                const trimmedValue = value.trim();
+                                
+                                // Only auto-fill if current value is exactly 8 digits and previous value wasn't an email
+                                if (/^\d{8}$/.test(trimmedValue) && !prevEmailValue.includes('@')) {
+                                  setPrevEmailValue(`${trimmedValue}@nbsc.edu.ph`);
+                                  field.onChange(`${trimmedValue}@nbsc.edu.ph`);
+                                } else {
+                                  setPrevEmailValue(value);
+                                  field.onChange(value);
+                                }
+                              }}
+                            />
+                          )}
+                        />
                         </div>
                         {errors.schoolEmail && <p className="text-red-400 text-[10px] mt-1">{errors.schoolEmail.message as string}</p>}
                       </div>

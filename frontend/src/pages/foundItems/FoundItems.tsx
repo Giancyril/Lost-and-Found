@@ -186,8 +186,9 @@ const CustomSelect = ({ options, value, onChange }: {
 // ── Quick Claim Modal ─────────────────────────────────────────────────────────
 const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
   const [createClaim, { isLoading: claimLoading }] = useCreateClaimMutation();
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset, control } = useForm();
   const [submitted, setSubmitted] = useState(false);
+  const [prevClaimEmailValue, setPrevClaimEmailValue] = useState("");
   const [lostDate, setLostDate] = useState("");
 
   const onSubmit = async (data: any) => {
@@ -260,8 +261,35 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">School Email <span className="text-red-400">*</span></label>
                 <div className="relative">
                   <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
-                  <input type="email" placeholder=" " {...register("schoolEmail", { required: "School email is required", pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" } })}
-                    className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                  <Controller
+                      name="schoolEmail"
+                      control={control}
+                      rules={{
+                        required: "School email is required",
+                        pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+                      }}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="email"
+                          placeholder=" "
+                          className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const trimmedValue = value.trim();
+                            
+                            // Only auto-fill if current value is exactly 8 digits and previous value wasn't an email
+                            if (/^\d{8}$/.test(trimmedValue) && !prevClaimEmailValue.includes('@')) {
+                              setPrevClaimEmailValue(`${trimmedValue}@nbsc.edu.ph`);
+                              field.onChange(`${trimmedValue}@nbsc.edu.ph`);
+                            } else {
+                              setPrevClaimEmailValue(value);
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      )}
+                    />
                 </div>
                 {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
               </div>
@@ -329,6 +357,9 @@ const FoundItemsPage = () => {
   const [addSelectedCondition, setAddSelectedCondition] = useState("");
   const addFileInputRef = useRef<HTMLInputElement>(null);
   const MAX_SIZE_MB = 5;
+
+  // Track previous email value to prevent auto-fill loops
+  const [prevAddEmailValue, setPrevAddEmailValue] = useState("");
 
   const [showScanner, setShowScanner] = useState(false);
   const [scannedStudent, setScannedStudent] = useState<ScannedStudent | null>(null);
@@ -950,7 +981,35 @@ const FoundItemsPage = () => {
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
                       Institutional Email <span className="text-red-400">*</span>
                     </label>
-                    <input {...addRegister("schoolEmail", { required: "School email is required", pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" } })} type="email" placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
+                    <Controller
+                      name="schoolEmail"
+                      control={addControl}
+                      rules={{
+                        required: "School email is required",
+                        pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+                      }}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="email"
+                          placeholder=" "
+                          className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const trimmedValue = value.trim();
+                            
+                            // Only auto-fill if current value is exactly 8 digits and previous value wasn't an email
+                            if (/^\d{8}$/.test(trimmedValue) && !prevAddEmailValue.includes('@')) {
+                              setPrevAddEmailValue(`${trimmedValue}@nbsc.edu.ph`);
+                              field.onChange(`${trimmedValue}@nbsc.edu.ph`);
+                            } else {
+                              setPrevAddEmailValue(value);
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      )}
+                    />
                     {addErrors.schoolEmail && <p className="text-red-400 text-xs">{addErrors.schoolEmail?.message as string}</p>}
                   </div>
                 </div>
