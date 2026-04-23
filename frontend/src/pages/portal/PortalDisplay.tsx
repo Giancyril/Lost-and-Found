@@ -49,6 +49,57 @@ const RESTRICTED_CATEGORIES = ["wallets & purses", "wallet", "purse"];
 const isRestrictedCategory = (cat?: string) =>
   RESTRICTED_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
 
+// ── QR Code Slide Component ─────────────────────────────────────────────────────
+const QRCodeSlide = () => {
+  return (
+    <div className="h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-8">
+      <div className="text-center max-w-4xl">
+        {/* Header */}
+        <div className="mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">Lost & Found System</h2>
+          <div className="w-24 h-1 bg-gradient-to-r from-red-500 to-blue-500 mx-auto rounded-full"></div>
+        </div>
+        
+        {/* QR Codes Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-8">
+          {/* Lost Items QR Code */}
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-red-500/20 shadow-2xl">
+            <div className="flex items-center justify-center mb-4">
+              <h3 className="text-xl font-bold text-red-400">Report Lost Items</h3>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-lg mb-4">
+              <img src="/lost-items-qr.png" alt="Lost Items QR Code" className="w-48 h-48 object-contain" />
+            </div>
+            <p className="text-gray-300 text-sm">Scan to report your missing item</p>
+          </div>
+
+          {/* Found Items QR Code */}
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-blue-500/20 shadow-2xl">
+            <div className="flex items-center justify-center mb-4">
+              <h3 className="text-xl font-bold text-blue-400">Claim Found Items</h3>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-lg mb-4">
+              <img src="/found-items-qr.png" alt="Found Items QR Code" className="w-48 h-48 object-contain" />
+            </div>
+            <p className="text-gray-300 text-sm">Scan to claim your missing item</p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center">
+          <p className="text-gray-400 text-sm mb-2">Student Affairs Services • Lost & Found System</p>
+          <div className="flex items-center justify-center gap-2 text-gray-500 text-xs">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Available 24/7 Online</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Item Card ─────────────────────────────────────────────────────────────────
 const ItemCard = ({
   name, description, location, date, img, category, badge, badgeColor,
@@ -487,7 +538,7 @@ const PortalDisplay = () => {
   const REFETCH_INTERVAL = 60000;
 
   const { data: lostData, error: lostError, isLoading: lostLoading } = useGetLostItemsQuery(
-    { page: 1, limit: 50, sortBy: "date", sortOrder: "desc" },
+    { page: 1, limit: 10, sortBy: "date", sortOrder: "desc" },
     { 
       pollingInterval: REFETCH_INTERVAL,
       refetchOnFocus: true,
@@ -495,7 +546,7 @@ const PortalDisplay = () => {
     }
   );
   const { data: foundData, error: foundError, isLoading: foundLoading } = useGetFoundItemsQuery(
-    { page: 1, limit: 50, sortBy: "date", sortOrder: "desc" },
+    { page: 1, limit: 10, sortBy: "date", sortOrder: "desc" },
     { 
       pollingInterval: REFETCH_INTERVAL,
       refetchOnFocus: true,
@@ -536,9 +587,14 @@ const PortalDisplay = () => {
     category: i.category?.name,
   }));
 
+  // Calculate total slides for QR code slide
+  const totalLostSlides = Math.ceil(lostMapped.length / 4);
+  const totalFoundSlides = Math.ceil(foundMapped.length / 4);
+  const totalSlides = totalLostSlides + totalFoundSlides + 1; // +1 for QR code slide
+
   const advanceSlide = useCallback(() => {
-    setSlideIndex(prev => prev + 1);
-  }, []);
+    setSlideIndex(prev => (prev + 1) % totalSlides);
+  }, [totalSlides]);
 
   useEffect(() => {
     const slideTimer = setInterval(advanceSlide, SLIDE_DURATION);
@@ -663,8 +719,17 @@ const PortalDisplay = () => {
       <div className="fixed inset-0 bg-slate-900 flex flex-col overflow-hidden select-none">
         <Header />
         <div className="flex-1 grid grid-cols-2 portal-panels min-h-0 divide-x divide-white/5">
-          <Panel title="Lost Items"  accentColor="red"  items={lostMapped}  slideIndex={slideIndex} total={lostItems.length}  />
-          <Panel title="Found Items" accentColor="blue" items={foundMapped} slideIndex={slideIndex} total={foundItems.length} />
+          {/* Show QR code slide when we reach the last slide */}
+          {slideIndex >= totalLostSlides + totalFoundSlides ? (
+            <div className="col-span-2">
+              <QRCodeSlide />
+            </div>
+          ) : (
+            <>
+              <Panel title="Lost Items"  accentColor="red"  items={lostMapped}  slideIndex={slideIndex} total={lostItems.length}  />
+              <Panel title="Found Items" accentColor="blue" items={foundMapped} slideIndex={slideIndex} total={foundItems.length} />
+            </>
+          )}
         </div>
         <Ticker lostCount={lostItems.length} foundCount={foundItems.length} />
       </div>
