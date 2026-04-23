@@ -13,6 +13,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
 import { useUserVerification } from "../../auth/auth";
+import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
 
 // ── Category icon resolver ────────────────────────────────────────────────────
 const getCategoryIcon = (name: string) => {
@@ -221,14 +222,13 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
   const tipCount = getTipsForItem(item.id).length;
 
   const message =
-    `🔍 LOST ITEM REPORT — NBSC Campus\n\n` +
-    `📦 Item: ${item?.lostItemName ?? "Unknown item"}\n` +
-    `📍 Last seen: ${item?.location ?? "Unknown location"}\n` +
-    `📅 Date lost: ${dateStr}\n` +
-    (item?.description ? `📝 Description: ${item.description}\n` : "") +
-    (tipCount > 0 ? `👁 Community sightings: ${tipCount}\n` : "") +
-    `\nIf you've seen this item, please submit a sighting on the NBSC Lost & Found board or contact the SAS office.\n` +
-    `🔗 lost-and-found.nbsc.edu.ph/lostItems/${item.id}`;
+    `LOST ITEM REPORT - NBSC Campus\n\n` +
+    `Item: ${item?.lostItemName ?? "Unknown item"}\n` +
+    `Last seen: ${item?.location ?? "Unknown location"}\n` +
+    `Date lost: ${dateStr}\n` +
+    (item?.description ? `Description: ${item.description}\n` : "") +
+    (tipCount > 0 ? `Community sightings: ${tipCount}\n` : "") +
+    `\nIf you've seen this item, please submit a sighting on the NBSC Lost & Found board or contact the SAS office.`;
 
   const handleCopy = async () => {
     try {
@@ -394,12 +394,12 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
                   Where did you see it? <span className="text-gray-600 font-normal normal-case tracking-normal">(optional)</span>
                 </label>
-                <div className="relative">
-                  <FaMapMarkerAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
-                  <input type="text" value={location} onChange={e => setLocation(e.target.value)}
-                    placeholder="e.g. SWDC Building - Room 205, Library, Canteen..."
-                    className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/30" />
-                </div>
+                <LocationAutocomplete
+                  value={location}
+                  onChange={setLocation}
+                  placeholder="e.g. SWDC Building - Room 205, Library, Canteen..."
+                  className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/30"
+                />
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
@@ -445,7 +445,7 @@ const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () =>
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
           <div>
             <h3 className="text-white font-bold text-sm flex items-center gap-2">
-              <FaEye className="text-cyan-400" size={13} /> Community Sightings
+               Community Sightings
               {isAdmin && <span className="text-[9px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded-full font-bold">Admin</span>}
             </h3>
             <p className="text-gray-500 text-xs mt-0.5">{item?.lostItemName} · {tips.length} {tips.length === 1 ? "sighting" : "sightings"}</p>
@@ -578,22 +578,23 @@ const ItemCard = ({
         </div>
         <div className="h-px bg-white/[0.04] mb-3" />
         <div className="grid grid-cols-4 gap-1.5">
-          <button onClick={onTip} disabled={!!item?.isFound}
-            className="flex items-center justify-center py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-            Sighted
-          </button>
-          <button onClick={onViewTips}
-            className="flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[11px] font-medium rounded-lg transition-all">
-            Tips{tipCount > 0 && <span className="ml-1 px-1 py-0.5 bg-cyan-500/20 rounded text-[9px] font-bold">{tipCount}</span>}
-          </button>
-          <button onClick={onShare}
-            className="flex items-center justify-center py-2 bg-white/5 hover:bg-blue-600/20 border border-white/5 hover:border-blue-500/20 text-gray-400 hover:text-blue-400 text-[11px] font-medium rounded-lg transition-all">
-            Share
-          </button>
           <Link to={`/lostItems/${item.id}`}
             className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
             Details
           </Link>
+          <button onClick={onTip} disabled={!!item?.isFound}
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 text-[11px] font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+            Sighted
+          </button>
+          <button onClick={onViewTips}
+            className="flex items-center justify-center gap-1 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-blue-400 text-[11px] font-medium rounded-lg transition-all">
+            Tips{tipCount > 0 && <span className="ml-1 px-1 py-0.5 bg-white/5 rounded text-[9px] font-bold">{tipCount}</span>}
+          </button>
+          <button onClick={onShare}
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-blue-500/20 text-gray-400 hover:text-blue-400 text-[11px] font-medium rounded-lg transition-all">
+            Share
+          </button>
+          
         </div>
       </div>
     </div>
