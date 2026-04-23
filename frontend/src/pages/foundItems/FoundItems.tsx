@@ -29,7 +29,6 @@ import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModa
 import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
-import { logToSheet } from "../../utils/sheetsLogger";
 
 // ── Category configuration with auto-fill data ─────────────────────────────
 const CATEGORY_CONFIG = {
@@ -644,19 +643,7 @@ const FoundItemsPage = () => {
           toast.warning("Item saved, but image upload failed. You can re-upload later.");
         }
       }
-      logToSheet({
-        sheetName: "Found Items",
-        studentId: scannedStudent?.id || "N/A",
-        reporterName: data.reporterName || "OFFICE",
-        email: data.schoolEmail || scannedStudent?.email || "N/A",
-        itemName: data.foundItemName,
-        description: data.description,
-        location: data.location,
-        date: new Date(addStartDate).toISOString().split("T")[0],
-        type: "FOUND",
-        reportId: newItemId || "UNKNOWN",
-        scannedAt: scannedAtRef.current || new Date().toISOString(),
-      }).catch(console.error);
+
       toast.success("Found item submitted successfully!");
       closeAddModal();
     } catch {

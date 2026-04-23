@@ -5,6 +5,7 @@
 
 interface SheetLogData {
   sheetName: "Lost Items" | "Found Items";
+  timestamp: string;
   studentId: string;
   reporterName: string;
   email: string;
@@ -32,11 +33,7 @@ export const logToSheet = async (data: SheetLogData): Promise<void> => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        ...data,
-        timestamp: new Date().toISOString(),
-        source: "backend-api"
-      }),
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {

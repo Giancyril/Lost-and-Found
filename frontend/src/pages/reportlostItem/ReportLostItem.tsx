@@ -21,7 +21,6 @@ import {
 import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
 import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
 import imageCompression from "browser-image-compression";
-import { logToSheet } from "../../utils/sheetsLogger";
 
 const MAX_SIZE_MB = 5;
 
@@ -463,14 +462,7 @@ const ReportLostItem = () => {
         reporterName: data.reporterName || "", schoolEmail: data.schoolEmail || "",
       });
       if (res.error || res?.data?.success === false) { toast.error("Failed to report lost item"); return; }
-      const reportId = res.data.id || res.data.data?.id;
-      logToSheet({
-        sheetName: "Lost Items", studentId: scannedStudent?.id || "N/A",
-        reporterName: data.reporterName || "", email: data.schoolEmail || "",
-        itemName: data.lostItemName, description: data.description,
-        location: data.location, date: startDate, type: "LOST",
-        reportId: reportId || "UNKNOWN", scannedAt: scannedAtRef.current || new Date().toISOString(),
-      }).catch(console.error);
+
       toast.success("Lost item reported successfully");
       reset(); setSelectedFile(null); setPreview(""); setUploadError("");
       setselectedMenu(""); setselectedMenucategoryId(""); setCategoryTouched(false);

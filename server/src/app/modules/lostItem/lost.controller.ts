@@ -40,9 +40,14 @@ const createLostItem = async (req: Request, res: Response) => {
     if (result?.id) {
       // Log to Google Sheets
       try {
+        const reportTimestamp = new Date().toISOString();
+        const studentId = req.body.studentId || 
+          (req.body.schoolEmail ? req.body.schoolEmail.split("@")[0] : "N/A");
+
         await logToSheet({
           sheetName: "Lost Items",
-          studentId: req.body.studentId || "N/A",
+          timestamp: reportTimestamp,
+          studentId: studentId,
           reporterName: req.body.reporterName || "SAS Office",
           email: req.body.schoolEmail || "N/A",
           itemName: req.body.lostItemName,
@@ -51,7 +56,7 @@ const createLostItem = async (req: Request, res: Response) => {
           date: req.body.date,
           type: "LOST",
           reportId: result.id.toString(),
-          scannedAt: new Date().toISOString()
+          scannedAt: reportTimestamp
         });
         console.log("[Sheets] Lost item logged to Google Sheets:", result.id);
       } catch (sheetsError) {

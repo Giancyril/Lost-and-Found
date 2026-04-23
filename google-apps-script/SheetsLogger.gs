@@ -50,19 +50,19 @@ function doPost(e) {
     // Initialize sheet if needed
     initializeSheet(sheet, data.sheetName);
 
-    // Add the new row
+    // Add the new row - use exact data from backend, no fallbacks
     const rowData = [
-      new Date().toISOString(), // Timestamp
-      data.studentId || "N/A",
-      data.reporterName || "SAS Office",
-      data.email || "N/A",
+      data.timestamp, // Use exact timestamp from backend
+      data.studentId,
+      data.reporterName,
+      data.email,
       data.itemName,
-      data.description || "",
+      data.description,
       data.location,
       data.date,
       data.type,
-      data.reportId || "UNKNOWN",
-      data.scannedAt || new Date().toISOString()
+      data.reportId,
+      data.scannedAt // Use exact scannedAt from backend
     ];
 
     sheet.appendRow(rowData);

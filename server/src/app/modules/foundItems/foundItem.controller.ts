@@ -18,9 +18,14 @@ const createFoundItem = async (req: Request, res: Response) => {
     if (result?.id) {
       // Log to Google Sheets
       try {
+        const reportTimestamp = new Date().toISOString();
+        const studentId = req.body.studentId || 
+          (req.body.schoolEmail ? req.body.schoolEmail.split("@")[0] : "N/A");
+
         await logToSheet({
           sheetName: "Found Items",
-          studentId: req.body.studentId || "N/A",
+          timestamp: reportTimestamp,
+          studentId: studentId,
           reporterName: req.body.reporterName || "SAS Office",
           email: req.body.schoolEmail || "N/A",
           itemName: req.body.foundItemName,
@@ -29,7 +34,7 @@ const createFoundItem = async (req: Request, res: Response) => {
           date: req.body.date,
           type: "FOUND",
           reportId: result.id.toString(),
-          scannedAt: new Date().toISOString()
+          scannedAt: reportTimestamp
         });
         console.log("[Sheets] Found item logged to Google Sheets:", result.id);
       } catch (sheetsError) {
