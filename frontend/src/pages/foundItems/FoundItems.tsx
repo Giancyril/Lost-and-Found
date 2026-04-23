@@ -8,7 +8,7 @@ import {
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
   FaClipboardList, FaUser, FaEnvelope, FaCheck, FaChevronDown,
-  FaQrcode, FaSpinner, FaUserCheck, FaMoneyBillWave,
+  FaQrcode, FaSpinner, FaUserCheck, FaMoneyBillWave, FaCalculator,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -88,11 +88,13 @@ const getCategoryIcon = (name: string) => {
   if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod")) return <FaHeadphones size={9} className="text-green-400" />;
   if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass")) return <FaGlasses size={9} className="text-teal-400" />;
   if (n.includes("book") || n.includes("stationery") || n.includes("notebook")) return <FaBook size={9} className="text-yellow-400" />;
+  if (n.includes("calculat")) return <FaCalculator size={9} className="text-lime-400" />;
   if (n.includes("id") || n.includes("card") || n.includes("document"))     return <FaIdCard     size={9} className="text-blue-400" />;
   if (n.includes("umbrella"))                                                return <FaUmbrella   size={9} className="text-blue-400" />;
   if (n.includes("cloth") || n.includes("shirt") || n.includes("uniform") || n.includes("wear")) return <FaTshirt size={9} className="text-purple-400" />;
   if (n.includes("camera") || n.includes("photo"))                          return <FaCamera     size={9} className="text-violet-400" />;
   if (n.includes("watch") || n.includes("clock"))                           return <FaClock      size={9} className="text-gray-300" />;
+  if (n.includes("jewelry") || n.includes("ring") || n.includes("bracelet") || n.includes("necklace")) return <FaTag size={9} className="text-pink-400" />;
   if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask")) return <FaTint size={9} className="text-cyan-400" />;
   if (n.includes("money") || n.includes("cash") || n.includes("bill") || n.includes("currency")) return <FaMoneyBillWave size={9} className="text-green-400" />;
   return <FaTag size={9} className="text-blue-400" />;
