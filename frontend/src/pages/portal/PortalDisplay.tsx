@@ -49,53 +49,96 @@ const RESTRICTED_CATEGORIES = ["wallets & purses", "wallet", "purse"];
 const isRestrictedCategory = (cat?: string) =>
   RESTRICTED_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
 
-// ── QR Code Slide Component ─────────────────────────────────────────────────────
+// ── QR Code Slide Component ───────────────────────────────────────────────────
 const QRCodeSlide = () => {
   return (
-    <div className="h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-8">
-      <div className="text-center max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">Lost & Found System</h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-red-500 to-blue-500 mx-auto rounded-full"></div>
-        </div>
-        
-        {/* QR Codes Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-8">
-          {/* Lost Items QR Code */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-red-500/20 shadow-2xl">
-            <div className="flex items-center justify-center mb-4">
-              <h3 className="text-xl font-bold text-red-400">Report Lost Items</h3>
+    <div className="h-full w-full bg-slate-900 flex flex-col overflow-hidden">
+      {/* Top accent bar */}
+      <div className="h-1 w-full bg-gradient-to-r from-red-600 via-red-400 to-blue-500 shrink-0" />
+
+      <div className="flex-1 flex items-center justify-center px-6 py-4 min-h-0">
+        <div className="w-full max-w-5xl flex flex-col items-center gap-4">
+
+          {/* Institution Header */}
+          <div className="text-center">
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.25em] mb-1">
+              Northern Bukidnon State College
+            </p>
+            <h1 className="text-white text-2xl md:text-3xl font-black tracking-tight">
+              Student Affairs Services
+            </h1>
+            <div className="flex items-center gap-3 justify-center mt-2">
+              <div className="h-px w-16 bg-slate-600" />
+              <span className="text-red-400 text-xs font-bold uppercase tracking-widest">Lost &amp; Found Portal</span>
+              <div className="h-px w-16 bg-slate-600" />
             </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg mb-4">
-              <img src="/lost-items-qr.png" alt="Lost Items QR Code" className="w-48 h-48 object-contain" />
-            </div>
-            <p className="text-gray-300 text-sm">Scan to report your missing item</p>
           </div>
 
-          {/* Found Items QR Code */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-blue-500/20 shadow-2xl">
-            <div className="flex items-center justify-center mb-4">
-              <h3 className="text-xl font-bold text-blue-400">Claim Found Items</h3>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg mb-4">
-              <img src="/found-items-qr.png" alt="Found Items QR Code" className="w-48 h-48 object-contain" />
-            </div>
-            <p className="text-gray-300 text-sm">Scan to claim your missing item</p>
-          </div>
-        </div>
+          {/* Main Content Row */}
+          <div className="flex flex-col md:flex-row items-center gap-6 w-full">
 
-        {/* Footer */}
-        <div className="text-center">
-          <p className="text-gray-400 text-sm mb-2">Student Affairs Services • Lost & Found System</p>
-          <div className="flex items-center justify-center gap-2 text-gray-500 text-xs">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>Available 24/7 Online</span>
+            {/* QR Section */}
+            <div className="flex flex-col items-center gap-3 shrink-0">
+              <div className="bg-white p-4 rounded-2xl shadow-2xl border-4 border-slate-200">
+                <img
+                  src="/lost-items-qr.png"
+                  alt="Lost Items QR Code"
+                  className="w-44 h-44 md:w-52 md:h-52 object-contain"
+                />
+              </div>
+              <div className="text-center">
+                <p className="text-red-400 font-bold text-sm uppercase tracking-widest">Scan to Report</p>
+                <p className="text-slate-400 text-xs mt-0.5">Use your phone camera</p>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="hidden md:block h-48 w-px bg-slate-700 shrink-0" />
+            <div className="block md:hidden w-full h-px bg-slate-700 shrink-0" />
+
+            {/* Info Section */}
+            <div className="flex-1 space-y-4 w-full">
+
+              {/* Steps */}
+              <div className="space-y-2">
+                {[
+                  { num: "01", title: "Scan the QR Code", desc: "Point your phone camera at the code to open the reporting form." },
+                  { num: "02", title: "Fill in Item Details", desc: "Provide a description, location last seen, and date of loss." },
+                  { num: "03", title: "Submit Your Report", desc: "Our team will log the item and notify you on any updates." },
+                ].map(step => (
+                  <div key={step.num} className="flex items-start gap-3 bg-slate-800/60 border border-white/5 rounded-xl px-4 py-2.5">
+                    <span className="text-red-500 font-black text-sm shrink-0 mt-0.5">{step.num}</span>
+                    <div>
+                      <p className="text-white font-bold text-sm leading-tight">{step.title}</p>
+                      <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">{step.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Notice */}
+              <div className="flex items-start gap-2 bg-blue-950/50 border border-blue-500/20 rounded-xl px-4 py-2.5">
+                <svg width="14" height="14" className="shrink-0 text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" />
+                </svg>
+                <p className="text-blue-300 text-xs leading-relaxed">
+                  <span className="font-bold">Claiming a found item?</span> Bring a valid school ID to the SAS Office during office hours.
+                </p>
+              </div>
+            </div>
           </div>
+
+          {/* Footer */}
+          <div className="w-full flex items-center justify-between pt-2 border-t border-white/5">
+            <p className="text-slate-500 text-[10px] uppercase tracking-widest font-semibold">SAS Office • Admin Building</p>
+            <p className="text-slate-500 text-[10px] uppercase tracking-widest font-semibold">Available 24/7 Online</p>
+          </div>
+
         </div>
       </div>
+
+      {/* Bottom accent bar */}
+      <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-red-400 to-red-600 shrink-0" />
     </div>
   );
 };
@@ -259,13 +302,12 @@ const Panel = ({
     });
   }, [n]);
 
-  // dot indicator
   const dotIdx = ((pos - 1 + n) % n + n) % n;
   const extendedPairs = n > 0 ? [realPairs[n - 1], ...realPairs, realPairs[0]] : [];
 
   return (
     <div className="flex flex-col h-full bg-slate-900 overflow-hidden">
-      {/* Fixed Height Header to prevent overlap */}
+      {/* Fixed Height Header */}
       <div className={`flex items-center justify-between px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 border-b ${accent.border} bg-slate-800/50 h-[60px] sm:h-[80px] md:h-[100px] shrink-0`}>
         <div className="flex-1 min-w-0 pr-2 sm:pr-4">
           <h2 className={`text-[10px] sm:text-xs md:text-base font-black uppercase tracking-widest ${accent.text} truncate`}>
@@ -280,7 +322,7 @@ const Panel = ({
             {total} {total === 1 ? "item" : "items"} on record
           </p>
         </div>
-        
+
         {/* Pagination Dots */}
         <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 shrink-0">
           {realPairs.map((_, i) => (
@@ -296,12 +338,12 @@ const Panel = ({
       {/* Carousel track */}
       <div className="flex-1 min-h-0 overflow-hidden relative">
         {n === 0 ? (
-           <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20">
-              <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-              </svg>
-              <p className="mt-2 text-sm">No records found</p>
-           </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20">
+            <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+            </svg>
+            <p className="mt-2 text-sm">No records found</p>
+          </div>
         ) : (
           <div
             className="absolute inset-0 flex"
@@ -328,7 +370,7 @@ const Panel = ({
   );
 };
 
-// ── Header Component ─────────────────────────────────────────────────────────────
+// ── Header Component ──────────────────────────────────────────────────────────
 const Header = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [weather, setWeather] = useState<{
@@ -336,173 +378,99 @@ const Header = () => {
     condition: string;
     icon: string;
   } | null>(null);
-
   const [weatherLoading, setWeatherLoading] = useState(true);
 
-  // Live Clock
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Weather Fetch
   useEffect(() => {
     const fetchWeather = async () => {
       try {
         const response = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?q=Manolo Fortich&appid=8e2117fb762222012f8606202d5df1fd&units=metric`
         );
-
-        if (!response.ok) {
-          throw new Error("Weather API unavailable");
-        }
-
+        if (!response.ok) throw new Error("Weather API unavailable");
         const data = await response.json();
-
         setWeather({
           temp: Math.round(data.main.temp),
           condition: data.weather[0].main,
           icon: data.weather[0].icon,
         });
-      } catch (error) {
-        console.log("Weather fetch failed, using fallback.");
-
-        setWeather({
-          temp: 30,
-          condition: "Cloudy",
-          icon: "03d",
-        });
+      } catch {
+        setWeather({ temp: 30, condition: "Cloudy", icon: "03d" });
       } finally {
         setWeatherLoading(false);
       }
     };
 
     fetchWeather();
-
     const weatherTimer = setInterval(fetchWeather, 600000);
-
     return () => clearInterval(weatherTimer);
   }, []);
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
-  };
+  const formatTime = (date: Date) =>
+    date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+  const formatDateStr = (date: Date) =>
+    date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
   const getWeatherIcon = (icon: string) => {
-    const iconMap: { [key: string]: string } = {
-      "01d": "☀️",
-      "01n": "🌙",
-      "02d": "⛅",
-      "02n": "☁️",
-      "03d": "☁️",
-      "03n": "☁️",
-      "04d": "☁️",
-      "04n": "☁️",
-      "09d": "🌧️",
-      "09n": "🌧️",
-      "10d": "🌦️",
-      "10n": "🌧️",
-      "11d": "⛈️",
-      "11n": "⛈️",
-      "13d": "❄️",
-      "13n": "❄️",
-      "50d": "🌫️",
-      "50n": "🌫️",
+    const iconMap: Record<string, string> = {
+      "01d": "☀️", "01n": "🌙", "02d": "⛅", "02n": "☁️",
+      "03d": "☁️", "03n": "☁️", "04d": "☁️", "04n": "☁️",
+      "09d": "🌧️", "09n": "🌧️", "10d": "🌦️", "10n": "🌧️",
+      "11d": "⛈️", "11n": "⛈️", "13d": "❄️", "13n": "❄️",
+      "50d": "🌫️", "50n": "🌫️",
     };
-
     return iconMap[icon] || "🌤️";
   };
 
   return (
-  <div className="h-20 md:h-24 bg-slate-800 border-b border-white/10 px-4 sm:px-6 md:px-8 flex items-center justify-between shrink-0">
-    
-    {/* LEFT SIDE (if any) */}
-    <div></div>
+    <div className="h-20 md:h-24 bg-slate-800 border-b border-white/10 px-4 sm:px-6 md:px-8 flex items-center justify-between shrink-0">
+      <div />
+      <div className="flex items-center gap-3">
+        {/* Date & Time */}
+        <div className="flex flex-col items-end pr-2 sm:pr-3 border-r border-white/10">
+          <span className="text-slate-400 text-[9px] sm:text-xs">{formatDateStr(currentTime)}</span>
+          <span className="text-white text-lg sm:text-xl font-bold tracking-wide tabular-nums leading-tight">
+            {formatTime(currentTime)}
+          </span>
+        </div>
 
-    {/* RIGHT SIDE */}
-    <div className="flex items-center gap-3">
-      
-      {/* Date & Time */}
-      <div className="flex flex-col items-end pr-2 sm:pr-3 border-r border-white/10">
-        <span className="text-slate-400 text-[9px] sm:text-xs">
-          {formatDate(currentTime)}
-        </span>
-
-        <span className="text-white text-lg sm:text-xl font-bold tracking-wide tabular-nums leading-tight">
-          {formatTime(currentTime)}
-        </span>
-      </div>
-
-      {/* Refined Weather Card */}
-      <div className="min-w-[120px] sm:min-w-[140px] bg-slate-700/70 border border-white/10 rounded-xl px-1.5 sm:px-2 py-1.5 backdrop-blur-md shadow-lg">
-        {weatherLoading ? (
-          <div className="flex items-center justify-center h-8">
-            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            
-            {/* Weather Icon moved to left */}
-            <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-slate-600/40 text-lg sm:text-xl shrink-0">
-              {getWeatherIcon(weather?.icon || "")}
+        {/* Weather Card */}
+        <div className="min-w-[120px] sm:min-w-[140px] bg-slate-700/70 border border-white/10 rounded-xl px-1.5 sm:px-2 py-1.5 backdrop-blur-md shadow-lg">
+          {weatherLoading ? (
+            <div className="flex items-center justify-center h-8">
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white" />
             </div>
-
-            {/* Weather Info aligned to the right */}
-            <div className="flex flex-col flex-1 text-right">
-              <span className="text-slate-300 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider">
-                Weather
-              </span>
-
-              <div className="flex items-center justify-end gap-1 text-slate-400 text-[9px] sm:text-[10px]">
-                <span className="hidden sm:inline">Manolo Fortich</span>
-                <span className="sm:hidden">MF</span>
-                <svg
-                  width="6"
-                  height="6"
-                  className="sm:w-7 sm:h-7"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
+          ) : (
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-slate-600/40 text-lg sm:text-xl shrink-0">
+                {getWeatherIcon(weather?.icon || "")}
               </div>
-
-              <div className="flex items-baseline justify-end gap-1">
-                <span className="text-base sm:text-lg font-black text-white leading-none">
-                  {weather?.temp ?? "--"}°
-                </span>
-                <span className="text-slate-300 text-[9px] sm:text-[10px] hidden sm:inline">
-                  {weather?.condition ?? "N/A"}
-                </span>
+              <div className="flex flex-col flex-1 text-right">
+                <span className="text-slate-300 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider">Weather</span>
+                <div className="flex items-center justify-end gap-1 text-slate-400 text-[9px] sm:text-[10px]">
+                  <span className="hidden sm:inline">Manolo Fortich</span>
+                  <span className="sm:hidden">MF</span>
+                  <svg width="6" height="6" className="sm:w-7 sm:h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+                <div className="flex items-baseline justify-end gap-1">
+                  <span className="text-base sm:text-lg font-black text-white leading-none">{weather?.temp ?? "--"}°</span>
+                  <span className="text-slate-300 text-[9px] sm:text-[10px] hidden sm:inline">{weather?.condition ?? "N/A"}</span>
+                </div>
               </div>
             </div>
-
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
 // ── Ticker ────────────────────────────────────────────────────────────────────
@@ -539,30 +507,12 @@ const PortalDisplay = () => {
 
   const { data: lostData, error: lostError, isLoading: lostLoading } = useGetLostItemsQuery(
     { page: 1, limit: 10, sortBy: "date", sortOrder: "desc" },
-    { 
-      pollingInterval: REFETCH_INTERVAL,
-      refetchOnFocus: true,
-      refetchOnReconnect: true
-    }
+    { pollingInterval: REFETCH_INTERVAL, refetchOnFocus: true, refetchOnReconnect: true }
   );
   const { data: foundData, error: foundError, isLoading: foundLoading } = useGetFoundItemsQuery(
     { page: 1, limit: 10, sortBy: "date", sortOrder: "desc" },
-    { 
-      pollingInterval: REFETCH_INTERVAL,
-      refetchOnFocus: true,
-      refetchOnReconnect: true
-    }
+    { pollingInterval: REFETCH_INTERVAL, refetchOnFocus: true, refetchOnReconnect: true }
   );
-
-  // Debug logging
-  console.log('PortalDisplay Debug:', {
-    lostData: lostData?.data?.length,
-    foundData: foundData?.data?.length,
-    lostError,
-    foundError,
-    lostLoading,
-    foundLoading
-  });
 
   const [slideIndex, setSlideIndex] = useState(0);
 
@@ -587,35 +537,48 @@ const PortalDisplay = () => {
     category: i.category?.name,
   }));
 
-  // Calculate total slides for QR code slide
-  const totalLostSlides = Math.ceil(lostMapped.length / 4);
-  const totalFoundSlides = Math.ceil(foundMapped.length / 4);
-  const totalSlides = totalLostSlides + totalFoundSlides + 1; // +1 for QR code slide
+  const totalLostSlides = Math.max(Math.ceil(lostMapped.length / 4), 1);
+  const totalFoundSlides = Math.max(Math.ceil(foundMapped.length / 4), 1);
+  const totalSlides = totalLostSlides + totalFoundSlides + 1; // +1 for QR slide
 
   const advanceSlide = useCallback(() => {
     setSlideIndex(prev => (prev + 1) % totalSlides);
   }, [totalSlides]);
 
-  useEffect(() => {
-    const slideTimer = setInterval(advanceSlide, SLIDE_DURATION);
-    return () => clearInterval(slideTimer);
-  }, [advanceSlide]);
+  // ✅ Fix: use ReturnType<typeof setTimeout> instead of NodeJS.Timeout
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Show loading state
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    const isQRCodeSlide = slideIndex >= totalLostSlides + totalFoundSlides;
+    const duration = isQRCodeSlide ? 15000 : SLIDE_DURATION;
+
+    timerRef.current = setTimeout(() => {
+      advanceSlide();
+    }, duration);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [slideIndex, totalLostSlides, totalFoundSlides, advanceSlide]);
+
+  const sharedStyles = `
+    html, body, #root {
+      background-color: #0f172a !important;
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+    }
+  `;
+
   if (lostLoading || foundLoading) {
     return (
       <>
-        <style>{`
-          html, body, #root {
-            background-color: #0f172a !important;
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-          }
-        `}</style>
+        <style>{sharedStyles}</style>
         <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
           <div className="text-white text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
             <p className="text-lg">Loading portal data...</p>
           </div>
         </div>
@@ -623,28 +586,20 @@ const PortalDisplay = () => {
     );
   }
 
-  // Show error state
   if (lostError || foundError) {
     return (
       <>
-        <style>{`
-          html, body, #root {
-            background-color: #0f172a !important;
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-          }
-        `}</style>
+        <style>{sharedStyles}</style>
         <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
           <div className="text-white text-center max-w-md px-4">
             <div className="text-red-400 text-6xl mb-4">!</div>
             <h2 className="text-xl font-bold mb-2">Portal Loading Error</h2>
             <p className="text-gray-400 mb-4">
-              {lostError && `Lost items error: ${'message' in lostError ? lostError.message : 'Unknown error'}`}
-              {foundError && `Found items error: ${'message' in foundError ? foundError.message : 'Unknown error'}`}
+              {lostError && `Lost items: ${"message" in lostError ? lostError.message : "Unknown error"}`}
+              {foundError && `Found items: ${"message" in foundError ? foundError.message : "Unknown error"}`}
             </p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
             >
               Refresh Page
@@ -655,27 +610,17 @@ const PortalDisplay = () => {
     );
   }
 
-  // Show empty state
   if (lostItems.length === 0 && foundItems.length === 0) {
     return (
       <>
-        <style>{`
-          html, body, #root {
-            background-color: #0f172a !important;
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-          }
-        `}</style>
+        <style>{sharedStyles}</style>
         <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
           <div className="text-white text-center max-w-md px-4">
             <div className="text-gray-400 text-6xl mb-4">[]</div>
             <h2 className="text-xl font-bold mb-2">No Items Available</h2>
-            <p className="text-gray-400 mb-4">
-              There are currently no lost or found items to display in the portal.
-            </p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <p className="text-gray-400 mb-4">There are currently no lost or found items to display.</p>
+            <button
+              onClick={() => window.location.reload()}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
             >
               Refresh Page
@@ -685,6 +630,8 @@ const PortalDisplay = () => {
       </>
     );
   }
+
+  const isQRSlide = slideIndex >= totalLostSlides + totalFoundSlides;
 
   return (
     <>
@@ -719,14 +666,13 @@ const PortalDisplay = () => {
       <div className="fixed inset-0 bg-slate-900 flex flex-col overflow-hidden select-none">
         <Header />
         <div className="flex-1 grid grid-cols-2 portal-panels min-h-0 divide-x divide-white/5">
-          {/* Show QR code slide when we reach the last slide */}
-          {slideIndex >= totalLostSlides + totalFoundSlides ? (
-            <div className="col-span-2">
+          {isQRSlide ? (
+            <div className="col-span-2 h-full overflow-hidden">
               <QRCodeSlide />
             </div>
           ) : (
             <>
-              <Panel title="Lost Items"  accentColor="red"  items={lostMapped}  slideIndex={slideIndex} total={lostItems.length}  />
+              <Panel title="Lost Items"  accentColor="red"  items={lostMapped}  slideIndex={slideIndex} total={lostItems.length} />
               <Panel title="Found Items" accentColor="blue" items={foundMapped} slideIndex={slideIndex} total={foundItems.length} />
             </>
           )}
