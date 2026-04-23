@@ -76,6 +76,7 @@ router.post("/claims", validateRequest(ItemClaimSchema.createClaim), claimsContr
 router.get("/claims", auth(), claimsController.getClaim);
 router.get("/my/claims", auth(), claimsController.getMyClaim);
 router.put("/claims/:claimId", validateRequest(ItemClaimSchema.updateClaim), auth(), claimsController.updateClaimStatus);
+router.delete("/claims/:claimId", auth(), claimsController.deleteClaim);
 
 ////////////////////////////////////////////////// admin //////////////////////////////////////////////
 router.get("/admin/lostItems", auth(), lostItemController.getAllLostItems);

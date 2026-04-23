@@ -116,6 +116,10 @@ const api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["adminData", "claims", "auditLogs"],
     }),
+    deleteClaim: builder.mutation({
+      query: (claimId: string) => ({ url: `/claims/${claimId}`, method: "DELETE" }),
+      invalidatesTags: ["adminData", "claims", "auditLogs"],
+    }),
 
     // admin stats
     adminStats: builder.query({
@@ -317,6 +321,7 @@ export const {
   useGetAllClaimsQuery,
   useUpdateClaimStatusMutation,
   useUpdateClaimStatusWithNoteMutation,
+  useDeleteClaimMutation,
   useUploadItemImagesMutation,
   useMarkLostItemAsFoundMutation,
   useGetTestimonialsQuery,

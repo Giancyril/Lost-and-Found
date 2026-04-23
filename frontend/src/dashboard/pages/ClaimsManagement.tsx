@@ -3,12 +3,13 @@ import {
   FaEye, FaSearch, FaCheck, FaTimes, FaUser, FaBoxOpen,
   FaHistory, FaClipboardList, FaChevronLeft, FaChevronRight,
   FaEnvelope, FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt,
-  FaTag, FaBolt,
+  FaTag, FaBolt, FaTrash,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
   useGetAllClaimsQuery,
   useUpdateClaimStatusMutation,
+  useDeleteClaimMutation,
   useGetAuditLogsQuery,
   useSendClaimApprovedEmailMutation,
   useGetMatchNotificationsQuery,
@@ -77,6 +78,9 @@ const ClaimsManagement = () => {
   const [emailClaim, setEmailClaim]               = useState<any>(null);
   const [isSendingEmail, setIsSendingEmail]       = useState(false);
   const [claimEmailToAddress, setClaimEmailToAddress] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [claimToDelete, setClaimToDelete]         = useState<any>(null);
+  const [isDeleting, setIsDeleting]               = useState(false);
   const [claimEmailSentIds, setClaimEmailSentIds] = useState<Set<string>>(() => {
     try { const s = localStorage.getItem("claimEmailSentIds"); return s ? new Set<string>(JSON.parse(s)) : new Set<string>(); }
     catch { return new Set<string>(); }
@@ -95,6 +99,7 @@ const ClaimsManagement = () => {
   const { data: matchData, isLoading: matchLoading } = useGetMatchNotificationsQuery({});
   const [updateClaimStatus]                          = useUpdateClaimStatusMutation();
   const [sendClaimApprovedEmail]                     = useSendClaimApprovedEmailMutation();
+  const [deleteClaim]                               = useDeleteClaimMutation();
 
   const claims    = allClaims?.data  || [];
   const auditLogs = auditData?.data  || [];
@@ -165,6 +170,29 @@ const ClaimsManagement = () => {
       setIsEmailModalOpen(false);
     } catch (err: any) { toast.error(err?.data?.message || "Failed"); }
     finally { setIsSendingEmail(false); }
+  };
+  const handleDeleteClaim = (claim: any) => {
+    setClaimToDelete(claim);
+    setIsDeleteModalOpen(true);
+  };
+  const handleDeleteConfirm = async () => {
+    if (!claimToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteClaim(claimToDelete.id).unwrap();
+      toast.success("Claim deleted successfully");
+      setIsDeleteModalOpen(false);
+      setClaimToDelete(null);
+    } catch (err: any) {
+      const errorMessage = err?.data?.message || err?.error || "Failed to delete claim";
+      if (errorMessage.includes("foreign key") || errorMessage.includes("constraint")) {
+        toast.error("Cannot delete approved claim due to existing references. Please reject the claim first.");
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getTimelineIcon = (toStatus: string) => {
@@ -325,6 +353,10 @@ const ClaimsManagement = () => {
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
                             <FaEye size={10} /> Verify
                           </button>
+                          <button onClick={() => handleDeleteClaim(claim)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors">
+                            <FaTrash size={10} /> Delete
+                          </button>
                           <div className="w-[72px] flex justify-center">
                             {claim.status === "APPROVED" ? (
                               claimEmailSentIds.has(claim.id) ? (
@@ -404,7 +436,7 @@ const ClaimsManagement = () => {
                   )}
 
                   {/* Row 4: actions */}
-                  <div className="flex items-center gap-2 pt-0.5">
+                  <div className="flex items-center gap-2 pt-0.5 flex-wrap">
                     {/* Status selector */}
                     <StatusSelect value={claim.status} onChange={v => handleStatusChange(claim.id, v)} />
 
@@ -414,6 +446,14 @@ const ClaimsManagement = () => {
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors"
                     >
                       <FaEye size={10} /> Verify
+                    </button>
+
+                    {/* Delete button */}
+                    <button
+                      onClick={() => handleDeleteClaim(claim)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors"
+                    >
+                      <FaTrash size={9} /> Delete
                     </button>
 
                     {/* Email button — only for APPROVED */}
@@ -907,6 +947,56 @@ const ClaimsManagement = () => {
               <button onClick={handleStatusConfirm} disabled={isStatusLoading}
                 className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
                 {isStatusLoading ? <><Spinner /> Updating...</> : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirmation Modal ── */}
+      {isDeleteModalOpen && claimToDelete && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <FaTrash size={12} className="text-red-500" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-white">Delete Claim</h2>
+                <p className="text-gray-500 text-xs">This action cannot be undone</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-gray-800/60 border border-white/5 rounded-xl mb-4">
+              <img src={claimToDelete.foundItem?.img || "/default-item.png"} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-white text-xs font-semibold truncate">{claimToDelete.foundItem?.foundItemName}</p>
+                {claimToDelete.claimantName && <p className="text-gray-500 text-[10px]">by {claimToDelete.claimantName}</p>}
+              </div>
+              <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(claimToDelete.status)}`}>
+                {claimToDelete.status}
+              </span>
+            </div>
+            {claimToDelete.status === "APPROVED" && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <p className="text-red-400 text-xs text-justify">
+                  This claim is approved. Deleting it may fail due to database constraints. Consider rejecting it first.
+                </p>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <button 
+                onClick={() => { setIsDeleteModalOpen(false); setClaimToDelete(null); }} 
+                disabled={isDeleting}
+                className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDeleteConfirm} 
+                disabled={isDeleting}
+                className="flex-1 bg-red-500/10 hover:bg-red-500 border border-red-500/30 text-red-400 hover:text-white disabled:opacity-50 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+              >
+                {isDeleting ? <><Spinner /> Deleting...</> : <><FaTrash size={10} /> Delete</>}
               </button>
             </div>
           </div>

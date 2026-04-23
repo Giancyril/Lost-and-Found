@@ -108,6 +108,46 @@ const updateClaimStatus = async (
   return result;
 };
 
+const deleteClaim = async (claimId: string) => {
+  const existing = await prisma.claim.findUnique({ 
+    where: { id: claimId },
+    include: { foundItem: true }
+  });
+
+  if (!existing) {
+    throw new Error("Claim not found");
+  }
+
+  // If claim is approved, we need to handle the foreign key constraint
+  if (existing.status === "APPROVED") {
+    // First, update the found item to unclaim it
+    await prisma.foundItem.update({
+      where: { id: existing.foundItemId },
+      data: { isClaimed: false },
+    });
+  }
+
+  // Soft delete the claim
+  const result = await prisma.claim.update({
+    where: { id: claimId },
+    data: { isDeleted: true },
+  });
+
+  // Create audit log for the deletion
+  await prisma.claimAuditLog.create({
+    data: {
+      claimId,
+      action: "DELETED",
+      fromStatus: existing.status,
+      toStatus: "DELETED",
+      performedBy: "Admin",
+      note: "Claim deleted by admin",
+    },
+  });
+
+  return result;
+};
+
 const getAuditLogs = async () => {
   const result = await prisma.claimAuditLog.findMany({
     orderBy: { createdAt: "desc" },
@@ -132,5 +172,6 @@ export const claimsService = {
   getClaim,
   updateClaimStatus,
   getMyClaim,
+  deleteClaim,
   getAuditLogs,
 };

@@ -858,9 +858,6 @@ const FoundItemsPage = () => {
             <div className="flex flex-col gap-3 px-4 sm:px-6 py-4 border-b border-white/5 shrink-0">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
-                  </div>
                   <div className="min-w-0">
                     <h2 className="text-sm font-bold text-white truncate">Log a Found Item</h2>
                     <p className="text-gray-500 text-[11px] mt-0.5 truncate">Record an item recovered on campus</p>

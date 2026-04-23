@@ -79,9 +79,24 @@ const updateClaimStatus = async (req: Request, res: Response, next: NextFunction
   }
 };
 
+const deleteClaim = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await claimsService.deleteClaim(req.params.claimId);
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Claim deleted successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const claimsController = {
   createClaim,
   getClaim,
   updateClaimStatus,
+  deleteClaim,
   getMyClaim,
 };
