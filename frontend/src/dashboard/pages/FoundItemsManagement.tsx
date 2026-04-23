@@ -500,7 +500,7 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
                 <p className="text-gray-400 text-xs">{archivingItem.description}</p>
               </div>
               <div className="bg-orange-500/5 border border-orange-500/15 rounded-xl px-3.5 py-2.5">
-                <p className="text-orange-300/80 text-xs">Archived items are <strong>not deleted</strong> — hidden from public and can be restored from <strong>Archive Log</strong>.</p>
+                <p className="text-orange-300/80 text-xs">Archived items are <strong>not deleted</strong>, hidden from public and can be restored from <strong>Archive Log</strong>.</p>
               </div>
               <div className="flex gap-2">
                 <button onClick={handleArchiveCancel} className="flex-1 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 py-2.5 rounded-xl text-xs font-medium transition-colors">Cancel</button>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   FaArchive, FaSearch, FaUndo, FaTrash,
   FaCalendarAlt, FaMapMarkerAlt, FaExclamationTriangle,
-  FaClock, FaCheckCircle,
+  FaClock, FaCheckCircle, FaTimes,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -38,6 +38,9 @@ const ArchivePage = () => {
   const [restoring, setRestoring]   = useState<string | null>(null);
   const [archiving, setArchiving]   = useState<string | null>(null);
   const [deleting, setDeleting]     = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
   const { data: archivedData, isLoading: archivedLoading, refetch: refetchArchived } =
     useGetArchivedFoundItemsQuery(undefined);
@@ -85,15 +88,32 @@ const ArchivePage = () => {
     finally { setRestoring(null); }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Permanently delete "${name}"? This cannot be undone.`)) return;
-    setDeleting(id);
+  const handleDelete = (item: any) => {
+    setItemToDelete(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return;
+    setIsDeleteLoading(true);
+    setDeleting(itemToDelete.id);
     try {
-      await deleteItem(id).unwrap();
-      toast.success(`"${name}" permanently deleted`);
+      await deleteItem(itemToDelete.id).unwrap();
+      toast.success(`"${itemToDelete.foundItemName}" permanently deleted`);
       refetchArchived();
+      refetchStale();
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
     } catch { toast.error("Failed to delete item"); }
-    finally { setDeleting(null); }
+    finally {
+      setIsDeleteLoading(false);
+      setDeleting(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
   };
 
   const isLoading = activeTab === "stale" ? staleLoading : archivedLoading;
@@ -102,45 +122,44 @@ const ArchivePage = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
+      {/* ── Tabs ── */}
+      <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit">
+        <div
+          role="button"
+          tabIndex={-1}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => handleTabChange("stale")}
+          className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer select-none outline-none ring-0 focus:ring-0 focus:outline-none active:opacity-70 ${
+            activeTab === "stale"
+              ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
+              : "text-gray-500 hover:text-white border border-transparent"
+          }`}
+        >
+          <FaClock size={11} /> Stale Items
+          <span className="ml-1 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
+            {staleItems.length}
+          </span>
+        </div>
 
-      {/* Tabs */}
-<div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit">
-  <div
-    role="button"
-    tabIndex={-1}
-    onMouseDown={(e) => e.preventDefault()}
-    onClick={() => handleTabChange("stale")}
-    className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer select-none outline-none ring-0 focus:ring-0 focus:outline-none active:opacity-70 ${
-      activeTab === "stale"
-        ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-        : "text-gray-500 hover:text-white border border-transparent"
-    }`}
-  >
-    <FaClock size={11} /> Stale Items
-    <span className="ml-1 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
-      {staleItems.length}
-    </span>
-  </div>
+        <div
+          role="button"
+          tabIndex={-1}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => handleTabChange("archived")}
+          className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer select-none outline-none ring-0 focus:ring-0 focus:outline-none active:opacity-70 ${
+            activeTab === "archived"
+              ? "bg-gray-500/10 text-gray-300 border border-gray-500/20"
+              : "text-gray-500 hover:text-white border border-transparent"
+          }`}
+        >
+          <FaArchive size={11} /> Archived
+          <span className="ml-1 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
+            {archivedItems.length}
+          </span>
+        </div>
+      </div>
 
-  <div
-    role="button"
-    tabIndex={-1}
-    onMouseDown={(e) => e.preventDefault()}
-    onClick={() => handleTabChange("archived")}
-    className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer select-none outline-none ring-0 focus:ring-0 focus:outline-none active:opacity-70 ${
-      activeTab === "archived"
-        ? "bg-gray-500/10 text-gray-300 border border-gray-500/20"
-        : "text-gray-500 hover:text-white border border-transparent"
-    }`}
-  >
-    <FaArchive size={11} /> Archived
-    <span className="ml-1 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
-      {archivedItems.length}
-    </span>
-  </div>
-</div>
-
-      {/* Info banner */}
+      {/* ── Info banner ── */}
       {activeTab === "stale" && (
         <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl px-4 py-3 flex items-start gap-3">
           <FaExclamationTriangle className="text-orange-400 shrink-0 mt-0.5" size={13} />
@@ -158,7 +177,7 @@ const ArchivePage = () => {
         </div>
       )}
 
-      {/* Search */}
+      {/* ── Search ── */}
       <div className="relative">
         <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
         <input
@@ -169,7 +188,7 @@ const ArchivePage = () => {
         />
       </div>
 
-      {/* Content */}
+      {/* ── Content ── */}
       {isLoading ? (
         <div className="space-y-3">
           {[1,2,3].map(i => (
@@ -192,7 +211,7 @@ const ArchivePage = () => {
         </div>
       ) : (
         <>
-          {/* Mobile cards */}
+          {/* ── Mobile cards ── */}
           <div className="space-y-3 md:hidden">
             {items.map((item: any) => {
               const daysOld = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));
@@ -256,7 +275,7 @@ const ArchivePage = () => {
                           {restoring === item.id ? "Restoring..." : "Restore"}
                         </button>
                         <button
-                          onClick={() => handleDelete(item.id, item.foundItemName)}
+                          onClick={() => handleDelete(item)}
                           disabled={deleting === item.id}
                           className="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
                         >
@@ -270,7 +289,7 @@ const ArchivePage = () => {
             })}
           </div>
 
-          {/* Desktop table */}
+          {/* ── Desktop table ── */}
           <div className="hidden md:block bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
             <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-white/5 text-[11px] uppercase tracking-widest text-gray-600 font-medium">
               <div className="col-span-3">Item</div>
@@ -320,7 +339,6 @@ const ArchivePage = () => {
                         {daysOld}d
                       </span>
                     </div>
-                    {/* ── Actions column — widened to col-span-1, buttons now wrap nicely ── */}
                     <div className="col-span-2 flex items-center gap-1.5">
                       {activeTab === "stale" ? (
                         <button
@@ -344,7 +362,7 @@ const ArchivePage = () => {
                             {restoring === item.id ? "..." : "Restore"}
                           </button>
                           <button
-                            onClick={() => handleDelete(item.id, item.foundItemName)}
+                            onClick={() => handleDelete(item)}
                             disabled={deleting === item.id}
                             title="Permanently delete"
                             className="flex items-center gap-1 px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
@@ -362,6 +380,81 @@ const ArchivePage = () => {
           </div>
         </>
       )}
+
+      {/* ── Delete Confirmation Modal ──
+           Placed OUTSIDE the items ternary so it stays mounted
+           while the delete API call is in-flight.               */}
+      {isDeleteModalOpen && itemToDelete && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                  <FaTrash size={11} className="text-red-400" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-white">Delete Item</h2>
+                  <p className="text-gray-500 text-[11px]">This action cannot be undone</p>
+                </div>
+              </div>
+              <button
+                onClick={handleDeleteCancel}
+                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+              >
+                <FaTimes size={12} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="bg-gray-800/60 border border-white/5 rounded-xl p-3 space-y-1.5">
+                <p className="text-white text-sm font-semibold truncate">{itemToDelete.foundItemName}</p>
+                <p className="text-gray-400 text-xs truncate">{itemToDelete.description}</p>
+                <div className="flex items-center gap-3 pt-1 text-[10px] text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <FaMapMarkerAlt size={8} className="text-blue-400" />
+                    {itemToDelete.location}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <FaCalendarAlt size={8} className="text-emerald-400" />
+                    {formatDate(itemToDelete.createdAt)}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-red-500/5 border border-red-500/15 rounded-xl px-3.5 py-2.5">
+                <p className="text-red-300/80 text-xs text-justify">
+                  This will <strong>permanently remove</strong> the item and all associated data. This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDeleteCancel}
+                  disabled={isDeleteLoading}
+                  className="flex-1 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 disabled:opacity-50 py-2.5 rounded-xl text-xs font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={isDeleteLoading}
+                  className="flex-1 bg-red-500/10 hover:bg-red-500 border border-red-500/30 text-red-400 hover:text-white disabled:opacity-50 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+                >
+                  {isDeleteLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <FaTrash size={10} />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
