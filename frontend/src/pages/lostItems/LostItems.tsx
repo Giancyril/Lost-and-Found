@@ -7,6 +7,7 @@ import {
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
   FaTh, FaList, FaCheck, FaChevronDown, FaShare,
+  FaMoneyBillWave,
   FaCopy, FaFire, FaStar, FaFacebook, FaFacebookMessenger,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
@@ -32,6 +33,7 @@ const getCategoryIcon = (name: string) => {
   if (n.includes("camera") || n.includes("photo"))                         return <FaCamera   size={9} className="text-violet-400" />;
   if (n.includes("watch") || n.includes("clock"))                          return <FaClock    size={9} className="text-gray-300" />;
   if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask")) return <FaTint size={9} className="text-cyan-400" />;
+  if (n.includes("money") || n.includes("cash") || n.includes("bill") || n.includes("currency")) return <FaMoneyBillWave size={9} className="text-green-400" />;
   return <FaTag size={9} className="text-blue-400" />;
 };
 

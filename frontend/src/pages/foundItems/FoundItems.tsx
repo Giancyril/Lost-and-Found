@@ -8,7 +8,7 @@ import {
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
   FaClipboardList, FaUser, FaEnvelope, FaCheck, FaChevronDown,
-  FaQrcode, FaSpinner, FaUserCheck,
+  FaQrcode, FaSpinner, FaUserCheck, FaMoneyBillWave,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -82,6 +82,7 @@ const getCategoryIcon = (name: string) => {
   if (n.includes("camera") || n.includes("photo"))                          return <FaCamera     size={9} className="text-violet-400" />;
   if (n.includes("watch") || n.includes("clock"))                           return <FaClock      size={9} className="text-gray-300" />;
   if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask")) return <FaTint size={9} className="text-cyan-400" />;
+  if (n.includes("money") || n.includes("cash") || n.includes("bill") || n.includes("currency")) return <FaMoneyBillWave size={9} className="text-green-400" />;
   return <FaTag size={9} className="text-blue-400" />;
 };
 
@@ -551,14 +552,14 @@ const FoundItemsPage = () => {
 
   const onAddSubmit = async (data: any) => {
     if (!addSelectedMenucategoryId) return;
-    if (!addSelectedFile && !addPreview) {
+    if (!addSelectedFile && !addPreview && !(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency"))) {
       setAddPhotoError("A photo of the item is required.");
       return;
     }
     setAddPhotoError("");
     try {
       const res: any = await createFoundItem({
-        img: addPreview || "",
+        img: (addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? "/money.jpg" : (addPreview || ""),
         categoryId: addSelectedMenucategoryId,
         foundItemName: data.foundItemName,
         description: data.description,
@@ -903,12 +904,6 @@ const FoundItemsPage = () => {
               )}
 
               <form id="add-found-form" onSubmit={handleAddSubmit(onAddSubmit)} className="space-y-4">
-                <ItemMatchSuggestions
-                  categoryId={addSelectedMenucategoryId}
-                  categoryName={addSelectedMenu}
-                  itemName={(document.querySelector('input[name="foundItemName"]') as HTMLInputElement)?.value ?? ""}
-                  location={(document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? ""}
-                />
 
                 {/* ── Reporter Information ── */}
                 <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
@@ -1005,6 +1000,13 @@ const FoundItemsPage = () => {
                 )}
 
                 {/* ── Where Found + Date Found ── */}
+                <ItemMatchSuggestions
+                  categoryId={addSelectedMenucategoryId}
+                  categoryName={addSelectedMenu}
+                  itemName={(document.querySelector('input[name="foundItemName"]') as HTMLInputElement)?.value ?? ""}
+                  location={(document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? ""}
+                />
+
                 <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   {/* ── Where Found — now using LocationAutocomplete ── */}
                   <div className="flex flex-col gap-1.5">
@@ -1054,7 +1056,7 @@ const FoundItemsPage = () => {
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                     Item Photo <span className="text-red-400">*</span>
                   </label>
-                  {!addPreview ? (
+                  {!addPreview && !(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? (
                     <div
                       className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
                         ${addPhotoError ? "border-red-500/60 bg-red-900/5" : addIsDragging ? "border-blue-500 bg-blue-900/10" : "border-gray-700 bg-gray-800/40 hover:border-blue-500/60 hover:bg-gray-800/70"}`}
@@ -1077,15 +1079,15 @@ const FoundItemsPage = () => {
                   ) : (
                     <div className="rounded-xl overflow-hidden border border-gray-700 bg-gray-800">
                       <div className="relative group">
-                        <img src={addPreview} alt="Preview" className="w-full max-h-44 object-cover" />
+                        <img src={(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? "/money.jpg" : addPreview} alt="Preview" className="w-full max-h-44 object-cover" />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/55 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
                           <button type="button" onClick={() => addFileInputRef.current?.click()} className="bg-white/90 hover:bg-white text-gray-900 text-xs font-semibold px-4 py-2 rounded-lg">Change</button>
                           <button type="button" onClick={() => { setAddSelectedFile(null); setAddPreview(""); }} className="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-4 py-2 rounded-lg">Remove</button>
                         </div>
                       </div>
                       <div className="px-4 py-2.5 border-t border-gray-700 flex items-center justify-between">
-                        <span className="text-xs text-gray-400 truncate">{addSelectedFile?.name}</span>
-                        <span className="text-xs text-gray-500 ml-3 shrink-0">{addSelectedFile ? (addSelectedFile.size < 1024 * 1024 ? (addSelectedFile.size / 1024).toFixed(1) + " KB" : (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB") : ""}</span>
+                        <span className="text-xs text-gray-400 truncate">{(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? "money.jpg (Default)" : (addSelectedFile?.name || "")}</span>
+                        <span className="text-xs text-gray-500 ml-3 shrink-0">{(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? "Default image" : (addSelectedFile ? (addSelectedFile.size < 1024 * 1024 ? (addSelectedFile.size / 1024).toFixed(1) + " KB" : (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB") : "")}</span>
                       </div>
                       <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleAddFileChange(e.target.files)} />
                     </div>
@@ -1110,7 +1112,7 @@ const FoundItemsPage = () => {
             {/* ── Modal footer ── */}
             <div className="px-6 py-4 border-t border-white/5 flex gap-3 shrink-0 bg-gray-900 rounded-b-2xl">
               <button type="button" onClick={closeAddModal} disabled={isBusy} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
-              <button type="submit" form="add-found-form" disabled={isBusy || (!addSelectedFile && !addPreview)}
+              <button type="submit" form="add-found-form" disabled={isBusy || (!addSelectedFile && !addPreview && !(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")))}
                 className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                 {isBusy ? (<><Spinner size="sm" /> Submitting…</>) : "Submit Found Item"}
               </button>

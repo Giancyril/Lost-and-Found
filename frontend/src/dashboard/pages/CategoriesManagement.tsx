@@ -5,7 +5,7 @@ import {
   FaWallet, FaHeadphones, FaKey, FaGlasses, FaUmbrella, FaFootballBall,
   FaLaptop, FaTabletAlt, FaCamera, FaClock, FaRing, FaTag,
   FaPlug, FaUsb, FaTint, FaPaintBrush, FaMusic, FaUtensils,
-  FaCalculator, FaShapes,
+  FaCalculator, FaShapes, FaMoneyBillWave,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -48,6 +48,7 @@ const getCategoryIcon = (name: string) => {
   if (n.includes("music") || n.includes("instrument") || n.includes("guitar")) return { icon: <FaMusic size={13} />, color: "text-fuchsia-400", bg: "bg-fuchsia-500/10 border-fuchsia-500/20" };
   if (n.includes("food") || n.includes("lunch") || n.includes("container")) return { icon: <FaUtensils size={13} />, color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20" };
   if (n.includes("calculat")) return { icon: <FaCalculator size={13} />, color: "text-lime-400", bg: "bg-lime-500/10 border-lime-500/20" };
+  if (n.includes("money") || n.includes("cash") || n.includes("bill") || n.includes("currency")) return { icon: <FaMoneyBillWave size={13} />, color: "text-green-400", bg: "bg-green-500/10 border-green-500/20" };
   if (n.includes("other")) return { icon: <FaShapes size={13} />, color: "text-gray-400", bg: "bg-gray-500/10 border-gray-500/20" };
   return { icon: <FaTag size={13} />, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" };
 };
