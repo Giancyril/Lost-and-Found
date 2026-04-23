@@ -177,38 +177,28 @@ const Panel = ({
   const realPairs = chunk(items, 2);
   const n = realPairs.length;
 
-  // pos is 1-based into extendedPairs: [cloneLast, ...real, cloneFirst]
-  // real slides occupy positions 1..n
   const [pos, setPos]           = useState(1);
   const [animated, setAnimated] = useState(true);
   const isSnapping              = useRef(false);
 
-  // Whenever the parent advances slideIndex, move forward by exactly 1
   const prevSlideIndex = useRef(slideIndex);
   useEffect(() => {
     if (n === 0) return;
     if (slideIndex === prevSlideIndex.current) return;
     prevSlideIndex.current = slideIndex;
-
     setAnimated(true);
-    setPos(p => p + 1);           // always move right
+    setPos(p => p + 1);
   }, [slideIndex, n]);
 
-  // After the CSS transition ends, silently snap clones back to their real twin
   const handleTransitionEnd = useCallback(() => {
     if (n === 0 || isSnapping.current) return;
-
     setPos(p => {
-      // Landed on cloneFirst (pos = n+1) → snap to real first (pos = 1)
-      // Landed on cloneLast  (pos = 0)   → snap to real last  (pos = n)
       if (p === n + 1 || p === 0) {
         isSnapping.current = true;
         return p === n + 1 ? 1 : n;
       }
       return p;
     });
-
-    // Turn animation off for the snap frame, then re-enable
     setAnimated(false);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -218,49 +208,30 @@ const Panel = ({
     });
   }, [n]);
 
-  if (n === 0) {
-    return (
-      <div className="flex flex-col h-full bg-slate-900">
-        <div className={`flex items-center justify-between px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 border-b ${accent.border} bg-slate-800/50`}>
-          <div className="flex-1">
-            <h2 className={`text-sm sm:text-base md:text-lg font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] ${accent.text}`}>{title}</h2>
-            <p className="text-slate-300 text-xs sm:text-sm font-semibold leading-tight mt-1.5 max-w-[95%]">
-              {accentColor === "red"
-                ? "Reported Missing: These items are not currently held at the SAS Office"
-                : "Recovered Items: These are held at the SAS Office and ready for claim"}
-            </p>
-            <p className="text-slate-500 text-[10px] sm:text-xs mt-1 font-medium">0 items on record</p>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center opacity-30">
-          <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-slate-500" strokeWidth="1">
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-          </svg>
-        </div>
-      </div>
-    );
-  }
-
-  // dot indicator: pos 1..n maps to real index 0..n-1, with wraparound for clones
+  // dot indicator
   const dotIdx = ((pos - 1 + n) % n + n) % n;
-
-  // Extended slides: [cloneLast, real[0], ..., real[n-1], cloneFirst]
-  const extendedPairs = [realPairs[n - 1], ...realPairs, realPairs[0]];
+  const extendedPairs = n > 0 ? [realPairs[n - 1], ...realPairs, realPairs[0]] : [];
 
   return (
-    <div className="flex flex-col h-full bg-slate-900">
-      {/* Header */}
-      <div className={`flex items-center justify-between px-2 sm:px-3 md:px-4 py-2 sm:py-3 md:py-4 border-b ${accent.border} bg-slate-800/50`}>
-        <div>
-          <h2 className={`text-xs sm:text-sm md:text-base font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] ${accent.text}`}>{title}</h2>
-          <p className="text-slate-300 text-xs font-semibold leading-tight mt-1.5 max-w-[95%]">
+    <div className="flex flex-col h-full bg-slate-900 overflow-hidden">
+      {/* Fixed Height Header to prevent overlap */}
+      <div className={`flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b ${accent.border} bg-slate-800/50 h-[80px] sm:h-[100px] shrink-0`}>
+        <div className="flex-1 min-w-0 pr-4">
+          <h2 className={`text-xs sm:text-sm md:text-base font-black uppercase tracking-widest ${accent.text} truncate`}>
+            {title}
+          </h2>
+          <p className="text-slate-300 text-[10px] sm:text-xs font-semibold leading-tight mt-1 line-clamp-1">
             {accentColor === "red"
-              ? "Reported Missing: These items are not currently held at the SAS Office"
-              : "Recovered Items: These are held at the SAS Office and ready for claim"}
+              ? "Reported Missing: Not held at SAS Office"
+              : "Recovered Items: Held at SAS Office"}
           </p>
-          <p className="text-slate-500 text-[10px] mt-1 font-medium">{total} item{total !== 1 ? "s" : ""} on record</p>
+          <p className="text-slate-500 text-[9px] sm:text-[10px] mt-1 font-bold uppercase tracking-tight">
+            {total} {total === 1 ? "item" : "items"} on record
+          </p>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0 ml-4">
+        
+        {/* Pagination Dots */}
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {realPairs.map((_, i) => (
             <div key={i} className={`rounded-full transition-all duration-300 ${
               i === dotIdx
@@ -273,25 +244,34 @@ const Panel = ({
 
       {/* Carousel track */}
       <div className="flex-1 min-h-0 overflow-hidden relative">
-        <div
-          className="absolute inset-0 flex"
-          style={{
-            width: `${extendedPairs.length * 100}%`,
-            transform: `translateX(${-(pos / extendedPairs.length) * 100}%)`,
-            transition: animated ? "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
-          }}
-          onTransitionEnd={handleTransitionEnd}
-        >
-          {extendedPairs.map((pair, i) => (
-            <div
-              key={i}
-              className="p-2 sm:p-3 md:p-5"
-              style={{ width: `${100 / extendedPairs.length}%`, flexShrink: 0 }}
-            >
-              <SlideContent pair={pair} accentColor={accentColor} accent={accent} />
-            </div>
-          ))}
-        </div>
+        {n === 0 ? (
+           <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20">
+              <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+              </svg>
+              <p className="mt-2 text-sm">No records found</p>
+           </div>
+        ) : (
+          <div
+            className="absolute inset-0 flex"
+            style={{
+              width: `${extendedPairs.length * 100}%`,
+              transform: `translateX(${-(pos / extendedPairs.length) * 100}%)`,
+              transition: animated ? "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
+            }}
+            onTransitionEnd={handleTransitionEnd}
+          >
+            {extendedPairs.map((pair, i) => (
+              <div
+                key={i}
+                className="p-2 sm:p-3 md:p-4 lg:p-5"
+                style={{ width: `${100 / extendedPairs.length}%`, flexShrink: 0 }}
+              >
+                <SlideContent pair={pair} accentColor={accentColor} accent={accent} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
