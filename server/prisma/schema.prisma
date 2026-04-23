@@ -18,13 +18,13 @@ model User {
   role          userRole        @default(USER)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
-  foundItem     FoundItem[]
-  claim         Claim[]
   userImg       String          @default("")
   isDeleted     Boolean         @default(false)
   deletedAt     DateTime?
-  LostItem      LostItem[]
   ClaimAuditLog ClaimAuditLog[]
+  claim         Claim[]
+  foundItem     FoundItem[]
+  LostItem      LostItem[]
 
   @@map("users")
 }
@@ -41,52 +41,50 @@ model ItemCategory {
 }
 
 model FoundItem {
-  id            String        @id @default(uuid())
-  userId        String?
-  img           String        @default("")
-  user          User?         @relation(fields: [userId], references: [id])
-  categoryId    String
-  category      ItemCategory? @relation(fields: [categoryId], references: [id])
-  foundItemName String
-  description   String
-  location      String
-  date          DateTime      @default(now())
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  claim         Claim[]
-  claimProcess  String        @default("")
-  isClaimed     Boolean       @default(false)
-  isDeleted     Boolean       @default(false)
-  deletedAt     DateTime?
-  reporterName  String        @default("")
-  schoolEmail   String        @default("") 
-  isArchived    Boolean       @default(false)  
-  archivedAt    DateTime?                       
-
+  id                 String              @id @default(uuid())
+  userId             String?
+  img                String              @default("")
+  categoryId         String
+  foundItemName      String
+  description        String
+  location           String
+  date               DateTime            @default(now())
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  claimProcess       String              @default("")
+  isClaimed          Boolean             @default(false)
+  isDeleted          Boolean             @default(false)
+  deletedAt          DateTime?
+  reporterName       String              @default("")
+  archivedAt         DateTime?
+  isArchived         Boolean             @default(false)
+  schoolEmail        String              @default("")
+  claim              Claim[]
+  category           ItemCategory        @relation(fields: [categoryId], references: [id])
+  user               User?               @relation(fields: [userId], references: [id])
   matchNotifications MatchNotification[]
 
   @@map("foundItems")
 }
 
 model LostItem {
-  id           String        @id @default(uuid())
-  userId       String?
-  lostItemName String
-  categoryId   String
-  img          String        @default("")
-  description  String
-  location     String
-  date         DateTime
-  category     ItemCategory? @relation(fields: [categoryId], references: [id])
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  isFound      Boolean       @default(false)
-  isDeleted    Boolean       @default(false)
-  deletedAt    DateTime?
-  user         User?         @relation(fields: [userId], references: [id])
-  reporterName String        @default("")
-  schoolEmail  String        @default("")
-
+  id                 String              @id @default(uuid())
+  userId             String?
+  lostItemName       String
+  categoryId         String
+  img                String              @default("")
+  description        String
+  location           String
+  date               DateTime
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  isFound            Boolean             @default(false)
+  isDeleted          Boolean             @default(false)
+  deletedAt          DateTime?
+  reporterName       String              @default("")
+  schoolEmail        String              @default("")
+  category           ItemCategory        @relation(fields: [categoryId], references: [id])
+  user               User?               @relation(fields: [userId], references: [id])
   matchNotifications MatchNotification[]
 
   @@map("lostItems")
@@ -106,9 +104,9 @@ model Claim {
   schoolEmail            String          @default("")
   createdAt              DateTime        @default(now())
   updatedAt              DateTime        @updatedAt
-  user                   User?           @relation(fields: [userId], references: [id])
-  foundItem              FoundItem       @relation(fields: [foundItemId], references: [id])
   auditLogs              ClaimAuditLog[]
+  foundItem              FoundItem       @relation(fields: [foundItemId], references: [id])
+  user                   User?           @relation(fields: [userId], references: [id])
 
   @@map("claims")
 }
@@ -116,15 +114,15 @@ model Claim {
 model ClaimAuditLog {
   id              String   @id @default(uuid())
   claimId         String
-  claim           Claim    @relation(fields: [claimId], references: [id])
   action          String
   fromStatus      String
   toStatus        String
   performedBy     String   @default("Admin")
   performedById   String?
-  performedByUser User?    @relation(fields: [performedById], references: [id])
   note            String   @default("")
   createdAt       DateTime @default(now())
+  claim           Claim    @relation(fields: [claimId], references: [id])
+  performedByUser User?    @relation(fields: [performedById], references: [id])
 
   @@map("claimAuditLogs")
 }
@@ -151,10 +149,10 @@ model BulletinPost {
 model BulletinTip {
   id             String       @id @default(uuid())
   bulletinPostId String
-  bulletinPost   BulletinPost @relation(fields: [bulletinPostId], references: [id])
   location       String       @default("")
   details        String
   createdAt      DateTime     @default(now())
+  bulletinPost   BulletinPost @relation(fields: [bulletinPostId], references: [id])
 
   @@map("bulletinTips")
 }
@@ -164,9 +162,8 @@ model MatchNotification {
   lostItemId  String
   foundItemId String
   sentAt      DateTime  @default(now())
-
-  lostItem    LostItem  @relation(fields: [lostItemId], references: [id])
   foundItem   FoundItem @relation(fields: [foundItemId], references: [id])
+  lostItem    LostItem  @relation(fields: [lostItemId], references: [id])
 
   @@unique([lostItemId, foundItemId])
   @@map("matchNotifications")
