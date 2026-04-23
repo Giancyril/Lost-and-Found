@@ -250,18 +250,17 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
     if (navigator.share) {
       navigator.share({
         title: `Lost: ${item?.lostItemName ?? "Unknown item"}`,
-        text: message,
         url: shareUrl,
       })
       .then(() => console.log('Web Share successful'))
       .catch((error) => {
         console.log('Web Share failed, trying Facebook URL:', error);
-        // Fallback to Facebook URL
+        // Fallback to Facebook URL (no quote to avoid JS conflicts)
         const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
         window.open(fbUrl, '_blank', 'width=600,height=400');
       });
     } else {
-      // Fallback for browsers without Web Share API
+      // Fallback for browsers without Web Share API (no quote to avoid JS conflicts)
       const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
       console.log('Facebook URL:', fbUrl);
       window.open(fbUrl, '_blank', 'width=600,height=400');
