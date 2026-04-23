@@ -246,13 +246,26 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
     console.log('Sharing URL:', shareUrl);
     console.log('Sharing message:', message);
     
-    // Simplified Facebook share to avoid Relay/Comet issues
-    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(message)}`;
-    
-    console.log('Facebook URL:', fbUrl);
-    
-    // Use simplified approach to avoid Suspense boundary
-    window.open(fbUrl, '_blank', 'width=600,height=400');
+    // Try Web Share API first (best for mobile/desktop)
+    if (navigator.share) {
+      navigator.share({
+        title: `Lost: ${item?.lostItemName ?? "Unknown item"}`,
+        text: message,
+        url: shareUrl,
+      })
+      .then(() => console.log('Web Share successful'))
+      .catch((error) => {
+        console.log('Web Share failed, trying Facebook URL:', error);
+        // Fallback to Facebook URL
+        const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        window.open(fbUrl, '_blank', 'width=600,height=400');
+      });
+    } else {
+      // Fallback for browsers without Web Share API
+      const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+      console.log('Facebook URL:', fbUrl);
+      window.open(fbUrl, '_blank', 'width=600,height=400');
+    }
   };
 
   const handleMessengerShare = () => {
