@@ -7,7 +7,7 @@ import {
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
   FaTh, FaList, FaCheck, FaChevronDown, FaShare,
-  FaCopy, FaFire, FaStar,
+  FaCopy, FaFire, FaStar, FaFacebook, FaFacebookMessenger,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -228,7 +228,7 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
     `Date lost: ${dateStr}\n` +
     (item?.description ? `Description: ${item.description}\n` : "") +
     (tipCount > 0 ? `Community sightings: ${tipCount}\n` : "") +
-    `\nIf you've seen this item, please submit a sighting on the NBSC Lost & Found board or contact the SAS office.`;
+    `\nIf you've seen this item, please submit a sighting on the NBSC Lost & Found board or visit the SAS office.`;
 
   const handleCopy = async () => {
     try {
@@ -241,15 +241,38 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
     }
   };
 
+  const handleFacebookShare = () => {
+    const shareUrl = window.location.href;
+    console.log('Sharing URL:', shareUrl);
+    console.log('Sharing message:', message);
+    
+    // Try different Facebook share approaches
+    const fbUrl1 = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(message)}`;
+    const fbUrl2 = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&t=${encodeURIComponent(`Lost: ${item?.lostItemName ?? "Unknown item"}`)}&d=${encodeURIComponent(message)}`;
+    
+    console.log('Facebook URL 1:', fbUrl1);
+    console.log('Facebook URL 2:', fbUrl2);
+    
+    // Try the second approach with title parameter
+    window.open(fbUrl2, '_blank', 'width=600,height=400');
+  };
+
+  const handleMessengerShare = () => {
+    const shareUrl = window.location.href;
+    console.log('Messenger sharing URL:', shareUrl);
+    console.log('Messenger sharing message:', message);
+    
+    const messengerUrl = `https://www.facebook.com/dialog/send?link=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(message)}`;
+    console.log('Messenger URL:', messengerUrl);
+    window.open(messengerUrl, '_blank', 'width=600,height=400');
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl"
         style={{ borderTop: "2px solid #3b82f6" }}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-              <FaShare size={12} className="text-blue-400" />
-            </div>
             <div>
               <h3 className="text-white font-bold text-sm">Share this Report</h3>
               <p className="text-gray-500 text-[10px] mt-0.5">Paste in Messenger, Viber, or any chat</p>
@@ -288,27 +311,32 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
             </div>
           </div>
 
-          <div className="flex items-start gap-2.5 p-3 bg-blue-500/5 border border-blue-500/15 rounded-xl">
-            <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-blue-400 text-[9px] font-black">i</span>
-            </div>
-            <p className="text-[10px] text-blue-300/70 leading-relaxed">
-              Click <strong className="text-blue-400">Copy Message</strong> then paste directly into Messenger, Viber, Telegram, or any group chat to spread the word.
-            </p>
-          </div>
+          
 
-          <div className="flex gap-2">
-            <button onClick={onClose}
-              className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">
-              Cancel
-            </button>
-            <button onClick={handleCopy}
-              className={`flex-1 py-2.5 flex items-center justify-center gap-2 text-xs font-bold rounded-xl transition-all
-                ${copied
-                  ? "bg-green-600/80 border border-green-500/30 text-white"
-                  : "bg-blue-600 hover:bg-blue-500 text-white"}`}>
-              {copied ? <><FaCheckCircle size={11} /> Copied!</> : <><FaCopy size={11} /> Copy Message</>}
-            </button>
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={handleFacebookShare}
+                className="flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 border border-blue-500/30 text-white text-xs font-bold rounded-xl transition-all">
+                <FaFacebook size={12} /> Facebook
+              </button>
+              <button onClick={handleMessengerShare}
+                className="flex items-center justify-center gap-2 py-2.5 bg-blue-500 hover:bg-blue-600 border border-blue-500/30 text-white text-xs font-bold rounded-xl transition-all">
+                <FaFacebookMessenger size={12} /> Messenger
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={onClose}
+                className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleCopy}
+                className={`flex-1 py-2.5 flex items-center justify-center gap-2 text-xs font-bold rounded-xl transition-all
+                  ${copied
+                    ? "bg-green-600/80 border border-green-500/30 text-white"
+                    : "bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white"}`}>
+                {copied ? <><FaCheckCircle size={11} /> Copied!</> : <><FaCopy size={11} /> Copy Message</>}
+              </button>
+            </div>
           </div>
         </div>
       </div>
