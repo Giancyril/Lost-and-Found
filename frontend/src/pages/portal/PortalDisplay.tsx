@@ -297,6 +297,161 @@ const Panel = ({
   );
 };
 
+// ── Header Component ─────────────────────────────────────────────────────────────
+const Header = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [weather, setWeather] = useState<{ temp: number; condition: string; icon: string } | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fetch weather data (using OpenWeatherMap API as example)
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        // Note: In production, you should use environment variables for API keys
+        // This is a demo implementation - you'll need to replace with actual API key and location
+        const response = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=Manila&appid=YOUR_API_KEY&units=metric`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Weather API unavailable');
+        }
+        
+        const data = await response.json();
+        setWeather({
+          temp: Math.round(data.main.temp),
+          condition: data.weather[0].main,
+          icon: data.weather[0].icon
+        });
+      } catch (error) {
+        console.log('Weather data unavailable, using fallback');
+        // Fallback weather data
+        setWeather({
+          temp: 28,
+          condition: 'Partly Cloudy',
+          icon: '02d'
+        });
+      } finally {
+        setWeatherLoading(false);
+      }
+    };
+
+    fetchWeather();
+    // Refresh weather every 10 minutes
+    const weatherTimer = setInterval(fetchWeather, 600000);
+    return () => clearInterval(weatherTimer);
+  }, []);
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit',
+      hour12: true 
+    });
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const getWeatherIcon = (icon: string) => {
+    const iconMap: { [key: string]: string } = {
+      '01d': '☀️', '01n': '🌙',
+      '02d': '⛅', '02n': '☁️',
+      '03d': '☁️', '03n': '☁️',
+      '04d': '☁️', '04n': '☁️',
+      '09d': '🌧️', '09n': '🌧️',
+      '10d': '🌦️', '10n': '🌧️',
+      '11d': '⛈️', '11n': '⛈️',
+      '13d': '❄️', '13n': '❄️',
+      '50d': '🌫️', '50n': '🌫️'
+    };
+    return iconMap[icon] || '🌡️';
+  };
+
+  return (
+    <div className="h-16 sm:h-18 md:h-20 bg-slate-800 border-b border-white/10 flex items-center justify-between px-4 sm:px-6 md:px-8 shrink-0">
+      {/* Left side - SAS Lost and Found */}
+      <div className="flex items-center gap-3">
+        <img 
+          src="/sas lost and found logo.png" 
+          alt="SAS Lost and Found Logo" 
+          className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain"
+          onError={(e) => {
+            // Fallback to original SVG if image fails to load
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            const fallback = target.nextElementSibling as HTMLElement;
+            if (fallback) fallback.style.display = 'flex';
+          }}
+        />
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-blue-500 rounded-lg flex items-center justify-center" style={{display: 'none'}}>
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-white" strokeWidth="2">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        </div>
+        <div>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-tight">
+            SAS Lost and Found
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 font-medium">
+            NBSC Student Affairs Office
+          </p>
+        </div>
+      </div>
+
+      {/* Right side - Time, Date, and Weather */}
+      <div className="flex items-center gap-4 sm:gap-6 md:gap-8">
+        {/* Time */}
+        <div className="text-right">
+          <div className="text-lg sm:text-xl md:text-2xl font-bold text-white tabular-nums">
+            {formatTime(currentTime)}
+          </div>
+          <div className="text-xs sm:text-sm text-slate-400 font-medium">
+            {formatDate(currentTime)}
+          </div>
+        </div>
+
+        {/* Weather */}
+        <div className="flex items-center gap-2 bg-slate-700/50 px-3 py-2 rounded-lg border border-white/5">
+          {weatherLoading ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-b border-white"></div>
+          ) : weather ? (
+            <>
+              <span className="text-xl sm:text-2xl">{getWeatherIcon(weather.icon)}</span>
+              <div className="text-right">
+                <div className="text-sm sm:text-base font-bold text-white">
+                  {weather.temp}°C
+                </div>
+                <div className="text-xs text-slate-400">
+                  {weather.condition}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-xs text-slate-500">Weather unavailable</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Ticker ────────────────────────────────────────────────────────────────────
 const Ticker = ({ lostCount, foundCount }: { lostCount: number; foundCount: number }) => {
   const items = [
@@ -329,24 +484,20 @@ const PortalDisplay = () => {
   const SLIDE_DURATION = 5000;
   const REFETCH_INTERVAL = 60000;
 
-  const { data: lostData, error: lostError, isLoading: lostLoading, refetch: refetchLost } = useGetLostItemsQuery(
+  const { data: lostData, error: lostError, isLoading: lostLoading } = useGetLostItemsQuery(
     { page: 1, limit: 50, sortBy: "date", sortOrder: "desc" },
     { 
       pollingInterval: REFETCH_INTERVAL,
       refetchOnFocus: true,
-      refetchOnReconnect: true,
-      retry: 3,
-      retryDelay: 1000
+      refetchOnReconnect: true
     }
   );
-  const { data: foundData, error: foundError, isLoading: foundLoading, refetch: refetchFound } = useGetFoundItemsQuery(
+  const { data: foundData, error: foundError, isLoading: foundLoading } = useGetFoundItemsQuery(
     { page: 1, limit: 50, sortBy: "date", sortOrder: "desc" },
     { 
       pollingInterval: REFETCH_INTERVAL,
       refetchOnFocus: true,
-      refetchOnReconnect: true,
-      retry: 3,
-      retryDelay: 1000
+      refetchOnReconnect: true
     }
   );
 
@@ -431,8 +582,8 @@ const PortalDisplay = () => {
             <div className="text-red-400 text-6xl mb-4">!</div>
             <h2 className="text-xl font-bold mb-2">Portal Loading Error</h2>
             <p className="text-gray-400 mb-4">
-              {lostError && `Lost items error: ${lostError.message || 'Unknown error'}`}
-              {foundError && `Found items error: ${foundError.message || 'Unknown error'}`}
+              {lostError && `Lost items error: ${'message' in lostError ? lostError.message : 'Unknown error'}`}
+              {foundError && `Found items error: ${'message' in foundError ? foundError.message : 'Unknown error'}`}
             </p>
             <button 
               onClick={() => window.location.reload()} 
@@ -508,6 +659,7 @@ const PortalDisplay = () => {
       `}</style>
 
       <div className="fixed inset-0 bg-slate-900 flex flex-col overflow-hidden select-none">
+        <Header />
         <div className="flex-1 grid grid-cols-2 portal-panels min-h-0 divide-x divide-white/5">
           <Panel title="Lost Items"  accentColor="red"  items={lostMapped}  slideIndex={slideIndex} total={lostItems.length}  />
           <Panel title="Found Items" accentColor="blue" items={foundMapped} slideIndex={slideIndex} total={foundItems.length} />
