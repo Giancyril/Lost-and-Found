@@ -53,13 +53,9 @@ const isRestrictedCategory = (cat?: string) =>
 const QRCodeSlide = () => {
   return (
     <div className="h-full w-full bg-slate-900 flex flex-col overflow-hidden">
-      {/* Top accent bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-red-600 via-red-400 to-blue-500 shrink-0" />
-
+      <div className="h-1 w-full bg-blue-500 shrink-0" />
       <div className="flex-1 flex items-center justify-center px-6 py-4 min-h-0">
         <div className="w-full max-w-5xl flex flex-col items-center gap-4">
-
-          {/* Institution Header */}
           <div className="text-center">
             <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.25em] mb-1">
               Northern Bukidnon State College
@@ -69,15 +65,11 @@ const QRCodeSlide = () => {
             </h1>
             <div className="flex items-center gap-3 justify-center mt-2">
               <div className="h-px w-16 bg-slate-600" />
-              <span className="text-red-400 text-xs font-bold uppercase tracking-widest">Lost &amp; Found Portal</span>
+              <span className="text-blue-400 text-xs font-bold uppercase tracking-widest">Lost &amp; Found System</span>
               <div className="h-px w-16 bg-slate-600" />
             </div>
           </div>
-
-          {/* Main Content Row */}
           <div className="flex flex-col md:flex-row items-center gap-6 w-full">
-
-            {/* QR Section */}
             <div className="flex flex-col items-center gap-3 shrink-0">
               <div className="bg-white p-4 rounded-2xl shadow-2xl border-4 border-slate-200">
                 <img
@@ -88,26 +80,20 @@ const QRCodeSlide = () => {
               </div>
               <div className="text-center">
                 <p className="text-red-400 font-bold text-sm uppercase tracking-widest">Scan to Report</p>
-                <p className="text-slate-400 text-xs mt-0.5">Use your phone camera</p>
+                <p className="text-slate-400 text-xs mt-0.5">YOUR MISSING ITEMS</p>
               </div>
             </div>
-
-            {/* Divider */}
             <div className="hidden md:block h-48 w-px bg-slate-700 shrink-0" />
             <div className="block md:hidden w-full h-px bg-slate-700 shrink-0" />
-
-            {/* Info Section */}
             <div className="flex-1 space-y-4 w-full">
-
-              {/* Steps */}
               <div className="space-y-2">
                 {[
                   { num: "01", title: "Scan the QR Code", desc: "Point your phone camera at the code to open the reporting form." },
                   { num: "02", title: "Fill in Item Details", desc: "Provide a description, location last seen, and date of loss." },
-                  { num: "03", title: "Submit Your Report", desc: "Our team will log the item and notify you on any updates." },
+                  { num: "03", title: "Submit Your Report", desc: "Visit the SAS Office regularly to check for updates on your lost item." },
                 ].map(step => (
                   <div key={step.num} className="flex items-start gap-3 bg-slate-800/60 border border-white/5 rounded-xl px-4 py-2.5">
-                    <span className="text-red-500 font-black text-sm shrink-0 mt-0.5">{step.num}</span>
+                    <span className="text-blue-500 font-black text-sm shrink-0 mt-0.5">{step.num}</span>
                     <div>
                       <p className="text-white font-bold text-sm leading-tight">{step.title}</p>
                       <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">{step.desc}</p>
@@ -115,8 +101,6 @@ const QRCodeSlide = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Notice */}
               <div className="flex items-start gap-2 bg-blue-950/50 border border-blue-500/20 rounded-xl px-4 py-2.5">
                 <svg width="14" height="14" className="shrink-0 text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" />
@@ -127,18 +111,13 @@ const QRCodeSlide = () => {
               </div>
             </div>
           </div>
-
-          {/* Footer */}
           <div className="w-full flex items-center justify-between pt-2 border-t border-white/5">
             <p className="text-slate-500 text-[10px] uppercase tracking-widest font-semibold">SAS Office • Admin Building</p>
             <p className="text-slate-500 text-[10px] uppercase tracking-widest font-semibold">Available 24/7 Online</p>
           </div>
-
         </div>
       </div>
-
-      {/* Bottom accent bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-red-400 to-red-600 shrink-0" />
+      <div className="h-1 w-full bg-blue-500 shrink-0" />
     </div>
   );
 };
@@ -179,7 +158,6 @@ const ItemCard = ({
             </svg>
           </div>
         )}
-
         <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
           <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full border backdrop-blur-sm ${
             badgeColor === "red"
@@ -187,16 +165,13 @@ const ItemCard = ({
               : "bg-blue-800/90 text-blue-200 border-blue-500/50"
           }`}>{badge}</span>
         </div>
-
         {category && (
           <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2">
             <span className="px-1.5 py-0.5 text-[10px] sm:text-xs font-semibold bg-black/50 text-gray-300 border border-white/10 rounded-full backdrop-blur-sm">{category}</span>
           </div>
         )}
       </div>
-
       <div className="h-px bg-white/10 shrink-0" />
-
       <div className="flex flex-col flex-1 p-2 sm:p-3 md:p-4 lg:p-5 gap-1.5 sm:gap-2 md:gap-3">
         <h3 className={`font-black text-sm sm:text-base md:text-lg lg:text-xl leading-tight line-clamp-1 ${restricted ? "text-slate-400" : "text-white"}`}>
           {name}
@@ -307,7 +282,6 @@ const Panel = ({
 
   return (
     <div className="flex flex-col h-full bg-slate-900 overflow-hidden">
-      {/* Fixed Height Header */}
       <div className={`flex items-center justify-between px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 border-b ${accent.border} bg-slate-800/50 h-[60px] sm:h-[80px] md:h-[100px] shrink-0`}>
         <div className="flex-1 min-w-0 pr-2 sm:pr-4">
           <h2 className={`text-[10px] sm:text-xs md:text-base font-black uppercase tracking-widest ${accent.text} truncate`}>
@@ -322,8 +296,6 @@ const Panel = ({
             {total} {total === 1 ? "item" : "items"} on record
           </p>
         </div>
-
-        {/* Pagination Dots */}
         <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 shrink-0">
           {realPairs.map((_, i) => (
             <div key={i} className={`rounded-full transition-all duration-300 ${
@@ -334,8 +306,6 @@ const Panel = ({
           ))}
         </div>
       </div>
-
-      {/* Carousel track */}
       <div className="flex-1 min-h-0 overflow-hidden relative">
         {n === 0 ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20">
@@ -416,7 +386,7 @@ const Header = () => {
   const formatDateStr = (date: Date) =>
     date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
-  const getWeatherIcon = (icon: string) => {
+  const getWeatherEmoji = (icon: string) => {
     const iconMap: Record<string, string> = {
       "01d": "☀️", "01n": "🌙", "02d": "⛅", "02n": "☁️",
       "03d": "☁️", "03n": "☁️", "04d": "☁️", "04n": "☁️",
@@ -430,44 +400,49 @@ const Header = () => {
   return (
     <div className="h-20 md:h-24 bg-slate-800 border-b border-white/10 px-4 sm:px-6 md:px-8 flex items-center justify-between shrink-0">
       <div />
-      <div className="flex items-center gap-3">
+
+      <div className="flex items-center gap-4 sm:gap-6">
+
         {/* Date & Time */}
-        <div className="flex flex-col items-end pr-2 sm:pr-3 border-r border-white/10">
-          <span className="text-slate-400 text-[9px] sm:text-xs">{formatDateStr(currentTime)}</span>
-          <span className="text-white text-lg sm:text-xl font-bold tracking-wide tabular-nums leading-tight">
+        <div className="flex flex-col items-end">
+          <span className="text-slate-400 text-[10px] sm:text-xs font-medium tracking-wide">
+            {formatDateStr(currentTime)}
+          </span>
+          <span className="text-white text-xl sm:text-2xl font-bold tabular-nums leading-tight mt-0.5">
             {formatTime(currentTime)}
           </span>
         </div>
 
-        {/* Weather Card */}
-        <div className="min-w-[120px] sm:min-w-[140px] bg-slate-700/70 border border-white/10 rounded-xl px-1.5 sm:px-2 py-1.5 backdrop-blur-md shadow-lg">
-          {weatherLoading ? (
-            <div className="flex items-center justify-center h-8">
-              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white" />
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-slate-600/40 text-lg sm:text-xl shrink-0">
-                {getWeatherIcon(weather?.icon || "")}
+        {/* Divider */}
+        <div className="w-px h-10 bg-white/10 shrink-0" />
+
+        {/* Weather */}
+        {weatherLoading ? (
+          <div className="flex items-center justify-center w-8 h-8">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400" />
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            {/* Weather emoji */}
+            <span className="text-3xl sm:text-4xl leading-none select-none">
+              {getWeatherEmoji(weather?.icon || "")}
+            </span>
+
+            {/* Temp + label */}
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-1">
+                <span className="text-white text-2xl sm:text-3xl font-bold tabular-nums leading-none">
+                  {weather?.temp ?? "--"}°
+                </span>
+                <span className="text-slate-500 text-xs font-medium">C</span>
               </div>
-              <div className="flex flex-col flex-1 text-right">
-                <span className="text-slate-300 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider">Weather</span>
-                <div className="flex items-center justify-end gap-1 text-slate-400 text-[9px] sm:text-[10px]">
-                  <span className="hidden sm:inline">Manolo Fortich</span>
-                  <span className="sm:hidden">MF</span>
-                  <svg width="6" height="6" className="sm:w-7 sm:h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                </div>
-                <div className="flex items-baseline justify-end gap-1">
-                  <span className="text-base sm:text-lg font-black text-white leading-none">{weather?.temp ?? "--"}°</span>
-                  <span className="text-slate-300 text-[9px] sm:text-[10px] hidden sm:inline">{weather?.condition ?? "N/A"}</span>
-                </div>
-              </div>
+              <span className="text-slate-400 text-[10px] sm:text-xs font-medium mt-0.5 whitespace-nowrap">
+                {weather?.condition ?? "—"} · Manolo Fortich
+              </span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
@@ -539,28 +514,20 @@ const PortalDisplay = () => {
 
   const totalLostSlides = Math.max(Math.ceil(lostMapped.length / 4), 1);
   const totalFoundSlides = Math.max(Math.ceil(foundMapped.length / 4), 1);
-  const totalSlides = totalLostSlides + totalFoundSlides + 1; // +1 for QR slide
+  const totalSlides = totalLostSlides + totalFoundSlides + 1;
 
   const advanceSlide = useCallback(() => {
     setSlideIndex(prev => (prev + 1) % totalSlides);
   }, [totalSlides]);
 
-  // ✅ Fix: use ReturnType<typeof setTimeout> instead of NodeJS.Timeout
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
-
     const isQRCodeSlide = slideIndex >= totalLostSlides + totalFoundSlides;
     const duration = isQRCodeSlide ? 15000 : SLIDE_DURATION;
-
-    timerRef.current = setTimeout(() => {
-      advanceSlide();
-    }, duration);
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    timerRef.current = setTimeout(() => { advanceSlide(); }, duration);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [slideIndex, totalLostSlides, totalFoundSlides, advanceSlide]);
 
   const sharedStyles = `
@@ -598,10 +565,7 @@ const PortalDisplay = () => {
               {lostError && `Lost items: ${"message" in lostError ? lostError.message : "Unknown error"}`}
               {foundError && `Found items: ${"message" in foundError ? foundError.message : "Unknown error"}`}
             </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
-            >
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">
               Refresh Page
             </button>
           </div>
@@ -619,10 +583,7 @@ const PortalDisplay = () => {
             <div className="text-gray-400 text-6xl mb-4">[]</div>
             <h2 className="text-xl font-bold mb-2">No Items Available</h2>
             <p className="text-gray-400 mb-4">There are currently no lost or found items to display.</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
-            >
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">
               Refresh Page
             </button>
           </div>
