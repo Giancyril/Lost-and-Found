@@ -88,6 +88,10 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   );
 }
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const openModal  = (setter: (v: boolean) => void) => { setter(true);  document.body.classList.add("modal-open");    };
+const closeModal = (setter: (v: boolean) => void) => { setter(false); document.body.classList.remove("modal-open"); };
+
 const SingleLostItem = () => {
   const users: any = useUserVerification();
   const isAdmin = users?.role === "ADMIN";
@@ -97,7 +101,7 @@ const SingleLostItem = () => {
   const [createFoundItem, { isLoading: submitLoading }] = useCreateFoundItemMutation();
 
   const [isModalOpen, setIsModalOpen]     = useState(false);
-  const [foundDate, setFoundDate] = useState(new Date().toISOString().split("T")[0]);
+  const [foundDate, setFoundDate]         = useState(new Date().toISOString().split("T")[0]);
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [reportedFound, setReportedFound] = useState<boolean>(false);
 
@@ -111,7 +115,7 @@ const SingleLostItem = () => {
         description:   data.description,
         img:           lostItem?.img || "",
         location:      data.location,
-        date: new Date(foundDate + "T00:00:00"),
+        date:          new Date(foundDate + "T00:00:00"),
         claimProcess:  "Visit the SAS office with valid ID to claim this item.",
         categoryId:    lostItem?.category?.id,
         lostItemId:    lostItemId,
@@ -122,7 +126,7 @@ const SingleLostItem = () => {
         toast.error("Failed to submit. Please try again.");
       } else {
         toast.success("Thank you! The item has been reported as found.");
-        setIsModalOpen(false);
+        closeModal(setIsModalOpen);
         setReportedFound(true);
         refetch();
         reset();
@@ -182,13 +186,11 @@ const SingleLostItem = () => {
 
             {/* Left: Image Carousel with "Lost" Overlay Badge */}
             <div className="relative flex flex-col h-full rounded-2xl overflow-hidden">
-              {/* Overlay Badge */}
               {!alreadyFound && (
                 <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-red-600 text-white text-[10px] uppercase font-bold rounded-full shadow-lg border border-red-700/50 tracking-wider">
                   Lost
                 </div>
               )}
-              
               {hideImage ? (
                 <HiddenImagePlaceholder />
               ) : (
@@ -243,7 +245,8 @@ const SingleLostItem = () => {
                         <p className="text-gray-400 text-xs mt-1 leading-relaxed">Let the owner know by filling in where and when you found it. The SAS office will take it from there.</p>
                       </div>
                     </div>
-                    <button onClick={() => setIsModalOpen(true)}
+                    <button
+                      onClick={() => openModal(setIsModalOpen)}
                       className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
                       I Found This Item
                     </button>
@@ -258,13 +261,15 @@ const SingleLostItem = () => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex items-start justify-between px-4 py-3 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
               <div>
                 <h3 className="text-base font-bold text-white">I found this item</h3>
                 <p className="text-gray-500 text-xs mt-0.5">Tell us where and when you found <span className="text-white font-medium">{lostItemName}</span></p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white ml-4 mt-0.5 transition-colors">
+              <button
+                onClick={() => closeModal(setIsModalOpen)}
+                className="text-gray-500 hover:text-white ml-4 mt-0.5 transition-colors">
                 <FaTimes size={14} />
               </button>
             </div>
@@ -284,8 +289,8 @@ const SingleLostItem = () => {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold truncate">{lostItemName}</p>
-                  <p className="text-gray-400 text-xs mt-0.5 truncate"> {location}</p>
-                  <p className="text-gray-400 text-xs"> Lost: {date?.split("T")[0]}</p>
+                  <p className="text-gray-400 text-xs mt-0.5 truncate">{location}</p>
+                  <p className="text-gray-400 text-xs">Lost: {date?.split("T")[0]}</p>
                 </div>
                 <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">Missing</span>
               </div>
@@ -301,7 +306,7 @@ const SingleLostItem = () => {
                   </div>
                   <div>
                     <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Where found <span className="text-red-400">*</span></label>
-                    <input type="text" placeholder="e.g. Library, Room 205"
+                    <input type="text" placeholder=" "
                       {...register("location", { required: "Please provide the location" })}
                       className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 text-sm placeholder-gray-600" />
                     {errors.location && <p className="text-red-400 text-xs mt-1">{errors.location.message as string}</p>}
@@ -311,12 +316,12 @@ const SingleLostItem = () => {
                 <div>
                   <label className="block mb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date you found it</label>
                   <CustomDatePicker
-                  value={foundDate}
-                  onChange={setFoundDate}
-                  max={new Date().toISOString().split("T")[0]}
-                  placeholder="Select date found"
-                  openUp
-                />
+                    value={foundDate}
+                    onChange={setFoundDate}
+                    max={new Date().toISOString().split("T")[0]}
+                    placeholder="Select date found"
+                    openUp
+                  />
                 </div>
 
                 <div>
@@ -331,7 +336,8 @@ const SingleLostItem = () => {
                 </div>
 
                 <div className="flex gap-3 pt-1">
-                  <button type="button" onClick={() => setIsModalOpen(false)}
+                  <button type="button"
+                    onClick={() => closeModal(setIsModalOpen)}
                     className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium transition-colors">
                     Cancel
                   </button>
@@ -347,6 +353,7 @@ const SingleLostItem = () => {
           </div>
         </div>
       )}
+
       <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
     </>
   );

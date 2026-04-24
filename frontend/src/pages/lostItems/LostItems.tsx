@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight,
@@ -61,8 +61,6 @@ const deleteTipLocally = (id: string, idx: number) => {
   } catch { return []; }
 };
 
-// ── Community stats from localStorage ────────────────────────────────────────
-// Only count tips that belong to known item IDs to avoid stale/orphaned data
 const getCommunityStats = (activeReports: number, knownIds: string[]) => {
   try {
     const allTips = JSON.parse(localStorage.getItem("bulletin_tips") || "{}");
@@ -82,12 +80,10 @@ const getCommunityStats = (activeReports: number, knownIds: string[]) => {
   } catch { return { activeReports, totalTips: 0, tipsToday: 0 }; }
 };
 
-// ── Time grouping helpers ─────────────────────────────────────────────────────
 const getItemGroup = (item: any): "today" | "week" | "older" => {
   const date = new Date(item.createdAt ?? item.date);
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const diffDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
   if (diffDays < 1) return "today";
   if (diffDays < 7) return "week";
   return "older";
@@ -165,49 +161,61 @@ const CustomSelect = ({ options, value, onChange }: {
   );
 };
 
+// ── Community Stats Banner ────────────────────────────────────────────────────
 const CommunityStatsBanner = ({ activeReports, knownIds }: { activeReports: number; knownIds: string[] }) => {
   const stats = useMemo(() => getCommunityStats(activeReports, knownIds), [activeReports, knownIds]);
 
   const cards = [
     {
-      icon: <FaFire size={14} className="text-red-400" />,
-      iconBg: "bg-red-500/10 border-red-500/20",
+      icon: <FaFire size={15} className="text-red-400" />,
+      iconBg: "bg-red-500/10 border border-red-500/20",
       value: stats.activeReports,
       label: "Active Reports",
-      sub: `missing on campus`,
+      sub: "missing on campus",
       subColor: "text-red-400",
+      accent: "border-red-500/10",
     },
     {
-      icon: <FaLightbulb size={14} className="text-yellow-400" />,
-      iconBg: "bg-yellow-500/10 border-yellow-500/20",
+      icon: <FaLightbulb size={15} className="text-amber-400" />,
+      iconBg: "bg-amber-500/10 border border-amber-500/20",
       value: stats.totalTips,
       label: "Total Sightings",
       sub: "community tips",
-      subColor: "text-yellow-400",
+      subColor: "text-amber-400",
+      accent: "border-amber-500/10",
     },
     {
-      icon: <FaStar size={14} className="text-green-400" />,
-      iconBg: "bg-green-500/10 border-green-500/20",
+      icon: <FaStar size={15} className="text-emerald-400" />,
+      iconBg: "bg-emerald-500/10 border border-emerald-500/20",
       value: stats.tipsToday,
       label: "Tips Today",
       sub: "submitted today",
-      subColor: "text-green-400",
+      subColor: "text-emerald-400",
+      accent: "border-emerald-500/10",
     },
   ];
 
   return (
-    <div className="mx-6 sm:mx-10 lg:mx-16 mb-2 mt-5">
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+    <div className="px-6 sm:px-10 lg:px-16 mb-2 mt-5">
+      <div className="grid grid-cols-3 gap-3">
         {cards.map((card, i) => (
           <div key={i}
-            className="relative overflow-hidden bg-gray-900/80 border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-5 flex flex-col gap-1.5 sm:gap-3">
-            <div className={`w-6 h-6 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border flex items-center justify-center shrink-0 ${card.iconBg}`}>
-              {card.icon}
+            className={`relative bg-gray-900 border ${card.accent} rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col gap-2 sm:gap-3 overflow-hidden`}>
+            {/* Top row: icon + value */}
+            <div className="flex items-start justify-between gap-2">
+              <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 ${card.iconBg}`}>
+                {card.icon}
+              </div>
+              <span className="text-2xl sm:text-3xl font-black text-white leading-none tabular-nums">
+                {card.value}
+              </span>
             </div>
+            {/* Bottom: label + sub */}
             <div>
-              <p className="text-xl sm:text-3xl font-black text-white leading-none">{card.value}</p>
-              <p className="text-[10px] sm:text-sm text-gray-400 mt-0.5 sm:mt-1 leading-tight">{card.label}</p>
-              <p className={`text-[9px] sm:text-xs font-semibold mt-0.5 hidden sm:block ${card.subColor}`}>{card.sub}</p>
+              <p className="text-xs sm:text-sm font-semibold text-white leading-tight">{card.label}</p>
+              <p className={`text-[10px] sm:text-xs mt-0.5 font-medium ${card.subColor} hidden sm:block`}>
+                {card.sub}
+              </p>
             </div>
           </div>
         ))}
@@ -244,29 +252,25 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
   };
 
   const handleFacebookShare = () => {
-  const shareUrl = `${window.location.origin}/lostItems/${item?.id}`;
-  navigator.clipboard.writeText(message).catch(() => {});
-  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-  window.open(fbUrl, "_blank", "width=600,height=500");
-  toast.info("Message copied! Paste it into your Facebook post after it opens.", { autoClose: 5000 });
-};
+    const shareUrl = `${window.location.origin}/lostItems/${item?.id}`;
+    navigator.clipboard.writeText(message).catch(() => {});
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    window.open(fbUrl, "_blank", "width=600,height=500");
+    toast.info("Message copied! Paste it into your Facebook post after it opens.", { autoClose: 5000 });
+  };
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl"
         style={{ borderTop: "2px solid #3b82f6" }}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <div className="flex items-center gap-2.5">
-            <div>
-              <h3 className="text-white font-bold text-sm">Share this Report</h3>
-              <p className="text-gray-500 text-[10px] mt-0.5">Facebook will open with the link — your message is auto-copied to paste in.</p>
-            </div>
+          <div>
+            <h3 className="text-white font-bold text-sm">Share this Report</h3>
           </div>
           <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
             <FaTimes size={12} />
           </button>
         </div>
-
         <div className="p-5 space-y-4">
           <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-800/60 border border-white/5">
             <img
@@ -285,24 +289,16 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
             </div>
             <span className="shrink-0 px-2 py-0.5 bg-red-500/10 text-red-400 text-[10px] font-bold rounded-full border border-red-500/20">Lost</span>
           </div>
-
           <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-              Message Preview
-            </label>
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Message Preview</label>
             <div className="w-full p-3.5 bg-gray-800/80 border border-white/10 rounded-xl text-gray-300 text-xs leading-relaxed font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
               {message}
             </div>
           </div>
-
-          
-
           <div className="flex gap-2">
             <button onClick={handleCopy}
               className={`flex-1 py-2.5 flex items-center justify-center gap-2 text-xs font-bold rounded-xl transition-all
-                ${copied
-                  ? "bg-green-600/80 border border-green-500/30 text-white"
-                  : "bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white"}`}>
+                ${copied ? "bg-green-600/80 border border-green-500/30 text-white" : "bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white"}`}>
               {copied ? <><FaCheckCircle size={11} /> Copied!</> : <><FaCopy size={11} /> Copy Message</>}
             </button>
             <button onClick={handleFacebookShare}
@@ -313,7 +309,6 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
               className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">
               Cancel
             </button>
-            
           </div>
         </div>
       </div>
@@ -322,9 +317,7 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
 };
 
 // ── Section Header ─────────────────────────────────────────────────────────────
-const GroupHeader = ({
-  label, count, accent,
-}: { label: string; count: number; accent: "red" | "yellow" | "gray" }) => {
+const GroupHeader = ({ label, count, accent }: { label: string; count: number; accent: "red" | "yellow" | "gray" }) => {
   const colors = {
     red:    { dot: "bg-red-400 animate-pulse", text: "text-red-400", border: "border-red-500/20", badge: "bg-red-500/10 text-red-400 border-red-500/20" },
     yellow: { dot: "bg-yellow-400",            text: "text-yellow-400", border: "border-yellow-500/20", badge: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
@@ -332,7 +325,7 @@ const GroupHeader = ({
   }[accent];
 
   return (
-    <div className={`flex items-center gap-3 py-3 mb-1`}>
+    <div className="flex items-center gap-3 py-3 mb-1">
       <div className={`w-2 h-2 rounded-full ${colors.dot} shrink-0`} />
       <span className={`text-xs font-black uppercase tracking-widest ${colors.text}`}>{label}</span>
       <div className={`flex-1 h-px border-t ${colors.border}`} />
@@ -363,9 +356,7 @@ const TipModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
       <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
           <div>
-            <h3 className="text-white font-bold text-sm flex items-center gap-2">
-               Report a Sighting
-            </h3>
+            <h3 className="text-white font-bold text-sm">Report a Sighting</h3>
             <p className="text-gray-500 text-xs mt-0.5">Completely anonymous — no login needed</p>
           </div>
           <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
@@ -450,7 +441,7 @@ const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () =>
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
           <div>
             <h3 className="text-white font-bold text-sm flex items-center gap-2">
-               Community Sightings
+              Community Sightings
               {isAdmin && <span className="text-[9px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded-full font-bold">Admin</span>}
             </h3>
             <p className="text-gray-500 text-xs mt-0.5">{item?.lostItemName} · {tips.length} {tips.length === 1 ? "sighting" : "sightings"}</p>
@@ -512,13 +503,22 @@ const ItemCard = ({
   const daysAgo  = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
   const hideImg  = shouldHideImage(item?.category?.name, isAdmin);
 
+  const ageBadgeClass =
+    daysAgo > 30 ? "bg-red-500/10 text-red-400 border-red-500/20"
+    : daysAgo > 7 ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+    : "bg-black/50 text-white border-white/15";
+
   return (
-    <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col">
-      <div className="relative h-44 sm:h-48 overflow-hidden bg-gray-800">
+    <div className="group bg-gray-900 border border-white/5 hover:border-white/15 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-black/20 flex flex-col">
+
+      {/* Image area */}
+      <div className="relative h-44 sm:h-48 overflow-hidden bg-gray-800 shrink-0">
         {hideImg ? (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-gray-700 border border-gray-700 flex items-center justify-center">
-              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gray-800/80">
+            <div className="w-11 h-11 rounded-xl bg-gray-700/60 border border-white/5 flex items-center justify-center">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
             </div>
             <p className="text-gray-500 text-xs">Image Hidden</p>
           </div>
@@ -529,74 +529,88 @@ const ItemCard = ({
               : "") || item?.img || "/bgimg.png"}
             alt={item?.lostItemName}
             onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
-        <div className="absolute top-3 left-3">
-          <span className="px-2 py-0.5 bg-red-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-red-500/30">Lost</span>
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent pointer-events-none" />
+
+        {/* Top badges */}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+          <span className="px-2 py-0.5 bg-red-500/90 text-white text-[10px] font-bold rounded-full border border-red-400/30 backdrop-blur-sm">
+            Lost
+          </span>
         </div>
         <div className="absolute top-3 right-3">
-          <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm border
-            ${daysAgo > 30 ? "bg-orange-500/80 text-white border-orange-400/30"
-            : daysAgo > 7  ? "bg-yellow-500/80 text-gray-900 border-yellow-400/30"
-            : "bg-black/50 text-white border-white/15"}`}>
+          <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border backdrop-blur-sm ${ageBadgeClass}`}>
             {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
           </span>
         </div>
+
+        {/* Tips badge */}
         {tipCount > 0 && (
           <div className="absolute bottom-3 right-3">
-            <span className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/90 text-gray-900 text-[10px] font-bold rounded-full">
-              <FaLightbulb size={8} /> {tipCount}
+            <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/90 text-gray-900 text-[10px] font-bold rounded-full border border-amber-400/30 backdrop-blur-sm">
+              <FaLightbulb size={8} /> {tipCount} tip{tipCount > 1 ? "s" : ""}
             </span>
           </div>
         )}
-
       </div>
-      <div className="p-3 sm:p-4 flex flex-col flex-1">
-        <h3 className="text-white text-sm font-bold mb-1 line-clamp-1 group-hover:text-blue-400 transition-colors">{item?.lostItemName}</h3>
-        <p className="text-gray-500 text-xs mb-3 line-clamp-2 leading-relaxed">{item?.description}</p>
-        <div className="space-y-1.5 mt-auto mb-3">
+
+      {/* Content */}
+      <div className="p-4 flex flex-col flex-1 gap-3">
+
+        {/* Title + description */}
+        <div>
+          <h3 className="text-white text-sm font-semibold mb-1 line-clamp-1 group-hover:text-blue-400 transition-colors leading-snug">
+            {item?.lostItemName}
+          </h3>
+          <p className="text-gray-500 text-xs line-clamp-2 leading-relaxed">{item?.description}</p>
+        </div>
+
+        {/* Meta */}
+        <div className="space-y-1.5 mt-auto">
           <div className="flex items-center gap-2 text-xs text-gray-400">
-            <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-              <FaMapMarkerAlt className="text-blue-400" size={8} />
-            </div>
+            <FaMapMarkerAlt className="text-blue-400 shrink-0" size={9} />
             <span className="line-clamp-1">{item?.location}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-gray-400">
-            <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-              <FaCalendarAlt className="text-blue-400" size={8} />
-            </div>
+            <FaCalendarAlt className="text-blue-400 shrink-0" size={9} />
             <span>{item?.date?.split("T")[0] ?? "—"}</span>
           </div>
           {item?.category?.name && (
             <div className="flex items-center gap-2 text-xs text-gray-400">
-              <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                {getCategoryIcon(item.category.name)}
-              </div>
-              <span>{item.category.name}</span>
+              <span className="shrink-0">{getCategoryIcon(item.category.name)}</span>
+              <span className="line-clamp-1">{item.category.name}</span>
             </div>
           )}
         </div>
-        <div className="h-px bg-white/[0.04] mb-3" />
+
+        {/* Divider */}
+        <div className="h-px bg-white/[0.05]" />
+
+        {/* Actions */}
         <div className="grid grid-cols-4 gap-1.5">
           <Link to={`/lostItems/${item.id}`}
-            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
             Details
           </Link>
           <button onClick={onTip} disabled={!!item?.isFound}
-            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 text-[11px] font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed">
             Sighted
           </button>
           <button onClick={onViewTips}
-            className="flex items-center justify-center gap-1 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-blue-400 text-[11px] font-medium rounded-lg transition-all">
-            Tips{tipCount > 0 && <span className="ml-1 px-1 py-0.5 bg-white/5 rounded text-[9px] font-bold">{tipCount}</span>}
+            className={`flex items-center justify-center gap-1 py-2 border text-[11px] font-medium rounded-lg transition-all
+              ${tipCount > 0
+                ? "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20 text-amber-400"
+                : "bg-white/5 hover:bg-white/10 border-white/5 text-gray-400 hover:text-white"}`}>
+            Tips{tipCount > 0 && <span className="text-[9px] font-bold">{tipCount}</span>}
           </button>
           <button onClick={onShare}
-            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-blue-500/20 text-gray-400 hover:text-blue-400 text-[11px] font-medium rounded-lg transition-all">
-            Share
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
+            <FaShare size={10} />
           </button>
-          
         </div>
       </div>
     </div>
@@ -612,20 +626,31 @@ const ItemRow = ({
   const lostDateStr = item?.date?.split("T")[0] ?? "—";
   const hideImg     = shouldHideImage(item?.category?.name, isAdmin);
 
+  const ageColor =
+    daysAgo > 30 ? "text-red-400"
+    : daysAgo > 7 ? "text-amber-400"
+    : "text-gray-500";
+
+  const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
+    ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? "")
+    : "") || item?.img || "/bgimg.png";
+
   return (
-    <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/30 rounded-xl transition-all duration-150 hover:bg-gray-900/80">
+    <div className="group bg-gray-900 border border-white/5 hover:border-white/10 rounded-xl transition-all duration-150">
+
       {/* Mobile */}
-      <div className="sm:hidden flex flex-col gap-2 p-3">
-        {/* Row 1: image + info */}
+      <div className="sm:hidden flex flex-col gap-2.5 p-3">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-800 shrink-0">
             {hideImg ? (
               <div className="w-full h-full flex items-center justify-center">
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
               </div>
             ) : (
-              <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? "") : "") || item?.img || "/bgimg.png"}
-                alt={item?.lostItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+              <img src={imgSrc} alt={item?.lostItemName}
+                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
                 className="w-full h-full object-cover" />
             )}
           </div>
@@ -635,10 +660,10 @@ const ItemRow = ({
               <FaMapMarkerAlt size={7} className="text-blue-400 shrink-0" />
               <span className="truncate">{item?.location}</span>
             </p>
-            <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
               <span className="text-gray-600 text-[10px]">{lostDateStr}</span>
               <span className="text-gray-700 text-[10px]">·</span>
-              <span className={`text-[10px] font-semibold ${daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-500"}`}>
+              <span className={`text-[10px] font-semibold ${ageColor}`}>
                 {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
               </span>
               {item?.category?.name && (
@@ -653,14 +678,16 @@ const ItemRow = ({
             </div>
           </div>
         </div>
-        {/* Row 2: equal-width action buttons */}
         <div className="grid grid-cols-4 gap-1.5">
           <button onClick={onTip} disabled={!!item?.isFound}
-            className="flex items-center justify-center py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] font-medium rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed">
             Sighted
           </button>
           <button onClick={onViewTips}
-            className="flex items-center justify-center gap-1 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[10px] font-medium rounded-lg transition-all">
+            className={`flex items-center justify-center gap-1 py-2 border text-[10px] font-medium rounded-lg transition-all
+              ${tipCount > 0
+                ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                : "bg-white/5 border-white/5 text-gray-400 hover:text-white"}`}>
             <FaEye size={9} />{tipCount > 0 && <span>{tipCount}</span>}
           </button>
           <button onClick={onShare}
@@ -669,33 +696,35 @@ const ItemRow = ({
           </button>
           <Link to={`/lostItems/${item.id}`}
             className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] font-medium rounded-lg transition-all">
-            Info
+            Details
           </Link>
         </div>
       </div>
 
-      {/* Desktop — all 4 actions in a single flat row */}
+      {/* Desktop */}
       <div className="hidden sm:grid grid-cols-12 gap-4 items-center px-4 py-3">
         <div className="col-span-4 flex items-center gap-3 min-w-0">
           <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0">
             {hideImg ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+              <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
               </div>
             ) : (
-              <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? "") : "") || item?.img || "/bgimg.png"}
-                alt={item?.lostItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+              <img src={imgSrc} alt={item?.lostItemName}
+                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
                 className="w-full h-full object-cover" />
             )}
           </div>
           <div className="min-w-0">
             <p className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition-colors">{item?.lostItemName}</p>
-            <p className="text-gray-500 text-xs truncate leading-relaxed">{item?.description}</p>
+            <p className="text-gray-500 text-xs truncate">{item?.description}</p>
           </div>
         </div>
         <div className="col-span-2">
           <p className="text-gray-400 text-xs flex items-center gap-1.5 truncate">
-            <span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaMapMarkerAlt className="text-blue-400" size={8} /></span>
+            <FaMapMarkerAlt className="text-blue-400 shrink-0" size={9} />
             {item?.location}
           </p>
         </div>
@@ -705,21 +734,24 @@ const ItemRow = ({
             : <span className="text-gray-600 text-xs">—</span>}
         </div>
         <div className="col-span-2">
-          <p className="text-gray-400 text-xs flex items-center gap-1.5">
-            <span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></span>
-            {lostDateStr} · <span className={`font-semibold ${daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-500"}`}>{daysAgo === 0 ? "Today" : `${daysAgo}d ago`}</span>
+          <p className="text-gray-400 text-xs">
+            {lostDateStr}
+          </p>
+          <p className={`text-[11px] font-semibold mt-0.5 ${ageColor}`}>
+            {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
           </p>
         </div>
-
-        {/* ── Actions: single flat row of 4 buttons ── */}
         <div className="col-span-2 flex items-center justify-end gap-1.5">
           <button onClick={onTip} disabled={!!item?.isFound}
-            className="flex items-center justify-center px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap">
+            className="flex items-center justify-center px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap">
             Sighted
           </button>
           <button onClick={onViewTips}
-            className="flex items-center justify-center gap-1 px-3 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
-            Tips{tipCount > 0 && <span className="ml-1 px-1 py-0.5 bg-cyan-500/20 rounded text-[9px] font-bold">{tipCount}</span>}
+            className={`flex items-center justify-center gap-1 px-3 py-2 border text-[11px] font-medium rounded-lg transition-all whitespace-nowrap
+              ${tipCount > 0
+                ? "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20 text-amber-400"
+                : "bg-white/5 hover:bg-white/10 border-white/5 text-gray-400 hover:text-white"}`}>
+            Tips{tipCount > 0 && <span className="ml-1 text-[9px] font-bold">{tipCount}</span>}
           </button>
           <button onClick={onShare}
             className="flex items-center justify-center px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
@@ -784,8 +816,8 @@ const LostItemsPage = () => {
     return { today, week, older };
   }, [filteredItems]);
 
-  const totalPages    = lostItems?.meta?.totalPage || 1;
-  const totalReports  = lostItems?.meta?.total || filteredItems.length;
+  const totalPages   = lostItems?.meta?.totalPage || 1;
+  const totalReports = lostItems?.meta?.total || filteredItems.length;
 
   const sortOptions = [
     { value: "date-desc",         label: "Date Lost (Newest)" },
@@ -839,7 +871,7 @@ const LostItemsPage = () => {
   return (
     <div className="min-h-screen bg-gray-950 pb-16">
 
-      {/* ── Page header ── */}
+      {/* Page header */}
       <div className="border-b border-white/5 bg-gray-900/50">
         <div className="px-6 sm:px-10 lg:px-16 py-6 sm:py-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
@@ -857,10 +889,10 @@ const LostItemsPage = () => {
         </div>
       </div>
 
-      {/* ── Community Stats Banner ── */}
+      {/* Community Stats Banner */}
       <CommunityStatsBanner activeReports={totalReports} knownIds={filteredItems.map((i: any) => i.id)} />
 
-      {/* ── Search & filters ── */}
+      {/* Search & filters */}
       <div className="px-6 sm:px-10 lg:px-16 py-5">
         <div className="flex flex-col gap-3">
           <div className="relative">
@@ -899,13 +931,13 @@ const LostItemsPage = () => {
         </div>
       </div>
 
-      {/* ── Content ── */}
+      {/* Content */}
       <div className="px-6 sm:px-10 lg:px-16">
         {isLoading ? (
           <div className={viewMode === "grid" ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-2"}>
             {Array.from({ length: 8 }).map((_, i) => (
               viewMode === "grid" ? (
-                <div key={i} className="bg-gray-900 rounded-xl border border-white/5 overflow-hidden animate-pulse">
+                <div key={i} className="bg-gray-900 rounded-2xl border border-white/5 overflow-hidden animate-pulse">
                   <div className="h-48 bg-gray-800/60" />
                   <div className="p-4 space-y-2.5">
                     <div className="h-4 bg-gray-800/60 rounded-lg" />
@@ -948,7 +980,7 @@ const LostItemsPage = () => {
         )}
       </div>
 
-      {/* ── Pagination ── */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex flex-col items-center mt-12 space-y-3">
           <p className="text-gray-600 text-xs">Page {currentPage} of {totalPages} · {lostItems?.meta?.total || 0} items</p>
@@ -983,10 +1015,10 @@ const LostItemsPage = () => {
         </div>
       )}
 
-      {/* ── Modals ── */}
-      {tipItem      && <TipModal      item={tipItem}      onClose={() => setTipItem(null)} />}
+      {/* Modals */}
+      {tipItem      && <TipModal        item={tipItem}      onClose={() => setTipItem(null)} />}
       {viewTipsItem && <TipsViewerModal item={viewTipsItem} onClose={() => setViewTipsItem(null)} isAdmin={isAdmin} />}
-      {shareItem    && <ShareModal    item={shareItem}    onClose={() => setShareItem(null)} />}
+      {shareItem    && <ShareModal      item={shareItem}    onClose={() => setShareItem(null)} />}
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
     </div>
   );

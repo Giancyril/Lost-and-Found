@@ -2,7 +2,11 @@ import {
   useGetSingleFoundItemQuery,
   useCreateClaimMutation,
   useUpdateClaimStatusMutation,
+  useGetStudentByIdQuery,
+  useLazyGetStudentByDetailsQuery,
 } from "../../redux/api/api";
+import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
+import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
 import { Spinner } from "flowbite-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -14,9 +18,13 @@ import {
   FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaUser, FaTag,
   FaTimes, FaBuilding, FaCheckCircle, FaEnvelope,
   FaChevronLeft, FaChevronRight, FaClipboardList,
-  FaBoxOpen, FaHandshake, FaClock,
+  FaBoxOpen, FaHandshake, FaClock, FaSearch, FaQrcode, FaSpinner, FaUserCheck,
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const openModal  = (setter: (v: boolean) => void) => { setter(true);  document.body.classList.add("modal-open");    };
+const closeModal = (setter: (v: boolean) => void) => { setter(false); document.body.classList.remove("modal-open"); };
 
 // ── Hide image for Wallets & Purses (admin always sees) ──
 const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
@@ -210,7 +218,8 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
             </p>
           </div>
         )}
-        <div className="flex-1 overflow-y-auto px-5 py-5">
+        {/* ── scrollable timeline body ── */}
+        <div className="flex-1 overflow-y-auto px-5 py-5 custom-scrollbar">
           <div className="relative">
             <div className="absolute left-[18px] top-5 bottom-5 w-px bg-gray-800" />
             <div className="space-y-0">
@@ -284,11 +293,62 @@ const SingleFoundItem = () => {
   const [isSubmitting, setIsSubmitting]               = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen]       = useState(false);
   const [isTimelineOpen, setIsTimelineOpen]           = useState(false);
-
-  // ✅ Fix 1: lostDate state moved here (was incorrectly inside ImageCarousel)
   const [lostDate, setLostDate]                       = useState("");
+  const [claimScannedStudent, setClaimScannedStudent] = useState<ScannedStudent | null>(null);
+  const [showClaimScanner, setShowClaimScanner]       = useState(false);
+  const [isFetchingClaimStudent, setIsFetchingClaimStudent] = useState(false);
+  const [prevClaimEmailValue, setPrevClaimEmailValue] = useState("");
+  const [getStudentByDetailsForClaim] = useLazyGetStudentByDetailsQuery();
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const useFetchStudentForClaim = (id: string) => {
+    const trimmed = id?.trim() ?? "";
+    const isValidId = Boolean(trimmed && trimmed.length >= 4 && !/^\d{4}-\d{2}-\d{2}$/.test(trimmed));
+    return useGetStudentByIdQuery(trimmed, { skip: !isValidId });
+  };
+
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm();
+
+  const handleCloseClaimModal = () => {
+    closeModal(setIsClaimModalOpen);
+    reset();
+    setLostDate("");
+    setClaimScannedStudent(null);
+    setPrevClaimEmailValue("");
+  };
+
+  const handleClaimScan = (student: ScannedStudent) => {
+    setClaimScannedStudent(student);
+    setValue("claimantName", student.name);
+    setValue("schoolEmail", student.email);
+    setShowClaimScanner(false);
+    toast.success(`Student identified: ${student.name}`);
+  };
+
+  const handleClaimFetchDetails = async () => {
+    const nameEl  = document.querySelector('#single-claim-modal input[name="claimantName"]') as HTMLInputElement;
+    const emailEl = document.querySelector('#single-claim-modal input[name="schoolEmail"]')  as HTMLInputElement;
+    const name    = nameEl?.value?.trim()  || "";
+    const email   = emailEl?.value?.trim() || "";
+    if (!name && !email) { toast.info("Please enter a name or email to fetch details"); return; }
+    setIsFetchingClaimStudent(true);
+    try {
+      let student = null;
+      if (name) {
+        try { const r = await getStudentByDetailsForClaim({ name, email: "" }).unwrap(); student = r.data ?? r; }
+        catch { if (email) { try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; } catch {} } }
+      } else {
+        try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; }
+        catch { toast.error("Student not found"); return; }
+      }
+      if (student) {
+        setClaimScannedStudent({ id: student.id, name: student.name, email: student.email, department: student.department || "", raw: "manual_fetch" });
+        setValue("claimantName", student.name);
+        setValue("schoolEmail", student.email);
+        toast.success(`Found: ${student.name}`);
+      } else { toast.error("Student not found in masterlist"); }
+    } catch { toast.error("Student not found in masterlist"); }
+    finally { setIsFetchingClaimStudent(false); }
+  };
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -309,9 +369,7 @@ const SingleFoundItem = () => {
         } else {
           toast.success("Your claim has been submitted. Please visit the SAS office with a valid ID for verification.");
         }
-        setIsClaimModalOpen(false);
-        reset();
-        setLostDate("");
+        handleCloseClaimModal();
       } else {
         toast.error("Failed to submit claim. Please try again.");
       }
@@ -371,18 +429,15 @@ const SingleFoundItem = () => {
         <div className="border-b border-gray-800 bg-gray-950">
           <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-              {/* Left Side: Title and Subtitle */}
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">
                   {foundItemData?.foundItemName || "Found Item"}
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">Item lost details</p>
               </div>
-
-              {/* Right Side: Lifecycle Button */}
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
                 <button
-                  onClick={() => setIsTimelineOpen(true)}
+                  onClick={() => openModal(setIsTimelineOpen)}
                   className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all"
                 >
                   <FaClipboardList size={10} /> View Lifecycle
@@ -400,10 +455,8 @@ const SingleFoundItem = () => {
         {/* Main Content */}
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
-
-            {/* Left: Image with Status Overlay */}
+            {/* Left: Image */}
             <div className="relative flex flex-col h-full rounded-2xl overflow-hidden">
-              {/* Status Badge Overlay */}
               <div className="absolute top-3 left-3 z-10">
                 {isClaimed ? (
                   <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-emerald-500/30">
@@ -415,12 +468,7 @@ const SingleFoundItem = () => {
                   </span>
                 )}
               </div>
-
-              {hideImage ? (
-                <HiddenImagePlaceholder />
-              ) : (
-                <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
-              )}
+              {hideImage ? <HiddenImagePlaceholder /> : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />}
             </div>
 
             {/* Right: Details + Claim */}
@@ -429,7 +477,6 @@ const SingleFoundItem = () => {
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
                 <p className="text-gray-400 leading-relaxed text-sm">{foundItemData?.description || "No description available."}</p>
               </div>
-
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { icon: <FaCalendarAlt size={12} />, label: "Date Found", value: foundItemData?.date ? new Date(foundItemData.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified" },
@@ -446,8 +493,6 @@ const SingleFoundItem = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Claim section */}
               <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
                 <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-3">
                   {isClaimed ? "Claim Status" : isAdmin ? "Process Claim" : "Claim This Item"}
@@ -462,28 +507,28 @@ const SingleFoundItem = () => {
                   </div>
                 ) : isAdmin ? (
                   <>
-                    <div className="flex items-start gap-3 bg-gray-800/60 rounded-xl p-4 border border-gray-700 mb-4">
+                    <div className="flex items-start gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
                       <FaClipboardList className="text-blue-400 mt-0.5 shrink-0 text-lg" />
                       <div>
                         <p className="text-white text-sm font-semibold">Review claimant details</p>
                         <p className="text-gray-400 text-xs mt-1 leading-relaxed">Verify proof of ownership before marking this item as claimed.</p>
                       </div>
                     </div>
-                    <button onClick={() => setIsClaimModalOpen(true)}
+                    <button onClick={() => openModal(setIsClaimModalOpen)}
                       className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
                       Process Claim
                     </button>
                   </>
                 ) : (
                   <div className="space-y-3">
-                    <div className="flex items-start gap-3 bg-gray-800/60 rounded-xl p-4 border border-gray-700">
+                    <div className="flex items-start gap-3 bg-gray-800 rounded-xl p-3">
                       <FaBuilding className="text-blue-400 mt-0.5 shrink-0 text-lg" />
                       <div>
                         <p className="text-white text-sm font-semibold">Is this your item?</p>
                         <p className="text-gray-400 text-xs mt-1 leading-relaxed">Submit a claim with your details and proof of ownership. The SAS office will review and contact you via your school email.</p>
                       </div>
                     </div>
-                    <button onClick={() => setIsClaimModalOpen(true)}
+                    <button onClick={() => openModal(setIsClaimModalOpen)}
                       className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
                       Submit a Claim
                     </button>
@@ -497,26 +542,67 @@ const SingleFoundItem = () => {
 
       {/* Lifecycle Timeline Modal */}
       {isTimelineOpen && (
-        <LifecycleModal foundItem={foundItemData} onClose={() => setIsTimelineOpen(false)} />
+        <LifecycleModal foundItem={foundItemData} onClose={() => closeModal(setIsTimelineOpen)} />
       )}
 
       {/* Claim Modal */}
       {isClaimModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div 
+          id="single-claim-modal" 
+          className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto"
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
+          }}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 sticky top-0 bg-gray-900 z-20">
               <div>
                 <h3 className="text-base font-bold text-white">{isAdmin ? "Process Claim" : "Submit a Claim"}</h3>
                 <p className="text-gray-500 text-xs mt-0.5">{isAdmin ? "Verify ownership and mark item as claimed" : "Provide your details to prove ownership"}</p>
               </div>
-              <button
-                onClick={() => { setIsClaimModalOpen(false); reset(); setLostDate(""); }}
-                className="text-gray-500 hover:text-white ml-4"
-              >
+              <button onClick={handleCloseClaimModal} className="text-gray-500 hover:text-white ml-4">
                 <FaTimes size={15} />
               </button>
             </div>
 
+            {/* Fetch / Scan row */}
+            <div className="px-4 pt-3 border-b border-gray-800 pb-3">
+              {!claimScannedStudent ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleClaimFetchDetails}
+                    disabled={isFetchingClaimStudent}
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50"
+                  >
+                    {isFetchingClaimStudent ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
+                    Fetch Student Info
+                  </button>
+                  <button
+                    onClick={() => setShowClaimScanner(true)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider active:scale-95"
+                  >
+                    <FaQrcode size={9} /> Scan Student ID
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl px-3 py-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
+                    <FaUserCheck size={14} className="text-blue-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white text-xs font-black uppercase tracking-tight truncate">{claimScannedStudent.name}</p>
+                    <p className="text-blue-400/70 text-[10px] font-bold uppercase tracking-widest">ID: {claimScannedStudent.id}</p>
+                  </div>
+                  <button
+                    onClick={() => { setClaimScannedStudent(null); setValue("claimantName", ""); setValue("schoolEmail", ""); }}
+                    className="w-6 h-6 flex items-center justify-center rounded-md bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white transition-all shrink-0"
+                  >
+                    <FaTimes size={10} />
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="px-4 py-4">
               <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
                 {hideImage ? (
@@ -536,24 +622,22 @@ const SingleFoundItem = () => {
                   <p className="text-gray-400 text-xs">Found: {foundItemData?.date?.split("T")[0]}</p>
                 </div>
               </div>
-
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Full Name *</label>
                   <div className="relative">
                     <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
-                    <input type="text" placeholder="Enter your full name"
+                    <input type="text" placeholder=" "
                       {...register("claimantName", { required: "Full name is required" })}
                       className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm placeholder-gray-600" />
                   </div>
                   {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
                 </div>
-
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">School ID / Email *</label>
                   <div className="relative">
                     <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
-                    <input type="email" placeholder="yourname@nbsc.edu.ph"
+                    <input type="email" placeholder=" "
                       {...register("schoolEmail", {
                         required: "School email is required",
                         pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email (@nbsc.edu.ph)" },
@@ -562,22 +646,13 @@ const SingleFoundItem = () => {
                   </div>
                   {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
                 </div>
-
                 <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date Item Was Lost *</label>
-                  <CustomDatePicker
-                    value={lostDate}
-                    onChange={setLostDate}
-                    max={new Date().toISOString().split("T")[0]}
-                    placeholder="Select date lost"
-                    openUp
-                  />
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date</label>
+                  <CustomDatePicker value={lostDate} onChange={setLostDate} max={new Date().toISOString().split("T")[0]} placeholder=" " openUp />
                 </div>
-
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Proof of Ownership *</label>
-                  <textarea rows={4}
-                    placeholder="Describe identifying details — stickers, initials, scratches, serial number, contents inside, etc."
+                  <textarea rows={4} placeholder=" "
                     {...register("distinguishingFeatures", {
                       required: "Please describe identifying details",
                       minLength: { value: 10, message: "Please provide at least 10 characters" },
@@ -585,17 +660,13 @@ const SingleFoundItem = () => {
                     className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm resize-none placeholder-gray-600" />
                   {errors.distinguishingFeatures && <p className="text-red-400 text-xs mt-1">{errors.distinguishingFeatures.message as string}</p>}
                 </div>
-
                 <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
                   <p className="text-blue-300 text-xs leading-relaxed">
-                    {isAdmin
-                      ? "Your claim will be sent to the SAS office for review."
-                      : "Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
+                    {isAdmin ? "Your claim will be sent to the SAS office for review." : "Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
                   </p>
                 </div>
-
                 <div className="flex gap-3 pt-1">
-                  <button type="button" onClick={() => { setIsClaimModalOpen(false); reset(); setLostDate(""); }}
+                  <button type="button" onClick={handleCloseClaimModal}
                     className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium">
                     Cancel
                   </button>
@@ -610,6 +681,15 @@ const SingleFoundItem = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Scanner Modal */}
+      {showClaimScanner && (
+        <BarcodeScannerModal
+          onScan={handleClaimScan}
+          onClose={() => setShowClaimScanner(false)}
+          useFetchStudent={useFetchStudentForClaim}
+        />
       )}
 
       <ToastContainer position="top-right" autoClose={5000} style={{ top: "70px" }} theme="dark" />

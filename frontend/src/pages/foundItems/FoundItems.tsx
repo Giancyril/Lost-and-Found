@@ -13,6 +13,32 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
+
+// Custom scrollbar styles
+const customScrollbarStyles = `
+  #claim-modal::-webkit-scrollbar {
+    width: 6px;
+  }
+  #claim-modal::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+  #claim-modal::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+  #claim-modal::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  #claim-modal::-webkit-scrollbar-thumb:active {
+    background: rgba(255, 255, 255, 0.4);
+  }
+  #claim-modal {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+  }
+`;
 import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import {
@@ -185,10 +211,54 @@ const CustomSelect = ({ options, value, onChange }: {
 // ── Quick Claim Modal ─────────────────────────────────────────────────────────
 const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
   const [createClaim, { isLoading: claimLoading }] = useCreateClaimMutation();
-  const { register, handleSubmit, formState: { errors }, reset, control } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset, control, setValue: claimSetValue } = useForm();
   const [submitted, setSubmitted] = useState(false);
   const [prevClaimEmailValue, setPrevClaimEmailValue] = useState("");
   const [lostDate, setLostDate] = useState("");
+  const [claimScannedStudent, setClaimScannedStudent] = useState<ScannedStudent | null>(null);
+  const [showClaimScanner, setShowClaimScanner] = useState(false);
+  const [isFetchingClaimStudent, setIsFetchingClaimStudent] = useState(false);
+  const [getStudentByDetailsForClaim] = useLazyGetStudentByDetailsQuery();
+
+  const useFetchStudentForClaim = (id: string) => {
+    const trimmed = id?.trim() ?? "";
+    const isValidId = Boolean(trimmed && trimmed.length >= 4 && !/^\d{4}-\d{2}-\d{2}$/.test(trimmed));
+    return useGetStudentByIdQuery(trimmed, { skip: !isValidId });
+  };
+
+  const handleClaimScan = (student: ScannedStudent) => {
+    setClaimScannedStudent(student);
+    claimSetValue("claimantName", student.name, { shouldDirty: true });
+    claimSetValue("schoolEmail", student.email, { shouldDirty: true });
+    setShowClaimScanner(false);
+    toast.success(`Student identified: ${student.name}`);
+  };
+
+  const handleClaimFetchDetails = async () => {
+    const nameEl  = document.querySelector('#claim-modal input[name="claimantName"]') as HTMLInputElement;
+    const emailEl = document.querySelector('#claim-modal input[name="schoolEmail"]')  as HTMLInputElement;
+    const name  = nameEl?.value?.trim()  || "";
+    const email = emailEl?.value?.trim() || "";
+    if (!name && !email) { toast.info("Please enter a name or email to fetch details"); return; }
+    setIsFetchingClaimStudent(true);
+    try {
+      let student = null;
+      if (name) {
+        try { const r = await getStudentByDetailsForClaim({ name, email: "" }).unwrap(); student = r.data ?? r; }
+        catch { if (email) { try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; } catch {} } }
+      } else {
+        try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; }
+        catch { toast.error("Student not found"); return; }
+      }
+      if (student) {
+        setClaimScannedStudent({ id: student.id, name: student.name, email: student.email, department: student.department || "", raw: "manual_fetch" });
+        claimSetValue("claimantName", student.name, { shouldDirty: true });
+        claimSetValue("schoolEmail",  student.email, { shouldDirty: true });
+        toast.success(`Found: ${student.name}`);
+      } else { toast.error("Student not found in masterlist"); }
+    } catch { toast.error("Student not found in masterlist"); }
+    finally { setIsFetchingClaimStudent(false); }
+  };
 
   const onSubmit = async (data: any) => {
     try {
@@ -211,20 +281,66 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
 
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-              <FaClipboardList size={11} className="text-blue-400" />
+      <div id="claim-modal" className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex flex-col gap-3 px-5 py-4 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                <FaClipboardList size={11} className="text-blue-400" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-white truncate">Submit a Claim</h3>
+                <p className="text-gray-500 text-[11px] truncate">Prove ownership to retrieve this item</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">Submit a Claim</h3>
-              <p className="text-gray-500 text-[11px]">Prove ownership to retrieve this item</p>
-            </div>
+            <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0">
+              <FaTimes size={12} />
+            </button>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-            <FaTimes size={12} />
-          </button>
+          {/* Fetch / Scan row */}
+          <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+            {!claimScannedStudent && (
+              <>
+                <button
+                  onClick={handleClaimFetchDetails}
+                  disabled={isFetchingClaimStudent}
+                  className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50"
+                >
+                  {isFetchingClaimStudent ? (
+                    <FaSpinner className="animate-spin" size={8} />
+                  ) : (
+                    <FaSearch size={8} />
+                  )}
+                  Fetch Student Info
+                </button>
+
+                <button
+                  onClick={() => setShowClaimScanner(true)}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider active:scale-95"
+                >
+                  <FaQrcode size={9} /> Scan Student ID
+                </button>
+              </>
+            )}
+          </div>
+          {/* Scanned student banner */}
+          {claimScannedStudent && (
+            <div className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl px-3 py-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
+                <FaUserCheck size={14} className="text-blue-400" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-white text-xs font-black uppercase tracking-tight truncate">{claimScannedStudent.name}</p>
+                <p className="text-blue-400/70 text-[10px] font-bold uppercase tracking-widest">ID: {claimScannedStudent.id}</p>
+              </div>
+              <button
+                onClick={() => { setClaimScannedStudent(null); claimSetValue("claimantName", ""); claimSetValue("schoolEmail", ""); }}
+                className="w-6 h-6 flex items-center justify-center rounded-md bg-white/5 hover:bg-white-500/20 text-gray-500 hover:text-white-400 transition-all shrink-0"
+              >
+                <FaTimes size={10} />
+              </button>
+            </div>
+          )}
         </div>
         <div className="p-5">
           <div className="flex items-center gap-3 bg-gray-800/60 border border-white/5 rounded-xl p-3 mb-5">
@@ -270,6 +386,7 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
                       render={({ field }) => (
                         <input
                           {...field}
+                          value={field.value ?? ""}
                           type="email"
                           placeholder=" "
                           className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
@@ -320,8 +437,11 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
               </div>
             </form>
           )}
-        </div>
+         </div>
       </div>
+      {showClaimScanner && (
+        <BarcodeScannerModal onScan={handleClaimScan} onClose={() => setShowClaimScanner(false)} useFetchStudent={useFetchStudentForClaim} />
+      )}
     </div>
   );
 };
@@ -389,7 +509,18 @@ const FoundItemsPage = () => {
     reset: addReset,
     setValue: addSetValue,
     control: addControl,
-  } = useForm({ mode: "onSubmit", reValidateMode: "onSubmit" });
+  } = useForm({
+  mode: "onSubmit",
+  reValidateMode: "onSubmit",
+  defaultValues: {
+    reporterName: "",
+    schoolEmail: "",
+    department: "",
+    foundItemName: "",
+    description: "",
+    location: "",
+  },
+});
 
   const handleFuzzyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
@@ -978,6 +1109,7 @@ const FoundItemsPage = () => {
                       render={({ field }) => (
                         <input
                           {...field}
+                          value={field.value ?? ""}
                           type="email"
                           placeholder=" "
                           className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
@@ -1246,6 +1378,10 @@ const FoundItemsPage = () => {
       )}
 
       {claimItem && <QuickClaimModal item={claimItem} onClose={() => setClaimItem(null)} />}
+      
+      {/* Custom scrollbar styles */}
+      <style>{customScrollbarStyles}</style>
+
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
     </div>
   );
