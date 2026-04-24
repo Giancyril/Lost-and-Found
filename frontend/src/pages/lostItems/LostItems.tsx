@@ -8,7 +8,7 @@ import {
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
   FaTh, FaList, FaCheck, FaChevronDown, FaShare,
   FaMoneyBillWave,
-  FaCopy, FaFire, FaStar, FaFacebook, FaFacebookMessenger,
+  FaCopy, FaFire, FaStar, FaFacebook,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -244,37 +244,12 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
   };
 
   const handleFacebookShare = () => {
-    const shareUrl = window.location.href;
-    console.log('Sharing URL:', shareUrl);
-    console.log('Sharing message:', message);
-    
-    // Try different Facebook approaches
-    if (navigator.share) {
-      // Web Share API for modern browsers
-      navigator.share({
-        title: `Lost: ${item?.lostItemName ?? "Unknown item"}`,
-        text: message,
-        url: shareUrl,
-      })
-      .then(() => console.log('Web Share successful'))
-      .catch((error) => console.log('Web Share failed:', error));
-    } else {
-      // Try Facebook's direct post method
-      const fbPostUrl = `https://www.facebook.com/dialog/share?app_id=966242223394747&display=popup&href=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(message)}`;
-      console.log('Facebook Post URL:', fbPostUrl);
-      window.open(fbPostUrl, '_blank', 'width=600,height=400');
-    }
-  };
-
-  const handleMessengerShare = () => {
-    const shareUrl = window.location.href;
-    console.log('Messenger sharing URL:', shareUrl);
-    console.log('Messenger sharing message:', message);
-    
-    const messengerUrl = `https://www.facebook.com/dialog/send?link=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(message)}`;
-    console.log('Messenger URL:', messengerUrl);
-    window.open(messengerUrl, '_blank', 'width=600,height=400');
-  };
+  const shareUrl = `${window.location.origin}/lostItems/${item?.id}`;
+  navigator.clipboard.writeText(message).catch(() => {});
+  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+  window.open(fbUrl, "_blank", "width=600,height=500");
+  toast.info("Message copied! Paste it into your Facebook post after it opens.", { autoClose: 5000 });
+};
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -284,7 +259,7 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
           <div className="flex items-center gap-2.5">
             <div>
               <h3 className="text-white font-bold text-sm">Share this Report</h3>
-              <p className="text-gray-500 text-[10px] mt-0.5">Paste in Messenger, Viber, or any chat</p>
+              <p className="text-gray-500 text-[10px] mt-0.5">Facebook will open with the link — your message is auto-copied to paste in.</p>
             </div>
           </div>
           <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
@@ -322,30 +297,23 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
 
           
 
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={handleFacebookShare}
-                className="flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 border border-blue-500/30 text-white text-xs font-bold rounded-xl transition-all">
-                <FaFacebook size={12} /> Facebook
-              </button>
-              <button onClick={handleMessengerShare}
-                className="flex items-center justify-center gap-2 py-2.5 bg-blue-500 hover:bg-blue-600 border border-blue-500/30 text-white text-xs font-bold rounded-xl transition-all">
-                <FaFacebookMessenger size={12} /> Messenger
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={onClose}
-                className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">
-                Cancel
-              </button>
-              <button onClick={handleCopy}
-                className={`flex-1 py-2.5 flex items-center justify-center gap-2 text-xs font-bold rounded-xl transition-all
-                  ${copied
-                    ? "bg-green-600/80 border border-green-500/30 text-white"
-                    : "bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white"}`}>
-                {copied ? <><FaCheckCircle size={11} /> Copied!</> : <><FaCopy size={11} /> Copy Message</>}
-              </button>
-            </div>
+          <div className="flex gap-2">
+            <button onClick={handleCopy}
+              className={`flex-1 py-2.5 flex items-center justify-center gap-2 text-xs font-bold rounded-xl transition-all
+                ${copied
+                  ? "bg-green-600/80 border border-green-500/30 text-white"
+                  : "bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white"}`}>
+              {copied ? <><FaCheckCircle size={11} /> Copied!</> : <><FaCopy size={11} /> Copy Message</>}
+            </button>
+            <button onClick={handleFacebookShare}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 border border-blue-500/30 text-white text-xs font-bold rounded-xl transition-all">
+              <FaFacebook size={12} /> Facebook
+            </button>
+            <button onClick={onClose}
+              className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">
+              Cancel
+            </button>
+            
           </div>
         </div>
       </div>
@@ -494,12 +462,9 @@ const TipsViewerModal = ({ item, onClose, isAdmin }: { item: any; onClose: () =>
         <div className="flex-1 overflow-y-auto p-5">
           {tips.length === 0 ? (
             <div className="text-center py-10">
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-3">
-                <FaEye className="text-cyan-400 opacity-40" size={18} />
-              </div>
               <p className="text-white text-sm font-semibold">No sightings yet</p>
               <p className="text-gray-500 text-xs mt-1.5 leading-relaxed max-w-[220px] mx-auto">
-                If you've seen this item, click <strong className="text-blue-400">"I Saw This"</strong> to help!
+                If you've seen this item, <br /> click <strong className="text-blue-400">"Sighted"</strong> to report
               </p>
             </div>
           ) : (
