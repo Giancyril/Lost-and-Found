@@ -33,7 +33,7 @@ const services: Service[] = [
   },
   {
     title: "Location-Based Services",
-    description: "Browse items by specific campus areas classrooms, gym, cafeteria, library to narrow down where your belongings may have been found.",
+    description: "Browse items by specific campus areas classrooms, cafeteria, library to narrow down where your belongings may have been found.",
   },
   {
     title: "Smart AI Search",                                          

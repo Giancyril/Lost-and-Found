@@ -73,9 +73,12 @@ export function Navbars() {
         {/* Brand */}
         <NavbarBrand href="/" onClick={(e) => { if (!users?.email) { e.preventDefault(); handleBrandClick(); } }}>
           <div className="flex items-center space-x-2.5 select-none">
-            <img src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png" alt="NBSC SAS Logo"
+            <img
+              src="/sas lost and found logo.png"
+              alt="SAS Lost and Found Logo"
               className="w-9 h-9 object-contain shrink-0"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
             <div>
               <span className="whitespace-nowrap text-sm font-black text-white tracking-widest leading-none">NBSC SAS</span>
               <p className="text-gray-500 text-[10px] font-medium tracking-wide leading-tight hidden sm:block">Lost & Found Management System</p>

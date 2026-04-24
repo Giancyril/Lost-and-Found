@@ -5,7 +5,7 @@ import { ToastContainer } from "react-toastify";
 import { setUserLocalStorage } from "../../auth/auth";
 import { useLoginMutation } from "../../redux/api/api";
 import { useNavigate } from "react-router-dom";
-import { MdVisibility, MdVisibilityOff } from "react-icons/md";
+import { MdVisibility, MdVisibilityOff, MdEmail, MdLock, MdErrorOutline } from "react-icons/md";
 import { useState, useEffect } from "react";
 import FloatingLines from "../../components/FloatingLines";
 
@@ -27,6 +27,8 @@ const Login = () => {
   const [attempts, setAttempts] = useState(() => getLockoutState().attempts);
   const [lockedUntil, setLockedUntil] = useState<number | null>(() => getLockoutState().lockedUntil);
   const [countdown, setCountdown] = useState(0);
+  const [isFocused, setIsFocused] = useState<'username' | 'password' | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const {
     handleSubmit,
@@ -64,9 +66,8 @@ const Login = () => {
   const onSubmit = async (data: any) => {
     if (isLocked) return;
     try {
-      const res: any = await login(data);
+      const res: any = await login({ ...data, rememberMe });
       if (res?.data) {
-        // Success — clear lockout
         localStorage.removeItem(STORAGE_KEY);
         setAttempts(0);
         Modals({ message: "Logged in successfully", status: true });
@@ -96,12 +97,9 @@ const Login = () => {
 
   return (
     <>
-      {/* Changed items-start to items-center and removed pt-8 to perfectly center the card */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-950">
 
-        {/* ── Floating wave background ── */}
         <div className="absolute inset-0 bg-gray-950" />
-
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_60%,rgba(37,99,235,0.12),transparent)]" />
 
         <div className="absolute inset-0" style={{ mixBlendMode: 'screen' }}>
@@ -125,43 +123,71 @@ const Login = () => {
           />
         </div>
 
-        {/* ── Login card ── */}
         <div className="relative z-10 w-full max-w-md px-6 -mt-16">
-          <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/50 p-8">
-            <div className="mb-7 text-center">
-              {/* Logo */}
-              <div className="flex flex-col items-center gap-2 mb-5">
-                <img
-                  src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png"
-                  alt="NBSC Logo"
-                  className="w-16 h-16 object-contain"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
-                <p className="text-white font-bold text-sm tracking-wide"> SAS Lost &amp; Found Management System</p>
+          <div className="bg-gray-900/80 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl shadow-black/50 p-8 transition-all duration-300 hover:shadow-3xl hover:shadow-blue-500/10">
+            <div className="mb-8 text-center">
+              <div className="flex flex-col items-center gap-3 mb-6">
+                <div className="relative">
+                  <img
+                    src="/sas lost and found logo.png"
+                    alt="SAS Lost and Found Logo"
+                    className="w-20 h-20 object-contain transition-transform duration-300 hover:scale-105"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-px bg-white/15" />
+                  <span className="text-[10px] font-medium text-blue-300/70 tracking-widest uppercase">Student Affairs and Services</span>
+                  <span className="w-6 h-px bg-white/15" />
+                </div>
+                <h1 className="text-2xl font-bold text-white tracking-tight">Lost & <span className="text-blue-400">Found</span> </h1>
+              
               </div>
-              <h2 className="text-lg font-bold text-white"></h2>
-              <p className="text-gray-500 text-sm mt-1">Enter your credentials to access the admin panel</p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+
+              {/* Username */}
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                {/* ✅ removed 'block' — 'flex' already makes it block-level */}
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 uppercase tracking-wide mb-3">
+                  <MdEmail className="w-4 h-4 text-blue-400" />
                   Email or Username
                 </label>
-                <input
-                  type="text"
-                  {...register("username", { required: "Email is required" })}
-                  disabled={isLocked}
-                  className="w-full bg-gray-800/80 border border-white/10 text-white placeholder-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                  placeholder=" "
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    {...register("username", { required: "Email is required" })}
+                    disabled={isLocked}
+                    onFocus={() => setIsFocused('username')}
+                    onBlur={() => setIsFocused(null)}
+                    className={`w-full bg-gray-800/60 border ${
+                      isFocused === 'username'
+                        ? 'border-blue-500/50 ring-2 ring-blue-500/30'
+                        : 'border-white/10'
+                    } text-white placeholder-gray-500 rounded-xl px-4 py-4 focus:outline-none transition-all duration-300 text-base disabled:opacity-40 disabled:cursor-not-allowed`}
+                    placeholder=" "
+                  />
+                  {isFocused === 'username' && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <MdEmail className="w-5 h-5 text-blue-400 opacity-60" />
+                    </div>
+                  )}
+                </div>
                 {errors.username && (
-                  <p className="text-red-400 text-xs mt-1">{errors.username?.message as string}</p>
+                  <div className="flex items-center gap-2 mt-2 text-red-400 text-sm animate-pulse">
+                    <MdErrorOutline className="w-4 h-4" />
+                    <span>{errors.username?.message as string}</span>
+                  </div>
                 )}
               </div>
 
+              {/* Password */}
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                {/* ✅ removed 'block' — 'flex' already makes it block-level */}
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 uppercase tracking-wide mb-3">
+                  <MdLock className="w-4 h-4 text-blue-400" />
                   Password
                 </label>
                 <div className="relative">
@@ -169,46 +195,71 @@ const Login = () => {
                     type={showPassword ? "text" : "password"}
                     {...register("password", { required: "Password is required" })}
                     disabled={isLocked}
-                    placeholder="••••••••"
-                    className="w-full bg-gray-800/80 border border-white/10 text-white placeholder-gray-600 rounded-xl px-4 py-3 pr-11 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                    onFocus={() => setIsFocused('password')}
+                    onBlur={() => setIsFocused(null)}
+                    className={`w-full bg-gray-800/60 border ${
+                      isFocused === 'password'
+                        ? 'border-blue-500/50 ring-2 ring-blue-500/30'
+                        : 'border-white/10'
+                    } text-white placeholder-gray-500 rounded-xl px-4 py-4 pr-12 focus:outline-none transition-all duration-300 text-base disabled:opacity-40 disabled:cursor-not-allowed`}
+                    placeholder=" "
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-300 transition-colors duration-200"
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-blue-400 transition-colors duration-300"
                   >
-                    {showPassword ? <MdVisibilityOff className="w-5 h-5" /> : <MdVisibility className="w-5 h-5" />}
+                    {showPassword
+                      ? <MdVisibilityOff className="w-5 h-5" />
+                      : <MdVisibility className="w-5 h-5" />}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-red-400 text-xs mt-1">{errors.password?.message as string}</p>
+                  <div className="flex items-center gap-2 mt-2 text-red-400 text-sm animate-pulse">
+                    <MdErrorOutline className="w-4 h-4" />
+                    <span>{errors.password?.message as string}</span>
+                  </div>
                 )}
               </div>
 
+              {/* Submit / Locked / Loading */}
               {isLocked ? (
-                <div className="w-full bg-red-500/10 border border-red-500/20 rounded-xl py-3 px-4 text-center space-y-1">
-                  <p className="text-red-400 text-sm font-semibold">Too many failed attempts</p>
-                  <p className="text-gray-400 text-xs">Try again in <span className="text-white font-bold">{formatCountdown(countdown)}</span></p>
+                <div className="w-full bg-red-500/20 border border-red-500/30 rounded-xl py-4 px-4 text-center space-y-3">
+                  <div className="flex items-center justify-center gap-3">
+                    <MdErrorOutline className="w-6 h-6 text-red-400" />
+                    <div>
+                      <p className="text-red-400 font-semibold">Account temporarily locked</p>
+                      <p className="text-gray-400 text-sm">Too many failed login attempts</p>
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/60 rounded-lg py-2 px-3">
+                    <p className="text-gray-300 text-sm">
+                      Try again in{" "}
+                      <span className="text-white font-bold text-lg">{formatCountdown(countdown)}</span>
+                    </p>
+                  </div>
                 </div>
               ) : isLoading ? (
-                <div className="flex justify-center py-3">
-                  <div className="flex items-center gap-3">
+                <div className="flex justify-center py-4">
+                  <div className="flex items-center gap-3 bg-blue-500/20 rounded-xl px-6 py-3">
                     <Spinner size="sm" />
-                    <span className="text-gray-400 text-sm">Signing in...</span>
+                    <span className="text-blue-300 text-base font-medium">Authenticating...</span>
                   </div>
                 </div>
               ) : (
                 <>
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 text-sm mt-1 shadow-lg shadow-blue-900/30"
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold py-4 px-4 rounded-xl transition-all duration-300 text-base shadow-lg shadow-blue-900/30 hover:shadow-xl hover:shadow-blue-500/40 transform hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Sign In
                   </button>
                   {attempts > 0 && (
-                    <p className="text-center text-xs text-orange-400">
-                      {MAX_ATTEMPTS - attempts} attempt{MAX_ATTEMPTS - attempts === 1 ? "" : "s"} remaining before lockout
-                    </p>
+                    <div className="mt-3 text-center">
+                      <p className="text-xs text-orange-400 bg-orange-500/10 rounded-lg py-2 px-3 inline-block">
+                        {MAX_ATTEMPTS - attempts} attempt{MAX_ATTEMPTS - attempts === 1 ? "" : "s"} remaining before lockout
+                      </p>
+                    </div>
                   )}
                 </>
               )}

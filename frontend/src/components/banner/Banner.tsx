@@ -48,7 +48,7 @@ const Banner = () => {
   const RecentLostPanel = () => (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-white font-semibold text-sm flex items-center gap-2">📋 Recent Lost Items</p>
+        <p className="text-white font-semibold text-sm flex items-center gap-2"> Recent Lost Items</p>
         <a href="/lostItems" className="text-blue-400 text-xs hover:text-blue-300 transition-colors">View all →</a>
       </div>
       {lostItems?.data?.length > 0 ? (
@@ -74,7 +74,7 @@ const Banner = () => {
   const RecentFoundPanel = () => (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-white font-semibold text-sm flex items-center gap-2">✅ Recent Found Items</p>
+        <p className="text-white font-semibold text-sm flex items-center gap-2"> Recent Found Items</p>
         <a href="/foundItems" className="text-green-400 text-xs hover:text-green-300 transition-colors">View all →</a>
       </div>
       {foundItems?.data?.length > 0 ? (

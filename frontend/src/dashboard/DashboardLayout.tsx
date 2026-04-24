@@ -326,8 +326,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className={`flex items-center h-16 border-b border-white/5 px-4 shrink-0 ${sidebarCollapsed ? "justify-center" : "justify-between"}`}>
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2.5">
-              <img src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png" alt="NBSC SAS Logo"
-                className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              <img
+                src="/sas lost and found logo.png"
+                alt="SAS Lost and Found Logo"
+                className="w-8 h-8 object-contain"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
               <div className="leading-tight">
                 <p className="text-white text-sm font-semibold tracking-widest">NBSC SAS</p>
                 <p className="text-gray-500 text-[10px] uppercase tracking-widest">Lost & Found</p>
@@ -335,8 +339,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
           )}
           {sidebarCollapsed && (
-            <img src="https://nbsc.edu.ph/wp-content/uploads/2024/03/cropped-NBSC_NewLogo_icon.png" alt="NBSC SAS Logo"
-              className="w-8 h-8 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            <img
+              src="/sas lost and found logo.png"
+              alt="SAS Lost and Found Logo"
+              className="w-8 h-8 object-contain"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
           )}
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-500 hover:text-white p-1">
             <FaTimes size={14} />
