@@ -26,13 +26,6 @@ model User {
   foundItem     FoundItem[]
   LostItem      LostItem[]
   Comment       Comment[]
-  UserReputation UserReputation?
-  DiscussionThread DiscussionThread[]
-  ThreadReply    ThreadReply[]
-  ReputationHistory ReputationHistory[]
-  UserBadge      UserBadge[]
-  AnalyticsExport AnalyticsExport[]
-  ModerationAction ModerationAction[]
 
   @@map("users")
 }
@@ -179,175 +172,25 @@ model MatchNotification {
   @@map("matchNotifications")
 }
 
-model Student {
-  id         String   @id
-  name       String
-  email      String   @unique
-  department String   @default("")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@map("students")
-}
-
 model Comment {
-  id            String        @id @default(uuid())
-  itemId        String
-  itemType      ItemType
-  userId        String?       // null for anonymous
-  content       String
-  isAnonymous   Boolean       @default(false)
-  helpfulCount  Int           @default(0)
-  status        CommentStatus @default(PENDING)
-  location      String?
-  time          String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
-  foundItem     FoundItem?    @relation(fields: [itemId], references: [id], map: "comments_foundItem_fkey")
-  lostItem      LostItem?     @relation(fields: [itemId], references: [id], map: "comments_lostItem_fkey")
-  user          User?         @relation(fields: [userId], references: [id])
-  
+  id              String        @id @default(uuid())
+  itemId          String
+  itemType        ItemType
+  userId          String?
+  content         String
+  isAnonymous     Boolean       @default(false)
+  helpfulCount    Int           @default(0)
+  status          CommentStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  location        String?
+  rejectionReason String?
+
+  foundItem FoundItem? @relation(fields: [itemId], references: [id], map: "comments_foundItem_fkey")
+  lostItem  LostItem?  @relation(fields: [itemId], references: [id], map: "comments_lostItem_fkey")
+  user      User?      @relation(fields: [userId], references: [id])
+
   @@map("comments")
-}
-
-model DiscussionThread {
-  id          String           @id @default(uuid())
-  title       String
-  category    ThreadCategory
-  createdBy   String
-  isPinned    Boolean          @default(false)
-  replyCount  Int              @default(0)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  
-  creator     User             @relation(fields: [createdBy], references: [id])
-  replies     ThreadReply[]
-  
-  @@map("discussion_threads")
-}
-
-model ThreadReply {
-  id           String   @id @default(uuid())
-  threadId     String
-  userId       String
-  content      String
-  helpfulCount Int      @default(0)
-  createdAt    DateTime @default(now())
-  
-  thread       DiscussionThread @relation(fields: [threadId], references: [id])
-  user         User             @relation(fields: [userId], references: [id])
-  
-  @@map("thread_replies")
-}
-
-model UserReputation {
-  userId              String     @id
-  helpfulPoints       Int        @default(0)
-  commentsCount       Int        @default(0)
-  verifiedSightings   Int        @default(0)
-  threadsCreated      Int        @default(0)
-  reputationPoints    Int        @default(0)
-  trustLevel          TrustLevel @default(NEW)
-  lastCalculated      DateTime   @default(now())
-  
-  user                User       @relation(fields: [userId], references: [id])
-  
-  @@map("user_reputation")
-}
-
-model ReputationHistory {
-  id            String   @id @default(uuid())
-  userId        String
-  actionType    String
-  pointsChange  Int
-  reason        String
-  referenceId   String?
-  createdAt     DateTime @default(now())
-  
-  user          User     @relation(fields: [userId], references: [id])
-
-  @@map("reputation_history")
-}
-
-model BadgeDefinition {
-  id            String      @id @default(uuid())
-  name          String
-  description   String
-  icon          String
-  unlockPoints  Int
-  category      String
-  isActive      Boolean     @default(true)
-  createdAt     DateTime    @default(now())
-  userBadges    UserBadge[]
-
-  @@map("badge_definitions")
-}
-
-model UserBadge {
-  userId    String
-  badgeId   String
-  earnedAt  DateTime @default(now())
-  badgeData Json?
-  
-  user      User            @relation(fields: [userId], references: [id])
-  badge     BadgeDefinition @relation(fields: [badgeId], references: [id])
-
-  @@id([userId, badgeId])
-  @@map("user_badges")
-}
-
-model AnalyticsMetric {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  value       Float
-  category    String
-  recordedAt  DateTime @default(now())
-
-  @@map("analytics_metrics")
-}
-
-model AnalyticsExport {
-  id           String    @id @default(uuid())
-  exportName   String
-  exportType   String
-  exportFormat String
-  dateRange    String
-  createdBy    String
-  exportStatus String    @default("pending") // pending, processing, completed, failed
-  filePath     String?
-  createdAt    DateTime  @default(now())
-  completedAt  DateTime?
-  
-  user         User      @relation(fields: [createdBy], references: [id])
-
-  @@map("analytics_exports")
-}
-
-model AnalyticsAlert {
-  id             String   @id @default(uuid())
-  alertName      String
-  alertType      String
-  thresholdValue Float
-  metricName     String
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-
-  @@map("analytics_alerts")
-}
-
-model ModerationAction {
-  id           String   @id @default(uuid())
-  moderatorId  String
-  targetId     String
-  targetType   String   // user, thread, reply, comment
-  action       String   // block, delete, warning
-  reason       String
-  createdAt    DateTime @default(now())
-
-  user         User     @relation(fields: [moderatorId], references: [id])
-
-  @@map("moderation_actions")
 }
 
 enum status {
@@ -370,18 +213,4 @@ enum CommentStatus {
 enum ItemType {
   LOST
   FOUND
-}
-
-enum ThreadCategory {
-  LOCATION
-  GENERAL
-  TRENDING
-}
-
-enum TrustLevel {
-  NEW
-  TRUSTED
-  EXPERT
-  MASTER
-  MODERATOR
 }

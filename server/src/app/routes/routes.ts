@@ -11,7 +11,6 @@ import { FoundItemCategorySchema } from "../modules/itemCategory/itemCategory.va
 import { FoundItemSchema } from "../modules/foundItems/foundItems.validate";
 import { ItemClaimSchema } from "../modules/claim/claim.validate";
 import { lostItemController } from "../modules/lostItem/lost.controller";
-import { utils } from "../utils/utils";
 import { adminStats } from "../utils/adminStats";
 import { locationStats } from "../utils/locationStats";
 import { getAuditLogs } from "../utils/auditLog";
@@ -26,9 +25,6 @@ import { studentRoutes } from "../modules/student/student.routes";
 import sheetsRoutes from "../modules/sheets/sheets.routes";
 import { uploadImages } from "../midddlewares/upload";
 import { commentsRouter } from "../../api/comments/commentsRouter";
-import analyticsRouter from "../../api/analytics/analyticsRouter";
-import reputationRouter from "../../api/reputation/reputationRouter";
-import { threadsRouter } from "../../api/threads/threadsRouter";
 
 const router = express.Router();
 
@@ -56,10 +52,10 @@ router.get("/found-item/:id", foundItemController.getSingleFoundItem);
 router.post("/found-items/:id/images", uploadImages.array('images', 5), foundItemController.uploadFoundItemImages);
 
 // ── Archive routes (admin only) ──
-router.get("/found-items/archived",        auth(), foundItemController.getArchivedFoundItems);
-router.get("/found-items/stale",           auth(), foundItemController.getStaleFoundItems);
-router.put("/found-items/:id/archive",     auth(), foundItemController.archiveFoundItem);
-router.put("/found-items/:id/restore",     auth(), foundItemController.restoreFoundItem);
+router.get("/found-items/archived",    auth(), foundItemController.getArchivedFoundItems);
+router.get("/found-items/stale",       auth(), foundItemController.getStaleFoundItems);
+router.put("/found-items/:id/archive", auth(), foundItemController.archiveFoundItem);
+router.put("/found-items/:id/restore", auth(), foundItemController.restoreFoundItem);
 
 ////////////////////////////////////////////////// lost items //////////////////////////////////////////////
 router.post("/lostItem", lostItemController.createLostItem);
@@ -75,12 +71,11 @@ router.get("/my/foundItem", auth(), foundItemController.getMyFoundItem);
 router.put("/my/foundItem", auth(), foundItemController.editMyFoundItem);
 router.delete("/my/foundItem/:id", auth(), foundItemController.deleteMyFoundItem);
 
-////////////////////////////////////    ////////////// claims //////////////////////////////////////////////
+////////////////////////////////////////////////// claims //////////////////////////////////////////////
 router.post("/claims", validateRequest(ItemClaimSchema.createClaim), claimsController.createClaim);
 router.get("/claims", auth(), claimsController.getClaim);
 router.get("/my/claims", auth(), claimsController.getMyClaim);
 router.put("/claims/:claimId", validateRequest(ItemClaimSchema.updateClaim), auth(), claimsController.updateClaimStatus);
-// DELETE endpoint for claims - deployed on Render
 router.delete("/claims/:claimId", auth(), claimsController.deleteClaim);
 
 ////////////////////////////////////////////////// admin //////////////////////////////////////////////
@@ -101,19 +96,16 @@ router.post("/email/lost-item",      auth(), sendLostItemEmail);
 router.post("/email/claim-approved", auth(), sendClaimApprovedEmail);
 
 ////////////////////////////////////////////////// bulletin posts //////////////////////////////////////////////
-router.post("/bulletin-posts",                    postCreationLimiter,  validateRequest(createPostSchema), bulletinPostController.createPost);
-router.get("/bulletin-posts",                                           bulletinPostController.getPosts);
-router.post("/bulletin-posts/:id/tips",           tipSubmissionLimiter, validateRequest(createTipSchema),  bulletinPostController.createTip);
-router.get("/bulletin-posts/:id/tips",                                  bulletinPostController.getTips);
-router.delete("/bulletin-posts/:id",              auth(),               bulletinPostController.deletePost);
-router.delete("/bulletin-posts/:id/tips/:tipId",  auth(),               bulletinPostController.deleteTip);
-router.put("/bulletin-posts/:id/resolve",         auth(),               bulletinPostController.resolvePost);
+router.post("/bulletin-posts",                   postCreationLimiter,  validateRequest(createPostSchema), bulletinPostController.createPost);
+router.get("/bulletin-posts",                                          bulletinPostController.getPosts);
+router.post("/bulletin-posts/:id/tips",          tipSubmissionLimiter, validateRequest(createTipSchema),  bulletinPostController.createTip);
+router.get("/bulletin-posts/:id/tips",                                 bulletinPostController.getTips);
+router.delete("/bulletin-posts/:id",             auth(),               bulletinPostController.deletePost);
+router.delete("/bulletin-posts/:id/tips/:tipId", auth(),               bulletinPostController.deleteTip);
+router.put("/bulletin-posts/:id/resolve",        auth(),               bulletinPostController.resolvePost);
 
 router.use("/students", studentRoutes);
 router.use("/sheets", sheetsRoutes);
 router.use("/", commentsRouter);
-router.use("/analytics", analyticsRouter);
-router.use("/reputation", reputationRouter);
-router.use("/threads", threadsRouter);
 
 export default router;
