@@ -82,21 +82,19 @@ export const commentService = {
   },
 
   async getComments(itemId: string, options: any = {}) {
-  try {
-    const result = await prisma.$queryRaw`
-      SELECT 
-        id, "itemId", "itemType", content, "isAnonymous", 
-        "helpfulCount", status, "createdAt", "userId", location
-      FROM comments
-      WHERE "itemId" = ${itemId}
-        AND status = 'APPROVED'
-      ORDER BY "createdAt" DESC
-      LIMIT 50
-    `;
-    return result;
-  } catch (error: any) {
-    console.error('RAW QUERY ERROR:', error?.message);
-    throw error;
-  }
+  const page = Number(options.page) || 1;   // fallback to 1
+  const limit = Number(options.limit) || 50; // fallback to 50
+
+  return await prisma.comment.findMany({
+    where: { itemId, status: 'APPROVED' },
+    include: {
+      user: {
+        select: { id: true, name: true, userImg: true, role: true },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    skip: (page - 1) * limit,
+    take: limit,
+  });
 },
 };
