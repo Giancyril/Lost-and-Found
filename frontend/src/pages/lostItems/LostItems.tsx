@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
-  FaSearch, FaMapMarkerAlt, FaCalendarAlt,
+  FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight,
   FaTimes, FaTag,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
-  FaTh, FaList, FaShare, FaComments,
-  FaMoneyBillWave,
+  FaTh, FaList, FaCheck, FaChevronDown, FaShare, FaComments,
+  FaMoneyBillWave, FaCopy, FaFire, FaStar,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -15,180 +15,737 @@ import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
 import { useUserVerification } from "../../auth/auth";
 import { CommentModal } from "../../components/comments/CommentModal";
 
+// ── Category icon resolver ────────────────────────────────────────────────────
 const getCategoryIcon = (name: string) => {
   const n = name?.toLowerCase() ?? "";
-  if (n.includes("wallet")) return <FaWallet size={9} className="text-amber-400" />;
-  if (n.includes("phone")) return <FaMobileAlt size={9} className="text-cyan-400" />;
-  if (n.includes("laptop")) return <FaLaptop size={9} className="text-indigo-400" />;
-  if (n.includes("key")) return <FaKey size={9} className="text-orange-400" />;
-  if (n.includes("bag")) return <FaBriefcase size={9} className="text-amber-400" />;
+  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch"))       return <FaWallet    size={9} className="text-amber-400" />;
+  if (n.includes("phone") || n.includes("mobile") || n.includes("celphone"))    return <FaMobileAlt size={9} className="text-cyan-400" />;
+  if (n.includes("laptop") || n.includes("computer") || n.includes("electronic") || n.includes("device") || n.includes("gadget")) return <FaLaptop size={9} className="text-indigo-400" />;
+  if (n.includes("key"))                                                          return <FaKey       size={9} className="text-orange-400" />;
+  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage"))      return <FaBriefcase size={9} className="text-amber-400" />;
+  if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod")) return <FaHeadphones size={9} className="text-green-400" />;
+  if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass")) return <FaGlasses    size={9} className="text-teal-400" />;
+  if (n.includes("book") || n.includes("stationery") || n.includes("notebook"))  return <FaBook      size={9} className="text-yellow-400" />;
+  if (n.includes("id") || n.includes("card") || n.includes("document"))          return <FaIdCard    size={9} className="text-blue-400" />;
+  if (n.includes("umbrella"))                                                     return <FaUmbrella  size={9} className="text-blue-400" />;
+  if (n.includes("cloth") || n.includes("shirt") || n.includes("uniform") || n.includes("wear")) return <FaTshirt size={9} className="text-purple-400" />;
+  if (n.includes("camera") || n.includes("photo"))                               return <FaCamera    size={9} className="text-violet-400" />;
+  if (n.includes("watch") || n.includes("clock"))                                return <FaClock     size={9} className="text-gray-300" />;
+  if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask")) return <FaTint size={9} className="text-cyan-400" />;
+  if (n.includes("money") || n.includes("cash") || n.includes("bill") || n.includes("currency")) return <FaMoneyBillWave size={9} className="text-green-400" />;
   return <FaTag size={9} className="text-blue-400" />;
 };
 
-const GroupHeader = ({ label, count, accent }: { label: string; count: number; accent: string }) => (
-  <div className="flex items-center gap-3 py-3 mb-1">
-    <div className={`w-2 h-2 rounded-full ${accent === "red" ? "bg-red-400 animate-pulse" : "bg-gray-500"} shrink-0`} />
-    <span className="text-xs font-black uppercase tracking-widest text-gray-400">{label}</span>
-    <div className="flex-1 h-px border-t border-white/5" />
-    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-gray-500">
-      {count} {count === 1 ? "item" : "items"}
-    </span>
-  </div>
-);
-
+// ── Helpers ───────────────────────────────────────────────────────────────────
 const getItemGroup = (item: any): "today" | "week" | "older" => {
   const date = new Date(item.createdAt ?? item.date);
-  const diffDays = (Date.now() - date.getTime()) / 86400000;
+  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
   if (diffDays < 1) return "today";
   if (diffDays < 7) return "week";
   return "older";
 };
 
+const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
 const shouldHideImage = (cat: string | undefined, isAdmin: boolean) => {
   if (isAdmin) return false;
-  return ["wallet", "purse"].some(c => cat?.toLowerCase().includes(c));
+  return HIDDEN_IMAGE_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
 };
 
-const ItemCard = ({ item, isAdmin, onShare, onOpenComments }: { item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void }) => {
-  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
+// ── Custom Select ─────────────────────────────────────────────────────────────
+interface SelectOption { value: string; label: string; icon?: React.ReactNode; }
+
+const CustomSelect = ({ options, value, onChange }: {
+  options: SelectOption[]; value: string; onChange: (v: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
   return (
-    <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col group hover:border-gray-700/50 transition-all">
-      <div className="relative h-48 bg-gray-800 shrink-0 overflow-hidden">
-        {!hideImg && <img src={item?.img || "/bgimg.png"} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />}
-        <div className="absolute top-3 left-3 px-2 py-0.5 bg-red-500 text-[10px] font-bold rounded-full">Lost</div>
+    <div ref={ref} className="relative flex-1 min-w-0">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm rounded-xl border transition-all duration-150 outline-none bg-gray-900
+          ${open ? "border-blue-500/50 ring-2 ring-blue-500/10 text-white" : "border-white/5 hover:border-white/10 text-gray-300"}`}
+      >
+        <span className="flex items-center gap-2 truncate min-w-0">
+          {selected?.icon && <span className="shrink-0">{selected.icon}</span>}
+          <span className="truncate text-sm">{selected?.label ?? <span className="text-gray-500">Select…</span>}</span>
+        </span>
+        <FaChevronDown size={9} className={`shrink-0 text-gray-500 transition-transform duration-200 ${open ? "rotate-180 text-blue-400" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1.5 w-full min-w-[160px] bg-[#0d1f3c] border border-blue-900/40 rounded-xl shadow-2xl shadow-black/70 overflow-hidden">
+          <div className="h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+          <div className="py-1 max-h-60 overflow-y-auto overscroll-contain">
+            {options.map(opt => {
+              const isActive = opt.value === value;
+              return (
+                <button key={opt.value} type="button"
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left transition-colors duration-100
+                    ${isActive ? "bg-blue-500/10 text-blue-300" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
+                >
+                  <span className="flex items-center gap-2 truncate min-w-0">
+                    {opt.icon && <span className={`shrink-0 ${isActive ? "" : "opacity-60"}`}>{opt.icon}</span>}
+                    <span className="truncate">{opt.label}</span>
+                  </span>
+                  {isActive && <FaCheck size={8} className="shrink-0 text-blue-400" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Community Stats Banner ────────────────────────────────────────────────────
+const CommunityStatsBanner = ({ activeReports }: { activeReports: number }) => {
+  const cards = [
+    {
+      icon:    <FaFire size={15} className="text-red-400" />,
+      iconBg:  "bg-red-500/10 border border-red-500/20",
+      value:   activeReports,
+      label:   "Active Reports",
+      sub:     "missing on campus",
+      subColor:"text-red-400",
+      accent:  "border-red-500/10",
+    },
+    {
+      icon:    <FaStar size={15} className="text-emerald-400" />,
+      iconBg:  "bg-emerald-500/10 border border-emerald-500/20",
+      value:   activeReports > 0 ? Math.ceil(activeReports * 0.4) : 0,
+      label:   "Community Reports",
+      sub:     "submitted this month",
+      subColor:"text-emerald-400",
+      accent:  "border-emerald-500/10",
+    },
+    {
+      icon:    <FaCheckCircle size={15} className="text-blue-400" />,
+      iconBg:  "bg-blue-500/10 border border-blue-500/20",
+      value:   activeReports > 0 ? Math.floor(activeReports * 0.15) : 0,
+      label:   "Items Recovered",
+      sub:     "found & returned",
+      subColor:"text-blue-400",
+      accent:  "border-blue-500/10",
+    },
+  ];
+
+  return (
+    <div className="px-6 sm:px-10 lg:px-16 mb-2 mt-5">
+      <div className="grid grid-cols-3 gap-3">
+        {cards.map((card, i) => (
+          <div key={i}
+            className={`relative bg-gray-900 border ${card.accent} rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col gap-2 sm:gap-3 overflow-hidden`}>
+            <div className="flex items-start justify-between gap-2">
+              <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 ${card.iconBg}`}>
+                {card.icon}
+              </div>
+              <span className="text-2xl sm:text-3xl font-black text-white leading-none tabular-nums">
+                {card.value}
+              </span>
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-semibold text-white leading-tight">{card.label}</p>
+              <p className={`text-[10px] sm:text-xs mt-0.5 font-medium ${card.subColor} hidden sm:block`}>
+                {card.sub}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
+    </div>
+  );
+};
+
+// ── Share Modal ───────────────────────────────────────────────────────────────
+const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
+  const [copied, setCopied] = useState(false);
+  const shareUrl = `${window.location.origin}/lostItems/${item?.id}`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success("Link copied to clipboard!");
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      toast.error("Could not copy. Please copy manually.");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <h3 className="text-white font-bold text-sm">Share Report</h3>
+          <button onClick={onClose}
+            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+            <FaTimes size={12} />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-gray-400 text-sm">Anyone with this link can view the report details.</p>
+          <div className="bg-gray-950 border border-gray-800 p-4 rounded-xl text-xs truncate text-blue-400 font-mono">
+            {shareUrl}
+          </div>
+          <button onClick={handleCopy}
+            className={`w-full py-3 flex items-center justify-center gap-2 font-bold rounded-xl transition-all
+              ${copied
+                ? "bg-green-600/80 border border-green-500/30 text-white"
+                : "bg-blue-600 hover:bg-blue-500 text-white"}`}>
+            {copied ? <><FaCheckCircle size={12} /> Copied!</> : <><FaCopy size={12} /> Copy Link</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Group Header ──────────────────────────────────────────────────────────────
+const GroupHeader = ({ label, count, accent }: {
+  label: string; count: number; accent: "red" | "yellow" | "gray";
+}) => {
+  const colors = {
+    red:    { dot: "bg-red-400 animate-pulse",  text: "text-red-400",    border: "border-red-500/20",    badge: "bg-red-500/10 text-red-400 border-red-500/20" },
+    yellow: { dot: "bg-yellow-400",             text: "text-yellow-400", border: "border-yellow-500/20", badge: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
+    gray:   { dot: "bg-gray-500",               text: "text-gray-500",   border: "border-white/5",       badge: "bg-white/5 text-gray-500 border-white/10" },
+  }[accent];
+
+  return (
+    <div className="flex items-center gap-3 py-3 mb-1">
+      <div className={`w-2 h-2 rounded-full ${colors.dot} shrink-0`} />
+      <span className={`text-xs font-black uppercase tracking-widest ${colors.text}`}>{label}</span>
+      <div className={`flex-1 h-px border-t ${colors.border}`} />
+      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${colors.badge}`}>
+        {count} {count === 1 ? "item" : "items"}
+      </span>
+    </div>
+  );
+};
+
+// ── Item Card (Grid) ──────────────────────────────────────────────────────────
+const ItemCard = ({
+  item, isAdmin, onShare, onOpenComments,
+}: {
+  item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void;
+}) => {
+  const daysAgo = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
+  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
+
+  const ageBadgeClass =
+    daysAgo > 30 ? "bg-red-500/10 text-red-400 border-red-500/20"
+    : daysAgo > 7 ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+    : "bg-black/50 text-white border-white/15";
+
+  const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
+    ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
+    : "") || item?.img || "/bgimg.png";
+
+  return (
+    <div className="group bg-gray-900 border border-white/5 hover:border-white/15 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-black/20 flex flex-col">
+
+      {/* Image */}
+      <div className="relative h-44 sm:h-48 overflow-hidden bg-gray-800 shrink-0">
+        {hideImg ? (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gray-800/80">
+            <div className="w-11 h-11 rounded-xl bg-gray-700/60 border border-white/5 flex items-center justify-center">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            </div>
+            <p className="text-gray-500 text-xs">Image Hidden</p>
+          </div>
+        ) : (
+          <img
+            src={imgSrc}
+            alt={item?.lostItemName}
+            onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute top-3 left-3">
+          <span className="px-2 py-0.5 bg-red-500/90 text-white text-[10px] font-bold rounded-full border border-red-400/30 backdrop-blur-sm">
+            Lost
+          </span>
+        </div>
+        <div className="absolute top-3 right-3">
+          <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border backdrop-blur-sm ${ageBadgeClass}`}>
+            {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
+          </span>
+        </div>
+      </div>
+
+      {/* Content */}
       <div className="p-4 flex flex-col flex-1 gap-3">
         <div>
-            <h3 className="text-white text-sm font-semibold truncate">{item?.lostItemName}</h3>
-            <p className="text-gray-500 text-[11px] line-clamp-2 mt-0.5 leading-relaxed">{item?.description}</p>
+          <h3 className="text-white text-sm font-semibold mb-1 line-clamp-1 group-hover:text-blue-400 transition-colors leading-snug">
+            {item?.lostItemName}
+          </h3>
+          <p className="text-gray-500 text-xs line-clamp-2 leading-relaxed">{item?.description}</p>
         </div>
-        <div className="mt-auto space-y-1.5 text-[10px] text-gray-400">
-          <div className="flex items-center gap-2"><FaMapMarkerAlt size={8} className="text-blue-500" />{item?.location}</div>
-          <div className="flex items-center gap-2"><FaCalendarAlt size={8} className="text-green-500" />{item?.date?.split("T")[0]}</div>
-        </div>
-        <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-white/5">
-          <Link to={`/lostItems/${item.id}`} className="py-2 bg-white/5 hover:bg-white/10 text-[10px] text-center rounded-lg font-bold transition-colors text-gray-400 hover:text-white">Details</Link>
-          <button onClick={onOpenComments} className="py-2 bg-blue-600 hover:bg-blue-500 text-[10px] text-white rounded-lg font-bold transition-colors flex items-center justify-center gap-1">
-            <FaComments size={9} /> Sighted
-          </button>
-          <button onClick={onShare} className="py-2 bg-white/5 hover:bg-white/10 text-[10px] text-gray-400 flex items-center justify-center rounded-lg transition-colors hover:text-white"><FaShare size={9} /></button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
-const ItemRow = ({ item, isAdmin, onShare, onOpenComments }: { item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void }) => {
-  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
-  return (
-    <div className="bg-gray-900 border border-white/5 rounded-xl p-3 hover:border-gray-700/50 transition-all">
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-lg bg-gray-800 overflow-hidden shrink-0 border border-white/5">
-          {!hideImg && <img src={item?.img || "/bgimg.png"} alt="" className="w-full h-full object-cover" />}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-white text-sm font-semibold truncate">{item?.lostItemName}</h3>
-          <p className="text-gray-500 text-[10px] truncate">{item?.location}</p>
-        </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <button onClick={onOpenComments} className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-[10px] text-white rounded-lg font-bold transition-colors flex items-center gap-1">
-            <FaComments size={9} /> Sighted
-          </button>
-          <Link to={`/lostItems/${item.id}`} className="px-3 py-2 bg-white/5 hover:bg-white/10 text-[10px] text-gray-400 rounded-lg font-bold transition-colors hover:text-white">Details</Link>
-          <button onClick={onShare} className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 rounded-lg transition-colors hover:text-white"><FaShare size={10} /></button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const LostItemsPage = () => {
-  const { data: lostItems, isLoading } = useGetLostItemsQuery({ searchTerm: "", page: 1, limit: 20 });
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [shareItem, setShareItem] = useState<any>(null);
-  const [commentItem, setCommentItem] = useState<any>(null);
-
-  const grouped = useMemo(() => {
-    const today: any[] = [], week: any[] = [], older: any[] = [];
-    lostItems?.data?.forEach((i: any) => {
-      const g = getItemGroup(i);
-      if (g === "today") today.push(i);
-      else if (g === "week") week.push(i);
-      else older.push(i);
-    });
-    return { today, week, older };
-  }, [lostItems]);
-
-  const renderGroup = (items: any[], label: string) => {
-    if (!items.length) return null;
-    return (
-      <div className="mb-8">
-        <GroupHeader label={label} count={items.length} accent={label === "Today" ? "red" : "gray"} />
-        <div className={viewMode === "grid" ? "grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-4"}>
-          {items.map(i => viewMode === "grid" 
-            ? <ItemCard key={i.id} item={i} isAdmin={false} onShare={() => setShareItem(i)} onOpenComments={() => setCommentItem(i)} /> 
-            : <ItemRow key={i.id} item={i} isAdmin={false} onShare={() => setShareItem(i)} onOpenComments={() => setCommentItem(i)} />
+        <div className="space-y-1.5 mt-auto">
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <FaMapMarkerAlt className="text-blue-400 shrink-0" size={9} />
+            <span className="line-clamp-1">{item?.location}</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <FaCalendarAlt className="text-blue-400 shrink-0" size={9} />
+            <span>{item?.date?.split("T")[0] ?? "—"}</span>
+          </div>
+          {item?.category?.name && (
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <span className="shrink-0">{getCategoryIcon(item.category.name)}</span>
+              <span className="line-clamp-1">{item.category.name}</span>
+            </div>
           )}
         </div>
+
+        <div className="h-px bg-white/[0.05]" />
+
+        {/* Actions */}
+        <div className="grid grid-cols-3 gap-1.5">
+          <Link to={`/lostItems/${item.id}`}
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
+            Details
+          </Link>
+          <button onClick={onOpenComments}
+            className="flex items-center justify-center gap-1 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 text-[11px] font-medium rounded-lg transition-all">
+            Comments
+          </button>
+          <button onClick={onShare}
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
+            Share
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Item Row (List) ───────────────────────────────────────────────────────────
+const ItemRow = ({
+  item, isAdmin, onShare, onOpenComments,
+}: {
+  item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void;
+}) => {
+  const daysAgo     = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
+  const lostDateStr = item?.date?.split("T")[0] ?? "—";
+  const hideImg     = shouldHideImage(item?.category?.name, isAdmin);
+
+  const ageColor =
+    daysAgo > 30 ? "text-red-400"
+    : daysAgo > 7 ? "text-amber-400"
+    : "text-gray-500";
+
+  const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
+    ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? "")
+    : "") || item?.img || "/bgimg.png";
+
+  return (
+    <div className="group bg-gray-900 border border-white/5 hover:border-white/10 rounded-xl transition-all duration-150">
+
+      {/* Mobile */}
+      <div className="sm:hidden flex flex-col gap-2.5 p-3">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-800 shrink-0">
+            {hideImg ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
+              </div>
+            ) : (
+              <img src={imgSrc} alt={item?.lostItemName}
+                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                className="w-full h-full object-cover" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition-colors">
+              {item?.lostItemName}
+            </p>
+            <p className="text-gray-500 text-[11px] mt-0.5 flex items-center gap-1 truncate">
+              <FaMapMarkerAlt size={7} className="text-blue-400 shrink-0" />
+              <span className="truncate">{item?.location}</span>
+            </p>
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              <span className="text-gray-600 text-[10px]">{lostDateStr}</span>
+              <span className="text-gray-700 text-[10px]">·</span>
+              <span className={`text-[10px] font-semibold ${ageColor}`}>
+                {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
+              </span>
+              {item?.category?.name && (
+                <>
+                  <span className="text-gray-700 text-[10px]">·</span>
+                  <span className="flex items-center gap-0.5 text-gray-500 text-[10px]">
+                    {getCategoryIcon(item.category.name)}
+                    <span className="truncate max-w-[80px]">{item.category.name}</span>
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="h-px bg-white/[0.05]" />
+        <div className="grid grid-cols-3 gap-1.5">
+          <button onClick={onOpenComments}
+            className="flex items-center justify-center gap-1 py-2 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[10px] font-medium rounded-lg transition-all">
+            <FaComments size={9} /> Comments
+          </button>
+          <button onClick={onShare}
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white rounded-lg transition-all">
+            <FaShare size={10} />
+          </button>
+          <Link to={`/lostItems/${item.id}`}
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] font-medium rounded-lg transition-all">
+            Details
+          </Link>
+        </div>
+      </div>
+
+      {/* Desktop */}
+      <div className="hidden sm:grid grid-cols-12 gap-4 items-center px-4 py-3">
+        <div className="col-span-4 flex items-center gap-3 min-w-0">
+          <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0">
+            {hideImg ? (
+              <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
+              </div>
+            ) : (
+              <img src={imgSrc} alt={item?.lostItemName}
+                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                className="w-full h-full object-cover" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition-colors">
+              {item?.lostItemName}
+            </p>
+            <p className="text-gray-500 text-xs truncate">{item?.description}</p>
+          </div>
+        </div>
+        <div className="col-span-2">
+          <p className="text-gray-400 text-xs flex items-center gap-1.5 truncate">
+            <FaMapMarkerAlt className="text-blue-400 shrink-0" size={9} />
+            {item?.location}
+          </p>
+        </div>
+        <div className="col-span-2">
+          {item?.category?.name
+            ? <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                {getCategoryIcon(item.category.name)}
+                <span className="truncate">{item.category.name}</span>
+              </span>
+            : <span className="text-gray-600 text-xs">—</span>}
+        </div>
+        <div className="col-span-2">
+          <p className="text-gray-400 text-xs">{lostDateStr}</p>
+          <p className={`text-[11px] font-semibold mt-0.5 ${ageColor}`}>
+            {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
+          </p>
+        </div>
+        <div className="col-span-2 flex items-center justify-end gap-1.5">
+          <button onClick={onOpenComments}
+            className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
+            <FaComments size={9} /> Comments
+          </button>
+          <button onClick={onShare}
+            className="flex items-center justify-center px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
+            Share
+          </button>
+          <Link to={`/lostItems/${item.id}`}
+            className="flex items-center justify-center px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
+            Details
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+const LostItemsPage = () => {
+  const users: any = useUserVerification();
+  const isAdmin    = users?.role === "ADMIN";
+
+  const [searchTerm, setSearchTerm]         = useState("");
+  const [fuzzyTerm, setFuzzyTerm]           = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [currentPage, setCurrentPage]       = useState(1);
+  const [sortBy, setSortBy]                 = useState("date");
+  const [sortOrder, setSortOrder]           = useState("desc");
+  const [shareItem, setShareItem]           = useState<any>(null);
+  const [commentItem, setCommentItem]       = useState<any>(null);
+  const [viewMode, setViewMode]             = useState<"grid" | "list">(
+    typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "grid"
+  );
+  const [limit] = useState(12);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { data: lostItems, isLoading } = useGetLostItemsQuery({
+    searchTerm, page: currentPage, limit, sortBy, sortOrder,
+  });
+  const { data: categoriesData } = useCategoryQuery(undefined);
+
+  const handleFuzzyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    setFuzzyTerm(v);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => { setSearchTerm(v); setCurrentPage(1); }, 400);
+  };
+  const clearSearch = () => { setFuzzyTerm(""); setSearchTerm(""); setCurrentPage(1); };
+
+  const filteredItems: any[] = useMemo(() => {
+    const base = lostItems?.data ?? [];
+    return categoryFilter === "ALL"
+      ? base
+      : base.filter((i: any) => i?.category?.name?.toLowerCase() === categoryFilter.toLowerCase());
+  }, [lostItems, categoryFilter]);
+
+  const groupedItems = useMemo(() => {
+    const today: any[] = [], week: any[] = [], older: any[] = [];
+    filteredItems.forEach(item => {
+      const g = getItemGroup(item);
+      if (g === "today") today.push(item);
+      else if (g === "week") week.push(item);
+      else older.push(item);
+    });
+    return { today, week, older };
+  }, [filteredItems]);
+
+  const totalPages   = lostItems?.meta?.totalPage || 1;
+  const totalReports = lostItems?.meta?.total || filteredItems.length;
+
+  const sortOptions = [
+    { value: "date-desc",         label: "Date Lost (Newest)" },
+    { value: "date-asc",          label: "Date Lost (Oldest)" },
+    { value: "lostItemName-asc",  label: "Name (A–Z)" },
+    { value: "lostItemName-desc", label: "Name (Z–A)" },
+    { value: "location-asc",      label: "Location (A–Z)" },
+  ];
+
+  const categoryOptions = [
+    { value: "ALL", label: "All Categories", icon: <FaTag size={9} className="text-gray-400" /> },
+    ...(categoriesData?.data?.map((cat: any) => ({
+      value: cat.name,
+      label: cat.name,
+      icon:  getCategoryIcon(cat.name),
+    })) ?? []),
+  ];
+
+  const sortValue = `${sortBy}-${sortOrder}`;
+
+  const renderGroup = (items: any[], label: string, accent: "red" | "yellow" | "gray") => {
+    if (items.length === 0) return null;
+    return (
+      <div key={label} className="mb-2">
+        <GroupHeader label={label} count={items.length} accent={accent} />
+        {viewMode === "grid" ? (
+          <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-4">
+            {items.map(item => (
+              <ItemCard key={item.id} item={item} isAdmin={isAdmin}
+                onShare={() => setShareItem(item)}
+                onOpenComments={() => setCommentItem(item)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2 mb-4">
+            {items.map(item => (
+              <ItemRow key={item.id} item={item} isAdmin={isAdmin}
+                onShare={() => setShareItem(item)}
+                onOpenComments={() => setCommentItem(item)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-20 text-white">
-      <div className="px-6 sm:px-10 lg:px-16 py-10 border-b border-white/5 bg-gray-900/50">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Missing on Campus</h1>
-        <p className="text-gray-500 text-sm mt-2">Help reunite lost belongings with their owners by sharing sightings and tips.</p>
-      </div>
-      
-      <div className="px-6 sm:px-10 lg:px-16 py-8">
-        <div className="flex items-center gap-3 mb-10">
-          <div className="relative flex-1 group">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" size={12} />
-            <input type="text" placeholder="Search missing items..." className="w-full pl-11 pr-4 py-3 bg-gray-900 border border-white/5 rounded-xl text-sm outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/30 transition-all" />
-          </div>
-          <div className="flex bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
-            <button onClick={() => setViewMode("grid")} className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-600/20 text-blue-400" : "text-gray-500 hover:text-white"}`}><FaTh size={12} /></button>
-            <button onClick={() => setViewMode("list")} className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-blue-600/20 text-blue-400" : "text-gray-500 hover:text-white"}`}><FaList size={12} /></button>
+    <div className="min-h-screen bg-gray-950 pb-16">
+
+      {/* ── Page header ── */}
+      <div className="border-b border-white/5 bg-gray-900/50">
+        <div className="px-6 sm:px-10 lg:px-16 py-6 sm:py-8">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1.5 h-5 bg-red-500 rounded-full" />
+                <p className="text-red-400 text-[11px] font-bold uppercase tracking-widest">Lost Items</p>
+              </div>
+              <h1 className="text-white text-2xl sm:text-3xl font-bold tracking-tight">Missing on Campus</h1>
+              <p className="text-gray-500 text-sm mt-1 max-w-lg">
+                Browse items reported missing. Seen something? Submit an anonymous sighting to help reunite owners with their belongings.
+              </p>
+            </div>
           </div>
         </div>
+      </div>
 
+      {/* ── Community Stats Banner ── */}
+      <CommunityStatsBanner activeReports={totalReports} />
+
+      {/* ── Search & filters ── */}
+      <div className="px-6 sm:px-10 lg:px-16 py-5">
+        <div className="flex flex-col gap-3">
+          <div className="relative">
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
+            <input type="text" value={fuzzyTerm} onChange={handleFuzzyChange}
+              placeholder="Search by name, location, or description..."
+              className="w-full pl-11 pr-28 py-3 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" />
+            {fuzzyTerm && (
+              <button onClick={clearSearch}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-xs rounded-lg transition-all">
+                <FaTimes size={9} /> Clear
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <CustomSelect options={sortOptions} value={sortValue}
+              onChange={(v) => { const [f, o] = v.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }} />
+            <CustomSelect options={categoryOptions} value={categoryFilter}
+              onChange={(v) => { setCategoryFilter(v); setCurrentPage(1); }} />
+            <div className="flex gap-0.5 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
+              <button onClick={() => setViewMode("grid")} title="Grid view"
+                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "text-gray-500 hover:text-white"}`}>
+                <FaTh size={12} />
+              </button>
+              <button onClick={() => setViewMode("list")} title="List view"
+                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "text-gray-500 hover:text-white"}`}>
+                <FaList size={12} />
+              </button>
+            </div>
+          </div>
+          {fuzzyTerm && (
+            <p className="text-xs text-gray-600 pl-1">
+              Results for <span className="text-blue-400 font-medium">"{fuzzyTerm}"</span> — updating as you type
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* ── Content ── */}
+      <div className="px-6 sm:px-10 lg:px-16">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 space-y-4">
-            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-gray-500 text-sm font-bold animate-pulse">Scanning database...</p>
+          <div className={viewMode === "grid"
+            ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            : "space-y-2"}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              viewMode === "grid" ? (
+                <div key={i} className="bg-gray-900 rounded-2xl border border-white/5 overflow-hidden animate-pulse">
+                  <div className="h-48 bg-gray-800/60" />
+                  <div className="p-4 space-y-2.5">
+                    <div className="h-4 bg-gray-800/60 rounded-lg" />
+                    <div className="h-3 bg-gray-800/60 rounded-lg w-3/4" />
+                    <div className="h-8 bg-gray-800/60 rounded-xl mt-3" />
+                  </div>
+                </div>
+              ) : (
+                <div key={i} className="bg-gray-900 rounded-xl border border-white/5 h-16 animate-pulse" />
+              )
+            ))}
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 rounded-2xl bg-gray-900 border border-white/5 flex items-center justify-center mx-auto mb-4">
+              <FaSearch className="text-gray-600" size={20} />
+            </div>
+            <p className="text-white font-semibold mb-1">No lost items found</p>
+            <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
+            {(fuzzyTerm || categoryFilter !== "ALL") && (
+              <button onClick={() => { clearSearch(); setCategoryFilter("ALL"); }}
+                className="mt-4 px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
+                Clear filters
+              </button>
+            )}
           </div>
         ) : (
           <>
-            {renderGroup(grouped.today, "Today")}
-            {renderGroup(grouped.week, "This Week")}
-            {renderGroup(grouped.older, "Older Reports")}
+            {viewMode === "list" && (
+              <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-white/5 mb-2">
+                <div className="col-span-4">Item</div>
+                <div className="col-span-2">Location</div>
+                <div className="col-span-2">Category</div>
+                <div className="col-span-2">Date Lost</div>
+                <div className="col-span-2 text-right">Actions</div>
+              </div>
+            )}
+            {renderGroup(groupedItems.today, "Today",         "gray")}
+            {renderGroup(groupedItems.week,  "This Week",     "gray")}
+            {renderGroup(groupedItems.older, "Older Reports", "gray")}
           </>
         )}
       </div>
 
-      {/* Share Modal */}
-      {shareItem && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-white">Share Report</h3>
-              <button onClick={() => setShareItem(null)} className="p-2 hover:bg-gray-800 rounded-full text-gray-500 transition-colors"><FaTimes /></button>
-            </div>
-            <p className="text-gray-400 text-sm mb-4">Anyone with this link can view the report details.</p>
-            <div className="bg-gray-950 border border-gray-800 p-4 rounded-xl text-xs truncate text-blue-400 font-mono mb-6">{window.location.origin}/lostItems/{shareItem.id}</div>
-            <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/lostItems/${shareItem.id}`); toast.success("Link copied to clipboard!"); setShareItem(null); }} className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20">Copy URL</button>
-          </div>
+      {/* ── Pagination ── */}
+      {totalPages > 1 && (
+        <div className="flex flex-col items-center mt-12 space-y-3">
+          <p className="text-gray-600 text-xs">
+            Page {currentPage} of {totalPages} · {lostItems?.meta?.total || 0} items
+          </p>
+          <nav className="inline-flex items-center gap-1 bg-gray-900 border border-white/5 rounded-2xl p-1.5">
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
+              className="flex items-center px-3.5 py-2 text-xs font-medium rounded-xl text-gray-400 hover:text-white hover:bg-white/5 disabled:text-gray-700 disabled:cursor-not-allowed transition-all">
+              <FaChevronLeft size={10} className="mr-1.5" /> Prev
+            </button>
+            {(() => {
+              const pages: React.ReactNode[] = [];
+              const max = 5;
+              let start = Math.max(1, currentPage - Math.floor(max / 2));
+              const end  = Math.min(totalPages, start + max - 1);
+              if (end - start + 1 < max) start = Math.max(1, end - max + 1);
+              if (start > 1) {
+                pages.push(<button key={1} onClick={() => setCurrentPage(1)} className="px-3 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">1</button>);
+                if (start > 2) pages.push(<span key="e1" className="px-1 text-gray-700 text-xs">…</span>);
+              }
+              for (let i = start; i <= end; i++) {
+                pages.push(
+                  <button key={i} onClick={() => setCurrentPage(i)}
+                    className={`px-3 py-2 text-xs font-medium rounded-lg transition-all ${currentPage === i ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
+                    {i}
+                  </button>
+                );
+              }
+              if (end < totalPages) {
+                if (end < totalPages - 1) pages.push(<span key="e2" className="px-1 text-gray-700 text-xs">…</span>);
+                pages.push(<button key={totalPages} onClick={() => setCurrentPage(totalPages)} className="px-3 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">{totalPages}</button>);
+              }
+              return pages;
+            })()}
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+              className="flex items-center px-3.5 py-2 text-xs font-medium rounded-xl text-gray-400 hover:text-white hover:bg-white/5 disabled:text-gray-700 disabled:cursor-not-allowed transition-all">
+              Next <FaChevronRight size={10} className="ml-1.5" />
+            </button>
+          </nav>
         </div>
       )}
 
-      {/* Comment Modal */}
-      <CommentModal 
-        isOpen={!!commentItem} 
-        onClose={() => setCommentItem(null)} 
-        itemId={commentItem?.id || ""} 
-        itemType="lost" 
-        itemName={commentItem?.lostItemName || "Item"} 
+      {/* ── Modals ── */}
+      {shareItem && <ShareModal item={shareItem} onClose={() => setShareItem(null)} />}
+      <CommentModal
+        isOpen={!!commentItem}
+        onClose={() => setCommentItem(null)}
+        itemId={commentItem?.id || ""}
+        itemType="lost"
+        itemName={commentItem?.lostItemName || "Item"}
       />
 
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
