@@ -300,6 +300,13 @@ const api = baseApi.injectEndpoints({
       query: (commentId) => ({ url: `/comments/${commentId}/vote-helpful`, method: "POST" }),
       invalidatesTags: ["comments"],
     }),
+    deleteComment: builder.mutation<void, { commentId: string; itemId: string }>({
+      query: ({ commentId, itemId }) => ({
+        url: `/comments/${commentId}?itemId=${itemId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['comments'],
+    }),
   }),
 });
 
@@ -371,4 +378,5 @@ export const {
   useGetCommentsQuery,
   useCreateCommentMutation,
   useVoteHelpfulMutation,
+  useDeleteCommentMutation
 } = api;

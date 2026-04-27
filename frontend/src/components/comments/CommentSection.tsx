@@ -4,8 +4,11 @@ import { useSocket } from '../../hooks/useSocket';
 import { CommentList } from './CommentList';
 import { CommentInput } from './CommentInput';
 import { CommentFilters } from './CommentFilters';
-import { useGetCommentsQuery, useCreateCommentMutation } from '../../redux/api/api';
-import { toast } from 'react-toastify';
+import {
+  useGetCommentsQuery,
+  useCreateCommentMutation,
+  useDeleteCommentMutation,
+} from '../../redux/api/api';
 
 interface CommentSectionProps {
   itemId: string;
@@ -13,31 +16,38 @@ interface CommentSectionProps {
   isModalView?: boolean;
 }
 
-export const CommentSection: React.FC<CommentSectionProps> = ({ itemId, itemType, isModalView = false }) => {
-  const [comments, setComments] = useState<any[]>([]);
-  const [filter, setFilter] = useState('all');
-  const [isLoading, setIsLoading] = useState(false);
+export const CommentSection: React.FC<CommentSectionProps> = ({
+  itemId,
+  itemType,
+  isModalView = false,
+}) => {
+  const [comments, setComments]       = useState<any[]>([]);
+  const [filter, setFilter]           = useState('all');
+  const [isLoading, setIsLoading]     = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const socket = useSocket({ autoConnect: true });
 
-  const { data: fetchedData, isLoading: isFetching, isError: fetchError, error: fetchErrorDetail } = useGetCommentsQuery({ itemId });
-  const [createComment] = useCreateCommentMutation();
+  const {
+    data: fetchedData,
+    isLoading: isFetching,
+    isError: fetchError,
+    error: fetchErrorDetail,
+  } = useGetCommentsQuery({ itemId, itemType });
 
-  // Determine if this is a 404 (endpoint not deployed yet) vs a real error
+  const [createComment]                   = useCreateCommentMutation();
+  const [deleteCommentMutation]           = useDeleteCommentMutation();
+
   const is404 = fetchError && (fetchErrorDetail as any)?.status === 404;
 
+  // ── Sync fetched data → local state ──────────────────────────────────────
   useEffect(() => {
-    // Load from localStorage first
-    const localComments = localStorage.getItem(`comments_${itemId}`);
-    const parsedLocal = localComments ? JSON.parse(localComments) : [];
-    
+    const localComments  = localStorage.getItem(`comments_${itemId}`);
+    const parsedLocal    = localComments ? JSON.parse(localComments) : [];
+
     if (fetchedData) {
-      // Merge: unique comments from API + any unique local ones
       const merged = [...fetchedData];
       parsedLocal.forEach((lc: any) => {
-        if (!merged.find(mc => mc.id === lc.id)) {
-          merged.push(lc);
-        }
+        if (!merged.find((mc: any) => mc.id === lc.id)) merged.push(lc);
       });
       setComments(merged);
     } else if (parsedLocal.length > 0) {
@@ -45,23 +55,43 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ itemId, itemType
     }
   }, [fetchedData, itemId]);
 
-  // Sync back to localStorage whenever comments change
+  // ── Persist to localStorage ───────────────────────────────────────────────
   useEffect(() => {
     if (comments.length > 0) {
       localStorage.setItem(`comments_${itemId}`, JSON.stringify(comments));
     }
   }, [comments, itemId]);
 
+  // ── Socket listeners ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!socket.socket) return;
+
     socket.socket.emit('join-item', itemId);
-    socket.socket.on('comment-added', (comment: any) => setComments(prev => [comment, ...prev]));
+
+    socket.socket.on('comment-added', (comment: any) => {
+      setComments(prev => {
+        // Avoid duplicates from optimistic update + socket broadcast
+        if (prev.find(c => c.id === comment.id)) return prev;
+        return [comment, ...prev];
+      });
+    });
+
     socket.socket.on('comment-updated', (updated: any) =>
       setComments(prev => prev.map(c => c.id === updated.id ? updated : c))
     );
-    socket.socket.on('comment-deleted', (data: any) =>
-      setComments(prev => prev.filter(c => c.id !== data.commentId))
-    );
+
+    // Socket delete — only for OTHER users' views (we handle our own via REST)
+    socket.socket.on('comment-deleted', (data: any) => {
+      setComments(prev =>
+        prev
+          .filter(c => c.id !== data.commentId)
+          .map(c => ({
+            ...c,
+            replies: (c.replies || []).filter((r: any) => r.id !== data.commentId),
+          }))
+      );
+    });
+
     socket.socket.on('user-typing', (data: any) => {
       setTypingUsers(prev =>
         data.isTyping
@@ -69,6 +99,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ itemId, itemType
           : prev.filter(u => u !== (data.userName || 'Someone'))
       );
     });
+
     return () => {
       socket.socket?.emit('leave-item', itemId);
       socket.socket?.off('comment-added');
@@ -78,38 +109,40 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ itemId, itemType
     };
   }, [itemId, socket.socket]);
 
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
   const handleNewComment = async (commentData: any) => {
     setIsLoading(true);
-    const tempId = `local_${Date.now()}`;
+    const tempId     = `local_${Date.now()}`;
     const newComment = {
       id: tempId,
       itemId,
       itemType,
       ...commentData,
-      createdAt: new Date().toISOString(),
-      replies: [],
+      createdAt:    new Date().toISOString(),
+      replies:      [],
       helpfulCount: 0,
       user: {
-        name: commentData.isAnonymous ? 'Anonymous Student' : (socket.socket?.auth as any)?.userName || 'You',
-        role: 'USER'
-      }
+        name: commentData.isAnonymous
+          ? 'Anonymous Student'
+          : (socket.socket?.auth as any)?.userName || 'You',
+        role: 'USER',
+      },
     };
 
-    // Optimistically add to UI
     setComments(prev => [newComment, ...prev]);
 
     try {
       const result = await createComment({
         itemId,
         itemType,
-        ...commentData
+        ...commentData,
       }).unwrap();
-      
-      // Replace temp with real
+
+      // Replace temp comment with real one from server
       setComments(prev => prev.map(c => c.id === tempId ? result : c));
     } catch (err) {
-      console.warn('Backend not available (404), keeping comment in local storage:', err);
-      // We keep it in state, and useEffect above will save it to localStorage
+      console.warn('Comment save failed, keeping locally:', err);
     } finally {
       setIsLoading(false);
     }
@@ -121,37 +154,74 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ itemId, itemType
   const handleVoteHelpful = (commentId: string) => {
     socket.emit('vote-helpful', { commentId, itemId });
     setComments(prev =>
-      prev.map(c => c.id === commentId ? { ...c, helpfulCount: (c.helpfulCount || 0) + 1 } : c)
+      prev.map(c =>
+        c.id === commentId
+          ? { ...c, helpfulCount: (c.helpfulCount || 0) + 1 }
+          : c
+      )
     );
   };
 
-  const handleDeleteComment = (commentId: string) => {
-    socket.emit('delete-comment', { commentId, itemId });
-    setComments(prev => prev.filter(c => c.id !== commentId));
+  // ── DELETE — REST first, optimistic UI, no socket emit needed ────────────
+  const handleDeleteComment = async (commentId: string) => {
+    // Optimistically remove from UI instantly
+    setComments(prev =>
+      prev
+        .filter(c => c.id !== commentId)
+        .map(c => ({
+          ...c,
+          replies: (c.replies || []).filter((r: any) => r.id !== commentId),
+        }))
+    );
+
+    // Also clear from localStorage immediately
+    const local = localStorage.getItem(`comments_${itemId}`);
+    if (local) {
+      const parsed = JSON.parse(local);
+      const updated = parsed
+        .filter((c: any) => c.id !== commentId)
+        .map((c: any) => ({
+          ...c,
+          replies: (c.replies || []).filter((r: any) => r.id !== commentId),
+        }));
+      localStorage.setItem(`comments_${itemId}`, JSON.stringify(updated));
+    }
+
+    try {
+      await deleteCommentMutation({ commentId, itemId }).unwrap();
+    } catch (err) {
+      console.error('Delete failed:', err);
+      // RTK Query will invalidate ["comments"] tag and refetch, restoring the comment
+    }
   };
 
   const handleUpdateComment = (commentId: string, updateData: any) =>
     socket.emit('update-comment', { commentId, updateData, itemId });
 
+  // ── REPLY — always targets the top-level parent comment ──────────────────
   const handleReplyToComment = async (parentCommentId: string, content: string) => {
-    const tempId = `reply_${Date.now()}`;
+    const tempId   = `reply_${Date.now()}`;
     const newReply = {
-      id: tempId,
+      id:          tempId,
       content,
-      createdAt: new Date().toISOString(),
-      isAnonymous: false, // Default to known user for replies
+      createdAt:   new Date().toISOString(),
+      isAnonymous: false,
+      replies:     [],
+      helpfulCount: 0,
       user: {
-        name: 'You',
-        role: 'USER'
-      }
+        name: (socket.socket?.auth as any)?.userName || 'You',
+        role: 'USER',
+      },
     };
 
-    // Optimistically add to UI
-    setComments(prev => prev.map(c => 
-      c.id === parentCommentId 
-        ? { ...c, replies: [...(c.replies || []), newReply] } 
-        : c
-    ));
+    // Optimistically add reply under the parent
+    setComments(prev =>
+      prev.map(c =>
+        c.id === parentCommentId
+          ? { ...c, replies: [...(c.replies || []), newReply] }
+          : c
+      )
+    );
 
     try {
       const result = await createComment({
@@ -160,30 +230,39 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ itemId, itemType
         content,
         parentCommentId,
       }).unwrap();
-      
-      // Replace temp with real in the nested replies
-      setComments(prev => prev.map(c => 
-        c.id === parentCommentId 
-          ? { ...c, replies: c.replies.map((r: any) => r.id === tempId ? result : r) } 
-          : c
-      ));
+
+      // Replace temp reply with real server response
+      setComments(prev =>
+        prev.map(c =>
+          c.id === parentCommentId
+            ? {
+                ...c,
+                replies: (c.replies || []).map((r: any) =>
+                  r.id === tempId ? result : r
+                ),
+              }
+            : c
+        )
+      );
     } catch (err) {
-      console.warn('Backend not available for reply, keeping local:', err);
+      console.warn('Reply save failed, keeping locally:', err);
     }
   };
 
+  // ── Filtering ─────────────────────────────────────────────────────────────
   const filteredComments = comments.filter(comment => {
     switch (filter) {
-      case 'helpful':   return comment.helpfulCount > 0;
-      case 'questions': return comment.content.includes('?');
-      case 'sightings': return /saw|seen|found/i.test(comment.content);
+      case 'helpful':   return (comment.helpfulCount || 0) > 0;
+      case 'questions': return comment.content?.includes('?');
+      case 'sightings': return /saw|seen|found/i.test(comment.content || '');
       default:          return true;
     }
   });
 
+  // ── Main content ──────────────────────────────────────────────────────────
   const mainContent = (
     <div className="space-y-6">
-      {/* Header section with Stats & Filters */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
@@ -203,18 +282,18 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ itemId, itemType
       {typingUsers.length > 0 && (
         <div className="flex items-center gap-2 text-[12px] text-blue-400 italic animate-pulse px-2">
           <div className="flex gap-0.5">
-            <span className="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-            <span className="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-            <span className="w-1 h-1 bg-blue-400 rounded-full animate-bounce"></span>
+            <span className="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+            <span className="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+            <span className="w-1 h-1 bg-blue-400 rounded-full animate-bounce" />
           </div>
           {typingUsers.join(', ')} typing…
         </div>
       )}
 
-      {/* Comment List */}
+      {/* Comment list */}
       {isFetching ? (
         <div className="flex flex-col items-center justify-center py-12 gap-3">
-          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-gray-500 text-sm">Loading discussion...</p>
         </div>
       ) : fetchError && !is404 ? (
@@ -246,18 +325,13 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ itemId, itemType
     </div>
   );
 
-  // If in modal view, we want a sticky input at the bottom
+  // ── Modal view ────────────────────────────────────────────────────────────
   if (isModalView) {
     return (
       <div className="flex flex-col h-full max-h-[80vh] overflow-hidden">
-        {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-          <div className="pb-4">
-            {mainContent}
-          </div>
+          <div className="pb-4">{mainContent}</div>
         </div>
-        
-        {/* Sticky Input Bar at Bottom (Inside Modal) */}
         <div className="mt-auto bg-gray-900 border-t border-gray-800 p-4 pt-2 z-10">
           <CommentInput
             onSubmit={handleNewComment}
@@ -269,7 +343,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ itemId, itemType
     );
   }
 
-  // Standard inline view
+  // ── Inline view ───────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-6">
       <CommentInput
@@ -278,9 +352,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ itemId, itemType
         onTyping={handleTyping}
       />
       <div className="h-px bg-gray-800/50" />
-      <div className="pb-6">
-        {mainContent}
-      </div>
+      <div className="pb-6">{mainContent}</div>
     </div>
   );
 };

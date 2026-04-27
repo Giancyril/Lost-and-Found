@@ -185,7 +185,11 @@ model Comment {
   updatedAt       DateTime      @updatedAt
   location        String?
   rejectionReason String?
+  parentCommentId String?
 
+  parent    Comment?   @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies   Comment[]  @relation("CommentReplies")
+  
   foundItem FoundItem? @relation(fields: [itemId], references: [id], map: "comments_foundItem_fkey")
   lostItem  LostItem?  @relation(fields: [itemId], references: [id], map: "comments_lostItem_fkey")
   user      User?      @relation(fields: [userId], references: [id])
