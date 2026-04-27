@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
-import { createServer } from 'http';
 import { socketHandlers } from './socketHandlers';
 import { socketMiddleware } from './socketMiddleware';
+import { ExtendedSocket } from '../types/socket';
 
 export const initializeSocket = (httpServer: any) => {
   const io = new Server(httpServer, {
@@ -15,22 +15,21 @@ export const initializeSocket = (httpServer: any) => {
     pingInterval: 25000
   });
 
-  // Apply middleware for authentication
   io.use(socketMiddleware);
 
-  // Handle socket connections
   io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.userId || 'anonymous'}`);
-    
-    // Handle socket events
-    socketHandlers(io, socket);
+    const s = socket as unknown as ExtendedSocket; // double cast fixes the type mismatch
 
-    socket.on('disconnect', (reason) => {
-      console.log(`User disconnected: ${socket.userId || 'anonymous'} - ${reason}`);
+    console.log(`User connected: ${s.userId || 'anonymous'}`);
+
+    socketHandlers(io, s);
+
+    s.on('disconnect', (reason) => {
+      console.log(`User disconnected: ${s.userId || 'anonymous'} - ${reason}`);
     });
 
-    socket.on('error', (error) => {
-      console.error(`Socket error for ${socket.userId || 'anonymous'}:`, error);
+    s.on('error', (error) => {
+      console.error(`Socket error for ${s.userId || 'anonymous'}:`, error);
     });
   });
 

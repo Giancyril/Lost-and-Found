@@ -5,7 +5,6 @@ import {
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, FaChevronDown,
-  FaStream,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -38,7 +37,6 @@ const menuItems = [
   { title: "Archive Log", icon: FaArchive,             path: "/dashboard/archive"                   },
   // Insights
   { title: "Analytics",      icon: FaChartLine,           path: "/dashboard/analytics"                 },
-  { title: "Command Center",   icon: FaStream,           path: "/dashboard/analytics-v2"              },
   { title: "Heatmap",        icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                   },
   { title: "Report",         icon: FaFileAlt,             path: "/dashboard/report"                    },
   // Administration
@@ -54,7 +52,6 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/claims":      { title: "Claims",      subtitle: "Review, verify and process submitted ownership claims."       },
   "/dashboard/archive":     { title: "Archive Log", subtitle: "Browse archived items and restore or permanently remove them." },
   "/dashboard/analytics":      { title: "Analytics",      subtitle: "Monthly trends, category breakdown and top reporters."       },
-  "/dashboard/analytics-v2":   { title: "Command Center",   subtitle: "Advanced platform monitoring, trends, and geographic heatmaps." },
   "/dashboard/heatmap":        { title: "Heatmap",        subtitle: "Visualize where items are most commonly lost or found."       },
   "/dashboard/report":      { title: "Report",      subtitle: "Generate and export weekly or monthly summary reports."       },
   "/dashboard/users":       { title: "Users",       subtitle: "View and manage all registered system users."                },

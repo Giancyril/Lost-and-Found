@@ -3,8 +3,8 @@ import { ItemType } from '@prisma/client';
 
 export const commentService = {
   async createComment(data: any) {
-    const { itemId, itemType, userId, content, isAnonymous, location, time } = data;
-    
+    const { itemId, itemType, userId, content, isAnonymous, location } = data;
+
     return await prisma.comment.create({
       data: {
         itemId,
@@ -12,9 +12,8 @@ export const commentService = {
         userId: userId || null,
         content: content || '',
         location: location || null,
-        time: time || null,
         isAnonymous: isAnonymous || !userId,
-        status: 'APPROVED'  // auto-approve all — admins can moderate from dashboard later
+        status: 'APPROVED'
       },
       include: {
         user: {
@@ -30,7 +29,6 @@ export const commentService = {
   },
 
   async updateComment(commentId: string, updateData: any, userId: string, userRole: string) {
-    // Only allow update if owner or admin
     const where: any = { id: commentId };
     if (userRole !== 'ADMIN') {
       where.userId = userId;
@@ -58,9 +56,7 @@ export const commentService = {
       where.userId = userId;
     }
 
-    await prisma.comment.delete({
-      where
-    });
+    await prisma.comment.delete({ where });
     return true;
   },
 
@@ -87,7 +83,7 @@ export const commentService = {
 
   async getComments(itemId: string, options: any = {}) {
     const { page = 1, limit = 50, status = 'APPROVED' } = options;
-    
+
     return await prisma.comment.findMany({
       where: {
         itemId,
