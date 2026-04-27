@@ -9,36 +9,15 @@ import {
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
   FaClipboardList, FaUser, FaEnvelope, FaCheck, FaChevronDown,
   FaQrcode, FaSpinner, FaUserCheck, FaMoneyBillWave, FaCalculator,
+  FaComments, FaEye,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
+import { CommentModal } from "../../components/comments/CommentModal";
+import { CommentSection } from "../../components/comments/CommentSection";
 
-// Custom scrollbar styles
-const customScrollbarStyles = `
-  #claim-modal::-webkit-scrollbar {
-    width: 6px;
-  }
-  #claim-modal::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
-  }
-  #claim-modal::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-    transition: background 0.2s ease;
-  }
-  #claim-modal::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-  #claim-modal::-webkit-scrollbar-thumb:active {
-    background: rgba(255, 255, 255, 0.4);
-  }
-  #claim-modal {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
-  }
-`;
+
 import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import {
@@ -208,6 +187,95 @@ const CustomSelect = ({ options, value, onChange }: {
   );
 };
 
+// ── Found Item Card ─────────────────────────────────────────────────────────
+const FoundItemCard = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: any; isAdmin: boolean; setClaimItem: (i: any) => void; onOpenComments: () => void }) => {
+  const isClaimed = item?.isClaimed;
+  const daysAgo   = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
+  const hideImg   = shouldHideImage(item?.category?.name, isAdmin);
+  const dateStr   = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
+
+  return (
+    <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col">
+      <div className="relative h-48 overflow-hidden bg-gray-800">
+        {hideImg ? (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <div className="w-12 h-12 rounded-full bg-gray-700 border border-gray-700 flex items-center justify-center"><svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg></div>
+            <p className="text-gray-500 text-xs">Image Hidden</p>
+            <p className="text-gray-600 text-[10px] text-center px-6 leading-relaxed">Submit a claim to verify ownership</p>
+          </div>
+        ) : (
+          <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "") : "") || item?.img || "/bgimg.png"}
+            alt={item?.foundItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
+        <div className="absolute top-3 left-3">
+          {isClaimed ? <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-blue-500/30"><FaCheckCircle size={8} /> Claimed</span>
+            : <span className="px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-blue-500/30">Available</span>}
+        </div>
+        <div className="absolute top-3 right-3">
+          <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm border ${!isClaimed && daysAgo > 30 ? "bg-orange-500/80 text-white border-orange-400/30" : !isClaimed && daysAgo > 7 ? "bg-yellow-500/80 text-gray-900 border-yellow-400/30" : "bg-black/50 text-white border-white/15"}`}>
+            {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
+          </span>
+        </div>
+      </div>
+      <div className="p-4 flex flex-col flex-1">
+        <h3 className="text-white text-sm font-bold mb-1 line-clamp-1 group-hover:text-blue-400 transition-colors">{item?.foundItemName}</h3>
+        <p className="text-gray-500 text-xs mb-3 line-clamp-2 leading-relaxed">{item?.description}</p>
+        <div className="space-y-1.5 mt-auto mb-3">
+          <div className="flex items-center gap-2 text-xs text-gray-400"><div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaMapMarkerAlt className="text-blue-400" size={8} /></div><span className="line-clamp-1">{item?.location}</span></div>
+          <div className="flex items-center gap-2 text-xs text-gray-400"><div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></div><span>{dateStr}</span></div>
+          {item?.category?.name && <div className="flex items-center gap-2 text-xs text-gray-400"><div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">{getCategoryIcon(item.category.name)}</div><span>{item.category.name}</span></div>}
+        </div>
+        <div className="h-px bg-white/[0.04] mb-3" />
+        
+        <div className="grid grid-cols-2 gap-1.5">
+          {!isClaimed ? <button onClick={() => setClaimItem(item)} className="flex items-center justify-center gap-1.5 py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">Claim Item</button>
+            : <div className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg">Claimed</div>}
+          <button onClick={onOpenComments} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
+            Comments
+          </button>
+        </div>
+        <Link to={`/foundItems/${item.id}`} className="mt-1.5 flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-500 hover:text-white text-[11px] font-medium rounded-lg transition-all">View Details</Link>
+      </div>
+    </div>
+  );
+};
+
+// ── Found Item Row ──────────────────────────────────────────────────────────
+const FoundItemRow = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: any; isAdmin: boolean; setClaimItem: (i: any) => void; onOpenComments: () => void }) => {
+  const isClaimed = item?.isClaimed;
+  const hideImg   = shouldHideImage(item?.category?.name, isAdmin);
+  const dateStr   = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
+
+  return (
+    <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl p-3 transition-all duration-200 hover:shadow-lg hover:shadow-black/20">
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 rounded-lg bg-gray-800 overflow-hidden shrink-0 border border-white/5">
+          {!hideImg && <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "") : "") || item?.img || "/bgimg.png"}
+            alt={item?.foundItemName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h3 className="text-white text-sm font-bold truncate group-hover:text-blue-400 transition-colors">{item?.foundItemName}</h3>
+            {isClaimed && <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest rounded-md border border-blue-500/20 shrink-0">Claimed</span>}
+          </div>
+          <div className="flex items-center gap-3 text-[10px] text-gray-500 font-medium">
+            <span className="flex items-center gap-1"><FaMapMarkerAlt size={8} /> {item?.location}</span>
+            <span className="flex items-center gap-1"><FaCalendarAlt size={8} /> {dateStr}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button onClick={onOpenComments} className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors" title="Comments"><FaComments size={12} /></button>
+          {!isClaimed ? <button onClick={() => setClaimItem(item)} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg transition-all">Claim</button>
+            : <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-lg">Claimed</div>}
+          <Link to={`/foundItems/${item.id}`} className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors"><FaEye size={12} /></Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Quick Claim Modal ─────────────────────────────────────────────────────────
 const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
   const [createClaim, { isLoading: claimLoading }] = useCreateClaimMutation();
@@ -247,7 +315,7 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
         try { const r = await getStudentByDetailsForClaim({ name, email: "" }).unwrap(); student = r.data ?? r; }
         catch { if (email) { try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; } catch {} } }
       } else {
-        try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; }
+        try { const r = await getStudentByDetailsForClaim({ name, email: "" }).unwrap(); student = r.data ?? r; }
         catch { toast.error("Student not found"); return; }
       }
       if (student) {
@@ -483,6 +551,7 @@ const FoundItemsPage = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [scannedStudent, setScannedStudent] = useState<ScannedStudent | null>(null);
   const scannedAtRef = useRef<string>("");
+  const [commentItem, setCommentItem] = useState<any>(null);
 
   const useFetchStudent = (id: string) => {
     const trimmed = id?.trim() ?? "";
@@ -787,6 +856,7 @@ const FoundItemsPage = () => {
     : (foundItems?.data ?? []).filter((i: any) => i?.category?.name?.toLowerCase() === categoryFilter.toLowerCase());
 
   const totalPages = foundItems?.meta?.totalPage || 1;
+  const pagedItems = filteredItems;
 
   const sortOptions = [
     { value: "foundItemName-asc",  label: "Name (A–Z)" },
@@ -900,109 +970,13 @@ const FoundItemsPage = () => {
               <button onClick={() => { clearSearch(); setCategoryFilter("ALL"); }} className="mt-4 px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">Clear filters</button>
             )}
           </div>
-        ) : viewMode === "grid" ? (
-          <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredItems.map((item: any) => {
-              const isClaimed = item?.isClaimed;
-              const daysAgo   = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
-              const hideImg   = shouldHideImage(item?.category?.name, isAdmin);
-              const dateStr   = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
-              return (
-                <div key={item.id} className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col">
-                  <div className="relative h-48 overflow-hidden bg-gray-800">
-                    {hideImg ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                        <div className="w-12 h-12 rounded-full bg-gray-700 border border-gray-700 flex items-center justify-center"><svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg></div>
-                        <p className="text-gray-500 text-xs">Image Hidden</p>
-                        <p className="text-gray-600 text-[10px] text-center px-6 leading-relaxed">Submit a claim to verify ownership</p>
-                      </div>
-                    ) : (
-                      <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "") : "") || item?.img || "/bgimg.png"}
-                        alt={item?.foundItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
-                    <div className="absolute top-3 left-3">
-                      {isClaimed ? <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-blue-500/30"><FaCheckCircle size={8} /> Claimed</span>
-                        : <span className="px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-blue-500/30">Available</span>}
-                    </div>
-                    <div className="absolute top-3 right-3">
-                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm border ${!isClaimed && daysAgo > 30 ? "bg-orange-500/80 text-white border-orange-400/30" : !isClaimed && daysAgo > 7 ? "bg-yellow-500/80 text-gray-900 border-yellow-400/30" : "bg-black/50 text-white border-white/15"}`}>
-                        {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-4 flex flex-col flex-1">
-                    <h3 className="text-white text-sm font-bold mb-1 line-clamp-1 group-hover:text-blue-400 transition-colors">{item?.foundItemName}</h3>
-                    <p className="text-gray-500 text-xs mb-3 line-clamp-2 leading-relaxed">{item?.description}</p>
-                    <div className="space-y-1.5 mt-auto mb-3">
-                      <div className="flex items-center gap-2 text-xs text-gray-400"><div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaMapMarkerAlt className="text-blue-400" size={8} /></div><span className="line-clamp-1">{item?.location}</span></div>
-                      <div className="flex items-center gap-2 text-xs text-gray-400"><div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></div><span>{dateStr}</span></div>
-                      {item?.category?.name && <div className="flex items-center gap-2 text-xs text-gray-400"><div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">{getCategoryIcon(item.category.name)}</div><span>{item.category.name}</span></div>}
-                    </div>
-                    <div className="h-px bg-white/[0.04] mb-3" />
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {!isClaimed ? <button onClick={() => setClaimItem(item)} className="flex items-center justify-center gap-1.5 py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">Claim Item</button>
-                        : <div className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg">Claimed</div>}
-                      <Link to={`/foundItems/${item.id}`} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">View Details</Link>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         ) : (
-          <div className="space-y-2">
-            <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-[10px] uppercase tracking-widest text-gray-600 font-semibold border-b border-white/5">
-              <div className="col-span-2">Item</div><div className="col-span-2">Location</div><div className="col-span-2">Reported By</div><div className="col-span-2">Category</div><div className="col-span-1">Date</div><div className="col-span-1">Status</div><div className="col-span-2 text-right">Actions</div>
-            </div>
-            {filteredItems.map((item: any) => {
-              const isClaimed = item?.isClaimed;
-              const daysAgo   = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
-              const dateStr   = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
-              const hideImg   = shouldHideImage(item?.category?.name, isAdmin);
-              return (
-                <div key={item.id} className="group bg-gray-900 border border-white/5 hover:border-blue-500/30 rounded-xl transition-all duration-150">
-                  <div className="sm:hidden flex items-center gap-3 p-3">
-                    <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-800 shrink-0">
-                      {hideImg ? <div className="w-full h-full flex items-center justify-center"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg></div>
-                        : <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? "") : "") || item?.img || "/bgimg.png"} alt={item?.foundItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} className="w-full h-full object-cover" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition-colors">{item?.foundItemName}</p>
-                      <p className="text-gray-500 text-[10px] mt-0.5 flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaMapMarkerAlt className="text-blue-400" size={7} /></span>{item?.location}</p>
-                      <p className="text-gray-500 text-[10px] mt-0.5 flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={7} /></span>{dateStr} · <span className={daysAgo > 30 ? "text-orange-400" : daysAgo > 7 ? "text-yellow-400" : "text-gray-600"}>{daysAgo === 0 ? "Today" : `${daysAgo}d ago`}</span></p>
-                    </div>
-                    <div className="flex flex-col gap-1 shrink-0">
-                      {!isClaimed ? <button onClick={() => setClaimItem(item)} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-semibold rounded-lg transition-all">Claim</button>
-                        : <span className="px-3 py-1.5 bg-blue-600/20 border border-blue-600/30 text-blue-400 text-[10px] font-semibold rounded-lg text-center">Claimed</span>}
-                      <Link to={`/foundItems/${item.id}`} className="flex items-center justify-center px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] rounded-lg transition-all">Details</Link>
-                    </div>
-                  </div>
-                  <div className="hidden sm:grid grid-cols-12 gap-4 items-center px-4 py-3">
-                    <div className="col-span-2 flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0">
-                        {hideImg ? <div className="w-full h-full flex items-center justify-center"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg></div>
-                          : <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? "") : "") || item?.img || "/bgimg.png"} alt={item?.foundItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} className="w-full h-full object-cover" />}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition-colors">{item?.foundItemName}</p>
-                        <p className="text-gray-500 text-xs truncate leading-relaxed">{item?.description}</p>
-                      </div>
-                    </div>
-                    <div className="col-span-2"><p className="text-gray-400 text-xs flex items-center gap-1.5 truncate"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaMapMarkerAlt className="text-blue-400" size={8} /></span>{item?.location}</p></div>
-                    <div className="col-span-2"><p className="text-gray-400 text-xs flex items-center gap-1.5 truncate"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaUser className="text-blue-400" size={8} /></span>{item?.user?.username ?? item?.reporterName ?? "SAS Office"}</p></div>
-                    <div className="col-span-2">{item?.category?.name ? <span className="flex items-center gap-1.5 text-xs text-gray-400"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">{getCategoryIcon(item.category.name)}</span><span className="truncate">{item.category.name}</span></span> : <span className="text-gray-600 text-xs">—</span>}</div>
-                    <div className="col-span-1"><p className="text-gray-400 text-xs flex items-center gap-1.5"><span className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaCalendarAlt className="text-blue-400" size={8} /></span>{dateStr}</p></div>
-                    <div className="col-span-1">{isClaimed ? <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-full">Claimed</span> : <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-full">Available</span>}</div>
-                    <div className="col-span-2 flex items-center justify-end gap-1.5">
-                      {!isClaimed && <button onClick={() => setClaimItem(item)} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-semibold rounded-lg transition-all whitespace-nowrap">Claim Item</button>}
-                      <Link to={`/foundItems/${item.id}`} className="flex items-center px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] rounded-lg transition-all">Details</Link>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className={viewMode === "grid" ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-2"}>
+            {filteredItems.map((item: any) => (
+              viewMode === "grid" 
+                ? <FoundItemCard key={item.id} item={item} isAdmin={isAdmin} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
+                : <FoundItemRow key={item.id} item={item} isAdmin={isAdmin} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
+            ))}
           </div>
         )}
       </div>
@@ -1061,7 +1035,13 @@ const FoundItemsPage = () => {
             </div>{/* ── end modal header ── */}
 
             {/* ── Modal body ── */}
-            <div className="overflow-y-auto flex-1 px-6 py-5">
+            <div
+              className="overflow-y-auto flex-1 px-6 py-5"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
+              }}
+            >
               {scannedStudent && (
                 <div className="group relative overflow-hidden bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6 transition-all duration-300">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-blue-500/10 transition-all duration-500" />
@@ -1379,8 +1359,14 @@ const FoundItemsPage = () => {
 
       {claimItem && <QuickClaimModal item={claimItem} onClose={() => setClaimItem(null)} />}
       
-      {/* Custom scrollbar styles */}
-      <style>{customScrollbarStyles}</style>
+      {/* Comment Modal */}
+      <CommentModal 
+        isOpen={!!commentItem} 
+        onClose={() => setCommentItem(null)} 
+        itemId={commentItem?.id || ""} 
+        itemType="found" 
+        itemName={commentItem?.foundItemName || "Item"} 
+      />
 
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
     </div>

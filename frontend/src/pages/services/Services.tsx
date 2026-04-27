@@ -15,12 +15,12 @@ interface Service {
 
 const getServiceIcon = (title: string): React.ReactElement => {
   const iconMapping: { [key: string]: React.ReactElement } = {
-    "Lost Item Reporting":        <TbReport size="26" />,
-    "Search for Lost Items":      <FaSearch size="22" />,
-    "Location-Based Services":    <IoLocationSharp size="26" />,
-    "Help Desk Support":          <BiSupport size="26" />,
-    "Item Claiming":              <FaGift size="22" />,
-    "Data Encryption & Privacy":  <IoShieldCheckmark size="26" />,
+    "Lost Item Reporting":        <TbReport size="20" />,
+    "Search for Lost Items":      <FaSearch size="18" />,
+    "Location-Based Services":    <IoLocationSharp size="20" />,
+    "Help Desk Support":          <BiSupport size="20" />,
+    "Item Claiming":              <FaGift size="18" />,
+    "Data Encryption & Privacy":  <IoShieldCheckmark size="20" />,
     
   };
   return iconMapping[title] || <FaSearch size="22" />;
@@ -50,10 +50,10 @@ const services: Service[] = [
   },
   {
     title: "Item Claiming",
-    description: "Claim found items through a secure verified process. Only the rightful owner confirmed by school ID can retrieve belongings.",
+    description: "Submit claims for found items with verification. Browse available items and claim yours through the secure verification process.",
     accent: "from-blue-500 to-blue-700",
     tag: "Core",
-    link: "/claimItem",
+    link: "/lostItems",
   },
   {
     title: "Smart AI Search",
@@ -157,19 +157,19 @@ const Services = () => {
           </div>
 
           {/* ── Services grid ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
             {services.map((service, index) => (
               <a
                 key={index}
                 href={service.tag === "Soon" ? undefined : service.link}
-                className={`svc-card group relative bg-gray-900 border border-gray-800 rounded-2xl p-7 flex flex-col gap-5 transition-all duration-300
+                className={`svc-card group relative bg-gray-900 border border-gray-800 rounded-2xl p-3 xs:p-4 sm:p-6 flex flex-col gap-4 xs:gap-4 sm:gap-5 transition-all duration-300
                   ${service.tag === "Soon"
                     ? "cursor-default opacity-75"
                     : "cursor-pointer hover:bg-gray-800 hover:border-blue-700/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20"}`}
               >
                 {/* Top row: icon + tag */}
                 <div className="flex items-start justify-between">
-                  <div className={`relative w-12 h-12 rounded-2xl bg-gradient-to-br ${service.accent} flex items-center justify-center text-white shadow-lg`}>
+                  <div className={`relative w-9 xs:w-11 h-9 xs:h-11 rounded-2xl bg-gradient-to-br ${service.accent} flex items-center justify-center text-white shadow-lg`}>
                     {/* inner shine */}
                     <div className="absolute inset-0 rounded-2xl bg-white/10" />
                     <span className="relative z-10">{getServiceIcon(service.title)}</span>
@@ -181,10 +181,10 @@ const Services = () => {
 
                 {/* Text */}
                 <div className="flex-1">
-                  <h3 className="text-white font-bold text-base mb-2 group-hover:text-blue-200 transition-colors duration-200 leading-snug">
+                  <h3 className="text-white font-bold text-sm xs:text-base mb-2 group-hover:text-blue-200 transition-colors duration-200 leading-snug">
                     {service.title}
                   </h3>
-                  <p className="text-gray-500 text-sm leading-relaxed text-justify group-hover:text-gray-400 transition-colors duration-200">
+                  <p className="text-gray-500 text-xs xs:text-sm leading-relaxed text-justify group-hover:text-gray-400 transition-colors duration-200">
                     {service.description}
                   </p>
                 </div>
@@ -216,18 +216,18 @@ const Services = () => {
           </div>
 
           {/* ── Bottom CTA strip ── */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-900/60 border border-white/5 rounded-2xl px-6 py-5">
+          <div className="mt-10 flex flex-row items-center justify-between gap-3 bg-gray-900/60 border border-white/5 rounded-2xl px-4 py-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                 <BiSupport className="text-blue-400 w-5 h-5" />
               </div>
               <div>
-                <p className="text-white text-sm font-semibold">Need help with any service?</p>
-                <p className="text-gray-500 text-xs">Our office is available during school hours.</p>
+                <p className="text-white text-xs font-semibold">Need help?</p>
+                <p className="text-gray-500 text-[10px]">Available during school hours.</p>
               </div>
             </div>
             <a href="/support"
-              className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-900/40">
+                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-900/40">
               Contact Support
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />

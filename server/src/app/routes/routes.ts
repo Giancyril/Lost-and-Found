@@ -25,6 +25,7 @@ import { getMatchNotifications } from "../utils/getMatchNotifications";
 import { studentRoutes } from "../modules/student/student.routes";
 import sheetsRoutes from "../modules/sheets/sheets.routes";
 import { uploadImages } from "../midddlewares/upload";
+import { commentsRouter } from "../../api/comments/commentsRouter";
 
 const router = express.Router();
 
@@ -107,5 +108,6 @@ router.put("/bulletin-posts/:id/resolve",         auth(),               bulletin
 
 router.use("/students", studentRoutes);
 router.use("/sheets", sheetsRoutes);
+router.use("/", commentsRouter); // Mounting at root because the router already defines /items/:itemId/comments and /comments/:commentId
 
 export default router;

@@ -106,7 +106,7 @@ const QRCodeSlide = () => {
                   <circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" />
                 </svg>
                 <p className="text-blue-300 text-xs leading-relaxed">
-                  <span className="font-bold">Claiming a found item?</span> Bring a valid school ID to the SAS Office during office hours.
+                  <span className="font-bold">Claiming a found item?</span> Visit SAS Office during office hours.
                 </p>
               </div>
             </div>

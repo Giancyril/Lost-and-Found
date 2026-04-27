@@ -4,8 +4,10 @@ import { FaBell, FaCheckCircle, FaTimesCircle, FaClock, FaBoxOpen } from "react-
 import { useMyClaimsQuery, useGetAuditLogsQuery } from "../../redux/api/api";
 import { useUserVerification } from "../../auth/auth";
 
-const ADMIN_SEEN_KEY = "notif_seen_admin";
-const USER_SEEN_KEY  = "notif_seen_user";
+const ADMIN_SEEN_KEY    = "notif_seen_admin";
+const USER_SEEN_KEY     = "notif_seen_user";
+const ADMIN_CLEARED_KEY = "notif_cleared_admin";
+const USER_CLEARED_KEY  = "notif_cleared_user";
 
 const readSeenIds = (key: string): Set<string> => {
   try {
@@ -15,7 +17,6 @@ const readSeenIds = (key: string): Set<string> => {
 };
 
 const writeSeenIds = (key: string, ids: Set<string>) => {
-  // keep only the last 200 to avoid unbounded growth
   const arr = [...ids].slice(-200);
   localStorage.setItem(key, JSON.stringify(arr));
 };
@@ -38,17 +39,17 @@ const statusMeta = (status: string) => {
 };
 
 const NotificationBell = () => {
-  const users: any = useUserVerification();
-  const isAdmin   = users?.role === "ADMIN";
-  const isLoggedIn = !!users?.email;
+  const users: any  = useUserVerification();
+  const isAdmin     = users?.role === "ADMIN";
+  const isLoggedIn  = !!users?.email;
 
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen]           = useState(false);
+  const ref                       = useRef<HTMLDivElement>(null);
+  const storageKey                = isAdmin ? ADMIN_SEEN_KEY    : USER_SEEN_KEY;
+  const clearedKey                = isAdmin ? ADMIN_CLEARED_KEY : USER_CLEARED_KEY;
 
-  const storageKey = isAdmin ? ADMIN_SEEN_KEY : USER_SEEN_KEY;
-
-  // seenIds persists across refreshes — tracks which notification IDs have been seen
-  const [seenIds, setSeenIds] = useState<Set<string>>(() => readSeenIds(storageKey));
+  const [seenIds,    setSeenIds]    = useState<Set<string>>(() => readSeenIds(storageKey));
+  const [clearedIds, setClearedIds] = useState<Set<string>>(() => readSeenIds(clearedKey));
 
   // Admin: audit logs
   const { data: auditData } = useGetAuditLogsQuery({}, { skip: !isAdmin || !isLoggedIn });
@@ -64,29 +65,41 @@ const NotificationBell = () => {
     .sort((a: any, b: any) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime())
     .slice(0, 20);
 
-  const items = isAdmin ? adminLogs : userClaims;
+  // Filter out cleared items
+  const allItems = isAdmin ? adminLogs : userClaims;
+  const items    = allItems.filter(item => !clearedIds.has(item.id));
 
-  // An item is "new" only if its ID is NOT in seenIds
   const unread = items.filter(item => !seenIds.has(item.id)).length;
 
   const markAllRead = useCallback(() => {
     const allIds = new Set<string>(items.map(item => item.id));
-    // merge with existing seen so we don't lose older entries
     const merged = new Set<string>([...seenIds, ...allIds]);
     writeSeenIds(storageKey, merged);
     setSeenIds(merged);
   }, [items, seenIds, storageKey]);
 
+  const clearAll = useCallback(() => {
+    const allIds = new Set<string>(allItems.map(item => item.id));
+    const merged = new Set<string>([...clearedIds, ...allIds]);
+    writeSeenIds(clearedKey, merged);
+    setClearedIds(merged);
+    // also mark all as read
+    const mergedSeen = new Set<string>([...seenIds, ...allIds]);
+    writeSeenIds(storageKey, mergedSeen);
+    setSeenIds(mergedSeen);
+  }, [allItems, clearedIds, clearedKey, seenIds, storageKey]);
+
   const handleOpen = () => {
     const next = !open;
     setOpen(next);
-    if (next) markAllRead(); // mark as read when opening
+    if (next) markAllRead();
   };
 
-  // Re-read seenIds from storage when storageKey changes (admin vs user switch)
+  // Re-read from storage when storageKey changes (admin vs user switch)
   useEffect(() => {
     setSeenIds(readSeenIds(storageKey));
-  }, [storageKey]);
+    setClearedIds(readSeenIds(clearedKey));
+  }, [storageKey, clearedKey]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -117,6 +130,7 @@ const NotificationBell = () => {
       {/* Dropdown */}
       {open && (
         <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-16 sm:top-11 sm:w-80 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden z-50">
+          
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
             <div className="flex items-center gap-2">
@@ -128,23 +142,44 @@ const NotificationBell = () => {
                 </span>
               )}
             </div>
-            {isAdmin && (
-              <Link to="/dashboard/claims" onClick={() => setOpen(false)}
-                className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors">
-                View all
-              </Link>
-            )}
+            <div className="flex items-center gap-2">
+              
+              {isAdmin && (
+                <Link
+                  to="/dashboard/claims"
+                  onClick={() => setOpen(false)}
+                  className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  View all
+                </Link>
+              )}
+
+              {items.length > 0 && (
+                <button
+                  onClick={clearAll}
+                  className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           {/* List */}
-          <div className="max-h-80 overflow-y-auto divide-y divide-gray-800/60">
+          <div
+            className="max-h-80 overflow-y-auto divide-y divide-gray-800/60"
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: "rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)",
+            }}
+          >
             {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-gray-600">
                 <FaBell size={20} className="mb-2 opacity-30" />
                 <p className="text-xs">No notifications yet</p>
               </div>
             ) : isAdmin ? (
-              adminLogs.map((log: any) => {
+              items.map((log: any) => {
                 const isNew = !seenIds.has(log.id);
                 const meta  = statusMeta(log.toStatus);
                 return (
@@ -176,7 +211,7 @@ const NotificationBell = () => {
                 );
               })
             ) : (
-              userClaims.map((claim: any) => {
+              items.map((claim: any) => {
                 const isNew = !seenIds.has(claim.id);
                 const meta  = statusMeta(claim.status);
                 return (

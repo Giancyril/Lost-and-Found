@@ -25,6 +25,10 @@ model User {
   claim         Claim[]
   foundItem     FoundItem[]
   LostItem      LostItem[]
+  Comment       Comment[]
+  UserReputation UserReputation?
+  DiscussionThread DiscussionThread[]
+  ThreadReply    ThreadReply[]
 
   @@map("users")
 }
@@ -63,6 +67,7 @@ model FoundItem {
   category           ItemCategory        @relation(fields: [categoryId], references: [id])
   user               User?               @relation(fields: [userId], references: [id])
   matchNotifications MatchNotification[]
+  Comment            Comment[]
 
   @@map("foundItems")
 }
@@ -86,6 +91,7 @@ model LostItem {
   category           ItemCategory        @relation(fields: [categoryId], references: [id])
   user               User?               @relation(fields: [userId], references: [id])
   matchNotifications MatchNotification[]
+  Comment            Comment[]
 
   @@map("lostItems")
 }
@@ -180,6 +186,69 @@ model Student {
   @@map("students")
 }
 
+model Comment {
+  id            String        @id @default(uuid())
+  itemId        String
+  itemType      ItemType
+  userId        String?       // null for anonymous
+  content       String
+  isAnonymous   Boolean       @default(false)
+  helpfulCount  Int           @default(0)
+  status        CommentStatus @default(PENDING)
+  location      String?
+  time          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  foundItem     FoundItem?    @relation(fields: [itemId], references: [id], map: "comments_foundItem_fkey")
+  lostItem      LostItem?     @relation(fields: [itemId], references: [id], map: "comments_lostItem_fkey")
+  user          User?         @relation(fields: [userId], references: [id])
+  
+  @@map("comments")
+}
+
+model DiscussionThread {
+  id          String           @id @default(uuid())
+  title       String
+  category    ThreadCategory
+  createdBy   String
+  isPinned    Boolean          @default(false)
+  replyCount  Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  
+  creator     User             @relation(fields: [createdBy], references: [id])
+  replies     ThreadReply[]
+  
+  @@map("discussion_threads")
+}
+
+model ThreadReply {
+  id           String   @id @default(uuid())
+  threadId     String
+  userId       String
+  content      String
+  helpfulCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  
+  thread       DiscussionThread @relation(fields: [threadId], references: [id])
+  user         User             @relation(fields: [userId], references: [id])
+  
+  @@map("thread_replies")
+}
+
+model UserReputation {
+  userId              String     @id
+  helpfulPoints       Int        @default(0)
+  commentsCount       Int        @default(0)
+  verifiedSightings   Int        @default(0)
+  trustLevel          TrustLevel @default(NEW)
+  
+  user                User       @relation(fields: [userId], references: [id])
+  
+  @@map("user_reputation")
+}
+
 enum status {
   PENDING
   APPROVED
@@ -189,4 +258,27 @@ enum status {
 enum userRole {
   ADMIN
   USER
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ItemType {
+  LOST
+  FOUND
+}
+
+enum ThreadCategory {
+  LOCATION
+  GENERAL
+  TRENDING
+}
+
+enum TrustLevel {
+  NEW
+  TRUSTED
+  MODERATOR
 }

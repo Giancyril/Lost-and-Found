@@ -1,7 +1,7 @@
+import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useGetSingleLostItemQuery, useCreateFoundItemMutation } from "../../redux/api/api";
 import { Spinner } from "flowbite-react";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast, ToastContainer } from "react-toastify";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
@@ -11,6 +11,9 @@ import {
   FaTimes, FaBoxOpen, FaChevronLeft, FaChevronRight,
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
+import { CommentSection } from "../../components/comments/CommentSection";
+import { CommentModal } from "../../components/comments/CommentModal";
+import { FaComments } from "react-icons/fa";
 
 const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
 
@@ -88,7 +91,6 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   );
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
 const openModal  = (setter: (v: boolean) => void) => { setter(true);  document.body.classList.add("modal-open");    };
 const closeModal = (setter: (v: boolean) => void) => { setter(false); document.body.classList.remove("modal-open"); };
 
@@ -101,6 +103,7 @@ const SingleLostItem = () => {
   const [createFoundItem, { isLoading: submitLoading }] = useCreateFoundItemMutation();
 
   const [isModalOpen, setIsModalOpen]     = useState(false);
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [foundDate, setFoundDate]         = useState(new Date().toISOString().split("T")[0]);
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [reportedFound, setReportedFound] = useState<boolean>(false);
@@ -256,6 +259,26 @@ const SingleLostItem = () => {
             </div>
           </div>
         </div>
+
+        {/* Comments Section */}
+        <div className="w-full px-4 sm:px-10 lg:px-16 py-6 border-t border-gray-800">
+          <div className="max-w-4xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Discussion & Sightings</h2>
+              <button 
+                onClick={() => setIsCommentModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg border border-gray-700 transition-all font-semibold text-sm"
+              >
+                <FaComments size={14} className="text-blue-400" />
+                View Comments
+              </button>
+            </div>
+            
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+              <CommentSection itemId={lostItemId!} itemType="lost" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Modal */}
@@ -353,6 +376,14 @@ const SingleLostItem = () => {
           </div>
         </div>
       )}
+
+      <CommentModal 
+        isOpen={isCommentModalOpen} 
+        onClose={() => setIsCommentModalOpen(false)} 
+        itemId={lostItemId!} 
+        itemType="lost" 
+        itemName={lostItemName || "Item"} 
+      />
 
       <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
     </>

@@ -12,6 +12,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
+import { CommentSection } from "../../components/comments/CommentSection";
+import { CommentModal } from "../../components/comments/CommentModal";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -19,6 +21,7 @@ import {
   FaTimes, FaBuilding, FaCheckCircle, FaEnvelope,
   FaChevronLeft, FaChevronRight, FaClipboardList,
   FaBoxOpen, FaHandshake, FaClock, FaSearch, FaQrcode, FaSpinner, FaUserCheck,
+  FaComments,
 } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
 
@@ -295,9 +298,10 @@ const SingleFoundItem = () => {
   const [isTimelineOpen, setIsTimelineOpen]           = useState(false);
   const [lostDate, setLostDate]                       = useState("");
   const [claimScannedStudent, setClaimScannedStudent] = useState<ScannedStudent | null>(null);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [showClaimScanner, setShowClaimScanner]       = useState(false);
   const [isFetchingClaimStudent, setIsFetchingClaimStudent] = useState(false);
-  const [prevClaimEmailValue, setPrevClaimEmailValue] = useState("");
   const [getStudentByDetailsForClaim] = useLazyGetStudentByDetailsQuery();
 
   const useFetchStudentForClaim = (id: string) => {
@@ -313,7 +317,6 @@ const SingleFoundItem = () => {
     reset();
     setLostDate("");
     setClaimScannedStudent(null);
-    setPrevClaimEmailValue("");
   };
 
   const handleClaimScan = (student: ScannedStudent) => {
@@ -423,258 +426,210 @@ const SingleFoundItem = () => {
     : foundItemData?.claim ? 1 : 0;
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-950">
-        {/* Header */}
-        <div className="border-b border-gray-800 bg-gray-950">
-          <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">
-                  {foundItemData?.foundItemName || "Found Item"}
-                </h1>
-                <p className="text-gray-500 text-sm mt-1">Item lost details</p>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
-                <button
-                  onClick={() => openModal(setIsTimelineOpen)}
-                  className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all"
-                >
-                  <FaClipboardList size={10} /> View Lifecycle
-                  {claimCount > 0 && (
-                    <span className="ml-0.5 bg-violet-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-none">
-                      {claimCount}
-                    </span>
-                  )}
-                </button>
-              </div>
+    <div className="min-h-screen bg-gray-950 text-white">
+      {/* Header */}
+      <div className="border-b border-gray-800 bg-gray-950">
+        <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">
+                {foundItemData?.foundItemName || "Found Item"}
+              </h1>
+              <p className="text-gray-500 text-sm mt-1">Item details & discussion</p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
+              <button
+                onClick={() => openModal(setIsTimelineOpen)}
+                className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all"
+              >
+                <FaClipboardList size={10} /> View Lifecycle
+                {claimCount > 0 && (
+                  <span className="ml-0.5 bg-violet-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-none">
+                    {claimCount}
+                  </span>
+                )}
+              </button>
+              <Link to="/foundItems" className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-xs font-semibold text-gray-400 hover:text-white transition-all">
+                <FaArrowLeft size={10} /> Back to Board
+              </Link>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
-            {/* Left: Image */}
-            <div className="relative flex flex-col h-full rounded-2xl overflow-hidden">
-              <div className="absolute top-3 left-3 z-10">
-                {isClaimed ? (
-                  <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-emerald-500/30">
-                    <FaCheckCircle size={8} /> Claimed
-                  </span>
-                ) : (
-                  <span className="px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-blue-500/30">
-                    Available
-                  </span>
-                )}
+      {/* Main Content */}
+      <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
+          {/* Left: Image */}
+          <div className="relative flex flex-col h-full rounded-2xl overflow-hidden">
+            <div className="absolute top-3 left-3 z-10">
+              {isClaimed ? (
+                <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-emerald-500/30">
+                  <FaCheckCircle size={8} /> Claimed
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-blue-500/30">
+                  Available
+                </span>
+              )}
+            </div>
+            {hideImage ? <HiddenImagePlaceholder /> : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />}
+          </div>
+
+          {/* Right: Info */}
+          <div className="flex flex-col h-full space-y-4">
+            <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
+              <h2 className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                <FaTag className="text-blue-500" size={10} /> Item Details
+              </h2>
+              <div className="grid grid-cols-2 gap-3 mb-1">
+                <div className="space-y-1">
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Category</p>
+                  <p className="text-white text-sm font-semibold">{foundItemData?.category?.name || "Uncategorized"}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Found Date</p>
+                  <p className="text-white text-sm font-semibold flex items-center justify-end gap-1.5">
+                    <FaCalendarAlt className="text-blue-500" size={10} />
+                    {foundItemData?.date?.split("T")[0] || "—"}
+                  </p>
+                </div>
               </div>
-              {hideImage ? <HiddenImagePlaceholder /> : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />}
             </div>
 
-            {/* Right: Details + Claim */}
-            <div className="space-y-4">
-              <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
-                <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
-                <p className="text-gray-400 leading-relaxed text-sm">{foundItemData?.description || "No description available."}</p>
+            <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
+              <h2 className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                <FaMapMarkerAlt className="text-blue-500" size={10} /> Location Found
+              </h2>
+              <div className="p-3 bg-gray-800 rounded-lg border border-gray-700/50">
+                <p className="text-white text-sm font-semibold">{foundItemData?.location}</p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { icon: <FaCalendarAlt size={12} />, label: "Date Found", value: foundItemData?.date ? new Date(foundItemData.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified" },
-                  { icon: <FaMapMarkerAlt size={12} />, label: "Location",  value: foundItemData?.location || "Not specified" },
-                  { icon: <FaTag size={12} />,          label: "Category",  value: foundItemData?.category?.name || "Uncategorized" },
-                  { icon: <FaUser size={12} />,         label: "Logged By", value: foundItemData?.user?.username || "SAS Office" },
-                ].map((item, i) => (
-                  <div key={i} className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-                    <div className="flex items-center gap-2 text-blue-400 mb-2">
-                      {item.icon}
-                      <span className="text-xs font-bold uppercase tracking-widest truncate">{item.label}</span>
-                    </div>
-                    <p className="text-gray-300 text-sm">{item.value}</p>
-                  </div>
-                ))}
+            </div>
+
+            <div className="bg-gray-900 rounded-xl p-5 border border-gray-800 flex-1">
+              <h2 className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                <FaClipboardList className="text-blue-500" size={10} /> Description
+              </h2>
+              <p className="text-gray-300 text-sm leading-relaxed text-justify whitespace-pre-wrap">
+                {foundItemData?.description || "No description provided."}
+              </p>
+            </div>
+
+            {isClaimed ? (
+              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <FaHandshake className="text-emerald-400" size={18} />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-bold">Already Claimed</p>
+                  <p className="text-emerald-400/70 text-[10px] uppercase font-black tracking-widest">Success</p>
+                </div>
               </div>
-              <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
-                <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-3">
-                  {isClaimed ? "Claim Status" : isAdmin ? "Process Claim" : "Claim This Item"}
-                </h3>
-                {isClaimed ? (
-                  <div className="bg-green-900/20 border border-green-600/30 rounded-xl p-4 flex items-start gap-3">
-                    <FaCheckCircle className="text-green-400 mt-0.5 shrink-0 text-lg" />
-                    <div>
-                      <p className="text-green-400 text-sm font-semibold">Item Successfully Claimed</p>
-                      <p className="text-green-400/70 text-xs mt-1 leading-relaxed">This item has been verified and returned to its owner.</p>
-                    </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 bg-gray-800 rounded-xl p-3">
+                  <FaBuilding className="text-blue-400 mt-0.5 shrink-0 text-lg" />
+                  <div>
+                    <p className="text-white text-sm font-semibold">Is this your item?</p>
+                    <p className="text-gray-400 text-xs mt-1 leading-relaxed">Submit a claim with proof of ownership. SAS office will review and contact you.</p>
                   </div>
-                ) : isAdmin ? (
-                  <>
-                    <div className="flex items-start gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
-                      <FaClipboardList className="text-blue-400 mt-0.5 shrink-0 text-lg" />
-                      <div>
-                        <p className="text-white text-sm font-semibold">Review claimant details</p>
-                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">Verify proof of ownership before marking this item as claimed.</p>
-                      </div>
-                    </div>
-                    <button onClick={() => openModal(setIsClaimModalOpen)}
-                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
-                      Process Claim
-                    </button>
-                  </>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3 bg-gray-800 rounded-xl p-3">
-                      <FaBuilding className="text-blue-400 mt-0.5 shrink-0 text-lg" />
-                      <div>
-                        <p className="text-white text-sm font-semibold">Is this your item?</p>
-                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">Submit a claim with your details and proof of ownership. The SAS office will review and contact you via your school email.</p>
-                      </div>
-                    </div>
-                    <button onClick={() => openModal(setIsClaimModalOpen)}
-                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
-                      Submit a Claim
-                    </button>
-                  </div>
-                )}
+                </div>
+                <button onClick={() => openModal(setIsClaimModalOpen)}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm shadow-lg shadow-blue-600/20">
+                  Submit a Claim
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Discussion & Sightings */}
+        <div className="mt-10 pt-10 border-t border-gray-800">
+          <div className="max-w-4xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Discussion &amp; Sightings</h2>
+              <button
+                onClick={() => setIsCommentModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg border border-gray-700 transition-all font-semibold text-sm"
+              >
+                <FaComments size={14} className="text-blue-400" />
+                View All
+              </button>
+            </div>
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+              <div className="p-4 sm:p-6">
+                <CommentSection itemId={foundItemId!} itemType="found" />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Lifecycle Timeline Modal */}
+      {/* Modals */}
       {isTimelineOpen && (
         <LifecycleModal foundItem={foundItemData} onClose={() => closeModal(setIsTimelineOpen)} />
       )}
 
-      {/* Claim Modal */}
       {isClaimModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div 
-          id="single-claim-modal" 
-          className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto"
-          style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
-          }}
-          >
+          <div id="single-claim-modal" className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 sticky top-0 bg-gray-900 z-20">
               <div>
                 <h3 className="text-base font-bold text-white">{isAdmin ? "Process Claim" : "Submit a Claim"}</h3>
-                <p className="text-gray-500 text-xs mt-0.5">{isAdmin ? "Verify ownership and mark item as claimed" : "Provide your details to prove ownership"}</p>
+                <p className="text-gray-500 text-xs mt-0.5">{isAdmin ? "Verify ownership" : "Provide proof of ownership"}</p>
               </div>
-              <button onClick={handleCloseClaimModal} className="text-gray-500 hover:text-white ml-4">
+              <button onClick={handleCloseClaimModal} className="text-gray-500 hover:text-white">
                 <FaTimes size={15} />
               </button>
             </div>
 
-            {/* Fetch / Scan row */}
             <div className="px-4 pt-3 border-b border-gray-800 pb-3">
               {!claimScannedStudent ? (
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleClaimFetchDetails}
-                    disabled={isFetchingClaimStudent}
-                    className="flex-1 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50"
-                  >
-                    {isFetchingClaimStudent ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
-                    Fetch Student Info
+                  <button onClick={handleClaimFetchDetails} disabled={isFetchingClaimStudent} className="flex-1 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
+                    {isFetchingClaimStudent ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />} Fetch Info
                   </button>
-                  <button
-                    onClick={() => setShowClaimScanner(true)}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider active:scale-95"
-                  >
-                    <FaQrcode size={9} /> Scan Student ID
+                  <button onClick={() => setShowClaimScanner(true)} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg uppercase tracking-wider">
+                    <FaQrcode size={9} /> Scan ID
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl px-3 py-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
-                    <FaUserCheck size={14} className="text-blue-400" />
-                  </div>
+                  <FaUserCheck size={14} className="text-blue-400" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-white text-xs font-black uppercase tracking-tight truncate">{claimScannedStudent.name}</p>
-                    <p className="text-blue-400/70 text-[10px] font-bold uppercase tracking-widest">ID: {claimScannedStudent.id}</p>
+                    <p className="text-white text-xs font-black uppercase truncate">{claimScannedStudent.name}</p>
+                    <p className="text-blue-400/70 text-[10px] font-bold">ID: {claimScannedStudent.id}</p>
                   </div>
-                  <button
-                    onClick={() => { setClaimScannedStudent(null); setValue("claimantName", ""); setValue("schoolEmail", ""); }}
-                    className="w-6 h-6 flex items-center justify-center rounded-md bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white transition-all shrink-0"
-                  >
-                    <FaTimes size={10} />
-                  </button>
+                  <button onClick={() => { setClaimScannedStudent(null); setValue("claimantName", ""); setValue("schoolEmail", ""); }} className="text-gray-500 hover:text-white"><FaTimes size={10} /></button>
                 </div>
               )}
             </div>
+
             <div className="px-4 py-4">
-              <div className="flex items-center gap-3 bg-gray-800 rounded-xl p-3 mb-5 border border-gray-700">
-                {hideImage ? (
-                  <div className="w-14 h-14 rounded-lg bg-gray-700 border border-gray-600 flex items-center justify-center shrink-0">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                    </svg>
-                  </div>
-                ) : (
-                  <img src={foundItemData?.img} alt={foundItemData?.foundItemName}
-                    className="w-14 h-14 rounded-lg object-cover shrink-0"
-                    onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
-                )}
-                <div>
-                  <p className="text-white text-sm font-semibold">{foundItemData?.foundItemName}</p>
-                  <p className="text-gray-400 text-xs mt-0.5">{foundItemData?.location}</p>
-                  <p className="text-gray-400 text-xs">Found: {foundItemData?.date?.split("T")[0]}</p>
-                </div>
-              </div>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Full Name *</label>
-                  <div className="relative">
-                    <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
-                    <input type="text" placeholder=" "
-                      {...register("claimantName", { required: "Full name is required" })}
-                      className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm placeholder-gray-600" />
-                  </div>
+                  <input type="text" {...register("claimantName", { required: "Full name is required" })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm" />
                   {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
                 </div>
                 <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">School ID / Email *</label>
-                  <div className="relative">
-                    <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
-                    <input type="email" placeholder=" "
-                      {...register("schoolEmail", {
-                        required: "School email is required",
-                        pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email (@nbsc.edu.ph)" },
-                      })}
-                      className="w-full pl-9 pr-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm placeholder-gray-600" />
-                  </div>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">School Email *</label>
+                  <input type="email" {...register("schoolEmail", { required: "School email is required", pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Use @nbsc.edu.ph" } })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm" />
                   {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
                 </div>
                 <div>
-                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date</label>
+                  <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Date Lost</label>
                   <CustomDatePicker value={lostDate} onChange={setLostDate} max={new Date().toISOString().split("T")[0]} placeholder=" " openUp />
                 </div>
                 <div>
                   <label className="block mb-1.5 text-xs font-bold text-white uppercase tracking-widest">Proof of Ownership *</label>
-                  <textarea rows={4} placeholder=" "
-                    {...register("distinguishingFeatures", {
-                      required: "Please describe identifying details",
-                      minLength: { value: 10, message: "Please provide at least 10 characters" },
-                    })}
-                    className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm resize-none placeholder-gray-600" />
+                  <textarea rows={4} {...register("distinguishingFeatures", { required: "Description required", minLength: { value: 10, message: "Min 10 chars" } })} className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm resize-none" />
                   {errors.distinguishingFeatures && <p className="text-red-400 text-xs mt-1">{errors.distinguishingFeatures.message as string}</p>}
                 </div>
-                <div className="bg-blue-900/20 border border-blue-600/20 rounded-lg px-4 py-3">
-                  <p className="text-blue-300 text-xs leading-relaxed">
-                    {isAdmin ? "Your claim will be sent to the SAS office for review." : "Once submitted, the SAS office will review your proof of ownership and match it with the item before releasing it."}
-                  </p>
-                </div>
-                <div className="flex gap-3 pt-1">
-                  <button type="button" onClick={handleCloseClaimModal}
-                    className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium">
-                    Cancel
-                  </button>
-                  <button type="submit" disabled={isSubmitting || claimLoading}
-                    className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50">
-                    {isSubmitting || claimLoading
-                      ? <div className="flex items-center justify-center gap-2"><Spinner size="sm" /> Processing...</div>
-                      : isAdmin ? "Confirm as Claimed" : "Submit Claim"}
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={handleCloseClaimModal} className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium">Cancel</button>
+                  <button type="submit" disabled={isSubmitting || claimLoading} className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold">
+                    {isSubmitting || claimLoading ? <Spinner size="sm" /> : isAdmin ? "Approve Claim" : "Submit Claim"}
                   </button>
                 </div>
               </form>
@@ -683,17 +638,20 @@ const SingleFoundItem = () => {
         </div>
       )}
 
-      {/* Scanner Modal */}
       {showClaimScanner && (
-        <BarcodeScannerModal
-          onScan={handleClaimScan}
-          onClose={() => setShowClaimScanner(false)}
-          useFetchStudent={useFetchStudentForClaim}
-        />
+        <BarcodeScannerModal onScan={handleClaimScan} onClose={() => setShowClaimScanner(false)} useFetchStudent={useFetchStudentForClaim} />
       )}
 
-      <ToastContainer position="top-right" autoClose={5000} style={{ top: "70px" }} theme="dark" />
-    </>
+      <CommentModal 
+        isOpen={isCommentModalOpen} 
+        onClose={() => setIsCommentModalOpen(false)} 
+        itemId={foundItemId!} 
+        itemType="found" 
+        itemName={singleFoundItem?.data?.foundItemName || "Item"} 
+      />
+
+      <ToastContainer position="top-right" autoClose={5000} theme="dark" />
+    </div>
   );
 };
 

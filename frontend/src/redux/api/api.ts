@@ -282,6 +282,20 @@ const api = baseApi.injectEndpoints({
     upsertStudent: builder.mutation({
       query: (data: any) => ({ url: "/students/upsert", method: "POST", body: data }),
     }),
+
+    // comments
+    getComments: builder.query({
+      query: ({ itemId }) => ({ url: `/items/${itemId}/comments`, method: "GET" }),
+      providesTags: ["comments"],
+    }),
+    createComment: builder.mutation({
+      query: ({ itemId, ...data }) => ({ url: `/items/${itemId}/comments`, method: "POST", body: data }),
+      invalidatesTags: ["comments"],
+    }),
+    voteHelpful: builder.mutation({
+      query: (commentId) => ({ url: `/comments/${commentId}/vote-helpful`, method: "POST" }),
+      invalidatesTags: ["comments"],
+    }),
   }),
 });
 
@@ -350,4 +364,7 @@ export const {
   useGetStudentByDetailsQuery,
   useLazyGetStudentByDetailsQuery,
   useUpsertStudentMutation,
+  useGetCommentsQuery,
+  useCreateCommentMutation,
+  useVoteHelpfulMutation,
 } = api;

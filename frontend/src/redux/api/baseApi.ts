@@ -23,7 +23,7 @@ export const baseApi = createApi({
     "mylostItems", "myFoundItems", "users", "adminData",
     "testimonials", "services", "faqs", "recentActivity",
     "foundItems", "claims", "categories", "auditLogs",
-    "bulletinPosts","matchNotifications",
+    "bulletinPosts","matchNotifications","comments",
   ],
   endpoints: () => ({}),
 });

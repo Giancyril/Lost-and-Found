@@ -178,7 +178,13 @@ const NotificationBell = () => {
                 <button onClick={() => setOpen(false)} className="sm:hidden text-gray-500 hover:text-white ml-1"><FaTimes size={13} /></button>
               </div>
             </div>
-            <div className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto divide-y divide-white/5">
+            <div
+              className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto divide-y divide-white/5"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
+              }}
+            >
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-gray-600">
                   <FaBell size={24} className="mb-3 opacity-30" />
@@ -204,7 +210,7 @@ const NotificationBell = () => {
             </div>
             {notifications.length > 0 && (
               <div className="px-4 py-2.5 border-t border-white/5">
-                <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">View all activity →</Link>
+                <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors block text-center">View all activity</Link>
               </div>
             )}
           </div>
