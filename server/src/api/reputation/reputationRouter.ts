@@ -1,11 +1,16 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
 import { reputationController } from './reputationController';
-import { authMiddleware } from '../middleware/authMiddleware';
+import auth from '../../app/midddlewares/auth';
+
+import badgeRouter from './badges/badgeRouter';
 
 const router = Router();
 
-// Apply authentication middleware
-router.use(authMiddleware);
+// Mount badge sub-router
+router.use('/badges-management', badgeRouter);
+
+// Apply authentication middleware for existing routes
+router.use(auth());
 
 // Get user reputation
 router.get('/user/:userId', reputationController.getUserReputation);

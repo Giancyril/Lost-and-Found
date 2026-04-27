@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { redis } from '../utils/redis';
 
 const prisma = new PrismaClient();
@@ -41,12 +41,12 @@ export const analyticsService = {
       }),
       prisma.lostItem.count({
         where: { 
-          ...dateFilter ? { createdAt: { gte: dateFilter } } : {},
+          ...(dateFilter ? { createdAt: { gte: dateFilter } } : {}),
           isFound: true 
         }
       }),
-      this.calculateItemRecoveryRate(dateFilter),
-      this.calculateUserEngagementRate(dateFilter)
+      this.calculateItemRecoveryRate(dateFilter || undefined),
+      this.calculateUserEngagementRate(dateFilter || undefined)
     ]);
 
     const metrics = {
@@ -70,11 +70,8 @@ export const analyticsService = {
   async getTrends(metrics: string[], dateRange?: string, comparisonPeriod?: string) {
     const cacheKey = `analytics:trends:${metrics.join(',')}:${dateRange || 'default'}:${comparisonPeriod || 'default'}`;
     
-    // Try to get from cache first
     const cached = await redis.get(cacheKey);
-    if (cached) {
-      return JSON.parse(cached);
-    }
+    if (cached) return JSON.parse(cached);
 
     const dateFilter = this.getDateFilter(dateRange);
     const comparisonFilter = this.getDateFilter(comparisonPeriod);
@@ -82,14 +79,14 @@ export const analyticsService = {
     const trends = await Promise.all(
       metrics.map(async (metric) => {
         const [current, previous] = await Promise.all([
-          this.getMetricData(metric, dateFilter),
-          this.getMetricData(metric, comparisonFilter)
+          this.getMetricData(metric, dateFilter || undefined),
+          this.getMetricData(metric, comparisonFilter || undefined)
         ]);
 
         return {
           metric,
-          current: current,
-          previous: previous,
+          current,
+          previous,
           change: this.calculateChange(current, previous),
           trend: this.calculateTrend(current, previous)
         };
@@ -104,11 +101,8 @@ export const analyticsService = {
   async getGeographic(dateRange?: string) {
     const cacheKey = `analytics:geographic:${dateRange || 'default'}`;
     
-    // Try to get from cache first
     const cached = await redis.get(cacheKey);
-    if (cached) {
-      return JSON.parse(cached);
-    }
+    if (cached) return JSON.parse(cached);
 
     const dateFilter = this.getDateFilter(dateRange);
     
@@ -140,7 +134,7 @@ export const analyticsService = {
       prisma.lostItem.groupBy({
         by: ['location'],
         where: { 
-          ...dateFilter ? { createdAt: { gte: dateFilter } } : {},
+          ...(dateFilter ? { createdAt: { gte: dateFilter } } : {}),
           isFound: true 
         },
         _count: { id: true },
@@ -153,7 +147,6 @@ export const analyticsService = {
       })
     ]);
 
-    // Combine geographic data
     const geographicData = this.combineGeographicData({
       locationThreads,
       locationReplies,
@@ -213,9 +206,7 @@ export const analyticsService = {
       }
     });
 
-    // Start export job in background
     this.processExportJob(exportJob.id).catch(console.error);
-
     return exportJob;
   },
 
@@ -301,27 +292,20 @@ export const analyticsService = {
   // Process export job (background task)
   async processExportJob(exportId: string) {
     try {
-      // Update export status to processing
       await prisma.analyticsExport.update({
         where: { id: exportId },
         data: { exportStatus: 'processing' }
       });
 
-      const export = await prisma.analyticsExport.findUnique({
+      const exportData = await prisma.analyticsExport.findUnique({
         where: { id: exportId }
       });
 
-      if (!export) {
-        throw new Error('Export not found');
-      }
+      if (!exportData) throw new Error('Export not found');
 
-      // Generate export data based on type
-      const data = await this.generateExportData(export.exportType, export.dateRange);
+      const data = await this.generateExportData(exportData.exportType, exportData.dateRange);
+      const filePath = await this.saveExportFile(data, exportData.exportFormat, exportData.exportName);
       
-      // Save export file
-      const filePath = await this.saveExportFile(data, export.exportFormat, export.exportName);
-      
-      // Update export status to completed
       await prisma.analyticsExport.update({
         where: { id: exportId },
         data: {
@@ -330,9 +314,7 @@ export const analyticsService = {
           completedAt: new Date()
         }
       });
-
     } catch (error) {
-      // Update export status to failed
       await prisma.analyticsExport.update({
         where: { id: exportId },
         data: { exportStatus: 'failed' }
@@ -350,26 +332,17 @@ export const analyticsService = {
         return await prisma.discussionThread.findMany({
           where: dateFilter ? { createdAt: { gte: dateFilter } } : {},
           include: {
-            creator: {
-              select: { id: true, name: true, email: true }
-            },
+            creator: { select: { id: true, name: true, email: true } },
             replies: true
           }
         });
       case 'users':
         return await prisma.user.findMany({
-          include: {
-            reputation: true,
-            badges: true
-          }
+          include: { reputation: true, badges: true }
         });
       case 'reputation':
         return await prisma.userReputation.findMany({
-          include: {
-            user: {
-              select: { id: true, name: true, email: true }
-            }
-          }
+          include: { user: { select: { id: true, name: true, email: true } } }
         });
       default:
         throw new Error('Unknown export type');
@@ -378,8 +351,6 @@ export const analyticsService = {
 
   // Save export file
   async saveExportFile(data: any, format: string, name: string): Promise<string> {
-    // This would implement actual file saving logic
-    // For now, return a mock file path
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     return `/exports/${name}_${timestamp}.${format}`;
   },
@@ -389,27 +360,13 @@ export const analyticsService = {
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
-    const [
-      recentThreads,
-      recentReplies,
-      recentUsers
-    ] = await Promise.all([
-      prisma.discussionThread.count({
-        where: { createdAt: { gte: oneDayAgo } }
-      }),
-      prisma.threadReply.count({
-        where: { createdAt: { gte: oneDayAgo } }
-      }),
-      prisma.user.count({
-        where: { createdAt: { gte: oneDayAgo } }
-      })
+    const [recentThreads, recentReplies, recentUsers] = await Promise.all([
+      prisma.discussionThread.count({ where: { createdAt: { gte: oneDayAgo } } }),
+      prisma.threadReply.count({ where: { createdAt: { gte: oneDayAgo } } }),
+      prisma.user.count({ where: { createdAt: { gte: oneDayAgo } } })
     ]);
 
-    return {
-      recentThreads,
-      recentReplies,
-      recentUsers
-    };
+    return { recentThreads, recentReplies, recentUsers };
   },
 
   // Helper methods
@@ -436,14 +393,10 @@ export const analyticsService = {
   },
 
   calculateItemRecoveryRate(dateFilter?: Date): number {
-    // This would calculate the actual recovery rate
-    // For now, return a mock value
     return 0.75;
   },
 
   calculateUserEngagementRate(dateFilter?: Date): number {
-    // This would calculate the actual engagement rate
-    // For now, return a mock value
     return 0.65;
   },
 
@@ -478,10 +431,8 @@ export const analyticsService = {
   },
 
   combineGeographicData(data: any): any[] {
-    // Combine all geographic data into a unified format
-    const locations = new Set();
+    const locations = new Set<string>();
     
-    // Collect all unique locations
     Object.values(data).forEach((item: any) => {
       if (Array.isArray(item)) {
         item.forEach((locationData: any) => {
@@ -492,44 +443,31 @@ export const analyticsService = {
       }
     });
 
-    // Create combined data for each location
     return Array.from(locations).map((location: string) => {
-      const locationData = location as string;
-      
-      const threadData = data.locationThreads.find((item: any) => item.location === locationData);
-      const replyData = data.locationReplies.find((item: any) => item.location === locationData);
-      const lostItemData = data.locationLostItems.find((item: any) => item.location === locationData);
-      const foundItemData = data.locationFoundItems.find((item: any) => item.location === locationData);
-      const userData = data.locationUsers.find((item: any) => item.location === locationData);
+      const threadData = data.locationThreads.find((item: any) => item.location === location);
+      const replyData = data.locationReplies.find((item: any) => item.location === location);
+      const lostItemData = data.locationLostItems.find((item: any) => item.location === location);
+      const foundItemData = data.locationFoundItems.find((item: any) => item.location === location);
+      const userData = data.locationUsers.find((item: any) => item.location === location);
 
-      return {
-        location: locationData,
+      const counts = {
         threadCount: threadData?._count.id || 0,
         replyCount: replyData?._count.id || 0,
         lostItemCount: lostItemData?._count.id || 0,
         foundItemCount: foundItemData?._count.id || 0,
-        userCount: userData?._count.id || 0,
-        activityScore: this.calculateActivityScore({
-          threadCount: threadData?._count.id || 0,
-          replyCount: replyData?._count.id || 0,
-          lostItemCount: lostItemData?._count.id || 0,
-          foundItemCount: foundItemData?._count.id || 0,
-          userCount: userData?._count.id || 0
-        })
+        userCount: userData?._count.id || 0
+      };
+
+      return {
+        location,
+        ...counts,
+        activityScore: this.calculateActivityScore(counts)
       };
     });
   },
 
   calculateActivityScore(data: any): number {
-    // Calculate activity score based on various metrics
-    const weights = {
-      threads: 0.3,
-      replies: 0.2,
-      lostItems: 0.2,
-      foundItems: 0.2,
-      users: 0.1
-    };
-
+    const weights = { threads: 0.3, replies: 0.2, lostItems: 0.2, foundItems: 0.2, users: 0.1 };
     return (
       (data.threadCount * weights.threads) +
       (data.replyCount * weights.replies) +

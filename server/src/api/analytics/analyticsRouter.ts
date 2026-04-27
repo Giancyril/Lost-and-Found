@@ -1,11 +1,11 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
 import { analyticsController } from './analyticsController';
-import { authMiddleware } from '../middleware/authMiddleware';
+import auth from '../../app/midddlewares/auth';
 
 const router = Router();
 
 // Apply authentication middleware
-router.use(authMiddleware);
+router.use(auth());
 
 // Get metrics cards
 router.get('/metrics', analyticsController.getMetrics);

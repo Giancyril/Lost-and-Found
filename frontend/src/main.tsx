@@ -27,6 +27,11 @@ import HeatmapPage from "./dashboard/pages/HeatmapPage.tsx";
 import AnalyticsPage from "./dashboard/pages/AnalyticsPage.tsx";
 import ArchievePage from "./dashboard/pages/ArchievePage.tsx";
 import ReportPage from "./dashboard/pages/ReportPage.tsx";
+import ThreadList from "./components/threads/ThreadList.tsx";
+import ThreadDetail from "./components/threads/ThreadDetail.tsx";
+import ThreadCreate from "./components/threads/ThreadCreate.tsx";
+import ReputationDashboard from "./components/reputation/ReputationDashboard.tsx";
+import AnalyticsV2 from "./dashboard/pages/AnalyticsV2.tsx";
 import BulletinBoard from "./pages/bulletin/BulletinBoard.tsx";
 import PortalDisplay from "./pages/portal/PortalDisplay.tsx";
 import AboutUs from "./components/aboutUs/aboutUs.tsx";
@@ -48,6 +53,10 @@ const router = createBrowserRouter([
       { path: "/reportFoundItem",element: <ReportFoundItem /> },
       { path: "/ai-search",      element: <AiSearch /> },
       { path: "/bulletin",       element: <BulletinBoard /> },
+      { path: "/threads",        element: <ThreadList /> },
+      { path: "/threads/:id",    element: <ThreadDetail /> },
+      { path: "/threads/new",    element: <ThreadCreate /> },
+      { path: "/reputation",     element: <ReputationDashboard userId="current" /> },
     ],
   },
 
@@ -63,6 +72,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/lost-items",     element: <DashboardLayout><LostItemsManagement /></DashboardLayout> },
   { path: "/dashboard/claims",         element: <DashboardLayout><ClaimsManagement /></DashboardLayout> },
   { path: "/dashboard/analytics",      element: <DashboardLayout><AnalyticsPage /></DashboardLayout> },
+  { path: "/dashboard/analytics-v2",   element: <DashboardLayout><AnalyticsV2 /></DashboardLayout> },
   { path: "/dashboard/heatmap",        element: <DashboardLayout><HeatmapPage /></DashboardLayout> },
   { path: "/dashboard/users",          element: <DashboardLayout><UsersManagement /></DashboardLayout> },
   { path: "/dashboard/categories",     element: <DashboardLayout><CategoriesManagement /></DashboardLayout> },

@@ -15,7 +15,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **AI-Powered Search**: Integration with Google Gemini AI for intelligent item search and matching
 - **High-Performance Web Scanner**: Next-generation hybrid barcode scanner using jsQR + QuaggaJS + native fallback for 1-2 second scan performance — 3-5x faster than previous implementation
 - **Student Masterlist Integration**: Google Sheets-backed masterlist that resolves student name, email, and department from a scanned or entered ID — with fuzzy name matching and ID normalization
-- **Real-time Notifications**: Email notifications for potential matches and claim status updates
+- **Real-Time Notifications**: Email notifications for potential matches and claim status updates
 - **Interactive Maps**: Location-based visualization using Leaflet maps with heat mapping
 - **Bulletin Board**: Community bulletin for posting lost items with tips from other users
 - **Archive System**: Automated archiving of stale items to keep the database clean
@@ -25,6 +25,16 @@ A comprehensive lost and found management system built with modern web technolog
 - **Multi-Image Upload**: Found items support up to 6 images per report with a cover photo selector
 - **Location Autocomplete**: Smart location input with campus-aware suggestions for faster and more consistent location entry
 - **Live Item Match Suggestions**: While filling out a lost item report, the system queries existing found items and surfaces potential matches in real time before the form is even submitted
+
+### Phase 2: Community Features
+- **Enhanced Discussion Threads**: Real-time community discussions with voting, pinning, and moderation tools
+- **User Reputation System**: Point-based reputation system with badges, trust levels, and leaderboards
+- **Campus-Wide Analytics Dashboard**: Comprehensive analytics with metrics, trends, geographic heat mapping, and alert system
+- **Real-Time Communication**: Socket.io powered real-time updates across all community features
+- **Content Moderation**: Advanced moderation tools with automated content analysis and user reporting
+- **Community Engagement**: Rich interaction features including comments, replies, and collaborative problem-solving
+- **Achievement System**: Badge system for recognizing helpful community contributions
+- **Trust Indicators**: Visual trust levels based on user reputation and activity
 
 ### User Experience
 - **Responsive Design**: Mobile-first design using Tailwind CSS and Flowbite components
@@ -45,6 +55,8 @@ A comprehensive lost and found management system built with modern web technolog
 - **Google Sheets Gviz API** for student masterlist lookups and activity logging
 - **Nodemailer** for email notifications
 - **Zod** for schema validation
+- **Socket.io** for real-time communication
+- **Redis** for caching and session management
 
 ### Frontend
 - **React 19** with TypeScript
@@ -58,6 +70,8 @@ A comprehensive lost and found management system built with modern web technolog
 - **React Toastify** for notifications
 - **Web Scanner Stack**: jsQR (QR codes) + QuaggaJS (1D barcodes) + native BarcodeDetector fallback for high-performance scanning
 - **browser-image-compression** for client-side image optimization before upload
+- **Socket.io Client** for real-time updates
+- **React Icons** for enhanced UI components
 
 ### Testing
 - **Jest** for backend testing
@@ -71,6 +85,12 @@ A comprehensive lost and found management system built with modern web technolog
 lost-and-found-main/
 ├── server/                 # Backend application
 │   ├── src/
+│   │   ├── api/
+│   │   │   ├── threads/      # Enhanced discussion threads API
+│   │   │   ├── reputation/  # User reputation system API
+│   │   │   ├── analytics/   # Campus-wide analytics API
+│   │   │   ├── comments/    # Comment system API
+│   │   │   └── moderation/ # Content moderation API
 │   │   ├── app/
 │   │   │   ├── modules/    # Feature modules
 │   │   │   │   └── student/  # Student masterlist lookup & ID resolution
@@ -84,6 +104,9 @@ lost-and-found-main/
 │   │   ├── components/
 │   │   │   ├── scanner/    # WebScannerModal — hybrid jsQR + QuaggaJS + native fallback
 │   │   │   ├── itemMatch/  # ItemMatchSuggestions — live match preview on report form
+│   │   │   ├── threads/     # Enhanced discussion threads components
+│   │   │   ├── reputation/ # User reputation components
+│   │   │   ├── analytics/  # Analytics dashboard components
 │   │   │   └── ui/         # Shared UI — LocationAutocomplete, CustomDatePicker, etc.
 │   │   ├── pages/          # Page components
 │   │   ├── dashboard/      # Admin dashboard
@@ -91,6 +114,11 @@ lost-and-found-main/
 │   │   ├── types/          # TypeScript declarations (quagga.d.ts for custom types)
 │   │   └── store/          # Redux store
 │   └── package.json
+├── docs/                  # Documentation
+│   ├── IMPLEMENTATION_PLAN.md
+│   ├── PHASE_2_IMPLEMENTATION_PLAN.md
+│   ├── REMAINING_PHASE_2.md
+│   └── COMMUNITY_FEATURES_DESIGN.md
 └── README.md
 ```
 

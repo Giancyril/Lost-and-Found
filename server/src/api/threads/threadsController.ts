@@ -12,7 +12,9 @@ export const threadsController = {
 
   async createThread(req: Request, res: Response) {
     try {
-      res.status(201).json(await threadsService.createThread(req.body));
+      const userId = (req as any).user?.id;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      res.status(201).json(await threadsService.createThread({ ...req.body, userId }));
     } catch (error) {
       res.status(500).json({ error: 'Failed to create thread' });
     }
@@ -55,7 +57,13 @@ export const threadsController = {
 
   async createReply(req: Request, res: Response) {
     try {
-      res.status(201).json(await threadsService.createReply(req.body));
+      const userId = (req as any).user?.id;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      res.status(201).json(await threadsService.createReply({ 
+        ...req.body, 
+        threadId: req.params.threadId,
+        userId 
+      }));
     } catch (error) {
       res.status(500).json({ error: 'Failed to create reply' });
     }

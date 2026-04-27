@@ -137,7 +137,6 @@ export function Navbars() {
                       <FaTachometerAlt size={13} className="text-blue-400 shrink-0" />
                       Admin Dashboard
                     </Link>                  
-                    {/* Portal link in dropdown too */}
                     <a
                       href="/portal"
                       target="_blank"
@@ -182,6 +181,8 @@ export function Navbars() {
           <div className="flex flex-col md:flex-row md:items-center md:gap-8 lg:gap-14">
             {[
               { label: "Home",             href: "/"               },
+              { label: "Community",        href: "/threads"        },
+              { label: "My Reputation",    href: "/reputation"     },
               { label: "Report Lost Item", href: "/reportlostItem" },
               { label: "Lost Items",       href: "/lostItems"      },
               { label: "Found Items",      href: "/foundItems"     },
