@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useGetSingleLostItemQuery, useCreateFoundItemMutation } from "../../redux/api/api";
 import { Spinner } from "flowbite-react";
@@ -96,6 +96,9 @@ const closeModal = (setter: (v: boolean) => void) => { setter(false); document.b
 
 const SingleLostItem = () => {
   const users: any = useUserVerification();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const isAdmin = users?.role === "ADMIN";
 
   const { lostItem: lostItemId }: any = useParams();
@@ -261,23 +264,17 @@ const SingleLostItem = () => {
         </div>
 
         {/* Comments Section */}
-        <div className="w-full px-4 sm:px-10 lg:px-16 py-6 border-t border-gray-800">
-          <div className="max-w-4xl">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Discussion & Sightings</h2>
-              <button 
-                onClick={() => setIsCommentModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg border border-gray-700 transition-all font-semibold text-sm"
-              >
-                <FaComments size={14} className="text-blue-400" />
-                View Comments
-              </button>
-            </div>
-            
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-              <CommentSection itemId={lostItemId!} itemType="lost" />
-            </div>
+        <div className="w-full px-4 sm:px-10 lg:px-16 py-8 border-t border-gray-800">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">Discussion & Sightings</h2>
           </div>
+          <button
+            onClick={() => setIsCommentModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-sm"
+          >
+            <FaComments size={14} className="text-blue-400" />
+            View Discussion & Sightings
+          </button>
         </div>
       </div>
 

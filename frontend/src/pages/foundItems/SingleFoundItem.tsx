@@ -8,7 +8,7 @@ import {
 import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
 import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
 import { Spinner } from "flowbite-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -286,6 +286,9 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
 // ── Main Component ─────────────────────────────────────────────────────────────
 const SingleFoundItem = () => {
   const { foundItem: foundItemParam } = useParams<{ foundItem: string }>();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const foundItemId = foundItemParam;
   const users: any = useUserVerification();
   const isAdmin = users?.role === "ADMIN";
@@ -535,7 +538,7 @@ const SingleFoundItem = () => {
                   </div>
                 </div>
                 <button onClick={() => openModal(setIsClaimModalOpen)}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm shadow-lg shadow-blue-600/20">
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
                   Submit a Claim
                 </button>
               </div>
@@ -545,23 +548,13 @@ const SingleFoundItem = () => {
 
         {/* Discussion & Sightings */}
         <div className="mt-10 pt-10 border-t border-gray-800">
-          <div className="max-w-4xl">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Discussion &amp; Sightings</h2>
-              <button
-                onClick={() => setIsCommentModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg border border-gray-700 transition-all font-semibold text-sm"
-              >
-                <FaComments size={14} className="text-blue-400" />
-                View All
-              </button>
-            </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-              <div className="p-4 sm:p-6">
-                <CommentSection itemId={foundItemId!} itemType="found" />
-              </div>
-            </div>
-          </div>
+          <button
+            onClick={() => setIsCommentModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-sm"
+          >
+            <FaComments size={14} className="text-blue-400" />
+            View Discussion & Sightings
+          </button>
         </div>
       </div>
 

@@ -82,8 +82,8 @@ export const commentService = {
   },
 
   async getComments(itemId: string, options: any = {}) {
-  const page = Number(options.page) || 1;   // fallback to 1
-  const limit = Number(options.limit) || 50; // fallback to 50
+  const page  = Number(options.page)  || 1;
+  const limit = Number(options.limit) || 50;
 
   return await prisma.comment.findMany({
     where: { itemId, status: 'APPROVED' },

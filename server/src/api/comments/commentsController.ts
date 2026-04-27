@@ -5,14 +5,14 @@ export const commentsController = {
   async getComments(req: Request, res: Response) {
   try {
     const { itemId } = req.params;
-    const comments = await commentService.getComments(itemId);
+    const page  = parseInt(req.query.page  as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+
+    const comments = await commentService.getComments(itemId, { page, limit });
     res.json(comments);
   } catch (error: any) {
-    console.error('COMMENTS ERROR:', error?.message, error?.code, error?.meta);
-    res.status(500).json({ 
-      error: 'Failed to fetch comments',
-      detail: error?.message  // temporarily expose for debugging
-    });
+    console.error('COMMENTS ERROR:', error?.message);
+    res.status(500).json({ error: 'Failed to fetch comments', detail: error?.message });
   }
 },
 

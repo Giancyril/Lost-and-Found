@@ -6,7 +6,7 @@ const serverUrl = `${import.meta.env.VITE_SERVER_URL}/api` || "http://localhost:
 
 export const baseApi = createApi({
   reducerPath: "baseApi",
-  refetchOnFocus: true,
+  refetchOnFocus: false,
   refetchOnReconnect: true,
   baseQuery: fetchBaseQuery({
     baseUrl: isProduction ? serverUrl : "http://127.0.0.1:5000/api",

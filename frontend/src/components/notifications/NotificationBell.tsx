@@ -51,15 +51,31 @@ const NotificationBell = () => {
   const [seenIds,    setSeenIds]    = useState<Set<string>>(() => readSeenIds(storageKey));
   const [clearedIds, setClearedIds] = useState<Set<string>>(() => readSeenIds(clearedKey));
 
-  // Admin: audit logs
-  const { data: auditData } = useGetAuditLogsQuery({}, { skip: !isAdmin || !isLoggedIn });
+  // Admin: audit logs — poll every 60s, no refetch on focus/reconnect
+  const { data: auditData } = useGetAuditLogsQuery(
+    undefined,
+    {
+      skip: !isAdmin || !isLoggedIn,
+      pollingInterval: 60000,
+      refetchOnFocus: false,
+      refetchOnReconnect: false,
+    }
+  );
   const adminLogs: any[] = (auditData?.data ?? [])
     .slice()
     .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 20);
 
-  // User: my claims
-  const { data: myClaims } = useMyClaimsQuery({}, { skip: isAdmin || !isLoggedIn });
+  // User: my claims — poll every 60s, no refetch on focus/reconnect
+  const { data: myClaims } = useMyClaimsQuery(
+    {},
+    {
+      skip: isAdmin || !isLoggedIn,
+      pollingInterval: 60000,
+      refetchOnFocus: false,
+      refetchOnReconnect: false,
+    }
+  );
   const userClaims: any[] = (myClaims?.data ?? [])
     .slice()
     .sort((a: any, b: any) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime())
@@ -83,7 +99,6 @@ const NotificationBell = () => {
     const merged = new Set<string>([...clearedIds, ...allIds]);
     writeSeenIds(clearedKey, merged);
     setClearedIds(merged);
-    // also mark all as read
     const mergedSeen = new Set<string>([...seenIds, ...allIds]);
     writeSeenIds(storageKey, mergedSeen);
     setSeenIds(mergedSeen);
@@ -95,7 +110,6 @@ const NotificationBell = () => {
     if (next) markAllRead();
   };
 
-  // Re-read from storage when storageKey changes (admin vs user switch)
   useEffect(() => {
     setSeenIds(readSeenIds(storageKey));
     setClearedIds(readSeenIds(clearedKey));
@@ -130,7 +144,7 @@ const NotificationBell = () => {
       {/* Dropdown */}
       {open && (
         <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-16 sm:top-11 sm:w-80 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden z-50">
-          
+
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
             <div className="flex items-center gap-2">
@@ -143,7 +157,6 @@ const NotificationBell = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
-              
               {isAdmin && (
                 <Link
                   to="/dashboard/claims"
@@ -153,7 +166,6 @@ const NotificationBell = () => {
                   View all
                 </Link>
               )}
-
               {items.length > 0 && (
                 <button
                   onClick={clearAll}
