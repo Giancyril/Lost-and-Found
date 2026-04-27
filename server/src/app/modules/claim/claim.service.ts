@@ -151,6 +151,7 @@ const deleteClaim = async (claimId: string) => {
 const getAuditLogs = async () => {
   const result = await prisma.claimAuditLog.findMany({
     orderBy: { createdAt: "desc" },
+    take: 30,
     include: {
       claim: {
         include: {
@@ -164,7 +165,7 @@ const getAuditLogs = async () => {
       },
     },
   });
-  return result;
+  return result.filter((log: any) => log.claim !== null); // cast to any
 };
 
 export const claimsService = {
