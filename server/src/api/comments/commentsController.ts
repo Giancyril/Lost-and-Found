@@ -3,23 +3,18 @@ import { commentService } from './commentsService';
 
 export const commentsController = {
   async getComments(req: Request, res: Response) {
-    try {
-      const { itemId } = req.params;
-      const { filter, sort, page, limit } = req.query;
-      
-      const comments = await commentService.getComments(itemId, {
-        filter,
-        sort,
-        page: Number(page),
-        limit: Number(limit)
-      });
-      
-      res.json(comments);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-      res.status(500).json({ error: 'Failed to fetch comments' });
-    }
-  },
+  try {
+    const { itemId } = req.params;
+    const comments = await commentService.getComments(itemId);
+    res.json(comments);
+  } catch (error: any) {
+    console.error('COMMENTS ERROR:', error?.message, error?.code, error?.meta);
+    res.status(500).json({ 
+      error: 'Failed to fetch comments',
+      detail: error?.message  // temporarily expose for debugging
+    });
+  }
+},
 
   async createComment(req: Request, res: Response) {
     try {

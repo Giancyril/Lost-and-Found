@@ -285,7 +285,11 @@ const api = baseApi.injectEndpoints({
 
     // comments
     getComments: builder.query({
-      query: ({ itemId }) => ({ url: `/items/${itemId}/comments`, method: "GET" }),
+      query: ({ itemId, itemType }) => ({ 
+        url: `/items/${itemId}/comments`, 
+        method: "GET",
+        params: { itemType }  // add this
+      }),
       providesTags: ["comments"],
     }),
     createComment: builder.mutation({
