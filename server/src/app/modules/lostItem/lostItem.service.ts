@@ -86,7 +86,6 @@ const getLostItem = async (query: any = {}) => {
     if (endDate)   whereConditions.date.lte = new Date(endDate);
   }
 
-  // img is now a short Storage URL — safe to include in list queries
   let retryCount = 0;
   const maxRetries = 3;
   
@@ -108,14 +107,15 @@ const getLostItem = async (query: any = {}) => {
       console.error(`getLostItem attempt ${retryCount} failed:`, error.message);
       
       if (retryCount >= maxRetries) {
-        console.error('getLostItem: Max retries reached, throwing error');
-        throw new Error('Database connection failed. Please try again.');
+        console.warn('getLostItem: returning empty after max retries'); 
+        return []; 
       }
       
-      // Wait before retrying (exponential backoff)
       await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
     }
   }
+
+  return []; 
 };
 
 const getAllLostItems = async (query: any = {}) => {

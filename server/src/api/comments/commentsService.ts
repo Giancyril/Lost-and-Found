@@ -17,26 +17,35 @@ const COMMENT_INCLUDE = {
 };
 
 export const commentService = {
-  async createComment(data: any) {
-    const {
-      itemId, itemType, userId, content,
-      isAnonymous, location, parentCommentId
-    } = data;
+  // commentsService.ts
 
-    return await prisma.comment.create({
-      data: {
-        itemId,
-        itemType: (itemType || 'FOUND').toUpperCase() as ItemType,
-        userId:          userId          || null,
-        content:         content         || '',
-        location:        location        || null,
-        isAnonymous:     isAnonymous     || !userId,
-        parentCommentId: parentCommentId || null,   // ← pass it through
-        status: 'APPROVED'
-      },
-      include: COMMENT_INCLUDE
-    });
-  },
+async createComment(data: any) {
+  const {
+    itemId, itemType, userId, content,
+    isAnonymous, location, parentCommentId
+  } = data;
+
+  const normalizedType = (itemType || 'FOUND').toUpperCase() as ItemType;
+
+  return await prisma.comment.create({
+    data: {
+      itemType: normalizedType,
+      userId:          userId      || null,
+      content:         content     || '',
+      location:        location    || null,
+      isAnonymous:     isAnonymous || !userId,
+      parentCommentId: parentCommentId || null,
+      status: 'APPROVED',
+
+      // ✅ Connect only the matching relation — NOT itemId directly
+      ...(normalizedType === 'FOUND'
+        ? { foundItem: { connect: { id: itemId } } }
+        : { lostItem:  { connect: { id: itemId } } }
+      ),
+    },
+    include: COMMENT_INCLUDE
+  });
+},
 
   async updateComment(
     commentId: string, updateData: any,

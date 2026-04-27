@@ -17,31 +17,34 @@ export const commentsController = {
 },
 
   async createComment(req: Request, res: Response) {
-    try {
-      const { itemId } = req.params;
-      // user may be undefined for anonymous / unauthenticated requests
-      const userId = (req as any).user?.id || null;
-      const userRole = (req as any).user?.role || 'USER';
+  try {
+    const { itemId } = req.params;
+    
+    console.log('📥 createComment body:', req.body);
+    console.log('📥 itemId param:', itemId);
 
-      const comment = await commentService.createComment({
-        ...req.body,
-        itemId,
-        userId,
-        userRole
-      });
+    const userId   = (req as any).user?.id   || null;
+    const userRole = (req as any).user?.role || 'USER';
 
-      // Broadcast real-time update
-      const io = req.app.get('io');
-      if (io) {
-        io.to(`item-${itemId}`).emit('comment-added', comment);
-      }
+    const comment = await commentService.createComment({
+      ...req.body,
+      itemId,
+      userId,
+      userRole
+    });
 
-      res.status(201).json(comment);
-    } catch (error) {
-      console.error('Error creating comment:', error);
-      res.status(500).json({ error: 'Failed to create comment' });
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`item-${itemId}`).emit('comment-added', comment);
     }
-  },
+
+    res.status(201).json(comment);
+  } catch (error: any) {
+    console.error('❌ Error creating comment:', error?.message);
+    console.error('❌ Full error:', error);
+    res.status(500).json({ error: 'Failed to create comment', detail: error?.message });
+  }
+},
 
   async updateComment(req: Request, res: Response) {
     try {
