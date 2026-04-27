@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FaMapMarkerAlt, FaClock, FaCamera, FaSmile, FaPaperPlane, FaGhost } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaClock, FaSmile, FaPaperPlane, FaGhost } from 'react-icons/fa';
 import { useUserVerification } from '../../auth/auth';
 
 interface CommentInputProps {
@@ -8,171 +8,189 @@ interface CommentInputProps {
   onTyping: (isTyping: boolean) => void;
 }
 
-export const CommentInput: React.FC<CommentInputProps> = ({
-  onSubmit,
-  isLoading,
-  onTyping
-}) => {
-  const [content, setContent] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [location, setLocation] = useState('');
-  const [time, setTime] = useState('');
+export const CommentInput: React.FC<CommentInputProps> = ({ onSubmit, isLoading, onTyping }) => {
+  const [content, setContent]           = useState('');
+  const [isAnonymous, setIsAnonymous]   = useState(false);
+  const [location, setLocation]         = useState('');
+  const [time, setTime]                 = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage]     = useState<File | null>(null);
+  const [imagePreview, setImagePreview]       = useState<string | null>(null);
   const user: any = useUserVerification();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const emojiRef    = useRef<HTMLDivElement>(null);
 
   const emojis = ['👍', '❤️', '😂', '😮', '😢', '😡', '🔥', '📍', '✅', '🙏'];
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!content.trim() || isLoading) return;
-
-    onSubmit({
-      content: content.trim(),
-      isAnonymous,
-      location,
-      time,
-      image: selectedImage
-    });
-
-    setContent('');
-    setLocation('');
-    setTime('');
-    setSelectedImage(null);
-    setImagePreview(null);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
+    onSubmit({ content: content.trim(), isAnonymous, location, time, image: selectedImage });
+    setContent(''); setLocation(''); setTime('');
+    setSelectedImage(null); setImagePreview(null);
+    onTyping(false);
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); }
   };
 
   const handleLocationClick = () => {
-    if (location) {
-      setLocation('');
-      return;
-    }
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setLocation(`${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`),
-        () => setLocation('Location unavailable')
-      );
-    }
+    if (location) { setLocation(''); return; }
+    navigator.geolocation?.getCurrentPosition(
+      pos => setLocation(`${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`),
+      () => setLocation('Location unavailable'),
+    );
   };
 
   const handleTimeClick = () => {
-    if (time) {
-      setTime('');
-    } else {
-      setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    }
-  };
-
-  const handleEmojiClick = (emoji: string) => {
-    setContent(prev => prev + emoji);
-    setShowEmojiPicker(false);
-    textareaRef.current?.focus();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
+    setTime(t => t ? '' : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
     onTyping(e.target.value.length > 0);
     e.target.style.height = 'auto';
-    e.target.style.height = `${e.target.scrollHeight}px`;
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
   };
 
+  const avatarSrc = isAnonymous
+    ? null
+    : (user?.userImg || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'U')}&background=1d4ed8&color=fff&bold=true`);
+
+  const canSend = content.trim().length > 0 && !isLoading;
+
   return (
-    <div className="py-3 border-t border-gray-800">
-      <div className="flex gap-2">
+    <div
+      className="px-4 py-3"
+      style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+    >
+      <div className="flex gap-2.5 items-start">
+
         {/* Avatar */}
-        <div className="flex-shrink-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-gray-700 bg-gray-800">
-            {isAnonymous ? (
-              <div className="w-full h-full flex items-center justify-center bg-gray-700 text-gray-400">
-                <FaGhost size={14} />
-              </div>
-            ) : (
-              <img
-                src={user?.userImg || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random`}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-              />
-            )}
-          </div>
+        <div
+          className="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-0.5 flex items-center justify-center"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          {isAnonymous ? (
+            <FaGhost size={13} className="text-gray-500" />
+          ) : avatarSrc ? (
+            <img src={avatarSrc} alt="avatar" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-xs font-bold text-gray-400">
+              {(user?.name || 'U')[0].toUpperCase()}
+            </span>
+          )}
         </div>
 
-        {/* Input column */}
+        {/* Input box */}
         <div className="flex-1 min-w-0">
-          {/* Main bubble input */}
-          <div className="!bg-[#242526] rounded-[20px] px-3 py-2.5 focus-within:ring-1 focus-within:ring-blue-500/30 transition-all border border-transparent">
+          <div
+            className="rounded-xl transition-all"
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
             <textarea
               ref={textareaRef}
               value={content}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              placeholder="Write a public comment..."
-              className="w-full bg-transparent border-none focus:ring-0 text-[14px] p-1 resize-none max-h-40 !text-[#e4e6eb] placeholder-[#8a8d91] outline-none"
+              placeholder="Write a public comment…"
               rows={1}
+              className="w-full bg-transparent resize-none outline-none px-3.5 pt-3 pb-2"
+              style={{
+                fontSize: '13px',
+                color: '#e4e6eb',
+                maxHeight: '120px',
+                lineHeight: '1.5',
+              }}
             />
 
+            {/* Location/time chips inside box */}
+            {(location || time) && (
+              <div className="flex flex-wrap gap-1.5 px-3.5 pb-2">
+                {location && (
+                  <span
+                    className="inline-flex items-center gap-1 text-blue-400 rounded-full px-2 py-0.5"
+                    style={{ fontSize: '10px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}
+                  >
+                    <FaMapMarkerAlt size={8} /> {location}
+                    <button onClick={() => setLocation('')} className="ml-0.5 opacity-60 hover:opacity-100">×</button>
+                  </span>
+                )}
+                {time && (
+                  <span
+                    className="inline-flex items-center gap-1 text-emerald-400 rounded-full px-2 py-0.5"
+                    style={{ fontSize: '10px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}
+                  >
+                    <FaClock size={8} /> {time}
+                    <button onClick={() => setTime('')} className="ml-0.5 opacity-60 hover:opacity-100">×</button>
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Action row */}
-            <div className="flex items-center justify-between mt-1.5 px-1">
-              {/* Left icons */}
-              <div className="flex gap-2">
+            <div
+              className="flex items-center justify-between px-3 pb-2.5 pt-1"
+              style={{ borderTop: content || location || time ? '1px solid rgba(255,255,255,0.05)' : 'none', marginTop: content ? '0' : undefined }}
+            >
+              {/* Left tools */}
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={handleLocationClick}
-                  className={`transition-colors ${location ? 'text-blue-400' : 'text-[#8a8d91] hover:text-[#b0b3b8]'}`}
                   title={location ? 'Remove location' : 'Add location'}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                  style={{
+                    color: location ? '#60a5fa' : 'rgba(156,163,175,0.6)',
+                    background: location ? 'rgba(59,130,246,0.12)' : 'transparent',
+                  }}
                 >
-                  <FaMapMarkerAlt size={16} />
+                  <FaMapMarkerAlt size={12} />
                 </button>
                 <button
                   type="button"
                   onClick={handleTimeClick}
-                  className={`transition-colors ${time ? 'text-green-400' : 'text-[#8a8d91] hover:text-[#b0b3b8]'}`}
-                  title={time ? 'Remove time' : 'Add current time'}
+                  title={time ? 'Remove time' : 'Add time'}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                  style={{
+                    color: time ? '#34d399' : 'rgba(156,163,175,0.6)',
+                    background: time ? 'rgba(16,185,129,0.12)' : 'transparent',
+                  }}
                 >
-                  <FaClock size={16} />
+                  <FaClock size={12} />
                 </button>
-                
-                {/* Emoji picker */}
-                <div className="relative">
+
+                {/* Emoji */}
+                <div className="relative" ref={emojiRef}>
                   <button
                     type="button"
-                    onClick={() => setShowEmojiPicker(prev => !prev)}
-                    className={`transition-colors ${showEmojiPicker ? 'text-yellow-400' : 'text-[#8a8d91] hover:text-[#b0b3b8]'}`}
-                    title="Emoji"
+                    onClick={() => setShowEmojiPicker(p => !p)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                    style={{ color: showEmojiPicker ? '#fbbf24' : 'rgba(156,163,175,0.6)' }}
                   >
-                    <FaSmile size={16} />
+                    <FaSmile size={12} />
                   </button>
-
                   {showEmojiPicker && (
-                    <div className="absolute bottom-full left-0 mb-3 !bg-[#242526] border border-[#3e4042] rounded-xl p-2 shadow-2xl flex flex-wrap gap-1.5 z-[100] w-48 animate-in zoom-in-95 duration-100">
+                    <div
+                      className="absolute bottom-full left-0 mb-2 rounded-xl p-2 flex flex-wrap gap-1 z-50"
+                      style={{
+                        background: '#1a1d23',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
+                        width: '176px',
+                      }}
+                    >
                       {emojis.map(emoji => (
                         <button
                           key={emoji}
                           type="button"
-                          onClick={() => handleEmojiClick(emoji)}
-                          className="hover:scale-125 transition-transform text-lg leading-none"
+                          onClick={() => { setContent(p => p + emoji); setShowEmojiPicker(false); textareaRef.current?.focus(); }}
+                          className="hover:scale-125 transition-transform text-base leading-none p-0.5"
                         >
                           {emoji}
                         </button>
@@ -182,62 +200,58 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                 </div>
               </div>
 
-              {/* Right: Anonymous toggle + Send */}
-              <div className="flex items-center gap-4">
+              {/* Right: anon + send */}
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsAnonymous(prev => !prev)}
-                  className={`text-[11px] font-bold uppercase tracking-widest transition-colors ${isAnonymous ? 'text-blue-400' : 'text-[#8a8d91] hover:text-[#b0b3b8]'}`}
+                  onClick={() => setIsAnonymous(p => !p)}
+                  className="flex items-center gap-1.5 rounded-lg px-2 py-1 transition-all"
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.06em',
+                    color: isAnonymous ? '#60a5fa' : 'rgba(107,114,128,0.8)',
+                    background: isAnonymous ? 'rgba(59,130,246,0.1)' : 'transparent',
+                    border: isAnonymous ? '1px solid rgba(59,130,246,0.2)' : '1px solid transparent',
+                  }}
                 >
-                  Anonymous
+                  <FaGhost size={9} />
+                  ANON
                 </button>
+
                 <button
                   type="button"
                   onClick={() => handleSubmit()}
-                  disabled={!content.trim() || isLoading}
-                  className={`transition-colors ${content.trim() && !isLoading ? 'text-blue-500 hover:text-blue-400' : 'text-[#4e4f50] cursor-not-allowed'}`}
+                  disabled={!canSend}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                  style={{
+                    background: canSend ? 'rgba(59,130,246,0.9)' : 'rgba(255,255,255,0.05)',
+                    color: canSend ? '#fff' : 'rgba(107,114,128,0.4)',
+                    cursor: canSend ? 'pointer' : 'not-allowed',
+                  }}
                 >
                   {isLoading
-                    ? <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                    : <FaPaperPlane size={18} />
+                    ? <div className="w-3.5 h-3.5 border border-white border-t-transparent rounded-full animate-spin" />
+                    : <FaPaperPlane size={11} />
                   }
                 </button>
               </div>
             </div>
-          </div>{/* end input bubble */}
+          </div>
 
           {/* Image preview */}
           {imagePreview && (
             <div className="mt-2 relative inline-block">
-              <img src={imagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-lg border border-gray-600" />
+              <img src={imagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-lg" style={{ border: '1px solid rgba(255,255,255,0.1)' }} />
               <button
                 type="button"
                 onClick={() => { setSelectedImage(null); setImagePreview(null); }}
-                className="absolute -top-2 -right-2 bg-gray-900 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs border border-gray-600 hover:bg-gray-800"
-              >
-                ×
-              </button>
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+                style={{ background: '#1a1d23', color: '#9ca3af', border: '1px solid rgba(255,255,255,0.15)' }}
+              >×</button>
             </div>
           )}
-
-          {/* Location / time chips */}
-          {(location || time) && (
-            <div className="flex flex-wrap gap-2 mt-2 ml-1">
-              {location && (
-                <div className="bg-blue-500/10 text-blue-400 text-[10px] px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-blue-500/20">
-                  <FaMapMarkerAlt size={9} /> {location}
-                  <button type="button" onClick={() => setLocation('')} className="ml-1 hover:text-blue-300 font-bold leading-none">×</button>
-                </div>
-              )}
-              {time && (
-                <div className="bg-green-500/10 text-green-400 text-[10px] px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-green-500/20">
-                  <FaClock size={9} /> {time}
-                  <button type="button" onClick={() => setTime('')} className="ml-1 hover:text-green-300 font-bold leading-none">×</button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>{/* end input column */}
+        </div>
       </div>
     </div>
   );

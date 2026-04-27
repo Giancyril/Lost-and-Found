@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaThumbsUp, FaQuestion, FaEye, FaList } from 'react-icons/fa';
+import { FaThumbsUp, FaQuestion, FaEye, FaBars } from 'react-icons/fa';
 
 interface CommentFiltersProps {
   filter: string;
@@ -8,28 +8,38 @@ interface CommentFiltersProps {
 
 export const CommentFilters: React.FC<CommentFiltersProps> = ({ filter, onChange }) => {
   const filters = [
-    { value: 'all',       label: 'All',       icon: <FaList size={10} />      },
-    { value: 'helpful',   label: 'Helpful',   icon: <FaThumbsUp size={10} />  },
-    { value: 'questions', label: 'Questions', icon: <FaQuestion size={10} />  },
-    { value: 'sightings', label: 'Sightings', icon: <FaEye size={10} />       },
+    { value: 'all',       label: 'All',       icon: <FaBars     size={9} /> },
+    { value: 'helpful',   label: 'Helpful',   icon: <FaThumbsUp size={9} /> },
+    { value: 'questions', label: 'Questions', icon: <FaQuestion size={9} /> },
+    { value: 'sightings', label: 'Sightings', icon: <FaEye      size={9} /> },
   ];
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
-      {filters.map(f => (
-        <button
-          key={f.value}
-          onClick={() => onChange(f.value)}
-          className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full border font-bold transition-all ${
-            filter === f.value
-              ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-              : 'bg-[#3a3b3c] text-gray-300 border-transparent hover:bg-[#4a4b4c] hover:text-white'
-          }`}
-        >
-          {f.icon}
-          {f.label}
-        </button>
-      ))}
+    <div
+      className="flex items-center p-0.5 gap-0.5 rounded-lg"
+      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+    >
+      {filters.map(f => {
+        const active = filter === f.value;
+        return (
+          <button
+            key={f.value}
+            onClick={() => onChange(f.value)}
+            className="inline-flex items-center gap-1.5 rounded-md font-medium transition-all whitespace-nowrap"
+            style={{
+              fontSize: '11px',
+              padding: '5px 10px',
+              background: active ? 'rgba(59,130,246,0.18)' : 'transparent',
+              color: active ? '#93c5fd' : 'rgba(156,163,175,0.8)',
+              border: active ? '1px solid rgba(59,130,246,0.25)' : '1px solid transparent',
+              letterSpacing: '0.01em',
+            }}
+          >
+            <span style={{ opacity: active ? 1 : 0.6 }}>{f.icon}</span>
+            {f.label}
+          </button>
+        );
+      })}
     </div>
   );
 };

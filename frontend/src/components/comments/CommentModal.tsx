@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaComments } from 'react-icons/fa';
 import { CommentSection } from './CommentSection';
 
 interface CommentModalProps {
@@ -15,40 +15,75 @@ export const CommentModal: React.FC<CommentModalProps> = ({
   onClose,
   itemId,
   itemType,
-  itemName
+  itemName,
 }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div 
-        className="relative w-full max-w-2xl bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+      style={{ animation: 'fadeIn 0.18s ease' }}
+    >
+      {/* Click-outside backdrop */}
+      <div className="absolute inset-0" onClick={onClose} />
+
+      <div
+        className="relative w-full max-w-2xl flex flex-col max-h-[88vh] rounded-2xl overflow-hidden shadow-2xl"
+        style={{
+          background: 'linear-gradient(160deg, #0f1318 0%, #0d1117 100%)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
+          animation: 'slideUp 0.2s cubic-bezier(0.16,1,0.3,1)',
+        }}
+        onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-gray-900/50">
-          <div>
-            <h3 className="text-lg font-bold text-white leading-tight">
-              {itemName}'s Post
-            </h3>
-            <p className="text-[12px] text-gray-500 mt-0.5">Community Discussion & Sightings</p>
+        <div
+          className="flex items-center justify-between px-5 py-4 shrink-0"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.2)' }}
+            >
+              <FaComments size={15} className="text-blue-400" />
+            </div>
+            <div className="min-w-0">
+              <h3
+                className="font-semibold text-white leading-tight truncate"
+                style={{ fontSize: '14px', letterSpacing: '-0.01em' }}
+              >
+                {itemName}
+              </h3>
+              <p className="text-gray-500 mt-0.5" style={{ fontSize: '11px' }}>
+                Community Discussion & Sightings
+              </p>
+            </div>
           </div>
-          <button 
+
+          <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition-all border border-gray-700"
+            className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-white transition-all ml-4"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
           >
-            <FaTimes size={16} />
+            <FaTimes size={13} />
           </button>
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-900 p-4 sm:p-6">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
           <CommentSection itemId={itemId} itemType={itemType} isModalView={true} />
         </div>
       </div>
-      
-      {/* Click outside to close */}
-      <div className="absolute inset-0 -z-10" onClick={onClose} />
+
+      <style>{`
+        @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.98) } to { opacity: 1; transform: translateY(0) scale(1) } }
+      `}</style>
     </div>
   );
 };

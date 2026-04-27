@@ -229,14 +229,15 @@ const FoundItemCard = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: 
         </div>
         <div className="h-px bg-white/[0.04] mb-3" />
         
-        <div className="grid grid-cols-2 gap-1.5">
-          {!isClaimed ? <button onClick={() => setClaimItem(item)} className="flex items-center justify-center gap-1.5 py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">Claim Item</button>
-            : <div className="flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg">Claimed</div>}
+        <div className="grid grid-cols-3 gap-1.5">
+          {!isClaimed
+            ? <button onClick={() => setClaimItem(item)} className="flex items-center justify-center py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">Claim</button>
+            : <div className="flex items-center justify-center py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg">Claimed</div>}
           <button onClick={onOpenComments} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
             Comments
           </button>
+          <Link to={`/foundItems/${item.id}`} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-500 hover:text-white text-[11px] font-medium rounded-lg transition-all">Details</Link>
         </div>
-        <Link to={`/foundItems/${item.id}`} className="mt-1.5 flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-500 hover:text-white text-[11px] font-medium rounded-lg transition-all">View Details</Link>
       </div>
     </div>
   );
@@ -248,12 +249,86 @@ const FoundItemRow = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: a
   const hideImg   = shouldHideImage(item?.category?.name, isAdmin);
   const dateStr   = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
 
+  const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
+    ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
+    : "") || item?.img || "/bgimg.png";
+
   return (
-    <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl p-3 transition-all duration-200 hover:shadow-lg hover:shadow-black/20">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-lg bg-gray-800 overflow-hidden shrink-0 border border-white/5">
-          {!hideImg && <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "") : "") || item?.img || "/bgimg.png"}
-            alt={item?.foundItemName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />}
+    <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-black/20">
+
+      {/* Mobile */}
+      <div className="sm:hidden flex flex-col gap-2.5 p-3">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-800 shrink-0">
+            {hideImg ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
+              </div>
+            ) : (
+              <img src={imgSrc} alt={item?.foundItemName}
+                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                className="w-full h-full object-cover" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition-colors">
+              {item?.foundItemName}
+            </p>
+            <p className="text-gray-500 text-[11px] mt-0.5 flex items-center gap-1 truncate">
+              <FaMapMarkerAlt size={7} className="text-blue-400 shrink-0" />
+              <span className="truncate">{item?.location}</span>
+            </p>
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              <span className="text-gray-600 text-[10px]">{dateStr}</span>
+              {item?.category?.name && (
+                <>
+                  <span className="text-gray-700 text-[10px]">·</span>
+                  <span className="flex items-center gap-0.5 text-gray-500 text-[10px]">
+                    {getCategoryIcon(item.category.name)}
+                    <span className="truncate max-w-[80px]">{item.category.name}</span>
+                  </span>
+                </>
+              )}
+              {isClaimed && (
+                <>
+                  <span className="text-gray-700 text-[10px]">·</span>
+                  <span className="text-blue-400 text-[10px] font-semibold">Claimed</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="h-px bg-white/[0.05]" />
+        <div className="grid grid-cols-3 gap-1.5">
+          {!isClaimed
+            ? <button onClick={() => setClaimItem(item)}
+                className="flex items-center justify-center py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[10px] font-semibold rounded-lg transition-all">
+                Claim
+              </button>
+            : <div className="flex items-center justify-center py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-lg">
+                Claimed
+              </div>}
+          <button onClick={onOpenComments}
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] font-medium rounded-lg transition-all">
+            Comments
+          </button>
+          <Link to={`/foundItems/${item.id}`}
+            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] font-medium rounded-lg transition-all">
+            Details
+          </Link>
+        </div>
+      </div>
+
+      {/* Desktop */}
+      <div className="hidden sm:flex items-center gap-4 px-4 py-3">
+        <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0 border border-white/5">
+          {!hideImg && (
+            <img src={imgSrc} alt={item?.foundItemName}
+              className="w-full h-full object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
@@ -265,11 +340,21 @@ const FoundItemRow = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: a
             <span className="flex items-center gap-1"><FaCalendarAlt size={8} /> {dateStr}</span>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <button onClick={onOpenComments} className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors" title="Comments"><FaComments size={12} /></button>
-          {!isClaimed ? <button onClick={() => setClaimItem(item)} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg transition-all">Claim</button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button onClick={onOpenComments}
+            className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors" title="Comments">
+            <FaComments size={12} />
+          </button>
+          {!isClaimed
+            ? <button onClick={() => setClaimItem(item)}
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg transition-all">
+                Claim
+              </button>
             : <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-lg">Claimed</div>}
-          <Link to={`/foundItems/${item.id}`} className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors"><FaEye size={12} /></Link>
+          <Link to={`/foundItems/${item.id}`}
+            className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors">
+            <FaEye size={12} />
+          </Link>
         </div>
       </div>
     </div>

@@ -402,18 +402,18 @@ const ItemRow = ({
         </div>
         <div className="h-px bg-white/[0.05]" />
         <div className="grid grid-cols-3 gap-1.5">
-          <button onClick={onOpenComments}
-            className="flex items-center justify-center gap-1 py-2 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[10px] font-medium rounded-lg transition-all">
-            <FaComments size={9} /> Comments
-          </button>
-          <button onClick={onShare}
-            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white rounded-lg transition-all">
-            <FaShare size={10} />
-          </button>
           <Link to={`/lostItems/${item.id}`}
             className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] font-medium rounded-lg transition-all">
             Details
           </Link>
+          <button onClick={onOpenComments}
+            className="flex items-center justify-center gap-1 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 text-[10px] font-medium rounded-lg transition-all">
+              Comment
+          </button>
+          <button onClick={onShare}
+            className="flex items-center justify-center gap-1 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 text-[10px] font-medium rounded-lg transition-all">
+            Share
+          </button>      
         </div>
       </div>
 
@@ -461,18 +461,19 @@ const ItemRow = ({
           </p>
         </div>
         <div className="col-span-2 flex items-center justify-end gap-1.5">
+          <Link to={`/lostItems/${item.id}`}
+            className="flex items-center justify-center px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
+            Details
+          </Link>
           <button onClick={onOpenComments}
-            className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
-            <FaComments size={9} /> Comments
+            className="flex items-center justify-center px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
+            Comment
           </button>
           <button onClick={onShare}
             className="flex items-center justify-center px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
             Share
           </button>
-          <Link to={`/lostItems/${item.id}`}
-            className="flex items-center justify-center px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
-            Details
-          </Link>
+          
         </div>
       </div>
     </div>
