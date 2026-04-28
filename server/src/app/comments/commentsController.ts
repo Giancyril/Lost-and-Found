@@ -3,59 +3,59 @@ import { commentService } from './commentsService';
 
 export const commentsController = {
   async getComments(req: Request, res: Response) {
-  try {
-    const { itemId } = req.params;
-    const page  = parseInt(req.query.page  as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 50;
-
-    const comments = await commentService.getComments(itemId, { page, limit });
-    res.json(comments);
-  } catch (error: any) {
-    console.error('COMMENTS ERROR:', error?.message);
-    res.status(500).json({ error: 'Failed to fetch comments', detail: error?.message });
-  }
-},
+    try {
+      const { itemId } = req.params;
+      const page  = parseInt(req.query.page  as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      // itemType is accepted from query but not used in filtering — safe to ignore
+      const comments = await commentService.getComments(itemId, { page, limit });
+      res.json(comments);
+    } catch (error: any) {
+      console.error('COMMENTS GET ERROR:', error?.message);
+      res.status(500).json({ error: 'Failed to fetch comments', detail: error?.message });
+    }
+  },
 
   async createComment(req: Request, res: Response) {
-  try {
-    const { itemId } = req.params;
-    
-    console.log('📥 createComment body:', req.body);
-    console.log('📥 itemId param:', itemId);
+    try {
+      const { itemId } = req.params;
 
-    const userId   = (req as any).user?.id   || null;
-    const userRole = (req as any).user?.role || 'USER';
+      console.log('📥 createComment body:', req.body);
+      console.log('📥 itemId param:', itemId);
 
-    const comment = await commentService.createComment({
-      ...req.body,
-      itemId,
-      userId,
-      userRole
-    });
+      const userId   = (req as any).user?.id   || null;
+      const userRole = (req as any).user?.role  || 'USER';
 
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`item-${itemId}`).emit('comment-added', comment);
+      const comment = await commentService.createComment({
+        ...req.body,
+        itemId,
+        userId,
+        userRole,
+      });
+
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`item-${itemId}`).emit('comment-added', comment);
+      }
+
+      res.status(201).json(comment);
+    } catch (error: any) {
+      console.error('❌ Error creating comment:', error?.message);
+      console.error('❌ Full error:', error);
+      res.status(500).json({ error: 'Failed to create comment', detail: error?.message });
     }
-
-    res.status(201).json(comment);
-  } catch (error: any) {
-    console.error('❌ Error creating comment:', error?.message);
-    console.error('❌ Full error:', error);
-    res.status(500).json({ error: 'Failed to create comment', detail: error?.message });
-  }
-},
+  },
 
   async updateComment(req: Request, res: Response) {
     try {
       const { commentId } = req.params;
-      const userId = (req as any).user?.id;
-      const userRole = (req as any).user?.role;
+      const userId   = (req as any).user?.id   || null;
+      const userRole = (req as any).user?.role  || 'USER';
 
       const updated = await commentService.updateComment(
-        commentId, 
-        req.body.updateData, 
-        userId, 
+        commentId,
+        req.body.updateData,
+        userId,
         userRole
       );
 
@@ -69,10 +69,18 @@ export const commentsController = {
   async deleteComment(req: Request, res: Response) {
     try {
       const { commentId } = req.params;
-      const userId = (req as any).user?.id;
-      const userRole = (req as any).user?.role;
+      const userId   = (req as any).user?.id   || null;  // null not ''
+      const userRole = (req as any).user?.role  || 'GUEST';
 
       await commentService.deleteComment(commentId, userId, userRole);
+
+      // Broadcast deletion to other users in the room
+      const io = req.app.get('io');
+      if (io) {
+        const itemId = req.query.itemId as string;
+        if (itemId) io.to(`item-${itemId}`).emit('comment-deleted', { commentId });
+      }
+
       res.status(204).send();
     } catch (error) {
       console.error('Error deleting comment:', error);
@@ -83,7 +91,7 @@ export const commentsController = {
   async voteHelpful(req: Request, res: Response) {
     try {
       const { commentId } = req.params;
-      const userId = (req as any).user?.id;
+      const userId = (req as any).user?.id || null;
 
       const updated = await commentService.voteHelpful(commentId, userId);
       res.json(updated);
@@ -91,5 +99,5 @@ export const commentsController = {
       console.error('Error voting helpful:', error);
       res.status(500).json({ error: 'Failed to vote helpful' });
     }
-  }
+  },
 };
