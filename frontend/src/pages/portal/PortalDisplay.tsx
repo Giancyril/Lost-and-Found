@@ -207,7 +207,7 @@ const SlideContent = ({
   accentColor: "red" | "blue";
   accent: { border: string; text: string; dot: string };
 }) => (
-  <div className="w-full h-full grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 content-start shrink-0">
+  <div className="w-full h-full grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 items-stretch content-start shrink-0">
     {pair.length === 0 ? (
       <div className="col-span-1 sm:col-span-2 flex flex-col items-center justify-center h-full opacity-30">
         <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-slate-500 mb-2 sm:mb-3" strokeWidth="1">
@@ -221,10 +221,10 @@ const SlideContent = ({
       ))
     )}
     {pair.length === 1 && (
-      <div className={`col-span-1 sm:col-span-2 rounded-2xl border border-dashed ${accent.border} opacity-20 flex items-center justify-center`}>
-        <p className={`text-xs sm:text-sm ${accent.text} font-semibold uppercase tracking-widest`}>No more items</p>
-      </div>
-    )}
+  <div className={`rounded-2xl border border-dashed ${accent.border} opacity-20 flex items-center justify-center`}>
+    <p className={`text-xs sm:text-sm ${accent.text} font-semibold uppercase tracking-widest`}>No more items</p>
+  </div>
+)}
   </div>
 );
 
@@ -453,8 +453,8 @@ const Ticker = ({ lostCount, foundCount }: { lostCount: number; foundCount: numb
     `${lostCount} item${lostCount !== 1 ? "s" : ""} currently reported lost`,
     `${foundCount} item${foundCount !== 1 ? "s" : ""} recovered and awaiting claim`,
     "Visit the SAS Office to report or claim an item",
-    "Bring a valid school ID when claiming found items",
-    "NBSC Student Affairs Office — Lost & Found Management System",
+    "Bring your school ID when claiming found items",
+    "NBSC Student Affairs and Services — Lost & Found Management System",
   ];
   const repeated = [...items, ...items];
 

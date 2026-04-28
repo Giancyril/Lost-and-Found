@@ -309,7 +309,19 @@ const CATEGORY_HELP_CONTENT = {
 };
 
 const ReportLostItem = () => {
-  const { register, formState: { errors }, reset, trigger, getValues, control, setValue, watch } = useForm({ mode: "onChange" });
+  const { register, formState: { errors }, reset, trigger, getValues, control, setValue, watch } = useForm({
+  mode: "onChange",
+  defaultValues: {
+    reporterName: "",
+    schoolEmail: "",
+    department: "",
+    lostItemName: "",
+    description: "",
+    location: "",
+    color: "",
+    condition: "",
+  }
+});
 
   const reporterName = watch("reporterName");
   const schoolEmail = watch("schoolEmail");
@@ -733,7 +745,7 @@ const ReportLostItem = () => {
 
                     <Field label="Description" required error={errors.description?.message as string} icon={<IconText />}>
                       <textarea {...register("description", { required: "Description is required" })}
-                        rows={1} className={`${inputCls} resize-none`}
+                        rows={2} className={`${inputCls} resize-none`}
                         placeholder="Describe the item color, brand, size, etc." />
                     </Field>
 
