@@ -26,6 +26,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [isLoading, setIsLoading]     = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
 
+  // ── Scroll container ref ──────────────────────────────────────────────────
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   // ── Track IDs we already have so socket broadcast never duplicates ────────
   const savedIdsRef = useRef<Set<string>>(new Set());
 
@@ -42,6 +45,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [deleteCommentMutation] = useDeleteCommentMutation();
 
   const is404 = fetchError && (fetchErrorDetail as any)?.status === 404;
+
+  // ── Smooth scroll to top ──────────────────────────────────────────────────
+  const scrollToTop = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // ── Helper: find top-level parent for any comment/reply ID ───────────────
   const findTopLevelParent = (targetId: string, commentList: any[]) => {
@@ -87,7 +99,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       savedIdsRef.current.add(comment.id);
 
       if (comment.parentCommentId) {
-        // Find the top-level parent (handles replies-to-replies too)
         setComments(prev => {
           const topLevel = findTopLevelParent(comment.parentCommentId, prev);
           if (!topLevel) return prev;
@@ -147,9 +158,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   // ── New top-level comment ─────────────────────────────────────────────────
   const handleNewComment = async (commentData: any) => {
     setIsLoading(true);
-    const tempId     = `local_${Date.now()}`;
+    const tempId = `local_${Date.now()}`;
     const newComment = {
-      id:           tempId,
+      id: tempId,
       itemId,
       itemType,
       ...commentData,
@@ -164,7 +175,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       },
     };
 
+    // Optimistically prepend then immediately scroll to top
     setComments(prev => [newComment, ...prev]);
+    scrollToTop();
 
     try {
       const { image, ...commentPayload } = commentData;
@@ -186,16 +199,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const handleTyping = (isTyping: boolean) =>
     socket.emit(isTyping ? 'typing-start' : 'typing-stop', { itemId });
 
-  const handleVoteHelpful = (commentId: string) => {
-    socket.emit('vote-helpful', { commentId, itemId });
-    setComments(prev =>
-      prev.map(c =>
-        c.id === commentId
-          ? { ...c, helpfulCount: (c.helpfulCount || 0) + 1 }
-          : c
-      )
-    );
-  };
+  const [replyContent, setReplyContent] = useState('');
+  const [showReplyInput, setShowReplyInput] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<any>(null);
 
   // ── DELETE — instant optimistic, REST confirms ────────────────────────────
   const handleDeleteComment = async (commentId: string) => {
@@ -235,99 +241,57 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     socket.emit('update-comment', { commentId, updateData, itemId });
 
   // ── Reply (supports reply-to-reply with @mention) ─────────────────────────
-const handleReplyToComment = async (parentCommentId: string, content: string) => {
-  if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
-    console.warn('Blocked reply to unsaved temp comment');
-    return;
-  }
+  const handleReplyToComment = async (parentCommentId: string, content: string) => {
+    if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
+      console.warn('Blocked reply to unsaved temp comment');
+      return;
+    }
 
-  const topLevelParent = findTopLevelParent(parentCommentId, comments);
-  if (!topLevelParent) {
-    console.warn('Could not find parent comment in state');
-    return;
-  }
+    const parentComment = comments.find(c => c.id === parentCommentId);
+    const name = parentComment?.user?.name || parentComment?.user?.username || parentComment?.userName || 'Anonymous Student';
+    const mentionPrefix = `@${name} `;
 
-  const uiParentId     = topLevelParent.id;
-  const isReplyToReply = parentCommentId !== uiParentId;
+    const finalContent = mentionPrefix
+      ? mentionPrefix + content
+      : content.replace(/^@\s*/, '').trimStart();
 
-  // ── Build @mention prefix ─────────────────────────────────────────────
-  let mentionPrefix = '';
-  if (isReplyToReply) {
-    const replyingTo = (topLevelParent.replies || []).find(
-      (r: any) => r.id === parentCommentId
-    );
-    const name =
-      replyingTo?.user?.name ||
-      replyingTo?.user?.username ||
-      replyingTo?.userName ||
-      'Anonymous Student';
-    mentionPrefix = `@${name} `;
-  }
+    const tempId   = `reply_${Date.now()}`;
+    const newReply = {
+      id:           tempId,
+      content:      finalContent,
+      createdAt:    new Date().toISOString(),
+      isAnonymous:  false,
+      replies:      [],
+      helpfulCount: 0,
+      user: {
+        name: (socket.socket?.auth as any)?.userName || 'You',
+        role: 'USER',
+      },
+      upvotes:      0,
+      downvotes:    0,
+      parentId:     parentCommentId,
+    };
 
-  // ── Strip any manual @mention the user may have typed ─────────────────
-  // Handles both single-word (@Anonymous) and multi-word (@Anonymous Student)
-  const finalContent = mentionPrefix
-  ? mentionPrefix + content
-  : content.replace(/^@\s*/, '').trimStart(); // strip lone @ on top-level replies
+    setComments(prev => {
+      if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
+        return prev;
+      }
+      const parentComment = prev.find(c => c.id === parentCommentId);
+      if (!parentComment) return prev;
+      return prev.map(c =>
+        c.id === parentCommentId
+          ? { ...c, replies: [...(c.replies || []), newReply] }
+          : c
+      );
+    });
 
-  const tempId   = `reply_${Date.now()}`;
-  const newReply = {
-    id:           tempId,
-    content:      finalContent,
-    createdAt:    new Date().toISOString(),
-    isAnonymous:  false,
-    replies:      [],
-    helpfulCount: 0,
-    user: {
-      name: (socket.socket?.auth as any)?.userName || 'You',
-      role: 'USER',
-    },
+    socket.emit('new-reply', { parentCommentId, content: finalContent, itemId });
+
+    setReplyContent('');
+    setShowReplyInput(null);
+    setReplyingTo(null);
   };
 
-  setComments(prev =>
-    prev.map(c =>
-      c.id === uiParentId
-        ? { ...c, replies: [...(c.replies || []), newReply] }
-        : c
-    )
-  );
-
-  try {
-    const result = await createComment({
-      itemId,
-      itemType,
-      content:         finalContent,
-      parentCommentId: uiParentId,
-    }).unwrap();
-
-    savedIdsRef.current.add(result.id);
-
-    setComments(prev =>
-      prev.map(c =>
-        c.id === uiParentId
-          ? {
-              ...c,
-              replies: (c.replies || [])
-                .map((r: any) => (r.id === tempId ? result : r))
-                .filter(
-                  (r: any, idx: number, arr: any[]) =>
-                    arr.findIndex((x: any) => x.id === r.id) === idx
-                ),
-            }
-          : c
-      )
-    );
-  } catch (err) {
-    console.warn('Reply save failed:', err);
-    setComments(prev =>
-      prev.map(c =>
-        c.id === uiParentId
-          ? { ...c, replies: (c.replies || []).filter((r: any) => r.id !== tempId) }
-          : c
-      )
-    );
-  }
-};
   // ── Filtering ─────────────────────────────────────────────────────────────
   const filteredComments = comments.filter(comment => {
     switch (filter) {
@@ -341,78 +305,158 @@ const handleReplyToComment = async (parentCommentId: string, content: string) =>
   // ── Main content ──────────────────────────────────────────────────────────
   const mainContent = (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-            <FaComments size={20} />
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+          <div
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(147,197,253,0.1) 100%)',
+              border: '1px solid rgba(59,130,246,0.25)',
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            <FaComments size={18} className="text-blue-400 sm:hidden" />
+            <FaComments size={22} className="text-blue-400 hidden sm:block" />
           </div>
-          <div>
-            <h4 className="text-sm font-bold text-gray-200">Community Activity</h4>
-            <p className="text-[11px] text-gray-500 uppercase tracking-widest font-bold">
-              {comments.length} total interaction{comments.length !== 1 ? 's' : ''}
-            </p>
+          <div className="min-w-0 flex-1">
+            <h4 className="text-sm sm:text-base font-bold text-white mb-1">Community Discussion</h4>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                {comments.length} {comments.length === 1 ? 'Interaction' : 'Interactions'}
+              </p>
+              {comments.length > 0 && (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="hidden sm:inline">Active</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        <CommentFilters filter={filter} onChange={setFilter} />
+        <div className="flex-shrink-0">
+          <CommentFilters filter={filter} onChange={setFilter} />
+        </div>
       </div>
 
+      {/* Typing indicator */}
       {typingUsers.length > 0 && (
-        <div className="flex items-center gap-2 text-[12px] text-blue-400 italic animate-pulse px-2">
-          <div className="flex gap-0.5">
-            <span className="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-            <span className="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-            <span className="w-1 h-1 bg-blue-400 rounded-full animate-bounce" />
+        <div
+          className="flex items-center gap-3 px-4 py-2 rounded-xl"
+          style={{
+            background: 'rgba(59,130,246,0.08)',
+            border: '1px solid rgba(59,130,246,0.15)',
+          }}
+        >
+          <div className="flex gap-1">
+            <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+            <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+            <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
           </div>
-          {typingUsers.join(', ')} typing…
+          <span className="text-sm text-blue-300 font-medium">
+            {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing…
+          </span>
         </div>
       )}
 
-      {isFetching ? (
-        <div className="flex flex-col items-center justify-center py-12 gap-3">
-          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-500 text-sm">Loading discussion...</p>
-        </div>
-      ) : fetchError && !is404 ? (
-        <div className="text-center py-12 px-4 bg-red-500/5 border border-red-500/20 rounded-2xl">
-          <FaExclamationTriangle className="text-red-500 text-2xl mx-auto mb-2" />
-          <h5 className="text-red-400 font-bold">Failed to load comments</h5>
-          <p className="text-red-400/60 text-xs">There was an error fetching the discussion.</p>
-        </div>
-      ) : filteredComments.length > 0 ? (
-        <CommentList
-          comments={filteredComments}
-          onUpdateComment={handleUpdateComment}
-          onDeleteComment={handleDeleteComment}
-          onVoteHelpful={handleVoteHelpful}
-          onReply={handleReplyToComment}
-          itemId={itemId}
-        />
-      ) : (
-        <div className="text-center py-12 px-4">
-          <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-4 border border-gray-700/50">
-            <FaReply className="text-gray-600 text-2xl rotate-180" />
+      {/* Content area */}
+      <div className="min-h-[200px]">
+        {isFetching ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-4">
+            <div className="relative">
+              <div className="w-12 h-12 border-3 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+              <div className="absolute inset-0 w-12 h-12 border-3 border-transparent border-t-blue-400 rounded-full animate-spin [animation-delay:0.15s]" />
+            </div>
+            <div className="text-center">
+              <p className="text-gray-400 text-sm font-medium mb-1">Loading discussion...</p>
+              <p className="text-gray-600 text-xs">Please wait while we fetch the latest comments</p>
+            </div>
           </div>
-          <h5 className="text-gray-300 font-bold mb-1">No tips yet</h5>
-          <p className="text-gray-500 text-xs max-w-[200px] mx-auto leading-relaxed">
-            Be the first to share a sighting or leave a helpful tip for the community.
-          </p>
-        </div>
-      )}
+        ) : fetchError && !is404 ? (
+          <div
+            className="text-center py-12 px-6 rounded-2xl"
+            style={{
+              background: 'rgba(239,68,68,0.08)',
+              border: '1px solid rgba(239,68,68,0.2)',
+            }}
+          >
+            <FaExclamationTriangle className="text-red-400 text-3xl mx-auto mb-3" />
+          </div>
+        ) : filteredComments.length > 0 ? (
+          <div className="space-y-1">
+            <CommentList
+              comments={filteredComments}
+              onUpdateComment={handleUpdateComment}
+              onDeleteComment={handleDeleteComment}
+              onReply={handleReplyToComment}
+              itemId={itemId}
+            />
+          </div>
+        ) : (
+          <div className="text-center py-16 px-6">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+              style={{
+                background: 'linear-gradient(135deg, rgba(107,114,128,0.1) 0%, rgba(75,85,99,0.05) 100%)',
+                border: '2px solid rgba(107,114,128,0.2)',
+              }}
+            >
+              <FaReply className="text-gray-500 text-3xl rotate-180" />
+            </div>
+            <h5 className="text-gray-300 font-bold text-lg mb-3">No comments yet</h5>
+            <p className="text-gray-500 text-sm max-w-sm mx-auto leading-relaxed mb-6">
+              Be the first to share a sighting or leave a helpful tip for the community.
+            </p>
+            <div className="flex items-center justify-center gap-4 text-xs text-gray-600">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-gray-600 rounded-full" />
+                <span>Start the conversation</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                <span>Share insights</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <span>Help others</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 
   if (isModalView) {
     return (
-      <div className="flex flex-col h-full max-h-[80vh] overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-          <div className="pb-4">{mainContent}</div>
+      <div className="flex flex-col flex-1 min-h-0" style={{ height: '100%' }}>
+        <div
+          ref={scrollContainerRef}
+          id="modal-comment-scroll"
+          className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-4"
+          style={{
+            paddingBottom: '80px',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+          }}
+        >
+          {mainContent}
         </div>
-        <div className="mt-auto bg-gray-900 border-t border-gray-800 p-4 pt-2 z-10">
-          <CommentInput
-            onSubmit={handleNewComment}
-            isLoading={isLoading}
-            onTyping={handleTyping}
-          />
+
+        <div
+          className="shrink-0 border-t"
+          style={{
+            borderColor: 'rgba(255,255,255,0.06)',
+            background: 'linear-gradient(160deg, #0f1318 0%, #0d1117 100%)',
+          }}
+        >
+          <div className="p-4">
+            <CommentInput
+              onSubmit={handleNewComment}
+              isLoading={isLoading}
+              onTyping={handleTyping}
+            />
+          </div>
         </div>
       </div>
     );
