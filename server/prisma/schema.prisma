@@ -64,7 +64,6 @@ model FoundItem {
   category           ItemCategory        @relation(fields: [categoryId], references: [id])
   user               User?               @relation(fields: [userId], references: [id])
   matchNotifications MatchNotification[]
-  Comment            Comment[]
 
   @@map("foundItems")
 }
@@ -88,7 +87,6 @@ model LostItem {
   category           ItemCategory        @relation(fields: [categoryId], references: [id])
   user               User?               @relation(fields: [userId], references: [id])
   matchNotifications MatchNotification[]
-  Comment            Comment[]
 
   @@map("lostItems")
 }
@@ -174,7 +172,7 @@ model MatchNotification {
 
 model Comment {
   id              String        @id @default(uuid())
-  itemId          String
+  itemId          String        // ← plain string, no FK constraint
   itemType        ItemType
   userId          String?
   content         String
@@ -187,12 +185,13 @@ model Comment {
   rejectionReason String?
   parentCommentId String?
 
-  parent    Comment?   @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
-  replies   Comment[]  @relation("CommentReplies")
-  
-  foundItem FoundItem? @relation(fields: [itemId], references: [id], map: "comments_foundItem_fkey")
-  lostItem  LostItem?  @relation(fields: [itemId], references: [id], map: "comments_lostItem_fkey")
-  user      User?      @relation(fields: [userId], references: [id])
+  parent  Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+  user    User?     @relation(fields: [userId], references: [id])
+
+  // ❌ Remove these two relations:
+  // foundItem FoundItem? @relation(...)
+  // lostItem  LostItem?  @relation(...)
 
   @@map("comments")
 }

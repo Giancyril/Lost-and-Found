@@ -21,33 +21,18 @@ export const commentService = {
   // commentsService.ts
 
 async createComment(data: any) {
-  const {
-    itemId, itemType, userId, content,
-    isAnonymous, location, parentCommentId
-  } = data;
-
-  const normalizedType = (itemType || 'FOUND').toUpperCase() as ItemType;
+  const { itemId, itemType, userId, content, isAnonymous, location, parentCommentId } = data;
 
   return await prisma.comment.create({
     data: {
-      itemType:    normalizedType,
-      content:     content  || '',
-      location:    location || null,
-      isAnonymous: isAnonymous || !userId,
-      status:      'APPROVED',
-
-      ...(parentCommentId && {
-        parent: { connect: { id: parentCommentId } }
-      }),
-
-      ...(userId && {
-        user: { connect: { id: userId } }
-      }),
-
-      ...(normalizedType === 'FOUND'
-        ? { foundItem: { connect: { id: itemId } } }
-        : { lostItem:  { connect: { id: itemId } } }
-      ),
+      itemId,
+      itemType: (itemType || 'FOUND').toUpperCase() as ItemType,
+      content:         content     || '',
+      location:        location    || null,
+      isAnonymous:     isAnonymous || !userId,
+      parentCommentId: parentCommentId || null,
+      status:          'APPROVED',
+      ...(userId && { user: { connect: { id: userId } } }),
     },
     include: COMMENT_INCLUDE,
   });
