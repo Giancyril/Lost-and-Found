@@ -21,8 +21,10 @@ A comprehensive lost and found management system built with modern web technolog
 - **Archive System**: Automated archiving of stale items to keep the database clean
 - **Audit Logging**: Comprehensive audit trail for all administrative actions
 - **Sheets Activity Logger**: Every lost and found report submission is logged to a Google Sheet in real time for offline recordkeeping and audit trails
-- **Image Compression**: Uploaded images are automatically compressed client-side before submission to reduce bandwidth and storage usage
-- **Multi-Image Upload**: Found items support up to 6 images per report with a cover photo selector
+- **Image Handling**: 
+  - **Image Compression**: Uploaded images are automatically compressed client-side before submission to reduce bandwidth and storage usage
+  - **Multi-Image Upload**: Found items support up to 6 images per report with a cover photo selector
+  - **Image Preview**: Inline image preview and remove/replace controls
 - **Location Autocomplete**: Smart location input with campus-aware suggestions for faster and more consistent location entry
 - **Live Item Match Suggestions**: While filling out a lost item report, the system queries existing found items and surfaces potential matches in real time before the form is even submitted
 
@@ -35,6 +37,22 @@ A comprehensive lost and found management system built with modern web technolog
 - **Community Engagement**: Rich interaction features including comments, replies, and collaborative problem-solving
 - **Achievement System**: Badge system for recognizing helpful community contributions
 - **Trust Indicators**: Visual trust levels based on user reputation and activity
+
+### Real-Time Comment System
+- **Modern-Style Interface**: Modern card-based comment layout with visual hierarchy and smooth animations
+- **Real-Time Updates**: Socket.io powered live comments, replies, typing indicators, and instant synchronization
+- **Advanced Comment Features**: 
+  - Inline editing with save/cancel functionality
+  - Reply threading with visual indentation and connecting lines
+  - Anonymous posting option with ghost mode toggle
+  - Location and time tagging with geolocation support
+  - Emoji reactions and rich text support
+- **Smart Filtering**: Filter comments by helpful, questions, sightings, or view all interactions
+- **User Identification**: Visual "You" labels for current user's comments and avatar-based identification
+- **Moderation Tools**: Delete confirmation modals, user verification, and role-based permissions
+- **Mobile-Optimized**: Responsive design with touch-friendly controls and modal-specific layouts
+- **Performance Optimized**: Local storage caching, optimistic updates, and efficient re-rendering
+- **Accessibility**: ARIA labels, keyboard navigation, and screen reader support
 
 ### User Experience
 - **Responsive Design**: Mobile-first design using Tailwind CSS and Flowbite components
