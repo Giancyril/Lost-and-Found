@@ -225,7 +225,12 @@ const CommentItem: React.FC<CommentItemProps> = ({
               <input
                 type="text"
                 value={replyText}
-                onChange={e => setReplyText(e.target.value)}
+                onChange={e => {
+                  const val = e.target.value;
+                  // Only block @ as the very first character on reply inputs
+                  if (isReply && val === '@') return;
+                  setReplyText(val);
+                }}
                 onKeyDown={handleReplyKeyDown}
                 placeholder={`Replying to ${comment.user?.name || 'Anonymous'}...`}
                 className="flex-1 bg-transparent border-none focus:ring-0 text-[12px] sm:text-[13px] !text-[#e4e6eb] placeholder-gray-500 outline-none min-w-0"
