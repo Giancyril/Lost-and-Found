@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import { ExtendedSocket } from '../types/socket';
-import { commentService } from '../api/comments/commentsService';
+import { commentService } from '../app/comments/commentsService';
 import { getRedisClient } from '../redis/redisClient';
 
 export const socketHandlers = (io: Server, socket: ExtendedSocket) => {

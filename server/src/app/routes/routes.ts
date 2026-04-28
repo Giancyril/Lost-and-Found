@@ -24,7 +24,7 @@ import { getMatchNotifications } from "../utils/getMatchNotifications";
 import { studentRoutes } from "../modules/student/student.routes";
 import sheetsRoutes from "../modules/sheets/sheets.routes";
 import { uploadImages } from "../midddlewares/upload";
-import { commentsRouter } from "../../api/comments/commentsRouter";
+import { commentsRouter } from "../comments/commentsRouter";
 
 const router = express.Router();
 

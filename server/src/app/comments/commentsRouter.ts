@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { commentsController } from './commentsController';
-import auth from '../../app/midddlewares/auth';
+import auth from '../midddlewares/auth';
 import { rateLimit } from 'express-rate-limit';
 
 const router = Router();

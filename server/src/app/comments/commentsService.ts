@@ -1,5 +1,5 @@
 // v2 - fixed FK constraint
-import prisma from '../../app/config/prisma';
+import prisma from '../config/prisma';
 import { ItemType } from '@prisma/client';
 
 const COMMENT_INCLUDE = {
