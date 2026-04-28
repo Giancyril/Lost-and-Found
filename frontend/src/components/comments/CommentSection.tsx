@@ -43,22 +43,27 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const is404 = fetchError && (fetchErrorDetail as any)?.status === 404;
 
+  // ── Helper: find top-level parent for any comment/reply ID ───────────────
+  const findTopLevelParent = (targetId: string, commentList: any[]) => {
+    return commentList.find(
+      c =>
+        c.id === targetId ||
+        (c.replies || []).some((r: any) => r.id === targetId)
+    );
+  };
+
   // ── Sync fetched data → local state ──────────────────────────────────────
   useEffect(() => {
     if (fetchedData) {
-      // Server is source of truth — replace entirely, never merge
-      // This prevents duplicates when RTK Query refetches after invalidation
       setComments(fetchedData);
       localStorage.setItem(`comments_${itemId}`, JSON.stringify(fetchedData));
 
-      // Register all IDs so socket broadcast won't re-add them
       savedIdsRef.current = new Set();
       fetchedData.forEach((c: any) => {
         savedIdsRef.current.add(c.id);
         (c.replies || []).forEach((r: any) => savedIdsRef.current.add(r.id));
       });
     } else {
-      // No server data yet — fall back to localStorage
       const localComments = localStorage.getItem(`comments_${itemId}`);
       if (localComments) {
         try {
@@ -71,9 +76,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   }, [fetchedData, itemId]);
 
-  // localStorage is written directly in the fetchedData sync effect above
-  // and in handleDeleteComment — no separate persist effect needed
-
   // ── Socket listeners ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!socket.socket) return;
@@ -81,15 +83,17 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     socket.socket.emit('join-item', itemId);
 
     socket.socket.on('comment-added', (comment: any) => {
-      // If we already have this ID (we posted it), skip — no duplicate
       if (savedIdsRef.current.has(comment.id)) return;
       savedIdsRef.current.add(comment.id);
 
       if (comment.parentCommentId) {
-        // Reply from another user — nest under its parent
-        setComments(prev =>
-          prev.map(c =>
-            c.id === comment.parentCommentId
+        // Find the top-level parent (handles replies-to-replies too)
+        setComments(prev => {
+          const topLevel = findTopLevelParent(comment.parentCommentId, prev);
+          if (!topLevel) return prev;
+
+          return prev.map(c =>
+            c.id === topLevel.id
               ? {
                   ...c,
                   replies: (c.replies || []).find((r: any) => r.id === comment.id)
@@ -97,10 +101,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     : [...(c.replies || []), comment],
                 }
               : c
-          )
-        );
+          );
+        });
       } else {
-        // Top-level comment from another user
         setComments(prev => {
           if (prev.find(c => c.id === comment.id)) return prev;
           return [comment, ...prev];
@@ -171,10 +174,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         ...commentPayload,
       }).unwrap();
 
-      // Register BEFORE socket fires so the broadcast gets ignored
       savedIdsRef.current.add(result.id);
-
-      // Swap temp → real
       setComments(prev => prev.map(c => c.id === tempId ? result : c));
     } catch (err) {
       console.warn('Comment save failed, keeping locally:', err);
@@ -212,14 +212,16 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
     const local = localStorage.getItem(`comments_${itemId}`);
     if (local) {
-      const parsed  = JSON.parse(local);
-      const updated = parsed
-        .filter((c: any) => c.id !== commentId)
-        .map((c: any) => ({
-          ...c,
-          replies: (c.replies || []).filter((r: any) => r.id !== commentId),
-        }));
-      localStorage.setItem(`comments_${itemId}`, JSON.stringify(updated));
+      try {
+        const parsed  = JSON.parse(local);
+        const updated = parsed
+          .filter((c: any) => c.id !== commentId)
+          .map((c: any) => ({
+            ...c,
+            replies: (c.replies || []).filter((r: any) => r.id !== commentId),
+          }));
+        localStorage.setItem(`comments_${itemId}`, JSON.stringify(updated));
+      } catch { /* ignore parse errors */ }
     }
 
     try {
@@ -232,32 +234,48 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const handleUpdateComment = (commentId: string, updateData: any) =>
     socket.emit('update-comment', { commentId, updateData, itemId });
 
-  // ── Reply ─────────────────────────────────────────────────────────────────
-  const handleReplyToComment = async (parentCommentId: string, content: string) => {
+  // ── Reply (supports reply-to-reply with @mention) ─────────────────────────
+const handleReplyToComment = async (parentCommentId: string, content: string) => {
   if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
     console.warn('Blocked reply to unsaved temp comment');
     return;
   }
 
-  // ── Find the actual top-level parent ─────────────────────────────────────
-  // If replying to a reply, use the top-level comment's ID as the target
-  // for UI nesting, but still send the actual parentCommentId to the backend
-  const topLevelParent = comments.find(c =>
-    c.id === parentCommentId ||
-    (c.replies || []).some((r: any) => r.id === parentCommentId)
-  );
-
+  const topLevelParent = findTopLevelParent(parentCommentId, comments);
   if (!topLevelParent) {
     console.warn('Could not find parent comment in state');
     return;
   }
 
-  const uiParentId = topLevelParent.id; // always the top-level comment ID for UI
+  const uiParentId     = topLevelParent.id;
+  const isReplyToReply = parentCommentId !== uiParentId;
+
+  // ── Build @mention prefix ─────────────────────────────────────────────
+  let mentionPrefix = '';
+  if (isReplyToReply) {
+    const replyingTo = (topLevelParent.replies || []).find(
+      (r: any) => r.id === parentCommentId
+    );
+    const name =
+      replyingTo?.user?.name ||
+      replyingTo?.user?.username ||
+      replyingTo?.userName ||
+      'Anonymous Student';
+    mentionPrefix = `@${name} `;
+  }
+
+  // ── Strip any manual @mention the user may have typed ─────────────────
+  // Handles both single-word (@Anonymous) and multi-word (@Anonymous Student)
+  const strippedContent = mentionPrefix
+    ? content.replace(new RegExp(`^@${mentionPrefix.trim().slice(1)}\\s*`, 'i'), '').trimStart()
+    : content.replace(/^@[\w\s]+?\s{2,}/, '').trimStart(); // fallback strip
+
+  const finalContent = mentionPrefix + strippedContent;
 
   const tempId   = `reply_${Date.now()}`;
   const newReply = {
     id:           tempId,
-    content,
+    content:      finalContent,
     createdAt:    new Date().toISOString(),
     isAnonymous:  false,
     replies:      [],
@@ -268,7 +286,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     },
   };
 
-  // Add optimistically under the top-level comment
   setComments(prev =>
     prev.map(c =>
       c.id === uiParentId
@@ -281,8 +298,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     const result = await createComment({
       itemId,
       itemType,
-      content,
-      parentCommentId, // send the actual clicked reply's ID to backend
+      content:         finalContent,
+      parentCommentId: uiParentId,
     }).unwrap();
 
     savedIdsRef.current.add(result.id);
@@ -313,7 +330,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     );
   }
 };
-
   // ── Filtering ─────────────────────────────────────────────────────────────
   const filteredComments = comments.filter(comment => {
     switch (filter) {
