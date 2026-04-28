@@ -234,71 +234,85 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   // ── Reply ─────────────────────────────────────────────────────────────────
   const handleReplyToComment = async (parentCommentId: string, content: string) => {
-    if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
-      console.warn('Blocked reply to unsaved temp comment');
-      return;
-    }
+  if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
+    console.warn('Blocked reply to unsaved temp comment');
+    return;
+  }
 
-    const tempId   = `reply_${Date.now()}`;
-    const newReply = {
-      id:           tempId,
+  // ── Find the actual top-level parent ─────────────────────────────────────
+  // If replying to a reply, use the top-level comment's ID as the target
+  // for UI nesting, but still send the actual parentCommentId to the backend
+  const topLevelParent = comments.find(c =>
+    c.id === parentCommentId ||
+    (c.replies || []).some((r: any) => r.id === parentCommentId)
+  );
+
+  if (!topLevelParent) {
+    console.warn('Could not find parent comment in state');
+    return;
+  }
+
+  const uiParentId = topLevelParent.id; // always the top-level comment ID for UI
+
+  const tempId   = `reply_${Date.now()}`;
+  const newReply = {
+    id:           tempId,
+    content,
+    createdAt:    new Date().toISOString(),
+    isAnonymous:  false,
+    replies:      [],
+    helpfulCount: 0,
+    user: {
+      name: (socket.socket?.auth as any)?.userName || 'You',
+      role: 'USER',
+    },
+  };
+
+  // Add optimistically under the top-level comment
+  setComments(prev =>
+    prev.map(c =>
+      c.id === uiParentId
+        ? { ...c, replies: [...(c.replies || []), newReply] }
+        : c
+    )
+  );
+
+  try {
+    const result = await createComment({
+      itemId,
+      itemType,
       content,
-      createdAt:    new Date().toISOString(),
-      isAnonymous:  false,
-      replies:      [],
-      helpfulCount: 0,
-      user: {
-        name: (socket.socket?.auth as any)?.userName || 'You',
-        role: 'USER',
-      },
-    };
+      parentCommentId, // send the actual clicked reply's ID to backend
+    }).unwrap();
+
+    savedIdsRef.current.add(result.id);
 
     setComments(prev =>
       prev.map(c =>
-        c.id === parentCommentId
-          ? { ...c, replies: [...(c.replies || []), newReply] }
+        c.id === uiParentId
+          ? {
+              ...c,
+              replies: (c.replies || [])
+                .map((r: any) => (r.id === tempId ? result : r))
+                .filter(
+                  (r: any, idx: number, arr: any[]) =>
+                    arr.findIndex((x: any) => x.id === r.id) === idx
+                ),
+            }
           : c
       )
     );
-
-    try {
-      const result = await createComment({
-        itemId,
-        itemType,
-        content,
-        parentCommentId,
-      }).unwrap();
-
-      // Register BEFORE socket fires
-      savedIdsRef.current.add(result.id);
-
-      setComments(prev =>
-        prev.map(c =>
-          c.id === parentCommentId
-            ? {
-                ...c,
-                replies: (c.replies || [])
-                  .map((r: any) => (r.id === tempId ? result : r))
-                  // Safety dedup in case socket fired before await resolved
-                  .filter(
-                    (r: any, idx: number, arr: any[]) =>
-                      arr.findIndex((x: any) => x.id === r.id) === idx
-                  ),
-              }
-            : c
-        )
-      );
-    } catch (err) {
-      console.warn('Reply save failed:', err);
-      setComments(prev =>
-        prev.map(c =>
-          c.id === parentCommentId
-            ? { ...c, replies: (c.replies || []).filter((r: any) => r.id !== tempId) }
-            : c
-        )
-      );
-    }
-  };
+  } catch (err) {
+    console.warn('Reply save failed:', err);
+    setComments(prev =>
+      prev.map(c =>
+        c.id === uiParentId
+          ? { ...c, replies: (c.replies || []).filter((r: any) => r.id !== tempId) }
+          : c
+      )
+    );
+  }
+};
 
   // ── Filtering ─────────────────────────────────────────────────────────────
   const filteredComments = comments.filter(comment => {

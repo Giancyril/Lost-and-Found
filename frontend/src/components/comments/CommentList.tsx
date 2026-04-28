@@ -254,9 +254,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 comment={reply}
                 onDeleteComment={onDeleteComment}
                 onVoteHelpful={onVoteHelpful}
-                onReply={onReply}
+                onReply={onReply}      
                 itemId=""
-                isReply={false} 
+                isReply={false}       
               />
             ))}
           </div>
