@@ -1,3 +1,4 @@
+//commasdasdasd
 import React, { useState, useEffect } from 'react';
 import { FaReply, FaExclamationTriangle, FaComments } from 'react-icons/fa';
 import { useSocket } from '../../hooks/useSocket';
@@ -112,43 +113,44 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleNewComment = async (commentData: any) => {
-    setIsLoading(true);
-    const tempId     = `local_${Date.now()}`;
-    const newComment = {
-      id: tempId,
+  setIsLoading(true);
+  const tempId = `local_${Date.now()}`;
+  const newComment = {
+    id: tempId,
+    itemId,
+    itemType,
+    ...commentData,
+    createdAt:    new Date().toISOString(),
+    replies:      [],
+    helpfulCount: 0,
+    user: {
+      name: commentData.isAnonymous
+        ? 'Anonymous Student'
+        : (socket.socket?.auth as any)?.userName || 'You',
+      role: 'USER',
+    },
+  };
+
+  setComments(prev => [newComment, ...prev]);
+
+  try {
+    
+    const { image, ...commentPayload } = commentData;
+
+    const result = await createComment({
       itemId,
       itemType,
-      ...commentData,
-      createdAt:    new Date().toISOString(),
-      replies:      [],
-      helpfulCount: 0,
-      user: {
-        name: commentData.isAnonymous
-          ? 'Anonymous Student'
-          : (socket.socket?.auth as any)?.userName || 'You',
-        role: 'USER',
-      },
-    };
+      ...commentPayload,
+    }).unwrap();
 
-    setComments(prev => [newComment, ...prev]);
-
-    try {
-      const result = await createComment({
-        itemId,
-        itemType,
-        ...commentData,
-      }).unwrap();
-
-      console.log('✅ Reply result from server:', result);
-
-      // Replace temp comment with real one from server
-      setComments(prev => prev.map(c => c.id === tempId ? result : c));
-    } catch (err) {
-      console.warn('Comment save failed, keeping locally:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    console.log('✅ Comment result from server:', result);
+    setComments(prev => prev.map(c => c.id === tempId ? result : c));
+  } catch (err) {
+    console.warn('Comment save failed, keeping locally:', err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleTyping = (isTyping: boolean) =>
     socket.emit(isTyping ? 'typing-start' : 'typing-stop', { itemId });
