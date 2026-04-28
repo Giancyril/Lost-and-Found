@@ -139,6 +139,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         ...commentData,
       }).unwrap();
 
+      console.log('✅ Reply result from server:', result);
+
       // Replace temp comment with real one from server
       setComments(prev => prev.map(c => c.id === tempId ? result : c));
     } catch (err) {

@@ -1,3 +1,4 @@
+// v2 - fixed FK constraint
 import prisma from '../../app/config/prisma';
 import { ItemType } from '@prisma/client';
 
