@@ -29,19 +29,20 @@ async createComment(data: any) {
 
   return await prisma.comment.create({
     data: {
-      itemType:        normalizedType,
-      content:         content     || '',
-      location:        location    || null,
-      isAnonymous:     isAnonymous || !userId,
-      parentCommentId: parentCommentId || null,
-      status:          'APPROVED',
+      itemType:    normalizedType,
+      content:     content  || '',
+      location:    location || null,
+      isAnonymous: isAnonymous || !userId,
+      status:      'APPROVED',
 
-      // ✅ user relation connect instead of raw userId
+      ...(parentCommentId && {
+        parent: { connect: { id: parentCommentId } }
+      }),
+
       ...(userId && {
         user: { connect: { id: userId } }
       }),
 
-      // ✅ item relation connect instead of raw itemId
       ...(normalizedType === 'FOUND'
         ? { foundItem: { connect: { id: itemId } } }
         : { lostItem:  { connect: { id: itemId } } }

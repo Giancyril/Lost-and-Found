@@ -199,7 +199,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     socket.emit('update-comment', { commentId, updateData, itemId });
 
   // ── REPLY — always targets the top-level parent comment ──────────────────
+  // ── REPLY — always targets the top-level parent comment ──────────────────
   const handleReplyToComment = async (parentCommentId: string, content: string) => {
+    // ✅ Block replies to unsaved temp comments
+    if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
+      console.warn('Blocked reply to temp comment — parent not yet saved to server');
+      return;
+    }
+
     const tempId   = `reply_${Date.now()}`;
     const newReply = {
       id:          tempId,
@@ -214,7 +221,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       },
     };
 
-    // Optimistically add reply under the parent
     setComments(prev =>
       prev.map(c =>
         c.id === parentCommentId
@@ -231,7 +237,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         parentCommentId,
       }).unwrap();
 
-      // Replace temp reply with real server response
       setComments(prev =>
         prev.map(c =>
           c.id === parentCommentId
@@ -245,7 +250,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         )
       );
     } catch (err) {
-      console.warn('Reply save failed, keeping locally:', err);
+      // ✅ Remove temp reply on failure instead of keeping broken local state
+      console.warn('Reply save failed:', err);
+      setComments(prev =>
+        prev.map(c =>
+          c.id === parentCommentId
+            ? { ...c, replies: (c.replies || []).filter((r: any) => r.id !== tempId) }
+            : c
+        )
+      );
     }
   };
 
