@@ -266,10 +266,7 @@ const handleReplyToComment = async (parentCommentId: string, content: string) =>
 
   // ── Strip any manual @mention the user may have typed ─────────────────
   // Handles both single-word (@Anonymous) and multi-word (@Anonymous Student)
-  const strippedContent = mentionPrefix
-    ? content.replace(new RegExp(`^@${mentionPrefix.trim().slice(1)}\\s*`, 'i'), '').trimStart()
-    : content.replace(/^@[\w\s]+?\s{2,}/, '').trimStart(); // fallback strip
-
+  const strippedContent = content.replace(/^@[^@]+?\s+(?=\S)/, '').trimStart();
   const finalContent = mentionPrefix + strippedContent;
 
   const tempId   = `reply_${Date.now()}`;

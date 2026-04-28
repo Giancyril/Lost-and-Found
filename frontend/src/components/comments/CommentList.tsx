@@ -189,7 +189,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           >
             Like
           </button>
-          {!isReply && onReply && (
+          {onReply && (
             <button
               onClick={() => setShowReplyInput(prev => !prev)}
               className="hover:underline hover:text-[#b0b3b8] transition-colors"
@@ -256,7 +256,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 onVoteHelpful={onVoteHelpful}
                 onReply={onReply}      
                 itemId=""
-                isReply={false}       
+                isReply={true}
               />
             ))}
           </div>
