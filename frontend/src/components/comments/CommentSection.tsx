@@ -327,7 +327,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               </p>
               {comments.length > 0 && (
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
                   <span className="hidden sm:inline">Active</span>
                 </div>
               )}
@@ -407,20 +407,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             <p className="text-gray-500 text-sm max-w-sm mx-auto leading-relaxed mb-6">
               Be the first to share a sighting or leave a helpful tip for the community.
             </p>
-            <div className="flex items-center justify-center gap-4 text-xs text-gray-600">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-gray-600 rounded-full" />
-                <span>Start the conversation</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                <span>Share insights</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <span>Help others</span>
-              </div>
-            </div>
+
           </div>
         )}
       </div>

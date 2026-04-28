@@ -42,16 +42,7 @@ export const CommentModal: React.FC<CommentModalProps> = ({
           style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}
         >
           <div className="flex items-center gap-4 min-w-0">
-            <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ 
-                background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(147,197,253,0.1) 100%)', 
-                border: '1px solid rgba(59,130,246,0.25)',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              <FaComments size={18} className="text-blue-400" />
-            </div>
+            
             <div className="min-w-0">
               <h3
                 className="font-bold text-white leading-tight truncate"
@@ -72,16 +63,7 @@ export const CommentModal: React.FC<CommentModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"
-              style={{
-                background: 'transparent',
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}
-              title="Share discussion"
-            >
-              <FaShare size={12} />
-            </button>
+            
             <button
               onClick={onClose}
               className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500/20 transition-all"
