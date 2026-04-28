@@ -34,15 +34,8 @@ exports.commentService = {
     createComment(data) {
         return __awaiter(this, void 0, void 0, function* () {
             const { itemId, itemType, userId, content, isAnonymous, location, parentCommentId } = data;
-            const normalizedType = (itemType || 'FOUND').toUpperCase();
             return yield prisma_1.default.comment.create({
-                data: Object.assign(Object.assign(Object.assign({ itemType: normalizedType, content: content || '', location: location || null, isAnonymous: isAnonymous || !userId, status: 'APPROVED' }, (parentCommentId && {
-                    parent: { connect: { id: parentCommentId } }
-                })), (userId && {
-                    user: { connect: { id: userId } }
-                })), (normalizedType === 'FOUND'
-                    ? { foundItem: { connect: { id: itemId } } }
-                    : { lostItem: { connect: { id: itemId } } })),
+                data: Object.assign({ itemId, itemType: (itemType || 'FOUND').toUpperCase(), content: content || '', location: location || null, isAnonymous: isAnonymous || !userId, parentCommentId: parentCommentId || null, status: 'APPROVED' }, (userId && { user: { connect: { id: userId } } })),
                 include: COMMENT_INCLUDE,
             });
         });
