@@ -1,5 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { FaBoxOpen, FaMapMarkerAlt, FaCalendarAlt, FaCheckCircle, FaClock } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import {
+  FaSearch, FaMapMarkerAlt, FaCalendarAlt,
+  FaCheckCircle, FaClock,
+} from "react-icons/fa";
+import { IoMdRadioButtonOn } from "react-icons/io";
 
 const API = "/api";
 const authHeaders = () => ({
@@ -9,77 +13,193 @@ const authHeaders = () => ({
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
-export default function StudentFoundItems() {
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+const STATUS_TABS = [
+  { label: "All",      value: "ALL"      },
+  { label: "Active",   value: "ACTIVE"   },
+  { label: "Resolved", value: "RESOLVED" },
+];
+
+export default function StudentLostItems() {
+  const [items,        setItems]        = useState<any[]>([]);
+  const [loading,      setLoading]      = useState(true);
+  const [search,       setSearch]       = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
-    fetch(`${API}/my/foundItem`, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((d) => setItems(d?.data?.data ?? d?.data ?? []))
+    fetch(`${API}/my/lostItem`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(d => setItems(d?.data?.data ?? d?.data ?? []))
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
   }, []);
 
+  const filtered = items.filter(item => {
+    const matchSearch = item.lostItemName?.toLowerCase().includes(search.toLowerCase()) ||
+      item.description?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus =
+      statusFilter === "ALL" ||
+      (statusFilter === "RESOLVED" &&  item.isFound) ||
+      (statusFilter === "ACTIVE"   && !item.isFound);
+    return matchSearch && matchStatus;
+  });
+
+  const total    = items.length;
+  const active   = items.filter(i => !i.isFound).length;
+  const resolved = items.filter(i =>  i.isFound).length;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 max-w-7xl mx-auto">
+
+      {/* Header */}
       <div>
-        <h1 className="text-white font-black text-xl">My Found Items</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Items you reported as found</p>
+        <h1 className="text-white font-black text-xl tracking-tight">My Lost Items</h1>
+        <p className="text-gray-500 text-sm mt-0.5">Items you reported as lost on campus</p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "Total Reports",  value: total,    icon: <FaSearch size={14} className="text-red-400" />,          accent: "bg-red-500/5",    sub: "all time",        subColor: "text-gray-500"    },
+          { label: "Active",         value: active,   icon: <IoMdRadioButtonOn size={14} className="text-orange-400" />, accent: "bg-orange-500/5", sub: "still missing",   subColor: "text-orange-400"  },
+          { label: "Resolved",       value: resolved, icon: <FaCheckCircle size={14} className="text-emerald-400" />,  accent: "bg-emerald-500/5",sub: "marked as found", subColor: "text-emerald-400" },
+        ].map(({ label, value, icon, accent, sub, subColor }) => (
+          <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
+            <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
+            <div className="relative">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${accent}`}>{icon}</div>
+            </div>
+            <div className="relative">
+              <p className="text-xl font-bold text-white tracking-tight">{value}</p>
+              <p className="text-gray-500 text-[11px] mt-0.5 font-medium">{label}</p>
+              <p className={`text-[10px] mt-1 font-medium ${subColor}`}>{sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="relative flex-1 w-full group">
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-red-400 transition-colors" size={12} />
+          <input
+            type="text" placeholder="Search lost items..." value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-800/80 border border-white/10 rounded-2xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all"
+          />
+        </div>
+        <div className="inline-flex gap-1 bg-gray-800/40 border border-white/10 rounded-2xl p-1 shrink-0">
+          {STATUS_TABS.map(({ label, value }) => (
+            <button key={value} onClick={() => setStatusFilter(value)}
+              className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap focus:outline-none select-none border transition-all ${
+                statusFilter === value
+                  ? "bg-red-500/10 text-red-300 border-red-500/20"
+                  : "border-transparent text-gray-400 hover:text-white"
+              }`}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center mb-4">
-            <FaBoxOpen size={22} className="text-emerald-400" />
-          </div>
-          <p className="text-white font-semibold">No found items yet</p>
-          <p className="text-gray-500 text-sm mt-1">Items you report as found will appear here</p>
+        <div className="space-y-3 animate-pulse">
+          {[1,2,3].map(i => <div key={i} className="h-20 bg-gray-900 border border-white/5 rounded-2xl" />)}
         </div>
       ) : (
-        <div className="grid gap-3">
-          {items.map((item: any, i: number) => (
-            <div key={i} className="bg-gray-900 border border-white/[0.06] rounded-xl p-4
-              flex items-start gap-4 hover:border-white/[0.1] transition-colors">
-              {item.img ? (
-                <img src={item.img} alt="" className="w-14 h-14 rounded-xl object-cover shrink-0 border border-white/10" />
-              ) : (
-                <div className="w-14 h-14 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center shrink-0">
-                  <FaBoxOpen size={18} className="text-emerald-400" />
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-white/5 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">
+              <div className="col-span-4">Item</div>
+              <div className="col-span-3">Location</div>
+              <div className="col-span-2">Date Lost</div>
+              <div className="col-span-2">Category</div>
+              <div className="col-span-1 text-right">Status</div>
+            </div>
+
+            {filtered.length === 0 ? (
+              <div className="py-20 text-center">
+                <FaSearch size={24} className="text-gray-700 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">No lost items match your filters</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-white/[0.04]">
+                {filtered.map((item: any, i: number) => (
+                  <div key={i} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors">
+                    <div className="col-span-4 flex items-center gap-3 min-w-0">
+                      {item.img
+                        ? <img src={item.img} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/10" />
+                        : <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/15 flex items-center justify-center shrink-0"><FaSearch size={12} className="text-red-400" /></div>
+                      }
+                      <div className="min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">{item.lostItemName}</p>
+                        <p className="text-gray-500 text-xs truncate mt-0.5">{item.description}</p>
+                      </div>
+                    </div>
+                    <div className="col-span-3 flex items-center gap-1 text-gray-400 text-xs min-w-0">
+                      <FaMapMarkerAlt size={9} className="text-blue-400 shrink-0" />
+                      <span className="truncate">{item.location || "—"}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-gray-500 text-xs">{item.date ? fmt(item.date) : "—"}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-xs px-2 py-0.5 bg-white/5 border border-white/5 text-gray-300 rounded-lg">
+                        {item.category?.name || "—"}
+                      </span>
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                        item.isFound
+                          ? "bg-blue-400/10 text-blue-400 border-blue-400/20"
+                          : "bg-emerald-400/10 text-emerald-400 border-emerald-400/20"
+                      }`}>
+                        {item.isFound ? "Resolved" : "Active"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3">
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center bg-gray-900 border border-white/5 rounded-2xl">
+                <FaSearch size={22} className="text-gray-700 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">No lost items match your filters</p>
+              </div>
+            ) : filtered.map((item: any, i: number) => (
+              <div key={i} className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {item.img
+                      ? <img src={item.img} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/10" />
+                      : <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/15 flex items-center justify-center shrink-0"><FaSearch size={14} className="text-red-400" /></div>
+                    }
+                    <div className="min-w-0">
+                      <p className="text-white font-semibold text-sm truncate">{item.lostItemName}</p>
+                      <p className="text-gray-500 text-xs mt-0.5 line-clamp-1">{item.description}</p>
+                    </div>
+                  </div>
+                  <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                    item.isFound
+                      ? "bg-blue-400/10 text-blue-400 border-blue-400/20"
+                      : "bg-emerald-400/10 text-emerald-400 border-emerald-400/20"
+                  }`}>
+                    {item.isFound ? "Resolved" : "Active"}
+                  </span>
                 </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-bold">{item.foundItemName}</p>
-                {item.description && (
-                  <p className="text-gray-500 text-sm mt-0.5 line-clamp-2">{item.description}</p>
-                )}
-                <div className="flex flex-wrap items-center gap-3 mt-2">
-                  {item.location && (
-                    <span className="flex items-center gap-1 text-gray-500 text-xs">
-                      <FaMapMarkerAlt size={9} /> {item.location}
-                    </span>
-                  )}
-                  {item.date && (
-                    <span className="flex items-center gap-1 text-gray-500 text-xs">
-                      <FaCalendarAlt size={9} /> {fmt(item.date)}
-                    </span>
-                  )}
+                <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-white/5">
+                  <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Location</p><p className="text-gray-300 mt-0.5 truncate">{item.location || "—"}</p></div>
+                  <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Date Lost</p><p className="text-gray-300 mt-0.5">{item.date ? fmt(item.date) : "—"}</p></div>
+                  <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Category</p><p className="text-gray-300 mt-0.5">{item.category?.name || "—"}</p></div>
                 </div>
               </div>
-              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border shrink-0 flex items-center gap-1 ${
-                item.isClaimed
-                  ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
-                  : "bg-yellow-500/10 text-yellow-300 border-yellow-500/20"
-              }`}>
-                {item.isClaimed ? <><FaCheckCircle size={9} /> Claimed</> : <><FaClock size={9} /> Unclaimed</>}
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

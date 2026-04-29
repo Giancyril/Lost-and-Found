@@ -51,19 +51,35 @@ export const StudentLogin: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-4">
 
-      {/* Logo — triple-tap triggers hidden admin route */}
-      <div
-        className="mb-8 text-center"
-        onClick={handleTripleTap}
-        style={{ cursor: 'default', userSelect: 'none' }}
-      >
-        <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20
-          flex items-center justify-center mx-auto mb-4">
-          <FaIdCard size={28} className="text-blue-400" />
+      {/* Logo & Header Section */}
+        <div className="mb-10 text-center px-4">
+        <div className="flex flex-col items-center">
+            
+            {/* Main Branding Group */}
+            <div className="space-y-1 mb-4">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+                SAS Lost & <span className="text-blue-400/90">Found</span>
+            </h1>
+            
+            {/* Sub-header with integrated lines */}
+            <div className="flex items-center justify-center gap-3">
+                <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-white/20" />
+                <span className="text-[10px] font-bold text-blue-300/60 tracking-[0.2em] uppercase">
+                Student Affairs & Services
+                </span>
+                <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-white/20" />
+            </div>
+            </div>
+
+            {/* Section Indicator */}
+            <div className="py-1 px-3 rounded-full bg-blue-500/5 border border-blue-500/10">
+            <p className="text-gray-400 text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.1em]">
+                Student Login
+            </p>
+            </div>
+            
         </div>
-        <h1 className="text-white font-bold text-xl tracking-tight">NBSC Lost &amp; Found</h1>
-        <p className="text-gray-500 text-xs mt-1">Student Access Portal</p>
-      </div>
+        </div>
 
       {justRegistered && (
         <div className="w-full max-w-sm mb-4 bg-emerald-500/5 border border-emerald-500/20
@@ -94,7 +110,7 @@ export const StudentLogin: React.FC = () => {
               type="text"
               value={schoolId}
               onChange={e => { setSchoolId(e.target.value); setError(''); }}
-              placeholder="e.g. 2021-00123"
+              placeholder=" "
               autoComplete="username"
               className="w-full bg-transparent text-white text-sm px-3 py-2.5
                 placeholder-gray-600 focus:outline-none"
@@ -150,7 +166,7 @@ export const StudentLogin: React.FC = () => {
               </>
             ) : (
               <>
-                <FaSignInAlt size={10} /> Sign In
+                 Sign In
               </>
             )}
           </button>

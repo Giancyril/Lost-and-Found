@@ -27,7 +27,7 @@ const StepIndicator: React.FC<{ current: Step }> = ({ current }) => (
             ${current === s
               ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
               : current > s
-              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+              ? 'bg-blue-500/20 text-blue-400 blue-emerald-500/30'
               : 'bg-white/[0.03] text-gray-600 border-white/[0.07]'
             }`}
         >
@@ -36,7 +36,7 @@ const StepIndicator: React.FC<{ current: Step }> = ({ current }) => (
         {i < 2 && (
           <div
             className={`flex-1 h-px transition-all duration-300
-              ${current > s ? 'bg-emerald-500/30' : 'bg-white/[0.06]'}`}
+              ${current > s ? 'bg-blue-500/30' : 'bg-white/[0.06]'}`}
           />
         )}
       </React.Fragment>
@@ -115,7 +115,7 @@ export const StudentRegister: React.FC = () => {
   // Updated to accept schoolId + set name/username from masterlist (see backend)
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPass) { setError('Passwords do not match.'); return; }
+    if (password !== confirmPass) { setError('Password do not match.'); return; }
     if (password.length < 8)     { setError('Password must be at least 8 characters.'); return; }
     setError('');
 
@@ -143,15 +143,35 @@ export const StudentRegister: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-4">
 
-      {/* Logo */}
-      <div className="mb-8 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20
-          flex items-center justify-center mx-auto mb-4">
-          <FaIdCard size={28} className="text-blue-400" />
+      {/* Logo & Header Section */}
+        <div className="mb-10 text-center px-4">
+        <div className="flex flex-col items-center">
+            
+            {/* Main Branding Group */}
+            <div className="space-y-1 mb-4">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+                SAS Lost & <span className="text-blue-400/90">Found</span>
+            </h1>
+            
+            {/* Sub-header with integrated lines */}
+            <div className="flex items-center justify-center gap-3">
+                <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-white/20" />
+                <span className="text-[10px] font-bold text-blue-300/60 tracking-[0.2em] uppercase">
+                Student Affairs & Services
+                </span>
+                <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-white/20" />
+            </div>
+            </div>
+
+            {/* Section Indicator */}
+            <div className="py-1 px-3 rounded-full bg-blue-500/5 border border-blue-500/10">
+            <p className="text-gray-400 text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.1em]">
+                Student Registration
+            </p>
+            </div>
+            
         </div>
-        <h1 className="text-white font-bold text-xl tracking-tight">Create Account</h1>
-        <p className="text-gray-500 text-xs mt-1">NBSC Lost &amp; Found · Student Registration</p>
-      </div>
+        </div>
 
       {/* Card */}
       <div className="w-full max-w-sm bg-gray-900 border border-white/[0.06]
@@ -183,7 +203,7 @@ export const StudentRegister: React.FC = () => {
                   type="text"
                   value={schoolId}
                   onChange={e => { setSchoolId(e.target.value); setError(''); }}
-                  placeholder="e.g. 2021-00123"
+                  placeholder=" "
                   autoFocus
                   className="w-full bg-transparent text-white text-sm px-3 py-2.5
                     placeholder-gray-600 focus:outline-none"
@@ -207,10 +227,10 @@ export const StudentRegister: React.FC = () => {
                 {isValidating ? (
                   <>
                     <div className="w-3.5 h-3.5 border border-blue-400 border-t-transparent rounded-full animate-spin" />
-                    Checking masterlist…
+                    Verifying Student Identity...
                   </>
                 ) : (
-                  <><FaArrowRight size={10} /> Continue</>
+                  <>Continue</>
                 )}
               </button>
             </form>
@@ -220,17 +240,17 @@ export const StudentRegister: React.FC = () => {
           {step === 2 && masterlistData && (
             <form onSubmit={e => { e.preventDefault(); setStep(3); }} className="space-y-3">
               {/* Verified badge */}
-              <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/15
+              <div className="flex items-center gap-2 bg-blue-500/5 border border-blue-500/15
                 rounded-xl px-3 py-2.5">
-                <MdVerified size={14} className="text-emerald-400 shrink-0" />
-                <p className="text-emerald-300/80 text-xs font-medium">Found in school masterlist</p>
+                <MdVerified size={14} className="text-blue-400 shrink-0" />
+                <p className="text-blue-300/80 text-xs font-medium">Student Record Authenticated</p>
               </div>
 
               {/* Read-only details */}
               {[
-                { label: 'Full Name',  value: masterlistData.name,      icon: <FaUser size={9} className="text-cyan-400" />,          color: 'text-cyan-400'   },
-                { label: 'Course',     value: masterlistData.course,     icon: <FaGraduationCap size={9} className="text-violet-400" />, color: 'text-violet-400' },
-                { label: 'Year Level', value: masterlistData.yearLevel,  icon: <FaIdCard size={9} className="text-orange-400" />,       color: 'text-orange-400' },
+                { label: 'Full Name',  value: masterlistData.name,      icon: <FaUser size={9} className="text-blue-400" />,          color: 'text-blue-400'   },
+                { label: 'Course',     value: masterlistData.course,     icon: <FaGraduationCap size={9} className="text-blue-400" />, color: 'text-blue-400' },
+                { label: 'Year Level', value: masterlistData.yearLevel,  icon: <FaIdCard size={9} className="text-blue-400" />,       color: 'text-blue-400' },
               ].map(field => (
                 <div key={field.label} className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
                   <div className="flex items-center gap-2 px-3 py-1.5 border-b border-white/[0.05]">
@@ -241,16 +261,7 @@ export const StudentRegister: React.FC = () => {
                 </div>
               ))}
 
-              <p className="text-[11px] text-gray-600 text-center">
-                Not you?{' '}
-                <button
-                  type="button"
-                  onClick={() => { setStep(1); setMasterlistData(null); setError(''); }}
-                  className="text-blue-400 hover:text-blue-300 font-semibold"
-                >
-                  Go back
-                </button>
-              </p>
+              
 
               <button
                 type="submit"
@@ -259,8 +270,19 @@ export const StudentRegister: React.FC = () => {
                   bg-blue-500/10 text-blue-300 border border-blue-500/25
                   hover:bg-blue-500/20"
               >
-                <FaArrowRight size={10} /> Yes, that's me — Continue
+                Confirm Identity & Proceed
               </button>
+
+              <p className="text-[11px] text-gray-600 text-center">
+                Is this information incorrect?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setStep(1); setMasterlistData(null); setError(''); }}
+                  className="text-blue-400 hover:text-blue-300 font-semibold"
+                >
+                  Change ID
+                </button>
+              </p>
             </form>
           )}
 
@@ -315,8 +337,8 @@ export const StudentRegister: React.FC = () => {
               </div>
 
               {confirmPass && (
-                <p className={`text-[11px] font-medium ${password === confirmPass ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {password === confirmPass ? '✓ Passwords match' : '✗ Passwords do not match'}
+                <p className={`text-[11px] font-medium ${password === confirmPass ? 'text-blue-400' : 'text-red-400'}`}>
+                  {password === confirmPass ? ' Password match' : ' Password do not match'}
                 </p>
               )}
 
@@ -331,16 +353,16 @@ export const StudentRegister: React.FC = () => {
                 disabled={isRegistering || !password || !confirmPass || password !== confirmPass}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl
                   text-xs font-semibold transition-all
-                  bg-emerald-500/10 text-emerald-400 border border-emerald-500/25
-                  hover:bg-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                  bg-blue-500/10 text-blue-400 border border-blue-500/25
+                  hover:bg-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isRegistering ? (
                   <>
-                    <div className="w-3.5 h-3.5 border border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border border-blue-400 border-t-transparent rounded-full animate-spin" />
                     Creating account…
                   </>
                 ) : (
-                  <><FaCheckCircle size={10} /> Create Account</>
+                  <>Create Account</>
                 )}
               </button>
             </form>
