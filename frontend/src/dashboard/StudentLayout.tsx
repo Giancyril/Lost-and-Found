@@ -111,7 +111,6 @@ const ProfileDropdown = ({
                   {user?.name || user?.username || "Student"}
                 </p>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <MdVerified size={9} className="text-blue-400" />
                   <p className="text-gray-500 text-[10px] font-mono truncate">
                     {user?.schoolId || "Student"}
                   </p>
@@ -290,25 +289,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         ))}
       </nav>
 
-      {/* Bottom */}
-      <div className="px-3 pb-4 border-t border-white/[0.05] pt-3 space-y-0.5">
-        <Link to="/"
-          title={collapsed ? "Home" : undefined}
-          className={`flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm
-            text-gray-400 hover:text-white hover:bg-white/5 transition-all
-            ${collapsed ? "justify-center" : ""}`}>
-          <FaHome size={14} className="shrink-0" />
-          {!collapsed && <span>Back to Home</span>}
-        </Link>
-        <button onClick={handleSignOut}
-          title={collapsed ? "Sign Out" : undefined}
-          className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm
-            text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all
-            ${collapsed ? "justify-center" : ""}`}>
-          <FaSignOutAlt size={14} className="shrink-0" />
-          {!collapsed && <span>Sign Out</span>}
-        </button>
-      </div>
+     
     </div>
   );
 

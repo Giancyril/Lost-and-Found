@@ -7,8 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        // Change this from localhost:5000 to your Render backend URL
+        target: 'https://lost-and-found-jqmn.onrender.com', 
         changeOrigin: true,
+        // Optional: If your Render backend DOES NOT have /api in its routes
+        // rewrite: (path) => path.replace(/^\/api/, ''), 
       },
     },
   },

@@ -1,12 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useUserVerification } from "../../auth/auth";
 import { FaTrophy, FaMedal, FaStar, FaSearch } from "react-icons/fa";
-
-const API = "/api";
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`,
-  "Content-Type": "application/json",
-});
+import { useGetLeaderboardQuery, useGetMyPointsQuery } from "../../redux/api/api"; // Updated imports
 
 const medalLabel = (i: number) =>
   i === 0 ? "🥇 1st Place" : i === 1 ? "🥈 2nd Place" : i === 2 ? "🥉 3rd Place" : null;
@@ -24,41 +19,30 @@ const rankBg = (i: number, isMe: boolean) => {
 
 export default function StudentLeaderboard() {
   const user: any = useUserVerification();
-  const [board,    setBoard]    = useState<any[]>([]);
-  const [myPoints, setMyPoints] = useState(0);
-  const [loading,  setLoading]  = useState(true);
-  const [search,   setSearch]   = useState("");
+  const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    Promise.allSettled([
-      fetch(`${API}/points/leaderboard`, { headers: authHeaders() }).then(r => r.json()),
-      fetch(`${API}/points/my`,          { headers: authHeaders() }).then(r => r.json()),
-    ]).then(([lb, mp]) => {
-      if (lb.status === "fulfilled") setBoard(lb.value?.data ?? []);
-      if (mp.status === "fulfilled") setMyPoints(mp.value?.data?.totalPoints ?? 0);
-    }).finally(() => setLoading(false));
-  }, []);
+  // RTK Query hooks
+  const { data: boardData, isLoading: lbLoading } = useGetLeaderboardQuery(undefined);
+  const { data: pointsData, isLoading: ptsLoading } = useGetMyPointsQuery(undefined);
 
-  const myRank   = board.findIndex((u: any) => u.id === user?.id) + 1;
-  const filtered = board.filter(u =>
+  const loading = lbLoading || ptsLoading;
+  const board = boardData?.data ?? [];
+  const myPoints = pointsData?.data?.totalPoints ?? 0;
+
+  const myRank = board.findIndex((u: any) => u.id === user?.id) + 1;
+  const filtered = board.filter((u: any) =>
     (u.name || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
 
-      {/* Header */}
-      <div>
-        <h1 className="text-white font-black text-xl tracking-tight">Leaderboard</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Top students ranked by points earned</p>
-      </div>
-
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Your Points",  value: myPoints,      icon: <FaStar size={14} className="text-yellow-400" />,  accent: "bg-yellow-500/5",  color: "text-yellow-400"  },
+          { label: "Your Points",  value: myPoints,       icon: <FaStar size={14} className="text-yellow-400" />,  accent: "bg-yellow-500/5",  color: "text-yellow-400"  },
           { label: "Your Rank",    value: myRank > 0 ? `#${myRank}` : "—", icon: <FaTrophy size={14} className="text-cyan-400" />, accent: "bg-cyan-500/5", color: "text-cyan-400" },
-          { label: "Total Ranked", value: board.length,  icon: <FaMedal size={14} className="text-violet-400" />, accent: "bg-violet-500/5",  color: "text-violet-400"  },
+          { label: "Total Ranked", value: board.length,   icon: <FaMedal size={14} className="text-violet-400" />, accent: "bg-violet-500/5",  color: "text-violet-400"  },
         ].map(({ label, value, icon, accent, color }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
             <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
@@ -74,7 +58,7 @@ export default function StudentLeaderboard() {
       </div>
 
       {/* My rank callout */}
-      {myRank > 0 && (
+      {!loading && myRank > 0 && (
         <div className="bg-blue-500/[0.07] border border-blue-500/20 rounded-2xl px-4 py-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
             <FaStar size={14} className="text-yellow-400" />
@@ -129,7 +113,7 @@ export default function StudentLeaderboard() {
               {filtered.map((u: any, i: number) => {
                 const isMe    = u.id === user?.id;
                 const initial = u.name?.charAt(0)?.toUpperCase() || "?";
-                const realIdx = board.findIndex(b => b.id === u.id);
+                const realIdx = board.findIndex((b: any) => b.id === u.id);
                 return (
                   <div key={i}
                     className={`grid grid-cols-12 gap-4 items-center px-5 py-3.5 transition-colors ${
@@ -180,7 +164,7 @@ export default function StudentLeaderboard() {
             {filtered.map((u: any, i: number) => {
               const isMe    = u.id === user?.id;
               const initial = u.name?.charAt(0)?.toUpperCase() || "?";
-              const realIdx = board.findIndex(b => b.id === u.id);
+              const realIdx = board.findIndex((b: any) => b.id === u.id);
               return (
                 <div key={i}
                   className={`flex items-center gap-4 rounded-2xl px-4 py-3 border transition-colors ${rankBg(realIdx, isMe)}`}>

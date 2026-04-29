@@ -53,10 +53,6 @@ export default function StudentSettings() {
 
   return (
     <div className="space-y-6 max-w-lg">
-      <div>
-        <h1 className="text-white font-black text-xl">Settings</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Manage your account</p>
-      </div>
 
       {/* Profile info (read-only) */}
       <div className="bg-gray-900 border border-white/[0.06] rounded-2xl p-5 space-y-4">
@@ -118,13 +114,13 @@ export default function StudentSettings() {
 
           <button type="submit" disabled={pwLoading}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
-              bg-blue-500/10 text-blue-300 border border-blue-500/25
-              hover:bg-blue-500/20 disabled:opacity-40 transition-colors">
+                bg-blue-500/10 text-blue-300 border border-blue-500/25
+                hover:bg-blue-500/20 disabled:opacity-40 transition-colors">
             {pwLoading
-              ? <div className="w-3.5 h-3.5 border border-blue-400 border-t-transparent rounded-full animate-spin" />
-              : <FaCheck size={10} />}
+                ? <div className="w-3.5 h-3.5 border border-blue-400 border-t-transparent rounded-full animate-spin" />
+                : null}
             {pwLoading ? "Saving…" : "Update Password"}
-          </button>
+            </button>
         </form>
       </div>
     </div>

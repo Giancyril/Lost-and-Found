@@ -1,15 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt,
   FaCheckCircle, FaClock,
 } from "react-icons/fa";
 import { IoMdRadioButtonOn } from "react-icons/io";
+import { useGetMyLostItemQuery } from "../../redux/api/api"; // Updated import
 
-const API = "/api";
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`,
-  "Content-Type": "application/json",
-});
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
@@ -20,20 +16,14 @@ const STATUS_TABS = [
 ];
 
 export default function StudentLostItems() {
-  const [items,        setItems]        = useState<any[]>([]);
-  const [loading,      setLoading]      = useState(true);
-  const [search,       setSearch]       = useState("");
+  // RTK Query Hook replacement
+  const { data, isLoading: loading } = useGetMyLostItemQuery(undefined);
+  const items = data?.data?.data ?? data?.data ?? [];
+
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
-  useEffect(() => {
-    fetch(`${API}/my/lostItem`, { headers: authHeaders() })
-      .then(r => r.json())
-      .then(d => setItems(d?.data?.data ?? d?.data ?? []))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filtered = items.filter(item => {
+  const filtered = items.filter((item: any) => {
     const matchSearch = item.lostItemName?.toLowerCase().includes(search.toLowerCase()) ||
       item.description?.toLowerCase().includes(search.toLowerCase());
     const matchStatus =
@@ -44,18 +34,11 @@ export default function StudentLostItems() {
   });
 
   const total    = items.length;
-  const active   = items.filter(i => !i.isFound).length;
-  const resolved = items.filter(i =>  i.isFound).length;
+  const active   = items.filter((i: any) => !i.isFound).length;
+  const resolved = items.filter((i: any) =>  i.isFound).length;
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
-
-      {/* Header */}
-      <div>
-        <h1 className="text-white font-black text-xl tracking-tight">My Lost Items</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Items you reported as lost on campus</p>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[

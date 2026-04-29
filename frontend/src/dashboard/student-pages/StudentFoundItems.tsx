@@ -1,14 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  FaBoxOpen, FaMapMarkerAlt, FaCalendarAlt,
-  FaCheckCircle, FaClock, FaSearch, FaChevronDown, FaCheck,
+  FaBoxOpen, FaMapMarkerAlt,
+  FaCheckCircle, FaClock, FaSearch,
 } from "react-icons/fa";
+import { useGetMyFoundItemQuery } from "../../redux/api/api";
 
-const API = "/api";
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`,
-  "Content-Type": "application/json",
-});
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
@@ -19,18 +15,11 @@ const STATUS_TABS = [
 ];
 
 export default function StudentFoundItems() {
-  const [items,        setItems]        = useState<any[]>([]);
-  const [loading,      setLoading]      = useState(true);
   const [search,       setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
-  useEffect(() => {
-    fetch(`${API}/my/foundItem`, { headers: authHeaders() })
-      .then(r => r.json())
-      .then(d => setItems(d?.data?.data ?? d?.data ?? []))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, isLoading: loading } = useGetMyFoundItemQuery(undefined);
+  const items: any[] = data?.data?.data ?? data?.data ?? [];
 
   const filtered = items.filter(item => {
     const matchSearch = item.foundItemName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -58,8 +47,8 @@ export default function StudentFoundItems() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total Reported", value: total,     icon: <FaBoxOpen size={14} className="text-cyan-400" />,    accent: "bg-cyan-500/5",    sub: "all time",          subColor: "text-gray-500"    },
-          { label: "Unclaimed",      value: unclaimed,  icon: <FaClock size={14} className="text-yellow-400" />,   accent: "bg-yellow-500/5",  sub: "awaiting claim",    subColor: "text-yellow-400"  },
+          { label: "Total Reported", value: total,     icon: <FaBoxOpen size={14} className="text-cyan-400" />,         accent: "bg-cyan-500/5",    sub: "all time",             subColor: "text-gray-500"    },
+          { label: "Unclaimed",      value: unclaimed,  icon: <FaClock size={14} className="text-yellow-400" />,        accent: "bg-yellow-500/5",  sub: "awaiting claim",       subColor: "text-yellow-400"  },
           { label: "Claimed",        value: claimed,    icon: <FaCheckCircle size={14} className="text-emerald-400" />, accent: "bg-emerald-500/5", sub: "successfully claimed", subColor: "text-emerald-400" },
         ].map(({ label, value, icon, accent, sub, subColor }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
@@ -115,7 +104,6 @@ export default function StudentFoundItems() {
               <div className="col-span-2">Category</div>
               <div className="col-span-1 text-right">Status</div>
             </div>
-
             {filtered.length === 0 ? (
               <div className="py-20 text-center">
                 <FaSearch size={24} className="text-gray-700 mx-auto mb-3" />

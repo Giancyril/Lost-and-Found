@@ -11,7 +11,7 @@ interface CommentListProps {
   itemId: string;
 }
 
-// ── Mention picker (unchanged — portal stays here) ───────────────────────────
+// ── Mention picker (unchanged) ───────────────────────────
 
 const MentionPickerPortal: React.FC<{
   anchorRef: React.RefObject<HTMLDivElement | null>;
@@ -97,13 +97,18 @@ export const CommentList: React.FC<CommentListProps> = ({
   const handleEdit   = (commentId: string, content: string) => onUpdateComment?.(commentId, { content });
   const handleDelete = (commentId: string) => setShowDeleteModal(commentId);
 
+  // Function to filter out duplicates by ID
+  const deduplicate = (arr: any[]) => arr.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+
   const renderComment = (comment: any, isReply = false): React.ReactNode => {
     const isCurrentUser =
       currentUser?.id === comment.userId || currentUser?.role === 'ADMIN';
 
+    // Deduplicate replies to prevent duplicate key errors in nested threads
+    const uniqueReplies = deduplicate(comment.replies || []);
+
     return (
       <div key={comment.id}>
-        {/* CommentCard owns: header, body, footer actions, edit inline, reply inline */}
         <CommentCard
           comment={comment}
           isReply={isReply}
@@ -116,18 +121,15 @@ export const CommentList: React.FC<CommentListProps> = ({
           onDeleteCancel={() => setShowDeleteModal(null)}
         />
 
-        {/* Nested replies with vertical thread line */}
-        {(comment.replies || []).length > 0 && (
+        {uniqueReplies.length > 0 && (
           <div className={`relative mt-2 ${isReply ? '' : 'ml-10'}`}>
-            {/* Vertical thread line */}
             <div
               className="absolute left-3.5 top-0 bottom-3 w-px"
               style={{ background: 'rgba(255,255,255,0.07)' }}
             />
             <div className="flex flex-col gap-2">
-              {(comment.replies as any[]).map((reply: any) => (
+              {uniqueReplies.map((reply: any) => (
                 <div key={reply.id} className="relative pl-8">
-                  {/* Horizontal connector nub */}
                   <div
                     className="absolute left-3.5 top-[18px] w-4 h-px"
                     style={{ background: 'rgba(255,255,255,0.07)' }}
@@ -142,9 +144,11 @@ export const CommentList: React.FC<CommentListProps> = ({
     );
   };
 
+  const uniqueComments = deduplicate(comments);
+
   return (
     <div className="flex flex-col gap-3">
-      {comments.map(comment => renderComment(comment))}
+      {uniqueComments.map(comment => renderComment(comment))}
     </div>
   );
 };

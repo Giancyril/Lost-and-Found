@@ -1,15 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   FaClipboardList, FaCheckCircle, FaTimesCircle,
   FaClock, FaSearch, FaEye, FaBoxOpen, FaMapMarkerAlt,
-  FaCalendarAlt, FaTimes, FaUser,
+  FaTimes, FaUser,
 } from "react-icons/fa";
+import { useMyClaimsQuery } from "../../redux/api/api"; // Updated import
 
-const API = "/api";
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`,
-  "Content-Type": "application/json",
-});
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
@@ -25,6 +21,7 @@ const STATUS_BADGE: Record<string, string> = {
   APPROVED: "bg-emerald-400/10 text-emerald-400 border-emerald-400/20",
   REJECTED: "bg-red-400/10 text-red-400 border-red-400/20",
 };
+
 const STATUS_ICON: Record<string, React.ReactNode> = {
   PENDING:  <FaClock size={9} />,
   APPROVED: <FaCheckCircle size={9} />,
@@ -32,21 +29,15 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
 };
 
 export default function StudentClaims() {
-  const [claims,       setClaims]       = useState<any[]>([]);
-  const [loading,      setLoading]      = useState(true);
+  // RTK Query Hook replacement
+  const { data, isLoading: loading } = useMyClaimsQuery(undefined);
+  const claims = data?.data?.data ?? data?.data ?? [];
+
   const [search,       setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selected,     setSelected]     = useState<any>(null);
 
-  useEffect(() => {
-    fetch(`${API}/my/claims`, { headers: authHeaders() })
-      .then(r => r.json())
-      .then(d => setClaims(d?.data?.data ?? d?.data ?? []))
-      .catch(() => setClaims([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filtered = claims.filter(c => {
+  const filtered = claims.filter((c: any) => {
     const name = c.foundItem?.foundItemName ?? c.lostItem?.lostItemName ?? "";
     const matchSearch = name.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "ALL" || c.status === statusFilter;
@@ -54,19 +45,12 @@ export default function StudentClaims() {
   });
 
   const total    = claims.length;
-  const pending  = claims.filter(c => c.status === "PENDING").length;
-  const approved = claims.filter(c => c.status === "APPROVED").length;
-  const rejected = claims.filter(c => c.status === "REJECTED").length;
+  const pending  = claims.filter((c: any) => c.status === "PENDING").length;
+  const approved = claims.filter((c: any) => c.status === "APPROVED").length;
+  const rejected = claims.filter((c: any) => c.status === "REJECTED").length;
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
-
-      {/* Header */}
-      <div>
-        <h1 className="text-white font-black text-xl tracking-tight">My Claims</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Track the status of your item claims</p>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
@@ -250,7 +234,6 @@ export default function StudentClaims() {
               </div>
             </div>
             <div className="p-5 space-y-3">
-              {/* Item */}
               <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
                 <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.05]">
                   <FaBoxOpen size={9} className="text-cyan-400" />
@@ -269,7 +252,6 @@ export default function StudentClaims() {
                   </div>
                 </div>
               </div>
-              {/* Proof */}
               <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
                 <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.05]">
                   <FaUser size={9} className="text-emerald-400" />

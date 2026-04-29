@@ -341,19 +341,20 @@ const FoundItemRow = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: a
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          <button onClick={onOpenComments}
-            className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors" title="Comments">
-            <FaComments size={12} />
-          </button>
+          
           {!isClaimed
             ? <button onClick={() => setClaimItem(item)}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg transition-all">
+                className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-[10px] font-bold rounded-lg transition-all">
                 Claim
               </button>
             : <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-lg">Claimed</div>}
+            <button onClick={onOpenComments}
+            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-[10px] font-bold rounded-lg transition-all" title="Comments">
+            Comments
+          </button>
           <Link to={`/foundItems/${item.id}`}
-            className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors">
-            <FaEye size={12} />
+            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-[10px] font-bold rounded-lg transition-all">
+            Details
           </Link>
         </div>
       </div>
