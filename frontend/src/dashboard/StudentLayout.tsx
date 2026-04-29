@@ -75,9 +75,11 @@ const ProfileDropdown = ({
         <div className="relative">
           <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full
             flex items-center justify-center border-2 border-gray-700
-            group-hover:border-blue-400 transition-all shadow-lg text-white font-bold text-sm shrink-0">
-            {initial}
-          </div>
+            group-hover:border-blue-400 transition-all shadow-lg shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-5 h-5 opacity-90">
+                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+            </svg>
+            </div>
           <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500
             border-2 border-gray-900 rounded-full" />
         </div>
@@ -218,27 +220,16 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
       </div>
 
       {/* Student profile pill */}
-      {!collapsed && (
-        <div className="mx-3 mt-3 p-3 rounded-xl bg-blue-500/[0.07] border border-blue-500/15">
-          <div className="flex items-center gap-2.5">
+      {collapsed && (
+        <div className="flex justify-center mt-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500
-              flex items-center justify-center shrink-0">
-              <span className="text-white font-black text-sm">{initial}</span>
+            flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4 opacity-90">
+                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+            </svg>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-white text-xs font-bold truncate leading-none">
-                {user?.name || user?.username || "Student"}
-              </p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <MdVerified size={9} className="text-blue-400 shrink-0" />
-                <p className="text-gray-500 text-[10px] truncate font-mono">
-                  {user?.schoolId ?? "Student"}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
-      )}
+        )}
 
       {/* Collapsed avatar */}
       {collapsed && (

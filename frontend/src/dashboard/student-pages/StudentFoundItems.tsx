@@ -86,10 +86,10 @@ export default function StudentFoundItems() {
             className="w-full pl-10 pr-4 py-2.5 bg-gray-800/80 border border-white/10 rounded-2xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all"
           />
         </div>
-        <div className="inline-flex gap-1 bg-gray-800/40 border border-white/10 rounded-2xl p-1 shrink-0">
+        <div className="flex gap-1 bg-gray-800/40 border border-white/10 rounded-2xl p-1 w-full sm:w-auto">
           {STATUS_TABS.map(({ label, value }) => (
             <button key={value} onClick={() => setStatusFilter(value)}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap focus:outline-none select-none border transition-all ${
+              className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap focus:outline-none select-none border transition-all ${
                 statusFilter === value
                   ? "bg-cyan-500/10 text-cyan-300 border-cyan-500/20"
                   : "border-transparent text-gray-400 hover:text-white"

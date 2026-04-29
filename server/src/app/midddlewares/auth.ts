@@ -22,7 +22,10 @@ const auth = () => {
       // }
 
       next();
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === "TokenExpiredError" || err.name === "JsonWebTokenError" || err.name === "NotBeforeError") {
+        return next(new AppError(StatusCodes.UNAUTHORIZED, "Invalid or expired token"));
+      }
       next(err);
     }
   };

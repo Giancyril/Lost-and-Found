@@ -91,60 +91,79 @@ export default function StudentDashboard() {
     <div className="space-y-6 text-white">
 
         {/* ── Hero / Profile Card ────────────────────────────────────────── */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900/30 via-gray-900 to-gray-900
-          border border-blue-500/15 p-6">
-          {/* decorative blur */}
-          <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gray-900">
+        {/* Top accent bar */}
+        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-400" />
 
-          <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
+        {/* Background decoration */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
+
+        <div className="relative p-5 sm:p-6">
+            <div className="flex items-center gap-4">
             {/* Avatar */}
             <div className="relative shrink-0">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500
-                flex items-center justify-center shadow-xl shadow-blue-900/30">
-                <span className="text-white font-black text-2xl">{initial}</span>
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-gray-900 rounded-full" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-8 h-8 sm:w-9 sm:h-9 opacity-90">
+                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                </svg>
+                </div>
+                {/* Online dot */}
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-gray-900 rounded-full" />
             </div>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-white font-black text-xl tracking-tight">
-                  {user?.name || user?.username || "Student"}
+                <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-white font-black text-lg sm:text-xl tracking-tight truncate">
+                    {user?.name || user?.username || "Student"}
                 </h1>
-                <span className="flex items-center gap-1 text-[10px] text-blue-300 bg-blue-500/10
-                  border border-blue-500/20 px-2 py-0.5 rounded-full font-semibold">
-                  <MdVerified size={10} /> STUDENT
+                <span className="flex items-center gap-1 text-[9px] text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold tracking-wider shrink-0">
+                    <MdVerified size={9} /> STUDENT
                 </span>
-              </div>
-              {user?.schoolId && (
-                <p className="text-gray-400 text-sm mt-0.5 font-mono">{user.schoolId}</p>
-              )}
-              <p className="text-gray-500 text-xs mt-0.5">{user?.email}</p>
+                </div>
+                {user?.schoolId && (
+                <p className="text-gray-400 text-xs sm:text-sm mt-0.5 font-mono">{user.schoolId}</p>
+                )}
+                <p className="text-gray-600 text-[11px] mt-0.5 truncate">{user?.email}</p>
+            </div>
             </div>
 
-            {/* Points pill */}
-            <div className="flex items-center gap-3 bg-gray-800/60 border border-white/[0.06] rounded-xl px-4 py-3 shrink-0">
-              <div className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-500/20
-                flex items-center justify-center">
-                <FaStar size={14} className="text-yellow-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-black text-white leading-none">
-                  {points?.totalPoints ?? 0}
-                </p>
-                <p className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mt-0.5">
-                  Total Points
-                </p>
-              </div>
-              {myRank > 0 && (
-                <div className="ml-2 pl-3 border-l border-white/[0.06]">
-                  <p className="text-xl font-black text-white leading-none">#{myRank}</p>
-                  <p className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mt-0.5">Rank</p>
+            {/* Divider */}
+            <div className="h-px bg-white/[0.05] my-4" />
+
+            {/* Stats row */}
+            <div className="flex items-center gap-3">
+            {/* Points */}
+            <div className="flex-1 flex items-center gap-3 bg-gray-800/50 border border-white/[0.05] rounded-xl px-4 py-3">
+                <div className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
+                <FaStar size={12} className="text-yellow-400" />
                 </div>
-              )}
+                <div>
+                <p className="text-lg sm:text-xl font-black text-white leading-none">
+                    {points?.totalPoints ?? 0}
+                </p>
+                <p className="text-gray-500 text-[9px] font-bold uppercase tracking-widest mt-0.5">
+                    Total Points
+                </p>
+                </div>
             </div>
-          </div>
+
+            {/* Rank */}
+            {myRank > 0 && (
+                <div className="flex-1 flex items-center gap-3 bg-gray-800/50 border border-white/[0.05] rounded-xl px-4 py-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                    <FaTrophy size={12} className="text-blue-400" />
+                </div>
+                <div>
+                    <p className="text-lg sm:text-xl font-black text-white leading-none">#{myRank}</p>
+                    <p className="text-gray-500 text-[9px] font-bold uppercase tracking-widest mt-0.5">
+                    Ranking
+                    </p>
+                </div>
+                </div>
+            )}
+            </div>
+        </div>
         </div>
 
         {/* ── Stats Row ─────────────────────────────────────────────────── */}
