@@ -15,10 +15,7 @@ export const StudentLogin: React.FC = () => {
   const [showPass, setShowPass] = useState(false);
   const [error, setError]       = useState('');
 
-  // ── Use your existing Redux login mutation ─────────────────────────────────
   const [login, { isLoading }] = useLoginMutation();
-
-  // ── Triple-tap logo → navigate to hidden admin login ──────────────────────
   const handleTripleTap = useTripleTap(() => navigate('/admin'));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,15 +24,25 @@ export const StudentLogin: React.FC = () => {
     setError('');
 
     try {
-      // Send schoolId as the "username" field — auth.service loginUser checks
-      // OR username OR email. We add schoolId lookup in auth.service (see backend).
       const result = await login({
-        username: schoolId.trim(), // existing field — intercepted by updated loginUser
+        username: schoolId.trim(),
         password,
-      }).unwrap();
+      }).unwrap() as any;
 
-      setUserLocalStorage(result); // your existing helper
-      navigate('/');
+      console.log('Login result:', result);
+      console.log('Token:', result.token);
+      console.log('Token type:', typeof result.token);
+
+      const token = result.token ?? result.data?.token ?? result.accessToken ?? result.data?.accessToken;
+      console.log('Resolved token:', token);
+
+      if (!token) {
+        setError('Login succeeded but no token received. Please contact support.');
+        return;
+      }
+
+      setUserLocalStorage(token);
+      window.location.href = '/';
     } catch (err: any) {
       setError(err?.data?.message || 'Invalid School ID or password.');
     }
@@ -52,14 +59,12 @@ export const StudentLogin: React.FC = () => {
       >
         <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20
           flex items-center justify-center mx-auto mb-4">
-          {/* Replace with your actual school logo img if available */}
           <FaIdCard size={28} className="text-blue-400" />
         </div>
         <h1 className="text-white font-bold text-xl tracking-tight">NBSC Lost &amp; Found</h1>
         <p className="text-gray-500 text-xs mt-1">Student Access Portal</p>
       </div>
 
-      {/* Just-registered success banner */}
       {justRegistered && (
         <div className="w-full max-w-sm mb-4 bg-emerald-500/5 border border-emerald-500/20
           rounded-2xl px-4 py-3">
@@ -69,20 +74,16 @@ export const StudentLogin: React.FC = () => {
         </div>
       )}
 
-      {/* Card */}
       <div className="w-full max-w-sm bg-gray-900 border border-white/[0.06]
         rounded-2xl overflow-hidden shadow-2xl">
 
-        {/* Card header */}
         <div className="px-5 pt-5 pb-4 border-b border-white/[0.04] bg-white/[0.01]">
           <h2 className="text-sm font-bold text-white">Sign In</h2>
           <p className="text-[11px] text-gray-500 mt-0.5">Use your School ID to continue</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-3">
 
-          {/* School ID field */}
           <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden
             focus-within:border-blue-500/30 transition-colors">
             <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.05]">
@@ -100,7 +101,6 @@ export const StudentLogin: React.FC = () => {
             />
           </div>
 
-          {/* Password field */}
           <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden
             focus-within:border-blue-500/30 transition-colors">
             <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.05]">
@@ -128,14 +128,12 @@ export const StudentLogin: React.FC = () => {
             </div>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="bg-red-500/5 border border-red-500/15 rounded-xl px-3 py-2.5">
               <p className="text-red-300/80 text-xs">{error}</p>
             </div>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={isLoading || !schoolId.trim() || !password.trim()}
@@ -157,7 +155,6 @@ export const StudentLogin: React.FC = () => {
             )}
           </button>
 
-          {/* Register link */}
           <p className="text-center text-[11px] text-gray-600 pt-1">
             Don't have an account?{' '}
             <Link

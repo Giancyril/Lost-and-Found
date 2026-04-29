@@ -17,7 +17,7 @@ export function Navbars() {
   const navigate = useNavigate();
   const users: any = useUserVerification();
   const isAdmin = users?.role === "ADMIN";
-  const isLoggedIn = !!users?.email;
+  const isLoggedIn = !!users?.email || !!users?.id;
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -43,7 +43,7 @@ export function Navbars() {
     clickTimerRef.current = setTimeout(() => { clickCountRef.current = 0; }, 600);
     if (clickCountRef.current >= 3) {
       clickCountRef.current = 0;
-      navigate('/admin'); // ← navigates to hidden admin Login.tsx
+      navigate('/admin');
     }
   };
 
@@ -182,7 +182,7 @@ export function Navbars() {
             </div>
           )}
 
-          {/* ── Logged in as Student → show avatar + sign out ── */}
+          {/* ── Logged in as Student → show avatar + dropdown ── */}
           {isLoggedIn && !isAdmin && (
             <div ref={profileRef} className="relative">
               <button
@@ -197,11 +197,33 @@ export function Navbars() {
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 top-12 w-48 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
-                  <div className="px-4 py-3 bg-gray-800/50 border-b border-gray-700">
-                    <p className="text-white font-semibold text-sm truncate">{users?.name || users?.username}</p>
-                    <p className="text-gray-400 text-xs">Student</p>
+                <div className="absolute right-0 top-12 w-52 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                  {/* Student info header */}
+                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-gray-700">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center shrink-0">
+                      <span className="text-white font-bold text-xs">{initial}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-semibold text-sm truncate">{users?.name || users?.username}</p>
+                      <p className="text-gray-400 text-xs">
+                        {users?.schoolId ?? "Student"}
+                      </p>
+                    </div>
                   </div>
+
+                  {/* Dashboard link */}
+                  <div className="py-1">
+                    <Link
+                      to="/dashboard/student"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors text-sm"
+                    >
+                      <FaTachometerAlt size={13} className="text-blue-400 shrink-0" />
+                      My Dashboard
+                    </Link>
+                  </div>
+
+                  {/* Sign out */}
                   <div className="border-t border-gray-700 py-1">
                     <button type="button" onClick={handleSignOut}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-colors text-sm">
@@ -232,6 +254,16 @@ export function Navbars() {
                 {label}
               </NavbarLink>
             ))}
+
+            {/* Student dashboard link — mobile only */}
+            {isLoggedIn && !isAdmin && (
+              <NavbarLink
+                href="/dashboard/student"
+                className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm md:hidden"
+              >
+                My Dashboard
+              </NavbarLink>
+            )}
 
             {/* Mobile-only Register link */}
             {!isLoggedIn && (

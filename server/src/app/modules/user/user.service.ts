@@ -3,15 +3,23 @@ import { utils } from "../../utils/utils";
 import AppError from "../../global/error";
 import prisma from "../../config/prisma";
 
-const registerUser = async (user: User) => {
+const registerUser = async (user: any) => {
+  // Build the identifier fields from either schoolId or username/email
+  const username = user.username || user.schoolId;
+  const email    = user.email    || `${user.schoolId}@student.nbsc.edu.ph`;
+
   const existedUser = await prisma.user.findFirst({
     where: {
-      OR: [{ username: user.username }, { email: user.email }],
+      OR: [
+        { username },
+        { email },
+        ...(user.schoolId ? [{ schoolId: user.schoolId }] : []),
+      ],
     },
   });
 
   if (existedUser) {
-    throw new AppError(400, "Same Username and email exists");
+    throw new AppError(406, "Username, email, or School ID already exists");
   }
 
   const hashedPassword = await utils.passwordHash(user.password);
@@ -19,23 +27,26 @@ const registerUser = async (user: User) => {
   const result = await prisma.$transaction(async (transactions) => {
     const createdUser = await transactions.user.create({
       data: {
-        username: user.username,
-        email: user.email,
-        password: hashedPassword,
-        userImg: user.userImg,
+        username,
+        email,
+        password:   hashedPassword,
+        userImg:    user.userImg  || "",
+        name:       user.name     || "",
+        schoolId:   user.schoolId || null,   // ← NEW
       },
     });
 
-    const returnData = {
-      id: createdUser.id,
-      userImg: createdUser.userImg,
-      username: createdUser.username,
-      email: createdUser.email,
+    return {
+      id:        createdUser.id,
+      userImg:   createdUser.userImg,
+      username:  createdUser.username,
+      email:     createdUser.email,
+      schoolId:  createdUser.schoolId,
       createdAt: createdUser.createdAt,
       updatedAt: createdUser.updatedAt,
     };
-    return returnData;
   });
+
   return result;
 };
 

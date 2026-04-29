@@ -32,6 +32,13 @@ import ReportPage from "./dashboard/pages/ReportPage.tsx";
 import BulletinBoard from "./pages/bulletin/BulletinBoard.tsx";
 import PortalDisplay from "./pages/portal/PortalDisplay.tsx";
 import AboutUs from "./components/aboutUs/aboutUs.tsx";
+import StudentLayout from "./dashboard/StudentLayout.tsx";
+import StudentDashboard from "./dashboard/StudentDashboard.tsx";
+import StudentFoundItems from "./dashboard/student-pages/StudentFoundItems.tsx";
+import StudentLostItems from "./dashboard/student-pages/StudentLostItems.tsx";
+import StudentClaims from "./dashboard/student-pages/StudentClaims.tsx";
+import StudentLeaderboard from "./dashboard/student-pages/StudentLeaderboard.tsx";
+import StudentSettings from "./dashboard/student-pages/StudentSettings.tsx";
 
 const router = createBrowserRouter([
   {
@@ -60,7 +67,7 @@ const router = createBrowserRouter([
     element: <Providers><PortalDisplay /></Providers>,
   },
 
-  // ── Dashboard routes ──────────────────────────────────────────────────────
+  // ── Admin Dashboard routes ────────────────────────────────────────────────
   { path: "/dashboard",                  element: <DashboardLayout><Dashboard /></DashboardLayout> },
   { path: "/dashboard/found-items",      element: <DashboardLayout><FoundItemsManagement /></DashboardLayout> },
   { path: "/dashboard/lost-items",       element: <DashboardLayout><LostItemsManagement /></DashboardLayout> },
@@ -74,6 +81,14 @@ const router = createBrowserRouter([
   { path: "/dashboard/archive",          element: <DashboardLayout><ArchievePage /></DashboardLayout> },
   { path: "/dashboard/myFoundItems",     element: <DashboardLayout><MyFoundItems /></DashboardLayout> },
   { path: "/dashboard/myLostItems",      element: <DashboardLayout><MyLostItems /></DashboardLayout> },
+
+  // ── Student Dashboard routes ──────────────────────────────────────────────
+  { path: "/dashboard/student",                element: <StudentLayout><StudentDashboard /></StudentLayout> },
+  { path: "/dashboard/student/found-items",    element: <StudentLayout><StudentFoundItems /></StudentLayout> },
+  { path: "/dashboard/student/lost-items",     element: <StudentLayout><StudentLostItems /></StudentLayout> },
+  { path: "/dashboard/student/claims",         element: <StudentLayout><StudentClaims /></StudentLayout> },
+  { path: "/dashboard/student/leaderboard",    element: <StudentLayout><StudentLeaderboard /></StudentLayout> },
+  { path: "/dashboard/student/settings",       element: <StudentLayout><StudentSettings /></StudentLayout> },
 ]);
 
 createRoot(document.getElementById("root")!).render(

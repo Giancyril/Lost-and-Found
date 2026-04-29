@@ -6,11 +6,8 @@ export const setUserLocalStorage = (token: string, navigate?: (path: string) => 
   if (typeof window !== "undefined" && window.localStorage) {
     if (token == null || token == undefined) {
       localStorage.removeItem("accessToken");
-      if (navigate) {
-        navigate("/");
-      } else {
-        window.location.href = "/";
-      }
+      if (navigate) navigate("/");
+      else window.location.href = "/";
     } else {
       localStorage.setItem("accessToken", token);
     }
@@ -19,19 +16,16 @@ export const setUserLocalStorage = (token: string, navigate?: (path: string) => 
 
 export const getUserLocalStorage = () => {
   if (typeof window !== "undefined" && window.localStorage) {
-    const token = localStorage.getItem("accessToken");
-    return token;
+    return localStorage.getItem("accessToken");
   }
   return null;
 };
+
 export const removeUserLocalStorage = (navigate?: (path: string) => void) => {
   if (typeof window !== "undefined" && window.localStorage) {
     localStorage.removeItem("accessToken");
-    if (navigate) {
-      navigate("/login");
-    } else {
-      window.location.href = "/login";
-    }
+    if (navigate) navigate("/login");
+    else window.location.href = "/login";
   }
 };
 
@@ -44,13 +38,23 @@ export const useUserVerification = () => {
   const [user, setUser] = useState({});
 
   useEffect(() => {
-    const token = getUserLocalStorage();
-    if (token) {
-      const verifiedUser = verifyToken(token);
-      if (verifiedUser) {
-        setUser(verifiedUser);
+    const readToken = () => {
+      const token = getUserLocalStorage();
+      if (token) {
+        try {
+          const verifiedUser = verifyToken(token);
+          if (verifiedUser) setUser(verifiedUser);
+        } catch {
+          setUser({});
+        }
+      } else {
+        setUser({});
       }
-    }
+    };
+
+    readToken(); // run on mount
+    window.addEventListener('authchange', readToken);
+    return () => window.removeEventListener('authchange', readToken);
   }, []);
 
   return user;
@@ -59,17 +63,8 @@ export const useUserVerification = () => {
 export const signOut = (navigate?: (path: string) => void) => {
   if (typeof window !== "undefined" && window.localStorage) {
     localStorage.removeItem("accessToken");
-    if (navigate) {
-      navigate("/");
-    } else {
-      window.location.href = "/";
-    }
+    window.dispatchEvent(new Event('authchange')); // ← was 'storage'
+    if (navigate) navigate("/");
+    else window.location.href = "/";
   }
 };
-
-// const router = useRouter()
-//   const user: any  = useUserVerification();
-//   console.log(user.role);
-//   if(user?.role=="USER"){
-//    removeUserLocalStorage()
-//   }

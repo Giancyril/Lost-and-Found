@@ -30,7 +30,9 @@ const parseGvizResponse = (data: string) => {
 
 const fetchMasterlist = async () => {
   try {
+    console.log("[Student] Fetching masterlist from:", GVIZ_URL);
     const response = await fetch(GVIZ_URL);
+    console.log("[Student] Sheet response status:", response.status);
     if (!response.ok) {
       throw new AppError(
         StatusCodes.SERVICE_UNAVAILABLE,
@@ -38,8 +40,10 @@ const fetchMasterlist = async () => {
       );
     }
     const text = await response.text();
+    console.log("[Student] Raw response preview:", text.substring(0, 200));
     return parseGvizResponse(text);
   } catch (error: any) {
+    console.error("[Student] fetchMasterlist error:", error.message);
     if (error instanceof AppError) throw error;
     throw new AppError(
       StatusCodes.INTERNAL_SERVER_ERROR,
