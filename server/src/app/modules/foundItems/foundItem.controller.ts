@@ -9,6 +9,7 @@ import sharp from "sharp";
 import { sendEmail } from "../../utils/mailer";
 import { lostItemReportedTemplate } from "../../utils/emailTemplates";
 import { logToSheet } from "../sheets/sheets.service";
+import { pointsService } from "../points/points.service"; // ← NEW
 
 const createFoundItem = async (req: Request, res: Response) => {
   try {
@@ -16,11 +17,24 @@ const createFoundItem = async (req: Request, res: Response) => {
     const result = await foundItemService.createFoundItem(req.body, userId);
 
     if (result?.id) {
+      // ── Award points to the reporter ────────────────────────────────────────
+      // Fire-and-forget: never blocks the response if points fail
+      if (userId) {
+        await pointsService
+          .award(userId, "FOUND_ITEM_REPORTED", result.id)
+          .catch((err) =>
+            console.error("[Points] Failed to award points for found item:", err)
+          );
+      }
+
       // Log to Google Sheets
       try {
         const reportTimestamp = new Date().toISOString();
-        const studentId = req.body.studentId || 
-          (req.body.schoolEmail ? req.body.schoolEmail.split("@")[0] : "N/A");
+        const studentId =
+          req.body.studentId ||
+          (req.body.schoolEmail
+            ? req.body.schoolEmail.split("@")[0]
+            : "N/A");
 
         await logToSheet({
           sheetName: "Found Items",
@@ -34,18 +48,26 @@ const createFoundItem = async (req: Request, res: Response) => {
           date: req.body.date,
           type: "FOUND",
           reportId: result.id.toString(),
-          scannedAt: reportTimestamp
+          scannedAt: reportTimestamp,
         });
-        console.log("[Sheets] Found item logged to Google Sheets:", result.id);
+        console.log(
+          "[Sheets] Found item logged to Google Sheets:",
+          result.id
+        );
       } catch (sheetsError) {
-        console.error("[Sheets] Failed to log found item to Google Sheets:", sheetsError);
+        console.error(
+          "[Sheets] Failed to log found item to Google Sheets:",
+          sheetsError
+        );
       }
 
       // Send confirmation email to the reporter
       try {
-        const fromName = process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
-        const fromEmail = process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
-        
+        const fromName =
+          process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
+        const fromEmail =
+          process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
+
         const template = lostItemReportedTemplate({
           reporterName: req.body.reporterName || "Unknown",
           itemName: req.body.foundItemName,
@@ -61,10 +83,16 @@ const createFoundItem = async (req: Request, res: Response) => {
           subject: template.subject,
           html: template.html,
         });
-        
-        console.log("[Email] Found item confirmation sent to:", req.body.schoolEmail);
+
+        console.log(
+          "[Email] Found item confirmation sent to:",
+          req.body.schoolEmail
+        );
       } catch (emailError) {
-        console.error("[Email] Failed to send found item confirmation:", emailError);
+        console.error(
+          "[Email] Failed to send found item confirmation:",
+          emailError
+        );
       }
 
       matchService.findMatchesForFoundItem(result).catch((err) =>
@@ -90,9 +118,8 @@ const createFoundItem = async (req: Request, res: Response) => {
 
 const getFoundItem = async (req: Request, res: Response) => {
   try {
-    // ── EGRESS FIX: cache public list for 60 seconds ──────────────────────────
     res.set("Cache-Control", "public, max-age=60");
-    const meta = await utils.calculateMeta({ ...req.query, itemType: 'found' });
+    const meta = await utils.calculateMeta({ ...req.query, itemType: "found" });
     const result = await foundItemService.getFoundItem(req.query);
     sendResponse(res, {
       statusCode: StatusCodes.OK,
@@ -283,30 +310,27 @@ const uploadFoundItemImages = async (req: Request, res: Response) => {
       });
     }
 
-    // Upload each image to storage
     const uploadedUrls = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
-      // Compress image using sharp
+
       let compressedBuffer = file.buffer;
       try {
         compressedBuffer = await sharp(file.buffer)
-          .resize(1200, 1200, { 
-            fit: 'inside',
-            withoutEnlargement: true 
+          .resize(1200, 1200, {
+            fit: "inside",
+            withoutEnlargement: true,
           })
-          .jpeg({ 
+          .jpeg({
             quality: 80,
-            progressive: true 
+            progressive: true,
           })
           .toBuffer();
       } catch (error) {
         console.error("Image compression error:", error);
-        // Fall back to original buffer if compression fails
         compressedBuffer = file.buffer;
       }
-      
+
       const url = await uploadFileToStorage(
         compressedBuffer,
         file.mimetype,
@@ -316,7 +340,6 @@ const uploadFoundItemImages = async (req: Request, res: Response) => {
       uploadedUrls.push(url);
     }
 
-    // Update the found item with the primary image URL
     const primaryImageUrl = uploadedUrls[parseInt(primaryIndex) || 0];
     await foundItemService.updateFoundItemImage(id, primaryImageUrl);
 

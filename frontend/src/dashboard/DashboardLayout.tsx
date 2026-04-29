@@ -29,34 +29,34 @@ interface Notification {
 }
 
 const menuItems = [
-  { title: "Overview",    icon: FaTachometerAlt,       path: "/dashboard",               exact: true },
+  { title: "Overview", icon: FaTachometerAlt, path: "/dashboard", exact: true },
   // Item Management
-  { title: "Lost Items",  icon: FaExclamationTriangle, path: "/dashboard/lost-items"                },
-  { title: "Found Items", icon: FaSearch,              path: "/dashboard/found-items"               },
-  { title: "Claims",      icon: FaClipboardList,       path: "/dashboard/claims"                    },
-  { title: "Archive Log", icon: FaArchive,             path: "/dashboard/archive"                   },
+  { title: "Lost Items", icon: FaExclamationTriangle, path: "/dashboard/lost-items" },
+  { title: "Found Items", icon: FaSearch, path: "/dashboard/found-items" },
+  { title: "Claims", icon: FaClipboardList, path: "/dashboard/claims" },
+  { title: "Archive Log", icon: FaArchive, path: "/dashboard/archive" },
   // Insights
-  { title: "Analytics",      icon: FaChartLine,           path: "/dashboard/analytics"                 },
-  { title: "Heatmap",        icon: FaMapMarkedAlt,        path: "/dashboard/heatmap"                   },
-  { title: "Report",         icon: FaFileAlt,             path: "/dashboard/report"                    },
+  { title: "Analytics", icon: FaChartLine, path: "/dashboard/analytics" },
+  { title: "Heatmap", icon: FaMapMarkedAlt, path: "/dashboard/heatmap" },
+  { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
   // Administration
-  { title: "Users",       icon: FaUsers,               path: "/dashboard/users"                     },
-  { title: "Categories",  icon: FaBoxOpen,             path: "/dashboard/categories"                },
-  { title: "Settings",    icon: FaCog,                 path: "/dashboard/settings"                  },
+  { title: "Users", icon: FaUsers, path: "/dashboard/users" },
+  { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
+  { title: "Settings", icon: FaCog, path: "/dashboard/settings" },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
-  "/dashboard":             { title: "Overview",    subtitle: "Welcome back! Here's an overview of today's activity."        },
-  "/dashboard/lost-items":  { title: "Lost Items",  subtitle: "Track and manage items reported as lost on campus."           },
-  "/dashboard/found-items": { title: "Found Items", subtitle: "Review and manage all recovered items awaiting claim."        },
-  "/dashboard/claims":      { title: "Claims",      subtitle: "Review, verify and process submitted ownership claims."       },
-  "/dashboard/archive":     { title: "Archive Log", subtitle: "Browse archived items and restore or permanently remove them." },
-  "/dashboard/analytics":      { title: "Analytics",      subtitle: "Monthly trends, category breakdown and top reporters."       },
-  "/dashboard/heatmap":        { title: "Heatmap",        subtitle: "Visualize where items are most commonly lost or found."       },
-  "/dashboard/report":      { title: "Report",      subtitle: "Generate and export weekly or monthly summary reports."       },
-  "/dashboard/users":       { title: "Users",       subtitle: "View and manage all registered system users."                },
-  "/dashboard/categories":  { title: "Categories",  subtitle: "Create and organize item categories for better sorting."     },
-  "/dashboard/settings":    { title: "Settings",    subtitle: "Configure system preferences and account settings."          },
+  "/dashboard": { title: "Overview", subtitle: "Welcome back! Here's an overview of today's activity." },
+  "/dashboard/lost-items": { title: "Lost Items", subtitle: "Track and manage items reported as lost on campus." },
+  "/dashboard/found-items": { title: "Found Items", subtitle: "Review and manage all recovered items awaiting claim." },
+  "/dashboard/claims": { title: "Claims", subtitle: "Review, verify and process submitted ownership claims." },
+  "/dashboard/archive": { title: "Archive Log", subtitle: "Browse archived items and restore or permanently remove them." },
+  "/dashboard/analytics": { title: "Analytics", subtitle: "Monthly trends, category breakdown and top reporters." },
+  "/dashboard/heatmap": { title: "Heatmap", subtitle: "Visualize where items are most commonly lost or found." },
+  "/dashboard/report": { title: "Report", subtitle: "Generate and export weekly or monthly summary reports." },
+  "/dashboard/users": { title: "Users", subtitle: "View and manage all registered system users." },
+  "/dashboard/categories": { title: "Categories", subtitle: "Create and organize item categories for better sorting." },
+  "/dashboard/settings": { title: "Settings", subtitle: "Configure system preferences and account settings." },
 };
 
 const timeAgo = (dateStr: string) => {
@@ -72,10 +72,10 @@ const timeAgo = (dateStr: string) => {
 const notifIcon = (type: Notification["type"]) => {
   const base = "w-8 h-8 rounded-full flex items-center justify-center shrink-0";
   switch (type) {
-    case "claim":        return <div className={`${base} bg-yellow-400/10 border border-yellow-400/20`}><FaClipboardList  size={12} className="text-yellow-400" /></div>;
+    case "claim": return <div className={`${base} bg-yellow-400/10 border border-yellow-400/20`}><FaClipboardList size={12} className="text-yellow-400" /></div>;
     case "claim_status": return <div className={`${base} bg-emerald-400/10 border border-emerald-400/20`}><FaCheckCircle size={12} className="text-emerald-400" /></div>;
-    case "found":        return <div className={`${base} bg-cyan-400/10 border border-cyan-400/20`}><FaSearch             size={12} className="text-cyan-400"    /></div>;
-    case "lost":         return <div className={`${base} bg-red-400/10 border border-red-400/20`}><FaExclamationTriangle  size={12} className="text-red-400"     /></div>;
+    case "found": return <div className={`${base} bg-cyan-400/10 border border-cyan-400/20`}><FaSearch size={12} className="text-cyan-400" /></div>;
+    case "lost": return <div className={`${base} bg-red-400/10 border border-red-400/20`}><FaExclamationTriangle size={12} className="text-red-400" /></div>;
   }
 };
 
@@ -96,17 +96,17 @@ const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>(() => {
     try { const saved = localStorage.getItem("admin_notifications"); return saved ? JSON.parse(saved) : []; } catch { return []; }
   });
-  const location      = useLocation();
-  const bellRef       = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const bellRef = useRef<HTMLDivElement>(null);
   const latestClaimTs = useRef<string | null>(getSavedLatestTs("claims"));
   const latestFoundTs = useRef<string | null>(getSavedLatestTs("found"));
-  const latestLostTs  = useRef<string | null>(getSavedLatestTs("lost"));
-  const initialized   = useRef({ claims: getSavedLatestTs("claims") !== null, found: getSavedLatestTs("found") !== null, lost: getSavedLatestTs("lost") !== null });
-  const pollOpts      = { pollingInterval: 8000, refetchOnFocus: true, refetchOnReconnect: true };
+  const latestLostTs = useRef<string | null>(getSavedLatestTs("lost"));
+  const initialized = useRef({ claims: getSavedLatestTs("claims") !== null, found: getSavedLatestTs("found") !== null, lost: getSavedLatestTs("lost") !== null });
+  const pollOpts = { pollingInterval: 8000, refetchOnFocus: true, refetchOnReconnect: true };
 
   const { data: claimsData } = useGetAllClaimsQuery(undefined, pollOpts);
-  const { data: foundData }  = useGetFoundItemsQuery({},        pollOpts);
-  const { data: lostData }   = useGetLostItemsQuery({},         pollOpts);
+  const { data: foundData } = useGetFoundItemsQuery({}, pollOpts);
+  const { data: lostData } = useGetLostItemsQuery({}, pollOpts);
 
   // Close on route change
   useEffect(() => { setOpen(false); }, [location.pathname]);
@@ -141,12 +141,12 @@ const NotificationBell = () => {
   useEffect(() => { processItems(claimsData, latestClaimTs, "claims", (claim: any): Notification => ({ id: `claim-${claim.id}`, type: "claim", title: "New Claim Submitted", subtitle: `${claim.claimantName || "Someone"} claimed "${claim.foundItem?.foundItemName || "an item"}"`, time: claim.createdAt, read: false, link: "/dashboard/claims" })); }, [claimsData]);
   useEffect(() => { processItems(foundData, latestFoundTs, "found", (item: any): Notification => ({ id: `found-${item.id}`, type: "found", title: "New Found Item Reported", subtitle: `"${item.foundItemName || "Unknown item"}" found at ${item.location || "unknown location"}`, time: item.createdAt, read: false, link: "/dashboard/found-items" })); }, [foundData]);
   useEffect(() => { processItems(lostData, latestLostTs, "lost", (item: any): Notification => ({ id: `lost-${item.id}`, type: "lost", title: "New Lost Item Reported", subtitle: `"${item.lostItemName || "Unknown item"}" lost at ${item.location || "unknown location"}`, time: item.createdAt, read: false, link: "/dashboard/lost-items" })); }, [lostData]);
-  useEffect(() => { try { localStorage.setItem("admin_notifications", JSON.stringify(notifications)); } catch {} }, [notifications]);
+  useEffect(() => { try { localStorage.setItem("admin_notifications", JSON.stringify(notifications)); } catch { } }, [notifications]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
-  const markAllRead = () => { const u = notifications.map(n => ({ ...n, read: true })); setNotifications(u); try { localStorage.setItem("admin_notifications", JSON.stringify(u)); } catch {} };
+  const markAllRead = () => { const u = notifications.map(n => ({ ...n, read: true })); setNotifications(u); try { localStorage.setItem("admin_notifications", JSON.stringify(u)); } catch { } };
   const markOneRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  const clearAll = () => { setNotifications([]); latestClaimTs.current = null; latestFoundTs.current = null; latestLostTs.current = null; initialized.current = { claims: false, found: false, lost: false }; try { localStorage.removeItem("admin_notifications"); } catch {} };
+  const clearAll = () => { setNotifications([]); latestClaimTs.current = null; latestFoundTs.current = null; latestLostTs.current = null; initialized.current = { claims: false, found: false, lost: false }; try { localStorage.removeItem("admin_notifications"); } catch { } };
 
   return (
     <div ref={bellRef} className="relative">
@@ -281,7 +281,7 @@ const ProfileDropdown = ({ initials, user, handleSignOut }: { initials: string; 
 
 // ─── Main Layout ──────────────────────────────────────────────────────────────
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen]           = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
 
@@ -368,13 +368,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
           {menuItems.map((item, idx) => {
             const active = isActive(item.path, item.exact);
-            const Icon   = item.icon;
+            const Icon = item.icon;
 
             // Section dividers
             const showDivider =
               (!sidebarCollapsed && idx === 1) ? "Item Management" :
-              (!sidebarCollapsed && idx === 5) ? "Insights" :
-              (!sidebarCollapsed && idx === 8) ? "Administration" : null;
+                (!sidebarCollapsed && idx === 5) ? "Insights" :
+                  (!sidebarCollapsed && idx === 8) ? "Administration" : null;
 
             return (
               <div key={item.path}>

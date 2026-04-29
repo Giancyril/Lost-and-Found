@@ -307,6 +307,25 @@ const api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['comments'],
     }),
+
+    // ── Points ────────────────────────────────────────────────────────────────────
+    getMyPoints: builder.query({
+      query: () => ({ url: '/points/my', method: 'GET' }),
+      providesTags: ['points'],
+    }),
+    getLeaderboard: builder.query({
+      query: () => ({ url: '/points/leaderboard', method: 'GET' }),
+      providesTags: ['points'],
+    }),
+
+    // ── Student registration validation (new endpoint) ────────────────────────────
+      validateRegistration: builder.query({
+        query: (schoolId: string) => ({
+          url: `/students/validate-registration`,
+          method: 'GET',
+          params: { schoolId },
+        }),
+      }),
   }),
 });
 
@@ -378,5 +397,9 @@ export const {
   useGetCommentsQuery,
   useCreateCommentMutation,
   useVoteHelpfulMutation,
-  useDeleteCommentMutation
+  useDeleteCommentMutation,
+  useLazyValidateRegistrationQuery,
+  useValidateRegistrationQuery,
+  useGetMyPointsQuery,
+  useGetLeaderboardQuery
 } = api;

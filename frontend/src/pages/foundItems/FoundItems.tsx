@@ -568,7 +568,7 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
                   value={lostDate}
                   onChange={setLostDate}
                   max={new Date().toISOString().split("T")[0]}
-                  placeholder="Select date lost"
+                  placeholder=""
                   openUp
                 />
                 {!lostDate && <p className="text-red-400 text-xs mt-1">Please select the date</p>}

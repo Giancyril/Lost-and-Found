@@ -17,6 +17,7 @@ export function Navbars() {
   const navigate = useNavigate();
   const users: any = useUserVerification();
   const isAdmin = users?.role === "ADMIN";
+  const isLoggedIn = !!users?.email;
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -31,27 +32,23 @@ export function Navbars() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const [loginVisible, setLoginVisible] = useState(false);
+  // ── Triple-click on brand → navigate to hidden admin login ────────────────
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hideTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleBrandClick = () => {
-    if (users?.email) return;
+    if (isLoggedIn) return;
     clickCountRef.current += 1;
     if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-    clickTimerRef.current = setTimeout(() => { clickCountRef.current = 0; }, 2000);
+    clickTimerRef.current = setTimeout(() => { clickCountRef.current = 0; }, 600);
     if (clickCountRef.current >= 3) {
       clickCountRef.current = 0;
-      setLoginVisible(true);
-      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-      hideTimerRef.current = setTimeout(() => setLoginVisible(false), 8000);
+      navigate('/admin'); // ← navigates to hidden admin Login.tsx
     }
   };
 
   useEffect(() => () => {
     if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-    if (hideTimerRef.current)  clearTimeout(hideTimerRef.current);
   }, []);
 
   const handleSignOut = () => {
@@ -70,8 +67,11 @@ export function Navbars() {
     <>
       <Navbar fluid className="sticky top-0 z-50 bg-gray-950/95 backdrop-blur-md border-b border-gray-800 shadow-2xl">
 
-        {/* Brand */}
-        <NavbarBrand href="/" onClick={(e) => { if (!users?.email) { e.preventDefault(); handleBrandClick(); } }}>
+        {/* Brand — triple-click to reveal admin login */}
+        <NavbarBrand
+          href="/"
+          onClick={(e) => { if (!isLoggedIn) { e.preventDefault(); handleBrandClick(); } }}
+        >
           <div className="flex items-center space-x-2.5 select-none">
             <img
               src="/sas lost and found logo.png"
@@ -90,11 +90,32 @@ export function Navbars() {
         <div className="flex md:order-2 items-center gap-2">
           <NotificationBell />
 
-          
+          {/* ── Not logged in → show Register + Login buttons ── */}
+          {!isLoggedIn && (
+            <div className="flex items-center gap-2">
+              <Link
+                to="/register"
+                className="hidden sm:flex items-center px-3 py-1.5 rounded-lg
+                  text-xs font-semibold text-gray-300 border border-white/[0.08]
+                  bg-white/[0.04] hover:bg-white/[0.08] transition-colors"
+              >
+                Register
+              </Link>
+              <Link
+                to="/login"
+                className="flex items-center px-3 py-1.5 rounded-lg
+                  text-xs font-semibold text-white
+                  bg-blue-600 hover:bg-blue-500 border border-blue-500/50
+                  transition-colors"
+              >
+                Login
+              </Link>
+            </div>
+          )}
 
-          {users?.email && isAdmin ? (
+          {/* ── Logged in as Admin → show profile dropdown ── */}
+          {isLoggedIn && isAdmin && (
             <div ref={profileRef} className="relative">
-              {/* Trigger button */}
               <button
                 type="button"
                 onClick={() => setProfileOpen(prev => !prev)}
@@ -118,7 +139,6 @@ export function Navbars() {
                 <FaChevronDown size={10} className={`text-gray-500 hidden sm:block transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`} />
               </button>
 
-              {/* Dropdown panel */}
               {profileOpen && (
                 <div className="absolute right-0 top-12 w-52 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-gray-700">
@@ -136,14 +156,10 @@ export function Navbars() {
                       className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors text-sm">
                       <FaTachometerAlt size={13} className="text-blue-400 shrink-0" />
                       Admin Dashboard
-                    </Link>                  
-                    <a
-                      href="/portal"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    </Link>
+                    <a href="/portal" target="_blank" rel="noopener noreferrer"
                       onClick={() => setProfileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors text-sm"
-                    >
+                      className="flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors text-sm">
                       <FaTv size={13} className="text-blue-400 shrink-0" />
                       Display Portal
                     </a>
@@ -164,14 +180,39 @@ export function Navbars() {
                 </div>
               )}
             </div>
+          )}
 
-          ) : loginVisible ? (
-            <Link to="/login"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-all duration-200 animate-pulse"
-              onClick={() => setLoginVisible(false)}>
-              Login
-            </Link>
-          ) : null}
+          {/* ── Logged in as Student → show avatar + sign out ── */}
+          {isLoggedIn && !isAdmin && (
+            <div ref={profileRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setProfileOpen(prev => !prev)}
+                className="flex items-center gap-2 cursor-pointer group focus:outline-none"
+              >
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center border-2 border-gray-700 group-hover:border-blue-400 transition-all duration-200">
+                  <span className="text-white font-bold text-sm">{initial}</span>
+                </div>
+                <FaChevronDown size={10} className={`text-gray-500 hidden sm:block transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {profileOpen && (
+                <div className="absolute right-0 top-12 w-48 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                  <div className="px-4 py-3 bg-gray-800/50 border-b border-gray-700">
+                    <p className="text-white font-semibold text-sm truncate">{users?.name || users?.username}</p>
+                    <p className="text-gray-400 text-xs">Student</p>
+                  </div>
+                  <div className="border-t border-gray-700 py-1">
+                    <button type="button" onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-colors text-sm">
+                      <FaSignOutAlt size={13} className="text-red-400 shrink-0" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <NavbarToggle />
         </div>
@@ -191,6 +232,14 @@ export function Navbars() {
                 {label}
               </NavbarLink>
             ))}
+
+            {/* Mobile-only Register link */}
+            {!isLoggedIn && (
+              <NavbarLink href="/register"
+                className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm sm:hidden">
+                Register
+              </NavbarLink>
+            )}
           </div>
         </NavbarCollapse>
       </Navbar>

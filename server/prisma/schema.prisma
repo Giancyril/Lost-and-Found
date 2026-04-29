@@ -21,11 +21,14 @@ model User {
   userImg       String          @default("")
   isDeleted     Boolean         @default(false)
   deletedAt     DateTime?
+  schoolId      String?         @unique    // ← NEW
+  totalPoints   Int             @default(0) // ← NEW
   ClaimAuditLog ClaimAuditLog[]
   claim         Claim[]
   foundItem     FoundItem[]
   LostItem      LostItem[]
   Comment       Comment[]
+  points        Points[]                   // ← NEW
 
   @@map("users")
 }
@@ -172,7 +175,7 @@ model MatchNotification {
 
 model Comment {
   id              String        @id @default(uuid())
-  itemId          String        // ← plain string, no FK constraint
+  itemId          String
   itemType        ItemType
   userId          String?
   content         String
@@ -189,11 +192,20 @@ model Comment {
   replies Comment[] @relation("CommentReplies")
   user    User?     @relation(fields: [userId], references: [id])
 
-  // ❌ Remove these two relations:
-  // foundItem FoundItem? @relation(...)
-  // lostItem  LostItem?  @relation(...)
-
   @@map("comments")
+}
+
+// ← NEW
+model Points {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Int
+  reason    String
+  refId     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("points")
 }
 
 enum status {

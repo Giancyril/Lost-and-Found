@@ -25,6 +25,7 @@ import { studentRoutes } from "../modules/student/student.routes";
 import sheetsRoutes from "../modules/sheets/sheets.routes";
 import { uploadImages } from "../midddlewares/upload";
 import { commentsRouter } from "../comments/commentsRouter";
+import { pointsController } from "../modules/points/points.controller"; 
 
 const router = express.Router();
 
@@ -107,5 +108,8 @@ router.put("/bulletin-posts/:id/resolve",        auth(),               bulletinP
 router.use("/students", studentRoutes);
 router.use("/sheets", sheetsRoutes);
 router.use("/", commentsRouter);
+
+router.get("/points/my",          auth(), pointsController.getMyPoints);
+router.get("/points/leaderboard",         pointsController.getLeaderboard);
 
 export default router;

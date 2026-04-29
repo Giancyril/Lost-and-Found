@@ -64,7 +64,48 @@ const upsertStudent = async (req: Request, res: Response) => {
   }
 };
 
-// ── Debug endpoint — remove after fixing ─────────────────────────────────────
+// ── NEW: Registration validation ──────────────────────────────────────────────
+// GET /api/students/validate-registration?schoolId=2021-00123
+// Used by StudentRegister.tsx Step 1 to check masterlist + duplicate accounts.
+const validateRegistration = async (req: Request, res: Response) => {
+  try {
+    const { schoolId } = req.query as { schoolId?: string };
+    if (!schoolId?.trim()) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.BAD_REQUEST,
+        success: false,
+        message: "schoolId query param is required",
+        data: null,
+      });
+    }
+
+    const result = await studentService.validateForRegistration(schoolId.trim());
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Student is eligible for registration",
+      data: { alreadyRegistered: false, ...result },
+    });
+  } catch (err: any) {
+    // CONFLICT means already registered — still 200 so frontend can show the right message
+    if (err.statusCode === StatusCodes.CONFLICT) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: err.message,
+        data: { alreadyRegistered: true },
+      });
+    }
+    sendResponse(res, {
+      statusCode: err.statusCode ?? 400,
+      success: false,
+      message: err.message,
+      data: null,
+    });
+  }
+};
+
+// ── Debug endpoint — remove after confirming sheet columns ───────────────────
 const debugMasterlist = async (req: Request, res: Response) => {
   try {
     const response = await fetch(GVIZ_URL);
@@ -90,5 +131,6 @@ export const studentController = {
   getStudentById,
   getStudentByDetails,
   upsertStudent,
+  validateRegistration, // ← NEW
   debugMasterlist,
 };
