@@ -4,9 +4,8 @@ import { useUserVerification, signOut } from "../auth/auth";
 import {
   FaTachometerAlt, FaBoxOpen, FaSearch, FaClipboardList,
   FaTrophy, FaCog, FaBars, FaTimes, FaHome, FaSignOutAlt,
-  FaIdCard, FaChevronLeft, FaChevronRight, FaStar, FaChevronDown,
+  FaChevronLeft, FaChevronRight, FaStar, FaChevronDown,
 } from "react-icons/fa";
-import { MdVerified } from "react-icons/md";
 
 const NAV_ITEMS = [
   {
@@ -50,13 +49,18 @@ interface StudentLayoutProps {
   children: React.ReactNode;
 }
 
+// ── Shared SVG user icon ──────────────────────────────────────────────────────
+const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className={`${className} opacity-90`}>
+    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+  </svg>
+);
+
 // ── Profile Dropdown ──────────────────────────────────────────────────────────
 const ProfileDropdown = ({
-  initial,
   user,
   onSignOut,
 }: {
-  initial: string;
   user: any;
   onSignOut: () => void;
 }) => {
@@ -76,10 +80,8 @@ const ProfileDropdown = ({
           <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full
             flex items-center justify-center border-2 border-gray-700
             group-hover:border-blue-400 transition-all shadow-lg shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-5 h-5 opacity-90">
-                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-            </svg>
-            </div>
+            <UserIcon className="w-5 h-5" />
+          </div>
           <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500
             border-2 border-gray-900 rounded-full" />
         </div>
@@ -100,23 +102,23 @@ const ProfileDropdown = ({
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10
             rounded-xl shadow-2xl overflow-hidden z-50">
-            {/* Header */}
+
+            {/* Header — SVG icon, not initial letter */}
             <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/5">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500
-                flex items-center justify-center text-white text-sm font-bold shrink-0">
-                {initial}
+                flex items-center justify-center shrink-0">
+                <UserIcon className="w-5 h-5" />
               </div>
               <div className="min-w-0">
                 <p className="text-white text-sm font-medium truncate">
                   {user?.name || user?.username || "Student"}
                 </p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <p className="text-gray-500 text-[10px] font-mono truncate">
-                    {user?.schoolId || "Student"}
-                  </p>
-                </div>
+                <p className="text-gray-500 text-[10px] font-mono truncate">
+                  {user?.schoolId || "Student"}
+                </p>
               </div>
             </div>
+
             {/* Links */}
             <div className="py-1">
               <Link to="/dashboard/student/settings" onClick={() => setOpen(false)}
@@ -154,10 +156,6 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   const [mobileOpen,  setMobileOpen]  = useState(false);
 
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
-
-  const initial =
-    user?.name?.charAt(0)?.toUpperCase() ||
-    user?.username?.charAt(0)?.toUpperCase() || "S";
 
   const handleSignOut = () => {
     signOut(navigate);
@@ -218,24 +216,12 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         </button>
       </div>
 
-      {/* Student profile pill */}
-      {collapsed && (
-        <div className="flex justify-center mt-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500
-            flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4 opacity-90">
-                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-            </svg>
-            </div>
-        </div>
-        )}
-
-      {/* Collapsed avatar */}
+      {/* Collapsed avatar — single block, SVG icon only */}
       {collapsed && (
         <div className="flex justify-center mt-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500
             flex items-center justify-center">
-            <span className="text-white font-black text-sm">{initial}</span>
+            <UserIcon className="w-4 h-4" />
           </div>
         </div>
       )}
@@ -272,7 +258,6 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
                       {icon}
                     </span>
                     {!collapsed && <span>{label}</span>}
-                    {/* Tooltip when collapsed */}
                     {collapsed && (
                       <span className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5
                         bg-gray-800 border border-white/10 text-white text-xs rounded-lg
@@ -288,8 +273,6 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
           </div>
         ))}
       </nav>
-
-     
     </div>
   );
 
@@ -321,14 +304,12 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         <header className="h-16 bg-gray-900/80 backdrop-blur border-b border-white/5
           flex items-center px-4 sm:px-5 gap-4 shrink-0 sticky top-0 z-30">
 
-          {/* Hamburger (mobile) */}
           <button onClick={() => setMobileOpen(true)}
             className="lg:hidden text-gray-400 hover:text-white p-1.5 rounded-lg
               hover:bg-white/5 transition-colors">
             <FaBars size={16} />
           </button>
 
-          {/* Page title */}
           <div className="flex-1 min-w-0">
             <h1 className="text-white text-sm sm:text-base font-semibold tracking-tight truncate">
               {pageMeta.title}
@@ -338,9 +319,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             </p>
           </div>
 
-          {/* Right side */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Points badge */}
             <Link to="/dashboard/student/leaderboard"
               className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-yellow-400/10
                 text-yellow-300 border border-yellow-400/20 rounded-full text-[11px]
@@ -349,12 +328,10 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
               <span>Points</span>
             </Link>
 
-            {/* Profile dropdown */}
-            <ProfileDropdown initial={initial} user={user} onSignOut={handleSignOut} />
+            <ProfileDropdown user={user} onSignOut={handleSignOut} />
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 p-4 sm:p-5 lg:p-7 overflow-auto bg-gray-950">
           {children}
         </main>

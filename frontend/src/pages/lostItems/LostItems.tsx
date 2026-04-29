@@ -8,6 +8,8 @@ import {
   FaTshirt, FaCamera, FaClock, FaTint, FaCheckCircle,
   FaTh, FaList, FaCheck, FaChevronDown, FaShare, FaComments,
   FaMoneyBillWave, FaCopy, FaFire, FaStar,
+  FaPaintBrush, FaPlug, FaUsb, FaGem, FaUtensils,
+  FaMusic, FaFootballBall,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -33,6 +35,14 @@ const getCategoryIcon = (name: string) => {
   if (n.includes("watch") || n.includes("clock"))                                return <FaClock     size={9} className="text-gray-300" />;
   if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask")) return <FaTint size={9} className="text-cyan-400" />;
   if (n.includes("money") || n.includes("cash") || n.includes("bill") || n.includes("currency")) return <FaMoneyBillWave size={9} className="text-green-400" />;
+  // Icons matching CategoriesManagement
+  if (n.includes("art") || n.includes("paint") || n.includes("brush")) return <FaPaintBrush size={9} className="text-rose-400" />;
+  if (n.includes("charger") || n.includes("cable") || n.includes("plug")) return <FaPlug size={9} className="text-yellow-400" />;
+  if (n.includes("usb") || n.includes("flash") || n.includes("drive")) return <FaUsb size={9} className="text-blue-400" />;
+  if (n.includes("accessor") || n.includes("jewel") || n.includes("bracelet")) return <FaGem size={9} className="text-pink-400" />;
+  if (n.includes("food") || n.includes("lunch") || n.includes("container")) return <FaUtensils size={9} className="text-orange-400" />;
+  if (n.includes("music") || n.includes("instrument") || n.includes("guitar")) return <FaMusic size={9} className="text-fuchsia-400" />;
+  if (n.includes("sport") || n.includes("ball") || n.includes("gym")) return <FaFootballBall size={9} className="text-red-400" />;
   return <FaTag size={9} className="text-blue-400" />;
 };
 
