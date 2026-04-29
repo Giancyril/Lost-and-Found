@@ -49,6 +49,120 @@ const RESTRICTED_CATEGORIES = ["wallets & purses", "wallet", "purse"];
 const isRestrictedCategory = (cat?: string) =>
   RESTRICTED_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
 
+// ── Updated Points Banner Slide (Blue Theme) ──────────────────────────────────
+const PointsBannerSlide = () => {
+  const steps = [
+    { num: "01", title: "Find a Lost Item", desc: "Spot something left behind on campus — a bag, keys, umbrella, or any belonging." },
+    { num: "02", title: "Report It Here", desc: "Visit the SAS Lost & Found system and log the item with a description and location." },
+    { num: "03", title: "Earn 50 Points", desc: "Every verified found item report credits your account with 50 reward points." },
+    { num: "04", title: "Climb the Leaderboard", desc: "Accumulate points to rise in the community rankings and earn recognition." },
+  ];
+
+  return (
+    <div className="h-full w-full bg-slate-900 flex flex-col overflow-hidden">
+      {/* Top accent - Changed to Blue */}
+      <div className="h-1 w-full bg-blue-500 shrink-0" />
+
+      <div className="flex-1 flex items-center justify-center px-6 py-6 min-h-0">
+        <div className="w-full max-w-5xl flex flex-col gap-6">
+
+          {/* Header */}
+          <div className="text-center">
+            <p className="text-blue-400/70 text-xs font-bold uppercase tracking-[0.3em] mb-2">
+              Campus Rewards Program
+            </p>
+            <h1 className="text-white text-3xl md:text-4xl font-black tracking-tight">
+              Help Others.{" "}
+              <span className="text-blue-500">
+                Earn Points.
+              </span>
+            </h1>
+            <p className="text-slate-400 text-sm mt-2 max-w-xl mx-auto">
+              Every found item you report earns you <span className="text-blue-400 font-bold">50 points</span> and helps a fellow student recover their belongings.
+            </p>
+          </div>
+
+          {/* Steps */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {steps.map((step, i) => (
+              <div key={step.num}
+                className="relative flex flex-col gap-3 rounded-2xl p-4 overflow-hidden"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(59,130,246,0.2)", // Blue border
+                }}
+              >
+                {/* Step number */}
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-black text-sm"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(59,130,246,0.3), rgba(37,99,235,0.2))",
+                      border: "1px solid rgba(59,130,246,0.3)",
+                      color: "#60a5fa",
+                    }}
+                  >
+                    {step.num}
+                  </div>
+                  {/* Connector arrow */}
+                  {i < steps.length - 1 && (
+                    <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(59,130,246,0.3)" strokeWidth="2">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm leading-tight">{step.title}</p>
+                  <p className="text-slate-400 text-xs mt-1 leading-relaxed">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom CTA row */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl px-6 py-4"
+            style={{
+              background: "linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.06))",
+              border: "1px solid rgba(59,130,246,0.2)",
+            }}
+          >
+            <div className="flex items-center gap-4">
+              {/* Points badge - Blue Theme */}
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-7 h-7">
+                  <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-white font-black text-lg leading-none">50 Points Per Report</p>
+                <p className="text-blue-400/70 text-xs mt-1 font-medium">Awarded for the highest points accumulated</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 text-center sm:text-right">
+              <div className="h-10 w-px bg-white/10 hidden sm:block" />
+              <div>
+                <p className="text-slate-400 text-xs font-medium">Register at</p>
+                <p className="text-white font-black text-base tracking-tight">nbsc.edu.ph/lost-found</p>
+                <p className="text-blue-400/60 text-[10px] mt-0.5 uppercase tracking-widest font-bold">Use your School ID</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Bottom accent - Changed to Blue */}
+      <div className="h-1 w-full bg-blue-500 shrink-0" />
+    </div>
+  );
+};
+
 // ── QR Code Slide Component ───────────────────────────────────────────────────
 const QRCodeSlide = () => {
   return (
@@ -221,10 +335,10 @@ const SlideContent = ({
       ))
     )}
     {pair.length === 1 && (
-  <div className={`rounded-2xl border border-dashed ${accent.border} opacity-20 flex items-center justify-center`}>
-    <p className={`text-xs sm:text-sm ${accent.text} font-semibold uppercase tracking-widest`}>No more items</p>
-  </div>
-)}
+      <div className={`rounded-2xl border border-dashed ${accent.border} opacity-20 flex items-center justify-center`}>
+        <p className={`text-xs sm:text-sm ${accent.text} font-semibold uppercase tracking-widest`}>No more items</p>
+      </div>
+    )}
   </div>
 );
 
@@ -342,11 +456,7 @@ const Panel = ({
 // ── Header Component ──────────────────────────────────────────────────────────
 const Header = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [weather, setWeather] = useState<{
-    temp: number;
-    condition: string;
-    icon: string;
-  } | null>(null);
+  const [weather, setWeather] = useState<{ temp: number; condition: string; icon: string } | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
 
   useEffect(() => {
@@ -362,18 +472,13 @@ const Header = () => {
         );
         if (!response.ok) throw new Error("Weather API unavailable");
         const data = await response.json();
-        setWeather({
-          temp: Math.round(data.main.temp),
-          condition: data.weather[0].main,
-          icon: data.weather[0].icon,
-        });
+        setWeather({ temp: Math.round(data.main.temp), condition: data.weather[0].main, icon: data.weather[0].icon });
       } catch {
         setWeather({ temp: 30, condition: "Cloudy", icon: "03d" });
       } finally {
         setWeatherLoading(false);
       }
     };
-
     fetchWeather();
     const weatherTimer = setInterval(fetchWeather, 600000);
     return () => clearInterval(weatherTimer);
@@ -381,10 +486,8 @@ const Header = () => {
 
   const formatTime = (date: Date) =>
     date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
-
   const formatDateStr = (date: Date) =>
     date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-
   const getWeatherEmoji = (icon: string) => {
     const iconMap: Record<string, string> = {
       "01d": "☀️", "01n": "🌙", "02d": "⛅", "02n": "☁️",
@@ -399,49 +502,28 @@ const Header = () => {
   return (
     <div className="h-20 md:h-24 bg-slate-800 border-b border-white/10 px-4 sm:px-6 md:px-8 flex items-center justify-between shrink-0">
       <div />
-
       <div className="flex items-center gap-4 sm:gap-6">
-
-        {/* Date & Time */}
         <div className="flex flex-col items-end">
-          <span className="text-slate-400 text-[10px] sm:text-xs font-medium tracking-wide">
-            {formatDateStr(currentTime)}
-          </span>
-          <span className="text-white text-xl sm:text-2xl font-bold tabular-nums leading-tight mt-0.5 tracking-[0.15em]">
-            {formatTime(currentTime)}
-          </span>
+          <span className="text-slate-400 text-[10px] sm:text-xs font-medium tracking-wide">{formatDateStr(currentTime)}</span>
+          <span className="text-white text-xl sm:text-2xl font-bold tabular-nums leading-tight mt-0.5 tracking-[0.15em]">{formatTime(currentTime)}</span>
         </div>
-
-        {/* Divider */}
         <div className="w-px h-10 bg-white/10 shrink-0" />
-
-        {/* Weather */}
         {weatherLoading ? (
           <div className="flex items-center justify-center w-8 h-8">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400" />
           </div>
         ) : (
           <div className="flex items-center gap-3">
-            {/* Weather emoji */}
-            <span className="text-3xl sm:text-4xl leading-none select-none">
-              {getWeatherEmoji(weather?.icon || "")}
-            </span>
-
-            {/* Temp + label */}
+            <span className="text-3xl sm:text-4xl leading-none select-none">{getWeatherEmoji(weather?.icon || "")}</span>
             <div className="flex flex-col">
               <div className="flex items-baseline gap-1">
-                <span className="text-white text-2xl sm:text-3xl font-bold tabular-nums leading-none">
-                  {weather?.temp ?? "--"}°
-                </span>
+                <span className="text-white text-2xl sm:text-3xl font-bold tabular-nums leading-none">{weather?.temp ?? "--"}°</span>
                 <span className="text-slate-500 text-xs font-medium">C</span>
               </div>
-              <span className="text-slate-400 text-[10px] sm:text-xs font-medium mt-0.5 whitespace-nowrap">
-                {weather?.condition ?? "—"} · Manolo Fortich
-              </span>
+              <span className="text-slate-400 text-[10px] sm:text-xs font-medium mt-0.5 whitespace-nowrap">{weather?.condition ?? "—"} · Manolo Fortich</span>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
@@ -454,6 +536,7 @@ const Ticker = ({ lostCount, foundCount }: { lostCount: number; foundCount: numb
     `${foundCount} item${foundCount !== 1 ? "s" : ""} recovered and awaiting claim`,
     "Visit the SAS Office to report or claim an item",
     "Bring your school ID when claiming found items",
+    "Report a found item and earn 50 reward points!",
     "NBSC Student Affairs and Services — Lost & Found Management System",
   ];
   const repeated = [...items, ...items];
@@ -473,6 +556,13 @@ const Ticker = ({ lostCount, foundCount }: { lostCount: number; foundCount: numb
     </div>
   );
 };
+
+// ── Slide type constants ──────────────────────────────────────────────────────
+const SLIDE_TYPE = {
+  ITEMS: "items",
+  POINTS: "points",
+  QR: "qr",
+} as const;
 
 // ── Main Portal Display ───────────────────────────────────────────────────────
 const PortalDisplay = () => {
@@ -494,26 +584,24 @@ const PortalDisplay = () => {
   const foundItems: FoundItem[] = (foundData?.data ?? []).filter((i: FoundItem) => !i.isClaimed);
 
   const lostMapped = lostItems.map(i => ({
-    name: i.lostItemName,
-    description: i.description,
-    location: i.location,
-    date: i.date,
-    img: i.img || "",
-    category: i.category?.name,
+    name: i.lostItemName, description: i.description, location: i.location,
+    date: i.date, img: i.img || "", category: i.category?.name,
   }));
-
   const foundMapped = foundItems.map(i => ({
-    name: i.foundItemName,
-    description: i.description,
-    location: i.location,
-    date: i.date,
-    img: getFoundImg(i),
-    category: i.category?.name,
+    name: i.foundItemName, description: i.description, location: i.location,
+    date: i.date, img: getFoundImg(i), category: i.category?.name,
   }));
 
-  const totalLostSlides = Math.max(Math.ceil(lostMapped.length / 4), 1);
+  const totalLostSlides  = Math.max(Math.ceil(lostMapped.length / 4), 1);
   const totalFoundSlides = Math.max(Math.ceil(foundMapped.length / 4), 1);
-  const totalSlides = totalLostSlides + totalFoundSlides + 1;
+  // Slide order: items... → points banner → QR code
+  const totalSlides = totalLostSlides + totalFoundSlides + 2;
+
+  const getSlideType = (idx: number) => {
+    if (idx < totalLostSlides + totalFoundSlides) return SLIDE_TYPE.ITEMS;
+    if (idx === totalLostSlides + totalFoundSlides) return SLIDE_TYPE.POINTS;
+    return SLIDE_TYPE.QR;
+  };
 
   const advanceSlide = useCallback(() => {
     setSlideIndex(prev => (prev + 1) % totalSlides);
@@ -523,8 +611,11 @@ const PortalDisplay = () => {
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    const isQRCodeSlide = slideIndex >= totalLostSlides + totalFoundSlides;
-    const duration = isQRCodeSlide ? 15000 : SLIDE_DURATION;
+    const type = getSlideType(slideIndex);
+    const duration =
+      type === SLIDE_TYPE.QR     ? 15000 :
+      type === SLIDE_TYPE.POINTS ? 10000 :
+      SLIDE_DURATION;
     timerRef.current = setTimeout(() => { advanceSlide(); }, duration);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [slideIndex, totalLostSlides, totalFoundSlides, advanceSlide]);
@@ -582,16 +673,14 @@ const PortalDisplay = () => {
             <div className="text-gray-400 text-6xl mb-4">[]</div>
             <h2 className="text-xl font-bold mb-2">No Items Available</h2>
             <p className="text-gray-400 mb-4">There are currently no lost or found items to display.</p>
-            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">
-              Refresh Page
-            </button>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">Refresh Page</button>
           </div>
         </div>
       </>
     );
   }
 
-  const isQRSlide = slideIndex >= totalLostSlides + totalFoundSlides;
+  const currentSlideType = getSlideType(slideIndex);
 
   return (
     <>
@@ -626,9 +715,13 @@ const PortalDisplay = () => {
       <div className="fixed inset-0 bg-slate-900 flex flex-col overflow-hidden select-none">
         <Header />
         <div className="flex-1 grid grid-cols-2 portal-panels min-h-0 divide-x divide-white/5">
-          {isQRSlide ? (
+          {currentSlideType === SLIDE_TYPE.QR ? (
             <div className="col-span-2 h-full overflow-hidden">
               <QRCodeSlide />
+            </div>
+          ) : currentSlideType === SLIDE_TYPE.POINTS ? (
+            <div className="col-span-2 h-full overflow-hidden">
+              <PointsBannerSlide />
             </div>
           ) : (
             <>

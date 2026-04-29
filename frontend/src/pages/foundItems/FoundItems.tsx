@@ -17,6 +17,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import { CommentModal } from "../../components/comments/CommentModal";
 import { CommentSection } from "../../components/comments/CommentSection";
+import { PointsTeaserBanner } from "../../components/home/PointsTeaserBanner";
+import { useGetMyPointsQuery } from "../../redux/api/api";
 
 
 import { useForm, Controller } from "react-hook-form";
@@ -613,6 +615,11 @@ const FoundItemsPage = () => {
   const users: any = useUserVerification();
   const isAdmin    = users?.role === "ADMIN";
 
+  // ── Points teaser banner ──
+  const isAuthenticated = !!users?.id || !!users?.email;
+  const { data: pointsData } = useGetMyPointsQuery(undefined, { skip: !isAuthenticated || isAdmin });
+  const totalPoints = pointsData?.data?.totalPoints ?? 0;
+
   const [searchTerm, setSearchTerm]         = useState("");
   const [fuzzyTerm, setFuzzyTerm]           = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
@@ -1000,6 +1007,16 @@ const FoundItemsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* ── Points Teaser Banner ── */}
+    {!isAdmin && (
+      <div className="px-6 sm:px-10 lg:px-16 pt-5">
+        <PointsTeaserBanner
+          isAuthenticated={isAuthenticated}
+          totalPoints={totalPoints}
+        />
+      </div>
+    )}
 
       {/* ── Search & filters ── */}
       <div className="px-6 sm:px-10 lg:px-16 py-5">

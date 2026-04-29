@@ -1,8 +1,16 @@
 import { useState, useEffect } from "react";
 import { useGetLostItemsQuery, useGetFoundItemsQuery, useAdminStatsQuery } from "../../redux/api/api";
+import { PointsTeaserBanner } from "../../components/home/PointsTeaserBanner";
+import { useUserVerification } from "../../auth/auth";
+import { useGetMyPointsQuery } from "../../redux/api/api";
 
 const Banner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  const user: any = useUserVerification();
+  const isAuthenticated = !!user?.id || !!user?.email;
+  const { data: pointsData } = useGetMyPointsQuery(undefined, { skip: !isAuthenticated });
+  const totalPoints = pointsData?.data?.totalPoints ?? 0;
 
   const { data: lostItems }  = useGetLostItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
   const { data: foundItems } = useGetFoundItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
@@ -115,7 +123,6 @@ const Banner = () => {
     </div>
   );
 
-  // ── KEY FIX: opening <> fragment was missing; <style> and <section> need a single root ──
   return (
     <>
       <style>{`
@@ -156,9 +163,17 @@ const Banner = () => {
 
               <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 mb-5 rounded-full" />
 
-              <p className="mb-7 text-base lg:text-lg font-light text-gray-400 max-w-lg leading-relaxed">
+              <p className="mb-6 text-base lg:text-lg font-light text-gray-400 max-w-lg leading-relaxed">
                 {s.description}
               </p>
+
+              {/* ── Points Teaser Banner ── */}
+              <div className="mb-6">
+                <PointsTeaserBanner
+                  isAuthenticated={isAuthenticated}
+                  totalPoints={totalPoints}
+                />
+              </div>
 
               <div className="flex flex-row gap-3 mb-6">
                 <a href={s.primaryButton.href}

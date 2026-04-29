@@ -102,11 +102,7 @@ export function Navbars() {
           {/* ── Not logged in ── */}
           {!isLoggedIn && (
             <div className="flex items-center gap-2">
-              <Link to="/register"
-                className="hidden sm:flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold
-                  text-gray-300 border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] transition-colors">
-                Register
-              </Link>
+              
               <Link to="/login"
                 className="flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-white
                   bg-blue-600 hover:bg-blue-500 border border-blue-500/50 transition-colors">
