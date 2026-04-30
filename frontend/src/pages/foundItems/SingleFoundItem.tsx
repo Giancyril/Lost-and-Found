@@ -545,17 +545,33 @@ const SingleFoundItem = () => {
               </p>
             </div>
 
-            {isClaimed ? (
-              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                  <FaHandshake className="text-emerald-400" size={18} />
+            
+            {isClaimed ? (() => {
+              const claimArr = Array.isArray(foundItemData?.claim)
+                ? foundItemData.claim
+                : foundItemData?.claim ? [foundItemData.claim] : [];
+              const approvedClaim = claimArr.find((c: any) => c.status === "APPROVED");
+              const claimedAt = approvedClaim?.auditLogs?.find((l: any) => l.toStatus === "APPROVED")?.createdAt
+                ?? approvedClaim?.createdAt
+                ?? foundItemData?.updatedAt
+                ?? null;
+              return (
+                <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                    <FaHandshake className="text-blue-400" size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-bold">Already Claimed</p>
+                    <p className="text-blue-400/80 text-xs mt-0.5 font-medium">
+                      {claimedAt ? `Returned ${timeAgo(claimedAt)}` : "Successfully returned to owner"}
+                    </p>
+                  </div>
+                  <div className="shrink-0 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full">
+                    <p className="text-blue-400 text-[10px] font-bold uppercase tracking-widest">Returned</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white text-sm font-bold">Already Claimed</p>
-                  <p className="text-emerald-400/70 text-[10px] uppercase font-black tracking-widest">Success</p>
-                </div>
-              </div>
-            ) : (
+              );
+            })() : (
               <div className="space-y-3">
                 <div className="flex items-start gap-3 bg-gray-800 rounded-xl p-3">
                   <FaBuilding className="text-blue-400 mt-0.5 shrink-0 text-lg" />

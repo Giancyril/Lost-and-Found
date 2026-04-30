@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react";
 import { useGetLostItemsQuery, useGetFoundItemsQuery, useAdminStatsQuery } from "../../redux/api/api";
 import { PointsTeaserBanner } from "../../components/home/PointsTeaserBanner";
-import { useUserVerification } from "../../auth/auth";
-import { useGetMyPointsQuery } from "../../redux/api/api";
 
 const Banner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  const user: any = useUserVerification();
-  const isAuthenticated = !!user?.id || !!user?.email;
-  const { data: pointsData } = useGetMyPointsQuery(undefined, { skip: !isAuthenticated });
-  const totalPoints = pointsData?.data?.totalPoints ?? 0;
 
   const { data: lostItems }  = useGetLostItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
   const { data: foundItems } = useGetFoundItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
@@ -55,7 +48,7 @@ const Banner = () => {
   const RecentLostPanel = () => (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-white font-semibold text-sm flex items-center gap-2">Recent Lost Items</p>
+        <p className="text-white font-semibold text-sm">Recent Lost Items</p>
         <a href="/lostItems" className="text-blue-400 text-xs hover:text-blue-300 transition-colors">View all</a>
       </div>
       {lostItems?.data?.length > 0 ? (
@@ -81,7 +74,7 @@ const Banner = () => {
   const RecentFoundPanel = () => (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-white font-semibold text-sm flex items-center gap-2">Recent Found Items</p>
+        <p className="text-white font-semibold text-sm">Recent Found Items</p>
         <a href="/foundItems" className="text-blue-400 text-xs hover:text-blue-300 transition-colors">View all</a>
       </div>
       {foundItems?.data?.length > 0 ? (
@@ -111,9 +104,9 @@ const Banner = () => {
   const StatsRow = () => (
     <div className="grid grid-cols-3 gap-3">
       {[
-        [stats?.data?.lostItems   ?? lostItems?.data?.length  ?? 0, "Lost Reports" ],
-        [stats?.data?.foundItems  ?? foundItems?.data?.length ?? 0, "Found Reports"],
-        [stats?.data?.claimedItems ?? "—",                          "Claimed Items"],
+        [stats?.data?.lostItems    ?? lostItems?.data?.length  ?? 0, "Lost Reports"  ],
+        [stats?.data?.foundItems   ?? foundItems?.data?.length ?? 0, "Found Reports" ],
+        [stats?.data?.claimedItems ?? "—",                           "Claimed Items" ],
       ].map(([num, label]) => (
         <div key={label as string} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center backdrop-blur-sm">
           <p className="text-blue-400 font-black text-xl">{num as React.ReactNode}</p>
@@ -133,7 +126,6 @@ const Banner = () => {
       `}</style>
 
       <section className="relative overflow-hidden bg-gray-950">
-        {/* Background */}
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-gray-950 to-gray-900" />
           <div className="absolute inset-0 opacity-5" style={{
@@ -167,21 +159,19 @@ const Banner = () => {
                 {s.description}
               </p>
 
-              {/* ── Points Teaser Banner ── */}
-              <div className="mb-6">
-                <PointsTeaserBanner
-                  isAuthenticated={isAuthenticated}
-                  totalPoints={totalPoints}
-                />
+              {/* ── Points Teaser Banner — same max-w as buttons ── */}
+              <div className="mb-3 max-w-lg">
+                <PointsTeaserBanner />
               </div>
 
-              <div className="flex flex-row gap-3 mb-6">
+              {/* ── Buttons — same max-w as banner ── */}
+              <div className="flex flex-row gap-3 mb-6 max-w-lg">
                 <a href={s.primaryButton.href}
-                  className="inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold py-3 px-5 sm:px-7 rounded-lg transition-all duration-300 hover:-translate-y-0.5 text-sm sm:text-base">
+                  className="flex-1 inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold py-3 px-5 rounded-lg transition-all duration-300 hover:-translate-y-0.5 text-sm sm:text-base">
                   {s.primaryButton.text}
                 </a>
                 <a href={s.secondaryButton.href}
-                  className="inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold py-3 px-5 sm:px-7 rounded-lg transition-all duration-300 hover:-translate-y-0.5 text-sm sm:text-base">
+                  className="flex-1 inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold py-3 px-5 rounded-lg transition-all duration-300 hover:-translate-y-0.5 text-sm sm:text-base">
                   {s.secondaryButton.text}
                 </a>
               </div>
@@ -207,7 +197,7 @@ const Banner = () => {
           </div>
         </div>
 
-        {/* Mobile panels — below the hero */}
+        {/* Mobile panels */}
         <div className="lg:hidden px-4 sm:px-6 pb-10 space-y-4 relative z-10">
           <RecentLostPanel />
           <RecentFoundPanel />

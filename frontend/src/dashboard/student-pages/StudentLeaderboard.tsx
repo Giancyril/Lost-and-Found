@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useUserVerification } from "../../auth/auth";
 import { FaTrophy, FaMedal, FaStar, FaSearch } from "react-icons/fa";
 import { useGetLeaderboardQuery, useGetMyPointsQuery } from "../../redux/api/api"; // Updated imports
+import { useStudent } from "../../components/context/StudentContext";
 
 const medalLabel = (i: number) =>
   i === 0 ? "🥇 1st Place" : i === 1 ? "🥈 2nd Place" : i === 2 ? "🥉 3rd Place" : null;

@@ -14,6 +14,7 @@ import {
   useMyClaimsQuery,
   useGetLeaderboardQuery,
 } from "../redux/api/api";
+import { useStudent } from "../components/context/StudentContext";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmt = (d: string) => new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });

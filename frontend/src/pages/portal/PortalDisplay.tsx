@@ -49,18 +49,24 @@ const RESTRICTED_CATEGORIES = ["wallets & purses", "wallet", "purse"];
 const isRestrictedCategory = (cat?: string) =>
   RESTRICTED_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
 
-// ── Updated Points Banner Slide (Blue Theme) ──────────────────────────────────
+// ── Slide type constants ──────────────────────────────────────────────────────
+const SLIDE_TYPE = {
+  ITEMS:  "items",
+  POINTS: "points",
+  QR:     "qr",
+} as const;
+
+// ── Points Banner Slide ───────────────────────────────────────────────────────
 const PointsBannerSlide = () => {
   const steps = [
-    { num: "01", title: "Find a Lost Item", desc: "Spot something left behind on campus — a bag, keys, umbrella, or any belonging." },
-    { num: "02", title: "Report It Here", desc: "Visit the SAS Lost & Found system and log the item with a description and location." },
-    { num: "03", title: "Earn 50 Points", desc: "Every verified found item report credits your account with 50 reward points." },
-    { num: "04", title: "Climb the Leaderboard", desc: "Accumulate points to rise in the community rankings and earn recognition." },
+    { num: "01", title: "Find a Lost Item",       desc: "Submit details of a found item to assist in its successful recovery and return." },
+    { num: "02", title: "Report It Here",          desc: "Visit the SAS Lost & Found system and log the item with a description and location." },
+    { num: "03", title: "Earn 50 Points",          desc: "Every verified found item report credits your account with 50 reward points." },
+    { num: "04", title: "Climb the Leaderboard",   desc: "Earn points for each return to climb the integrity leaderboard and gain campus recognition." },
   ];
 
   return (
     <div className="h-full w-full bg-slate-900 flex flex-col overflow-hidden">
-      {/* Top accent - Changed to Blue */}
       <div className="h-1 w-full bg-blue-500 shrink-0" />
 
       <div className="flex-1 flex items-center justify-center px-6 py-6 min-h-0">
@@ -73,11 +79,9 @@ const PointsBannerSlide = () => {
             </p>
             <h1 className="text-white text-3xl md:text-4xl font-black tracking-tight">
               Help Others.{" "}
-              <span className="text-blue-500">
-                Earn Points.
-              </span>
+              <span className="text-blue-500">Earn Points.</span>
             </h1>
-            <p className="text-slate-400 text-sm mt-2 max-w-2xl mx-auto">
+            <p className="text-slate-400 text-sm mt-2 max-w-2xl mx-auto text-justify" style={{ hyphens: "auto" }}>
               Every found item you report earns you <span className="text-blue-400 font-bold">50 points</span> and helps a fellow student recover their belongings.
             </p>
           </div>
@@ -85,16 +89,17 @@ const PointsBannerSlide = () => {
           {/* Steps */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {steps.map((step, i) => (
-              <div key={step.num}
+              <div
+                key={step.num}
                 className="relative flex flex-col gap-3 rounded-2xl p-4 overflow-hidden"
                 style={{
                   background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(59,130,246,0.2)", // Blue border
+                  border: "1px solid rgba(59,130,246,0.2)",
                 }}
               >
-                {/* Step number */}
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-black text-sm"
+                  <div
+                    className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-black text-sm"
                     style={{
                       background: "linear-gradient(135deg, rgba(59,130,246,0.3), rgba(37,99,235,0.2))",
                       border: "1px solid rgba(59,130,246,0.3)",
@@ -103,7 +108,6 @@ const PointsBannerSlide = () => {
                   >
                     {step.num}
                   </div>
-                  {/* Connector arrow */}
                   {i < steps.length - 1 && (
                     <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(59,130,246,0.3)" strokeWidth="2">
@@ -114,25 +118,27 @@ const PointsBannerSlide = () => {
                 </div>
                 <div>
                   <p className="text-white font-bold text-sm leading-tight">{step.title}</p>
-                  <p className="text-slate-400 text-xs mt-1 leading-relaxed">{step.desc}</p>
+                  {/* ── text-justify applied here ── */}
+                  <p className="text-slate-400 text-xs mt-1 leading-relaxed text-justify" style={{ hyphens: "auto" }}>
+                    {step.desc}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Bottom CTA row */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl px-6 py-4"
+          <div
+            className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl px-6 py-4"
             style={{
               background: "linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.06))",
               border: "1px solid rgba(59,130,246,0.2)",
             }}
           >
             <div className="flex items-center gap-4">
-              {/* Points badge - Blue Theme */}
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-                style={{
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                }}
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                style={{ background: "linear-gradient(135deg, #3b82f6, #1d4ed8)" }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-7 h-7">
                   <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
@@ -148,7 +154,7 @@ const PointsBannerSlide = () => {
               <div className="h-10 w-px bg-white/10 hidden sm:block" />
               <div>
                 <p className="text-slate-400 text-xs font-medium">Register at</p>
-                <p className="text-white font-black text-base tracking-tight">nbsc.edu.ph/lost-found</p>
+                <p className="text-white font-black text-sm tracking-tight break-all">lost-and-found-liart-seven.vercel.app/register</p>
                 <p className="text-blue-400/60 text-[10px] mt-0.5 uppercase tracking-widest font-bold">Use your School ID</p>
               </div>
             </div>
@@ -157,79 +163,172 @@ const PointsBannerSlide = () => {
         </div>
       </div>
 
-      {/* Bottom accent - Changed to Blue */}
       <div className="h-1 w-full bg-blue-500 shrink-0" />
     </div>
   );
 };
 
-// ── QR Code Slide Component ───────────────────────────────────────────────────
-const QRCodeSlide = () => {
+// ── Combined QR Slide ─────────────────────────────────────────────────────────
+// Layout: centered header → two QR cards side-by-side, each with its own
+// label + 3 compact steps below → shared footer.
+const CombinedQRSlide = () => {
+  const reportSteps = [
+    { num: "01", title: "Scan the QR Code",    desc: "Point your phone camera at the code to open the reporting form." },
+    { num: "02", title: "Fill in Item Details", desc: "Provide a description, location last seen, and date of loss." },
+    { num: "03", title: "Submit Your Report",   desc: "Visit the SAS Office to check for updates on your item." },
+  ];
+  const browseSteps = [
+    { num: "01", title: "Scan the QR Code",   desc: "Open the Found Items directory instantly on your phone." },
+    { num: "02", title: "Browse the List",    desc: "Search by name, category, or location to find your item." },
+    { num: "03", title: "Found your Item?",     desc: "Submit a claim to verify and retrieve it." },
+  ];
+
   return (
     <div className="h-full w-full bg-slate-900 flex flex-col overflow-hidden">
       <div className="h-1 w-full bg-blue-500 shrink-0" />
-      <div className="flex-1 flex items-center justify-center px-6 py-4 min-h-0">
-        <div className="w-full max-w-5xl flex flex-col items-center gap-4">
-          <div className="text-center">
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.25em] mb-1">
-              Northern Bukidnon State College
+
+      <div className="flex-1 flex items-center justify-center px-8 py-4 min-h-0 overflow-hidden">
+        <div className="w-full max-w-6xl flex flex-col gap-4 min-h-0">
+
+          {/* ── Header ── */}
+          <div className="text-center shrink-0">
+            <p className="text-slate-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-0.5">
+              Northern Bukidnon State College — Student Affairs Services
             </p>
-            <h1 className="text-white text-2xl md:text-3xl font-black tracking-tight">
-              Student Affairs Services
+            <h1 className="text-white text-2xl md:text-3xl font-black tracking-tight leading-tight">
+              Lost &amp; Found{" "}
+              <span className="text-blue-400">Quick Access</span>
             </h1>
-            <div className="flex items-center gap-3 justify-center mt-2">
-              <div className="h-px w-16 bg-slate-600" />
-              <span className="text-blue-400 text-xs font-bold uppercase tracking-widest">Lost &amp; Found System</span>
-              <div className="h-px w-16 bg-slate-600" />
-            </div>
+            <p className="text-slate-500 text-xs mt-1">
+              Scan a QR code below to report a missing item or browse the lost items directory
+            </p>
           </div>
-          <div className="flex flex-col md:flex-row items-center gap-6 w-full">
-            <div className="flex flex-col items-center gap-3 shrink-0">
-              <div className="bg-white p-4 rounded-2xl shadow-2xl border-4 border-slate-200">
-                <img
-                  src="/lost-items-qr.png"
-                  alt="Lost Items QR Code"
-                  className="w-44 h-44 md:w-52 md:h-52 object-contain"
-                />
-              </div>
-              <div className="text-center">
-                <p className="text-red-400 font-bold text-sm uppercase tracking-widest">Scan to Report</p>
-                <p className="text-slate-400 text-xs mt-0.5">YOUR MISSING ITEMS</p>
-              </div>
-            </div>
-            <div className="hidden md:block h-48 w-px bg-slate-700 shrink-0" />
-            <div className="block md:hidden w-full h-px bg-slate-700 shrink-0" />
-            <div className="flex-1 space-y-4 w-full">
-              <div className="space-y-2">
-                {[
-                  { num: "01", title: "Scan the QR Code", desc: "Point your phone camera at the code to open the reporting form." },
-                  { num: "02", title: "Fill in Item Details", desc: "Provide a description, location last seen, and date of loss." },
-                  { num: "03", title: "Submit Your Report", desc: "Visit the SAS Office regularly to check for updates on your lost item." },
-                ].map(step => (
-                  <div key={step.num} className="flex items-start gap-3 bg-slate-800/60 border border-white/5 rounded-xl px-4 py-2.5">
-                    <span className="text-blue-500 font-black text-sm shrink-0 mt-0.5">{step.num}</span>
-                    <div>
-                      <p className="text-white font-bold text-sm leading-tight ">{step.title}</p>
-                      <p className="text-slate-400 text-xs mt-1 leading-relaxed text-justify" style={{ hyphens: 'auto' }}>{step.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-start gap-2 bg-blue-950/50 border border-blue-500/20 rounded-xl px-4 py-2.5">
-                <svg width="14" height="14" className="shrink-0 text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" />
+
+          {/* ── Two QR columns ── */}
+          <div className="flex-1 grid grid-cols-2 gap-5 min-h-0">
+
+            {/* ─── Left: Report Lost Item ─── */}
+            <div
+              className="flex flex-col rounded-2xl overflow-hidden border"
+              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(59,130,246,0.2)" }}
+            >
+              {/* Column header */}
+              <div
+                className="flex items-center justify-center gap-2 px-4 py-2.5 shrink-0"
+                style={{ background: "rgba(59,130,246,0.08)", borderBottom: "1px solid rgba(59,130,246,0.15)" }}
+              >
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400 shrink-0" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-blue-300 text-xs leading-relaxed">
-                  <span className="font-bold">Claiming a found item?</span> Visit SAS Office during office hours.
-                </p>
+                <span className="text-blue-300 text-xs font-black uppercase tracking-widest">Report a Lost Item</span>
+              </div>
+
+              {/* QR + Steps */}
+              <div className="flex flex-1 items-center gap-4 px-4 py-3 min-h-0">
+                {/* QR code */}
+                <div className="flex flex-col items-center gap-2 shrink-0">
+                  <div className="bg-white p-3 rounded-xl shadow-xl border-2 border-slate-200">
+                    <img
+                      src="/lost-items-qr.png"
+                      alt="Report Lost Item QR Code"
+                      className="w-36 h-36 md:w-44 md:h-44 object-contain"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-blue-400 font-black text-[10px] uppercase tracking-widest">Scan to Report</p>
+                    <p className="text-slate-500 text-[9px] mt-0.5 font-semibold uppercase">Your Missing Items</p>
+                  </div>
+                </div>
+
+                {/* Steps */}
+                <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+                  {reportSteps.map(step => (
+                    <div key={step.num} className="flex items-start gap-2.5 bg-slate-800/60 border border-white/5 rounded-lg px-3 py-2">
+                      <span className="text-blue-400 font-black text-xs shrink-0 mt-px">{step.num}</span>
+                      <div className="min-w-0">
+                        <p className="text-white font-bold text-xs leading-tight">{step.title}</p>
+                        <p className="text-slate-400 text-[10px] mt-0.5 leading-relaxed text-justify" style={{ hyphens: "auto" }}>{step.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-start gap-2 bg-blue-950/50 border border-blue-500/20 rounded-lg px-3 py-2 mt-0.5">
+                    <svg width="11" height="11" className="shrink-0 text-blue-400 mt-px" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" />
+                    </svg>
+                    <p className="text-blue-300 text-[10px] leading-relaxed">
+                      <span className="font-bold">Claiming a found item?</span> Visit the office during office hours.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="w-full flex items-center justify-center pt-2 border-t border-white/5">
+
+            {/* ─── Right: Browse Lost Items ─── */}
+            <div
+              className="flex flex-col rounded-2xl overflow-hidden border"
+              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(59,130,246,0.2)" }}
+            >
+              {/* Column header */}
+              <div
+                className="flex items-center justify-center gap-2 px-4 py-2.5 shrink-0"
+                style={{ background: "rgba(59,130,246,0.08)", borderBottom: "1px solid rgba(59,130,246,0.15)" }}
+              >
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400 shrink-0" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+                </svg>
+                <span className="text-blue-300 text-xs font-black uppercase tracking-widest">Browse Found Items</span>
+              </div>
+
+              {/* QR + Steps */}
+              <div className="flex flex-1 items-center gap-4 px-4 py-3 min-h-0">
+                {/* QR code */}
+                <div className="flex flex-col items-center gap-2 shrink-0">
+                  <div className="bg-white p-3 rounded-xl shadow-xl border-2 border-slate-200">
+                    <img
+                      src="/found-items-qr.png"
+                      alt="Browse Found Items QR Code"
+                      className="w-36 h-36 md:w-44 md:h-44 object-contain"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-blue-400 font-black text-[10px] uppercase tracking-widest">Scan to View</p>
+                    <p className="text-slate-500 text-[9px] mt-0.5 font-semibold uppercase">All Reported Found Items</p>
+                  </div>
+                </div>
+
+                {/* Steps */}
+                <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+                  {browseSteps.map(step => (
+                    <div key={step.num} className="flex items-start gap-2.5 bg-slate-800/60 border border-white/5 rounded-lg px-3 py-2">
+                      <span className="text-blue-400 font-black text-xs shrink-0 mt-px">{step.num}</span>
+                      <div className="min-w-0">
+                        <p className="text-white font-bold text-xs leading-tight">{step.title}</p>
+                        <p className="text-slate-400 text-[10px] mt-0.5 leading-relaxed text-justify" style={{ hyphens: "auto" }}>{step.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-start gap-2 bg-blue-950/50 border border-blue-500/20 rounded-lg px-3 py-2 mt-0.5">
+                    <svg width="11" height="11" className="shrink-0 text-blue-400 mt-px" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" />
+                    </svg>
+                    <p className="text-blue-300 text-[10px] leading-relaxed">
+                      <span className="font-bold">Found something?</span> File a report to help the owner claim it.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>{/* end grid */}
+
+          {/* ── Footer ── */}
+          <div className="flex items-center justify-center border-t border-white/5 pt-2 shrink-0">
             <p className="text-slate-500 text-[10px] uppercase tracking-widest font-semibold">NBSC • Student Affairs and Services</p>
           </div>
+
         </div>
       </div>
+
       <div className="h-1 w-full bg-blue-500 shrink-0" />
     </div>
   );
@@ -484,10 +583,13 @@ const Header = () => {
     return () => clearInterval(weatherTimer);
   }, []);
 
+  // ── No seconds ──
   const formatTime = (date: Date) =>
-    date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+    date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+
   const formatDateStr = (date: Date) =>
     date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
   const getWeatherEmoji = (icon: string) => {
     const iconMap: Record<string, string> = {
       "01d": "☀️", "01n": "🌙", "02d": "⛅", "02n": "☁️",
@@ -557,19 +659,12 @@ const Ticker = ({ lostCount, foundCount }: { lostCount: number; foundCount: numb
   );
 };
 
-// ── Slide type constants ──────────────────────────────────────────────────────
-const SLIDE_TYPE = {
-  ITEMS: "items",
-  POINTS: "points",
-  QR: "qr",
-} as const;
-
 // ── Main Portal Display ───────────────────────────────────────────────────────
 const PortalDisplay = () => {
-  const SLIDE_DURATION = 5000;
+  const SLIDE_DURATION   = 5000;
   const REFETCH_INTERVAL = 60000;
 
-  const { data: lostData, error: lostError, isLoading: lostLoading } = useGetLostItemsQuery(
+  const { data: lostData,  error: lostError,  isLoading: lostLoading  } = useGetLostItemsQuery(
     { page: 1, limit: 10, sortBy: "date", sortOrder: "desc" },
     { pollingInterval: REFETCH_INTERVAL, refetchOnFocus: true, refetchOnReconnect: true }
   );
@@ -580,10 +675,10 @@ const PortalDisplay = () => {
 
   const [slideIndex, setSlideIndex] = useState(0);
 
-  const lostItems: LostItem[] = (lostData?.data ?? []).filter((i: LostItem) => !(i as any).isFound);
+  const lostItems:  LostItem[]  = (lostData?.data  ?? []).filter((i: LostItem)  => !(i as any).isFound);
   const foundItems: FoundItem[] = (foundData?.data ?? []).filter((i: FoundItem) => !i.isClaimed);
 
-  const lostMapped = lostItems.map(i => ({
+  const lostMapped  = lostItems.map(i => ({
     name: i.lostItemName, description: i.description, location: i.location,
     date: i.date, img: i.img || "", category: i.category?.name,
   }));
@@ -592,13 +687,14 @@ const PortalDisplay = () => {
     date: i.date, img: getFoundImg(i), category: i.category?.name,
   }));
 
-  const totalLostSlides  = Math.max(Math.ceil(lostMapped.length / 4), 1);
+  const totalLostSlides  = Math.max(Math.ceil(lostMapped.length  / 4), 1);
   const totalFoundSlides = Math.max(Math.ceil(foundMapped.length / 4), 1);
-  // Slide order: items... → points banner → QR code
+
+  // Slide order: items... → points banner → combined QR
   const totalSlides = totalLostSlides + totalFoundSlides + 2;
 
   const getSlideType = (idx: number) => {
-    if (idx < totalLostSlides + totalFoundSlides) return SLIDE_TYPE.ITEMS;
+    if (idx < totalLostSlides + totalFoundSlides)   return SLIDE_TYPE.ITEMS;
     if (idx === totalLostSlides + totalFoundSlides) return SLIDE_TYPE.POINTS;
     return SLIDE_TYPE.QR;
   };
@@ -652,7 +748,7 @@ const PortalDisplay = () => {
             <div className="text-red-400 text-6xl mb-4">!</div>
             <h2 className="text-xl font-bold mb-2">Portal Loading Error</h2>
             <p className="text-gray-400 mb-4">
-              {lostError && `Lost items: ${"message" in lostError ? lostError.message : "Unknown error"}`}
+              {lostError  && `Lost items: ${"message"  in lostError  ? lostError.message  : "Unknown error"}`}
               {foundError && `Found items: ${"message" in foundError ? foundError.message : "Unknown error"}`}
             </p>
             <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">
@@ -717,7 +813,7 @@ const PortalDisplay = () => {
         <div className="flex-1 grid grid-cols-2 portal-panels min-h-0 divide-x divide-white/5">
           {currentSlideType === SLIDE_TYPE.QR ? (
             <div className="col-span-2 h-full overflow-hidden">
-              <QRCodeSlide />
+              <CombinedQRSlide />
             </div>
           ) : currentSlideType === SLIDE_TYPE.POINTS ? (
             <div className="col-span-2 h-full overflow-hidden">

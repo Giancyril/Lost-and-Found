@@ -1008,10 +1008,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
       {/* ── Points Teaser Banner ── */}
     {!isAdmin && (
       <div className="px-6 sm:px-10 lg:px-16 pt-5">
-        <PointsTeaserBanner
-          isAuthenticated={isAuthenticated}
-          totalPoints={totalPoints}
-        />
+        <PointsTeaserBanner />
       </div>
     )}
 
