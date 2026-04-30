@@ -89,7 +89,7 @@ const RecentFoundItem = () => {
                   {/* Status */}
                   <div className="absolute top-2.5 left-2.5">
                     {isClaimed
-                      ? <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full border border-emerald-500/30 backdrop-blur-sm"><FaCheckCircle size={7} /> Claimed</span>
+                      ? <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full border border-emerald-500/30 backdrop-blur-sm"> Claimed</span>
                       : <span className="px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full border border-blue-500/30 backdrop-blur-sm">Available</span>
                     }
                   </div>

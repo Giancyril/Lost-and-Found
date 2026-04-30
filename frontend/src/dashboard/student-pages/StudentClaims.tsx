@@ -4,17 +4,10 @@ import {
   FaClock, FaSearch, FaEye, FaBoxOpen, FaMapMarkerAlt,
   FaTimes, FaUser,
 } from "react-icons/fa";
-import { useMyClaimsQuery } from "../../redux/api/api"; // Updated import
+import { useMyClaimsQuery } from "../../redux/api/api";
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
-
-const STATUS_TABS = [
-  { label: "All",      value: "ALL"      },
-  { label: "Pending",  value: "PENDING"  },
-  { label: "Approved", value: "APPROVED" },
-  { label: "Rejected", value: "REJECTED" },
-];
 
 const STATUS_BADGE: Record<string, string> = {
   PENDING:  "bg-yellow-400/10 text-yellow-400 border-yellow-400/20",
@@ -29,17 +22,19 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
 };
 
 export default function StudentClaims() {
-  // RTK Query Hook replacement
   const { data, isLoading: loading } = useMyClaimsQuery(undefined);
-  const claims = data?.data?.data ?? data?.data ?? [];
 
-  const [search, setSearch] = useState("");
+  // Backend getMyClaim returns a plain array wrapped in sendResponse as data.data
+  // ❌ was: data?.data?.data ?? data?.data ?? []  (double-unwrap, always empty)
+  // ✅ fix: data?.data ?? []
+  const claims: any[] = data?.data ?? [];
+
+  const [search, setSearch]     = useState("");
   const [selected, setSelected] = useState<any>(null);
 
   const filtered = claims.filter((c: any) => {
     const name = c.foundItem?.foundItemName ?? c.lostItem?.lostItemName ?? "";
-    const matchSearch = name.toLowerCase().includes(search.toLowerCase());
-    return matchSearch;
+    return name.toLowerCase().includes(search.toLowerCase());
   });
 
   const total    = claims.length;
@@ -81,7 +76,7 @@ export default function StudentClaims() {
 
       {loading ? (
         <div className="space-y-3 animate-pulse">
-          {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-900 border border-white/5 rounded-2xl" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-900 border border-white/5 rounded-2xl" />)}
         </div>
       ) : (
         <>
@@ -98,20 +93,23 @@ export default function StudentClaims() {
             {filtered.length === 0 ? (
               <div className="py-20 text-center">
                 <FaClipboardList size={24} className="text-gray-700 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No claims match your filters</p>
+                <p className="text-gray-500 text-sm">
+                  {claims.length === 0 ? "You haven't submitted any claims yet" : "No claims match your search"}
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-white/[0.04]">
                 {filtered.map((claim: any, i: number) => {
                   const itemName = claim.foundItem?.foundItemName ?? claim.lostItem?.lostItemName ?? "Item";
                   const status   = claim.status ?? "PENDING";
+                  const imgSrc   = (Array.isArray(claim.foundItem?.images) && claim.foundItem.images.length > 0
+                    ? (typeof claim.foundItem.images[0] === "string" ? claim.foundItem.images[0] : claim.foundItem.images[0]?.url ?? "")
+                    : "") || claim.foundItem?.img || "/default-item.png";
+
                   return (
-                    <div key={i} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors group">
+                    <div key={claim.id ?? i} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors group">
                       <div className="col-span-4 flex items-center gap-3 min-w-0">
-                        <img
-                          src={claim.foundItem?.img || "/default-item.png"} alt=""
-                          className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/5"
-                        />
+                        <img src={imgSrc} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/5" onError={(e) => { (e.target as HTMLImageElement).src = "/default-item.png"; }} />
                         <div className="min-w-0">
                           <p className="text-white text-sm font-semibold truncate">{itemName}</p>
                           <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
@@ -151,16 +149,21 @@ export default function StudentClaims() {
             {filtered.length === 0 ? (
               <div className="py-16 text-center bg-gray-900 border border-white/5 rounded-2xl">
                 <FaClipboardList size={22} className="text-gray-700 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No claims match your filters</p>
+                <p className="text-gray-500 text-sm">
+                  {claims.length === 0 ? "You haven't submitted any claims yet" : "No claims match your search"}
+                </p>
               </div>
             ) : filtered.map((claim: any, i: number) => {
               const itemName = claim.foundItem?.foundItemName ?? claim.lostItem?.lostItemName ?? "Item";
               const status   = claim.status ?? "PENDING";
+              const imgSrc   = (Array.isArray(claim.foundItem?.images) && claim.foundItem.images.length > 0
+                ? (typeof claim.foundItem.images[0] === "string" ? claim.foundItem.images[0] : claim.foundItem.images[0]?.url ?? "")
+                : "") || claim.foundItem?.img || "/default-item.png";
+
               return (
-                <div key={i} className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-3">
+                <div key={claim.id ?? i} className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-3">
                   <div className="flex items-start gap-3">
-                    <img src={claim.foundItem?.img || "/default-item.png"} alt=""
-                      className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/5" />
+                    <img src={imgSrc} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/5" onError={(e) => { (e.target as HTMLImageElement).src = "/default-item.png"; }} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-white font-semibold text-sm truncate">{itemName}</p>
@@ -226,8 +229,14 @@ export default function StudentClaims() {
                   <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Item Being Claimed</p>
                 </div>
                 <div className="flex gap-3 p-3">
-                  <img src={selected.foundItem?.img || "/default-item.png"} alt=""
-                    className="w-14 h-14 rounded-xl object-cover shrink-0 border border-white/10" />
+                  <img
+                    src={(Array.isArray(selected.foundItem?.images) && selected.foundItem.images.length > 0
+                      ? (typeof selected.foundItem.images[0] === "string" ? selected.foundItem.images[0] : selected.foundItem.images[0]?.url ?? "")
+                      : "") || selected.foundItem?.img || "/default-item.png"}
+                    alt=""
+                    className="w-14 h-14 rounded-xl object-cover shrink-0 border border-white/10"
+                    onError={(e) => { (e.target as HTMLImageElement).src = "/default-item.png"; }}
+                  />
                   <div className="min-w-0">
                     <p className="text-white text-sm font-bold">{selected.foundItem?.foundItemName ?? "—"}</p>
                     {selected.foundItem?.location && (

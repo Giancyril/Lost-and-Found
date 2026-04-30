@@ -5,70 +5,63 @@ import { StatusCodes } from "http-status-codes";
 import sendResponse from "../../global/response";
 import { pointsService } from "./points.service";
 
+// GET /points/my  — auth() middleware required (already in router)
 const getMyPoints = async (req: Request, res: Response) => {
   try {
-    const result = await pointsService.getMyPoints(req.user.id);
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.UNAUTHORIZED,
+        success:    false,
+        message:    "Not authenticated",
+        data:       null,
+      });
+    }
+
+    // Returns { totalPoints, name, history }
+    // Frontend reads pointsData?.data?.totalPoints  ✅
+    const data = await pointsService.getMyPoints(userId);
+
     sendResponse(res, {
       statusCode: StatusCodes.OK,
-      success: true,
-      message: "Points retrieved successfully",
-      data: result,
+      success:    true,
+      message:    "Points retrieved successfully",
+      data,
     });
-  } catch (err: any) {
+  } catch (error: any) {
     sendResponse(res, {
-      statusCode: err.statusCode ?? 400,
-      success: false,
-      message: err.message,
-      data: null,
+      statusCode: StatusCodes.BAD_REQUEST,
+      success:    false,
+      message:    error?.message ?? "Failed to retrieve points",
+      data:       null,
     });
   }
 };
 
-const getLeaderboard = async (_req: Request, res: Response) => {
+// GET /points/leaderboard  — public, no auth required
+const getLeaderboard = async (req: Request, res: Response) => {
   try {
-    const result = await pointsService.getLeaderboard();
+    // Returns array of { id, name, totalPoints, userImg, schoolId }
+    // Frontend reads boardData?.data  ✅
+    const data = await pointsService.getLeaderboard();
+
     sendResponse(res, {
       statusCode: StatusCodes.OK,
-      success: true,
-      message: "Leaderboard retrieved",
-      data: result,
+      success:    true,
+      message:    "Leaderboard retrieved successfully",
+      data,
     });
-  } catch (err: any) {
+  } catch (error: any) {
     sendResponse(res, {
-      statusCode: err.statusCode ?? 400,
-      success: false,
-      message: err.message,
-      data: null,
+      statusCode: StatusCodes.BAD_REQUEST,
+      success:    false,
+      message:    error?.message ?? "Failed to retrieve leaderboard",
+      data:       null,
     });
   }
 };
 
-export const pointsController = { getMyPoints, getLeaderboard };
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ADD THESE ROUTES to your main router.ts file:
-// ─────────────────────────────────────────────────────────────────────────────
-//
-//   import { pointsController } from "../modules/points/points.controller";
-//
-//   router.get("/points/my",          auth(), pointsController.getMyPoints);
-//   router.get("/points/leaderboard",         pointsController.getLeaderboard);
-//
-// ─────────────────────────────────────────────────────────────────────────────
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// AWARD POINTS when a found item is reported — add this to foundItem.controller.ts
-// inside your createFoundItem handler, after the item is created:
-// ─────────────────────────────────────────────────────────────────────────────
-//
-//   import { pointsService } from "../points/points.service";
-//
-//   // After: const item = await prisma.foundItem.create(...)
-//   if (req.user?.id) {
-//     await pointsService.award(req.user.id, 'FOUND_ITEM_REPORTED', item.id)
-//       .catch(() => {}); // don't block the response if points fail
-//   }
-//
-// ─────────────────────────────────────────────────────────────────────────────
+export const pointsController = {
+  getMyPoints,
+  getLeaderboard,
+};

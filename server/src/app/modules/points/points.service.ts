@@ -1,5 +1,4 @@
 // src/modules/points/points.service.ts
-// Drop this in your backend alongside your other module folders.
 
 import prisma from "../../config/prisma";
 import AppError from "../../global/error";
@@ -58,20 +57,31 @@ const getMyPoints = async (userId: string) => {
 
   const history = await prisma.points.findMany({
     where:   { userId },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     take:    50,
   });
 
-  return { totalPoints: user?.totalPoints ?? 0, history };
+  return {
+    totalPoints: user?.totalPoints ?? 0,
+    name:        user?.name        ?? "",
+    history,
+  };
 };
 
-// ── Leaderboard — top 10 students by totalPoints ─────────────────────────────
+// ── Leaderboard — top 50 students by totalPoints ──────────────────────────────
+// ✅ Added schoolId so StudentLeaderboard can display it and match the current user
 const getLeaderboard = async () => {
   return prisma.user.findMany({
-    where:   { totalPoints: { gt: 0 } },
-    orderBy: { totalPoints: 'desc' },
-    take:    10,
-    select:  { id: true, name: true, totalPoints: true, userImg: true },
+    where:   { totalPoints: { gt: 0 }, role: "USER" },
+    orderBy: { totalPoints: "desc" },
+    take:    50,
+    select: {
+      id:          true,
+      name:        true,
+      totalPoints: true,
+      userImg:     true,
+      schoolId:    true,   // ✅ required for StudentLeaderboard rank matching display
+    },
   });
 };
 

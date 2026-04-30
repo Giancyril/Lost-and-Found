@@ -18,7 +18,6 @@ import NotificationBell from "../notifications/NotificationBell";
 import { useGetMyPointsQuery } from "../../redux/api/api";
 import { FaStar } from "react-icons/fa";
 
-// ── Shared SVG user icon — matches StudentLayout & StudentDashboard ──────────
 const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className={`${className} opacity-90`}>
     <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
@@ -26,13 +25,19 @@ const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
 );
 
 export function Navbars() {
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
   const users: any = useUserVerification();
-  const isAdmin   = users?.role === "ADMIN";
-  const isLoggedIn = !!users?.email || !!users?.id;
-  
-  // Get points for students
-  const { data: pointsData } = useGetMyPointsQuery(undefined, { skip: !isLoggedIn || isAdmin });
+
+  const isAdmin = users?.role === "ADMIN";
+
+  const isLoggedIn = !!(users?.email || users?.id);
+
+  const { data: pointsData, refetch: refetchPoints } = useGetMyPointsQuery(undefined, {
+    // ✅ Only skip if we're certain the user is not logged in OR is an admin
+    skip: !isLoggedIn || isAdmin,
+    // Refresh every 2 minutes so the navbar badge stays current without a page reload
+    pollingInterval: 120_000,
+  });
   const points = pointsData?.data?.totalPoints ?? 0;
 
   const [profileOpen, setProfileOpen] = useState(false);
@@ -47,7 +52,12 @@ export function Navbars() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ── Triple-click on brand → navigate to hidden admin login ────────────────
+  // Refetch points when user logs in / logs out
+  useEffect(() => {
+    if (isLoggedIn && !isAdmin) refetchPoints();
+  }, [isLoggedIn, isAdmin]);
+
+  // Triple-click on brand → hidden admin login
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -105,10 +115,9 @@ export function Navbars() {
         <div className="flex md:order-2 items-center gap-2">
           <NotificationBell />
 
-          {/* ── Not logged in ── */}
+          {/* Not logged in */}
           {!isLoggedIn && (
             <div className="flex items-center gap-2">
-              
               <Link to="/login"
                 className="flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-white
                   bg-blue-600 hover:bg-blue-500 border border-blue-500/50 transition-colors">
@@ -117,7 +126,7 @@ export function Navbars() {
             </div>
           )}
 
-          {/* ── Admin dropdown ── */}
+          {/* Admin dropdown */}
           {isLoggedIn && isAdmin && (
             <div ref={profileRef} className="relative">
               <button type="button" onClick={() => setProfileOpen(p => !p)}
@@ -177,13 +186,11 @@ export function Navbars() {
             </div>
           )}
 
-          {/* ── Student dropdown — matches StudentLayout ProfileDropdown exactly ── */}
+          {/* Student dropdown */}
           {isLoggedIn && !isAdmin && (
             <div ref={profileRef} className="relative">
               <button type="button" onClick={() => setProfileOpen(p => !p)}
                 className="flex items-center gap-2 cursor-pointer group focus:outline-none">
-
-                {/* Avatar — identical to StudentLayout */}
                 <div className="relative">
                   <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full
                     flex items-center justify-center border-2 border-gray-700
@@ -192,8 +199,6 @@ export function Navbars() {
                   </div>
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
                 </div>
-
-                {/* Name + school ID */}
                 <div className="hidden sm:block text-left">
                   <p className="text-white text-sm font-semibold leading-none">
                     {users?.name || users?.username || "Student"}
@@ -202,7 +207,6 @@ export function Navbars() {
                     {users?.schoolId || "STUDENT"}
                   </p>
                 </div>
-
                 <FaChevronDown size={10} className={`text-gray-500 hidden sm:block transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`} />
               </button>
 
@@ -210,8 +214,6 @@ export function Navbars() {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
                   <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-
-                    {/* Header */}
                     <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/[0.05]">
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500
                         flex items-center justify-center shrink-0">
@@ -225,20 +227,18 @@ export function Navbars() {
                           {users?.schoolId || "Student"}
                         </p>
                       </div>
+                      {/* ✅ Points badge — only shown when points > 0 or query settled */}
                       <div className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1.5 shrink-0">
                         <FaStar size={10} className="text-yellow-400" />
                         <span className="text-yellow-400 text-xs font-bold">{points}</span>
                       </div>
                     </div>
-
-                    {/* Links */}
                     <div className="py-1">
                       <Link to="/dashboard/student" onClick={() => setProfileOpen(false)}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
                         <FaTachometerAlt size={12} className="text-gray-500 shrink-0" /> My Dashboard
                       </Link>
                     </div>
-
                     <div className="border-t border-white/[0.05] py-1">
                       <button type="button" onClick={handleSignOut}
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm">
@@ -270,7 +270,6 @@ export function Navbars() {
               </NavbarLink>
             ))}
 
-            {/* Mobile-only student dashboard link */}
             {isLoggedIn && !isAdmin && (
               <NavbarLink href="/dashboard/student"
                 className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm md:hidden">
@@ -278,7 +277,6 @@ export function Navbars() {
               </NavbarLink>
             )}
 
-            {/* Mobile-only register */}
             {!isLoggedIn && (
               <NavbarLink href="/register"
                 className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm sm:hidden">

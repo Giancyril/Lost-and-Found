@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useUserVerification } from "../../auth/auth";
 import { FaTrophy, FaMedal, FaStar, FaSearch } from "react-icons/fa";
-import { useGetLeaderboardQuery, useGetMyPointsQuery } from "../../redux/api/api"; // Updated imports
-import { useStudent } from "../../components/context/StudentContext";
+import { useGetLeaderboardQuery, useGetMyPointsQuery } from "../../redux/api/api";
 
 const medalLabel = (i: number) =>
   i === 0 ? "🥇 1st Place" : i === 1 ? "🥈 2nd Place" : i === 2 ? "🥉 3rd Place" : null;
@@ -22,15 +21,28 @@ export default function StudentLeaderboard() {
   const user: any = useUserVerification();
   const [search, setSearch] = useState("");
 
-  // RTK Query hooks
   const { data: boardData, isLoading: lbLoading } = useGetLeaderboardQuery(undefined);
   const { data: pointsData, isLoading: ptsLoading } = useGetMyPointsQuery(undefined);
 
   const loading = lbLoading || ptsLoading;
-  const board = boardData?.data ?? [];
-  const myPoints = pointsData?.data?.totalPoints ?? 0;
 
-  const myRank = board.findIndex((u: any) => u.id === user?.id) + 1;
+  // ── Leaderboard: backend returns { success, data: [...] }
+  // getLeaderboard service returns plain array → pointsController wraps as { success, data }
+  // RTK Query baseQuery puts the full response body at data, so it's data.data
+  const board: any[] = boardData?.data ?? [];
+
+  // ── My points: backend returns { success, data: { totalPoints, history } }
+  // ✅ data.data.totalPoints
+  const myPoints: number = pointsData?.data?.totalPoints ?? 0;
+
+  // ── Resolve current user's id from the JWT payload
+  // useUserVerification decodes the JWT — the id field may be user.id, user.userId, or user.sub
+  // depending on how your auth.sign() sets the payload. We try all three.
+  const myId: string | undefined = user?.id ?? user?.userId ?? user?.sub;
+
+  const myRankIdx = board.findIndex((u: any) => u.id === myId);
+  const myRank    = myRankIdx >= 0 ? myRankIdx + 1 : 0;
+
   const filtered = board.filter((u: any) =>
     (u.name || "").toLowerCase().includes(search.toLowerCase())
   );
@@ -41,9 +53,9 @@ export default function StudentLeaderboard() {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Your Points",  value: myPoints,       icon: <FaStar size={14} className="text-yellow-400" />,  accent: "bg-yellow-500/5",  color: "text-yellow-400"  },
-          { label: "Your Rank",    value: myRank > 0 ? `#${myRank}` : "—", icon: <FaTrophy size={14} className="text-cyan-400" />, accent: "bg-cyan-500/5", color: "text-cyan-400" },
-          { label: "Total Ranked", value: board.length,   icon: <FaMedal size={14} className="text-violet-400" />, accent: "bg-violet-500/5",  color: "text-violet-400"  },
+          { label: "Your Points",  value: myPoints,                             icon: <FaStar size={14} className="text-yellow-400" />,  accent: "bg-yellow-500/5",  color: "text-yellow-400"  },
+          { label: "Your Rank",    value: myRank > 0 ? `#${myRank}` : "—",     icon: <FaTrophy size={14} className="text-cyan-400" />,   accent: "bg-cyan-500/5",    color: "text-cyan-400"    },
+          { label: "Total Ranked", value: board.length,                          icon: <FaMedal size={14} className="text-violet-400" />, accent: "bg-violet-500/5",  color: "text-violet-400"  },
         ].map(({ label, value, icon, accent, color }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
             <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
@@ -76,6 +88,19 @@ export default function StudentLeaderboard() {
         </div>
       )}
 
+      {/* Not yet on board */}
+      {!loading && myRank === 0 && myPoints === 0 && (
+        <div className="bg-gray-900 border border-white/5 rounded-2xl px-4 py-3 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+            <FaTrophy size={14} className="text-blue-400" />
+          </div>
+          <div>
+            <p className="text-white font-bold text-sm">You're not on the leaderboard yet</p>
+            <p className="text-gray-500 text-xs mt-0.5">Report a found item to earn 50 points and get ranked!</p>
+          </div>
+        </div>
+      )}
+
       {/* Search */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl p-4">
         <div className="relative">
@@ -90,7 +115,7 @@ export default function StudentLeaderboard() {
 
       {loading ? (
         <div className="space-y-2 animate-pulse">
-          {[1,2,3,4,5].map(i => <div key={i} className="h-14 bg-gray-900 border border-white/5 rounded-2xl" />)}
+          {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-14 bg-gray-900 border border-white/5 rounded-2xl" />)}
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-gray-900 border border-white/5 rounded-2xl py-20 text-center">
@@ -112,11 +137,12 @@ export default function StudentLeaderboard() {
             </div>
             <div className="divide-y divide-white/[0.04]">
               {filtered.map((u: any, i: number) => {
-                const isMe    = u.id === user?.id;
-                const initial = u.name?.charAt(0)?.toUpperCase() || "?";
+                // Use the real index in the full board for rank display, not the filtered index
                 const realIdx = board.findIndex((b: any) => b.id === u.id);
+                const isMe    = u.id === myId;
+                const initial = u.name?.charAt(0)?.toUpperCase() || "?";
                 return (
-                  <div key={i}
+                  <div key={u.id ?? i}
                     className={`grid grid-cols-12 gap-4 items-center px-5 py-3.5 transition-colors ${
                       isMe ? "bg-blue-500/5" : "hover:bg-white/[0.02]"
                     }`}>
@@ -129,9 +155,9 @@ export default function StudentLeaderboard() {
                       </div>
                     </div>
                     <div className="col-span-6 flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 overflow-hidden">
                         {u.userImg
-                          ? <img src={u.userImg} alt="" className="w-full h-full rounded-xl object-cover" />
+                          ? <img src={u.userImg} alt="" className="w-full h-full object-cover" />
                           : <span className="text-white font-black text-sm">{initial}</span>
                         }
                       </div>
@@ -163,11 +189,11 @@ export default function StudentLeaderboard() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-2">
             {filtered.map((u: any, i: number) => {
-              const isMe    = u.id === user?.id;
-              const initial = u.name?.charAt(0)?.toUpperCase() || "?";
               const realIdx = board.findIndex((b: any) => b.id === u.id);
+              const isMe    = u.id === myId;
+              const initial = u.name?.charAt(0)?.toUpperCase() || "?";
               return (
-                <div key={i}
+                <div key={u.id ?? i}
                   className={`flex items-center gap-4 rounded-2xl px-4 py-3 border transition-colors ${rankBg(realIdx, isMe)}`}>
                   <div className={`w-8 text-center font-black ${rankColor(realIdx)}`}>
                     {realIdx < 3
@@ -175,9 +201,9 @@ export default function StudentLeaderboard() {
                       : <span className="text-sm">#{realIdx + 1}</span>
                     }
                   </div>
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 overflow-hidden">
                     {u.userImg
-                      ? <img src={u.userImg} alt="" className="w-full h-full rounded-xl object-cover" />
+                      ? <img src={u.userImg} alt="" className="w-full h-full object-cover" />
                       : <span className="text-white font-black text-sm">{initial}</span>
                     }
                   </div>

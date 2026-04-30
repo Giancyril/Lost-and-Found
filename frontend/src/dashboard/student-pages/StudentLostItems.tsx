@@ -1,32 +1,28 @@
 import { useState } from "react";
 import {
-  FaSearch, FaMapMarkerAlt, FaCalendarAlt,
-  FaCheckCircle, FaClock,
+  FaSearch, FaMapMarkerAlt,
+  FaCheckCircle,
 } from "react-icons/fa";
 import { IoMdRadioButtonOn } from "react-icons/io";
-import { useGetMyLostItemQuery } from "../../redux/api/api"; // Updated import
+import { useGetMyLostItemQuery } from "../../redux/api/api";
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
-const STATUS_TABS = [
-  { label: "All",      value: "ALL"      },
-  { label: "Active",   value: "ACTIVE"   },
-  { label: "Resolved", value: "RESOLVED" },
-];
-
 export default function StudentLostItems() {
-  // RTK Query Hook replacement
   const { data, isLoading: loading } = useGetMyLostItemQuery(undefined);
-  const items = data?.data?.data ?? data?.data ?? [];
+
+  // Backend getMyLostItem returns a plain array wrapped in sendResponse as data.data
+  // ❌ was: data?.data?.data ?? data?.data ?? []  (double-unwrap, always empty)
+  // ✅ fix: data?.data ?? []
+  const items: any[] = data?.data ?? [];
 
   const [search, setSearch] = useState("");
 
-  const filtered = items.filter((item: any) => {
-    const matchSearch = item.lostItemName?.toLowerCase().includes(search.toLowerCase()) ||
-      item.description?.toLowerCase().includes(search.toLowerCase());
-    return matchSearch;
-  });
+  const filtered = items.filter((item: any) =>
+    item.lostItemName?.toLowerCase().includes(search.toLowerCase()) ||
+    item.description?.toLowerCase().includes(search.toLowerCase())
+  );
 
   const total    = items.length;
   const active   = items.filter((i: any) => !i.isFound).length;
@@ -37,9 +33,9 @@ export default function StudentLostItems() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total Reports",  value: total,    icon: <FaSearch size={14} className="text-red-400" />,          accent: "bg-red-500/5",    sub: "all time",        subColor: "text-gray-500"    },
-          { label: "Active",         value: active,   icon: <IoMdRadioButtonOn size={14} className="text-orange-400" />, accent: "bg-orange-500/5", sub: "still missing",   subColor: "text-orange-400"  },
-          { label: "Resolved",       value: resolved, icon: <FaCheckCircle size={14} className="text-emerald-400" />,  accent: "bg-emerald-500/5",sub: "marked as found", subColor: "text-emerald-400" },
+          { label: "Total Reports", value: total,    icon: <FaSearch size={14} className="text-red-400" />,             accent: "bg-red-500/5",    sub: "all time",        subColor: "text-gray-500"    },
+          { label: "Active",        value: active,   icon: <IoMdRadioButtonOn size={14} className="text-orange-400" />, accent: "bg-orange-500/5", sub: "still missing",   subColor: "text-orange-400"  },
+          { label: "Resolved",      value: resolved, icon: <FaCheckCircle size={14} className="text-emerald-400" />,    accent: "bg-emerald-500/5",sub: "marked as found", subColor: "text-emerald-400" },
         ].map(({ label, value, icon, accent, sub, subColor }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
             <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
@@ -69,7 +65,7 @@ export default function StudentLostItems() {
 
       {loading ? (
         <div className="space-y-3 animate-pulse">
-          {[1,2,3].map(i => <div key={i} className="h-20 bg-gray-900 border border-white/5 rounded-2xl" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-20 bg-gray-900 border border-white/5 rounded-2xl" />)}
         </div>
       ) : (
         <>
@@ -86,15 +82,17 @@ export default function StudentLostItems() {
             {filtered.length === 0 ? (
               <div className="py-20 text-center">
                 <FaSearch size={24} className="text-gray-700 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No lost items match your filters</p>
+                <p className="text-gray-500 text-sm">
+                  {items.length === 0 ? "You haven't reported any lost items yet" : "No lost items match your search"}
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-white/[0.04]">
                 {filtered.map((item: any, i: number) => (
-                  <div key={i} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors">
+                  <div key={item.id ?? i} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors">
                     <div className="col-span-4 flex items-center gap-3 min-w-0">
                       {item.img
-                        ? <img src={item.img} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/10" />
+                        ? <img src={item.img} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/10" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                         : <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/15 flex items-center justify-center shrink-0"><FaSearch size={12} className="text-red-400" /></div>
                       }
                       <div className="min-w-0">
@@ -134,14 +132,16 @@ export default function StudentLostItems() {
             {filtered.length === 0 ? (
               <div className="py-16 text-center bg-gray-900 border border-white/5 rounded-2xl">
                 <FaSearch size={22} className="text-gray-700 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No lost items match your filters</p>
+                <p className="text-gray-500 text-sm">
+                  {items.length === 0 ? "You haven't reported any lost items yet" : "No lost items match your search"}
+                </p>
               </div>
             ) : filtered.map((item: any, i: number) => (
-              <div key={i} className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-3">
+              <div key={item.id ?? i} className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     {item.img
-                      ? <img src={item.img} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/10" />
+                      ? <img src={item.img} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/10" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                       : <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/15 flex items-center justify-center shrink-0"><FaSearch size={14} className="text-red-400" /></div>
                     }
                     <div className="min-w-0">
