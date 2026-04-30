@@ -190,18 +190,27 @@ const CombinedQRSlide = () => {
       <div className="flex-1 flex items-center justify-center px-8 py-4 min-h-0 overflow-hidden">
         <div className="w-full max-w-6xl flex flex-col gap-4 min-h-0">
 
-          {/* ── Header ── */}
-          <div className="text-center shrink-0">
-            <p className="text-slate-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-0.5">
-              Northern Bukidnon State College — Student Affairs Services
+         {/* ── Institutional Header ── */}
+          <div className="text-center shrink-0 mb-8 pt-6">
+            {/* College Name - Small, Wide-spaced, Bold Uppercase */}
+            <p className="text-slate-400 text-[11px] md:text-xs font-bold uppercase tracking-[0.4em] mb-2">
+              Northern Bukidnon State College
             </p>
-            <h1 className="text-white text-2xl md:text-3xl font-black tracking-tight leading-tight">
-              Lost &amp; Found{" "}
-              <span className="text-blue-400">Quick Access</span>
+
+            {/* Department Name - Large, High-impact Hero Text */}
+            <h1 className="text-white text-4xl md:text-5xl font-black tracking-tight leading-none mb-4">
+              Student Affairs & Services
             </h1>
-            <p className="text-slate-500 text-xs mt-1">
-              Scan a QR code below to report a missing item or browse the lost items directory
-            </p>
+
+            {/* System Title - Framed by decorative horizontal lines */}
+            <div className="flex items-center justify-center gap-4 px-4 max-w-2xl mx-auto">
+              <div className="h-[1px] flex-1 bg-gradient-to-l from-slate-700 to-transparent"></div>
+              <h2 className="text-blue-400 text-xs md:text-sm font-black uppercase tracking-[0.25em] whitespace-nowrap">
+                Lost & Found System
+              </h2>
+              <div className="h-[1px] flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
+            </div>
+
           </div>
 
           {/* ── Two QR columns ── */}
