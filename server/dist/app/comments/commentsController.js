@@ -18,11 +18,12 @@ exports.commentsController = {
                 const { itemId } = req.params;
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 50;
+                // itemType is accepted from query but not used in filtering — safe to ignore
                 const comments = yield commentsService_1.commentService.getComments(itemId, { page, limit });
                 res.json(comments);
             }
             catch (error) {
-                console.error('COMMENTS ERROR:', error === null || error === void 0 ? void 0 : error.message);
+                console.error('COMMENTS GET ERROR:', error === null || error === void 0 ? void 0 : error.message);
                 res.status(500).json({ error: 'Failed to fetch comments', detail: error === null || error === void 0 ? void 0 : error.message });
             }
         });
@@ -57,8 +58,8 @@ exports.commentsController = {
             var _a, _b;
             try {
                 const { commentId } = req.params;
-                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
-                const userRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
+                const userId = ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id) || null;
+                const userRole = ((_b = req.user) === null || _b === void 0 ? void 0 : _b.role) || 'USER';
                 const updated = yield commentsService_1.commentService.updateComment(commentId, req.body.updateData, userId, userRole);
                 res.json(updated);
             }
@@ -73,9 +74,16 @@ exports.commentsController = {
             var _a, _b;
             try {
                 const { commentId } = req.params;
-                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
-                const userRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
+                const userId = ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id) || null; // null not ''
+                const userRole = ((_b = req.user) === null || _b === void 0 ? void 0 : _b.role) || 'GUEST';
                 yield commentsService_1.commentService.deleteComment(commentId, userId, userRole);
+                // Broadcast deletion to other users in the room
+                const io = req.app.get('io');
+                if (io) {
+                    const itemId = req.query.itemId;
+                    if (itemId)
+                        io.to(`item-${itemId}`).emit('comment-deleted', { commentId });
+                }
                 res.status(204).send();
             }
             catch (error) {
@@ -89,7 +97,7 @@ exports.commentsController = {
             var _a;
             try {
                 const { commentId } = req.params;
-                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                const userId = ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id) || null;
                 const updated = yield commentsService_1.commentService.voteHelpful(commentId, userId);
                 res.json(updated);
             }
@@ -98,5 +106,5 @@ exports.commentsController = {
                 res.status(500).json({ error: 'Failed to vote helpful' });
             }
         });
-    }
+    },
 };

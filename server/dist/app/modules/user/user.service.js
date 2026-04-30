@@ -17,33 +17,42 @@ const utils_1 = require("../../utils/utils");
 const error_1 = __importDefault(require("../../global/error"));
 const prisma_1 = __importDefault(require("../../config/prisma"));
 const registerUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
+    // Build the identifier fields from either schoolId or username/email
+    const username = user.username || user.schoolId;
+    const email = user.email || `${user.schoolId}@student.nbsc.edu.ph`;
     const existedUser = yield prisma_1.default.user.findFirst({
         where: {
-            OR: [{ username: user.username }, { email: user.email }],
+            OR: [
+                { username },
+                { email },
+                ...(user.schoolId ? [{ schoolId: user.schoolId }] : []),
+            ],
         },
     });
     if (existedUser) {
-        throw new error_1.default(400, "Same Username and email exists");
+        throw new error_1.default(406, "Username, email, or School ID already exists");
     }
     const hashedPassword = yield utils_1.utils.passwordHash(user.password);
     const result = yield prisma_1.default.$transaction((transactions) => __awaiter(void 0, void 0, void 0, function* () {
         const createdUser = yield transactions.user.create({
             data: {
-                username: user.username,
-                email: user.email,
+                username,
+                email,
                 password: hashedPassword,
-                userImg: user.userImg,
+                userImg: user.userImg || "",
+                name: user.name || "",
+                schoolId: user.schoolId || null, // ← NEW
             },
         });
-        const returnData = {
+        return {
             id: createdUser.id,
             userImg: createdUser.userImg,
             username: createdUser.username,
             email: createdUser.email,
+            schoolId: createdUser.schoolId,
             createdAt: createdUser.createdAt,
             updatedAt: createdUser.updatedAt,
         };
-        return returnData;
     }));
     return result;
 });

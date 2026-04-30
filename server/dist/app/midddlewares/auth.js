@@ -33,6 +33,9 @@ const auth = () => {
             next();
         }
         catch (err) {
+            if (err.name === "TokenExpiredError" || err.name === "JsonWebTokenError" || err.name === "NotBeforeError") {
+                return next(new error_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, "Invalid or expired token"));
+            }
             next(err);
         }
     });

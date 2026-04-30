@@ -79,7 +79,48 @@ const upsertStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
 });
-// ── Debug endpoint — remove after fixing ─────────────────────────────────────
+// ── NEW: Registration validation ──────────────────────────────────────────────
+// GET /api/students/validate-registration?schoolId=2021-00123
+// Used by StudentRegister.tsx Step 1 to check masterlist + duplicate accounts.
+const validateRegistration = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _d;
+    try {
+        const { schoolId } = req.query;
+        if (!(schoolId === null || schoolId === void 0 ? void 0 : schoolId.trim())) {
+            return (0, response_1.default)(res, {
+                statusCode: http_status_codes_1.StatusCodes.BAD_REQUEST,
+                success: false,
+                message: "schoolId query param is required",
+                data: null,
+            });
+        }
+        const result = yield student_service_1.studentService.validateForRegistration(schoolId.trim());
+        (0, response_1.default)(res, {
+            statusCode: http_status_codes_1.StatusCodes.OK,
+            success: true,
+            message: "Student is eligible for registration",
+            data: Object.assign({ alreadyRegistered: false }, result),
+        });
+    }
+    catch (err) {
+        // CONFLICT means already registered — still 200 so frontend can show the right message
+        if (err.statusCode === http_status_codes_1.StatusCodes.CONFLICT) {
+            return (0, response_1.default)(res, {
+                statusCode: http_status_codes_1.StatusCodes.OK,
+                success: true,
+                message: err.message,
+                data: { alreadyRegistered: true },
+            });
+        }
+        (0, response_1.default)(res, {
+            statusCode: (_d = err.statusCode) !== null && _d !== void 0 ? _d : 400,
+            success: false,
+            message: err.message,
+            data: null,
+        });
+    }
+});
+// ── Debug endpoint — remove after confirming sheet columns ───────────────────
 const debugMasterlist = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const response = yield fetch(GVIZ_URL);
@@ -106,5 +147,6 @@ exports.studentController = {
     getStudentById,
     getStudentByDetails,
     upsertStudent,
+    validateRegistration, // ← NEW
     debugMasterlist,
 };

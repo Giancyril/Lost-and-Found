@@ -10,6 +10,8 @@ const auth_1 = __importDefault(require("../../midddlewares/auth"));
 const router = express_1.default.Router();
 router.get("/debug/masterlist", student_controller_1.studentController.debugMasterlist);
 router.get("/details", student_controller_1.studentController.getStudentByDetails);
+router.get("/validate-registration", student_controller_1.studentController.validateRegistration);
+// ── Existing ──────────────────────────────────────────────────────────────────
 router.get("/:id", student_controller_1.studentController.getStudentById);
 router.post("/upsert", (0, auth_1.default)(), student_controller_1.studentController.upsertStudent);
 exports.studentRoutes = router;

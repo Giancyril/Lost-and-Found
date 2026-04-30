@@ -23,17 +23,27 @@ const sharp_1 = __importDefault(require("sharp"));
 const mailer_1 = require("../../utils/mailer");
 const emailTemplates_1 = require("../../utils/emailTemplates");
 const sheets_service_1 = require("../sheets/sheets.service");
+const points_service_1 = require("../points/points.service"); // ← NEW
 const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         const result = yield foundItem_service_1.foundItemService.createFoundItem(req.body, userId);
         if (result === null || result === void 0 ? void 0 : result.id) {
+            // ── Award points to the reporter ────────────────────────────────────────
+            // Fire-and-forget: never blocks the response if points fail
+            if (userId) {
+                yield points_service_1.pointsService
+                    .award(userId, "FOUND_ITEM_REPORTED", result.id)
+                    .catch((err) => console.error("[Points] Failed to award points for found item:", err));
+            }
             // Log to Google Sheets
             try {
                 const reportTimestamp = new Date().toISOString();
                 const studentId = req.body.studentId ||
-                    (req.body.schoolEmail ? req.body.schoolEmail.split("@")[0] : "N/A");
+                    (req.body.schoolEmail
+                        ? req.body.schoolEmail.split("@")[0]
+                        : "N/A");
                 yield (0, sheets_service_1.logToSheet)({
                     sheetName: "Found Items",
                     timestamp: reportTimestamp,
@@ -46,7 +56,7 @@ const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function
                     date: req.body.date,
                     type: "FOUND",
                     reportId: result.id.toString(),
-                    scannedAt: reportTimestamp
+                    scannedAt: reportTimestamp,
                 });
                 console.log("[Sheets] Found item logged to Google Sheets:", result.id);
             }
@@ -96,9 +106,8 @@ const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 const getFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // ── EGRESS FIX: cache public list for 60 seconds ──────────────────────────
         res.set("Cache-Control", "public, max-age=60");
-        const meta = yield utils_1.utils.calculateMeta(Object.assign(Object.assign({}, req.query), { itemType: 'found' }));
+        const meta = yield utils_1.utils.calculateMeta(Object.assign(Object.assign({}, req.query), { itemType: "found" }));
         const result = yield foundItem_service_1.foundItemService.getFoundItem(req.query);
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
@@ -287,33 +296,29 @@ const uploadFoundItemImages = (req, res) => __awaiter(void 0, void 0, void 0, fu
                 data: null,
             });
         }
-        // Upload each image to storage
         const uploadedUrls = [];
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            // Compress image using sharp
             let compressedBuffer = file.buffer;
             try {
                 compressedBuffer = yield (0, sharp_1.default)(file.buffer)
                     .resize(1200, 1200, {
-                    fit: 'inside',
-                    withoutEnlargement: true
+                    fit: "inside",
+                    withoutEnlargement: true,
                 })
                     .jpeg({
                     quality: 80,
-                    progressive: true
+                    progressive: true,
                 })
                     .toBuffer();
             }
             catch (error) {
                 console.error("Image compression error:", error);
-                // Fall back to original buffer if compression fails
                 compressedBuffer = file.buffer;
             }
             const url = yield (0, storage_1.uploadFileToStorage)(compressedBuffer, file.mimetype, "found", id);
             uploadedUrls.push(url);
         }
-        // Update the found item with the primary image URL
         const primaryImageUrl = uploadedUrls[parseInt(primaryIndex) || 0];
         yield foundItem_service_1.foundItemService.updateFoundItemImage(id, primaryImageUrl);
         (0, response_1.default)(res, {

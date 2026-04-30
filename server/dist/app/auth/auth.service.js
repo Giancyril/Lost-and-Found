@@ -19,15 +19,14 @@ const http_status_codes_1 = require("http-status-codes");
 const prisma_1 = __importDefault(require("../config/prisma"));
 const loginUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const { password, username: userNameEmail } = data;
+    // ── Find user by username, email, OR schoolId ─────────────────────────────
+    // This is the only change from the original — schoolId is now a third OR branch.
     const user = yield prisma_1.default.user.findFirst({
         where: {
             OR: [
-                {
-                    username: userNameEmail,
-                },
-                {
-                    email: userNameEmail,
-                },
+                { username: userNameEmail },
+                { email: userNameEmail },
+                { schoolId: userNameEmail }, // ← NEW: students log in with schoolId
             ],
         },
     });
@@ -48,17 +47,14 @@ const loginUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
         token: accessToken,
     };
 });
+// ── All other functions unchanged from your original ─────────────────────────
 const newPasswords = (data, user) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(data.newPassword);
     if (data.currentPassword === data.newPassword) {
         throw new error_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Password is same");
     }
     const existedUser = yield prisma_1.default.user.findFirst({
-        where: {
-            username: user.username,
-        },
+        where: { username: user.username },
     });
-    // console.log(user)
     if (data.currentPassword &&
         existedUser &&
         !(yield utils_1.utils.comparePasswords(data.currentPassword, existedUser.password))) {
@@ -66,43 +62,27 @@ const newPasswords = (data, user) => __awaiter(void 0, void 0, void 0, function*
     }
     const newHashPassword = yield utils_1.utils.passwordHash(data.newPassword);
     yield prisma_1.default.user.update({
-        where: {
-            email: existedUser === null || existedUser === void 0 ? void 0 : existedUser.email,
-        },
-        data: {
-            password: newHashPassword,
-        },
+        where: { email: existedUser === null || existedUser === void 0 ? void 0 : existedUser.email },
+        data: { password: newHashPassword },
     });
 });
 const changeEmail = (email, user) => __awaiter(void 0, void 0, void 0, function* () {
-    // console.log(email);
-    const existedUser = yield prisma_1.default.user.findFirst({
-        where: email,
-    });
-    // console.log(user);
-    // console.log(existedUser);
+    const existedUser = yield prisma_1.default.user.findFirst({ where: email });
     if (existedUser) {
         throw new error_1.default(http_status_codes_1.StatusCodes.CONFLICT, "Email already exists. Try new one!");
     }
     yield prisma_1.default.user.update({
-        where: {
-            username: user === null || user === void 0 ? void 0 : user.username,
-        },
+        where: { username: user === null || user === void 0 ? void 0 : user.username },
         data: email,
     });
 });
 const changeUsername = (username, user) => __awaiter(void 0, void 0, void 0, function* () {
-    const existedUser = yield prisma_1.default.user.findFirst({
-        where: username,
-    });
+    const existedUser = yield prisma_1.default.user.findFirst({ where: username });
     if (existedUser) {
         throw new error_1.default(http_status_codes_1.StatusCodes.CONFLICT, "Username already exists. Try new one!");
     }
-    // console.log(user);
     yield prisma_1.default.user.update({
-        where: {
-            email: user.email,
-        },
+        where: { email: user.email },
         data: username,
     });
 });

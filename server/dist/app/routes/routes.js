@@ -30,6 +30,7 @@ const student_routes_1 = require("../modules/student/student.routes");
 const sheets_routes_1 = __importDefault(require("../modules/sheets/sheets.routes"));
 const upload_1 = require("../midddlewares/upload");
 const commentsRouter_1 = require("../comments/commentsRouter");
+const points_controller_1 = require("../modules/points/points.controller");
 const router = express_1.default.Router();
 ////////////////////////////////////////////////// user //////////////////////////////////////////////
 router.post("/register", user_controllers_1.userController.registerUser);
@@ -97,4 +98,6 @@ router.put("/bulletin-posts/:id/resolve", (0, auth_1.default)(), bulletinPost_co
 router.use("/students", student_routes_1.studentRoutes);
 router.use("/sheets", sheets_routes_1.default);
 router.use("/", commentsRouter_1.commentsRouter);
+router.get("/points/my", (0, auth_1.default)(), points_controller_1.pointsController.getMyPoints);
+router.get("/points/leaderboard", points_controller_1.pointsController.getLeaderboard);
 exports.default = router;

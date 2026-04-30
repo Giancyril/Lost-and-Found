@@ -143,9 +143,65 @@ const createOrUpdateStudent = async (_data: any) => {
   throw new AppError(StatusCodes.METHOD_NOT_ALLOWED, "Manage the student masterlist directly in Google Sheets.");
 };
 
+// Google Sheets logging functionality
+const SHEETS_WEBHOOK_URL = process.env.SHEETS_WEBHOOK_URL;
+
+interface SheetLogData {
+  sheetName: string;
+  timestamp: string;
+  studentId: string;
+  reporterName: string;
+  email: string;
+  itemName: string;
+  description: string;
+  location: string;
+  date: string;
+  type: "LOST" | "FOUND";
+  reportId: string;
+  scannedAt: string;
+}
+
+const logToSheet = async (data: SheetLogData) => {
+  if (!SHEETS_WEBHOOK_URL) {
+    console.warn("[Sheets] SHEETS_WEBHOOK_URL not configured, skipping logging");
+    return;
+  }
+
+  try {
+    const response = await fetch(SHEETS_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Sheets webhook responded with status: ${response.status}`);
+    }
+
+    console.log(`[Sheets] Successfully logged to ${data.sheetName} sheet`);
+  } catch (error) {
+    console.error('[Sheets] Error logging to Google Sheets:', error);
+    throw error;
+  }
+};
+
+const getSheetsConfig = () => {
+  return {
+    isEnabled: !!SHEETS_WEBHOOK_URL,
+    sheetId: SHEET_ID,
+  };
+};
+
 export const studentService = {
   getStudentById,
   getStudentByDetails,
   validateForRegistration,
   createOrUpdateStudent,
+};
+
+export {
+  logToSheet,
+  getSheetsConfig,
 };

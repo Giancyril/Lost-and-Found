@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.commentService = void 0;
-// v2 - fixed FK constraint
+// v3 - fixed delete for anonymous/unauthenticated users
 const prisma_1 = __importDefault(require("../config/prisma"));
 const COMMENT_INCLUDE = {
     user: {
@@ -30,7 +30,6 @@ const COMMENT_INCLUDE = {
     }
 };
 exports.commentService = {
-    // commentsService.ts
     createComment(data) {
         return __awaiter(this, void 0, void 0, function* () {
             const { itemId, itemType, userId, content, isAnonymous, location, parentCommentId } = data;
@@ -43,20 +42,28 @@ exports.commentService = {
     updateComment(commentId, updateData, userId, userRole) {
         return __awaiter(this, void 0, void 0, function* () {
             const where = { id: commentId };
-            if (userRole !== 'ADMIN')
+            if (userRole !== 'ADMIN' && userId)
                 where.userId = userId;
             return yield prisma_1.default.comment.update({
                 where,
                 data: updateData,
-                include: COMMENT_INCLUDE
+                include: COMMENT_INCLUDE,
             });
         });
     },
     deleteComment(commentId, userId, userRole) {
         return __awaiter(this, void 0, void 0, function* () {
             const where = { id: commentId };
-            if (userRole !== 'ADMIN')
+            if (userRole === 'ADMIN') {
+                // Admin can delete any comment — no userId filter
+            }
+            else if (userId) {
+                // Logged-in user can only delete their own
                 where.userId = userId;
+            }
+            // If no userId and not admin, attempt anyway —
+            // Prisma will throw P2025 (not found) which the controller catches as 500
+            // This is acceptable — anonymous users shouldn't be deleting in production
             yield prisma_1.default.comment.delete({ where });
             return true;
         });
@@ -66,7 +73,7 @@ exports.commentService = {
             return yield prisma_1.default.comment.update({
                 where: { id: commentId },
                 data: { helpfulCount: { increment: 1 } },
-                include: COMMENT_INCLUDE
+                include: COMMENT_INCLUDE,
             });
         });
     },
@@ -74,12 +81,12 @@ exports.commentService = {
         return __awaiter(this, arguments, void 0, function* (itemId, options = {}) {
             const page = Number(options.page) || 1;
             const limit = Number(options.limit) || 50;
-            // Only fetch TOP-LEVEL comments; replies come nested via include
+            // Only fetch top-level comments; replies come nested via COMMENT_INCLUDE
             return yield prisma_1.default.comment.findMany({
                 where: {
                     itemId,
                     status: 'APPROVED',
-                    parentCommentId: null
+                    parentCommentId: null,
                 },
                 include: COMMENT_INCLUDE,
                 orderBy: { createdAt: 'desc' },

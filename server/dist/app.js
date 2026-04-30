@@ -10,6 +10,7 @@ const routes_1 = __importDefault(require("./app/routes/routes"));
 const errorHandler_1 = __importDefault(require("./app/midddlewares/errorHandler"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
+app.set('trust proxy', 1);
 const corsOptions = {
     origin: [
         "http://localhost:5173",
