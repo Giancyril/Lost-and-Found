@@ -636,11 +636,11 @@ const LostItemsPage = () => {
               onChange={(v) => { setCategoryFilter(v); setCurrentPage(1); }} />
             <div className="flex gap-0.5 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
               <button onClick={() => setViewMode("grid")} title="Grid view"
-                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "text-gray-500 hover:text-white"}`}>
+                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-500/10 text-blue-400" : "text-gray-500 hover:text-white"}`}>
                 <FaTh size={12} />
               </button>
               <button onClick={() => setViewMode("list")} title="List view"
-                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "text-gray-500 hover:text-white"}`}>
+                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-blue-500/10 text-blue-400" : "text-gray-500 hover:text-white"}`}>
                 <FaList size={12} />
               </button>
             </div>

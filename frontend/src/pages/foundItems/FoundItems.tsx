@@ -445,13 +445,12 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
 
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div id="claim-modal" className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div id="claim-modal" className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
+  style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)' }}>
         <div className="flex flex-col gap-3 px-5 py-4 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                <FaClipboardList size={11} className="text-blue-400" />
-              </div>
+              
               <div className="min-w-0">
                 <h3 className="text-sm font-bold text-white truncate">Submit a Claim</h3>
                 <p className="text-gray-500 text-[11px] truncate">Prove ownership to retrieve this item</p>
@@ -1043,11 +1042,11 @@ const watchedSchoolEmail  = watch("schoolEmail");
             />
             <div className="flex gap-0.5 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
               <button onClick={() => setViewMode("grid")} title="Grid view"
-                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "text-gray-500 hover:text-white"}`}>
+                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-500/10 text-blue-400" : "text-gray-500 hover:text-white"}`}>
                 <FaTh size={12} />
               </button>
               <button onClick={() => setViewMode("list")} title="List view"
-                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "text-gray-500 hover:text-white"}`}>
+                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-blue-500/10 text-blue-400" : "text-gray-500 hover:text-white"}`}>
                 <FaList size={12} />
               </button>
             </div>
