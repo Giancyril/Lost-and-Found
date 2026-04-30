@@ -82,10 +82,10 @@ export const StudentLogin: React.FC = () => {
         </div>
 
       {justRegistered && (
-        <div className="w-full max-w-sm mb-4 bg-emerald-500/5 border border-emerald-500/20
+        <div className="w-full max-w-sm mb-4 bg-blue-500/5 border border-blue-500/20
           rounded-2xl px-4 py-3">
-          <p className="text-emerald-300 text-xs font-medium text-center">
-            ✓ Account created! Sign in with your School ID.
+          <p className="text-blue-300 text-xs font-medium text-center">
+            Account created successfully. Sign in with your School ID to continue.
           </p>
         </div>
       )}

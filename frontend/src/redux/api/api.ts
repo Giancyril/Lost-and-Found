@@ -60,7 +60,9 @@ const api = baseApi.injectEndpoints({
     }),
     createFoundItem: builder.mutation({
       query: (data: any) => ({ url: `/found-items/public`, method: "POST", body: data }),
-      invalidatesTags: ["foundItems", "mylostItems"],
+      // FIX: invalidate "myFoundItems" and "points" so the dashboard found-items
+      // list and the navbar points badge both refresh immediately after submission.
+      invalidatesTags: ["foundItems", "mylostItems", "myFoundItems", "points"],
     }),
     getFoundItems: builder.query({
       query: (data: any) => ({ url: "/found-items", method: "GET", params: data }),
@@ -108,13 +110,16 @@ const api = baseApi.injectEndpoints({
     }),
     updateClaimStatus: builder.mutation({
       query: ({ claimId, ...data }: any) => ({ url: `/claims/${claimId}`, method: "PUT", body: data }),
-      invalidatesTags: ["adminData", "claims", "auditLogs"],
+      // FIX: invalidate "points" so leaderboard and navbar badge refresh when
+      // admin approves a claim (CLAIM_APPROVED points are awarded server-side).
+      invalidatesTags: ["adminData", "claims", "auditLogs", "points"],
     }),
     updateClaimStatusWithNote: builder.mutation({
       query: ({ claimId, status, note }: { claimId: string; status: string; note?: string }) => ({
         url: `/claims/${claimId}`, method: "PUT", body: { status, note },
       }),
-      invalidatesTags: ["adminData", "claims", "auditLogs"],
+      // FIX: same as above
+      invalidatesTags: ["adminData", "claims", "auditLogs", "points"],
     }),
     deleteClaim: builder.mutation({
       query: (claimId: string) => ({ url: `/claims/${claimId}`, method: "DELETE" }),
@@ -141,6 +146,7 @@ const api = baseApi.injectEndpoints({
       query: () => ({ url: "/admin/match-notifications", method: "GET" }),
       providesTags: ["matchNotifications"],
     }),
+
     // user management
     blockUser: builder.mutation({
       query: (id: string) => ({ url: `/block/user/${id}`, method: "PUT" }),
@@ -201,12 +207,11 @@ const api = baseApi.injectEndpoints({
       invalidatesTags: ["faqs"],
     }),
 
-    // lost item — add after getLostItems
+    // lost item admin
     getAllLostItems: builder.query({
       query: (data: any) => ({ url: "/admin/lostItems", method: "GET", params: data }),
       providesTags: ["mylostItems"],
     }),
-
 
     // email
     sendLostItemEmail: builder.mutation({
@@ -215,7 +220,7 @@ const api = baseApi.injectEndpoints({
     sendClaimApprovedEmail: builder.mutation({
       query: (data: any) => ({ url: "/email/claim-approved", method: "POST", body: data }),
     }),
-        
+
     // archived and stale items
     getArchivedFoundItems: builder.query({
       query: () => ({ url: "/found-items/archived", method: "GET" }),
@@ -271,7 +276,7 @@ const api = baseApi.injectEndpoints({
       query: (id: string) => ({ url: `/bulletin-posts/${id}/resolve`, method: "PUT" }),
       invalidatesTags: ["bulletinPosts"],
     }),
-    
+
     // students
     getStudentById: builder.query({
       query: (id: string) => ({ url: `/students/${id}`, method: "GET" }),
@@ -285,10 +290,10 @@ const api = baseApi.injectEndpoints({
 
     // comments
     getComments: builder.query({
-      query: ({ itemId, itemType }) => ({ 
-        url: `/items/${itemId}/comments`, 
+      query: ({ itemId, itemType }) => ({
+        url: `/items/${itemId}/comments`,
         method: "GET",
-        params: { itemType }  // add this
+        params: { itemType },
       }),
       providesTags: ["comments"],
     }),
@@ -303,29 +308,29 @@ const api = baseApi.injectEndpoints({
     deleteComment: builder.mutation<void, { commentId: string; itemId: string }>({
       query: ({ commentId, itemId }) => ({
         url: `/comments/${commentId}?itemId=${itemId}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['comments'],
+      invalidatesTags: ["comments"],
     }),
 
-    // ── Points ────────────────────────────────────────────────────────────────────
+    // points
     getMyPoints: builder.query({
-      query: () => ({ url: '/points/my', method: 'GET' }),
-      providesTags: ['points'],
+      query: () => ({ url: "/points/my", method: "GET" }),
+      providesTags: ["points"],
     }),
     getLeaderboard: builder.query({
-      query: () => ({ url: '/points/leaderboard', method: 'GET' }),
-      providesTags: ['points'],
+      query: () => ({ url: "/points/leaderboard", method: "GET" }),
+      providesTags: ["points"],
     }),
 
-    // ── Student registration validation (new endpoint) ────────────────────────────
-      validateRegistration: builder.query({
-        query: (schoolId: string) => ({
-          url: `/students/validate-registration`,
-          method: 'GET',
-          params: { schoolId },
-        }),
+    // student registration validation
+    validateRegistration: builder.query({
+      query: (schoolId: string) => ({
+        url: `/students/validate-registration`,
+        method: "GET",
+        params: { schoolId },
       }),
+    }),
   }),
 });
 
@@ -401,5 +406,5 @@ export const {
   useLazyValidateRegistrationQuery,
   useValidateRegistrationQuery,
   useGetMyPointsQuery,
-  useGetLeaderboardQuery
+  useGetLeaderboardQuery,
 } = api;

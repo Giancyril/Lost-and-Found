@@ -4,7 +4,7 @@ import { useUserVerification, signOut } from "../auth/auth";
 import {
   FaTachometerAlt, FaBoxOpen, FaSearch, FaClipboardList,
   FaTrophy, FaCog, FaBars, FaTimes, FaHome, FaSignOutAlt,
-  FaChevronLeft, FaChevronRight, FaStar, FaChevronDown,
+  FaChevronLeft, FaChevronRight, FaChevronDown, FaStar,
 } from "react-icons/fa";
 
 const NAV_ITEMS = [
@@ -87,7 +87,7 @@ const ProfileDropdown = ({
         </div>
         <div className="hidden sm:block text-left">
           <p className="text-white text-sm font-semibold leading-none">
-            {user?.name || user?.username || "Student"}
+            {user?.name?.split(' ')[0] || user?.username || "Student"}
           </p>
           <p className="text-gray-500 text-xs mt-0.5 font-mono">{user?.schoolId || "STUDENT"}</p>
         </div>
@@ -111,7 +111,7 @@ const ProfileDropdown = ({
               </div>
               <div className="min-w-0">
                 <p className="text-white text-sm font-medium truncate">
-                  {user?.name || user?.username || "Student"}
+                  {user?.name?.split(' ')[0] || user?.username || "Student"}
                 </p>
                 <p className="text-gray-500 text-[10px] font-mono truncate">
                   {user?.schoolId || "Student"}

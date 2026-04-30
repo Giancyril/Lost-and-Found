@@ -78,8 +78,8 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
       };
 
       const [pointsRes, boardRes] = await Promise.allSettled([
-        fetch("/api/points/my",          { headers }).then(r => r.json()),
-        fetch("/api/points/leaderboard", { headers }).then(r => r.json()),
+        fetch("/points/my",          { headers }).then(r => r.json()),
+        fetch("/points/leaderboard", { headers }).then(r => r.json()),
       ]);
 
       if (pointsRes.status === "fulfilled") {

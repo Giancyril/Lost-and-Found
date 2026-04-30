@@ -15,6 +15,8 @@ import {
 } from "react-icons/fa";
 import { useState, useRef, useEffect } from "react";
 import NotificationBell from "../notifications/NotificationBell";
+import { useGetMyPointsQuery } from "../../redux/api/api";
+import { FaStar } from "react-icons/fa";
 
 // ── Shared SVG user icon — matches StudentLayout & StudentDashboard ──────────
 const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -28,6 +30,10 @@ export function Navbars() {
   const users: any = useUserVerification();
   const isAdmin   = users?.role === "ADMIN";
   const isLoggedIn = !!users?.email || !!users?.id;
+  
+  // Get points for students
+  const { data: pointsData } = useGetMyPointsQuery(undefined, { skip: !isLoggedIn || isAdmin });
+  const points = pointsData?.data?.totalPoints ?? 0;
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -211,13 +217,17 @@ export function Navbars() {
                         flex items-center justify-center shrink-0">
                         <UserIcon className="w-5 h-5" />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-white text-sm font-medium truncate">
                           {users?.name || users?.username || "Student"}
                         </p>
                         <p className="text-gray-500 text-[10px] font-mono truncate">
                           {users?.schoolId || "Student"}
                         </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1.5 shrink-0">
+                        <FaStar size={10} className="text-yellow-400" />
+                        <span className="text-yellow-400 text-xs font-bold">{points}</span>
                       </div>
                     </div>
 

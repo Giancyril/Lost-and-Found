@@ -21,21 +21,16 @@ export default function StudentLostItems() {
   const items = data?.data?.data ?? data?.data ?? [];
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
 
   const filtered = items.filter((item: any) => {
     const matchSearch = item.lostItemName?.toLowerCase().includes(search.toLowerCase()) ||
       item.description?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus =
-      statusFilter === "ALL" ||
-      (statusFilter === "RESOLVED" &&  item.isFound) ||
-      (statusFilter === "ACTIVE"   && !item.isFound);
-    return matchSearch && matchStatus;
+    return matchSearch;
   });
 
   const total    = items.length;
   const active   = items.filter((i: any) => !i.isFound).length;
-  const resolved = items.filter((i: any) =>  i.isFound).length;
+  const resolved = items.filter((i: any) => i.isFound).length;
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
@@ -60,8 +55,8 @@ export default function StudentLostItems() {
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+      {/* Search */}
+      <div className="bg-gray-900 border border-white/5 rounded-2xl p-4">
         <div className="relative flex-1 w-full group">
           <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-red-400 transition-colors" size={12} />
           <input
@@ -69,18 +64,6 @@ export default function StudentLostItems() {
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-gray-800/80 border border-white/10 rounded-2xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all"
           />
-        </div>
-        <div className="flex gap-1 bg-gray-800/40 border border-white/10 rounded-2xl p-1 w-full sm:w-auto">
-          {STATUS_TABS.map(({ label, value }) => (
-            <button key={value} onClick={() => setStatusFilter(value)}
-              className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap focus:outline-none select-none border transition-all ${
-                statusFilter === value
-                  ? "bg-red-500/10 text-red-300 border-red-500/20"
-                  : "border-transparent text-gray-400 hover:text-white"
-              }`}>
-              {label}
-            </button>
-          ))}
         </div>
       </div>
 
