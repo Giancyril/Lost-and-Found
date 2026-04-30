@@ -313,7 +313,11 @@ const SingleFoundItem = () => {
     return useGetStudentByIdQuery(trimmed, { skip: !isValidId });
   };
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
+
+  // ── FIX: watch the claim form fields for live values ──
+  const watchedClaimantName = watch("claimantName") ?? "";
+  const watchedSchoolEmail  = watch("schoolEmail")  ?? "";
 
   const handleCloseClaimModal = () => {
     closeModal(setIsClaimModalOpen);
@@ -330,30 +334,56 @@ const SingleFoundItem = () => {
     toast.success(`Student identified: ${student.name}`);
   };
 
+  // ── FIX: use watched values instead of querySelector ──
   const handleClaimFetchDetails = async () => {
-    const nameEl  = document.querySelector('#single-claim-modal input[name="claimantName"]') as HTMLInputElement;
-    const emailEl = document.querySelector('#single-claim-modal input[name="schoolEmail"]')  as HTMLInputElement;
-    const name    = nameEl?.value?.trim()  || "";
-    const email   = emailEl?.value?.trim() || "";
+    const name  = watchedClaimantName?.trim() || "";
+    const email = watchedSchoolEmail?.trim()  || "";
+
     if (!name && !email) { toast.info("Please enter a name or email to fetch details"); return; }
+
     setIsFetchingClaimStudent(true);
     try {
-      let student = null;
+      let student: any = null;
+
+      // Try name (+ email together) first
       if (name) {
-        try { const r = await getStudentByDetailsForClaim({ name, email: "" }).unwrap(); student = r.data ?? r; }
-        catch { if (email) { try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; } catch {} } }
-      } else {
-        try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; }
-        catch { toast.error("Student not found"); return; }
+        try {
+          const r = await getStudentByDetailsForClaim({ name, email }).unwrap();
+          student = r?.data ?? r;
+        } catch {
+          // name search failed — fall through to email-only
+        }
       }
-      if (student) {
-        setClaimScannedStudent({ id: student.id, name: student.name, email: student.email, department: student.department || "", raw: "manual_fetch" });
+
+      // Fall back to email-only if name search failed or name was empty
+      if (!student?.name && email) {
+        try {
+          const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap();
+          student = r?.data ?? r;
+        } catch {
+          // both failed
+        }
+      }
+
+      if (student?.name) {
+        setClaimScannedStudent({
+          id:         student.id         || "",
+          name:       student.name       || "",
+          email:      student.email      || "",
+          department: student.department || student.course || "",
+          raw:        "manual_fetch",
+        });
         setValue("claimantName", student.name);
-        setValue("schoolEmail", student.email);
+        setValue("schoolEmail",  student.email);
         toast.success(`Found: ${student.name}`);
-      } else { toast.error("Student not found in masterlist"); }
-    } catch { toast.error("Student not found in masterlist"); }
-    finally { setIsFetchingClaimStudent(false); }
+      } else {
+        toast.error("Student not found in masterlist");
+      }
+    } catch {
+      toast.error("Student not found in masterlist");
+    } finally {
+      setIsFetchingClaimStudent(false);
+    }
   };
 
   const onSubmit = async (data: any) => {
@@ -579,7 +609,11 @@ const SingleFoundItem = () => {
             <div className="px-4 pt-3 border-b border-gray-800 pb-3">
               {!claimScannedStudent ? (
                 <div className="flex items-center gap-2">
-                  <button onClick={handleClaimFetchDetails} disabled={isFetchingClaimStudent} className="flex-1 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
+                  <button
+                    onClick={handleClaimFetchDetails}
+                    disabled={isFetchingClaimStudent}
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 uppercase tracking-wider flex items-center justify-center gap-1.5"
+                  >
                     {isFetchingClaimStudent ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />} Fetch Info
                   </button>
                   <button onClick={() => setShowClaimScanner(true)} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg uppercase tracking-wider">

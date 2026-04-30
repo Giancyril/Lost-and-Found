@@ -77,7 +77,7 @@ const PointsBannerSlide = () => {
                 Earn Points.
               </span>
             </h1>
-            <p className="text-slate-400 text-sm mt-2 max-w-xl mx-auto">
+            <p className="text-slate-400 text-sm mt-2 max-w-2xl mx-auto">
               Every found item you report earns you <span className="text-blue-400 font-bold">50 points</span> and helps a fellow student recover their belongings.
             </p>
           </div>
@@ -209,8 +209,8 @@ const QRCodeSlide = () => {
                   <div key={step.num} className="flex items-start gap-3 bg-slate-800/60 border border-white/5 rounded-xl px-4 py-2.5">
                     <span className="text-blue-500 font-black text-sm shrink-0 mt-0.5">{step.num}</span>
                     <div>
-                      <p className="text-white font-bold text-sm leading-tight">{step.title}</p>
-                      <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">{step.desc}</p>
+                      <p className="text-white font-bold text-sm leading-tight ">{step.title}</p>
+                      <p className="text-slate-400 text-xs mt-1 leading-relaxed text-justify" style={{ hyphens: 'auto' }}>{step.desc}</p>
                     </div>
                   </div>
                 ))}

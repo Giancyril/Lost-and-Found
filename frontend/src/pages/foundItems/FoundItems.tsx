@@ -679,6 +679,7 @@ const FoundItemsPage = () => {
     reset: addReset,
     setValue: addSetValue,
     control: addControl,
+    watch,
   } = useForm({
   mode: "onSubmit",
   reValidateMode: "onSubmit",
@@ -691,6 +692,9 @@ const FoundItemsPage = () => {
     location: "",
   },
 });
+
+const watchedReporterName = watch("reporterName");
+const watchedSchoolEmail  = watch("schoolEmail");
 
   const handleFuzzyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
@@ -761,63 +765,57 @@ const FoundItemsPage = () => {
   };
 
   const handleFetchDetails = async () => {
-    const reporterName = (document.querySelector('input[name="reporterName"]') as HTMLInputElement)?.value?.trim() || "";
-    const schoolEmail  = (document.querySelector('input[name="schoolEmail"]') as HTMLInputElement)?.value?.trim() || "";
-
-    if (!reporterName && !schoolEmail) {
-      toast.info("Please enter a name or email to fetch details");
-      return;
+  // Use the form's live watched values instead of DOM querySelector
+  // (Controller-managed fields don't reliably expose via querySelector)
+  const name  = watchedReporterName?.trim() || "";
+  const email = watchedSchoolEmail?.trim()  || "";
+ 
+  if (!name && !email) {
+    toast.info("Please enter a name or email to fetch details");
+    return;
+  }
+ 
+  try {
+    // Try name first, fall back to email
+    let student: any = null;
+ 
+    if (name) {
+      try {
+        const res = await getStudentByDetails({ name, email }).unwrap();
+        student = res?.data ?? res;
+      } catch {
+        // name search failed, try email below
+      }
     }
-
-    try {
-      let student = null;
-      let searchType = "";
-
-      if (reporterName) {
-        try {
-          const res = await getStudentByDetails({ name: reporterName, email: "" }).unwrap();
-          student = res.data ?? res;
-          searchType = "name";
-        } catch {
-          if (schoolEmail) {
-            try {
-              const emailRes = await getStudentByDetails({ name: "", email: schoolEmail }).unwrap();
-              student = emailRes.data ?? emailRes;
-              searchType = "email";
-            } catch { /* both failed */ }
-          }
-        }
-      } else if (schoolEmail) {
-        try {
-          const emailRes = await getStudentByDetails({ name: "", email: schoolEmail }).unwrap();
-          student = emailRes.data ?? emailRes;
-          searchType = "email";
-        } catch {
-          toast.error("Student not found with this email address");
-          return;
-        }
+ 
+    if (!student && email) {
+      try {
+        const res = await getStudentByDetails({ name: "", email }).unwrap();
+        student = res?.data ?? res;
+      } catch {
+        // email search also failed
       }
-
-      if (student) {
-        setScannedStudent({
-          id: student.id,
-          name: student.name,
-          email: student.email,
-          department: student.department || "",
-          raw: "manual_fetch"
-        });
-        addSetValue("reporterName", student.name, { shouldDirty: true });
-        addSetValue("schoolEmail", student.email, { shouldDirty: true });
-        addSetValue("department", student.department || "", { shouldDirty: true });
-        toast.success(`Found by ${searchType}: ${student.name}`);
-      } else {
-        toast.error("Student not found in masterlist");
-      }
-    } catch (error) {
-      console.error("Fetch details error:", error);
+    }
+ 
+    if (student?.name) {
+      setScannedStudent({
+        id:         student.id         || "",
+        name:       student.name       || "",
+        email:      student.email      || "",
+        department: student.department || student.course || "",
+        raw:        "manual_fetch",
+      });
+      addSetValue("reporterName", student.name,                          { shouldDirty: true });
+      addSetValue("schoolEmail",  student.email,                         { shouldDirty: true });
+      addSetValue("department",   student.department || student.course || "", { shouldDirty: true });
+      toast.success(`Found: ${student.name}`);
+    } else {
       toast.error("Student not found in masterlist");
     }
-  };
+  } catch {
+    toast.error("Student not found in masterlist");
+  }
+};
 
   const handleCategoryChange = (id: string) => {
     const cat = categoriesData?.data?.find((c: any) => c.id === id);

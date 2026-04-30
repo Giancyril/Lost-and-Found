@@ -408,24 +408,44 @@ const ReportLostItem = () => {
   const [getStudentByDetails, { isFetching: isFetchingByDetails }] = useLazyGetStudentByDetailsQuery();
 
   const handleFetchDetails = async () => {
-    const name = getValues("reporterName");
-    const email = getValues("schoolEmail");
-    if (!name && !email) { toast.info("Please enter a name or email to fetch details"); return; }
-    if (name && /^\d{8}$|^\d{4}-\d{2}-\d{2}$/.test(name.trim())) { toast.warn("Please enter a valid name"); return; }
-    try {
-      const res = await getStudentByDetails({ name, email }).unwrap();
-      const student = res.data ?? res;
-      if (student) {
-        setValue("reporterName", student.name);
-        setValue("schoolEmail", student.email);
-        setValue("department", student.department || "");
-        setScannedStudent({ id: student.id, name: student.name, email: student.email, department: student.department || "", raw: "manual_fetch" });
-        toast.success(`Found: ${student.name}`);
-      }
-    } catch {
+  // Read directly from watched values (more reliable with Controller fields)
+  const name  = reporterName?.trim() || "";
+  const email = schoolEmail?.trim()  || "";
+
+  if (!name && !email) {
+    toast.info("Please enter a name or email to fetch details");
+    return;
+  }
+  if (name && /^\d{8}$|^\d{4}-\d{2}-\d{2}$/.test(name)) {
+    toast.warn("Please enter a valid name");
+    return;
+  }
+
+  try {
+    const res = await getStudentByDetails({ name, email }).unwrap();
+    // Backend sendResponse wraps in { success, data } — unwrap if needed
+    const student = res?.data ?? res;
+
+    if (student?.name) {
+      setValue("reporterName", student.name);
+      setValue("schoolEmail",  student.email);
+      // department is now returned by the service (alias for course)
+      setValue("department",   student.department || student.course || "");
+      setScannedStudent({
+        id:         student.id,
+        name:       student.name,
+        email:      student.email,
+        department: student.department || student.course || "",
+        raw:        "manual_fetch",
+      });
+      toast.success(`Found: ${student.name}`);
+    } else {
       toast.error("Student not found in masterlist");
     }
-  };
+  } catch {
+    toast.error("Student not found in masterlist");
+  }
+};
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
