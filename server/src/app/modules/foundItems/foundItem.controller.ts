@@ -9,19 +9,67 @@ import sharp from "sharp";
 import { sendEmail } from "../../utils/mailer";
 import { lostItemReportedTemplate } from "../../utils/emailTemplates";
 import { logToSheet } from "../sheets/sheets.service";
-import { pointsService } from "../points/points.service"; // ← NEW
+import { pointsService } from "../points/points.service";
+import prisma from "../../config/prisma"; 
 
 const createFoundItem = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const result = await foundItemService.createFoundItem(req.body, userId);
+    console.log(`[DEBUG] Request user:`, { role: req.user?.role, id: req.user?.id, email: req.user?.email });
+    console.log(`[DEBUG] Request body:`, { schoolEmail: req.body.schoolEmail, studentId: req.body.studentId, reporterName: req.body.reporterName });
+    
+    // Check if admin is submitting with student info and we need to find the student user ID
+    let finalUserId = userId;
+    if (req.user?.role === "ADMIN" && (req.body.schoolEmail || req.body.studentId)) {
+      try {
+        let studentUser = null;
+        
+        // First try to find by email
+        if (req.body.schoolEmail) {
+          console.log(`[DEBUG] Searching for student by email: ${req.body.schoolEmail}`);
+          studentUser = await prisma.user.findFirst({
+            where: { 
+              email: req.body.schoolEmail,
+              role: "USER"
+            },
+            select: { id: true, email: true, schoolId: true }
+          });
+          console.log(`[DEBUG] Student found by email:`, studentUser);
+        }
+        
+        // If not found by email, try by studentId
+        if (!studentUser && req.body.studentId) {
+          console.log(`[DEBUG] Searching for student by studentId: ${req.body.studentId}`);
+          studentUser = await prisma.user.findFirst({
+            where: { 
+              schoolId: req.body.studentId,
+              role: "USER"
+            },
+            select: { id: true, email: true, schoolId: true }
+          });
+          console.log(`[DEBUG] Student found by studentId:`, studentUser);
+        }
+        
+        if (studentUser) {
+          finalUserId = studentUser.id;
+          console.log(`[Admin->Student] Admin submitting on behalf of student: ${req.body.schoolEmail || req.body.studentId} -> User ID: ${studentUser.id}`);
+        } else {
+          console.log(`[Admin->Student] Student not found: email=${req.body.schoolEmail}, studentId=${req.body.studentId}`);
+        }
+      } catch (error) {
+        console.error("[Admin->Student] Error finding student user:", error);
+      }
+    }
+    
+    console.log(`[DEBUG] Final userId for found item: ${finalUserId}`);
+    const result = await foundItemService.createFoundItem(req.body, finalUserId);
 
     if (result?.id) {
-      // ── Award points to the reporter ────────────────────────────────────────
+      // Award points to the reporter (student if found, otherwise admin)
       // Fire-and-forget: never blocks the response if points fail
-      if (userId) {
+      if (finalUserId) {
         await pointsService
-          .award(userId, "FOUND_ITEM_REPORTED", result.id)
+          .award(finalUserId, "FOUND_ITEM_REPORTED", result.id)
           .catch((err) =>
             console.error("[Points] Failed to award points for found item:", err)
           );

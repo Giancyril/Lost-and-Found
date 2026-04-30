@@ -25,7 +25,7 @@ import { studentRoutes } from "../modules/student/student.routes";
 import sheetsRoutes from "../modules/sheets/sheets.routes";
 import { uploadImages } from "../midddlewares/upload";
 import { commentsRouter } from "../comments/commentsRouter";
-import { pointsController } from "../modules/points/points.controller"; 
+import { pointsController } from "../modules/points/points.controller";
 
 const router = express.Router();
 
@@ -46,15 +46,20 @@ router.put("/item-categories/:id", validateRequest(FoundItemCategorySchema.creat
 router.delete("/item-categories/:id", auth(), itemcategoryController.deleteItemCategory);
 
 ////////////////////////////////////////////////// found items //////////////////////////////////////////////
-router.post("/found-items/public", foundItemController.createFoundItem);
+
+// FIX: auth() added to /found-items/public so req.user is populated for students.
+// Without this, userId was always undefined → no points awarded, item saved with
+// userId: null, and "My Found Items" always returned empty.
+router.post("/found-items/public", auth(), foundItemController.createFoundItem);
+
 router.post("/found-items", validateRequest(FoundItemSchema.createFoundItem), auth(), foundItemController.createFoundItem);
 router.get("/found-items", foundItemController.getFoundItem);
 router.get("/found-item/:id", foundItemController.getSingleFoundItem);
-router.post("/found-items/:id/images", uploadImages.array('images', 5), foundItemController.uploadFoundItemImages);
+router.post("/found-items/:id/images", uploadImages.array("images", 5), foundItemController.uploadFoundItemImages);
 
 // ── Archive routes (admin only) ──
-router.get("/found-items/archived",    auth(), foundItemController.getArchivedFoundItems);
-router.get("/found-items/stale",       auth(), foundItemController.getStaleFoundItems);
+router.get("/found-items/archived", auth(), foundItemController.getArchivedFoundItems);
+router.get("/found-items/stale", auth(), foundItemController.getStaleFoundItems);
 router.put("/found-items/:id/archive", auth(), foundItemController.archiveFoundItem);
 router.put("/found-items/:id/restore", auth(), foundItemController.restoreFoundItem);
 
@@ -93,23 +98,24 @@ router.get("/admin/match-notifications", auth(), getMatchNotifications);
 router.post("/ai-search", validateRequest(aiSearchValidation.aiSearchSchema), aiSearchController.aiSearch);
 
 // ── Email / Mailer ──
-router.post("/email/lost-item",      auth(), sendLostItemEmail);
+router.post("/email/lost-item", auth(), sendLostItemEmail);
 router.post("/email/claim-approved", auth(), sendClaimApprovedEmail);
 
 ////////////////////////////////////////////////// bulletin posts //////////////////////////////////////////////
-router.post("/bulletin-posts",                   postCreationLimiter,  validateRequest(createPostSchema), bulletinPostController.createPost);
-router.get("/bulletin-posts",                                          bulletinPostController.getPosts);
-router.post("/bulletin-posts/:id/tips",          tipSubmissionLimiter, validateRequest(createTipSchema),  bulletinPostController.createTip);
-router.get("/bulletin-posts/:id/tips",                                 bulletinPostController.getTips);
-router.delete("/bulletin-posts/:id",             auth(),               bulletinPostController.deletePost);
-router.delete("/bulletin-posts/:id/tips/:tipId", auth(),               bulletinPostController.deleteTip);
-router.put("/bulletin-posts/:id/resolve",        auth(),               bulletinPostController.resolvePost);
+router.post("/bulletin-posts", postCreationLimiter, validateRequest(createPostSchema), bulletinPostController.createPost);
+router.get("/bulletin-posts", bulletinPostController.getPosts);
+router.post("/bulletin-posts/:id/tips", tipSubmissionLimiter, validateRequest(createTipSchema), bulletinPostController.createTip);
+router.get("/bulletin-posts/:id/tips", bulletinPostController.getTips);
+router.delete("/bulletin-posts/:id", auth(), bulletinPostController.deletePost);
+router.delete("/bulletin-posts/:id/tips/:tipId", auth(), bulletinPostController.deleteTip);
+router.put("/bulletin-posts/:id/resolve", auth(), bulletinPostController.resolvePost);
 
 router.use("/students", studentRoutes);
 router.use("/sheets", sheetsRoutes);
 router.use("/", commentsRouter);
 
-router.get("/points/my",          auth(), pointsController.getMyPoints);
-router.get("/points/leaderboard",         pointsController.getLeaderboard);
+////////////////////////////////////////////////// points //////////////////////////////////////////////
+router.get("/points/my", auth(), pointsController.getMyPoints);
+router.get("/points/leaderboard", pointsController.getLeaderboard);
 
 export default router;
