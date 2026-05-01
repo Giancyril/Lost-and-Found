@@ -88,7 +88,7 @@ const Banner = () => {
                 <p className="text-gray-500 text-xs truncate">{item.date?.split("T")[0]} · {item.location}</p>
               </div>
               {item.isClaimed ? (
-                <span className="ml-2 shrink-0 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20">✓ Claimed</span>
+                <span className="ml-2 shrink-0 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20"> Claimed</span>
               ) : (
                 <span className="ml-2 shrink-0 text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">Available</span>
               )}

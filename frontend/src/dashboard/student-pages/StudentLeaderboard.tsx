@@ -141,12 +141,7 @@ export default function StudentLeaderboard() {
                       </div>
                     </div>
                     <div className="col-span-6 flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 overflow-hidden">
-                        {u.userImg
-                          ? <img src={u.userImg} alt="" className="w-full h-full object-cover" />
-                          : <span className="text-white font-black text-sm">{initial}</span>
-                        }
-                      </div>
+                      
                       <div className="min-w-0">
                         <p className={`font-bold text-sm truncate ${isMe ? "text-blue-300" : "text-white"}`}>
                           {isMe ? `${u.name || "You"} (You)` : (u.name || "Student")}
@@ -190,18 +185,12 @@ export default function StudentLeaderboard() {
                     }
                   </div>
 
-                  {/* Avatar — smaller on mobile */}
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 overflow-hidden">
-                    {u.userImg
-                      ? <img src={u.userImg} alt="" className="w-full h-full object-cover" />
-                      : <span className="text-white font-black text-[11px]">{initial}</span>
-                    }
-                  </div>
+               
 
                   {/* Name + medal label — flex-1 with min-w-0 to allow truncation */}
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-bold truncate leading-tight ${isMe ? "text-blue-300" : "text-white"}`}>
-                      {isMe ? `${u.name || "You"} (You)` : (u.name || "Student")}
+                    <p className="text-xs font-bold truncate leading-tight text-white">
+                      {u.name || "Student"}
                     </p>
                     {medalLabel(realIdx) && (
                       <p className={`text-[10px] font-semibold leading-tight ${rankColor(realIdx)}`}>

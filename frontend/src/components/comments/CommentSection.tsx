@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaReply, FaExclamationTriangle, FaComments } from 'react-icons/fa';
 import { useSocket } from '../../hooks/useSocket';
+import { useUserVerification } from '../../auth/auth';
 import { CommentList } from './CommentList';
 import { CommentInput } from './CommentInput';
 import { CommentFilters } from './CommentFilters';
@@ -8,6 +9,7 @@ import {
   useGetCommentsQuery,
   useCreateCommentMutation,
   useDeleteCommentMutation,
+  useUpdateCommentMutation,
 } from '../../redux/api/api';
 
 interface CommentSectionProps {
@@ -26,10 +28,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [isLoading, setIsLoading]     = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
 
-  // ── Scroll container ref ──────────────────────────────────────────────────
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // FIX: get the actual logged-in user so optimistic comments show correct name
+  const currentUser: any = useUserVerification();
 
-  // ── Track IDs we already have so socket broadcast never duplicates ────────
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const savedIdsRef = useRef<Set<string>>(new Set());
 
   const socket = useSocket({ autoConnect: true });
@@ -43,10 +45,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   const [createComment]         = useCreateCommentMutation();
   const [deleteCommentMutation] = useDeleteCommentMutation();
+  const [updateCommentMutation] = useUpdateCommentMutation();
 
   const is404 = fetchError && (fetchErrorDetail as any)?.status === 404;
 
-  // ── Smooth scroll to top ──────────────────────────────────────────────────
   const scrollToTop = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
@@ -55,7 +57,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   };
 
-  // ── Helper: find top-level parent for any comment/reply ID ───────────────
   const findTopLevelParent = (targetId: string, commentList: any[]) => {
     return commentList.find(
       c =>
@@ -64,7 +65,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     );
   };
 
-  // ── Sync fetched data → local state ──────────────────────────────────────
   useEffect(() => {
     if (fetchedData) {
       setComments(fetchedData);
@@ -88,7 +88,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   }, [fetchedData, itemId]);
 
-  // ── Socket listeners ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!socket.socket) return;
 
@@ -102,7 +101,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         setComments(prev => {
           const topLevel = findTopLevelParent(comment.parentCommentId, prev);
           if (!topLevel) return prev;
-
           return prev.map(c =>
             c.id === topLevel.id
               ? {
@@ -155,27 +153,34 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     };
   }, [itemId, socket.socket]);
 
-  // ── New top-level comment ─────────────────────────────────────────────────
   const handleNewComment = async (commentData: any) => {
     setIsLoading(true);
     const tempId = `local_${Date.now()}`;
+
+    // FIX: use actual logged-in user name/id for optimistic comment
+    // so the "You" badge and edit/delete buttons appear immediately
+    const isAnon = commentData.isAnonymous || !currentUser?.id;
     const newComment = {
-      id: tempId,
+      id:           tempId,
       itemId,
       itemType,
       ...commentData,
+      isAnonymous:  isAnon,
       createdAt:    new Date().toISOString(),
       replies:      [],
       helpfulCount: 0,
-      user: {
-        name: commentData.isAnonymous
-          ? 'Anonymous Student'
-          : (socket.socket?.auth as any)?.userName || 'You',
-        role: 'USER',
-      },
+      // Populate userId so CommentList.isCurrentUser check matches immediately
+      userId:       currentUser?.id ?? null,
+      user: isAnon
+        ? null
+        : {
+            id:      currentUser.id,
+            name:    currentUser.name || currentUser.username || 'You',
+            userImg: currentUser.userImg ?? null,
+            role:    currentUser.role ?? 'USER',
+          },
     };
 
-    // Optimistically prepend then immediately scroll to top
     setComments(prev => [newComment, ...prev]);
     scrollToTop();
 
@@ -188,6 +193,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       }).unwrap();
 
       savedIdsRef.current.add(result.id);
+      // Replace optimistic comment with real one from server
       setComments(prev => prev.map(c => c.id === tempId ? result : c));
     } catch (err) {
       console.warn('Comment save failed, keeping locally:', err);
@@ -203,7 +209,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [showReplyInput, setShowReplyInput] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<any>(null);
 
-  // ── DELETE — instant optimistic, REST confirms ────────────────────────────
   const handleDeleteComment = async (commentId: string) => {
     savedIdsRef.current.delete(commentId);
 
@@ -227,7 +232,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             replies: (c.replies || []).filter((r: any) => r.id !== commentId),
           }));
         localStorage.setItem(`comments_${itemId}`, JSON.stringify(updated));
-      } catch { /* ignore parse errors */ }
+      } catch { /* ignore */ }
     }
 
     try {
@@ -237,62 +242,92 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   };
 
-  const handleUpdateComment = (commentId: string, updateData: any) =>
-    socket.emit('update-comment', { commentId, updateData, itemId });
+    const handleUpdateComment = async (commentId: string, updateData: any) => {
+    // Optimistic update
+    setComments(prev =>
+      prev.map(c =>
+        c.id === commentId
+          ? { ...c, ...updateData }
+          : { ...c, replies: (c.replies || []).map((r: any) => r.id === commentId ? { ...r, ...updateData } : r) }
+      )
+    );
+    try {
+      const updated = await updateCommentMutation({ commentId, itemId, ...updateData }).unwrap();
+      setComments(prev =>
+        prev.map(c =>
+          c.id === commentId
+            ? updated
+            : { ...c, replies: (c.replies || []).map((r: any) => r.id === commentId ? updated : r) }
+        )
+      );
+      socket.emit('update-comment', { commentId, updateData, itemId });
+    } catch (err) {
+      console.error('Update failed:', err);
+    }
+  };
 
-  // ── Reply (supports reply-to-reply with @mention) ─────────────────────────
   const handleReplyToComment = async (parentCommentId: string, content: string) => {
     if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
       console.warn('Blocked reply to unsaved temp comment');
       return;
     }
-
     const parentComment = comments.find(c => c.id === parentCommentId);
-    const name = parentComment?.user?.name || parentComment?.user?.username || parentComment?.userName || 'Anonymous Student';
-    const mentionPrefix = `@${name} `;
-
-    const finalContent = mentionPrefix
-      ? mentionPrefix + content
-      : content.replace(/^@\s*/, '').trimStart();
-
-    const tempId   = `reply_${Date.now()}`;
+    const name = parentComment?.user?.name || parentComment?.user?.username || 'Anonymous Student';
+    const finalContent = `@${name} ${content}`;
+    const tempId = `reply_${Date.now()}`;
     const newReply = {
-      id:           tempId,
-      content:      finalContent,
-      createdAt:    new Date().toISOString(),
-      isAnonymous:  false,
-      replies:      [],
+      id: tempId,
+      content: finalContent,
+      createdAt: new Date().toISOString(),
+      isAnonymous: !currentUser?.id,
+      replies: [],
       helpfulCount: 0,
-      user: {
-        name: (socket.socket?.auth as any)?.userName || 'You',
-        role: 'USER',
-      },
-      upvotes:      0,
-      downvotes:    0,
-      parentId:     parentCommentId,
+      userId: currentUser?.id ?? null,
+      user: currentUser?.id
+        ? { id: currentUser.id, name: currentUser.name || currentUser.username || 'You', userImg: currentUser.userImg ?? null, role: currentUser.role ?? 'USER' }
+        : null,
     };
-
-    setComments(prev => {
-      if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
-        return prev;
-      }
-      const parentComment = prev.find(c => c.id === parentCommentId);
-      if (!parentComment) return prev;
-      return prev.map(c =>
+    // Optimistic update
+    setComments(prev =>
+      prev.map(c =>
         c.id === parentCommentId
           ? { ...c, replies: [...(c.replies || []), newReply] }
           : c
-      );
-    });
-
-    socket.emit('new-reply', { parentCommentId, content: finalContent, itemId });
-
+      )
+    );
     setReplyContent('');
     setShowReplyInput(null);
     setReplyingTo(null);
+    try {
+      // ✅ Save to DB — this also triggers socket broadcast from server
+      const result = await createComment({
+        itemId,
+        itemType,
+        content: finalContent,
+        parentCommentId,
+      }).unwrap();
+      savedIdsRef.current.add(result.id);
+      // Replace temp reply with real server result
+      setComments(prev =>
+        prev.map(c =>
+          c.id === parentCommentId
+            ? { ...c, replies: (c.replies || []).map((r: any) => r.id === tempId ? result : r) }
+            : c
+        )
+      );
+    } catch (err) {
+      console.warn('Reply save failed, rolling back:', err);
+      setComments(prev =>
+        prev.map(c =>
+          c.id === parentCommentId
+            ? { ...c, replies: (c.replies || []).filter((r: any) => r.id !== tempId) }
+            : c
+        )
+      );
+    }
   };
 
-  // ── Filtering ─────────────────────────────────────────────────────────────
+
   const filteredComments = comments.filter(comment => {
     switch (filter) {
       case 'helpful':   return (comment.helpfulCount || 0) > 0;
@@ -302,10 +337,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     }
   });
 
-  // ── Main content ──────────────────────────────────────────────────────────
   const mainContent = (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
           <div
@@ -327,7 +360,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
               </p>
               {comments.length > 0 && (
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                  <div className="w-2 h-2 bg-blue-500 rounded-full" />
                   <span className="hidden sm:inline">Active</span>
                 </div>
               )}
@@ -339,14 +372,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         </div>
       </div>
 
-      {/* Typing indicator */}
       {typingUsers.length > 0 && (
         <div
           className="flex items-center gap-3 px-4 py-2 rounded-xl"
-          style={{
-            background: 'rgba(59,130,246,0.08)',
-            border: '1px solid rgba(59,130,246,0.15)',
-          }}
+          style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}
         >
           <div className="flex gap-1">
             <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
@@ -359,27 +388,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         </div>
       )}
 
-      {/* Content area */}
       <div className="min-h-[200px]">
         {isFetching ? (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
-            <div className="relative">
-              <div className="w-12 h-12 border-3 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-              <div className="absolute inset-0 w-12 h-12 border-3 border-transparent border-t-blue-400 rounded-full animate-spin [animation-delay:0.15s]" />
-            </div>
-            <div className="text-center">
-              <p className="text-gray-400 text-sm font-medium mb-1">Loading discussion...</p>
-              <p className="text-gray-600 text-xs">Please wait while we fetch the latest comments</p>
-            </div>
+            <div className="w-12 h-12 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+            <p className="text-gray-400 text-sm font-medium">Loading discussion...</p>
           </div>
         ) : fetchError && !is404 ? (
-          <div
-            className="text-center py-12 px-6 rounded-2xl"
-            style={{
-              background: 'rgba(239,68,68,0.08)',
-              border: '1px solid rgba(239,68,68,0.2)',
-            }}
-          >
+          <div className="text-center py-12 px-6 rounded-2xl"
+            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
             <FaExclamationTriangle className="text-red-400 text-3xl mx-auto mb-3" />
           </div>
         ) : filteredComments.length > 0 ? (
@@ -407,7 +424,6 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             <p className="text-gray-500 text-sm max-w-sm mx-auto leading-relaxed mb-6">
               Be the first to share a sighting or leave a helpful tip for the community.
             </p>
-
           </div>
         )}
       </div>
@@ -421,28 +437,16 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
           ref={scrollContainerRef}
           id="modal-comment-scroll"
           className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-4"
-          style={{
-            paddingBottom: '80px',
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(255,255,255,0.1) transparent',
-          }}
+          style={{ paddingBottom: '80px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}
         >
           {mainContent}
         </div>
-
         <div
           className="shrink-0 border-t"
-          style={{
-            borderColor: 'rgba(255,255,255,0.06)',
-            background: 'linear-gradient(160deg, #0f1318 0%, #0d1117 100%)',
-          }}
+          style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'linear-gradient(160deg, #0f1318 0%, #0d1117 100%)' }}
         >
           <div className="p-4">
-            <CommentInput
-              onSubmit={handleNewComment}
-              isLoading={isLoading}
-              onTyping={handleTyping}
-            />
+            <CommentInput onSubmit={handleNewComment} isLoading={isLoading} onTyping={handleTyping} />
           </div>
         </div>
       </div>
@@ -451,11 +455,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
   return (
     <div className="flex flex-col gap-6">
-      <CommentInput
-        onSubmit={handleNewComment}
-        isLoading={isLoading}
-        onTyping={handleTyping}
-      />
+      <CommentInput onSubmit={handleNewComment} isLoading={isLoading} onTyping={handleTyping} />
       <div className="h-px bg-gray-800/50" />
       <div className="pb-6">{mainContent}</div>
     </div>

@@ -12,6 +12,12 @@ import FoundItemsPage from "./pages/foundItems/FoundItems.tsx";
 import SingleFoundItem from "./pages/foundItems/SingleFoundItem.tsx";
 import LostItemsPage from "./pages/lostItems/LostItems.tsx";
 import SingleLostItem from "./pages/lostItems/SingleLostItem.tsx";
+import ReportLostItem from "./pages/reportlostItem/ReportLostItem.tsx";
+import ReportFoundItem from "./pages/reportFoundItem/ReportFoundItem.tsx";
+import AiSearch from "./pages/aiSearch/AiSearch.tsx";
+import BulletinBoard from "./pages/bulletin/BulletinBoard.tsx";
+import AboutUs from "./components/aboutUs/aboutUs.tsx";
+import PortalDisplay from "./pages/portal/PortalDisplay.tsx";
 import DashboardLayout from "./dashboard/DashboardLayout.tsx";
 import Dashboard from "./dashboard/Dashboard.tsx";
 import FoundItemsManagement from "./dashboard/pages/FoundItemsManagement.tsx";
@@ -20,18 +26,12 @@ import ClaimsManagement from "./dashboard/pages/ClaimsManagement.tsx";
 import UsersManagement from "./dashboard/pages/UsersManagement.tsx";
 import CategoriesManagement from "./dashboard/pages/CategoriesManagement.tsx";
 import Settings from "./dashboard/pages/Settings.tsx";
-import MyFoundItems from "./dashboard/myFoundItems/MyFoundItems.tsx";
-import MyLostItems from "./dashboard/myLostItems/MyLostItems.tsx";
-import ReportLostItem from "./pages/reportlostItem/ReportLostItem.tsx";
-import ReportFoundItem from "./pages/reportFoundItem/ReportFoundItem.tsx";
-import AiSearch from "./pages/aiSearch/AiSearch.tsx";
 import HeatmapPage from "./dashboard/pages/HeatmapPage.tsx";
 import AnalyticsPage from "./dashboard/pages/AnalyticsPage.tsx";
-import ArchievePage from "./dashboard/pages/ArchievePage.tsx";
 import ReportPage from "./dashboard/pages/ReportPage.tsx";
-import BulletinBoard from "./pages/bulletin/BulletinBoard.tsx";
-import PortalDisplay from "./pages/portal/PortalDisplay.tsx";
-import AboutUs from "./components/aboutUs/aboutUs.tsx";
+import ArchievePage from "./dashboard/pages/ArchievePage.tsx";
+import MyFoundItems from "./dashboard/myFoundItems/MyFoundItems.tsx";
+import MyLostItems from "./dashboard/myLostItems/MyLostItems.tsx";
 import StudentLayout from "./dashboard/StudentLayout.tsx";
 import StudentDashboard from "./dashboard/StudentDashboard.tsx";
 import StudentFoundItems from "./dashboard/student-pages/StudentFoundItems.tsx";
@@ -39,6 +39,7 @@ import StudentLostItems from "./dashboard/student-pages/StudentLostItems.tsx";
 import StudentClaims from "./dashboard/student-pages/StudentClaims.tsx";
 import StudentLeaderboard from "./dashboard/student-pages/StudentLeaderboard.tsx";
 import StudentSettings from "./dashboard/student-pages/StudentSettings.tsx";
+import StudentRegistry from "./dashboard/pages/StudentRegistry.tsx";
 
 const router = createBrowserRouter([
   {
@@ -75,6 +76,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/analytics",        element: <DashboardLayout><AnalyticsPage /></DashboardLayout> },
   { path: "/dashboard/heatmap",          element: <DashboardLayout><HeatmapPage /></DashboardLayout> },
   { path: "/dashboard/users",            element: <DashboardLayout><UsersManagement /></DashboardLayout> },
+  { path: "/dashboard/students",         element: <DashboardLayout><StudentRegistry /></DashboardLayout> },
   { path: "/dashboard/categories",       element: <DashboardLayout><CategoriesManagement /></DashboardLayout> },
   { path: "/dashboard/report",           element: <DashboardLayout><ReportPage /></DashboardLayout> },
   { path: "/dashboard/settings",         element: <DashboardLayout><Settings /></DashboardLayout> },

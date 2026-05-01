@@ -11,8 +11,6 @@ interface CommentListProps {
   itemId: string;
 }
 
-// ── Mention picker (unchanged) ───────────────────────────
-
 const MentionPickerPortal: React.FC<{
   anchorRef: React.RefObject<HTMLDivElement | null>;
   suggestions: { name: string; isAnonymous: boolean }[];
@@ -81,8 +79,6 @@ const MentionPickerPortal: React.FC<{
   );
 };
 
-// ── CommentList ───────────────────────────────────────────────────────────────
-
 export const CommentList: React.FC<CommentListProps> = ({
   comments,
   onDeleteComment,
@@ -97,14 +93,18 @@ export const CommentList: React.FC<CommentListProps> = ({
   const handleEdit   = (commentId: string, content: string) => onUpdateComment?.(commentId, { content });
   const handleDelete = (commentId: string) => setShowDeleteModal(commentId);
 
-  // Function to filter out duplicates by ID
   const deduplicate = (arr: any[]) => arr.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
 
   const renderComment = (comment: any, isReply = false): React.ReactNode => {
+    // FIX: check both comment.userId (raw DB field) and comment.user?.id (joined relation)
+    // Also allow admin to edit/delete any comment
     const isCurrentUser =
-      currentUser?.id === comment.userId || currentUser?.role === 'ADMIN';
+      !!currentUser?.id && (
+        currentUser.id === comment.userId ||
+        currentUser.id === comment.user?.id ||
+        currentUser.role === 'ADMIN'
+      );
 
-    // Deduplicate replies to prevent duplicate key errors in nested threads
     const uniqueReplies = deduplicate(comment.replies || []);
 
     return (

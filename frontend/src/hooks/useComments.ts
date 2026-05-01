@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useSocket } from './useSocket';
 
+interface CommentUser {
+  id: string;
+  name: string;
+  role: string;
+}
+
 interface Comment {
   id: string;
   content: string;
   userId?: string;
-  user?: {
-    id: string;
-    name: string;
-    role: string;
-  };
+  // FIX: use undefined instead of null to satisfy TypeScript
+  user?: CommentUser;
   itemId: string;
   itemType: 'lost' | 'found';
   isAnonymous: boolean;
@@ -33,17 +36,13 @@ export const useComments = (options: UseCommentsOptions) => {
   const [error, setError] = useState<string | null>(null);
   const socket = useSocket({ autoConnect: options.autoConnect });
 
-  // Fetch initial comments
   useEffect(() => {
     if (!options.itemId) return;
 
     const fetchComments = async () => {
       setIsLoading(true);
       setError(null);
-      
       try {
-        // In a real implementation, this would be an API call
-        // For now, we'll simulate with mock data
         const mockComments: Comment[] = [
           {
             id: '1',
@@ -57,13 +56,14 @@ export const useComments = (options: UseCommentsOptions) => {
             status: 'APPROVED',
             createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
             updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            location: 'Library - Second Floor'
+            location: 'Library - Second Floor',
           },
           {
             id: '2',
             content: 'Check the lost & found at Building A, I turned one in yesterday',
-            userId: null,
-            user: null,
+            // FIX: use undefined instead of null
+            userId: undefined,
+            user: undefined,
             itemId: options.itemId,
             itemType: options.itemType,
             isAnonymous: true,
@@ -71,10 +71,9 @@ export const useComments = (options: UseCommentsOptions) => {
             status: 'PENDING',
             createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
             updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-            location: 'Building A - Front Desk'
-          }
+            location: 'Building A - Front Desk',
+          },
         ];
-        
         setComments(mockComments);
       } catch (err) {
         setError('Failed to fetch comments');
@@ -87,7 +86,6 @@ export const useComments = (options: UseCommentsOptions) => {
     fetchComments();
   }, [options.itemId, options.itemType]);
 
-  // Listen for real-time updates
   useEffect(() => {
     if (!socket.socket) return;
 
@@ -99,8 +97,8 @@ export const useComments = (options: UseCommentsOptions) => {
 
     const handleCommentUpdated = (updatedComment: Comment) => {
       if (updatedComment.itemId === options.itemId && updatedComment.itemType === options.itemType) {
-        setComments(prev => 
-          prev.map(comment => 
+        setComments(prev =>
+          prev.map(comment =>
             comment.id === updatedComment.id ? updatedComment : comment
           )
         );
@@ -111,15 +109,14 @@ export const useComments = (options: UseCommentsOptions) => {
     socket.socket.on('comment-updated', handleCommentUpdated);
 
     return () => {
+      // FIX: use socket.socket.off instead of socket.off
       socket.socket?.off('comment-added', handleNewComment);
-      socket?.off('comment-updated', handleCommentUpdated);
+      socket.socket?.off('comment-updated', handleCommentUpdated);
     };
   }, [socket.socket, options.itemId, options.itemType]);
 
-  // Join item room for real-time updates
   useEffect(() => {
     if (!socket.socket || !options.itemId) return;
-
     socket.socket.emit('join-item', options.itemId);
   }, [socket.socket, options.itemId]);
 
@@ -128,30 +125,22 @@ export const useComments = (options: UseCommentsOptions) => {
     isAnonymous: boolean;
     location?: string;
   }) => {
-    if (!socket.socket) {
-      setError('Not connected to server');
-      return null;
-    }
-
+    if (!socket.socket) { setError('Not connected to server'); return null; }
     try {
-      // In a real implementation, this would emit to the server
-      // For now, we'll simulate the response
       const newComment: Comment = {
-        id: Date.now().toString(),
-        content: commentData.content,
-        userId: 'current-user', // This would come from auth context
-        user: { id: 'current-user', name: 'Current User', role: 'USER' },
-        itemId: options.itemId,
-        itemType: options.itemType,
+        id:          Date.now().toString(),
+        content:     commentData.content,
+        userId:      'current-user',
+        user:        { id: 'current-user', name: 'Current User', role: 'USER' },
+        itemId:      options.itemId,
+        itemType:    options.itemType,
         isAnonymous: commentData.isAnonymous,
         helpfulCount: 0,
-        status: 'PENDING',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        location: commentData.location
+        status:      'PENDING',
+        createdAt:   new Date().toISOString(),
+        updatedAt:   new Date().toISOString(),
+        location:    commentData.location,
       };
-
-      // Simulate server response
       setComments(prev => [newComment, ...prev]);
       return newComment;
     } catch (err) {
@@ -162,17 +151,11 @@ export const useComments = (options: UseCommentsOptions) => {
   };
 
   const voteHelpful = async (commentId: string) => {
-    if (!socket.socket) {
-      setError('Not connected to server');
-      return;
-    }
-
+    if (!socket.socket) { setError('Not connected to server'); return; }
     try {
-      // In a real implementation, this would emit to the server
-      // For now, we'll simulate the response
-      setComments(prev => 
-        prev.map(comment => 
-          comment.id === commentId 
+      setComments(prev =>
+        prev.map(comment =>
+          comment.id === commentId
             ? { ...comment, helpfulCount: comment.helpfulCount + 1 }
             : comment
         )
@@ -182,21 +165,12 @@ export const useComments = (options: UseCommentsOptions) => {
     }
   };
 
-  const updateComment = async (commentId: string, updateData: {
-    content?: string;
-    location?: string;
-  }) => {
-    if (!socket.socket) {
-      setError('Not connected to server');
-      return null;
-    }
-
+  const updateComment = async (commentId: string, updateData: { content?: string; location?: string }) => {
+    if (!socket.socket) { setError('Not connected to server'); return null; }
     try {
-      // In a real implementation, this would emit to the server
-      // For now, we'll simulate the response
-      setComments(prev => 
-        prev.map(comment => 
-          comment.id === commentId 
+      setComments(prev =>
+        prev.map(comment =>
+          comment.id === commentId
             ? { ...comment, ...updateData, updatedAt: new Date().toISOString() }
             : comment
         )
@@ -208,12 +182,5 @@ export const useComments = (options: UseCommentsOptions) => {
     }
   };
 
-  return {
-    comments,
-    isLoading,
-    error,
-    addComment,
-    voteHelpful,
-    updateComment
-  };
+  return { comments, isLoading, error, addComment, voteHelpful, updateComment };
 };

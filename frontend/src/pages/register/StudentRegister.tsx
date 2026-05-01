@@ -127,6 +127,8 @@ export const StudentRegister: React.FC = () => {
         username:  masterlistData!.schoolId,          // schoolId doubles as username
         name:      masterlistData!.name,
         email:     masterlistData!.email, 
+        course:    masterlistData!.course,     
+        yearLevel: masterlistData!.yearLevel,  
         password,
       }).unwrap();
 

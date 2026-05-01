@@ -22,6 +22,8 @@ model User {
   isDeleted     Boolean         @default(false)
   deletedAt     DateTime?
   schoolId      String?         @unique    // ← NEW
+  course        String?  
+  yearLevel     String?  
   totalPoints   Int             @default(0) // ← NEW
   ClaimAuditLog ClaimAuditLog[]
   claim         Claim[]

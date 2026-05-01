@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { commentsController } from './commentsController';
 import auth from '../midddlewares/auth';
+import authOptional from '../midddlewares/authOptional';
 import { rateLimit } from 'express-rate-limit';
 
 const router = Router();
@@ -9,34 +10,33 @@ const router = Router();
 const commentRateLimit = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 10,
-  message: 'Too many comments, please try again later'
+  message: 'Too many comments, please try again later',
 });
 
 // Get comments for a specific item (public)
 router.get('/items/:itemId/comments', commentsController.getComments);
 
-// Create a new comment — auth optional (anon comments allowed)
-router.post('/items/:itemId/comments',
+// Create a new comment — auth optional so both logged-in and anonymous users
+// can comment. authOptional() sets req.user from the JWT if present, but never
+// blocks the request if there's no token (or an invalid one).
+router.post(
+  '/items/:itemId/comments',
   commentRateLimit,
-  commentsController.createComment
+  authOptional(),
+  commentsController.createComment,
 );
 
 // Update a comment (authenticated users only)
-router.put('/comments/:commentId',
-  auth(),
-  commentsController.updateComment
-);
+router.put('/comments/:commentId', auth(), commentsController.updateComment);
 
 // Delete a comment (authenticated users only)
-router.delete('/comments/:commentId',
-  auth(),
-  commentsController.deleteComment
-);
+router.delete('/comments/:commentId', auth(), commentsController.deleteComment);
 
 // Vote on a comment (authenticated users only)
-router.post('/comments/:commentId/vote-helpful',
+router.post(
+  '/comments/:commentId/vote-helpful',
   auth(),
-  commentsController.voteHelpful
+  commentsController.voteHelpful,
 );
 
 export { router as commentsRouter };

@@ -7,7 +7,6 @@ export const commentsController = {
       const { itemId } = req.params;
       const page  = parseInt(req.query.page  as string) || 1;
       const limit = parseInt(req.query.limit as string) || 50;
-      // itemType is accepted from query but not used in filtering — safe to ignore
       const comments = await commentService.getComments(itemId, { page, limit });
       res.json(comments);
     } catch (error: any) {
@@ -52,9 +51,13 @@ export const commentsController = {
       const userId   = (req as any).user?.id   || null;
       const userRole = (req as any).user?.role  || 'USER';
 
+      // FIX: frontend sends { content } directly OR { updateData: { content } }
+      // Handle both shapes so edit never sends undefined to Prisma
+      const updateData = req.body.updateData ?? req.body;
+
       const updated = await commentService.updateComment(
         commentId,
-        req.body.updateData,
+        updateData,
         userId,
         userRole
       );
@@ -69,12 +72,11 @@ export const commentsController = {
   async deleteComment(req: Request, res: Response) {
     try {
       const { commentId } = req.params;
-      const userId   = (req as any).user?.id   || null;  // null not ''
+      const userId   = (req as any).user?.id   || null;
       const userRole = (req as any).user?.role  || 'GUEST';
 
       await commentService.deleteComment(commentId, userId, userRole);
 
-      // Broadcast deletion to other users in the room
       const io = req.app.get('io');
       if (io) {
         const itemId = req.query.itemId as string;

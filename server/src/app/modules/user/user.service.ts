@@ -32,7 +32,10 @@ const registerUser = async (user: any) => {
         password:   hashedPassword,
         userImg:    user.userImg  || "",
         name:       user.name     || "",
-        schoolId:   user.schoolId || null,   // ← NEW
+        schoolId:   user.schoolId || null,  
+        course:     user.course    || null,  
+        yearLevel:  user.yearLevel || null,  
+ 
       },
     });
 

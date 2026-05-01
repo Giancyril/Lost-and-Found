@@ -160,7 +160,7 @@ const AiSearch: React.FC = () => {
             {searchResults.foundItems.length > 0 && (
               <section>
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+                  <span className="w-2 h-2 bg-blue-400 rounded-full" />
                   <h2 className="text-white font-semibold text-sm uppercase tracking-widest">
                     Found Items — {searchResults.foundItems.length}
                   </h2>
@@ -178,11 +178,11 @@ const AiSearch: React.FC = () => {
                       date={formatDate(item.date)}
                       badge={item.isClaimed
                         ? { label: "Claimed", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" }
-                        : { label: "Available", color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20" }
+                        : { label: "Available", color: "text-blue-400 bg-blue-400/10 border-blue-400/20" }
                       }
-                      accentHover="hover:border-emerald-500/30"
+                      accentHover="hover:border-blue-500/30"
                       onView={() => navigate(`/foundItems/${item.id}`)}
-                      btnColor="bg-emerald-500/10 hover:bg-emerald-500 border-emerald-500/20 text-emerald-400 hover:text-white"
+                      btnColor="bg-blue-500/10 hover:bg-blue-500 border-blue-500/20 text-blue-400 hover:text-white"
                     />
                   ))}
                 </div>

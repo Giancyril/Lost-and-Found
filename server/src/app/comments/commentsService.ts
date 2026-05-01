@@ -19,25 +19,29 @@ const COMMENT_INCLUDE = {
 
 export const commentService = {
   async createComment(data: any) {
-    const {
-      itemId, itemType, userId, content,
-      isAnonymous, location, parentCommentId
-    } = data;
+  const {
+    itemId, itemType, userId, content,
+    isAnonymous, location, parentCommentId
+  } = data;
 
-    return await prisma.comment.create({
-      data: {
-        itemId,
-        itemType:        (itemType || 'FOUND').toUpperCase() as ItemType,
-        content:         content          || '',
-        location:        location         || null,
-        isAnonymous:     isAnonymous      || !userId,
-        parentCommentId: parentCommentId  || null,
-        status:          'APPROVED',
-        ...(userId && { user: { connect: { id: userId } } }),
-      },
-      include: COMMENT_INCLUDE,
-    });
-  },
+  return await prisma.comment.create({
+    data: {
+      itemId,
+      itemType:    (itemType || 'FOUND').toUpperCase() as ItemType,
+      content:      content    || '',
+      location:     location   || null,
+      isAnonymous:  isAnonymous || !userId,
+      status:       'APPROVED',
+
+      ...(parentCommentId && {
+        parent: { connect: { id: parentCommentId } },
+      }),
+      ...(userId && { user: { connect: { id: userId } } }),
+    },
+    include: COMMENT_INCLUDE,
+  });
+},
+
 
   async updateComment(
     commentId: string,
