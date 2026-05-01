@@ -85,7 +85,7 @@ export const StudentLogin: React.FC = () => {
         <div className="w-full max-w-sm mb-4 bg-blue-500/5 border border-blue-500/20
           rounded-2xl px-4 py-3">
           <p className="text-blue-300 text-xs font-medium text-center">
-            Account created successfully. Sign in with your School ID to continue.
+            Account successfully created. Use your student ID number to sign in and get started.
           </p>
         </div>
       )}

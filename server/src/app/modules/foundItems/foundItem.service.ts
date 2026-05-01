@@ -9,7 +9,6 @@ const createFoundItem = async (
   data: FoundItem & { lostItemId?: string; reporterName?: string },
   userId?: string
 ) => {
-  // ── STORAGE FIX: convert base64 img to Storage URL before saving ──────────
   let imgUrl = data.img ?? "";
   if (imgUrl.startsWith("data:")) {
     imgUrl = await uploadBase64ToStorage(imgUrl, "found", `found-${Date.now()}`);
@@ -43,8 +42,7 @@ const createFoundItem = async (
     });
   }
 
-  // Trigger smart matching in background
-  matchService.findMatchesForFoundItem(result).catch(err => 
+  matchService.findMatchesForFoundItem(result).catch(err =>
     console.error("[SmartMatch] Error during matching:", err)
   );
 
@@ -87,10 +85,10 @@ const getFoundItem = async (data: TFilter) => {
 
   let retryCount = 0;
   const maxRetries = 3;
-  
+
   while (retryCount < maxRetries) {
     try {
-      const result = await prisma.foundItem.findMany({
+      return await prisma.foundItem.findMany({
         where:   whereConditions,
         orderBy: { [sortBy]: sortOrder },
         skip:    (Number(page) - 1) * Number(limit),
@@ -113,17 +111,12 @@ const getFoundItem = async (data: TFilter) => {
           user: { select: { id: true, username: true, email: true, role: true } },
         },
       });
-      return result;
     } catch (error: any) {
       retryCount++;
       console.error(`getFoundItem attempt ${retryCount} failed:`, error.message);
-      
       if (retryCount >= maxRetries) {
-        console.error('getFoundItem: Max retries reached, throwing error');
-        throw new Error('Database connection failed. Please try again.');
+        throw new Error("Database connection failed. Please try again.");
       }
-      
-      // Wait before retrying (exponential backoff)
       await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
     }
   }
@@ -143,9 +136,18 @@ const getSingleFoundItem = async (id: string) => {
   });
 };
 
+// FIX: Simplified to ONLY query by userId.
+// The previous version used schoolId/email fallbacks which leaked other
+// students' items when schoolId was undefined in the JWT.
+// Now that schoolId is included in the token (auth.service.ts fix), and
+// createFoundItem always saves userId when a student is logged in,
+// a simple userId filter is all that's needed.
 const getMyFoundItem = async (user: JwtPayload) => {
+  if (!user?.id) return [];
+
   return prisma.foundItem.findMany({
     where:   { userId: user.id, isDeleted: false },
+    orderBy: { createdAt: "desc" },
     include: { user: true, category: true },
   });
 };
@@ -157,7 +159,6 @@ const editMyFoundItem = async (data: any) => {
   if (data?.date)                       updateData.date          = data.date;
   if (data?.description)                updateData.description   = data.description;
   if (data?.reporterName !== undefined) updateData.reporterName  = data.reporterName;
-  // Upload new image to Storage if base64 provided
   if (data?.img?.startsWith("data:")) {
     updateData.img = await uploadBase64ToStorage(data.img, "found", data.id);
   }
@@ -216,7 +217,7 @@ const getStaleFoundItems = async () => {
 const updateFoundItemImage = async (id: string, imageUrl: string) => {
   return prisma.foundItem.update({
     where: { id },
-    data: { img: imageUrl },
+    data:  { img: imageUrl },
   });
 };
 

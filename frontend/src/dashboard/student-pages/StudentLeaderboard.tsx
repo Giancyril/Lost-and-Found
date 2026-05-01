@@ -26,18 +26,8 @@ export default function StudentLeaderboard() {
 
   const loading = lbLoading || ptsLoading;
 
-  // ── Leaderboard: backend returns { success, data: [...] }
-  // getLeaderboard service returns plain array → pointsController wraps as { success, data }
-  // RTK Query baseQuery puts the full response body at data, so it's data.data
-  const board: any[] = boardData?.data ?? [];
-
-  // ── My points: backend returns { success, data: { totalPoints, history } }
-  // ✅ data.data.totalPoints
+  const board: any[]   = boardData?.data ?? [];
   const myPoints: number = pointsData?.data?.totalPoints ?? 0;
-
-  // ── Resolve current user's id from the JWT payload
-  // useUserVerification decodes the JWT — the id field may be user.id, user.userId, or user.sub
-  // depending on how your auth.sign() sets the payload. We try all three.
   const myId: string | undefined = user?.id ?? user?.userId ?? user?.sub;
 
   const myRankIdx = board.findIndex((u: any) => u.id === myId);
@@ -53,9 +43,9 @@ export default function StudentLeaderboard() {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Your Points",  value: myPoints,                             icon: <FaStar size={14} className="text-yellow-400" />,  accent: "bg-yellow-500/5",  color: "text-yellow-400"  },
-          { label: "Your Rank",    value: myRank > 0 ? `#${myRank}` : "—",     icon: <FaTrophy size={14} className="text-cyan-400" />,   accent: "bg-cyan-500/5",    color: "text-cyan-400"    },
-          { label: "Total Ranked", value: board.length,                          icon: <FaMedal size={14} className="text-violet-400" />, accent: "bg-violet-500/5",  color: "text-violet-400"  },
+          { label: "Your Points",  value: myPoints,                         icon: <FaStar size={14} className="text-yellow-400" />,  accent: "bg-yellow-500/5",  color: "text-yellow-400"  },
+          { label: "Your Rank",    value: myRank > 0 ? `#${myRank}` : "—", icon: <FaTrophy size={14} className="text-cyan-400" />,  accent: "bg-cyan-500/5",    color: "text-cyan-400"    },
+          { label: "Total Ranked", value: board.length,                      icon: <FaMedal size={14} className="text-violet-400" />, accent: "bg-violet-500/5",  color: "text-violet-400"  },
         ].map(({ label, value, icon, accent, color }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
             <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
@@ -73,12 +63,9 @@ export default function StudentLeaderboard() {
       {/* My rank callout */}
       {!loading && myRank > 0 && (
         <div className="bg-blue-500/[0.07] border border-blue-500/20 rounded-2xl px-4 py-3 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
-            <FaStar size={14} className="text-yellow-400" />
-          </div>
           <div>
             <p className="text-white font-bold text-sm">
-              You're ranked <span className="text-blue-300">#{myRank}</span> with{" "}
+              You're ranked <span className="text-white">#{myRank}</span> with{" "}
               <span className="text-yellow-400 font-bold">{myPoints} pts</span>
             </p>
             <p className="text-gray-500 text-xs mt-0.5">
@@ -137,7 +124,6 @@ export default function StudentLeaderboard() {
             </div>
             <div className="divide-y divide-white/[0.04]">
               {filtered.map((u: any, i: number) => {
-                // Use the real index in the full board for rank display, not the filtered index
                 const realIdx = board.findIndex((b: any) => b.id === u.id);
                 const isMe    = u.id === myId;
                 const initial = u.name?.charAt(0)?.toUpperCase() || "?";
@@ -188,37 +174,47 @@ export default function StudentLeaderboard() {
 
           {/* Mobile cards */}
           <div className="md:hidden space-y-2">
-            {filtered.map((u: any, i: number) => {
+            {filtered.map((u: any) => {
               const realIdx = board.findIndex((b: any) => b.id === u.id);
               const isMe    = u.id === myId;
               const initial = u.name?.charAt(0)?.toUpperCase() || "?";
               return (
-                <div key={u.id ?? i}
-                  className={`flex items-center gap-4 rounded-2xl px-4 py-3 border transition-colors ${rankBg(realIdx, isMe)}`}>
-                  <div className={`w-8 text-center font-black ${rankColor(realIdx)}`}>
+                <div key={u.id ?? realIdx}
+                  className={`flex items-center gap-2.5 rounded-2xl px-3 py-2.5 border transition-colors ${rankBg(realIdx, isMe)}`}>
+
+                  {/* Rank icon — fixed narrow width */}
+                  <div className={`w-6 text-center font-black shrink-0 ${rankColor(realIdx)}`}>
                     {realIdx < 3
-                      ? <FaMedal size={18} className="mx-auto" />
-                      : <span className="text-sm">#{realIdx + 1}</span>
+                      ? <FaMedal size={15} className="mx-auto" />
+                      : <span className="text-[11px]">#{realIdx + 1}</span>
                     }
                   </div>
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 overflow-hidden">
+
+                  {/* Avatar — smaller on mobile */}
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 overflow-hidden">
                     {u.userImg
                       ? <img src={u.userImg} alt="" className="w-full h-full object-cover" />
-                      : <span className="text-white font-black text-sm">{initial}</span>
+                      : <span className="text-white font-black text-[11px]">{initial}</span>
                     }
                   </div>
+
+                  {/* Name + medal label — flex-1 with min-w-0 to allow truncation */}
                   <div className="flex-1 min-w-0">
-                    <p className={`font-bold text-sm truncate ${isMe ? "text-blue-300" : "text-white"}`}>
+                    <p className={`text-xs font-bold truncate leading-tight ${isMe ? "text-blue-300" : "text-white"}`}>
                       {isMe ? `${u.name || "You"} (You)` : (u.name || "Student")}
                     </p>
                     {medalLabel(realIdx) && (
-                      <p className={`text-[10px] font-semibold ${rankColor(realIdx)}`}>{medalLabel(realIdx)}</p>
+                      <p className={`text-[10px] font-semibold leading-tight ${rankColor(realIdx)}`}>
+                        {medalLabel(realIdx)}
+                      </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <FaStar size={11} className="text-yellow-400" />
-                    <span className="text-yellow-400 font-black text-sm">{u.totalPoints}</span>
-                    <span className="text-gray-600 text-xs">pts</span>
+
+                  {/* Points — shrink-0 so it never wraps */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <FaStar size={10} className="text-yellow-400" />
+                    <span className="text-yellow-400 font-black text-xs">{u.totalPoints}</span>
+                    <span className="text-gray-600 text-[10px]">pts</span>
                   </div>
                 </div>
               );

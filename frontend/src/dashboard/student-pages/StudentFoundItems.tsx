@@ -9,13 +9,23 @@ const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
 export default function StudentFoundItems() {
+  console.log("[DEBUG] StudentFoundItems component is rendering!");
+  
   const [search, setSearch] = useState("");
 
-  const { data, isLoading: loading } = useGetMyFoundItemQuery(undefined);
+  const { data, isLoading: loading, error, isError } = useGetMyFoundItemQuery(undefined);
+  console.log("[DEBUG] useGetMyFoundItemQuery state:", { loading, error, isError });
+
+  // Debug: Log the actual data structure
+  console.log("[StudentFoundItems] Raw API response:", data);
+  console.log("[StudentFoundItems] API Error:", error);
+  console.log("[StudentFoundItems] Is Error:", isError);
+  console.log("[StudentFoundItems] Loading:", loading);
+  console.log("[StudentFoundItems] Parsed items:", data?.data);
 
   // Backend getMyFoundItem returns a plain array wrapped in sendResponse as data.data
-  // ❌ was: data?.data?.data ?? data?.data ?? []  (double-unwrap, always empty)
-  // ✅ fix: data?.data ?? []
+  // was: data?.data?.data ?? data?.data ?? []  (double-unwrap, always empty)
+  // fix: data?.data ?? []
   const items: any[] = data?.data ?? [];
 
   const filtered = items.filter(item =>

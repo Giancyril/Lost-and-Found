@@ -5,6 +5,7 @@ import {
   FaTrophy, FaStar, FaBoxOpen, FaClipboardList, FaCheckCircle,
   FaTimesCircle, FaClock, FaMedal, FaSearch, FaArrowRight,
   FaChartLine, FaHistory, FaMapMarkerAlt, FaCalendarAlt,
+  FaBolt, FaChevronRight, FaUser,
 } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import {
@@ -14,271 +15,352 @@ import {
   useMyClaimsQuery,
   useGetLeaderboardQuery,
 } from "../redux/api/api";
-import { useStudent } from "../components/context/StudentContext";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 const fmt = (d: string) => new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
-const statusColor: Record<string, string> = {
-  PENDING:  "bg-yellow-500/10 text-yellow-300 border-yellow-500/20",
-  APPROVED: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
-  REJECTED: "bg-red-500/10 text-red-300 border-red-500/20",
-};
-const statusIcon: Record<string, React.ReactNode> = {
-  PENDING:  <FaClock size={10} />,
-  APPROVED: <FaCheckCircle size={10} />,
-  REJECTED: <FaTimesCircle size={10} />,
+
+const STATUS_STYLE: Record<string, { dot: string; text: string; bg: string; border: string }> = {
+  APPROVED: { dot: "bg-emerald-400", text: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20" },
+  PENDING:  { dot: "bg-yellow-400",  text: "text-yellow-400",  bg: "bg-yellow-400/10",  border: "border-yellow-400/20"  },
+  REJECTED: { dot: "bg-red-400",     text: "text-red-400",     bg: "bg-red-400/10",     border: "border-red-400/20"     },
 };
 
-// ── Medal colours for leaderboard ────────────────────────────────────────────
 const medalColor = (i: number) =>
-  i === 0 ? "text-yellow-400" : i === 1 ? "text-gray-300" : i === 2 ? "text-amber-600" : "text-gray-600";
+  i === 0 ? "text-yellow-400 border-yellow-500/40 bg-yellow-500/10"
+  : i === 1 ? "text-gray-300 border-gray-500/40 bg-gray-500/10"
+  : "text-amber-600 border-amber-700/40 bg-amber-700/10";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Component
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Tab definition ────────────────────────────────────────────────────────────
+type TabKey = "claims" | "found" | "lost" | "points";
+const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+  { key: "claims", label: "Claims",        icon: <FaClipboardList size={11} /> },
+  { key: "found",  label: "Found Reports", icon: <FaBoxOpen size={11} /> },
+  { key: "lost",   label: "Lost Reports",  icon: <FaSearch size={11} /> },
+  { key: "points", label: "Points",        icon: <FaStar size={11} /> },
+];
+
+// ── Podium ────────────────────────────────────────────────────────────────────
+const Podium = ({ top3, currentUserId }: { top3: any[]; currentUserId: string }) => {
+  const order = [top3[1], top3[0], top3[2]]; // 2nd, 1st, 3rd visual order
+  const heights = ["h-20", "h-28", "h-16"];
+  const labels  = ["2nd", "1st", "3rd"];
+  const rings   = [
+    "border-gray-400/50 bg-gray-500/10",
+    "border-yellow-400/60 bg-yellow-500/10",
+    "border-amber-600/50 bg-amber-700/10",
+  ];
+  const nameColors = ["text-gray-300", "text-yellow-400", "text-amber-500"];
+  const blockBgs   = [
+    "bg-gray-800/60 border-gray-600/20",
+    "bg-yellow-900/20 border-yellow-600/20",
+    "bg-amber-900/20 border-amber-700/20",
+  ];
+  const labelColors = ["text-gray-400", "text-yellow-400", "text-amber-600"];
+
+  return (
+    <div className="flex items-end justify-center gap-3 px-4 pt-4 pb-2">
+      {order.map((u, vi) => {
+        if (!u) return <div key={vi} className="flex-1" />;
+        const isMe = u.id === currentUserId;
+        return (
+          <div key={u.id} className="flex-1 flex flex-col items-center gap-1.5">
+            <div className={`w-10 h-10 rounded-full border-2 ${rings[vi]} flex items-center justify-center`}>
+              <FaUser size={14} className={nameColors[vi]} />
+            </div>
+            <p className={`text-[10px] font-bold uppercase tracking-wide text-center truncate w-full px-1 ${nameColors[vi]}`}>
+              {isMe ? "You" : (u.name?.split(" ")[0] || "Student")}
+            </p>
+            <p className={`text-xs font-black ${nameColors[vi]}`}>{u.totalPoints}</p>
+            <div className={`w-full ${heights[vi]} rounded-t-xl border ${blockBgs[vi]} flex items-center justify-center`}>
+              <span className={`text-xs font-black ${labelColors[vi]}`}>{labels[vi]}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// ── Main Dashboard ────────────────────────────────────────────────────────────
 export default function StudentDashboard() {
   const user: any = useUserVerification();
-  const [tab, setTab] = useState<"claims" | "found" | "lost" | "points">("claims");
+  const [tab, setTab] = useState<TabKey>("claims");
 
-  const { data: pointsData,  isLoading: p1 } = useGetMyPointsQuery(undefined);
-  const { data: foundData,   isLoading: p2 } = useGetMyFoundItemQuery(undefined);
-  const { data: lostData,    isLoading: p3 } = useGetMyLostItemQuery(undefined);
-  const { data: claimsData,  isLoading: p4 } = useMyClaimsQuery(undefined);
-  const { data: boardData,   isLoading: p5 } = useGetLeaderboardQuery(undefined);
+  const { data: pointsData, isLoading: p1 } = useGetMyPointsQuery(undefined);
+  const { data: foundData,  isLoading: p2 } = useGetMyFoundItemQuery(undefined);
+  const { data: lostData,   isLoading: p3 } = useGetMyLostItemQuery(undefined);
+  const { data: claimsData, isLoading: p4 } = useMyClaimsQuery(undefined);
+  const { data: boardData,  isLoading: p5 } = useGetLeaderboardQuery(undefined);
 
-  const loading    = p1 || p2 || p3 || p4 || p5;
-  const points     = pointsData?.data ?? null;
-  const foundItems = foundData?.data?.data  ?? foundData?.data  ?? [];
-  const lostItems  = lostData?.data?.data   ?? lostData?.data   ?? [];
-  const claims     = claimsData?.data?.data ?? claimsData?.data ?? [];
-  const board      = boardData?.data ?? [];
+  const loading       = p1 || p2 || p3 || p4 || p5;
+  const totalPoints   = pointsData?.data?.totalPoints ?? 0;
+  const pointsHistory = pointsData?.data?.history ?? [];
+  const foundItems    = foundData?.data  ?? [];
+  const lostItems     = lostData?.data   ?? [];
+  const claims        = claimsData?.data ?? [];
+  const board         = boardData?.data  ?? [];
 
-  const myRank = board.findIndex((u: any) => u.id === user?.id) + 1;
-
-  // ── Stats ─────────────────────────────────────────────────────────────────
+  const myRank         = board.findIndex((u: any) => u.id === user?.id) + 1;
   const approvedClaims = claims.filter((c: any) => c.status === "APPROVED").length;
   const pendingClaims  = claims.filter((c: any) => c.status === "PENDING").length;
+
+  const tabCount: Record<TabKey, number> = {
+    claims: claims.length,
+    found:  foundItems.length,
+    lost:   lostItems.length,
+    points: pointsHistory.length,
+  };
 
   if (loading) return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
         <p className="text-gray-500 text-sm">Loading your dashboard…</p>
       </div>
     </div>
   );
 
+  const top3 = board.slice(0, 3);
+  const rest = board.slice(3, 10);
+
   return (
-    <div className="space-y-6 text-white">
+    <div className="space-y-4 sm:space-y-6 text-white max-w-7xl mx-auto">
 
-      {/* ── Hero / Profile Card ────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gray-900">
-        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-400" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
+      {/* ── Profile Card ──────────────────────────────────────────────── */}
+      <div className="relative bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute -top-10 -right-10 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative p-5 sm:p-6">
-          <div className="flex items-center gap-4">
-            {/* Avatar */}
-            <div className="relative shrink-0">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-8 h-8 sm:w-9 sm:h-9 opacity-90">
-                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-                </svg>
-              </div>
-              
+        {/* Desktop layout */}
+        <div className="relative hidden sm:flex items-center gap-5 p-5">
+          <div className="relative shrink-0">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center border-2 border-gray-700 shadow-lg">
+              <FaUser size={32} className="text-white opacity-90" />
             </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-white font-black text-lg sm:text-xl tracking-tight truncate">
-                  {user?.name || user?.username || "Student"}
-                </h1>
-                <span className="flex items-center gap-1 text-[9px] text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold tracking-wider shrink-0">
-                  <MdVerified size={9} /> STUDENT
-                </span>
-              </div>
-              {user?.schoolId && (
-                <p className="text-gray-400 text-xs sm:text-sm mt-0.5 font-mono">{user.schoolId}</p>
-              )}
-              <p className="text-gray-600 text-[11px] mt-0.5 truncate">{user?.email}</p>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
+              <FaCheckCircle size={10} className="text-white" />
             </div>
           </div>
 
-          <div className="h-px bg-white/[0.05] my-4" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-white font-bold text-xl tracking-tight break-words">
+                {user?.name || user?.username || "Student"}
+              </h1>
+              <span className="flex items-center gap-1.5 text-[10px] text-cyan-300 bg-cyan-500/10 border border-cyan-500/25 px-2.5 py-1 rounded-full font-bold tracking-widest shrink-0">
+                <MdVerified size={10} /> VERIFIED STUDENT
+              </span>
+            </div>
+            <p className="text-gray-500 text-sm mt-1">{user?.email}</p>
 
-          {/* Stats row */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 flex items-center gap-3 bg-gray-800/50 border border-white/[0.05] rounded-xl px-4 py-3">
-              <div className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
-                <FaStar size={12} className="text-yellow-400" />
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/5 bg-white/5">
+                <FaStar size={11} className="text-yellow-400" />
+                <span className="text-white font-bold text-sm">{totalPoints}</span>
+                <span className="text-gray-500 text-xs">points</span>
               </div>
-              <div>
-                <p className="text-lg sm:text-xl font-black text-white leading-none">
-                  {points?.totalPoints ?? 0}
-                </p>
-                <p className="text-gray-500 text-[9px] font-bold uppercase tracking-widest mt-0.5">Total Points</p>
+              {myRank > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/5 bg-white/5">
+                  <FaTrophy size={11} className="text-cyan-400" />
+                  <span className="text-white font-bold text-sm">#{myRank}</span>
+                  <span className="text-gray-500 text-xs">rank</span>
+                </div>
+              )}
+              <Link to="/reportFoundItem"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-400 text-xs font-semibold hover:bg-blue-500/10 transition-colors">
+                <FaBolt size={9} /> Report items to earn more points
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile layout */}
+        <div className="relative sm:hidden p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="relative shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center border-2 border-gray-700">
+                <FaUser size={22} className="text-white opacity-90" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
+                <FaCheckCircle size={8} className="text-white" />
               </div>
             </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white font-bold text-sm tracking-tight truncate leading-tight">
+                {user?.name || user?.username || "Student"}
+              </h1>
+              <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+                <span className="flex items-center gap-1 text-[9px] text-cyan-300 bg-cyan-500/10 border border-cyan-500/25 px-1.5 py-0.5 rounded-full font-bold shrink-0">
+                  <MdVerified size={8} /> VERIFIED
+                </span>
+                <p className="text-gray-500 text-[10px] truncate">{user?.email}</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/5 bg-white/5">
+              <FaStar size={10} className="text-yellow-400" />
+              <span className="text-white font-bold text-sm">{totalPoints}</span>
+              <span className="text-gray-500 text-xs">points</span>
+            </div>
             {myRank > 0 && (
-              <div className="flex-1 flex items-center gap-3 bg-gray-800/50 border border-white/[0.05] rounded-xl px-4 py-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <FaTrophy size={12} className="text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-lg sm:text-xl font-black text-white leading-none">#{myRank}</p>
-                  <p className="text-gray-500 text-[9px] font-bold uppercase tracking-widest mt-0.5">Ranking</p>
-                </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/5 bg-white/5">
+                <FaTrophy size={10} className="text-cyan-400" />
+                <span className="text-white font-bold text-sm">#{myRank}</span>
+                <span className="text-gray-500 text-xs">rank</span>
               </div>
             )}
+            <Link to="/reportFoundItem"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-400/5 text-emerald-400 text-[10px] font-semibold">
+              <FaBolt size={8} /> Report items to earn more points
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* ── Stats Row ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* ── Stats Row ──────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { label: "Found Items Reported", value: foundItems.length, icon: <FaBoxOpen />,     color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/15" },
-          { label: "Lost Items Reported",  value: lostItems.length,  icon: <FaSearch />,      color: "text-blue-400",    bg: "bg-blue-500/10 border-blue-500/15" },
-          { label: "Claims Approved",      value: approvedClaims,    icon: <FaCheckCircle />, color: "text-cyan-400",    bg: "bg-cyan-500/10 border-cyan-500/15" },
-          { label: "Claims Pending",       value: pendingClaims,     icon: <FaClock />,       color: "text-yellow-400",  bg: "bg-yellow-500/10 border-yellow-500/15" },
-        ].map(({ label, value, icon, color, bg }) => (
-          <div key={label} className={`rounded-xl border p-4 ${bg} bg-gray-900/60`}>
-            <div className={`text-xl mb-2 ${color}`}>{icon}</div>
-            <p className="text-2xl font-black text-white leading-none">{value}</p>
-            <p className="text-gray-500 text-[10px] font-medium mt-1 leading-tight">{label}</p>
+          { label: "Found Items Reported", value: foundItems.length,  icon: <FaBoxOpen size={15} />,     accent: "bg-cyan-400/5",    iconBg: "bg-cyan-400/10 border-cyan-400/20",      iconColor: "text-cyan-400"    },
+          { label: "Lost Items Reported",  value: lostItems.length,   icon: <FaSearch size={15} />,      accent: "bg-blue-400/5",    iconBg: "bg-blue-400/10 border-blue-400/20",      iconColor: "text-blue-400"    },
+          { label: "Claims Approved",      value: approvedClaims,     icon: <FaCheckCircle size={15} />, accent: "bg-emerald-400/5", iconBg: "bg-emerald-400/10 border-emerald-400/20", iconColor: "text-emerald-400" },
+          { label: "Claims Pending",       value: pendingClaims,      icon: <FaClock size={15} />,       accent: "bg-yellow-400/5",  iconBg: "bg-yellow-400/10 border-yellow-400/20",  iconColor: "text-yellow-400"  },
+        ].map(({ label, value, icon, accent, iconBg, iconColor }) => (
+          <div key={label} className={`relative group bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 hover:border-white/10 transition-all duration-200 overflow-hidden`}>
+            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${accent} blur-3xl scale-150`} />
+            <div className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center ${iconBg} ${iconColor}`}>
+              {icon}
+            </div>
+            <div className="relative">
+              <p className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{value}</p>
+              <p className="text-gray-500 text-xs mt-0.5 font-medium leading-tight">{label}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* ── Main Grid ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* ── Activity + Leaderboard ─────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4">
 
-        {/* Left: Tabbed Activity Panel */}
-        <div className="lg:col-span-2 bg-gray-900 border border-white/[0.06] rounded-2xl overflow-hidden">
-          <div className="flex border-b border-white/[0.06] overflow-x-auto">
-            {([
-              { key: "claims", label: "My Claims",      icon: <FaClipboardList size={11} /> },
-              { key: "found",  label: "Found Reports",  icon: <FaBoxOpen size={11} /> },
-              { key: "lost",   label: "Lost Reports",   icon: <FaSearch size={11} /> },
-              { key: "points", label: "Points History", icon: <FaChartLine size={11} /> },
-            ] as const).map(({ key, label, icon }) => (
-              <button
-                key={key}
-                onClick={() => setTab(key)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold whitespace-nowrap transition-colors border-b-2 ${
-                  tab === key
-                    ? "border-blue-500 text-white bg-blue-500/5"
-                    : "border-transparent text-gray-500 hover:text-gray-300"
-                }`}
-              >
-                {icon} {label}
-              </button>
-            ))}
+        {/* Activity Panel — 3 cols */}
+        <div className="lg:col-span-3 bg-gray-900 border border-white/5 rounded-2xl flex flex-col overflow-hidden">
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-white/5">
+            <div>
+              <h3 className="text-white text-sm font-semibold flex items-center gap-2">
+                <FaChartLine size={13} className="text-gray-400" /> Activity
+              </h3>
+              <p className="text-gray-500 text-xs mt-0.5">Your reports and claim history</p>
+            </div>
+
           </div>
 
-          <div className="p-4 space-y-2.5 max-h-[420px] overflow-y-auto">
+          {/* Tabs — 2×2 grid on mobile, single row on sm+ */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 px-4 pt-3 pb-3">
+            {TABS.map(({ key, label, icon }) => {
+              const active = tab === key;
+              const count  = tabCount[key];
+              return (
+                <button key={key} onClick={() => setTab(key)}
+                  className={`flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-xs font-semibold transition-all border ${
+                    active
+                      ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+                      : "border-white/5 text-gray-500 hover:text-gray-300 bg-transparent hover:bg-white/5"
+                  }`}>
+                  <span className={active ? "text-cyan-400" : "text-gray-600"}>{icon}</span>
+                  <span className="truncate">{label}</span>
+                  {count > 0 && (
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center shrink-0 ${
+                      active ? "bg-cyan-500 text-white" : "bg-white/[0.07] text-gray-500"
+                    }`}>{count}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-            {/* Claims */}
+          {/* Content */}
+          <div className="px-3 pb-3 space-y-0.5 max-h-[340px] overflow-y-auto divide-y divide-white/5" style={{ scrollbarWidth: "none" }}>
+
             {tab === "claims" && (
               claims.length === 0
                 ? <Empty label="No claims submitted yet" />
-                : claims.map((c: any, i: number) => (
-                  <div key={i} className="flex items-start gap-3 bg-gray-800/40 border border-white/[0.04] rounded-xl px-4 py-3 hover:border-white/[0.08] transition-colors">
-                    <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border mt-0.5 shrink-0 ${statusColor[c.status] ?? statusColor.PENDING}`}>
-                      {statusIcon[c.status] ?? statusIcon.PENDING}
-                      {c.status}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-semibold truncate">
-                        {c.foundItem?.foundItemName ?? c.lostItem?.lostItemName ?? "Item"}
-                      </p>
-                      <p className="text-gray-500 text-xs mt-0.5 truncate">{c.message ?? c.description}</p>
-                    </div>
-                    <p className="text-gray-600 text-[10px] shrink-0">{c.createdAt ? fmt(c.createdAt) : ""}</p>
-                  </div>
-                ))
+                : claims.map((c: any, i: number) => {
+                    const s = STATUS_STYLE[c.status] ?? STATUS_STYLE.PENDING;
+                    return (
+                      <div key={i} className="flex items-center gap-3 px-3 py-3 hover:bg-white/[0.02] transition-colors group cursor-default">
+                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold shrink-0 ${s.bg} ${s.border} ${s.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
+                          {c.status.charAt(0) + c.status.slice(1).toLowerCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">
+                            {c.foundItem?.foundItemName ?? c.lostItem?.lostItemName ?? "Item"}
+                          </p>
+                          <p className="text-gray-600 text-[10px] mt-0.5">{c.createdAt ? fmt(c.createdAt) : ""}</p>
+                        </div>
+                        <FaChevronRight size={10} className="text-gray-700 group-hover:text-gray-500 transition-colors shrink-0" />
+                      </div>
+                    );
+                  })
             )}
 
-            {/* Found Items */}
             {tab === "found" && (
               foundItems.length === 0
                 ? <Empty label="No found items reported yet" />
                 : foundItems.map((fi: any, i: number) => (
-                  <div key={i} className="flex items-start gap-3 bg-gray-800/40 border border-white/[0.04] rounded-xl px-4 py-3 hover:border-white/[0.08] transition-colors">
+                  <div key={i} className="flex items-center gap-3 px-3 py-3 hover:bg-white/[0.02] transition-colors">
                     {fi.img
-                      ? <img src={fi.img} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0 border border-white/10" />
-                      : <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center shrink-0">
-                          <FaBoxOpen size={14} className="text-emerald-400" />
-                        </div>
+                      ? <img src={fi.img} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0 border border-white/10" />
+                      : <div className="w-9 h-9 rounded-lg bg-cyan-400/10 border border-cyan-400/15 flex items-center justify-center shrink-0"><FaBoxOpen size={12} className="text-cyan-400" /></div>
                     }
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-semibold truncate">{fi.foundItemName}</p>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        {fi.location && (
-                          <span className="flex items-center gap-1 text-gray-500 text-[10px]">
-                            <FaMapMarkerAlt size={8} /> {fi.location}
-                          </span>
-                        )}
-                        {fi.date && (
-                          <span className="flex items-center gap-1 text-gray-500 text-[10px]">
-                            <FaCalendarAlt size={8} /> {fmt(fi.date)}
-                          </span>
-                        )}
+                      <p className="text-white text-sm font-medium truncate">{fi.foundItemName}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {fi.location && <span className="flex items-center gap-1 text-gray-600 text-[10px]"><FaMapMarkerAlt size={7} /> {fi.location}</span>}
+                        {fi.date && <span className="text-gray-600 text-[10px]">{fmt(fi.date)}</span>}
                       </div>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-lg border shrink-0 mt-0.5 ${fi.isClaimed ? statusColor.APPROVED : statusColor.PENDING}`}>
-                      {fi.isClaimed ? "Claimed" : "Unclaimed"}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${fi.isClaimed ? "bg-emerald-400/10 text-emerald-400 border-emerald-400/20" : "bg-yellow-400/10 text-yellow-400 border-yellow-400/20"}`}>
+                      {fi.isClaimed ? "Claimed" : "Active"}
                     </span>
                   </div>
                 ))
             )}
 
-            {/* Lost Items */}
             {tab === "lost" && (
               lostItems.length === 0
                 ? <Empty label="No lost items reported yet" />
                 : lostItems.map((li: any, i: number) => (
-                  <div key={i} className="flex items-start gap-3 bg-gray-800/40 border border-white/[0.04] rounded-xl px-4 py-3 hover:border-white/[0.08] transition-colors">
+                  <div key={i} className="flex items-center gap-3 px-3 py-3 hover:bg-white/[0.02] transition-colors">
                     {li.img
-                      ? <img src={li.img} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0 border border-white/10" />
-                      : <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/15 flex items-center justify-center shrink-0">
-                          <FaSearch size={12} className="text-blue-400" />
-                        </div>
+                      ? <img src={li.img} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0 border border-white/10" />
+                      : <div className="w-9 h-9 rounded-lg bg-blue-400/10 border border-blue-400/15 flex items-center justify-center shrink-0"><FaSearch size={11} className="text-blue-400" /></div>
                     }
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-semibold truncate">{li.lostItemName}</p>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        {li.location && (
-                          <span className="flex items-center gap-1 text-gray-500 text-[10px]">
-                            <FaMapMarkerAlt size={8} /> {li.location}
-                          </span>
-                        )}
-                        {li.date && (
-                          <span className="flex items-center gap-1 text-gray-500 text-[10px]">
-                            <FaCalendarAlt size={8} /> {fmt(li.date)}
-                          </span>
-                        )}
+                      <p className="text-white text-sm font-medium truncate">{li.lostItemName}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {li.location && <span className="flex items-center gap-1 text-gray-600 text-[10px]"><FaMapMarkerAlt size={7} /> {li.location}</span>}
+                        {li.date && <span className="text-gray-600 text-[10px]">{fmt(li.date)}</span>}
                       </div>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-lg border shrink-0 mt-0.5 ${li.isFound ? statusColor.APPROVED : statusColor.PENDING}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${li.isFound ? "bg-emerald-400/10 text-emerald-400 border-emerald-400/20" : "bg-blue-400/10 text-blue-400 border-blue-400/20"}`}>
                       {li.isFound ? "Found" : "Active"}
                     </span>
                   </div>
                 ))
             )}
 
-            {/* Points History */}
             {tab === "points" && (
-              !points || points.history?.length === 0
+              pointsHistory.length === 0
                 ? <Empty label="No points earned yet — report a found item to get started!" />
-                : points.history.map((h: any, i: number) => (
-                  <div key={i} className="flex items-center gap-3 bg-gray-800/40 border border-white/[0.04] rounded-xl px-4 py-3 hover:border-white/[0.08] transition-colors">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${h.amount > 0 ? "bg-yellow-500/10 border border-yellow-500/20" : "bg-red-500/10 border border-red-500/20"}`}>
-                      <FaStar size={12} className={h.amount > 0 ? "text-yellow-400" : "text-red-400"} />
+                : pointsHistory.map((h: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3 px-3 py-3 hover:bg-white/[0.02] transition-colors">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${h.amount > 0 ? "bg-yellow-400/10 border border-yellow-400/20" : "bg-red-400/10 border border-red-400/20"}`}>
+                      <FaStar size={11} className={h.amount > 0 ? "text-yellow-400" : "text-red-400"} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs font-semibold">{h.reason?.replace(/_/g, " ")}</p>
+                      <p className="text-white text-xs font-medium">{h.reason?.replace(/_/g, " ")}</p>
                       <p className="text-gray-600 text-[10px] mt-0.5">{h.createdAt ? fmt(h.createdAt) : ""}</p>
                     </div>
                     <p className={`text-sm font-black shrink-0 ${h.amount > 0 ? "text-yellow-400" : "text-red-400"}`}>
@@ -290,84 +372,121 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Right: Leaderboard */}
-        <div className="bg-gray-900 border border-white/[0.06] rounded-2xl overflow-hidden">
-          <div className="px-4 py-3.5 border-b border-white/[0.06] flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FaTrophy size={12} className="text-yellow-400" />
-              <p className="text-sm font-bold text-white">Leaderboard</p>
+        {/* Leaderboard — 2 cols */}
+        <div className="lg:col-span-2 bg-gray-900 border border-white/5 rounded-2xl flex flex-col overflow-hidden">
+
+          <div className="flex items-center justify-between px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-white/5">
+            <div>
+              <h3 className="text-white text-sm font-semibold flex items-center gap-2">
+               
+                Leaderboard
+              </h3>
             </div>
-            <p className="text-gray-600 text-[10px]">Top 10</p>
+            <p className="text-gray-600 text-[10px] font-semibold">TOP {board.length}</p>
           </div>
 
-          <div className="p-3 space-y-1.5 max-h-[380px] overflow-y-auto">
-            {board.length === 0
-              ? <Empty label="No rankings yet" />
-              : board.map((u: any, i: number) => {
-                const isMe = u.id === user?.id;
-                return (
-                  <div key={i} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
-                    isMe
-                      ? "bg-blue-500/10 border border-blue-500/25"
-                      : "bg-gray-800/30 border border-transparent hover:border-white/[0.06]"
-                  }`}>
-                    <div className={`w-6 text-center font-black text-sm ${medalColor(i)}`}>
-                      {i < 3 ? <FaMedal /> : <span className="text-xs">{i + 1}</span>}
+          {board.length === 0 ? (
+            <div className="p-6"><Empty label="No rankings yet" /></div>
+          ) : (
+            <>
+              {top3.length >= 1 && (
+                <Podium top3={top3} currentUserId={user?.id} />
+              )}
+
+              <div className="px-3 pb-3 space-y-0.5 divide-y divide-white/5">
+                {myRank > 3 && (() => {
+                  const me = board.find((u: any) => u.id === user?.id);
+                  if (!me) return null;
+                  return (
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 mb-2">
+                      <span className="text-gray-500 text-xs font-bold w-4 text-center">{myRank}</span>
+                      <div className="w-7 h-7 rounded-lg bg-cyan-500/20 flex items-center justify-center shrink-0">
+                        <FaUser size={11} className="text-cyan-400" />
+                      </div>
+                      <p className="text-cyan-300 text-xs font-semibold flex-1 truncate">You</p>
+                      <p className="text-yellow-400 text-xs font-black shrink-0">{me.totalPoints}<span className="text-gray-600 font-normal"> pts</span></p>
                     </div>
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4 opacity-90">
-                        <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold truncate ${isMe ? "text-blue-300" : "text-gray-300"}`}>
+                  );
+                })()}
+
+                {rest.map((u: any, i: number) => {
+                  const rank = i + 4;
+                  const isMe = u.id === user?.id;
+                  return (
+                    <div key={u.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
+                      isMe ? "bg-cyan-500/10 border border-cyan-500/20" : "hover:bg-white/[0.02] border border-transparent"
+                    }`}>
+                      <span className="text-gray-600 text-xs font-bold w-4 text-center">{rank}</span>
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isMe ? "bg-cyan-500/20" : "bg-white/[0.05]"}`}>
+                        <FaUser size={11} className={isMe ? "text-cyan-400" : "text-gray-600"} />
+                      </div>
+                      <p className={`text-xs font-semibold flex-1 truncate ${isMe ? "text-cyan-300" : "text-gray-300"}`}>
                         {isMe ? "You" : (u.name || "Student")}
                       </p>
+                      <p className="text-yellow-400 text-xs font-black shrink-0">
+                        {u.totalPoints}<span className="text-gray-600 font-normal"> pts</span>
+                      </p>
                     </div>
-                    <p className="text-yellow-400 text-xs font-black shrink-0">{u.totalPoints}</p>
-                  </div>
-                );
-              })}
-          </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* ── Quick Actions ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {[
-          { label: "Report Found Item",  desc: "Earn 50 pts",       href: "/reportFoundItem", icon: <FaBoxOpen size={16} />,      accent: "from-emerald-600 to-teal-600" },
-          { label: "Report Lost Item",   desc: "Help others find it", href: "/reportLostItem",  icon: <FaSearch size={16} />,       accent: "from-blue-600 to-cyan-600" },
-          { label: "Browse Found Items", desc: "Claim what's yours", href: "/foundItems",       icon: <FaClipboardList size={16} />, accent: "from-purple-600 to-violet-600" },
-        ].map(({ label, desc, href, icon, accent }) => (
-          <Link key={label} to={href}
-            className={`group flex items-center gap-4 rounded-2xl p-4 bg-gradient-to-br ${accent} bg-opacity-10
-              border border-white/[0.08] hover:border-white/[0.15] transition-all hover:shadow-lg hover:-translate-y-0.5`}
-            style={{ background: "rgba(255,255,255,0.03)" }}
-          >
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center shrink-0 shadow-lg`}>
-              <span className="text-white">{icon}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-bold">{label}</p>
-              <p className="text-gray-500 text-xs">{desc}</p>
-            </div>
-            <FaArrowRight size={10} className="text-gray-600 group-hover:text-white group-hover:translate-x-1 transition-all" />
-          </Link>
-        ))}
+      {/* ── Quick Actions ──────────────────────────────────────────────── */}
+      <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5">
+        <h3 className="text-white text-sm font-semibold mb-3 sm:mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            {
+              label: "Report Found Item",
+              desc:  "Earn +50 points for reporting",
+              href:  "/reportFoundItem",
+              icon:  <FaBoxOpen size={16} />,
+              color: "text-emerald-400 bg-emerald-400/5 hover:bg-emerald-400/10 border-emerald-400/10",
+            },
+            {
+              label: "Report Lost Item",
+              desc:  "Help the SAS office locate it",
+              href:  "/reportLostItem",
+              icon:  <FaSearch size={16} />,
+              color: "text-cyan-400 bg-cyan-400/5 hover:bg-cyan-400/10 border-cyan-400/10",
+            },
+            {
+              label: "Browse Found Items",
+              desc:  "Submit a claim to retrieve",
+              href:  "/foundItems",
+              icon:  <FaClipboardList size={16} />,
+              color: "text-violet-400 bg-violet-400/5 hover:bg-violet-400/10 border-violet-400/10",
+            },
+          ].map(({ label, desc, href, icon, color }) => (
+            <Link key={label} to={href}
+              className={`group flex items-center gap-4 rounded-xl p-3 sm:p-4 border transition-all duration-150 ${color}`}
+            >
+              <div className="shrink-0">{icon}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-medium">{label}</p>
+                <p className="text-gray-500 text-xs mt-0.5 truncate">{desc}</p>
+              </div>
+              <FaArrowRight size={11} className="text-gray-700 group-hover:text-gray-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+            </Link>
+          ))}
+        </div>
       </div>
 
     </div>
   );
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
 function Empty({ label }: { label: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-10 text-center">
-      <div className="w-10 h-10 rounded-xl bg-gray-800 border border-white/[0.06] flex items-center justify-center mb-3">
-        <FaHistory size={14} className="text-gray-600" />
+    <div className="flex flex-col items-center justify-center py-8 text-center">
+      <div className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/5 flex items-center justify-center mb-3">
+        <FaHistory size={13} className="text-gray-700" />
       </div>
-      <p className="text-gray-600 text-xs max-w-[180px] leading-relaxed">{label}</p>
+      <p className="text-gray-600 text-xs max-w-[160px] leading-relaxed">{label}</p>
     </div>
   );
 }

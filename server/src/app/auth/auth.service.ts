@@ -7,14 +7,12 @@ import prisma from "../config/prisma";
 const loginUser = async (data: any) => {
   const { password, username: userNameEmail } = data;
 
-  // ── Find user by username, email, OR schoolId ─────────────────────────────
-  // This is the only change from the original — schoolId is now a third OR branch.
   const user = await prisma.user.findFirst({
     where: {
       OR: [
         { username: userNameEmail },
         { email:    userNameEmail },
-        { schoolId: userNameEmail }, // ← NEW: students log in with schoolId
+        { schoolId: userNameEmail },
       ],
     },
   });
@@ -27,8 +25,19 @@ const loginUser = async (data: any) => {
     throw new AppError(StatusCodes.FORBIDDEN, "Password is incorrect");
   }
 
-  const { id, name, email, role, userImg, username } = user;
-  const accessToken = utils.createToken({ id, name, email, username, role, userImg });
+  const { id, name, email, role, userImg, username, schoolId } = user;
+
+  // FIX: schoolId is now included in the token payload so req.user.schoolId
+  // is available in all protected routes (e.g. getMyFoundItem).
+  const accessToken = utils.createToken({
+    id,
+    name,
+    email,
+    username,
+    role,
+    userImg,
+    schoolId, // ← ADDED
+  });
 
   return {
     id:       user.id,
@@ -36,11 +45,10 @@ const loginUser = async (data: any) => {
     username: user.username,
     email:    user.email,
     role,
+    schoolId, // ← ADDED so frontend also gets it on login
     token:    accessToken,
   };
 };
-
-// ── All other functions unchanged from your original ─────────────────────────
 
 const newPasswords = async (data: any, user: JwtPayload) => {
   if (data.currentPassword === data.newPassword) {

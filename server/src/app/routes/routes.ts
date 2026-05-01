@@ -64,7 +64,7 @@ router.put("/found-items/:id/archive", auth(), foundItemController.archiveFoundI
 router.put("/found-items/:id/restore", auth(), foundItemController.restoreFoundItem);
 
 ////////////////////////////////////////////////// lost items //////////////////////////////////////////////
-router.post("/lostItem", lostItemController.createLostItem);
+router.post("/lostItem", auth(), lostItemController.createLostItem);
 router.get("/lostItem", lostItemController.getLostItem);
 router.get("/lostItem/:id", lostItemController.getSingleLostItem);
 
@@ -78,7 +78,7 @@ router.put("/my/foundItem", auth(), foundItemController.editMyFoundItem);
 router.delete("/my/foundItem/:id", auth(), foundItemController.deleteMyFoundItem);
 
 ////////////////////////////////////////////////// claims //////////////////////////////////////////////
-router.post("/claims", validateRequest(ItemClaimSchema.createClaim), claimsController.createClaim);
+router.post("/claims", auth(), validateRequest(ItemClaimSchema.createClaim), claimsController.createClaim);
 router.get("/claims", auth(), claimsController.getClaim);
 router.get("/my/claims", auth(), claimsController.getMyClaim);
 router.put("/claims/:claimId", validateRequest(ItemClaimSchema.updateClaim), auth(), claimsController.updateClaimStatus);

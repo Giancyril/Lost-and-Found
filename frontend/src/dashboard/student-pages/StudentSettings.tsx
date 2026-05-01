@@ -79,7 +79,7 @@ export default function StudentSettings() {
             {/* Avatar — identical markup to StudentLayout sidebar avatar */}
             <div className="relative shrink-0">
               <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full
-                flex items-center justify-center border-2 border-gray-700 shadow-lg shadow-blue-900/30">
+                flex items-center justify-center border-2 border-gray-700">
                 <UserIcon className="w-7 h-7" />
               </div>
               {/* Online dot */}
@@ -91,9 +91,6 @@ export default function StudentSettings() {
             <div className="min-w-0 flex-1">
               <p className="text-white font-bold text-base leading-tight truncate">
                 {user?.name || user?.username || "Student"}
-              </p>
-              <p className="text-gray-500 text-xs font-mono mt-0.5">
-                {user?.schoolId || "STUDENT"}
               </p>
               {user?.email && (
                 <p className="text-gray-600 text-xs mt-0.5 truncate">{user.email}</p>

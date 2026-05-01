@@ -9,7 +9,15 @@ import { pointsService } from "./points.service";
 const getMyPoints = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
+    console.log(`[DEBUG] getMyPoints - User from request:`, {
+      id: req.user?.id,
+      email: req.user?.email,
+      role: req.user?.role,
+      username: req.user?.username
+    });
+    
     if (!userId) {
+      console.log(`[DEBUG] getMyPoints - No userId found`);
       return sendResponse(res, {
         statusCode: StatusCodes.UNAUTHORIZED,
         success:    false,
@@ -21,6 +29,12 @@ const getMyPoints = async (req: Request, res: Response) => {
     // Returns { totalPoints, name, history }
     // Frontend reads pointsData?.data?.totalPoints  ✅
     const data = await pointsService.getMyPoints(userId);
+    
+    console.log(`[DEBUG] getMyPoints - Service result:`, {
+      totalPoints: data?.totalPoints,
+      name: data?.name,
+      historyLength: data?.history?.length || 0
+    });
 
     sendResponse(res, {
       statusCode: StatusCodes.OK,
@@ -29,6 +43,7 @@ const getMyPoints = async (req: Request, res: Response) => {
       data,
     });
   } catch (error: any) {
+    console.error(`[DEBUG] getMyPoints - Error:`, error);
     sendResponse(res, {
       statusCode: StatusCodes.BAD_REQUEST,
       success:    false,

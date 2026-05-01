@@ -11,12 +11,11 @@ import Modals from "../modal/Modal";
 import { ToastContainer } from "react-toastify";
 import {
   FaCog, FaSignOutAlt, FaTachometerAlt, FaChevronDown,
-  FaTv,
+  FaTv, FaStar, FaTrophy, FaBoxOpen, FaChartLine, FaArrowRight,
 } from "react-icons/fa";
 import { useState, useRef, useEffect } from "react";
 import NotificationBell from "../notifications/NotificationBell";
-import { useGetMyPointsQuery } from "../../redux/api/api";
-import { FaStar } from "react-icons/fa";
+import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../../redux/api/api";
 
 const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className={`${className} opacity-90`}>
@@ -24,21 +23,200 @@ const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   </svg>
 );
 
+// ── Points reason label map ───────────────────────────────────────────────────
+const REASON_LABEL: Record<string, string> = {
+  FOUND_ITEM_REPORTED: "Reported a found item",
+  CLAIM_APPROVED:      "Claim approved",
+  HELPFUL_COMMENT:     "Helpful comment",
+};
+const REASON_COLOR: Record<string, string> = {
+  FOUND_ITEM_REPORTED: "text-emerald-400",
+  CLAIM_APPROVED:      "text-blue-400",
+  HELPFUL_COMMENT:     "text-violet-400",
+};
+
+// ── Tier badge ────────────────────────────────────────────────────────────────
+const getTier = (pts: number) => {
+  if (pts >= 500) return { label: "Gold",   color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20"  };
+  if (pts >= 200) return { label: "Silver", color: "text-gray-300",    bg: "bg-gray-400/10 border-gray-400/20"      };
+  if (pts >= 50)  return { label: "Bronze", color: "text-amber-600",   bg: "bg-amber-600/10 border-amber-600/20"    };
+  return           { label: "Starter", color: "text-gray-500", bg: "bg-gray-700/30 border-gray-600/20" };
+};
+
+// ── Points Dropdown ───────────────────────────────────────────────────────────
+const PointsDropdown = ({ points, history, rank }: {
+  points: number;
+  history: any[];
+  rank: number;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const tier = getTier(points);
+
+  // Next tier threshold
+  const nextThreshold = points < 50 ? 50 : points < 200 ? 200 : points < 500 ? 500 : null;
+  const prevThreshold = points < 50 ? 0  : points < 200 ? 50  : points < 500 ? 200 : 500;
+  const progress = nextThreshold
+    ? Math.round(((points - prevThreshold) / (nextThreshold - prevThreshold)) * 100)
+    : 100;
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setOpen(p => !p)}
+        className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold
+          border transition-all duration-200 hover:scale-105 active:scale-95
+          bg-yellow-400/10 text-yellow-300 border-yellow-400/20 hover:bg-yellow-400/15`}
+      >
+        <FaStar size={9} className="text-yellow-400" />
+        <span>{points} pts</span>
+        <FaChevronDown size={7} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-10 w-72 bg-gray-900 border border-white/10
+            rounded-2xl shadow-2xl shadow-black/60 overflow-hidden z-50">
+
+            {/* Header */}
+            <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-yellow-500/5 to-transparent border-b border-white/[0.05]">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-yellow-500/15 border border-yellow-500/20 flex items-center justify-center">
+                    <FaStar size={14} className="text-yellow-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-black leading-none">{points.toLocaleString()} pts</p>
+                    <p className="text-gray-500 text-[10px] mt-0.5">Total earned</p>
+                  </div>
+                </div>
+                {/* Tier badge */}
+                <span className={`text-[10px] font-black px-2 py-1 rounded-lg border ${tier.color} ${tier.bg} uppercase tracking-wider`}>
+                  {tier.label}
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              {nextThreshold && (
+                <div>
+                  <div className="flex justify-between text-[10px] text-gray-600 mb-1">
+                    <span>{points} pts</span>
+                    <span>{nextThreshold} pts for next tier</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full transition-all duration-500"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {!nextThreshold && (
+                <div className="text-[10px] text-yellow-400 font-semibold flex items-center gap-1">
+                  <FaTrophy size={9} /> Max tier reached!
+                </div>
+              )}
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-2 gap-px bg-white/[0.04] border-b border-white/[0.05]">
+              <div className="bg-gray-900 px-4 py-3">
+                <p className="text-white text-sm font-black">{rank > 0 ? `#${rank}` : "—"}</p>
+                <p className="text-gray-600 text-[10px] font-medium mt-0.5">Your Rank</p>
+              </div>
+              <div className="bg-gray-900 px-4 py-3">
+                <p className="text-white text-sm font-black">{history.length}</p>
+                <p className="text-gray-600 text-[10px] font-medium mt-0.5">Transactions</p>
+              </div>
+            </div>
+
+            {/* Recent history */}
+            <div className="px-3 pt-3 pb-1">
+              <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest px-1 mb-2">Recent Activity</p>
+              {history.length === 0 ? (
+                <div className="py-6 text-center">
+                  <FaBoxOpen size={18} className="text-gray-700 mx-auto mb-2" />
+                  <p className="text-gray-600 text-xs">No points yet</p>
+                  <p className="text-gray-700 text-[10px] mt-0.5">Report a found item to earn 50 pts</p>
+                </div>
+              ) : (
+                <div className="space-y-0.5 max-h-[160px] overflow-y-auto"
+                  style={{ scrollbarWidth: "none" }}>
+                  {history.slice(0, 6).map((h: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-white/[0.03] transition-colors">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                        h.amount > 0 ? "bg-yellow-500/10" : "bg-red-500/10"
+                      }`}>
+                        <FaStar size={9} className={h.amount > 0 ? "text-yellow-400" : "text-red-400"} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[11px] font-semibold truncate ${REASON_COLOR[h.reason] ?? "text-gray-400"}`}>
+                          {REASON_LABEL[h.reason] ?? h.reason?.replace(/_/g, " ")}
+                        </p>
+                      </div>
+                      <p className={`text-xs font-black shrink-0 ${h.amount > 0 ? "text-yellow-400" : "text-red-400"}`}>
+                        {h.amount > 0 ? "+" : ""}{h.amount}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer CTA */}
+            <div className="px-3 pb-3 pt-1 border-t border-white/[0.04] mt-1">
+              <Link
+                to="/dashboard/student/leaderboard"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl
+                  bg-yellow-500/8 hover:bg-yellow-500/15 border border-yellow-500/15
+                  text-yellow-300 text-xs font-semibold transition-all group"
+              >
+                <div className="flex items-center gap-2">
+                  <FaChartLine size={10} />
+                  <span>View full leaderboard</span>
+                </div>
+                <FaArrowRight size={9} className="group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ── Main Navbar ───────────────────────────────────────────────────────────────
 export function Navbars() {
   const navigate   = useNavigate();
   const users: any = useUserVerification();
 
-  const isAdmin = users?.role === "ADMIN";
-
+  const isAdmin    = users?.role === "ADMIN";
   const isLoggedIn = !!(users?.email || users?.id);
 
   const { data: pointsData, refetch: refetchPoints } = useGetMyPointsQuery(undefined, {
-    // ✅ Only skip if we're certain the user is not logged in OR is an admin
     skip: !isLoggedIn || isAdmin,
-    // Refresh every 2 minutes so the navbar badge stays current without a page reload
     pollingInterval: 120_000,
   });
-  const points = pointsData?.data?.totalPoints ?? 0;
+  const { data: boardData } = useGetLeaderboardQuery(undefined, {
+    skip: !isLoggedIn || isAdmin,
+  });
+
+  const points     = pointsData?.data?.totalPoints ?? 0;
+  const history    = pointsData?.data?.history     ?? [];
+  const board      = boardData?.data ?? [];
+  const rank       = board.findIndex((u: any) => u.id === users?.id) + 1;
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -52,12 +230,10 @@ export function Navbars() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Refetch points when user logs in / logs out
   useEffect(() => {
     if (isLoggedIn && !isAdmin) refetchPoints();
   }, [isLoggedIn, isAdmin]);
 
-  // Triple-click on brand → hidden admin login
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -186,69 +362,69 @@ export function Navbars() {
             </div>
           )}
 
-          {/* Student dropdown */}
+          {/* Student — Points dropdown + profile */}
           {isLoggedIn && !isAdmin && (
-            <div ref={profileRef} className="relative">
-              <button type="button" onClick={() => setProfileOpen(p => !p)}
-                className="flex items-center gap-2 cursor-pointer group focus:outline-none">
-                <div className="relative">
-                  <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full
-                    flex items-center justify-center border-2 border-gray-700
-                    group-hover:border-blue-400 transition-all shadow-lg shrink-0">
-                    <UserIcon className="w-5 h-5" />
-                  </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
-                </div>
-                <div className="hidden sm:block text-left">
-                  <p className="text-white text-sm font-semibold leading-none">
-                    {users?.name || users?.username || "Student"}
-                  </p>
-                  <p className="text-gray-500 text-xs mt-0.5 font-mono">
-                    {users?.schoolId || "STUDENT"}
-                  </p>
-                </div>
-                <FaChevronDown size={10} className={`text-gray-500 hidden sm:block transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`} />
-              </button>
+            <>
+              {/* ── Points dropdown ── */}
+              <PointsDropdown points={points} history={history} rank={rank} />
 
-              {profileOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                  <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-                    <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/[0.05]">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500
-                        flex items-center justify-center shrink-0">
-                        <UserIcon className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-white text-sm font-medium truncate">
-                          {users?.name || users?.username || "Student"}
-                        </p>
-                        <p className="text-gray-500 text-[10px] font-mono truncate">
-                          {users?.schoolId || "Student"}
-                        </p>
-                      </div>
-                      {/* ✅ Points badge — only shown when points > 0 or query settled */}
-                      <div className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1.5 shrink-0">
-                        <FaStar size={10} className="text-yellow-400" />
-                        <span className="text-yellow-400 text-xs font-bold">{points}</span>
-                      </div>
+              {/* ── Student profile dropdown ── */}
+              <div ref={profileRef} className="relative">
+                <button type="button" onClick={() => setProfileOpen(p => !p)}
+                  className="flex items-center gap-2 cursor-pointer group focus:outline-none">
+                  <div className="relative">
+                    <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full
+                      flex items-center justify-center border-2 border-gray-700
+                      group-hover:border-blue-400 transition-all shadow-lg shrink-0">
+                      <UserIcon className="w-5 h-5" />
                     </div>
-                    <div className="py-1">
-                      <Link to="/dashboard/student" onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
-                        <FaTachometerAlt size={12} className="text-gray-500 shrink-0" /> My Dashboard
-                      </Link>
-                    </div>
-                    <div className="border-t border-white/[0.05] py-1">
-                      <button type="button" onClick={handleSignOut}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm">
-                        <FaSignOutAlt size={12} className="shrink-0" /> Sign out
-                      </button>
-                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
                   </div>
-                </>
-              )}
-            </div>
+                  <div className="hidden sm:block text-left">
+                    <p className="text-white text-sm font-semibold leading-none">
+                      {users?.name?.split(' ')[0] || users?.username || "Student"}
+                    </p>
+                    <p className="text-gray-500 text-xs mt-0.5 font-mono">
+                      {users?.schoolId || "STUDENT"}
+                    </p>
+                  </div>
+                  <FaChevronDown size={10} className={`text-gray-500 hidden sm:block transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {profileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                    <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                      <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/[0.05]">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
+                          <UserIcon className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-white text-sm font-medium truncate">
+                            {users?.name || users?.username || "Student"}
+                          </p>
+                          <p className="text-gray-500 text-[10px] font-mono truncate">
+                            {users?.schoolId || "Student"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="py-1">
+                        <Link to="/dashboard/student" onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
+                          <FaTachometerAlt size={12} className="text-gray-500 shrink-0" /> My Dashboard
+                        </Link>
+                      </div>
+                      <div className="border-t border-white/[0.05] py-1">
+                        <button type="button" onClick={handleSignOut}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm">
+                          <FaSignOutAlt size={12} className="shrink-0" /> Sign out
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
           )}
 
           <NavbarToggle />

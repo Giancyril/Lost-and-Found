@@ -92,11 +92,21 @@ const updateClaimStatus = async (
   }
 
   if (data.status === "APPROVED") {
-    await prisma.foundItem.update({
-      where: { id: result.foundItemId },
-      data: { isClaimed: true },
-    });
+  await prisma.foundItem.update({
+    where: { id: result.foundItemId },
+    data: { isClaimed: true },
+  });
+
+  // Award points to the student who made the claim
+  if (result.userId) {
+    const { pointsService } = await import("../points/points.service");
+    await pointsService
+      .award(result.userId, "CLAIM_APPROVED", result.id)
+      .catch((err) =>
+        console.error("[Points] Failed to award points for approved claim:", err)
+      );
   }
+}
 
   if (data.status === "REJECTED" || data.status === "PENDING") {
     await prisma.foundItem.update({

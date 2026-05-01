@@ -44,8 +44,8 @@ const AboutUs = () => {
               </span>
             </h2>
             <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full mb-5" />
-            <p className="text-gray-400 text-sm sm:text-base leading-relaxed max-w-2xl">
-              The <strong className="text-white font-semibold">SAS Lost & Found Management System</strong> is designed exclusively for students, teachers, and staff — providing a safe, organized, and transparent way to report, track, and recover lost items within campus premises.
+            <p className="text-gray-400 text-sm sm:text-base leading-relaxed max-w-2xl text-justify">
+              The <strong className="text-white font-semibold">SAS Lost & Found Management System</strong> is designed exclusively for students, teachers, and staff providing a safe, organized, and transparent way to report, track, and recover lost items within campus premises.
             </p>
           </div>
 
@@ -54,11 +54,11 @@ const AboutUs = () => {
 
             {/* Left — audience cards + secondary text */}
             <div>
-              <p className="text-gray-400 text-sm leading-relaxed mb-6">
+              <p className="text-gray-400 text-sm leading-relaxed mb-6 text-justify">
                 We believe a well-managed lost and found system reflects the integrity and care of our school community. Every item reported and returned strengthens the trust we hold for one another as part of SAS.
               </p>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 text-justify">
                 {[
                   { emoji: "🎒", title: "For Students", desc: "Easily report or claim lost items from classrooms, hallways, or school grounds." },
                   { emoji: "👨‍🏫", title: "For Teachers & Staff", desc: "Manage found items and coordinate with the admin office through one central system." },
@@ -92,8 +92,8 @@ const AboutUs = () => {
                     <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-600/30 flex items-center justify-center text-base shrink-0">🎯</div>
                     <h3 className="text-white font-bold text-base sm:text-lg">Our Mission</h3>
                   </div>
-                  <p className="text-gray-400 text-sm leading-relaxed">
-                    To provide SAS with a reliable, school-appropriate lost and found system that promotes honesty, responsibility, and respect for each other's belongings — core values at the heart of our school culture.
+                  <p className="text-gray-400 text-sm leading-relaxed text-justify">
+                    To provide SAS with a reliable, school-appropriate lost and found system that promotes honesty, responsibility, and respect for each other's belongings core values at the heart of our school culture.
                   </p>
                 </div>
               </div>

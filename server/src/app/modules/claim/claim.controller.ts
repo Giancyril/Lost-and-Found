@@ -67,7 +67,11 @@ const getMyClaim = async (req: Request, res: Response) => {
 
 const updateClaimStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await claimsService.updateClaimStatus(req.params.claimId, req.body);
+    const result = await claimsService.updateClaimStatus(
+      req.params.claimId,
+      req.body,
+      { id: req.user?.id, name: req.user?.name || req.user?.username }
+    );
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,

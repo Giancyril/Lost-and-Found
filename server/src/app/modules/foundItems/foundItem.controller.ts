@@ -10,118 +10,81 @@ import { sendEmail } from "../../utils/mailer";
 import { lostItemReportedTemplate } from "../../utils/emailTemplates";
 import { logToSheet } from "../sheets/sheets.service";
 import { pointsService } from "../points/points.service";
-import prisma from "../../config/prisma"; 
+import prisma from "../../config/prisma";
+
 
 const createFoundItem = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    console.log(`[DEBUG] Request user:`, { role: req.user?.role, id: req.user?.id, email: req.user?.email });
-    console.log(`[DEBUG] Request body:`, { schoolEmail: req.body.schoolEmail, studentId: req.body.studentId, reporterName: req.body.reporterName });
-    
-    // Check if admin is submitting with student info and we need to find the student user ID
-    let finalUserId = userId;
-    if (req.user?.role === "ADMIN" && (req.body.schoolEmail || req.body.studentId)) {
-      try {
-        let studentUser = null;
-        
-        // First try to find by email
-        if (req.body.schoolEmail) {
-          console.log(`[DEBUG] Searching for student by email: ${req.body.schoolEmail}`);
-          studentUser = await prisma.user.findFirst({
-            where: { 
-              email: req.body.schoolEmail,
-              role: "USER"
-            },
-            select: { id: true, email: true, schoolId: true }
-          });
-          console.log(`[DEBUG] Student found by email:`, studentUser);
-        }
-        
-        // If not found by email, try by studentId
-        if (!studentUser && req.body.studentId) {
-          console.log(`[DEBUG] Searching for student by studentId: ${req.body.studentId}`);
-          studentUser = await prisma.user.findFirst({
-            where: { 
-              schoolId: req.body.studentId,
-              role: "USER"
-            },
-            select: { id: true, email: true, schoolId: true }
-          });
-          console.log(`[DEBUG] Student found by studentId:`, studentUser);
-        }
-        
-        if (studentUser) {
-          finalUserId = studentUser.id;
-          console.log(`[Admin->Student] Admin submitting on behalf of student: ${req.body.schoolEmail || req.body.studentId} -> User ID: ${studentUser.id}`);
-        } else {
-          console.log(`[Admin->Student] Student not found: email=${req.body.schoolEmail}, studentId=${req.body.studentId}`);
-        }
-      } catch (error) {
-        console.error("[Admin->Student] Error finding student user:", error);
+    const requestUserId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
+
+    // For admin submissions: find the student's User record by their email
+    // so the found item is linked to them and points go to them
+    let reporterUserId: string | undefined = undefined;
+
+    if (!isAdmin) {
+      // Student submitting directly — use their own account
+      reporterUserId = requestUserId;
+    } else if (req.body.schoolEmail) {
+      // Admin submitting on behalf of student — look up by schoolEmail
+      const studentUser = await prisma.user.findFirst({
+        where: { email: req.body.schoolEmail, role: "USER", isDeleted: false },
+        select: { id: true },
+      });
+      if (studentUser) {
+        reporterUserId = studentUser.id;
       }
     }
-    
-    console.log(`[DEBUG] Final userId for found item: ${finalUserId}`);
-    const result = await foundItemService.createFoundItem(req.body, finalUserId);
+
+    const result = await foundItemService.createFoundItem(req.body, reporterUserId);
 
     if (result?.id) {
-      // Award points to the reporter (student if found, otherwise admin)
-      // Fire-and-forget: never blocks the response if points fail
-      if (finalUserId) {
+      // Award 50pts to the student if their User account was found
+      if (reporterUserId) {
         await pointsService
-          .award(finalUserId, "FOUND_ITEM_REPORTED", result.id)
+          .award(reporterUserId, "FOUND_ITEM_REPORTED", result.id)
           .catch((err) =>
             console.error("[Points] Failed to award points for found item:", err)
           );
       }
 
-      // Log to Google Sheets
+      // ── Log to Google Sheets ─────────────────────────────────────────────────
       try {
         const reportTimestamp = new Date().toISOString();
         const studentId =
           req.body.studentId ||
-          (req.body.schoolEmail
-            ? req.body.schoolEmail.split("@")[0]
-            : "N/A");
+          (req.body.schoolEmail ? req.body.schoolEmail.split("@")[0] : "N/A");
 
         await logToSheet({
-          sheetName: "Found Items",
-          timestamp: reportTimestamp,
-          studentId: studentId,
+          sheetName:    "Found Items",
+          timestamp:    reportTimestamp,
+          studentId,
           reporterName: req.body.reporterName || "SAS Office",
-          email: req.body.schoolEmail || "N/A",
-          itemName: req.body.foundItemName,
-          description: req.body.description || "",
-          location: req.body.location,
-          date: req.body.date,
-          type: "FOUND",
-          reportId: result.id.toString(),
-          scannedAt: reportTimestamp,
+          email:        req.body.schoolEmail || "N/A",
+          itemName:     req.body.foundItemName,
+          description:  req.body.description || "",
+          location:     req.body.location,
+          date:         req.body.date,
+          type:         "FOUND",
+          reportId:     result.id.toString(),
+          scannedAt:    reportTimestamp,
         });
-        console.log(
-          "[Sheets] Found item logged to Google Sheets:",
-          result.id
-        );
+        console.log("[Sheets] Found item logged to Google Sheets:", result.id);
       } catch (sheetsError) {
-        console.error(
-          "[Sheets] Failed to log found item to Google Sheets:",
-          sheetsError
-        );
+        console.error("[Sheets] Failed to log found item to Google Sheets:", sheetsError);
       }
 
-      // Send confirmation email to the reporter
+      // ── Send confirmation email ──────────────────────────────────────────────
       try {
-        const fromName =
-          process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
-        const fromEmail =
-          process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
+        const fromName  = process.env.SMTP_FROM_NAME  || "NBSC SAS Lost & Found";
+        const fromEmail = process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
 
         const template = lostItemReportedTemplate({
           reporterName: req.body.reporterName || "Unknown",
-          itemName: req.body.foundItemName,
-          location: req.body.location,
-          date: new Date(req.body.date).toLocaleDateString(),
-          description: req.body.description,
+          itemName:     req.body.foundItemName,
+          location:     req.body.location,
+          date:         new Date(req.body.date).toLocaleDateString(),
+          description:  req.body.description,
         });
 
         await sendEmail({
@@ -129,20 +92,14 @@ const createFoundItem = async (req: Request, res: Response) => {
           fromEmail,
           toEmail: req.body.schoolEmail,
           subject: template.subject,
-          html: template.html,
+          html:    template.html,
         });
-
-        console.log(
-          "[Email] Found item confirmation sent to:",
-          req.body.schoolEmail
-        );
+        console.log("[Email] Found item confirmation sent to:", req.body.schoolEmail);
       } catch (emailError) {
-        console.error(
-          "[Email] Failed to send found item confirmation:",
-          emailError
-        );
+        console.error("[Email] Failed to send found item confirmation:", emailError);
       }
 
+      // ── Smart matching ───────────────────────────────────────────────────────
       matchService.findMatchesForFoundItem(result).catch((err) =>
         console.error("[SmartMatch] Error matching found item:", err)
       );
@@ -361,30 +318,18 @@ const uploadFoundItemImages = async (req: Request, res: Response) => {
     const uploadedUrls = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-
       let compressedBuffer = file.buffer;
       try {
         compressedBuffer = await sharp(file.buffer)
-          .resize(1200, 1200, {
-            fit: "inside",
-            withoutEnlargement: true,
-          })
-          .jpeg({
-            quality: 80,
-            progressive: true,
-          })
+          .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+          .jpeg({ quality: 80, progressive: true })
           .toBuffer();
       } catch (error) {
         console.error("Image compression error:", error);
         compressedBuffer = file.buffer;
       }
 
-      const url = await uploadFileToStorage(
-        compressedBuffer,
-        file.mimetype,
-        "found",
-        id
-      );
+      const url = await uploadFileToStorage(compressedBuffer, file.mimetype, "found", id);
       uploadedUrls.push(url);
     }
 
@@ -395,10 +340,7 @@ const uploadFoundItemImages = async (req: Request, res: Response) => {
       statusCode: StatusCodes.OK,
       success: true,
       message: "Images uploaded successfully",
-      data: {
-        urls: uploadedUrls,
-        primaryImageUrl,
-      },
+      data: { urls: uploadedUrls, primaryImageUrl },
     });
   } catch (error: any) {
     sendResponse(res, {

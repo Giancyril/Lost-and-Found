@@ -12,6 +12,7 @@ type Step = 1 | 2 | 3;
 interface MasterlistData {
   schoolId: string;
   name: string;
+  email: string; 
   course: string;
   yearLevel: string;
 }
@@ -99,6 +100,7 @@ export const StudentRegister: React.FC = () => {
       setMasterlistData({
         schoolId: student.id,
         name:     student.name,
+        email:     student.email,
         course:   student.course    || student.department || '—',
         yearLevel: student.yearLevel || '—',
       });
@@ -124,7 +126,7 @@ export const StudentRegister: React.FC = () => {
         schoolId:  masterlistData!.schoolId,
         username:  masterlistData!.schoolId,          // schoolId doubles as username
         name:      masterlistData!.name,
-        email:     `${masterlistData!.schoolId}@student.nbsc.edu.ph`, // synthetic fallback
+        email:     masterlistData!.email, 
         password,
       }).unwrap();
 

@@ -107,7 +107,7 @@ const ItemLifecycleTimeline = ({ foundItem, currentUserId }: Props) => {
       label:    "Item Reported",
       sublabel: `Found at ${foundItem.location ?? "unknown location"}`,
       time:     reportedAt,
-      actor:    foundItem.user?.username ?? foundItem.reporterName ?? "SAS Office",
+      actor:    foundItem.reporterName ?? foundItem.user?.username ?? "SAS Office",
       done:     true,
       active:   !claimedAt,
     },

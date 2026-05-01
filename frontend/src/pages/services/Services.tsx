@@ -148,8 +148,8 @@ const Services = () => {
                   &amp; Features
                 </span>
               </h2>
-              <p className="text-gray-400 text-base leading-relaxed">
-                Everything SAS students and staff need to report, search, and recover lost items — all in one place.
+              <p className="text-gray-400 text-base leading-relaxed text-justify">
+                Everything SAS students and staff need to report, search, and recover lost items all in one place.
               </p>
             </div>
 

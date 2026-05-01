@@ -43,6 +43,14 @@ const NotificationBell = () => {
   const isAdmin     = users?.role === "ADMIN";
   const isLoggedIn  = !!users?.email;
 
+  console.log("[DEBUG] NotificationBell - User verification:", {
+    users,
+    isAdmin,
+    isLoggedIn,
+    role: users?.role,
+    email: users?.email
+  });
+
   const [open, setOpen]           = useState(false);
   const ref                       = useRef<HTMLDivElement>(null);
   const storageKey                = isAdmin ? ADMIN_SEEN_KEY    : USER_SEEN_KEY;
@@ -52,6 +60,12 @@ const NotificationBell = () => {
   const [clearedIds, setClearedIds] = useState<Set<string>>(() => readSeenIds(clearedKey));
 
   // Admin: audit logs — poll every 60s, no refetch on focus/reconnect
+  console.log("[DEBUG] NotificationBell - Audit logs query config:", {
+    skip: !isAdmin || !isLoggedIn,
+    isAdmin,
+    isLoggedIn
+  });
+  
   const { data: auditData } = useGetAuditLogsQuery(
     undefined,
     {
