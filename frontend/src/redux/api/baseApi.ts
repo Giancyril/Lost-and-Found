@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { getUserLocalStorage } from "../../auth/auth";
 
-const isProduction = false; // Force development mode for local testing
+const isProduction = import.meta.env.PROD;
 
 const getBaseUrl = () => {
   if (isProduction) {
