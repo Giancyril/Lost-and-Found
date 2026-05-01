@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 interface Comment {
   id: string;
@@ -57,10 +58,10 @@ const commentsSlice = createSlice({
       const existingComments = state.comments[itemId] || [];
       state.comments[itemId] = existingComments.filter(c => c.id !== commentId);
     },
-    setLoading: (state, action: PayloadAction<{ loading: boolean }>) => {
+    setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
-    setError: (state, action: PayloadAction<{ error: string | null }>) => {
+    setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
     clearComments: (state, action: PayloadAction<{ itemId: string }>) => {
