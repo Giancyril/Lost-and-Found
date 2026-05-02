@@ -41,6 +41,7 @@ import StudentLeaderboard from "./dashboard/student-pages/StudentLeaderboard.tsx
 import StudentSettings from "./dashboard/student-pages/StudentSettings.tsx";
 import StudentRegistry from "./dashboard/pages/StudentRegistry.tsx";
 import CommunicationHub from "./dashboard/pages/CommunicationHub.tsx";
+import SupportPage from "./pages/support/SupportPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
       { path: "/reportFoundItem",           element: <ReportFoundItem /> },
       { path: "/ai-search",                 element: <AiSearch /> },
       { path: "/bulletin",                  element: <BulletinBoard /> },
+      { path: "/support",                   element: <SupportPage /> },
     ],
   },
 
