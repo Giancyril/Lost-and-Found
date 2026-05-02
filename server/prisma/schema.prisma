@@ -210,6 +210,57 @@ model Points {
   @@map("points")
 }
 
+model Announcement {
+  id          String             @id @default(uuid())
+  title       String
+  message     String
+  type        AnnouncementType   @default(INFO)
+  target      AnnouncementTarget @default(ALL)
+  sentByName  String             @default("Admin")
+  sentById    String?
+  emailSent   Boolean            @default(false)
+  emailCount  Int                @default(0)
+  isDeleted   Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@map("announcements")
+}
+
+model SupportTicket {
+  id          String        @id @default(uuid())
+  subject     String
+  message     String
+  senderName  String        @default("")
+  senderEmail String        @default("")
+  status      TicketStatus  @default(OPEN)
+  priority    TicketPriority @default(NORMAL)
+  adminReply  String        @default("")
+  repliedAt   DateTime?
+  repliedBy   String        @default("")
+  isDeleted   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("supportTickets")
+}
+
+model Feedback {
+  id          String         @id @default(uuid())
+  senderName  String         @default("")
+  senderEmail String         @default("")
+  category    FeedbackCategory @default(GENERAL)
+  message     String
+  rating      Int?
+  status      FeedbackStatus @default(UNREAD)
+  adminNote   String         @default("")
+  isDeleted   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("feedbacks")
+}
+
 enum status {
   PENDING
   APPROVED
@@ -230,4 +281,45 @@ enum CommentStatus {
 enum ItemType {
   LOST
   FOUND
+}
+
+enum AnnouncementType {
+  INFO
+  WARNING
+  SUCCESS
+  URGENT
+}
+
+enum AnnouncementTarget {
+  ALL
+  STUDENTS
+  ADMINS
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum FeedbackCategory {
+  GENERAL
+  BUG
+  FEATURE
+  COMPLAINT
+  COMPLIMENT
+}
+
+enum FeedbackStatus {
+  UNREAD
+  READ
+  RESOLVED
 }

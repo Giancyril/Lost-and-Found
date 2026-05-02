@@ -4,7 +4,7 @@ import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
-  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, FaChevronDown, FaChartBar,
+  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, FaChevronDown, FaChartBar, FaBullhorn,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -38,6 +38,7 @@ const menuItems = [
   // Insights
   { title: "Analytics", icon: FaChartLine, path: "/dashboard/analytics" },
   { title: "Heatmap", icon: FaMapMarkedAlt, path: "/dashboard/heatmap" },
+  { title: "Commmunication", icon: FaBullhorn, path: "/dashboard/comm-hub" },
   // Student Management
   { title: "Students", icon: FaUsers, path: "/dashboard/students" },
   { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
@@ -55,6 +56,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/archive": { title: "Archive Log", subtitle: "Browse archived items and restore or permanently remove them." },
   "/dashboard/analytics": { title: "Analytics", subtitle: "Monthly trends, category breakdown and top reporters, user activity, item flow, and performance metrics."},
   "/dashboard/heatmap": { title: "Heatmap", subtitle: "Visualize where items are most commonly lost or found." },
+  "/dashboard/comm-hub": { title: "Communication Hub", subtitle: "Announcements, support tickets, feedback and broadcasts." },
   "/dashboard/report": { title: "Report", subtitle: "Generate and export weekly or monthly summary reports." },
   "/dashboard/students": { title: "Students", subtitle: "View and manage all registered student accounts." },
   "/dashboard/users": { title: "Users", subtitle: "View and manage all registered system users." },
@@ -375,9 +377,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
             // Section dividers
             const showDivider =
-              (!sidebarCollapsed && idx === 1) ? "Item Management" :
-                (!sidebarCollapsed && idx === 5) ? "Insights" :
-                  (!sidebarCollapsed && idx === 9) ? "Administration" : null;
+            (!sidebarCollapsed && idx === 1) ? "Item Management" :
+            (!sidebarCollapsed && idx === 5) ? "Insights" :
+            (!sidebarCollapsed && idx === 8) ? "Student Management" :
+            (!sidebarCollapsed && idx === 10) ? "Administration" : null;
 
             return (
               <div key={item.path}>

@@ -40,6 +40,7 @@ import StudentClaims from "./dashboard/student-pages/StudentClaims.tsx";
 import StudentLeaderboard from "./dashboard/student-pages/StudentLeaderboard.tsx";
 import StudentSettings from "./dashboard/student-pages/StudentSettings.tsx";
 import StudentRegistry from "./dashboard/pages/StudentRegistry.tsx";
+import CommunicationHub from "./dashboard/pages/CommunicationHub.tsx";
 
 const router = createBrowserRouter([
   {
@@ -75,6 +76,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/claims",           element: <DashboardLayout><ClaimsManagement /></DashboardLayout> },
   { path: "/dashboard/analytics",        element: <DashboardLayout><AnalyticsPage /></DashboardLayout> },
   { path: "/dashboard/heatmap",          element: <DashboardLayout><HeatmapPage /></DashboardLayout> },
+  { path: "/dashboard/comm-hub",         element: <DashboardLayout><CommunicationHub /></DashboardLayout> },
   { path: "/dashboard/users",            element: <DashboardLayout><UsersManagement /></DashboardLayout> },
   { path: "/dashboard/students",         element: <DashboardLayout><StudentRegistry /></DashboardLayout> },
   { path: "/dashboard/categories",       element: <DashboardLayout><CategoriesManagement /></DashboardLayout> },

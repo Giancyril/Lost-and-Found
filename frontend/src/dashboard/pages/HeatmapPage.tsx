@@ -197,15 +197,15 @@ const HeatmapPage = () => {
 
       {/* ── Controls ── */}
       <div className="flex flex-col space-y-3">
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative flex-grow">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="relative w-full sm:flex-grow">
             <FaSearch size={12} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Explore locations..."
               className="w-full bg-gray-900 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:border-cyan-500/40 focus:outline-none transition-colors" />
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
             {/* Filter */}
-            <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
+            <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 flex-1 sm:flex-none">
               {(["all", "found", "lost"] as Filter[]).map(f => (
                 <button key={f} onClick={() => setFilter(f)}
                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
@@ -216,15 +216,15 @@ const HeatmapPage = () => {
               ))}
             </div>
             {/* View toggle */}
-            <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
+            <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 flex-1 sm:flex-none justify-end">
               <button onClick={() => setViewMode("list")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "list" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                className={`flex-1 justify-center px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "list" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
                 <FaList size={10} /> List
               </button>
               <button onClick={() => setViewMode("map")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "map" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                className={`flex-1 justify-center px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${viewMode === "map" ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
                 <FaMap size={10} /> Map
-              </button>           
+              </button>     
             </div>
           </div>
         </div>

@@ -26,6 +26,12 @@ import sheetsRoutes from "../modules/sheets/sheets.routes";
 import { uploadImages } from "../midddlewares/upload";
 import { commentsRouter } from "../comments/commentsRouter";
 import { pointsController } from "../modules/points/points.controller";
+import {
+  createAnnouncement, getAnnouncements, deleteAnnouncement,
+  createTicket, getTickets, replyToTicket, updateTicketStatus, deleteTicket,
+  submitFeedback, getFeedbacks, updateFeedbackStatus, deleteFeedback,
+  getCommHubStats,
+} from "../utils/communicationController";
 
 const router = express.Router();
 
@@ -119,5 +125,27 @@ router.get("/points/my", auth(), pointsController.getMyPoints);
 router.get("/points/leaderboard", pointsController.getLeaderboard);
 
 router.post("/admin/backfill-students", auth(), userController.backfillStudentData);
+
+// Communication Hub stats
+router.get("/admin/comm-hub/stats", auth(), getCommHubStats);
+ 
+// Announcements
+router.post("/admin/announcements", auth(), createAnnouncement);
+router.get("/admin/announcements", auth(), getAnnouncements);
+router.delete("/admin/announcements/:id", auth(), deleteAnnouncement);
+ 
+// Support Tickets (public submit, admin manage)
+router.post("/tickets", createTicket);                                  // public — users submit
+router.get("/admin/tickets", auth(), getTickets);                       // admin only
+router.put("/admin/tickets/:id/reply", auth(), replyToTicket);          // admin only
+router.put("/admin/tickets/:id/status", auth(), updateTicketStatus);    // admin only
+router.delete("/admin/tickets/:id", auth(), deleteTicket);              // admin only
+ 
+// Feedback (public submit, admin manage)
+router.post("/feedback", submitFeedback);                               // public — users submit
+router.get("/admin/feedback", auth(), getFeedbacks);                    // admin only
+router.put("/admin/feedback/:id/status", auth(), updateFeedbackStatus); // admin only
+router.delete("/admin/feedback/:id", auth(), deleteFeedback);           // admin only
+ 
 
 export default router;
