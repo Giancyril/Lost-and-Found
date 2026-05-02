@@ -1,50 +1,140 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { BiSupport } from "react-icons/bi";
 import {
-  FaTicketAlt, FaCommentDots, FaEnvelope, FaUser, FaPaperPlane,
-  FaCheckCircle, FaSpinner, FaStar, FaRegStar, FaChevronDown, FaChevronUp,
+  FaTicketAlt, FaCommentDots, FaEnvelope, FaUser,
+  FaPaperPlane, FaCheckCircle, FaSpinner, FaStar, FaRegStar,
+  FaChevronDown, FaChevronUp,
 } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// ── API base — reads the same env your Redux baseApi uses ────────────────────
-// If this fails, open your baseApi.ts, copy the baseUrl value, and paste it below
-const getBaseUrl = (): string => {
-  return (
-    import.meta.env.VITE_API_URL ||
-    (import.meta.env.VITE_SERVER_URL ? `${import.meta.env.VITE_SERVER_URL}/api` : "") ||
-    import.meta.env.VITE_BASE_URL ||
-    "http://localhost:5000/api"
-  );
-};
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-const postJSON = async (endpoint: string, data: any) => {
-  const url = `${getBaseUrl()}${endpoint}`;
-  const res = await fetch(url, {
+const postJSON = async (url: string, data: any) => {
+  const res = await fetch(`${API_BASE}${url}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || `Request failed (${res.status})`);
-  return json;
+  return res.json();
 };
 
-// ── Test data pre-filled so you can hit submit immediately ───────────────────
-const TEST_TICKET = {
-  senderName:  "Juan Dela Cruz",
-  senderEmail: "20230001@nbsc.edu.ph",
-  subject:     "My claim was not processed after 3 days",
-  message:     "I submitted a claim for a black backpack found at the Library last Monday. It has been 3 days and the status is still showing PENDING. I have already verified my identity at the SAS office. Please check the status of my claim. Thank you.",
-  priority:    "HIGH",
-};
+// ── Dropdown data ─────────────────────────────────────────────────────────────
+const PRIORITIES = [
+  { value: "LOW",    icon: "🌱", label: "Low",    sub: "General question",       bg: "#dcfce7", color: "#166534" },
+  { value: "NORMAL", icon: "⚡", label: "Normal", sub: "Issue affecting my use", bg: "#fef3c7", color: "#92400e" },
+  { value: "HIGH",   icon: "🔥", label: "High",   sub: "Urgent issue",           bg: "#fee2e2", color: "#991b1b" },
+  { value: "URGENT", icon: "🚨", label: "Urgent", sub: "Critical problem",       bg: "#fce7f3", color: "#9d174d" },
+];
 
-const TEST_FEEDBACK = {
-  senderName:  "Maria Santos",
-  senderEmail: "20230042@nbsc.edu.ph",
-  category:    "FEATURE",
-  message:     "It would be really helpful if students could receive SMS notifications when a potential match is found for their lost item. Not all students check their email regularly, so an SMS alert would speed up the recovery process. Also, the AI Search feature is amazing — please keep improving it!",
-  rating:      4,
+const CATEGORIES = [
+  { value: "GENERAL",    icon: "💬", label: "General Feedback", sub: "General comments or questions",      bg: "#ede9fe", color: "#5b21b6" },
+  { value: "BUG",        icon: "🐛", label: "Bug Report",       sub: "Something is broken or not working", bg: "#fee2e2", color: "#991b1b" },
+  { value: "FEATURE",    icon: "✨", label: "Feature Request",  sub: "Suggest a new feature",              bg: "#ede9fe", color: "#5b21b6" },
+  { value: "COMPLAINT",  icon: "⚠️", label: "Complaint",        sub: "Report a negative experience",       bg: "#fef3c7", color: "#92400e" },
+  { value: "COMPLIMENT", icon: "🌟", label: "Compliment",       sub: "Share positive feedback",            bg: "#dcfce7", color: "#166534" },
+];
+
+// ── Custom Dropdown ───────────────────────────────────────────────────────────
+interface DropdownOption {
+  value: string;
+  icon: string;
+  label: string;
+  sub: string;
+  bg: string;
+  color: string;
+}
+
+const CustomDropdown = ({
+  options,
+  value,
+  onChange,
+  accentColor = "blue",
+}: {
+  options: DropdownOption[];
+  value: string;
+  onChange: (val: string) => void;
+  accentColor?: "blue" | "cyan";
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value) ?? options[0];
+
+  const ring     = accentColor === "cyan" ? "border-cyan-500/40"  : "border-blue-500/40";
+  const activeBg = accentColor === "cyan" ? "bg-cyan-500/10"      : "bg-blue-500/10";
+  const dotColor = accentColor === "cyan" ? "bg-cyan-400"         : "bg-blue-400";
+  const textSel  = accentColor === "cyan" ? "text-cyan-300"       : "text-blue-300";
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      {/* Trigger */}
+      <div
+        onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-2.5 px-3 py-2.5 bg-gray-800 border rounded-xl cursor-pointer transition-colors ${
+          open ? ring + " border" : "border-white/10 hover:border-white/20"
+        }`}
+      >
+        <span
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
+          style={{ background: selected.bg }}
+        >
+          {selected.icon}
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-sm font-medium leading-tight">{selected.label}</p>
+          <p className="text-gray-500 text-[10px] mt-0.5">{selected.sub}</p>
+        </div>
+        <svg
+          width="10" height="6" viewBox="0 0 10 6"
+          className={`text-gray-500 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        >
+          <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        </svg>
+      </div>
+
+      {/* Menu */}
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 right-0 bg-gray-900 border border-white/10 rounded-xl overflow-hidden z-50 shadow-2xl shadow-black/40">
+          {options.map((opt, i) => {
+            const isSelected = opt.value === value;
+            return (
+              <div
+                key={opt.value}
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-colors select-none
+                  ${i < options.length - 1 ? "border-b border-white/[0.04]" : ""}
+                  ${isSelected ? activeBg : "hover:bg-white/[0.04]"}`}
+              >
+                <span
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
+                  style={{ background: opt.bg }}
+                >
+                  {opt.icon}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium leading-tight ${isSelected ? textSel : "text-white"}`}>
+                    {opt.label}
+                  </p>
+                  <p className="text-gray-500 text-[10px] mt-0.5">{opt.sub}</p>
+                </div>
+                {isSelected && (
+                  <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotColor}`} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 };
 
 // ── Star Rating ───────────────────────────────────────────────────────────────
@@ -66,14 +156,14 @@ const StarRating = ({ value, onChange }: { value: number; onChange: (v: number) 
   </div>
 );
 
-// ── FAQ ───────────────────────────────────────────────────────────────────────
+// ── FAQ data ──────────────────────────────────────────────────────────────────
 const FAQS = [
-  { q: "How do I report a lost item?",       a: "Go to the Lost Items page and click 'Report Lost Item'. Fill in the item description, location, and date. You'll receive a confirmation email." },
-  { q: "How do I claim a found item?",        a: "Browse the Found Items page, find your item, and click 'Claim'. Provide proof of ownership. The SAS office will verify and contact you." },
-  { q: "How long does claiming take?",        a: "Typically 1–3 business days. Claims are reviewed during office hours, Monday–Friday, 8AM–5PM." },
-  { q: "What if my item isn't found?",        a: "Your report stays active. If a matching item is found later, you'll get an automatic email notification." },
-  { q: "Can I report anonymously?",           a: "Found items can be reported without logging in. Lost item reports and claims require an NBSC email for verification." },
-  { q: "How do I check my claim status?",     a: "Log in to your student account and go to the Claims section in your dashboard." },
+  { q: "How do I report a lost item?", a: "Go to the Lost Items page and click 'Report Lost Item'. Fill in the details including item description, location it was lost, and date. You'll receive a confirmation email." },
+  { q: "How do I claim a found item?", a: "Browse the Found Items page, find your item, and click 'Claim'. You'll need to provide proof of ownership. The SAS office will verify and contact you." },
+  { q: "How long does the claiming process take?", a: "Typically 1–3 business days. The SAS office reviews claims during office hours (Monday–Friday, 8AM–5PM)." },
+  { q: "What happens if my lost item isn't found?", a: "Your report stays active in the system. If a matching item is found later, you'll receive an automatic email notification." },
+  { q: "Can I report anonymously?", a: "You can report found items without logging in. However, for lost item reports and claims, an NBSC email is required for verification." },
+  { q: "How do I check the status of my claim?", a: "Log in to your student account and go to the Claims section in your dashboard to see the current status." },
 ];
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -83,13 +173,19 @@ const SupportPage = () => {
   const [activeTab, setActiveTab] = useState<"ticket" | "feedback">("ticket");
   const [openFaq, setOpenFaq]     = useState<number | null>(null);
 
-  const [ticket, setTicket]               = useState(TEST_TICKET);
-  const [ticketSent, setTicketSent]       = useState(false);
+  // Ticket form
+  const [ticket, setTicket] = useState({
+    subject: "", message: "", senderName: "", senderEmail: "", priority: "NORMAL",
+  });
+  const [ticketSent,    setTicketSent]    = useState(false);
   const [ticketLoading, setTicketLoading] = useState(false);
 
-  const [feedback, setFeedback]                 = useState(TEST_FEEDBACK);
-  const [feedbackSent, setFeedbackSent]         = useState(false);
-  const [feedbackLoading, setFeedbackLoading]   = useState(false);
+  // Feedback form
+  const [feedback, setFeedback] = useState({
+    senderName: "", senderEmail: "", category: "GENERAL", message: "", rating: 0,
+  });
+  const [feedbackSent,    setFeedbackSent]    = useState(false);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   const handleTicketSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,10 +195,8 @@ const SupportPage = () => {
       const res = await postJSON("/tickets", ticket);
       if (res?.success) { setTicketSent(true); toast.success("Ticket submitted! We'll get back to you soon."); }
       else { toast.error(res?.message || "Failed to submit ticket"); }
-    } catch (err: any) {
-      toast.error(err?.message || "Could not reach server — check your API URL in .env");
-      console.error("[SupportPage] ticket error:", err);
-    } finally { setTicketLoading(false); }
+    } catch { toast.error("Something went wrong. Please try again."); }
+    finally { setTicketLoading(false); }
   };
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
@@ -113,10 +207,8 @@ const SupportPage = () => {
       const res = await postJSON("/feedback", feedback);
       if (res?.success) { setFeedbackSent(true); toast.success("Feedback received! Thank you."); }
       else { toast.error(res?.message || "Failed to submit feedback"); }
-    } catch (err: any) {
-      toast.error(err?.message || "Could not reach server — check your API URL in .env");
-      console.error("[SupportPage] feedback error:", err);
-    } finally { setFeedbackLoading(false); }
+    } catch { toast.error("Something went wrong. Please try again."); }
+    finally { setFeedbackLoading(false); }
   };
 
   return (
@@ -130,22 +222,24 @@ const SupportPage = () => {
         .fade-up-1 { animation-delay: 0.05s; }
         .fade-up-2 { animation-delay: 0.10s; }
         .fade-up-3 { animation-delay: 0.15s; }
+        .fade-up-4 { animation-delay: 0.20s; }
       `}</style>
 
       <div className="min-h-screen bg-gray-950 pb-20">
-        {/* Ambient bg */}
+
+        {/* ── Ambient bg ── */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-32 -right-32 w-[480px] h-[480px] bg-blue-600/6 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-600/5 rounded-full blur-3xl" />
           <div className="absolute inset-0 opacity-[0.025]" style={{
-            backgroundImage: `linear-gradient(rgba(99,179,237,0.4) 1px, transparent 1px),linear-gradient(90deg,rgba(99,179,237,0.4) 1px,transparent 1px)`,
+            backgroundImage: `linear-gradient(rgba(99,179,237,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(99,179,237,0.4) 1px, transparent 1px)`,
             backgroundSize: "64px 64px",
           }} />
         </div>
 
         <div className="relative z-10 px-4 sm:px-6 lg:px-16 mx-auto max-w-5xl pt-16 sm:pt-20">
 
-          {/* Header */}
+          {/* ── Header ── */}
           <div className="fade-up fade-up-1 text-center mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-5">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
@@ -158,16 +252,16 @@ const SupportPage = () => {
               </span>
             </h1>
             <p className="text-gray-400 text-base max-w-lg mx-auto leading-relaxed">
-              Submit a support ticket, send feedback, or browse the FAQ. SAS office: Mon–Fri, 8AM–5PM.
+              Submit a support ticket, send us feedback, or browse our FAQ. The SAS office is available Monday–Friday, 8AM–5PM.
             </p>
           </div>
 
-          {/* Info cards */}
+          {/* ── Quick info cards ── */}
           <div className="fade-up fade-up-2 grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
             {[
-              { icon: <BiSupport size={18} className="text-blue-400" />,    label: "Office Hours",  value: "Mon–Fri, 8AM–5PM",  bg: "bg-blue-500/10 border-blue-500/20" },
-              { icon: <FaEnvelope size={14} className="text-cyan-400" />,   label: "Email Support", value: "sas@nbsc.edu.ph",    bg: "bg-cyan-500/10 border-cyan-500/20" },
-              { icon: <FaTicketAlt size={14} className="text-violet-400" />,label: "Response Time", value: "1–3 business days",  bg: "bg-violet-500/10 border-violet-500/20" },
+              { icon: <BiSupport size={18} className="text-blue-400" />,   label: "Office Hours",   value: "Mon–Fri, 8AM–5PM",    bg: "bg-blue-500/10 border-blue-500/20" },
+              { icon: <FaEnvelope size={14} className="text-cyan-400" />,  label: "Email Support",  value: "sas@nbsc.edu.ph",     bg: "bg-cyan-500/10 border-cyan-500/20" },
+              { icon: <FaTicketAlt size={14} className="text-violet-400"/>,label: "Response Time",  value: "1–3 business days",   bg: "bg-violet-500/10 border-violet-500/20" },
             ].map((c, i) => (
               <div key={i} className={`flex items-center gap-3 p-4 rounded-2xl border bg-gray-900 ${c.bg}`}>
                 <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${c.bg}`}>{c.icon}</div>
@@ -181,8 +275,9 @@ const SupportPage = () => {
 
           <div className="fade-up fade-up-3 grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-            {/* Forms */}
+            {/* ── Left: Forms ── */}
             <div className="lg:col-span-3 space-y-4">
+
               {/* Tab switcher */}
               <div className="flex bg-gray-900 border border-white/5 rounded-2xl p-1 gap-1">
                 {([
@@ -190,28 +285,33 @@ const SupportPage = () => {
                   { id: "feedback", label: "Send Feedback",  icon: <FaCommentDots size={11} /> },
                 ] as const).map(tab => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center justify-center gap-2 flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all
-                      ${activeTab === tab.id ? "bg-blue-600 text-white shadow-lg shadow-blue-900/30" : "text-gray-500 hover:text-white hover:bg-white/5"}`}>
+                    className={`flex items-center justify-center gap-2 flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors focus:outline-none select-none
+                      ${activeTab === tab.id
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-500 hover:text-white hover:bg-white/5"}`}>
                     {tab.icon} {tab.label}
                   </button>
                 ))}
               </div>
 
-              {/* Support Ticket */}
+              {/* ── Support Ticket Form ── */}
               {activeTab === "ticket" && (
                 <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden" style={{ borderTop: "2px solid #3b82f6" }}>
                   <div className="px-5 py-4 border-b border-white/5">
                     <h2 className="text-white text-sm font-bold">Submit a Support Ticket</h2>
-                    <p className="text-gray-500 text-xs mt-0.5">Describe your issue and we'll reply via email</p>
+                    <p className="text-gray-500 text-xs mt-0.5">Describe your issue and we'll get back to you via email</p>
                   </div>
+
                   {ticketSent ? (
                     <div className="p-10 text-center">
                       <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4">
                         <FaCheckCircle size={24} className="text-blue-400" />
                       </div>
                       <p className="text-white font-bold text-lg">Ticket Submitted!</p>
-                      <p className="text-gray-400 text-sm mt-2 max-w-xs mx-auto leading-relaxed">We've received your request. Expect a reply within 1–3 business days to your school email.</p>
-                      <button onClick={() => { setTicketSent(false); setTicket(TEST_TICKET); }}
+                      <p className="text-gray-400 text-sm mt-2 leading-relaxed max-w-xs mx-auto">
+                        We've received your request. Expect a reply within 1–3 business days to your email.
+                      </p>
+                      <button onClick={() => { setTicketSent(false); setTicket({ subject: "", message: "", senderName: "", senderEmail: "", priority: "NORMAL" }); }}
                         className="mt-5 px-5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors">
                         Submit Another
                       </button>
@@ -223,66 +323,82 @@ const SupportPage = () => {
                           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Your Name</label>
                           <div className="relative">
                             <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
-                            <input value={ticket.senderName} onChange={e => setTicket(t => ({ ...t, senderName: e.target.value }))} type="text"
-                              className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                            <input value={ticket.senderName} onChange={e => setTicket(t => ({ ...t, senderName: e.target.value }))}
+                              placeholder=" " type="text"
+                              className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
                           </div>
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">School Email</label>
                           <div className="relative">
                             <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
-                            <input value={ticket.senderEmail} onChange={e => setTicket(t => ({ ...t, senderEmail: e.target.value }))} type="email"
-                              className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                            <input value={ticket.senderEmail} onChange={e => setTicket(t => ({ ...t, senderEmail: e.target.value }))}
+                              placeholder=" " type="email"
+                              className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
                           </div>
                         </div>
                       </div>
+
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Subject <span className="text-red-400">*</span></label>
-                        <input value={ticket.subject} onChange={e => setTicket(t => ({ ...t, subject: e.target.value }))} type="text" required
-                          className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                        <input value={ticket.subject} onChange={e => setTicket(t => ({ ...t, subject: e.target.value }))}
+                          placeholder=" " type="text" required
+                          className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
                       </div>
+
+                      {/* ── Custom Priority Dropdown ── */}
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Priority</label>
-                        <select value={ticket.priority} onChange={e => setTicket(t => ({ ...t, priority: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                          <option value="LOW">Low — General question</option>
-                          <option value="NORMAL">Normal — Issue affecting my use</option>
-                          <option value="HIGH">High — Urgent issue</option>
-                          <option value="URGENT">Urgent — Critical problem</option>
-                        </select>
+                        <CustomDropdown
+                          options={PRIORITIES}
+                          value={ticket.priority}
+                          onChange={val => setTicket(t => ({ ...t, priority: val }))}
+                          accentColor="blue"
+                        />
                       </div>
+
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Message <span className="text-red-400">*</span></label>
-                        <textarea value={ticket.message} onChange={e => setTicket(t => ({ ...t, message: e.target.value }))} rows={5} required
-                          className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                        <textarea value={ticket.message} onChange={e => setTicket(t => ({ ...t, message: e.target.value }))}
+                          rows={5} required placeholder=" "
+                          className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
                       </div>
+
                       <div className="p-3 bg-blue-500/5 border border-blue-500/15 rounded-xl">
-                        <p className="text-blue-300/70 text-xs leading-relaxed">Provide your school email so we can reply. Tickets are reviewed Mon–Fri during office hours.</p>
+                        <p className="text-blue-300/70 text-xs leading-relaxed">
+                          Provide your school email so we can reply. Tickets are reviewed during office hours.
+                        </p>
                       </div>
+
                       <button type="submit" disabled={ticketLoading}
                         className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-900/40">
-                        {ticketLoading ? <><FaSpinner className="animate-spin" size={12} /> Submitting…</> : <><FaPaperPlane size={11} /> Submit Ticket</>}
+                        {ticketLoading
+                          ? <><FaSpinner className="animate-spin" size={12} /> Submitting…</>
+                          : <><FaPaperPlane size={11} /> Submit Ticket</>}
                       </button>
                     </form>
                   )}
                 </div>
               )}
 
-              {/* Feedback */}
+              {/* ── Feedback Form ── */}
               {activeTab === "feedback" && (
                 <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden" style={{ borderTop: "2px solid #22d3ee" }}>
                   <div className="px-5 py-4 border-b border-white/5">
                     <h2 className="text-white text-sm font-bold">Send Feedback</h2>
-                    <p className="text-gray-500 text-xs mt-0.5">Bug reports, suggestions, or compliments</p>
+                    <p className="text-gray-500 text-xs mt-0.5">Help us improve — bug reports, suggestions, or compliments</p>
                   </div>
+
                   {feedbackSent ? (
                     <div className="p-10 text-center">
                       <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-4">
                         <FaCheckCircle size={24} className="text-cyan-400" />
                       </div>
                       <p className="text-white font-bold text-lg">Thank you!</p>
-                      <p className="text-gray-400 text-sm mt-2 max-w-xs mx-auto leading-relaxed">Your feedback has been received. We read every submission and use it to improve.</p>
-                      <button onClick={() => { setFeedbackSent(false); setFeedback(TEST_FEEDBACK); }}
+                      <p className="text-gray-400 text-sm mt-2 leading-relaxed max-w-xs mx-auto">
+                        Your feedback has been received. We read every submission and use it to improve.
+                      </p>
+                      <button onClick={() => { setFeedbackSent(false); setFeedback({ senderName: "", senderEmail: "", category: "GENERAL", message: "", rating: 0 }); }}
                         className="mt-5 px-5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors">
                         Send More Feedback
                       </button>
@@ -294,42 +410,50 @@ const SupportPage = () => {
                           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Your Name <span className="text-gray-600">(optional)</span></label>
                           <div className="relative">
                             <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
-                            <input value={feedback.senderName} onChange={e => setFeedback(f => ({ ...f, senderName: e.target.value }))} type="text"
-                              className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
+                            <input value={feedback.senderName} onChange={e => setFeedback(f => ({ ...f, senderName: e.target.value }))}
+                              placeholder=" " type="text"
+                              className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
                           </div>
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email <span className="text-gray-600">(optional)</span></label>
                           <div className="relative">
                             <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
-                            <input value={feedback.senderEmail} onChange={e => setFeedback(f => ({ ...f, senderEmail: e.target.value }))} type="email"
-                              className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
+                            <input value={feedback.senderEmail} onChange={e => setFeedback(f => ({ ...f, senderEmail: e.target.value }))}
+                              placeholder=" " type="email"
+                              className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
                           </div>
                         </div>
                       </div>
+
+                      {/* ── Custom Category Dropdown ── */}
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</label>
-                        <select value={feedback.category} onChange={e => setFeedback(f => ({ ...f, category: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30">
-                          <option value="GENERAL">💬 General Feedback</option>
-                          <option value="BUG">🐛 Bug Report</option>
-                          <option value="FEATURE">✨ Feature Request</option>
-                          <option value="COMPLAINT">⚠️ Complaint</option>
-                          <option value="COMPLIMENT">🌟 Compliment</option>
-                        </select>
+                        <CustomDropdown
+                          options={CATEGORIES}
+                          value={feedback.category}
+                          onChange={val => setFeedback(f => ({ ...f, category: val }))}
+                          accentColor="cyan"
+                        />
                       </div>
+
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Overall Rating <span className="text-gray-600">(optional)</span></label>
                         <StarRating value={feedback.rating} onChange={r => setFeedback(f => ({ ...f, rating: r }))} />
                       </div>
+
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Your Feedback <span className="text-red-400">*</span></label>
-                        <textarea value={feedback.message} onChange={e => setFeedback(f => ({ ...f, message: e.target.value }))} rows={5} required
-                          className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
+                        <textarea value={feedback.message} onChange={e => setFeedback(f => ({ ...f, message: e.target.value }))}
+                          rows={5} required placeholder=" "
+                          className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
                       </div>
+
                       <button type="submit" disabled={feedbackLoading}
                         className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-cyan-900/40">
-                        {feedbackLoading ? <><FaSpinner className="animate-spin" size={12} /> Sending…</> : <><FaPaperPlane size={11} /> Send Feedback</>}
+                        {feedbackLoading
+                          ? <><FaSpinner className="animate-spin" size={12} /> Sending…</>
+                          : <><FaPaperPlane size={11} /> Send Feedback</>}
                       </button>
                     </form>
                   )}
@@ -337,7 +461,7 @@ const SupportPage = () => {
               )}
             </div>
 
-            {/* Right: FAQ + Office */}
+            {/* ── Right: FAQ ── */}
             <div className="lg:col-span-2 space-y-3">
               <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
                 <div className="px-5 py-4 border-b border-white/5">
@@ -348,8 +472,10 @@ const SupportPage = () => {
                   {FAQS.map((faq, i) => (
                     <div key={i}>
                       <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                        className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-white/[0.02] transition-colors">
-                        <p className={`text-xs font-semibold leading-relaxed ${openFaq === i ? "text-blue-400" : "text-white"}`}>{faq.q}</p>
+                        className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-white/[0.02] transition-colors focus:outline-none select-none">
+                        <p className={`text-xs font-semibold leading-relaxed ${openFaq === i ? "text-blue-400" : "text-white"}`}>
+                          {faq.q}
+                        </p>
                         {openFaq === i
                           ? <FaChevronUp size={10} className="text-blue-400 shrink-0" />
                           : <FaChevronDown size={10} className="text-gray-600 shrink-0" />}
@@ -364,23 +490,24 @@ const SupportPage = () => {
                 </div>
               </div>
 
+              {/* Office info card */}
               <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                    <BiSupport size={16} className="text-blue-400" />
-                  </div>
+                  
                   <div>
                     <p className="text-white text-xs font-bold">SAS Office</p>
                     <p className="text-gray-500 text-[10px]">Student Affairs Services</p>
                   </div>
                 </div>
                 <div className="space-y-2 text-xs text-gray-500">
-                  <p>📍 NBSC Main Campus, SAS Building</p>
-                  <p>🕐 Mon–Fri, 8:00 AM – 5:00 PM</p>
-                  <p>📧 sas@nbsc.edu.ph</p>
+                  <p> NBSC SWDC - Building</p>
+                  <p> Mon–Fri, 8:00 AM – 5:00 PM</p>
+                  <p> sas@nbsc.edu.ph</p>
                 </div>
                 <div className="pt-2 border-t border-white/5">
-                  <p className="text-gray-600 text-[10px] leading-relaxed">For urgent matters, visit the office directly during school hours.</p>
+                  <p className="text-gray-600 text-[10px] leading-relaxed">
+                    For urgent matters, visit the office directly during office hours.
+                  </p>
                 </div>
               </div>
             </div>
