@@ -260,8 +260,8 @@ const SupportPage = () => {
           <div className="fade-up fade-up-2 grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
             {[
               { icon: <BiSupport size={18} className="text-blue-400" />,   label: "Office Hours",   value: "Mon–Fri, 8AM–5PM",    bg: "bg-blue-500/10 border-blue-500/20" },
-              { icon: <FaEnvelope size={14} className="text-cyan-400" />,  label: "Email Support",  value: "sas@nbsc.edu.ph",     bg: "bg-cyan-500/10 border-cyan-500/20" },
-              { icon: <FaTicketAlt size={14} className="text-violet-400"/>,label: "Response Time",  value: "1–3 business days",   bg: "bg-violet-500/10 border-violet-500/20" },
+              { icon: <FaEnvelope size={14} className="text-blue-400" />,  label: "Email Support",  value: "sas@nbsc.edu.ph",     bg: "bg-blue-500/10 border-blue-500/20" },
+              { icon: <FaTicketAlt size={14} className="text-blue-400"/>,label: "Response Time",  value: "1–3 business days",   bg: "bg-blue-500/10 border-blue-500/20" },
             ].map((c, i) => (
               <div key={i} className={`flex items-center gap-3 p-4 rounded-2xl border bg-gray-900 ${c.bg}`}>
                 <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${c.bg}`}>{c.icon}</div>

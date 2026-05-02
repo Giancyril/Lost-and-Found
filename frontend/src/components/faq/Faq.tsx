@@ -17,22 +17,22 @@ const Faq = () => {
     {
       question: "Do I need an account to use this system?",
       answer:
-        "No account is needed. Students and visitors can freely browse the Lost Items Board and Found Items Board without logging in. Only SAS staff have login access to manage the system.",
+        "No account is needed. Students and visitors can freely browse the Lost Items Board and Found Items Board without logging in.",
     },
     {
-      question: "How do I report a lost item?",
+      question: "How do I report my lost item?",
       answer:
-        "Click 'Report Lost Item' in the navigation bar and fill out the form with details about your missing item description, location, date, and category. Once submitted, it will appear on the Lost Items Board for others to see.",
+        "Go to the Lost Items page and click 'Report Lost Item'. Fill in the details including item description, location it was lost, and date. You'll receive a confirmation email.",
     },
     {
       question: "I found an item on campus. What should I do?",
       answer:
-        "You have two options: browse the Lost Items Board to see if the item matches a report, then click 'I Found This Item' on that listing or bring the item directly to the SAS Office and our staff will log it into the system.",
+        "You have two options: browse the Lost Items Board to see if the item matches a report, then click 'I Found This Item' on that listing or bring the item directly to the SAS Office",
     },
     {
       question: "How do I claim a found item?",
       answer:
-        "Visit the SAS Office in person with a valid ID and proof of ownership (e.g. description of unique markings, purchase receipt, photos). Our staff will verify your claim and process the release of the item.",
+        "Browse the Found Items page, find your item, and click 'Claim'. You'll need to provide proof of ownership.",
     },
     {
       question: "How do I use Smart Search?",
@@ -71,7 +71,7 @@ const Faq = () => {
               </span>
             </h2>
             <p className="text-gray-400 text-lg">
-              Everything you need to know about the NBSC SAS Lost & Found system.
+              Everything you need to know about the SAS Lost & Found system.
             </p>
           </div>
 
