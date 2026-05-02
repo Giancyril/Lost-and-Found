@@ -118,4 +118,6 @@ router.use("/", commentsRouter);
 router.get("/points/my", auth(), pointsController.getMyPoints);
 router.get("/points/leaderboard", pointsController.getLeaderboard);
 
+router.post("/admin/backfill-students", auth(), userController.backfillStudentData);
+
 export default router;

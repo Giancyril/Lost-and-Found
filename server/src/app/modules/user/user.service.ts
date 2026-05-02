@@ -147,10 +147,40 @@ const softDeleteUser = async (id: string) => {
   };
 };
 
+const backfillCourseAndYearLevel = async () => {
+  const users = await prisma.user.findMany({
+    where: { schoolId: { not: null }, course: null },
+    select: { id: true, schoolId: true },
+  });
+
+  const results = { updated: 0, skipped: 0, errors: [] as string[] };
+
+  for (const user of users) {
+    try {
+      const { studentService } = await import("../student/student.service");
+      const student = await studentService.getStudentById(user.schoolId!);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          course:    student.course,
+          yearLevel: student.yearLevel,
+        },
+      });
+      results.updated++;
+    } catch (e: any) {
+      results.skipped++;
+      results.errors.push(`${user.schoolId}: ${e.message}`);
+    }
+  }
+
+  return results;
+};
+
 export const userService = {
   registerUser,
   allUsers,
   blockUser,
   changeUserRole,
   softDeleteUser,
+  backfillCourseAndYearLevel, 
 };

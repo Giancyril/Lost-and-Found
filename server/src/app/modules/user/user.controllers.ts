@@ -111,10 +111,29 @@ const allUsers = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const backfillStudentData = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const result = await userService.backfillCourseAndYearLevel();
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: `Backfill complete. Updated: ${result.updated}, Skipped: ${result.skipped}`,
+      data: result,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const userController = {
   registerUser,
   allUsers,
   blockUser,
   changeUserRole,
   softDeleteUser,
+  backfillStudentData, 
 };

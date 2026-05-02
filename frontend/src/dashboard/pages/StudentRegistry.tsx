@@ -39,30 +39,29 @@ const getInitials = (name?: string, email?: string) => {
   return (email?.[0] ?? "?").toUpperCase();
 };
 
-// Matches your Prisma userRole enum: USER | ADMIN
 const ROLES = ["USER", "ADMIN"] as const;
 
 const StudentRegistry = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm]     = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "BLOCKED">("ALL");
   const [courseFilter, setCourseFilter] = useState("ALL");
-  const [courseOpen, setCourseOpen] = useState(false);
+  const [courseOpen, setCourseOpen]     = useState(false);
 
   const [blockModalOpen, setBlockModalOpen] = useState(false);
-  const [blockTarget, setBlockTarget] = useState<Student | null>(null);
+  const [blockTarget, setBlockTarget]       = useState<Student | null>(null);
   const [isBlockLoading, setIsBlockLoading] = useState(false);
 
   const [roleModalOpen, setRoleModalOpen] = useState(false);
-  const [roleTarget, setRoleTarget] = useState<Student | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>("USER");
+  const [roleTarget, setRoleTarget]       = useState<Student | null>(null);
+  const [selectedRole, setSelectedRole]   = useState<string>("USER");
   const [isRoleLoading, setIsRoleLoading] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
+  const [deleteTarget, setDeleteTarget]       = useState<Student | null>(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
   const { data: usersData, isLoading, error } = useGetAllUsersQuery(undefined);
-  const [blockUser] = useBlockUserMutation();
+  const [blockUser]      = useBlockUserMutation();
   const [changeUserRole] = useChangeUserRoleMutation();
   const [softDeleteUser] = useSoftDeleteUserMutation();
 
@@ -70,13 +69,9 @@ const StudentRegistry = () => {
     return (
       <div className="space-y-4 animate-pulse">
         <div className="grid grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-gray-900 border border-white/5 rounded-2xl" />
-          ))}
+          {[1, 2, 3, 4].map((i) => <div key={i} className="h-28 bg-gray-900 border border-white/5 rounded-2xl" />)}
         </div>
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="h-14 bg-gray-900 border border-white/5 rounded-xl" />
-        ))}
+        {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-14 bg-gray-900 border border-white/5 rounded-xl" />)}
       </div>
     );
 
@@ -87,8 +82,9 @@ const StudentRegistry = () => {
       </div>
     );
 
-  // No role filter — show all users (enum is USER | ADMIN, not STUDENT)
-  const allStudents: Student[] = usersData?.data ?? usersData ?? [];
+  const allStudents: Student[] = (usersData?.data ?? usersData ?? []).filter(
+    (s: Student) => s.role !== "ADMIN"
+  );
 
   const courses = [...new Set(allStudents.map((s) => s.course).filter(Boolean))] as string[];
 
@@ -100,7 +96,6 @@ const StudentRegistry = () => {
       s.username?.toLowerCase().includes(q) ||
       s.schoolId?.includes(q) ||
       s.email.toLowerCase().includes(q);
-    // activated=true means active, activated=false means blocked
     const matchStatus =
       statusFilter === "ALL" ||
       (statusFilter === "BLOCKED" && !s.activated) ||
@@ -170,13 +165,14 @@ const StudentRegistry = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-      {/* ── Stats ───────────────────────────────────────────────── */}
+
+      {/* ── Stats ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Students", value: allStudents.length,   icon: <FaUsers size={14} className="text-blue-400" />,  accent: "bg-blue-500/5",   sub: "registered accounts", subColor: "text-blue-400"   },
-          { label: "Active",        value: totalActive,        icon: <FaUserCheck size={14} className="text-green-400" />, accent: "bg-green-500/5",  sub: "currently active",   subColor: "text-green-400"  },
-          { label: "Blocked",       value: totalBlocked,       icon: <FaUserTimes size={14} className="text-red-400" />,   accent: "bg-red-500/5",    sub: "restricted access", subColor: "text-red-400"    },
-          { label: "Admins",         value: totalAdmins,          icon: <FaUserShield size={14} className="text-violet-400" />,  accent: "bg-violet-500/5", sub: "elevated roles", subColor: "text-violet-400"  },
+          { label: "Total Students", value: allStudents.length, icon: <FaUsers size={14} className="text-blue-400" />,       accent: "bg-blue-500/5",   sub: "registered accounts", subColor: "text-blue-400"   },
+          { label: "Active",         value: totalActive,        icon: <FaUserCheck size={14} className="text-green-400" />,  accent: "bg-green-500/5",  sub: "currently active",    subColor: "text-green-400"  },
+          { label: "Blocked",        value: totalBlocked,       icon: <FaUserTimes size={14} className="text-red-400" />,    accent: "bg-red-500/5",    sub: "restricted access",   subColor: "text-red-400"    },
+          { label: "Admins",         value: totalAdmins,        icon: <FaUserShield size={14} className="text-violet-400" />,accent: "bg-violet-500/5", sub: "elevated roles",      subColor: "text-violet-400" },
         ].map(({ label, value, icon, accent, sub, subColor }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-2.5 flex flex-col gap-2 overflow-hidden">
             <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
@@ -192,7 +188,7 @@ const StudentRegistry = () => {
         ))}
       </div>
 
-      {/* ── Filters ───────────────────────────────────────────────────────── */}
+      {/* ── Filters ── */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 min-w-0 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -264,16 +260,15 @@ const StudentRegistry = () => {
         </div>
       </div>
 
-      {/* ── Table — desktop ───────────────────────────────────────────────── */}
+      {/* ── Table — desktop ── */}
+      {/* Col layout (12 total): Student=3, Course=4, SchoolID=2, Year=1, Status=1, Role=1, Actions=1 (Points removed from header, shown in tooltip) */}
       <div className="hidden md:block bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-        <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-white/5 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">
+        <div className="grid grid-cols-12 gap-2 px-5 py-3 border-b border-white/5 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">
           <div className="col-span-3">Student</div>
+          <div className="col-span-4">Course</div>
           <div className="col-span-2">School ID</div>
-          <div className="col-span-2">Course</div>
-          <div className="col-span-1">Year</div>
           <div className="col-span-1">Status</div>
-          <div className="col-span-1">Role</div>
-          <div className="col-span-1">Points</div>
+          <div className="col-span-1 text-center">Role</div>
           <div className="col-span-1 text-right">Actions</div>
         </div>
 
@@ -286,7 +281,9 @@ const StudentRegistry = () => {
         ) : (
           <div className="divide-y divide-white/[0.04]">
             {filteredStudents.map((s) => (
-              <div key={s.id} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors">
+              <div key={s.id} className="grid grid-cols-12 gap-2 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors">
+
+                {/* Student */}
                 <div className="col-span-3 flex items-center gap-2.5 min-w-0">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
                     {getInitials(s.name, s.email)}
@@ -296,21 +293,31 @@ const StudentRegistry = () => {
                     <p className="text-gray-500 text-xs truncate">{s.email}</p>
                   </div>
                 </div>
+
+                {/* Course — wide enough to show full name */}
+                <div className="col-span-4">
+                  <div className="flex items-center gap-1.5 text-gray-400 text-xs">
+                    <FaGraduationCap size={9} className="text-blue-400 shrink-0" />
+                    <span title={s.course}>{s.course ?? "—"}</span>
+                  </div>
+                  {s.yearLevel && (
+                    <p className="text-gray-600 text-[10px] mt-0.5 pl-[14px]">{s.yearLevel}</p>
+                  )}
+                </div>
+
+                {/* School ID */}
                 <div className="col-span-2">
                   <div className="flex items-center gap-1.5 text-gray-400 text-xs">
                     <FaIdCard size={9} className="text-cyan-400 shrink-0" />
-                    <span className="truncate">{s.schoolId ?? "—"}</span>
+                    <span>{s.schoolId ?? "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-yellow-400 text-[10px] mt-0.5 pl-[14px]">
+                    <FaStar size={8} />
+                    <span>{s.totalPoints ?? 0} pts</span>
                   </div>
                 </div>
-                <div className="col-span-2">
-                  <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                    <FaGraduationCap size={9} className="text-blue-400 shrink-0" />
-                    <span className="truncate" title={s.course}>{s.course ?? "—"}</span>
-                  </div>
-                </div>
-                <div className="col-span-1">
-                  <p className="text-gray-500 text-xs">{s.yearLevel ?? "—"}</p>
-                </div>
+
+                {/* Status */}
                 <div className="col-span-1">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                     !s.activated
@@ -320,7 +327,9 @@ const StudentRegistry = () => {
                     {!s.activated ? "Blocked" : "Active"}
                   </span>
                 </div>
-                <div className="col-span-1">
+
+                {/* Role */}
+                <div className="col-span-1 flex justify-center">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                     s.role === "ADMIN"
                       ? "bg-violet-400/10 text-violet-400 border-violet-400/20"
@@ -329,12 +338,8 @@ const StudentRegistry = () => {
                     {s.role}
                   </span>
                 </div>
-                <div className="col-span-1">
-                  <div className="flex items-center gap-1 text-yellow-400 text-xs">
-                    <FaStar size={9} />
-                    <span>{s.totalPoints ?? 0}</span>
-                  </div>
-                </div>
+
+                {/* Actions */}
                 <div className="col-span-1 flex items-center justify-end gap-1">
                   <button
                     onClick={() => { setBlockTarget(s); setBlockModalOpen(true); }}
@@ -368,7 +373,7 @@ const StudentRegistry = () => {
         )}
       </div>
 
-      {/* ── Cards — mobile ────────────────────────────────────────────────── */}
+      {/* ── Cards — mobile ── */}
       <div className="md:hidden space-y-3">
         {filteredStudents.length === 0 ? (
           <div className="py-16 text-center bg-gray-900 border border-white/5 rounded-2xl">
@@ -398,7 +403,7 @@ const StudentRegistry = () => {
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-white/5">
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">School ID</p><p className="text-gray-300 mt-0.5">{s.schoolId ?? "—"}</p></div>
-              <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Course</p><p className="text-gray-300 mt-0.5 truncate">{s.course ?? "—"}</p></div>
+              <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Course</p><p className="text-gray-300 mt-0.5">{s.course ?? "—"}</p></div>
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Year Level</p><p className="text-gray-300 mt-0.5">{s.yearLevel ?? "—"}</p></div>
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Points</p><p className="text-yellow-400 mt-0.5 flex items-center gap-1"><FaStar size={9} />{s.totalPoints ?? 0}</p></div>
             </div>
@@ -430,7 +435,7 @@ const StudentRegistry = () => {
         ))}
       </div>
 
-      {/* ── Block / Unblock Modal ─────────────────────────────────────────── */}
+      {/* ── Block / Unblock Modal ── */}
       {blockModalOpen && blockTarget && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
@@ -471,9 +476,7 @@ const StudentRegistry = () => {
                 </div>
               </div>
               <div className={`border rounded-xl px-3.5 py-2.5 ${
-                !blockTarget.activated
-                  ? "bg-emerald-500/5 border-emerald-500/15"
-                  : "bg-orange-500/5 border-orange-500/15"
+                !blockTarget.activated ? "bg-emerald-500/5 border-emerald-500/15" : "bg-orange-500/5 border-orange-500/15"
               }`}>
                 <p className={`text-xs leading-relaxed ${!blockTarget.activated ? "text-emerald-300/80" : "text-orange-300/80"}`}>
                   {!blockTarget.activated
@@ -500,7 +503,7 @@ const StudentRegistry = () => {
         </div>
       )}
 
-      {/* ── Change Role Modal ─────────────────────────────────────────────── */}
+      {/* ── Change Role Modal ── */}
       {roleModalOpen && roleTarget && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
@@ -555,7 +558,7 @@ const StudentRegistry = () => {
         </div>
       )}
 
-      {/* ── Delete Modal ──────────────────────────────────────────────────── */}
+      {/* ── Delete Modal ── */}
       {deleteModalOpen && deleteTarget && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
