@@ -363,7 +363,7 @@ const AnnouncementsTab = () => {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => handleDelete(a.id)} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-red-500/10 text-gray-600 hover:text-red-400 flex items-center justify-center transition-all shrink-0">
+                  <button onClick={() => handleDelete(a.id)} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/15 text-red-400  hover:text-red-400 flex items-center justify-center transition-all shrink-0">
                     <FaTrash size={10} />
                   </button>
                 </div>
@@ -867,14 +867,6 @@ const CommunicationHub = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Open Tickets"    value={stats?.openTickets}         color="text-yellow-400"  bg="bg-yellow-400/10 border-yellow-400/20"  icon={<FaTicketAlt  size={14} className="text-yellow-400"  />} />
-        <StatCard label="Urgent Tickets"  value={stats?.urgentTickets}       color="text-red-400"     bg="bg-red-400/10 border-red-400/20"        icon={<FaFire       size={14} className="text-red-400"     />} />
-        <StatCard label="Unread Feedback" value={stats?.unresolvedFeedback}  color="text-violet-400"  bg="bg-violet-400/10 border-violet-400/20"  icon={<FaCommentDots size={14} className="text-violet-400" />} />
-        <StatCard label="Announcements"   value={stats?.totalAnnouncements}  color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"      icon={<FaBullhorn   size={14} className="text-cyan-400"    />} />
-      </div>
-
       {/* Tabs */}
       <div className="grid grid-cols-4 bg-gray-900 border border-white/5 rounded-2xl p-1 gap-1">
         {TABS.map(tab => {
@@ -889,6 +881,14 @@ const CommunicationHub = () => {
             </button>
           );
         })}
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatCard label="Open Tickets"    value={stats?.openTickets}         color="text-yellow-400"  bg="bg-yellow-400/10 border-yellow-400/20"  icon={<FaTicketAlt  size={14} className="text-yellow-400"  />} />
+        <StatCard label="Urgent Tickets"  value={stats?.urgentTickets}       color="text-red-400"     bg="bg-red-400/10 border-red-400/20"        icon={<FaFire       size={14} className="text-red-400"     />} />
+        <StatCard label="Unread Feedback" value={stats?.unresolvedFeedback}  color="text-violet-400"  bg="bg-violet-400/10 border-violet-400/20"  icon={<FaCommentDots size={14} className="text-violet-400" />} />
+        <StatCard label="Announcements"   value={stats?.totalAnnouncements}  color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"      icon={<FaBullhorn   size={14} className="text-cyan-400"    />} />
       </div>
 
       {/* Tab content */}

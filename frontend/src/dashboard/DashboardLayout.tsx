@@ -5,7 +5,7 @@ import {
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, 
-  FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt,
+  FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate, FaUserShield,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -42,12 +42,12 @@ const menuItems = [
   { title: "Heatmap", icon: FaMapMarkedAlt, path: "/dashboard/heatmap" },
   { title: "Commmunication", icon: FaBullhorn, path: "/dashboard/comm-hub" },
   // Student Management
-  { title: "Students", icon: FaUsers, path: "/dashboard/students" },
+  { title: "Students", icon: FaUserGraduate, path: "/dashboard/students" },
   { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
 
   { title: "Security", icon: FaShieldAlt, path: "/dashboard/security" },
   // Administration
-  { title: "Users", icon: FaUsers, path: "/dashboard/users" },
+  { title: "Accounts", icon: FaUserShield, path: "/dashboard/users" },
   { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
   { title: "Settings", icon: FaCog, path: "/dashboard/settings" },
 ];

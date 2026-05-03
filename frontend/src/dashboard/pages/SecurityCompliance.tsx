@@ -651,23 +651,25 @@ const SecurityCompliance = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
       {/* Tabs */}
-      <div className="flex bg-gray-900 border border-white/5 rounded-2xl p-1 gap-1 overflow-x-auto">
-        {TABS.map(tab => {
-            const Icon   = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 justify-center
-                ${active
-                    ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.15)]"
-                    : "text-gray-500 hover:text-gray-200 hover:bg-white/5 border border-transparent"
-                }`}>
-                <Icon size={12} className={`transition-colors ${active ? "text-cyan-400" : "text-gray-600 group-hover:text-gray-300"}`} />
-                {tab.label}
-            </button>
-            );
-        })}
-        </div>
+      <div className="flex bg-gray-900 border border-white/5 rounded-2xl p-1 gap-1">
+      {TABS.map(tab => {
+        const Icon   = tab.icon;
+        const active = activeTab === tab.id;
+        return (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            title={tab.label}
+            className={`flex items-center justify-center gap-2 flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 focus:outline-none select-none
+              ${active
+                ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.15)]"
+                : "text-gray-500 hover:text-gray-200 hover:bg-white/5 border border-transparent"
+              }`}>
+            <Icon size={14} className={`transition-colors shrink-0 ${active ? "text-cyan-400" : "text-gray-600"}`} />
+            {/* Hide text on mobile, show on sm+ */}
+            <span className="hidden sm:inline">{tab.label}</span>
+          </button>
+        );
+      })}
+    </div>
 
       {activeTab === "monitor"    && <SecurityMonitorTab />}
       {activeTab === "access"     && <AccessControlTab />}
