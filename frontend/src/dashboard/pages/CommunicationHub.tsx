@@ -386,7 +386,7 @@ const AnnouncementsTab = () => {
             </div>
 
              {/* ── Custom dropdowns ── */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <FieldLabel>Type</FieldLabel>
                 <CustomDropdown
@@ -430,8 +430,8 @@ const AnnouncementsTab = () => {
           <div className="px-5 py-4 border-t border-white/5 flex gap-3 shrink-0">
             <button onClick={() => setShowCompose(false)} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
             <button onClick={handleSubmit} disabled={isSending}
-              className="flex-1 py-2.5 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-              {isSending ? <><FaSpinner className="animate-spin" size={12} /> Sending…</> : <><FaPaperPlane size={10} /> {form.sendEmail ? "Send Announcement" : "Post Announcement"}</>}
+              className="flex-1 py-2.5 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
+              {isSending ? <><FaSpinner className="animate-spin" size={12} /> Sending…</> : <><FaPaperPlane size={10} /> {form.sendEmail ? "Send" : "Post"}</>}
             </button>
           </div>
         </Modal>
@@ -482,10 +482,10 @@ const SupportTicketsTab = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-gray-500 text-xs">{tickets.length} ticket{tickets.length !== 1 ? "s" : ""}</p>
-        <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
+        <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 overflow-x-auto scrollbar-none flex-nowrap">
           {["", "OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"].map(s => (
             <button key={s} onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${statusFilter === s ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0 ${statusFilter === s ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
               {s || "All"}
             </button>
           ))}
@@ -792,7 +792,7 @@ const NotificationCenterTab = () => {
             </div>
 
             {/* ── Custom dropdowns ── */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <FieldLabel>Type</FieldLabel>
                 <CustomDropdown
