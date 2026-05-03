@@ -925,15 +925,15 @@ const CommunicationHub = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
       {/* Tabs */}
-      <div className="grid grid-cols-5 bg-gray-900 border border-white/5 rounded-2xl p-1 gap-1">
+      <div className="grid grid-cols-5 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
         {TABS.map(tab => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium transition-colors w-full focus:outline-none select-none
-                ${active ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "text-gray-500 hover:text-white hover:bg-white/5"}`}>
-              <Icon size={11} className={active ? "text-cyan-400" : "text-gray-600"} />
+              className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-[11px] font-medium transition-colors w-full focus:outline-none select-none
+                ${active ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "text-gray-500 hover:text-white hover:bg-white/5 border border-transparent"}`}>
+              <Icon size={10} className={active ? "text-cyan-400" : "text-gray-600"} />
               <span className="truncate hidden sm:inline">{tab.label}</span>
             </button>
           );
