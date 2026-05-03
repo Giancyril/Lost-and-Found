@@ -97,9 +97,9 @@ interface DropdownOption {
 }
 
 const ANN_TYPES: DropdownOption[] = [
-  { value: "INFO",    icon: "ℹ️",  label: "Info",    sub: "General information for users",   bg: "#ecfeff", color: "#164e63" },
+  { value: "INFO",    icon: "ℹ️",  label: "Info",    sub: "General information for users",        bg: "#ecfeff", color: "#164e63" },
   { value: "WARNING", icon: "⚠️",  label: "Warning", sub: "Important notice requiring attention", bg: "#fefce8", color: "#713f12" },
-  { value: "SUCCESS", icon: "✅",  label: "Success", sub: "Positive update or achievement",  bg: "#f0fdf4", color: "#14532d" },
+  { value: "SUCCESS", icon: "✅",  label: "Success", sub: "Positive update or achievement",       bg: "#f0fdf4", color: "#14532d" },
   { value: "URGENT",  icon: "🚨",  label: "Urgent",  sub: "Critical alert needing immediate action", bg: "#fff1f2", color: "#881337" },
 ];
 
@@ -111,10 +111,7 @@ const ANN_TARGETS: DropdownOption[] = [
 
 // ── Custom Dropdown ───────────────────────────────────────────────────────────
 const CustomDropdown = ({
-  options,
-  value,
-  onChange,
-  accentColor = "cyan",
+  options, value, onChange, accentColor = "cyan",
 }: {
   options: DropdownOption[];
   value: string;
@@ -125,80 +122,45 @@ const CustomDropdown = ({
   const ref = useRef<HTMLDivElement>(null);
   const selected = options.find(o => o.value === value) ?? options[0];
 
-  const ring     = accentColor === "cyan"   ? "border-cyan-500/40"
-                 : accentColor === "blue"   ? "border-blue-500/40"
-                 : "border-violet-500/40";
-  const activeBg = accentColor === "cyan"   ? "bg-cyan-500/10"
-                 : accentColor === "blue"   ? "bg-blue-500/10"
-                 : "bg-violet-500/10";
-  const dotColor = accentColor === "cyan"   ? "bg-cyan-400"
-                 : accentColor === "blue"   ? "bg-blue-400"
-                 : "bg-violet-400";
-  const textSel  = accentColor === "cyan"   ? "text-cyan-300"
-                 : accentColor === "blue"   ? "text-blue-300"
-                 : "text-violet-300";
+  const ring     = accentColor === "cyan" ? "border-cyan-500/40" : accentColor === "blue" ? "border-blue-500/40" : "border-violet-500/40";
+  const activeBg = accentColor === "cyan" ? "bg-cyan-500/10"    : accentColor === "blue" ? "bg-blue-500/10"    : "bg-violet-500/10";
+  const dotColor = accentColor === "cyan" ? "bg-cyan-400"       : accentColor === "blue" ? "bg-blue-400"       : "bg-violet-400";
+  const textSel  = accentColor === "cyan" ? "text-cyan-300"     : accentColor === "blue" ? "text-blue-300"     : "text-violet-300";
 
   useEffect(() => {
-    const fn = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("mousedown", fn);
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
   return (
     <div ref={ref} className="relative">
-      <div
-        onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-2.5 px-3 py-2.5 bg-gray-800 border rounded-xl cursor-pointer transition-colors ${
-          open ? `${ring} border` : "border-white/10 hover:border-white/20"
-        }`}
-      >
-        <span
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
-          style={{ background: selected.bg }}
-        >
-          {selected.icon}
-        </span>
+      <div onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-2.5 px-3 py-2.5 bg-gray-800 border rounded-xl cursor-pointer transition-colors ${open ? `${ring} border` : "border-white/10 hover:border-white/20"}`}>
+        <span className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0" style={{ background: selected.bg }}>{selected.icon}</span>
         <div className="flex-1 min-w-0">
           <p className="text-white text-sm font-medium leading-tight">{selected.label}</p>
           <p className="text-gray-500 text-[10px] mt-0.5">{selected.sub}</p>
         </div>
-        <svg
-          width="10" height="6" viewBox="0 0 10 6"
-          className={`text-gray-500 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        >
+        <svg width="10" height="6" viewBox="0 0 10 6" className={`text-gray-500 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
           <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
         </svg>
       </div>
-
       {open && (
         <div className="absolute top-full mt-1.5 left-0 right-0 bg-gray-900 border border-white/10 rounded-xl overflow-hidden z-50 shadow-2xl shadow-black/40">
           {options.map((opt, i) => {
             const isSelected = opt.value === value;
             return (
-              <div
-                key={opt.value}
-                onClick={() => { onChange(opt.value); setOpen(false); }}
+              <div key={opt.value} onClick={() => { onChange(opt.value); setOpen(false); }}
                 className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-colors select-none
                   ${i < options.length - 1 ? "border-b border-white/[0.04]" : ""}
-                  ${isSelected ? activeBg : "hover:bg-white/[0.04]"}`}
-              >
-                <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
-                  style={{ background: opt.bg }}
-                >
-                  {opt.icon}
-                </span>
+                  ${isSelected ? activeBg : "hover:bg-white/[0.04]"}`}>
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0" style={{ background: opt.bg }}>{opt.icon}</span>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium leading-tight ${isSelected ? textSel : "text-white"}`}>
-                    {opt.label}
-                  </p>
+                  <p className={`text-sm font-medium leading-tight ${isSelected ? textSel : "text-white"}`}>{opt.label}</p>
                   <p className="text-gray-500 text-[10px] mt-0.5">{opt.sub}</p>
                 </div>
-                {isSelected && (
-                  <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotColor}`} />
-                )}
+                {isSelected && <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotColor}`} />}
               </div>
             );
           })}
@@ -210,37 +172,38 @@ const CustomDropdown = ({
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 const TABS = [
-  { id: "announcements", label: "Announcements",     icon: FaBullhorn   },
-  { id: "tickets",       label: "Support Tickets",   icon: FaTicketAlt  },
-  { id: "feedback",      label: "Feedback",          icon: FaCommentDots},
-  { id: "notifications", label: "Notification Center", icon: FaBell     },
+  { id: "announcements", label: "Announcements",     icon: FaBullhorn    },
+  { id: "tickets",       label: "Support Tickets",   icon: FaTicketAlt   },
+  { id: "feedback",      label: "Feedback",          icon: FaCommentDots },
+  { id: "notifications", label: "Notification Center", icon: FaBell      },
+  { id: "templates",     label: "Email Templates",   icon: FaEnvelope    },
 ];
 
 const TYPE_CONFIG: Record<string, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
-  INFO:    { color: "text-cyan-400",    bg: "bg-cyan-400/10 border-cyan-400/20",      icon: <FaInfoCircle size={11} />,         label: "Info"    },
-  WARNING: { color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20",  icon: <FaExclamationTriangle size={11} />, label: "Warning" },
-  SUCCESS: { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20",icon: <FaCheckCircle size={11} />,        label: "Success" },
-  URGENT:  { color: "text-red-400",     bg: "bg-red-400/10 border-red-400/20",        icon: <FaFire size={11} />,               label: "Urgent"  },
+  INFO:    { color: "text-cyan-400",    bg: "bg-cyan-400/10 border-cyan-400/20",       icon: <FaInfoCircle size={11} />,          label: "Info"    },
+  WARNING: { color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20",   icon: <FaExclamationTriangle size={11} />, label: "Warning" },
+  SUCCESS: { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20", icon: <FaCheckCircle size={11} />,         label: "Success" },
+  URGENT:  { color: "text-red-400",     bg: "bg-red-400/10 border-red-400/20",         icon: <FaFire size={11} />,                label: "Urgent"  },
 };
 
 const PRIORITY_CONFIG: Record<string, { color: string; bg: string }> = {
-  LOW:    { color: "text-gray-400",   bg: "bg-gray-400/10 border-gray-400/20"   },
-  NORMAL: { color: "text-cyan-400",   bg: "bg-cyan-400/10 border-cyan-400/20"   },
+  LOW:    { color: "text-gray-400",   bg: "bg-gray-400/10 border-gray-400/20"    },
+  NORMAL: { color: "text-cyan-400",   bg: "bg-cyan-400/10 border-cyan-400/20"    },
   HIGH:   { color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20"},
-  URGENT: { color: "text-red-400",    bg: "bg-red-400/10 border-red-400/20"     },
+  URGENT: { color: "text-red-400",    bg: "bg-red-400/10 border-red-400/20"      },
 };
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  OPEN:        { color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20",  label: "Open"        },
-  IN_PROGRESS: { color: "text-cyan-400",    bg: "bg-cyan-400/10 border-cyan-400/20",      label: "In Progress" },
-  RESOLVED:    { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20",label: "Resolved"    },
-  CLOSED:      { color: "text-gray-500",    bg: "bg-gray-500/10 border-gray-500/20",      label: "Closed"      },
+  OPEN:        { color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20",   label: "Open"        },
+  IN_PROGRESS: { color: "text-cyan-400",    bg: "bg-cyan-400/10 border-cyan-400/20",       label: "In Progress" },
+  RESOLVED:    { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20", label: "Resolved"    },
+  CLOSED:      { color: "text-gray-500",    bg: "bg-gray-500/10 border-gray-500/20",       label: "Closed"      },
 };
 
 const FEEDBACK_STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  UNREAD:   { color: "text-red-400",     bg: "bg-red-400/10 border-red-400/20",       label: "Unread"   },
-  READ:     { color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20", label: "Read"     },
-  RESOLVED: { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20",label: "Resolved"},
+  UNREAD:   { color: "text-red-400",     bg: "bg-red-400/10 border-red-400/20",        label: "Unread"   },
+  READ:     { color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20",  label: "Read"     },
+  RESOLVED: { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20",label: "Resolved" },
 };
 
 const CATEGORY_CONFIG: Record<string, { color: string; label: string }> = {
@@ -298,7 +261,6 @@ const AnnouncementsTab = () => {
   const [deleteAnnouncement] = useDeleteAnnouncementMutation();
   const [showCompose, setShowCompose] = useState(false);
   const [form, setForm] = useState({ title: "", message: "", type: "INFO", target: "ALL", sendEmail: false });
-
   const announcements: any[] = annData?.data || [];
 
   const handleSubmit = async () => {
@@ -345,9 +307,7 @@ const AnnouncementsTab = () => {
               <div key={a.id} className="bg-gray-900 border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-all">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${tc.bg} ${tc.color}`}>
-                      {tc.icon}
-                    </div>
+                    <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${tc.bg} ${tc.color}`}>{tc.icon}</div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-white text-sm font-semibold">{a.title}</p>
@@ -356,14 +316,12 @@ const AnnouncementsTab = () => {
                       </div>
                       <p className="text-gray-400 text-xs mt-1 line-clamp-2 leading-relaxed">{a.message}</p>
                       <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-600">
-                        <span>By {a.sentByName}</span>
-                        <span>·</span>
-                        <span>{timeAgo(a.createdAt)}</span>
+                        <span>By {a.sentByName}</span><span>·</span><span>{timeAgo(a.createdAt)}</span>
                         {a.emailSent && <><span>·</span><span className="text-cyan-600 flex items-center gap-1"><FaEnvelope size={8} /> {a.emailCount} emails sent</span></>}
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => handleDelete(a.id)} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/15 text-red-400  hover:text-red-400 flex items-center justify-center transition-all shrink-0">
+                  <button onClick={() => handleDelete(a.id)} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/15 text-red-400 flex items-center justify-center transition-all shrink-0">
                     <FaTrash size={10} />
                   </button>
                 </div>
@@ -373,49 +331,30 @@ const AnnouncementsTab = () => {
         </div>
       )}
 
-      {/* Compose Modal */}
       {showCompose && (
         <Modal onClose={() => setShowCompose(false)} wide>
           <ModalHeader title="New Announcement" subtitle="Broadcast a message to users" onClose={() => setShowCompose(false)} />
           <div className="p-5 overflow-y-auto space-y-4" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.2) rgba(255,255,255,0.05)" }}>
             <div className="space-y-1.5">
               <FieldLabel>Title <span className="text-red-400">*</span></FieldLabel>
-              <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                placeholder=" "
+              <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder=" "
                 className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
             </div>
-
-             {/* ── Custom dropdowns ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <FieldLabel>Type</FieldLabel>
-                <CustomDropdown
-                  options={ANN_TYPES}
-                  value={form.type}
-                  onChange={val => setForm(f => ({ ...f, type: val }))}
-                  accentColor="cyan"
-                />
+                <CustomDropdown options={ANN_TYPES} value={form.type} onChange={val => setForm(f => ({ ...f, type: val }))} accentColor="cyan" />
               </div>
               <div className="space-y-1.5">
                 <FieldLabel>Target Audience</FieldLabel>
-                <CustomDropdown
-                  options={ANN_TARGETS}
-                  value={form.target}
-                  onChange={val => setForm(f => ({ ...f, target: val }))}
-                  accentColor="violet"
-                />
+                <CustomDropdown options={ANN_TARGETS} value={form.target} onChange={val => setForm(f => ({ ...f, target: val }))} accentColor="violet" />
               </div>
             </div>
-
             <div className="space-y-1.5">
               <FieldLabel>Message <span className="text-red-400">*</span></FieldLabel>
-              <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                rows={5} placeholder=" "
+              <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={5} placeholder=" "
                 className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
             </div>
-
-           
-
             <label className="flex items-center gap-3 p-3 bg-gray-800/60 border border-white/5 rounded-xl cursor-pointer hover:border-cyan-500/20 transition-all">
               <div className={`w-10 h-5 rounded-full transition-all relative ${form.sendEmail ? "bg-cyan-500" : "bg-gray-700"}`}
                 onClick={() => setForm(f => ({ ...f, sendEmail: !f.sendEmail }))}>
@@ -452,18 +391,14 @@ const SupportTicketsTab = () => {
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [replyText, setReplyText] = useState("");
   const [replyStatus, setReplyStatus] = useState("RESOLVED");
-
   const tickets: any[] = ticketsData?.data || [];
 
   const handleReply = async () => {
     if (!replyText.trim()) { toast.error("Reply message is required"); return; }
     try {
       const res: any = await replyTicket({ id: selectedTicket.id, adminReply: replyText, status: replyStatus });
-      if (res?.data?.success) {
-        toast.success("Reply sent!");
-        setSelectedTicket(null);
-        setReplyText("");
-      } else { toast.error("Failed to send reply"); }
+      if (res?.data?.success) { toast.success("Reply sent!"); setSelectedTicket(null); setReplyText(""); }
+      else toast.error("Failed to send reply");
     } catch { toast.error("Something went wrong"); }
   };
 
@@ -564,8 +499,7 @@ const SupportTicketsTab = () => {
             </div>
             <div className="space-y-1.5">
               <FieldLabel>Your Reply <span className="text-red-400">*</span></FieldLabel>
-              <textarea value={replyText} onChange={e => setReplyText(e.target.value)}
-                rows={5} placeholder="Write your response..."
+              <textarea value={replyText} onChange={e => setReplyText(e.target.value)} rows={5} placeholder="Write your response..."
                 className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
             </div>
             <div className="space-y-1.5">
@@ -607,7 +541,6 @@ const FeedbackTab = () => {
   const [deleteFeedback] = useDeleteFeedbackMutation();
   const [selectedFb, setSelectedFb] = useState<any>(null);
   const [adminNote, setAdminNote] = useState("");
-
   const feedbacks: any[] = fbData?.data || [];
 
   const handleResolve = async (id: string, note?: string) => {
@@ -617,11 +550,8 @@ const FeedbackTab = () => {
     setAdminNote("");
   };
 
-  const handleMarkRead = async (id: string) => {
-    await updateFeedbackStatus({ id, status: "READ" });
-  };
-
-  const handleDelete = async (id: string) => {
+  const handleMarkRead  = async (id: string) => { await updateFeedbackStatus({ id, status: "READ" }); };
+  const handleDelete    = async (id: string) => {
     if (!confirm("Delete this feedback?")) return;
     await deleteFeedback(id);
     toast.success("Deleted");
@@ -632,9 +562,7 @@ const FeedbackTab = () => {
     return (
       <div className="flex items-center gap-0.5">
         {Array.from({ length: 5 }).map((_, i) =>
-          i < rating
-            ? <FaStar key={i} size={10} className="text-yellow-400" />
-            : <FaRegStar key={i} size={10} className="text-gray-700" />
+          i < rating ? <FaStar key={i} size={10} className="text-yellow-400" /> : <FaRegStar key={i} size={10} className="text-gray-700" />
         )}
       </div>
     );
@@ -665,7 +593,7 @@ const FeedbackTab = () => {
         <div className="space-y-3">
           {feedbacks.map((f: any) => {
             const fsc = FEEDBACK_STATUS_CONFIG[f.status] || FEEDBACK_STATUS_CONFIG.UNREAD;
-            const cc  = CATEGORY_CONFIG[f.category] || CATEGORY_CONFIG.GENERAL;
+            const cc  = CATEGORY_CONFIG[f.category]      || CATEGORY_CONFIG.GENERAL;
             return (
               <div key={f.id} className={`bg-gray-900 border rounded-2xl p-4 transition-all hover:border-white/10 ${f.status === "UNREAD" ? "border-cyan-500/20" : "border-white/5"}`}>
                 <div className="flex items-start justify-between gap-3">
@@ -723,8 +651,7 @@ const FeedbackTab = () => {
             </div>
             <div className="space-y-1.5">
               <FieldLabel>Admin Note (optional)</FieldLabel>
-              <textarea value={adminNote} onChange={e => setAdminNote(e.target.value)}
-                rows={3} placeholder="Internal note about this feedback..."
+              <textarea value={adminNote} onChange={e => setAdminNote(e.target.value)} rows={3} placeholder="Internal note about this feedback..."
                 className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
             </div>
           </div>
@@ -759,7 +686,7 @@ const NotificationCenterTab = () => {
         setSent(true);
         setForm({ title: "", message: "", type: "INFO", target: "ALL" });
         toast.success(res.data.message);
-      } else { toast.error("Broadcast failed"); }
+      } else toast.error("Broadcast failed");
     } catch { toast.error("Something went wrong"); }
   };
 
@@ -770,7 +697,6 @@ const NotificationCenterTab = () => {
           <h3 className="text-white text-sm font-semibold">Broadcast Message</h3>
           <p className="text-gray-500 text-xs mt-0.5">Send a system-wide email notification to users</p>
         </div>
-
         {sent && lastResult ? (
           <div className="p-8 text-center">
             <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
@@ -778,53 +704,34 @@ const NotificationCenterTab = () => {
             </div>
             <p className="text-white font-semibold">Broadcast Sent!</p>
             <p className="text-gray-400 text-sm mt-1">Delivered to <span className="text-emerald-400 font-bold">{lastResult.count}</span> {lastResult.target === "ALL" ? "users" : lastResult.target.toLowerCase()}</p>
-            <button onClick={() => setSent(false)} className="mt-4 px-5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors">
-              Send Another
-            </button>
+            <button onClick={() => setSent(false)} className="mt-4 px-5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors">Send Another</button>
           </div>
         ) : (
           <div className="p-5 space-y-4">
             <div className="space-y-1.5">
               <FieldLabel>Subject / Title <span className="text-red-400">*</span></FieldLabel>
-              <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                placeholder=" "
+              <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder=" "
                 className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
             </div>
-
-            {/* ── Custom dropdowns ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <FieldLabel>Type</FieldLabel>
-                <CustomDropdown
-                  options={ANN_TYPES}
-                  value={form.type}
-                  onChange={val => setForm(f => ({ ...f, type: val }))}
-                  accentColor="cyan"
-                />
+                <CustomDropdown options={ANN_TYPES} value={form.type} onChange={val => setForm(f => ({ ...f, type: val }))} accentColor="cyan" />
               </div>
               <div className="space-y-1.5">
                 <FieldLabel>Recipients</FieldLabel>
-                <CustomDropdown
-                  options={ANN_TARGETS}
-                  value={form.target}
-                  onChange={val => setForm(f => ({ ...f, target: val }))}
-                  accentColor="violet"
-                />
+                <CustomDropdown options={ANN_TARGETS} value={form.target} onChange={val => setForm(f => ({ ...f, target: val }))} accentColor="violet" />
               </div>
             </div>
             <div className="space-y-1.5">
               <FieldLabel>Message <span className="text-red-400">*</span></FieldLabel>
-              <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                rows={6} placeholder=" "
+              <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={6} placeholder=" "
                 className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
             </div>
-
             <div className="p-3 bg-blue-500/5 border border-blue-500/15 rounded-xl flex items-start gap-2">
               <FaExclamationTriangle size={10} className="text-blue-400 shrink-0 mt-0.5" />
               <p className="text-blue-300/70 text-xs leading-relaxed">
-                This will send an email to <strong className="text-blue-300">
-                  {form.target === "ALL" ? "all active users" : form.target.toLowerCase()}
-                </strong>. Make sure the message is accurate before broadcasting.
+                This will send an email to <strong className="text-blue-300">{form.target === "ALL" ? "all active users" : form.target.toLowerCase()}</strong>. Make sure the message is accurate before broadcasting.
               </p>
             </div>
             <button onClick={handleBroadcast} disabled={isBroadcasting}
@@ -834,16 +741,14 @@ const NotificationCenterTab = () => {
           </div>
         )}
       </div>
-
-      {/* Quick tips */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl p-5">
         <h4 className="text-white text-xs font-semibold mb-3">Notification Guidelines</h4>
         <div className="space-y-2.5">
           {[
-            { icon: <FaInfoCircle size={10} className="text-cyan-400" />,         text: "Use Info type for general announcements like office hours changes" },
-            { icon: <FaExclamationTriangle size={10} className="text-yellow-400"/>,text: "Use Warning for important notices that require user action" },
-            { icon: <FaFire size={10} className="text-red-400" />,                text: "Reserve Urgent for critical alerts like system outages or security issues" },
-            { icon: <FaCheckCircle size={10} className="text-emerald-400" />,     text: "Use Success to celebrate milestones or confirm resolved issues" },
+            { icon: <FaInfoCircle size={10} className="text-cyan-400" />,          text: "Use Info type for general announcements like office hours changes"           },
+            { icon: <FaExclamationTriangle size={10} className="text-yellow-400"/>, text: "Use Warning for important notices that require user action"                  },
+            { icon: <FaFire size={10} className="text-red-400" />,                 text: "Reserve Urgent for critical alerts like system outages or security issues"    },
+            { icon: <FaCheckCircle size={10} className="text-emerald-400" />,      text: "Use Success to celebrate milestones or confirm resolved issues"               },
           ].map((tip, i) => (
             <div key={i} className="flex items-start gap-2.5">
               <div className="shrink-0 mt-0.5">{tip.icon}</div>
@@ -852,6 +757,159 @@ const NotificationCenterTab = () => {
           ))}
         </div>
       </div>
+    </div>
+  );
+};
+
+// ════════════════════════════════════════════════════════════════════════════════
+// TAB: EMAIL TEMPLATES
+// ════════════════════════════════════════════════════════════════════════════════
+const EMAIL_TEMPLATES = [
+  {
+    id: "lost-report",
+    label: "Lost Item Report",
+    tag: "Auto-sent",
+    tagColor: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+    accent: "#1d4ed8",
+    trigger: "Sent to reporter when a lost item is submitted",
+    preview: {
+      subject: "Found Item Report Submitted — [Item Name]",
+      to: "reporter@nbsc.edu.ph",
+      fields: [
+        { label: "Reporter Name", value: "Juan Dela Cruz" },
+        { label: "Item Name",     value: "Black Backpack" },
+        { label: "Last Seen",     value: "SWDC Building - Room 205" },
+        { label: "Date Lost",     value: "January 15, 2026" },
+        { label: "Description",   value: "I am reporting a lost black bag with keychains." },
+        { label: "Status",        value: "⏳ Under Review", highlight: "text-amber-400" },
+      ],
+      note: "What happens next? The SAS office will review your report and contact the owner or relevant department to coordinate return of the item.",
+      noteColor: "#1e40af", noteBg: "#eff6ff", noteBorder: "#bfdbfe",
+    },
+  },
+  {
+    id: "item-claimed",
+    label: "Item Claimed",
+    tag: "Auto-sent",
+    tagColor: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+    accent: "#059669",
+    trigger: "Sent to claimant when a claim is approved and item received",
+    preview: {
+      subject: "Item Successfully Claimed — [Item Name]",
+      to: "claimant@nbsc.edu.ph",
+      fields: [
+        { label: "Claimant Name", value: "Maria Santos" },
+        { label: "Item",          value: "Black Backpack" },
+        { label: "Found At",      value: "SWDC Building - Room 205" },
+        { label: "Date Claimed",  value: "January 20, 2026" },
+        { label: "Status",        value: "✓ Successfully Received", highlight: "text-emerald-400" },
+      ],
+      note: "If you did NOT claim this item or did not authorize this transaction, please contact the SAS office immediately.",
+      noteColor: "#9a3412", noteBg: "#fff7ed", noteBorder: "#fed7aa",
+    },
+  },
+  {
+    id: "smart-match",
+    label: "Smart Match Alert",
+    tag: "Auto-sent",
+    tagColor: "text-violet-400 bg-violet-400/10 border-violet-400/20",
+    accent: "#7c3aed",
+    trigger: "Sent when the system finds a potential match for a lost item",
+    preview: {
+      subject: "Potential Match Found — [Item Name]",
+      to: "reporter@nbsc.edu.ph",
+      fields: [
+        { label: "Reporter Name", value: "Juan Dela Cruz" },
+        { label: "Item Name",     value: "Black Backpack" },
+        { label: "Found At",      value: "SWDC Building - Room 205" },
+        { label: "Date Found",    value: "January 18, 2026" },
+        { label: "Match Conf.",   value: "🎯 High Confidence Match", highlight: "text-emerald-400" },
+      ],
+      note: "Is this your item? Please visit the SAS office at your earliest convenience to verify and claim your item. Bring your school ID for identification.",
+      noteColor: "#5b21b6", noteBg: "#f5f3ff", noteBorder: "#ddd6fe",
+    },
+  },
+];
+
+const EmailTemplatesTab = () => {
+  const [selected, setSelected] = useState<string | null>(null);
+  const active = EMAIL_TEMPLATES.find(t => t.id === selected);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-gray-500 text-xs">
+        Read-only preview of automated emails sent by the system. These fire automatically — no changes needed.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {EMAIL_TEMPLATES.map(t => (
+          <button key={t.id} onClick={() => setSelected(selected === t.id ? null : t.id)}
+            className={`text-left p-4 rounded-2xl border transition-all ${selected === t.id ? "bg-gray-800 border-white/20" : "bg-gray-900 border-white/5 hover:border-white/10"}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: `${t.accent}18`, border: `1px solid ${t.accent}30` }}>
+                <FaEnvelope size={12} style={{ color: t.accent }} />
+              </div>
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${t.tagColor}`}>{t.tag}</span>
+            </div>
+            <p className="text-white text-xs font-semibold mb-1">{t.label}</p>
+            <p className="text-gray-500 text-[10px] leading-relaxed">{t.trigger}</p>
+            <p className={`text-[10px] font-bold mt-2 transition-colors ${selected === t.id ? "text-cyan-400" : "text-gray-600"}`}>
+              {selected === t.id ? "▲ Hide preview" : "▼ Show preview"}
+            </p>
+          </button>
+        ))}
+      </div>
+
+      {active && (
+        <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/5" style={{ borderTop: `2px solid ${active.accent}` }}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Email Preview</p>
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${active.tagColor}`}>{active.label}</span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-gray-600 w-12 shrink-0">TO</span>
+                <span className="text-[11px] text-gray-400 bg-gray-800 px-2 py-0.5 rounded-lg">{active.preview.to}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-gray-600 w-12 shrink-0">SUBJECT</span>
+                <span className="text-[11px] text-white font-medium">{active.preview.subject}</span>
+              </div>
+            </div>
+          </div>
+          <div className="p-5">
+            <div className="h-1 rounded-full mb-4" style={{ background: `linear-gradient(90deg, ${active.accent}, #0891b2)` }} />
+            <div className="mb-4 pb-4 border-b border-white/5">
+              <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1">NBSC SAS Lost &amp; Found</p>
+              <p className="text-white text-sm font-bold">{active.preview.subject.split(" — ")[0]}</p>
+            </div>
+            <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden mb-4">
+              <div className="px-4 py-2.5 border-b border-white/5">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Details</p>
+              </div>
+              {active.preview.fields.map((f, i) => (
+                <div key={i} className={`flex items-start gap-3 px-4 py-2.5 ${i < active.preview.fields.length - 1 ? "border-b border-white/[0.04]" : ""}`}>
+                  <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider w-28 shrink-0 pt-0.5">{f.label}</span>
+                  <span className={`text-xs font-medium ${(f as any).highlight || "text-gray-300"}`}>{f.value}</span>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-xl p-3 text-xs leading-relaxed"
+              style={{ background: active.preview.noteBg, border: `1px solid ${active.preview.noteBorder}`, color: active.preview.noteColor }}>
+              {active.preview.note}
+            </div>
+            <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-gray-400">NBSC SAS Lost &amp; Found System</p>
+                <p className="text-[10px] text-gray-600">Northern Bukidnon State College · Student Affairs Services</p>
+              </div>
+              <p className="text-[10px] text-gray-700">Do not reply</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -866,15 +924,14 @@ const CommunicationHub = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-
       {/* Tabs */}
-      <div className="grid grid-cols-4 bg-gray-900 border border-white/5 rounded-2xl p-1 gap-1">
+      <div className="grid grid-cols-5 bg-gray-900 border border-white/5 rounded-2xl p-1 gap-1">
         {TABS.map(tab => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors w-full focus:outline-none select-none
+              className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium transition-colors w-full focus:outline-none select-none
                 ${active ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "text-gray-500 hover:text-white hover:bg-white/5"}`}>
               <Icon size={11} className={active ? "text-cyan-400" : "text-gray-600"} />
               <span className="truncate hidden sm:inline">{tab.label}</span>
@@ -885,17 +942,17 @@ const CommunicationHub = () => {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Open Tickets"    value={stats?.openTickets}         color="text-yellow-400"  bg="bg-yellow-400/10 border-yellow-400/20"  icon={<FaTicketAlt  size={14} className="text-yellow-400"  />} />
-        <StatCard label="Urgent Tickets"  value={stats?.urgentTickets}       color="text-red-400"     bg="bg-red-400/10 border-red-400/20"        icon={<FaFire       size={14} className="text-red-400"     />} />
-        <StatCard label="Unread Feedback" value={stats?.unresolvedFeedback}  color="text-violet-400"  bg="bg-violet-400/10 border-violet-400/20"  icon={<FaCommentDots size={14} className="text-violet-400" />} />
-        <StatCard label="Announcements"   value={stats?.totalAnnouncements}  color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"      icon={<FaBullhorn   size={14} className="text-cyan-400"    />} />
+        <StatCard label="Open Tickets"    value={stats?.openTickets}        color="text-yellow-400" bg="bg-yellow-400/10 border-yellow-400/20" icon={<FaTicketAlt   size={14} className="text-yellow-400" />} />
+        <StatCard label="Urgent Tickets"  value={stats?.urgentTickets}      color="text-red-400"    bg="bg-red-400/10 border-red-400/20"       icon={<FaFire        size={14} className="text-red-400"    />} />
+        <StatCard label="Unread Feedback" value={stats?.unresolvedFeedback} color="text-violet-400" bg="bg-violet-400/10 border-violet-400/20" icon={<FaCommentDots size={14} className="text-violet-400"/>} />
+        <StatCard label="Announcements"   value={stats?.totalAnnouncements} color="text-cyan-400"   bg="bg-cyan-400/10 border-cyan-400/20"     icon={<FaBullhorn    size={14} className="text-cyan-400"   />} />
       </div>
 
-      {/* Tab content */}
-      {activeTab === "announcements"  && <AnnouncementsTab />}
-      {activeTab === "tickets"        && <SupportTicketsTab />}
-      {activeTab === "feedback"       && <FeedbackTab />}
-      {activeTab === "notifications"  && <NotificationCenterTab />}
+      {activeTab === "announcements" && <AnnouncementsTab />}
+      {activeTab === "tickets"       && <SupportTicketsTab />}
+      {activeTab === "feedback"      && <FeedbackTab />}
+      {activeTab === "notifications" && <NotificationCenterTab />}
+      {activeTab === "templates"     && <EmailTemplatesTab />}
 
       <ToastContainer position="top-right" autoClose={3000} theme="dark"
         toastClassName="!bg-gray-800 !border !border-white/10 !rounded-xl !text-sm !text-white shadow-2xl" />
