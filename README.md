@@ -1,6 +1,6 @@
 # Lost & Found System
 
-A comprehensive lost and found management system built with modern web technologies, featuring AI-powered search, smart matching, and real-time notifications.
+A comprehensive lost and found management system built with modern web technologies, featuring AI-powered search, smart matching, real-time notifications, and a full admin communication and compliance suite.
 
 ## Features
 
@@ -21,7 +21,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Archive System**: Automated archiving of stale items to keep the database clean
 - **Audit Logging**: Comprehensive audit trail for all administrative actions
 - **Sheets Activity Logger**: Every lost and found report submission is logged to a Google Sheet in real time for offline recordkeeping and audit trails
-- **Image Handling**: 
+- **Image Handling**:
   - **Image Compression**: Uploaded images are automatically compressed client-side before submission to reduce bandwidth and storage usage
   - **Multi-Image Upload**: Found items support up to 6 images per report with a cover photo selector
   - **Image Preview**: Inline image preview and remove/replace controls
@@ -55,7 +55,7 @@ A comprehensive lost and found management system built with modern web technolog
 ### Real-Time Comment System
 - **Modern-Style Interface**: Modern card-based comment layout with visual hierarchy and smooth animations
 - **Real-Time Updates**: Socket.io powered live comments, replies, typing indicators, and instant synchronization
-- **Advanced Comment Features**: 
+- **Advanced Comment Features**:
   - Inline editing with save/cancel functionality
   - Reply threading with visual indentation and connecting lines
   - **Student Commenting**: Enhanced comment system that distinguishes between regular users, students, and anonymous users
@@ -69,6 +69,45 @@ A comprehensive lost and found management system built with modern web technolog
 - **Mobile-Optimized**: Responsive design with touch-friendly controls and modal-specific layouts
 - **Performance Optimized**: Local storage caching, optimistic updates, and efficient re-rendering
 - **Accessibility**: ARIA labels, keyboard navigation, and screen reader support
+
+### Communication Hub
+A centralized admin panel for all outbound and inbound user communications.
+
+- **Announcement Manager**: Compose and broadcast system-wide notifications to all users or targeted groups — with scheduling, priority levels, and delivery tracking
+- **Support Tickets**: Full help-desk ticketing workflow for handling user issues and requests
+  - Ticket creation from both admin and user sides
+  - Status tracking (Open, In Progress, Resolved, Closed)
+  - Priority classification (Low, Normal, High, Urgent)
+  - Threaded replies and internal notes
+  - Assignment to admin staff
+- **Feedback Management**: Collect, review, and act on user-submitted feedback and feature suggestions
+  - Categorized feedback inbox (Bug Report, Feature Request, General)
+  - Status workflow (New, Under Review, Addressed, Archived)
+  - Export for analysis and reporting
+- **Notification Center**: System-wide message broadcasting
+  - Broadcast to all users or specific roles
+  - In-app and email delivery channels
+  - Notification history and read-receipt tracking
+
+### Security & Compliance
+A dedicated security and governance layer for administrators.
+
+- **Security Monitor**: Real-time visibility into login attempts, failed authentications, and suspicious activity patterns
+  - IP-based flagging and blocking
+  - Session management and forced logout
+  - Audit trail of all security events
+- **Data Privacy**: Built-in tools to support GDPR and local data-privacy compliance
+  - User data export on request
+  - Account and data deletion workflows
+  - Consent tracking and records
+- **Access Control**: Granular role-based permission management
+  - Create and manage custom roles beyond the default Admin/User split
+  - Per-feature permission toggles
+  - Role assignment history
+- **Compliance Reports**: Generate regulatory and internal compliance reports
+  - Scheduled report generation
+  - Export to PDF/CSV
+  - Audit-ready logs for data access, modifications, and deletions
 
 ### User Experience
 - **Responsive Design**: Mobile-first design using Tailwind CSS and Flowbite components
@@ -120,11 +159,13 @@ lost-and-found-main/
 ├── server/                 # Backend application
 │   ├── src/
 │   │   ├── api/
-│   │   │   ├── threads/      # Enhanced discussion threads API
-│   │   │   ├── reputation/  # User reputation system API
-│   │   │   ├── analytics/   # Campus-wide analytics API
-│   │   │   ├── comments/    # Comment system API
-│   │   │   └── moderation/ # Content moderation API
+│   │   │   ├── analytics/    # Campus-wide analytics API
+│   │   │   ├── comments/     # Comment system API
+│   │   │   ├── moderation/   # Content moderation API
+│   │   │   ├── support/      # Support tickets API
+│   │   │   ├── feedback/     # Feedback management API
+│   │   │   ├── announcements/# Announcement manager API
+│   │   │   └── security/     # Security monitor & compliance API
 │   │   ├── app/
 │   │   │   ├── modules/    # Feature modules
 │   │   │   │   └── student/  # Student masterlist lookup & ID resolution
@@ -136,23 +177,22 @@ lost-and-found-main/
 ├── frontend/               # Frontend application
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── scanner/    # WebScannerModal — hybrid jsQR + QuaggaJS + native fallback
-│   │   │   ├── itemMatch/  # ItemMatchSuggestions — live match preview on report form
-│   │   │   ├── threads/     # Enhanced discussion threads components
-│   │   │   ├── reputation/ # User reputation components
-│   │   │   ├── analytics/  # Analytics dashboard components
-│   │   │   └── ui/         # Shared UI — LocationAutocomplete, CustomDatePicker, etc.
+│   │   │   ├── scanner/      # WebScannerModal — hybrid jsQR + QuaggaJS + native fallback
+│   │   │   ├── itemMatch/    # ItemMatchSuggestions — live match preview on report form
+│   │   │   ├── reputation/   # User reputation components
+│   │   │   ├── analytics/    # Analytics dashboard components
+│   │   │   ├── support/      # Support ticket components
+│   │   │   ├── feedback/     # Feedback management components
+│   │   │   ├── announcements/# Announcement manager components
+│   │   │   ├── security/     # Security monitor & compliance components
+│   │   │   └── ui/           # Shared UI — LocationAutocomplete, CustomDatePicker, etc.
 │   │   ├── pages/          # Page components
 │   │   ├── dashboard/      # Admin dashboard
 │   │   ├── utils/          # sheetsLogger and other client utilities
 │   │   ├── types/          # TypeScript declarations (quagga.d.ts for custom types)
-│   │   └├── docs/                  # Documentation
-│   ├── IMPLEMENTATION_PLAN.md
-│   ├── PHASE_2_IMPLEMENTATION_PLAN.md
-│   ├── REMAINING_PHASE_2.md
-│   ├── COMMUNITY_FEATURES_DESIGN.md
+│   │   └── docs/           # Documentation
+│   │
 │   └── package.json
-│   
 └── README.md
 ```
 
@@ -160,7 +200,7 @@ lost-and-found-main/
 
 ### Scanner Performance
 - **QR Codes**: 80% scanned within 1 second (vs. previous 3-5 seconds)
-- **1D Barcodes**: 70% scanned within 1.5 seconds (vs. previous 4-6 seconds)  
+- **1D Barcodes**: 70% scanned within 1.5 seconds (vs. previous 4-6 seconds)
 - **Overall Success Rate**: 75% (vs. previous 60%)
 - **Maximum Timeout**: 2 seconds (vs. previous 5+ seconds)
 - **Performance Improvement**: 3-5x faster than native implementation
@@ -172,6 +212,34 @@ lost-and-found-main/
 - **Mobile-First**: Responsive design optimized for touch interfaces
 
 ## Features in Detail
+
+### Communication Hub
+
+#### Support Tickets
+Users and admins can create tickets directly from the interface. Each ticket tracks a full conversation thread, priority level, assigned staff member, and current status. Admins can add internal notes visible only to other staff. Tickets can be exported for audit or reporting purposes.
+
+#### Feedback Management
+The feedback inbox captures structured submissions from users categorized as Bug Reports, Feature Requests, or General feedback. Admins can update the status of each item as it moves through review and resolution, and export the full dataset for analysis.
+
+#### Announcement Manager
+Admins can compose announcements targeting all users or specific roles, schedule delivery, and track who has seen each notification. Announcements are delivered both in-app and via email depending on user notification preferences.
+
+#### Notification Center
+A broadcast tool for time-sensitive system-wide messages — maintenance windows, policy changes, emergency alerts. Notification history is retained and searchable, with per-message read-receipt data.
+
+### Security & Compliance
+
+#### Security Monitor
+The security monitor provides a live feed of authentication events — successful logins, failed attempts, password resets, and account lockouts. Suspicious IPs can be flagged or blocked directly from the dashboard. All security events are retained in a searchable audit log.
+
+#### Data Privacy
+The privacy tools allow administrators to respond to data subject requests: exporting a full record of a user's data or permanently deleting their account and associated records. Consent records are stored and timestamped for compliance documentation.
+
+#### Access Control
+Beyond the built-in Admin and User roles, custom roles can be created with per-feature permission toggles. Role assignments are tracked with a history log so any privilege escalation is traceable.
+
+#### Compliance Reports
+Preconfigured report templates cover data access logs, item lifecycle audits, and user activity summaries. Reports can be scheduled for automatic generation and exported as PDF or CSV for regulatory submissions.
 
 ### Sheets Activity Logger
 - **Automatic logging**: Every lost and found item submission fires a background log to a designated Google Sheet — no extra admin action needed
