@@ -267,65 +267,100 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const handleReplyToComment = async (parentCommentId: string, content: string) => {
-    if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
-      console.warn('Blocked reply to unsaved temp comment');
-      return;
+  if (parentCommentId.startsWith('reply_') || parentCommentId.startsWith('local_')) {
+    console.warn('Blocked reply to unsaved temp comment');
+    return;
+  }
+
+  // ✅ Fix: search both top-level comments AND their replies
+  // so replying to a reply still works correctly
+  let parentComment = comments.find(c => c.id === parentCommentId);
+  let topLevelId = parentCommentId;
+
+  if (!parentComment) {
+    // parentCommentId is a reply — find which top-level comment owns it
+    const topLevel = comments.find(c =>
+      (c.replies || []).some((r: any) => r.id === parentCommentId)
+    );
+    if (topLevel) {
+      parentComment = topLevel.replies.find((r: any) => r.id === parentCommentId);
+      topLevelId = topLevel.id; // ← always use top-level id for DB
     }
-    const parentComment = comments.find(c => c.id === parentCommentId);
-    const name = parentComment?.user?.name || parentComment?.user?.username || 'Anonymous Student';
-    const finalContent = `@${name} ${content}`;
-    const tempId = `reply_${Date.now()}`;
-    const newReply = {
-      id: tempId,
-      content: finalContent,
-      createdAt: new Date().toISOString(),
-      isAnonymous: !currentUser?.id,
-      replies: [],
-      helpfulCount: 0,
-      userId: currentUser?.id ?? null,
-      user: currentUser?.id
-        ? { id: currentUser.id, name: currentUser.name || currentUser.username || 'You', userImg: currentUser.userImg ?? null, role: currentUser.role ?? 'USER' }
-        : null,
-    };
-    // Optimistic update
+  }
+
+  // ✅ Fix: check all possible name fields including username
+  const name =
+    parentComment?.user?.name ||
+    parentComment?.user?.username ||
+    (parentComment?.isAnonymous ? 'Anonymous Student' : 'Anonymous Student');
+
+  const finalContent = `@${name} ${content}`;
+  const tempId = `reply_${Date.now()}`;
+
+  const newReply = {
+    id:          tempId,
+    content:     finalContent,
+    createdAt:   new Date().toISOString(),
+    isAnonymous: !currentUser?.id,
+    replies:     [],
+    helpfulCount: 0,
+    userId:      currentUser?.id ?? null,
+    user:        currentUser?.id
+      ? {
+          id:      currentUser.id,
+          name:    currentUser.name || currentUser.username || 'You',
+          userImg: currentUser.userImg ?? null,
+          role:    currentUser.role ?? 'USER',
+        }
+      : null,
+  };
+
+  // Optimistic update — attach to top-level comment
+  setComments(prev =>
+    prev.map(c =>
+      c.id === topLevelId
+        ? { ...c, replies: [...(c.replies || []), newReply] }
+        : c
+    )
+  );
+
+  setReplyContent('');
+  setShowReplyInput(null);
+  setReplyingTo(null);
+
+  try {
+    const result = await createComment({
+      itemId,
+      itemType,
+      content:         finalContent,
+      parentCommentId: topLevelId, // ← always send top-level id to DB
+    }).unwrap();
+
+    savedIdsRef.current.add(result.id);
+
     setComments(prev =>
       prev.map(c =>
-        c.id === parentCommentId
-          ? { ...c, replies: [...(c.replies || []), newReply] }
+        c.id === topLevelId
+          ? {
+              ...c,
+              replies: (c.replies || []).map((r: any) =>
+                r.id === tempId ? result : r
+              ),
+            }
           : c
       )
     );
-    setReplyContent('');
-    setShowReplyInput(null);
-    setReplyingTo(null);
-    try {
-      // ✅ Save to DB — this also triggers socket broadcast from server
-      const result = await createComment({
-        itemId,
-        itemType,
-        content: finalContent,
-        parentCommentId,
-      }).unwrap();
-      savedIdsRef.current.add(result.id);
-      // Replace temp reply with real server result
-      setComments(prev =>
-        prev.map(c =>
-          c.id === parentCommentId
-            ? { ...c, replies: (c.replies || []).map((r: any) => r.id === tempId ? result : r) }
-            : c
-        )
-      );
-    } catch (err) {
-      console.warn('Reply save failed, rolling back:', err);
-      setComments(prev =>
-        prev.map(c =>
-          c.id === parentCommentId
-            ? { ...c, replies: (c.replies || []).filter((r: any) => r.id !== tempId) }
-            : c
-        )
-      );
-    }
-  };
+  } catch (err) {
+    console.warn('Reply save failed, rolling back:', err);
+    setComments(prev =>
+      prev.map(c =>
+        c.id === topLevelId
+          ? { ...c, replies: (c.replies || []).filter((r: any) => r.id !== tempId) }
+          : c
+      )
+    );
+  }
+};
 
 
   const filteredComments = comments.filter(comment => {
