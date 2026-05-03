@@ -1,6 +1,7 @@
-// v3 - fixed delete for anonymous/unauthenticated users
+// v4 - auto-moderation: keyword filter on createComment
 import prisma from '../config/prisma';
 import { ItemType } from '@prisma/client';
+import { containsBlockedKeyword } from "../utils/moderationController";
 
 const COMMENT_INCLUDE = {
   user: {
@@ -19,29 +20,34 @@ const COMMENT_INCLUDE = {
 
 export const commentService = {
   async createComment(data: any) {
-  const {
-    itemId, itemType, userId, content,
-    isAnonymous, location, parentCommentId
-  } = data;
+    const {
+      itemId, itemType, userId, content,
+      isAnonymous, location, parentCommentId
+    } = data;
 
-  return await prisma.comment.create({
-    data: {
-      itemId,
-      itemType:    (itemType || 'FOUND').toUpperCase() as ItemType,
-      content:      content    || '',
-      location:     location   || null,
-      isAnonymous:  isAnonymous || !userId,
-      status:       'APPROVED',
+    // ── Auto-moderation ───────────────────────────────────────────────────────
+    // If the content contains a blocked keyword → hold as PENDING for admin review
+    // Otherwise → auto-approve immediately (existing behaviour)
+    const flaggedKeyword = containsBlockedKeyword(content || '');
+    const autoStatus     = flaggedKeyword ? 'PENDING' : 'APPROVED';
 
-      ...(parentCommentId && {
-        parent: { connect: { id: parentCommentId } },
-      }),
-      ...(userId && { user: { connect: { id: userId } } }),
-    },
-    include: COMMENT_INCLUDE,
-  });
-},
+    return await prisma.comment.create({
+      data: {
+        itemId,
+        itemType:    (itemType || 'FOUND').toUpperCase() as ItemType,
+        content:      content    || '',
+        location:     location   || null,
+        isAnonymous:  isAnonymous || !userId,
+        status:       autoStatus,   // ← was always 'APPROVED'
 
+        ...(parentCommentId && {
+          parent: { connect: { id: parentCommentId } },
+        }),
+        ...(userId && { user: { connect: { id: userId } } }),
+      },
+      include: COMMENT_INCLUDE,
+    });
+  },
 
   async updateComment(
     commentId: string,
@@ -74,7 +80,6 @@ export const commentService = {
     }
     // If no userId and not admin, attempt anyway —
     // Prisma will throw P2025 (not found) which the controller catches as 500
-    // This is acceptable — anonymous users shouldn't be deleting in production
 
     await prisma.comment.delete({ where });
     return true;

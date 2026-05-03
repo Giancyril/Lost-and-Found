@@ -43,6 +43,7 @@ import StudentRegistry from "./dashboard/pages/StudentRegistry.tsx";
 import CommunicationHub from "./dashboard/pages/CommunicationHub.tsx";
 import SupportPage from "./pages/support/SupportPage.tsx";
 import SecurityPage from "./dashboard/pages/SecurityCompliance.tsx";
+import ContentModeration from "./dashboard/pages/ContentModeration.tsx";
 
 const router = createBrowserRouter([
   {
@@ -89,6 +90,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/myFoundItems",     element: <DashboardLayout><MyFoundItems /></DashboardLayout> },
   { path: "/dashboard/myLostItems",      element: <DashboardLayout><MyLostItems /></DashboardLayout> },
   { path: "/dashboard/security",         element: <DashboardLayout><SecurityPage /></DashboardLayout> },
+  { path: "/dashboard/moderation", element: <DashboardLayout><ContentModeration /></DashboardLayout> },
 
   // ── Student Dashboard routes ──────────────────────────────────────────────
   { path: "/dashboard/student",                element: <StudentLayout><StudentDashboard /></StudentLayout> },

@@ -44,6 +44,15 @@ import {
   getComplianceReport,
 } from "../utils/securityController";
 
+import {
+  getModerationStats,
+  getReports, submitReport, resolveReport, deleteReport,
+  getPendingComments, moderateComment,
+  getUserBehavior, issueWarning, deleteWarning,
+  getKeywords, testContent,
+  getAppeals, submitAppeal, resolveAppeal,
+} from "../utils/moderationController";
+
 const router = express.Router();
 
 ////////////////////////////////////////////////// user //////////////////////////////////////////////
@@ -173,5 +182,32 @@ router.get("/admin/security/purge-check", auth(), purgeDeletedUsers);
  
 // Compliance
 router.get("/admin/security/compliance", auth(), getComplianceReport);
+
+// Moderation stats
+router.get("/admin/moderation/stats",               auth(), getModerationStats);
+ 
+// Reported content
+router.get("/admin/moderation/reports",             auth(), getReports);
+router.post("/moderation/reports",                           submitReport);   // public — anyone can report
+router.put("/admin/moderation/reports/:id/resolve", auth(), resolveReport);
+router.delete("/admin/moderation/reports/:id",      auth(), deleteReport);
+ 
+// Comment moderation queue
+router.get("/admin/moderation/comments",            auth(), getPendingComments);
+router.put("/admin/moderation/comments/:id",        auth(), moderateComment);
+ 
+// User behavior & warnings
+router.get("/admin/moderation/behavior",            auth(), getUserBehavior);
+router.post("/admin/moderation/warnings",           auth(), issueWarning);
+router.delete("/admin/moderation/warnings/:id",     auth(), deleteWarning);
+ 
+// Automated moderation
+router.get("/admin/moderation/keywords",            auth(), getKeywords);
+router.post("/admin/moderation/test",               auth(), testContent);
+ 
+// Appeals
+router.get("/admin/moderation/appeals",             auth(), getAppeals);
+router.post("/moderation/appeals",                  auth(), submitAppeal);    // requires login
+router.put("/admin/moderation/appeals/:id/resolve", auth(), resolveAppeal);
 
 export default router;

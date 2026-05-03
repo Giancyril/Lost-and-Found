@@ -5,7 +5,8 @@ import {
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, 
-  FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate, FaUserShield,
+  FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate, 
+  FaUserShield, FaFlag,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -41,6 +42,7 @@ const menuItems = [
   { title: "Analytics", icon: FaChartLine, path: "/dashboard/analytics" },
   { title: "Heatmap", icon: FaMapMarkedAlt, path: "/dashboard/heatmap" },
   { title: "Commmunication", icon: FaBullhorn, path: "/dashboard/comm-hub" },
+  { title: "Content Moderation", icon: FaFlag, path: "/dashboard/moderation" },
   // Student Management
   { title: "Students", icon: FaUserGraduate, path: "/dashboard/students" },
   { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
@@ -62,6 +64,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/heatmap": { title: "Heatmap", subtitle: "Visualize where items are most commonly lost or found." },
   "/dashboard/comm-hub": { title: "Communication Hub", subtitle: "Announcements, support tickets, feedback and broadcasts." },
   "/dashboard/report": { title: "Report", subtitle: "Generate and export weekly or monthly summary reports." },
+    "/dashboard/moderation":{ title: "Content Moderation",   subtitle: "Review flagged content, manage reports, and moderate community posts." },
   "/dashboard/students": { title: "Students", subtitle: "View and manage all registered student accounts." },
   "/dashboard/users": { title: "Users", subtitle: "View and manage all registered system users." },
   "/dashboard/categories": { title: "Categories", subtitle: "Create and organize item categories for better sorting." },
@@ -384,7 +387,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             const showDivider =
             (!sidebarCollapsed && idx === 1) ? "Item Management" :
             (!sidebarCollapsed && idx === 5) ? "Insights" :
-            (!sidebarCollapsed && idx === 8) ? "Student Management" :
+            (!sidebarCollapsed && idx === 9)  ? "Student Management" :
             (!sidebarCollapsed && idx === 10) ? "Administration" : null;
 
             return (
