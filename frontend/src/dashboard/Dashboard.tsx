@@ -328,7 +328,11 @@ const Dashboard = () => {
           </div>
 
           {/* Stale items preview */}
-          <div className="flex-1 divide-y divide-white/5 overflow-auto max-h-[240px]">
+          <div className="flex-1 divide-y divide-white/5 overflow-auto max-h-[240px]"
+                  style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
+          }}>
             {staleItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-gray-600">
                 <FaCheckCircle size={22} className="mb-2 opacity-40 text-emerald-500" />
@@ -436,7 +440,11 @@ const Dashboard = () => {
           </div>
 
           {/* Recent audit entries timeline */}
-          <div className="flex-1 overflow-auto max-h-[360px]">
+          <div className="flex-1 overflow-auto max-h-[360px]"
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
+          }}>
             {recentAuditLogs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-600">
                 <FaHistory size={22} className="mb-2 opacity-40" />
