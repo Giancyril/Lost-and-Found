@@ -365,13 +365,13 @@ const SupportPage = () => {
                       </div>
 
                       <div className="p-3 bg-blue-500/5 border border-blue-500/15 rounded-xl">
-                        <p className="text-blue-300/70 text-xs leading-relaxed">
+                        <p className="text-blue-300/70 text-xs leading-relaxed text-justify">
                           Provide your school email so we can reply. Tickets are reviewed during office hours.
                         </p>
                       </div>
 
                       <button type="submit" disabled={ticketLoading}
-                        className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-900/40">
+                        className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-900/40">
                         {ticketLoading
                           ? <><FaSpinner className="animate-spin" size={12} /> Submitting…</>
                           : <><FaPaperPlane size={11} /> Submit Ticket</>}
@@ -450,7 +450,7 @@ const SupportPage = () => {
                       </div>
 
                       <button type="submit" disabled={feedbackLoading}
-                        className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-cyan-900/40">
+                        className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-900/40">
                         {feedbackLoading
                           ? <><FaSpinner className="animate-spin" size={12} /> Sending…</>
                           : <><FaPaperPlane size={11} /> Send Feedback</>}
@@ -462,7 +462,7 @@ const SupportPage = () => {
             </div>
 
             {/* ── Right: FAQ ── */}
-            <div className="lg:col-span-2 space-y-3">
+            <div className="lg:col-span-2 flex flex-col gap-3">
               <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
                 <div className="px-5 py-4 border-b border-white/5">
                   <h3 className="text-white text-sm font-bold">Frequently Asked Questions</h3>
@@ -491,24 +491,62 @@ const SupportPage = () => {
               </div>
 
               {/* Office info card */}
-              <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 space-y-3">
-                <div className="flex items-center gap-2.5">
-                  
+              <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex-1 flex flex-col gap-4">
+
+                {/* Header */}
+                <div className="flex items-center gap-3">
                   <div>
-                    <p className="text-white text-xs font-bold">SAS Office</p>
-                    <p className="text-gray-500 text-[10px]">Student Affairs Services</p>
+                    <p className="text-white text-sm font-bold">SAS Office</p>
+                    <p className="text-gray-500 text-[10px]">Student Affairs Services · NBSC</p>
                   </div>
                 </div>
-                <div className="space-y-2 text-xs text-gray-500">
-                  <p> NBSC SWDC - Building</p>
-                  <p> Mon–Fri, 8:00 AM – 5:00 PM</p>
-                  <p> sas@nbsc.edu.ph</p>
+
+                {/* Location + Hours + Email */}
+                <div className="space-y-2.5">
+                  {[
+                    { emoji: "", label: "Location", value: "NBSC SWDC - Building" },
+                    { emoji: "", label: "Hours",    value: "Mon–Fri, 8:00 AM – 5:00 PM" },
+                   
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-start gap-2.5">
+                      <span className="text-sm shrink-0 mt-0.5">{item.emoji}</span>
+                      <div>
+                        <p className="text-gray-600 text-[9px] font-bold uppercase tracking-widest">{item.label}</p>
+                        <p className="text-gray-300 text-xs font-medium">{item.value}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="pt-2 border-t border-white/5">
-                  <p className="text-gray-600 text-[10px] leading-relaxed">
-                    For urgent matters, visit the office directly during office hours.
-                  </p>
+
+                <div className="border-t border-white/5" />
+
+                {/* When visiting tips */}
+                <div>
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-2">When visiting the office</p>
+                  <div className="space-y-1.5 text-justify">
+                    {[
+                      "Always use Fetch Student Info or scan your ID when reporting it auto-fills your name and email instantly.",
+                      "Check the Found Items page first before filing a lost report your item may already be there.",
+                    ].map((tip, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500/60 shrink-0 mt-1.5" />
+                        <p className="text-gray-500 text-[11px] leading-relaxed">{tip}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+               
+
+                {/* Status */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <p className="text-emerald-400 text-[11px] font-semibold">Office currently open</p>
+                  </div>
+                  <p className="text-gray-700 text-[10px]">Mon–Fri only</p>
+                </div>
+
               </div>
             </div>
           </div>

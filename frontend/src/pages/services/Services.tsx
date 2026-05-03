@@ -222,8 +222,8 @@ const Services = () => {
                 <BiSupport className="text-blue-400 w-5 h-5" />
               </div>
               <div>
-                <p className="text-white text-xs font-semibold">Need help?</p>
-                <p className="text-gray-500 text-[10px]">Available during school hours.</p>
+                <p className="text-white text-xs font-semibold">Need Assistance?</p>
+                <p className="text-gray-500 text-[10px]">Visit our office or message us for support.</p>
               </div>
             </div>
             <a href="/support"

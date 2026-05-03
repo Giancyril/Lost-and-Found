@@ -324,7 +324,7 @@ const AnnouncementsTab = () => {
       <div className="flex items-center justify-between">
         <p className="text-gray-500 text-xs">{announcements.length} announcement{announcements.length !== 1 ? "s" : ""} total</p>
         <button onClick={() => setShowCompose(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-xl transition-all">
+          className="flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white text-xs font-semibold rounded-xl transition-all">
           <FaBullhorn size={10} /> New Announcement
         </button>
       </div>
@@ -430,7 +430,7 @@ const AnnouncementsTab = () => {
           <div className="px-5 py-4 border-t border-white/5 flex gap-3 shrink-0">
             <button onClick={() => setShowCompose(false)} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
             <button onClick={handleSubmit} disabled={isSending}
-              className="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+              className="flex-1 py-2.5 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
               {isSending ? <><FaSpinner className="animate-spin" size={12} /> Sending…</> : <><FaPaperPlane size={10} /> {form.sendEmail ? "Send Announcement" : "Post Announcement"}</>}
             </button>
           </div>
