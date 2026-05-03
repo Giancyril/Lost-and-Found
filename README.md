@@ -1,6 +1,6 @@
 # Lost & Found System
 
-A comprehensive lost and found management system built with modern web technologies, featuring AI-powered search, smart matching, real-time notifications, and a full admin communication and compliance suite.
+A comprehensive lost and found management system built with modern web technologies, featuring AI-powered search, smart matching, real-time notifications, and a full admin communication, compliance, and content moderation suite.
 
 ## Features
 
@@ -17,7 +17,6 @@ A comprehensive lost and found management system built with modern web technolog
 - **Student Masterlist Integration**: Google Sheets-backed masterlist that resolves student name, email, and department from a scanned or entered ID — with fuzzy name matching and ID normalization
 - **Real-Time Notifications**: Email notifications for potential matches and claim status updates
 - **Interactive Maps**: Location-based visualization using Leaflet maps with heat mapping
-- **Bulletin Board**: Community bulletin for posting lost items with tips from other users
 - **Archive System**: Automated archiving of stale items to keep the database clean
 - **Audit Logging**: Comprehensive audit trail for all administrative actions
 - **Sheets Activity Logger**: Every lost and found report submission is logged to a Google Sheet in real time for offline recordkeeping and audit trails
@@ -47,7 +46,7 @@ A comprehensive lost and found management system built with modern web technolog
   - **Geographic Insights**: Location-based activity patterns and heat mapping
   - **Real-Time Monitoring**: Live dashboard updates with current system status
 - **Real-Time Communication**: Socket.io powered real-time updates across all community features
-- **Content Moderation**: Advanced moderation tools with automated content analysis and user reporting
+- **Content Moderation**: Advanced moderation tools with automated keyword filtering, user reporting, warning system, and appeal process
 - **Community Engagement**: Rich interaction features including comments, replies, and collaborative problem-solving
 - **Achievement System**: Badge system for recognizing helpful community contributions
 - **Trust Indicators**: Visual trust levels based on user reputation and activity
@@ -88,6 +87,7 @@ A centralized admin panel for all outbound and inbound user communications.
   - Broadcast to all users or specific roles
   - In-app and email delivery channels
   - Notification history and read-receipt tracking
+- **Email Templates**: Read-only preview of all 3 automated email templates (found item report, claim approved, smart match notification) with desktop and mobile preview modes
 
 ### Security & Compliance
 A dedicated security and governance layer for administrators.
@@ -108,6 +108,40 @@ A dedicated security and governance layer for administrators.
   - Scheduled report generation
   - Export to PDF/CSV
   - Audit-ready logs for data access, modifications, and deletions
+
+### Content Moderation
+A dedicated moderation layer for managing user-generated content, enforcing community standards, and handling disputes.
+
+- **Reported Content Review**: Users can flag any comment as spam, inappropriate, harassment, or misinformation. Admins review flagged content and choose to reject the comment, keep it, or dismiss the report — directly from the dashboard.
+  - Report reason classification (Spam, Inappropriate, Harassment, Misinformation, Other)
+  - One-click actions: Reject Comment / Keep Comment / Dismiss Report
+  - Full comment context shown alongside each report
+
+- **Comment Moderation Queue**: Comments flagged by the automated keyword filter are held as `PENDING` and appear in a dedicated review queue. Admins approve or reject each entry before it becomes publicly visible.
+  - Filter queue by Pending, Approved, or Rejected status
+  - Shows commenter identity, item context, and flag reason
+  - Bulk-friendly interface for processing multiple entries
+
+- **Automated Moderation**: A zero-cost, server-side keyword filter that runs on every comment submission — no external AI API required.
+  - Configurable blocked keyword list in `moderationController.ts`
+  - Clean content → auto-approved instantly
+  - Flagged content → held as PENDING for admin review
+  - Built-in content tester in the dashboard — paste any text and see immediately whether it would be approved or held
+  - Auto-moderation is integrated directly into the comment creation service
+
+- **User Behavior Tracking**: Monitor users who repeatedly violate community standards.
+  - Warning system with three severity levels: Low, Medium, High
+  - Admin-issued warnings with reason, severity, and internal notes
+  - Auto-block trigger: users who accumulate 3 HIGH severity warnings are automatically blocked
+  - Warning history per user visible in the dashboard
+  - Recent warnings feed for at-a-glance moderation activity
+
+- **Appeal Process**: Rejected users can contest moderation decisions through a structured appeal workflow.
+  - Users submit appeals via `POST /moderation/appeals` with their reason
+  - Admins review the original comment, rejection reason, and appeal text side-by-side
+  - Approve appeal → comment is automatically restored to Approved status
+  - Deny appeal → decision is recorded with an optional admin note
+  - Full appeal history with status tracking (Pending, Approved, Denied)
 
 ### User Experience
 - **Responsive Design**: Mobile-first design using Tailwind CSS and Flowbite components
@@ -172,6 +206,10 @@ lost-and-found-main/
 │   │   │   ├── auth/       # Authentication
 │   │   │   ├── midddlewares/ # Express middlewares
 │   │   │   └── utils/      # Utility functions
+│   │   │       ├── moderationController.ts  # Keyword filter, reports, warnings, appeals
+│   │   │       ├── communicationController.ts
+│   │   │       ├── securityController.ts
+│   │   │       └── adminStats.ts
 │   │   └── prisma/         # Database schema
 │   └── package.json
 ├── frontend/               # Frontend application
@@ -187,7 +225,13 @@ lost-and-found-main/
 │   │   │   ├── security/     # Security monitor & compliance components
 │   │   │   └── ui/           # Shared UI — LocationAutocomplete, CustomDatePicker, etc.
 │   │   ├── pages/          # Page components
+│   │   │   └── support/      # SupportPage — public support ticket & feedback form
 │   │   ├── dashboard/      # Admin dashboard
+│   │   │   └── pages/
+│   │   │       ├── ContentModeration.tsx    # 4-tab moderation dashboard
+│   │   │       ├── CommunicationHub.tsx     # 5-tab communication dashboard
+│   │   │       ├── SecurityCompliance.tsx   # 4-tab security dashboard
+│   │   │       └── AdvancedAnalyticsPage.tsx
 │   │   ├── utils/          # sheetsLogger and other client utilities
 │   │   ├── types/          # TypeScript declarations (quagga.d.ts for custom types)
 │   │   └── docs/           # Documentation
@@ -195,6 +239,33 @@ lost-and-found-main/
 │   └── package.json
 └── README.md
 ```
+
+## Database Models
+
+### Core Models
+- **User** — accounts with role, points, school ID, course, year level
+- **FoundItem** — reported found items with images, location, archive support
+- **LostItem** — reported lost items with smart matching support
+- **Claim** — ownership claims with audit log
+- **ClaimAuditLog** — full history of all claim status changes
+
+### Communication Models
+- **Announcement** — admin broadcasts with type and target audience
+- **SupportTicket** — help-desk tickets with priority and reply threading
+- **Feedback** — user-submitted feedback with category and rating
+
+### Security Models
+- **LoginLog** — authentication events with IP, user agent, success/failure
+
+### Moderation Models
+- **ContentReport** — user-submitted flags on comments (Spam, Inappropriate, Harassment, Misinformation)
+- **UserWarning** — admin-issued warnings with severity (Low, Medium, High)
+- **ModerationAppeal** — user appeals of rejected comments with resolution workflow
+
+### Other Models
+- **Comment** — threaded comments with status (Pending, Approved, Rejected), anonymous support
+- **Points** — point transaction history per user
+- **MatchNotification** — deduplication log for smart match email notifications
 
 ## Performance Benchmarks
 
@@ -213,6 +284,23 @@ lost-and-found-main/
 
 ## Features in Detail
 
+### Content Moderation
+
+#### Reported Content Review
+Any user can flag a comment from the public interface. The report is routed to the admin dashboard where it appears in the Reported Content tab alongside the original comment, the reporter's stated reason, and any additional details. Admins resolve each report with a single click — rejecting the comment, keeping it, or dismissing the report as unfounded. All resolutions are timestamped and attributed to the acting admin.
+
+#### Comment Moderation Queue
+When the automated keyword filter detects a blocked term in a new comment, the comment is held with a `PENDING` status instead of being published. It never appears to other users until an admin explicitly approves it. The moderation queue in the dashboard shows all pending comments with full context — who wrote it, on which item, and when — so admins can process the queue efficiently.
+
+#### Automated Moderation
+The keyword filter is a lightweight, server-side function that runs synchronously on every comment before it is written to the database. There is no external API call, no latency cost, and no usage fee. The blocked keyword list is a plain array in `moderationController.ts` and can be updated without schema changes. A built-in content tester in the dashboard lets admins verify any text against the current list before deploying changes.
+
+#### User Behavior Tracking
+Each warning issued to a user is stored with a severity level and reason. The dashboard surfaces users with the most warnings at the top of the behavior list, with a breakdown of how many are High severity. When a user accumulates 3 High severity warnings, their account is automatically set to inactive — blocking their access without permanent deletion. Admins can remove individual warnings if issued in error.
+
+#### Appeal Process
+The appeal endpoint is accessible to any authenticated user. After a comment is rejected, the user can submit an appeal explaining why they believe the decision was wrong. In the admin dashboard, the appeal review modal shows the rejected comment, its rejection reason, and the user's appeal argument side by side. Approving the appeal immediately restores the comment to Approved status. Denying it closes the appeal with an optional admin note. All appeal outcomes are logged.
+
 ### Communication Hub
 
 #### Support Tickets
@@ -226,6 +314,9 @@ Admins can compose announcements targeting all users or specific roles, schedule
 
 #### Notification Center
 A broadcast tool for time-sensitive system-wide messages — maintenance windows, policy changes, emergency alerts. Notification history is retained and searchable, with per-message read-receipt data.
+
+#### Email Templates
+A read-only preview panel showing all 3 automated email templates the system sends: the found item report confirmation, the claim approved notification, and the smart match alert. Each template can be previewed in desktop or mobile viewport with sample data pre-filled. The Info tab shows the template's trigger endpoint, the file it lives in, and the sample variables used for rendering.
 
 ### Security & Compliance
 
