@@ -838,7 +838,7 @@ const EmailTemplatesTab = () => {
   return (
     <div className="space-y-4">
       <p className="text-gray-500 text-xs">
-        Read-only preview of automated emails sent by the system. These fire automatically — no changes needed.
+        Read-only preview of automated emails sent by the system. These fire automatically no changes needed.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
