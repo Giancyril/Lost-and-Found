@@ -99,12 +99,12 @@ const StatCard = ({ label, value, color, bg, icon, sub }: any) => (
 
 const SectionCard = ({ title, subtitle, children, action }: any) => (
   <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-    <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-      <div>
+   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-5 py-4 border-b border-white/5">
+      <div className="min-w-0">
         <h3 className="text-white text-sm font-semibold">{title}</h3>
         {subtitle && <p className="text-gray-500 text-xs mt-0.5">{subtitle}</p>}
       </div>
-      {action}
+      {action && <div className="shrink-0 self-end sm:self-auto">{action}</div>}
     </div>
     {children}
   </div>
@@ -202,26 +202,27 @@ const SecurityMonitorTab = () => {
         title="Recent Login Logs"
         subtitle="Latest authentication activity"
         action={
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-lg p-1">
-              {[["", "All"], ["true", "Success"], ["false", "Failed"]].map(([val, label]) => (
-                <button key={val} onClick={() => setLogFilter(val)}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${logFilter === val ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
-                  {label}
-                </button>
-              ))}
-            </div>
-            
+        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex flex-1 sm:flex-none gap-1 bg-gray-800 border border-white/5 rounded-lg p-1">
+            {[["", "All"], ["true", "Success"], ["false", "Failed"]].map(([val, label]) => (
+              <button key={val} onClick={() => setLogFilter(val)}
+                className={`flex-1 sm:flex-none px-2 py-1 rounded-md text-[10px] font-medium transition-all ${logFilter === val ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1.5">
             <button onClick={() => downloadCSV(logs, "login-logs")}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] font-bold rounded-lg transition-all">
+              className="flex items-center gap-1 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] font-bold rounded-lg transition-all whitespace-nowrap">
               <FaDownload size={8} /> Export
             </button>
             <button onClick={handleClearLogs} disabled={isClearing}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-lg transition-all">
+              className="flex items-center gap-1 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-lg transition-all whitespace-nowrap">
               <FaTrash size={8} /> Clear
             </button>
           </div>
-        }
+        </div>
+      }
       >
         <div className="divide-y divide-white/5 max-h-96 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.2) rgba(255,255,255,0.05)" }}>
           {logs.length === 0 ? (
@@ -604,8 +605,8 @@ const ComplianceTab = () => {
         subtitle="All admin actions on claims — who did what and when"
         action={
           <button onClick={handleExportAudit}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-xs rounded-lg transition-all">
-            <FaDownload size={9} /> Export CSV
+            className="flex items-center gap-1 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] font-bold rounded-lg transition-all whitespace-nowrap">
+            <FaDownload size={8} /> Export
           </button>
         }
       >
