@@ -329,6 +329,31 @@ const api = baseApi.injectEndpoints({
       }),
     }),
 
+    // Security endpoints
+    getSecurityStats: builder.query({
+      query: () => ({ url: "/admin/security/stats", method: "GET" }),
+    }),
+    getLoginLogs: builder.query({
+      query: (params?: { success?: boolean; limit?: number }) => ({
+        url: "/admin/security/logs", method: "GET", params,
+      }),
+    }),
+    getAccessControl: builder.query({
+      query: () => ({ url: "/admin/security/access-control", method: "GET" }),
+    }),
+    getPrivacyStats: builder.query({
+      query: () => ({ url: "/admin/security/privacy", method: "GET" }),
+    }),
+    getComplianceReport: builder.query({
+      query: () => ({ url: "/admin/security/compliance", method: "GET" }),
+    }),
+    clearOldLogs: builder.mutation({
+      query: () => ({ url: "/admin/security/logs/clear", method: "DELETE" }),
+    }),
+    exportUsers: builder.query({
+      query: () => ({ url: "/admin/security/export-users", method: "GET" }),
+    }),
+
     // student registration validation
     validateRegistration: builder.query({
       query: (schoolId: string) => ({
@@ -411,4 +436,11 @@ export const {
   useGetStudentByIdQuery,
   useLazyGetStudentByIdQuery,
   useLazyGetStudentByDetailsQuery,
+  useGetSecurityStatsQuery,
+  useGetLoginLogsQuery,
+  useGetAccessControlQuery,
+  useGetPrivacyStatsQuery,
+  useGetComplianceReportQuery,
+  useClearOldLogsMutation,
+  useLazyExportUsersQuery,
 } = api;

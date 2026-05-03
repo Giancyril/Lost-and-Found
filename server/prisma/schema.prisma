@@ -21,16 +21,17 @@ model User {
   userImg       String          @default("")
   isDeleted     Boolean         @default(false)
   deletedAt     DateTime?
-  schoolId      String?         @unique    // ← NEW
+  schoolId      String?         @unique    
   course        String?  
   yearLevel     String?  
-  totalPoints   Int             @default(0) // ← NEW
+  totalPoints   Int             @default(0) 
   ClaimAuditLog ClaimAuditLog[]
   claim         Claim[]
   foundItem     FoundItem[]
   LostItem      LostItem[]
   Comment       Comment[]
-  points        Points[]                   // ← NEW
+  points        Points[] 
+  loginLogs     LoginLog[]                  
 
   @@map("users")
 }
@@ -259,6 +260,21 @@ model Feedback {
   updatedAt   DateTime       @updatedAt
 
   @@map("feedbacks")
+}
+
+model LoginLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  username  String   @default("")
+  email     String   @default("")
+  ipAddress String   @default("")
+  userAgent String   @default("")
+  success   Boolean  @default(false)
+  reason    String   @default("")
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("loginLogs")
 }
 
 enum status {

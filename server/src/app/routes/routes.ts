@@ -33,6 +33,17 @@ import {
   getCommHubStats,
 } from "../utils/communicationController";
 
+import {
+  getSecurityStats,
+  getLoginLogs,
+  clearOldLogs,
+  getAccessControlData,
+  getPrivacyStats,
+  exportUserData,
+  purgeDeletedUsers,
+  getComplianceReport,
+} from "../utils/securityController";
+
 const router = express.Router();
 
 ////////////////////////////////////////////////// user //////////////////////////////////////////////
@@ -147,5 +158,20 @@ router.get("/admin/feedback", auth(), getFeedbacks);                    // admin
 router.put("/admin/feedback/:id/status", auth(), updateFeedbackStatus); // admin only
 router.delete("/admin/feedback/:id", auth(), deleteFeedback);           // admin only
  
+// Security Monitor
+router.get("/admin/security/stats",      auth(), getSecurityStats);
+router.get("/admin/security/logs",       auth(), getLoginLogs);
+router.delete("/admin/security/logs",    auth(), clearOldLogs);
+ 
+// Access Control
+router.get("/admin/security/access-control", auth(), getAccessControlData);
+ 
+// Data Privacy
+router.get("/admin/security/privacy",    auth(), getPrivacyStats);
+router.get("/admin/security/export",     auth(), exportUserData);
+router.get("/admin/security/purge-check", auth(), purgeDeletedUsers);
+ 
+// Compliance
+router.get("/admin/security/compliance", auth(), getComplianceReport);
 
 export default router;

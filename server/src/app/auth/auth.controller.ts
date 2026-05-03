@@ -1,27 +1,53 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import sendResponse from "../global/response";
 import { StatusCodes } from "http-status-codes";
 import { authServices } from "./auth.service";
+import { logLoginAttempt, getClientIp } from "../utils/securityController"; 
 import { TLogin } from "../global/interface";
 
-const login = async (req: Request, res: Response) => {
+const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const { email, password, username } = req.body;
 
-    const user: TLogin = req.body;
-    const result = await authServices.loginUser(user);
-    sendResponse(res, {
-        statusCode: StatusCodes.OK,
-        success: true,
-        message: 'User logged in successfully',
-        data: result,
-      });
-  } catch (error: any) {
-    sendResponse(res, {
-      statusCode: StatusCodes.BAD_REQUEST,
-      success: false,
-      message: error?.message,
-      data: null,
+    // loginUser expects { username: <email or username>, password }
+    const user = await authServices.loginUser({
+      username: email || username, // ← pass as "username" key
+      password,
     });
+
+    try {
+      await logLoginAttempt({
+        userId:    user.id,
+        username:  user.username,
+        email:     user.email,
+        ipAddress: getClientIp(req),
+        userAgent: req.headers["user-agent"] || "",
+        success:   true,
+      });
+    } catch (logErr) {
+      console.error("[LoginLog] Failed to log success:", logErr);
+    }
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success:    true,
+      message:    "Login successful",
+      data:       user,
+    });
+  } catch (error: any) {
+    try {
+      await logLoginAttempt({
+        email:     req.body?.email || req.body?.username || "",
+        ipAddress: getClientIp(req),
+        userAgent: req.headers["user-agent"] || "",
+        success:   false,
+        reason:    error.message,
+      });
+    } catch (logErr) {
+      console.error("[LoginLog] Failed to log failure:", logErr);
+    }
+
+    next(error);
   }
 };
 const newPasswords = async (req: Request, res: Response) => {

@@ -4,7 +4,8 @@ import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
-  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, FaChevronDown, FaChartBar, FaBullhorn,
+  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, 
+  FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt,
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -14,6 +15,7 @@ import {
   useGetAllClaimsQuery,
   useGetFoundItemsQuery,
   useGetLostItemsQuery,
+  useGetSecurityStatsQuery,
 } from "../redux/api/api";
 
 interface DashboardLayoutProps { children: React.ReactNode; }
@@ -42,6 +44,8 @@ const menuItems = [
   // Student Management
   { title: "Students", icon: FaUsers, path: "/dashboard/students" },
   { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
+
+  { title: "Security", icon: FaShieldAlt, path: "/dashboard/security" },
   // Administration
   { title: "Users", icon: FaUsers, path: "/dashboard/users" },
   { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
@@ -62,6 +66,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/users": { title: "Users", subtitle: "View and manage all registered system users." },
   "/dashboard/categories": { title: "Categories", subtitle: "Create and organize item categories for better sorting." },
   "/dashboard/settings": { title: "Settings", subtitle: "Configure system preferences and account settings." },
+  "/dashboard/security": { title: "Security", subtitle: "Monitor login activity, access control, and compliance reports." },
 };
 
 const timeAgo = (dateStr: string) => {
