@@ -142,13 +142,13 @@ const Banner = () => {
             <div key={currentSlide} className="flex flex-col justify-center pt-2 lg:pt-8">
 
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 py-1 px-3 mb-4 text-[10px] font-semibold bg-blue-600/20 border border-blue-500/30 rounded-full text-blue-300 uppercase tracking-widest w-fit">
+              <div className="inline-flex items-center gap-2 py-1 px-3 mb-3 lg:mb-4 text-[10px] font-semibold bg-blue-600/20 border border-blue-500/30 rounded-full text-blue-300 uppercase tracking-widest w-fit">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                 {s.badge}
               </div>
 
-              {/* Heading */}
-              <h1 className="mb-3 text-[1.75rem] sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.15] text-white">
+              {/* Heading — matches FAQ/Services mobile scale */}
+              <h1 className="mb-2 lg:mb-3 text-2xl sm:text-3xl lg:text-5xl font-black tracking-tight leading-tight lg:leading-[1.15] text-white">
                 {s.title}
                 <br />
                 <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
@@ -156,10 +156,10 @@ const Banner = () => {
                 </span>
               </h1>
 
-              <div className="w-12 h-[3px] bg-gradient-to-r from-blue-500 to-cyan-400 mb-4 rounded-full" />
+              <div className="w-12 h-[3px] bg-gradient-to-r from-blue-500 to-cyan-400 mb-3 lg:mb-4 rounded-full" />
 
-              {/* Description — clamped on mobile */}
-              <p className="mb-5 text-sm lg:text-lg font-light text-gray-400 max-w-lg leading-relaxed line-clamp-3 lg:line-clamp-none">
+              {/* Description */}
+              <p className="mb-4 lg:mb-5 text-sm lg:text-lg font-light text-gray-400 max-w-lg leading-relaxed line-clamp-3 lg:line-clamp-none text-justify">
                 {s.description}
               </p>
 
@@ -169,7 +169,7 @@ const Banner = () => {
               </div>
 
               {/* Buttons */}
-              <div className="flex flex-row gap-2 mb-5 max-w-lg">
+              <div className="flex flex-row gap-2 mb-4 lg:mb-5 max-w-lg">
                 <a href={s.primaryButton.href}
                   className="flex-1 inline-flex items-center justify-center bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50 text-white font-semibold py-2.5 px-3 rounded-lg transition-all duration-300 hover:-translate-y-0.5 text-xs sm:py-3 sm:px-5 sm:text-sm whitespace-nowrap">
                   {s.primaryButton.text}
