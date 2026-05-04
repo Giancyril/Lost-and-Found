@@ -33,22 +33,25 @@ interface Notification {
 
 const menuItems = [
   { title: "Overview", icon: FaTachometerAlt, path: "/dashboard", exact: true },
+
   // Item Management
   { title: "Lost Items", icon: FaExclamationTriangle, path: "/dashboard/lost-items" },
   { title: "Found Items", icon: FaSearch, path: "/dashboard/found-items" },
   { title: "Claims", icon: FaClipboardList, path: "/dashboard/claims" },
   { title: "Archive Log", icon: FaArchive, path: "/dashboard/archive" },
+
   // Insights
   { title: "Analytics", icon: FaChartLine, path: "/dashboard/analytics" },
   { title: "Heatmap", icon: FaMapMarkedAlt, path: "/dashboard/heatmap" },
-  { title: "Commmunication", icon: FaBullhorn, path: "/dashboard/comm-hub" },
+  { title: "Communication", icon: FaBullhorn, path: "/dashboard/comm-hub" },
   { title: "Content Moderation", icon: FaFlag, path: "/dashboard/moderation" },
+
   // Student Management
   { title: "Students", icon: FaUserGraduate, path: "/dashboard/students" },
-  { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
 
+  // Administration - Ordered for Professional Workflow
+  { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
   { title: "Security", icon: FaShieldAlt, path: "/dashboard/security" },
-  // Administration
   { title: "Accounts", icon: FaUserShield, path: "/dashboard/users" },
   { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
   { title: "Settings", icon: FaCog, path: "/dashboard/settings" },

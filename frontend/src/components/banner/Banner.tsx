@@ -88,7 +88,7 @@ const Banner = () => {
                 <p className="text-gray-500 text-xs truncate">{item.date?.split("T")[0]} · {item.location}</p>
               </div>
               {item.isClaimed ? (
-                <span className="ml-2 shrink-0 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20"> Claimed</span>
+                <span className="ml-2 shrink-0 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20">Claimed</span>
               ) : (
                 <span className="ml-2 shrink-0 text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">Available</span>
               )}
@@ -135,17 +135,20 @@ const Banner = () => {
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative z-10 px-4 sm:px-6 lg:px-16 mx-auto max-w-7xl w-full py-12 lg:py-0 lg:min-h-[calc(100vh-64px)] lg:flex lg:items-center">
+        <div className="relative z-10 px-4 sm:px-6 lg:px-16 mx-auto max-w-7xl w-full py-8 lg:py-0 lg:min-h-[calc(100vh-64px)] lg:flex lg:items-center">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start w-full">
 
             {/* Left content */}
-            <div key={currentSlide} className="flex flex-col justify-center pt-4 lg:pt-8">
-              <div className="inline-flex items-center gap-2 py-1.5 px-4 mb-5 text-xs font-semibold bg-blue-600/20 border border-blue-500/30 rounded-full text-blue-300 uppercase tracking-widest w-fit">
+            <div key={currentSlide} className="flex flex-col justify-center pt-2 lg:pt-8">
+
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 py-1 px-3 mb-4 text-[10px] font-semibold bg-blue-600/20 border border-blue-500/30 rounded-full text-blue-300 uppercase tracking-widest w-fit">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                 {s.badge}
               </div>
 
-              <h1 className="mb-4 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white">
+              {/* Heading */}
+              <h1 className="mb-3 text-[1.75rem] sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.15] text-white">
                 {s.title}
                 <br />
                 <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
@@ -153,41 +156,43 @@ const Banner = () => {
                 </span>
               </h1>
 
-              <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 mb-5 rounded-full" />
+              <div className="w-12 h-[3px] bg-gradient-to-r from-blue-500 to-cyan-400 mb-4 rounded-full" />
 
-              <p className="mb-6 text-base lg:text-lg font-light text-gray-400 max-w-lg leading-relaxed">
+              {/* Description — clamped on mobile */}
+              <p className="mb-5 text-sm lg:text-lg font-light text-gray-400 max-w-lg leading-relaxed line-clamp-3 lg:line-clamp-none">
                 {s.description}
               </p>
 
-              {/* ── Points Teaser Banner — same max-w as buttons ── */}
+              {/* Points Teaser Banner */}
               <div className="mb-3 max-w-lg">
                 <PointsTeaserBanner />
               </div>
 
-              {/* ── Buttons — same max-w as banner ── */}
-              <div className="flex flex-row gap-3 mb-6 max-w-lg">
+              {/* Buttons */}
+              <div className="flex flex-row gap-2 mb-5 max-w-lg">
                 <a href={s.primaryButton.href}
-                  className="flex-1 inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold py-3 px-5 rounded-lg transition-all duration-300 hover:-translate-y-0.5 text-sm sm:text-base">
+                  className="flex-1 inline-flex items-center justify-center bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50 text-white font-semibold py-2.5 px-3 rounded-lg transition-all duration-300 hover:-translate-y-0.5 text-xs sm:py-3 sm:px-5 sm:text-sm whitespace-nowrap">
                   {s.primaryButton.text}
                 </a>
                 <a href={s.secondaryButton.href}
-                  className="flex-1 inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold py-3 px-5 rounded-lg transition-all duration-300 hover:-translate-y-0.5 text-sm sm:text-base">
+                  className="flex-1 inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold py-2.5 px-3 rounded-lg transition-all duration-300 hover:-translate-y-0.5 text-xs sm:py-3 sm:px-5 sm:text-sm whitespace-nowrap">
                   {s.secondaryButton.text}
                 </a>
               </div>
 
-              <div className="flex items-center gap-3">
+              {/* Slide dots */}
+              <div className="flex items-center gap-2.5 mb-2">
                 {slides.map((_, i) => (
                   <button key={i} onClick={() => setCurrentSlide(i)}
                     className={`transition-all duration-300 rounded-full ${
-                      i === currentSlide ? "w-8 h-2 bg-blue-400" : "w-2 h-2 bg-gray-600 hover:bg-gray-400"
+                      i === currentSlide ? "w-7 h-1.5 bg-blue-400" : "w-1.5 h-1.5 bg-gray-600 hover:bg-gray-400"
                     }`}
                   />
                 ))}
               </div>
             </div>
 
-            {/* Right panel — desktop */}
+            {/* Right panel — desktop only */}
             <div className="hidden lg:flex flex-col gap-4 pt-8 pb-8">
               <RecentLostPanel />
               <RecentFoundPanel />
@@ -197,11 +202,11 @@ const Banner = () => {
           </div>
         </div>
 
-        {/* Mobile panels */}
-        <div className="lg:hidden px-4 sm:px-6 pb-10 space-y-4 relative z-10">
+        {/* Mobile panels — stats first, then lost/found */}
+        <div className="lg:hidden px-4 sm:px-6 pb-10 space-y-3 relative z-10">
+          <StatsRow />
           <RecentLostPanel />
           <RecentFoundPanel />
-          <StatsRow />
         </div>
       </section>
     </>
