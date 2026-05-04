@@ -42,9 +42,9 @@ const Faq = () => {
   ];
 
   return (
-    <div className="py-16 lg:py-20 relative overflow-hidden bg-gray-950">
+    <div className="py-10 lg:py-20 relative overflow-hidden bg-gray-950">
 
-      {/* ── Background — exact match to Banner ── */}
+      {/* Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-gray-950 to-gray-900" />
         <div
@@ -57,38 +57,40 @@ const Faq = () => {
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl" />
       </div>
 
-      {/* ── Content ── */}
+      {/* Content */}
       <div className="relative z-10 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
-        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12">
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6 lg:gap-12">
 
           {/* Left — heading */}
           <div className="flex flex-col text-left lg:basis-1/2">
-            <p className="inline-block font-semibold text-blue-400 mb-4">FAQ</p>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
+            <p className="inline-block font-semibold text-blue-400 mb-2 lg:mb-4 text-sm lg:text-base">FAQ</p>
+            <h2 className="text-2xl sm:text-3xl lg:text-5xl font-extrabold text-white mb-2 lg:mb-4 leading-tight">
               Frequently Asked{" "}
               <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 Questions
               </span>
             </h2>
-            <p className="text-gray-400 text-lg">
+            <p className="text-gray-400 text-sm lg:text-lg leading-relaxed text-justify">
               Everything you need to know about the SAS Lost & Found system.
             </p>
           </div>
 
           {/* Right — accordion */}
-          <ul className="lg:basis-1/2 space-y-2">
+          <ul className="lg:basis-1/2 space-y-1.5 lg:space-y-2">
             {faqs.map((faq, index) => (
               <li
                 key={index}
                 className="bg-white/5 border border-white/10 rounded-lg overflow-hidden backdrop-blur-sm"
               >
                 <button
-                  className="relative flex gap-4 items-center w-full p-6 text-base font-semibold text-left hover:bg-white/5 transition-all duration-200"
+                  className="relative flex gap-3 items-center w-full px-4 py-3 lg:p-6 text-sm lg:text-base font-semibold text-left hover:bg-white/5 transition-all duration-200"
                   onClick={() => toggleFaq(index)}
                   aria-expanded={expandedIndex === index}
                 >
-                  <span className="flex-1 text-white text-left">{faq.question}</span>
-                  <div className="text-blue-400 shrink-0">
+                  <span className="flex-1 text-white text-left text-sm lg:text-base leading-snug">
+                    {faq.question}
+                  </span>
+                  <div className="text-blue-400 shrink-0 text-xs lg:text-sm">
                     {expandedIndex === index ? <FaMinus /> : <FaPlus />}
                   </div>
                 </button>
@@ -98,11 +100,13 @@ const Faq = () => {
                   }`}
                 >
                   <div
-                    className={`px-6 pb-6 transform transition-transform duration-500 ${
+                    className={`px-4 pb-4 lg:px-6 lg:pb-6 transform transition-transform duration-500 ${
                       expandedIndex === index ? "translate-y-0" : "-translate-y-4"
                     }`}
                   >
-                    <div className="text-gray-400 leading-relaxed">{faq.answer}</div>
+                    <div className="text-gray-400 text-xs lg:text-sm leading-relaxed text-justify">
+                      {faq.answer}
+                    </div>
                   </div>
                 </div>
               </li>
