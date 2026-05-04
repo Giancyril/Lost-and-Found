@@ -178,9 +178,65 @@ A dedicated moderation layer for managing user-generated content, enforcing comm
 - **Web Scanner Stack**: jsQR (QR codes) + QuaggaJS (1D barcodes) + native BarcodeDetector fallback for high-performance scanning
 - **browser-image-compression** for client-side image optimization before upload
 - **Socket.io Client** for real-time updates
+### Other
 - **React Icons** for enhanced UI components
+- **Framer Motion** for smooth UI transitions and animations
+- **Lucide React** for consistent iconography
 
-### Testing
+## System Architecture
+
+The system follows a modern full-stack architecture with a clear separation between the client and server layers, utilizing a modular approach for scalability and maintainability.
+
+```mermaid
+graph TD
+    subgraph Client ["Frontend (React/Vite)"]
+        UI["UI Components (Tailwind/Flowbite)"]
+        State["State Management (Redux/RTK Query)"]
+        Hooks["Custom Hooks (Verification/Scanner)"]
+    end
+
+    subgraph Server ["Backend (Node.js/Express)"]
+        Routes["Express Routes"]
+        Middle["Middlewares (Auth/Moderation)"]
+        Modules["Feature Modules (Items/Claims/Points)"]
+        Prisma["Prisma ORM"]
+    end
+
+    subgraph Storage ["External & Storage"]
+        DB[(PostgreSQL/Supabase)]
+        Sheets[(Google Sheets Masterlist)]
+        AI[Google Gemini AI]
+        Mail[SendGrid/SMTP]
+    end
+
+    UI <--> State
+    State <--> Routes
+    Routes --> Middle
+    Middle --> Modules
+    Modules <--> Prisma
+    Prisma <--> DB
+    Modules <--> Sheets
+    Modules <--> AI
+    Modules <--> Mail
+```
+
+## Module Dependency
+
+The application is structured into interconnected modules that handle specific business logic while sharing core utilities and state.
+
+### Backend Dependencies
+*   **Auth Module**: Foundation for all protected routes; verifies JWT and manages role-based access.
+*   **Item Module (Lost/Found)**: Core module; depends on **Category Module** and triggers **Matching Module** and **Sheets Logger** on submission.
+*   **Claim Module**: Depends on **Item Module** and **User Module**; logs changes to **Audit Log** and triggers **Points Module**.
+*   **Moderation Module**: Intercepts **Comment Module** submissions; manages user warnings and appeals.
+*   **Matching Module**: Background service; queries **LostItem** and **FoundItem** to find potential pairs and sends notifications via **Email Service**.
+
+### Frontend Dependencies
+*   **Redux Store**: Central source of truth; modules like `auth`, `api`, and `ui` depend on this for synchronized state.
+*   **RTK Query (API)**: All page components depend on this for data fetching, caching, and automatic re-validation.
+*   **Scanner Module**: Standalone utility; utilized by **ReportFoundItem** to quickly resolve student identities.
+*   **Dashboard Module**: Composite module; integrates **Analytics**, **Moderation**, **Communication**, and **Security** sub-modules.
+
 - **Jest** for backend testing
 - **Vitest** for frontend testing
 - **React Testing Library** for component testing
