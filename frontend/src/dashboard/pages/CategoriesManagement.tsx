@@ -27,7 +27,8 @@ const getCategoryIcon = (name: string) => {
   if (n.includes("cloth") || n.includes("shirt") || n.includes("wear") || n.includes("uniform")) return { icon: <FaTshirt size={13} />, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" };
   if (n.includes("accessor") || n.includes("jewel") || n.includes("bracelet")) return { icon: <FaGem size={13} />, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/20" };
   if (n.includes("book") || n.includes("stationery") || n.includes("pen")) return { icon: <FaBook size={13} />, color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" };
-  if (n.includes("id") || n.includes("card") || n.includes("document") || n.includes("license")) return { icon: <FaIdCard size={13} />, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" };
+  if (n === "id" || n.includes("card") || n.includes("license") || n === "identification") return { icon: <FaIdCard size={13} />, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" };
+  if (n === "documents" || n === "document") return { icon: <FaBook size={13} />, color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" };
   if (n.includes("phone") || n.includes("mobile") || n.includes("cellphone")) return { icon: <FaMobileAlt size={13} />, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" };
   if (n.includes("laptop") || n.includes("computer")) return { icon: <FaLaptop size={13} />, color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" };
   if (n.includes("tablet")) return { icon: <FaTabletAlt size={13} />, color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" };

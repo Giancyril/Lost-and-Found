@@ -24,6 +24,16 @@ const updateItemCategory = async (id: string, data: Partial<ItemCategory>) => {
 };
 
 const deleteItemCategory = async (id: string) => {
+  // Check if there are any lost or found items using this category
+  const foundItemsCount = await prisma.foundItem.count({ where: { categoryId: id } });
+  const lostItemsCount = await prisma.lostItem.count({ where: { categoryId: id } });
+
+  if (foundItemsCount > 0 || lostItemsCount > 0) {
+    throw new Error(
+      `Cannot delete category: ${foundItemsCount} found item(s) and ${lostItemsCount} lost item(s) are still using it. Please reassign or delete these items first.`
+    );
+  }
+
   const result = await prisma.itemCategory.delete({
     where: { id },
   });

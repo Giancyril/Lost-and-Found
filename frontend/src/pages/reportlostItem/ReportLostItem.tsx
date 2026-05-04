@@ -55,6 +55,18 @@ const CATEGORY_CONFIG = {
     description: 'Please select a color to auto-generate a detailed description. ',
     colors: ['Black', 'Brown', 'Silver', 'Gold', 'Blue', 'White', 'Rose Gold', 'Other'],
     conditions: ['Scratches', 'Stickers', 'Engravings', 'None']
+  },
+  id: {
+    itemName: 'ID',
+    description: 'Identification Card',
+    colors: [],
+    conditions: []
+  },
+  documents: {
+    itemName: 'Document',
+    description: 'Document',
+    colors: [],
+    conditions: []
   }
 };
 
@@ -69,7 +81,8 @@ const getCategoryIcon = (name: string) => {
   if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod")) return <FaHeadphones size={10} className="text-green-400" />;
   if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass")) return <FaGlasses size={10} className="text-teal-400" />;
   if (n.includes("book") || n.includes("stationery") || n.includes("notebook")) return <FaBook size={10} className="text-yellow-400" />;
-  if (n.includes("id") || n.includes("card") || n.includes("document"))     return <FaIdCard     size={10} className="text-blue-400" />;
+  if (n === "id" || n.includes("card") || n === "identification")              return <FaIdCard     size={10} className="text-blue-400" />;
+  if (n === "documents" || n === "document" || n.includes("paper"))           return <FaBook       size={10} className="text-yellow-400" />;
   if (n.includes("umbrella"))                                                return <FaUmbrella   size={10} className="text-blue-400" />;
   if (n.includes("cloth") || n.includes("shirt") || n.includes("uniform") || n.includes("wear")) return <FaTshirt size={10} className="text-purple-400" />;
   if (n.includes("camera") || n.includes("photo"))                          return <FaCamera     size={10} className="text-violet-400" />;
@@ -477,7 +490,7 @@ const ReportLostItem = () => {
     if (step >= 2) return;
     const fields = step === 0 
       ? ["reporterName", "schoolEmail"] 
-      : ["lostItemName", "description", "location", ...(selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] ? ["color"] : []), ...(selectedColor ? ["condition"] : [])];
+      : ["lostItemName", "description", "location", ...(selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.colors?.length > 0 ? ["color"] : []), ...(selectedColor && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 ? ["condition"] : [])];
     const valid = await trigger(fields as any);
     if (step === 1) { setCategoryTouched(true); if (!selectedMenucategoryId || !valid) return; }
     if (valid) setStep((s) => s + 1);
@@ -770,7 +783,7 @@ const ReportLostItem = () => {
                     </Field>
 
                     {/* Color dropdown for specific categories */}
-                    {selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && (
+                    {selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.length > 0 && (
                       <Field label="Color" required error={errors.color?.message as string} icon={<IconTag />}>
                         <Controller
                           name="color"
@@ -826,7 +839,7 @@ const ReportLostItem = () => {
                     )}
                     
                     {/* Condition dropdown */}
-                    {selectedColor && (
+                    {selectedColor && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 && (
                       <Field label="Condition" required error={errors.condition?.message as string} icon={<IconTag />}>
                         <Controller
                           name="condition"
@@ -1015,8 +1028,8 @@ const ReportLostItem = () => {
                         step === 0 
                           ? Boolean(!reporterName || !schoolEmail || !!errors.reporterName || !!errors.schoolEmail)
                           : Boolean(!lostItemName || !location || !description || !selectedMenucategoryId || !!errors.lostItemName || !!errors.location || !!errors.description || 
-                             (selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && (!color || !!errors.color)) || 
-                             (selectedColor && (!condition || !!errors.condition)))
+                             (selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.colors?.length > 0 && (!color || !!errors.color)) || 
+                             (selectedColor && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 && (!condition || !!errors.condition)))
                       }
                       className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all duration-200 shadow-lg">
                       Continue
