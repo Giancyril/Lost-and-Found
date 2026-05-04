@@ -9,29 +9,31 @@ datasource db {
 }
 
 model User {
-  name          String          @default("")
-  id            String          @id @default(uuid())
-  username      String          @unique
-  email         String          @unique
-  activated     Boolean         @default(true)
-  password      String
-  role          userRole        @default(USER)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  userImg       String          @default("")
-  isDeleted     Boolean         @default(false)
-  deletedAt     DateTime?
-  schoolId      String?         @unique    
-  course        String?  
-  yearLevel     String?  
-  totalPoints   Int             @default(0) 
-  ClaimAuditLog ClaimAuditLog[]
-  claim         Claim[]
-  foundItem     FoundItem[]
-  LostItem      LostItem[]
-  Comment       Comment[]
-  points        Points[] 
-  loginLogs     LoginLog[]                  
+  name              String              @default("")
+  id                String              @id @default(uuid())
+  username          String              @unique
+  email             String              @unique
+  activated         Boolean             @default(true)
+  password          String
+  role              userRole            @default(USER)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  userImg           String              @default("")
+  isDeleted         Boolean             @default(false)
+  deletedAt         DateTime?
+  schoolId          String?             @unique
+  course            String?
+  yearLevel         String?
+  totalPoints       Int                 @default(0)
+  ClaimAuditLog     ClaimAuditLog[]
+  claim             Claim[]
+  foundItem         FoundItem[]
+  LostItem          LostItem[]
+  Comment           Comment[]
+  points            Points[]
+  loginLogs         LoginLog[]
+  userWarnings      UserWarning[]
+  moderationAppeals ModerationAppeal[]
 
   @@map("users")
 }
@@ -177,28 +179,28 @@ model MatchNotification {
 }
 
 model Comment {
-  id              String        @id @default(uuid())
+  id              String            @id @default(uuid())
   itemId          String
   itemType        ItemType
   userId          String?
   content         String
-  isAnonymous     Boolean       @default(false)
-  helpfulCount    Int           @default(0)
-  status          CommentStatus @default(PENDING)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  isAnonymous     Boolean           @default(false)
+  helpfulCount    Int               @default(0)
+  status          CommentStatus     @default(PENDING)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
   location        String?
   rejectionReason String?
   parentCommentId String?
-
-  parent  Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
-  replies Comment[] @relation("CommentReplies")
-  user    User?     @relation(fields: [userId], references: [id])
+  parent          Comment?          @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies         Comment[]         @relation("CommentReplies")
+  user            User?             @relation(fields: [userId], references: [id])
+  contentReports  ContentReport[]
+  appeals         ModerationAppeal[]
 
   @@map("comments")
 }
 
-// ← NEW
 model Points {
   id        String   @id @default(uuid())
   userId    String
@@ -212,52 +214,52 @@ model Points {
 }
 
 model Announcement {
-  id          String             @id @default(uuid())
-  title       String
-  message     String
-  type        AnnouncementType   @default(INFO)
-  target      AnnouncementTarget @default(ALL)
-  sentByName  String             @default("Admin")
-  sentById    String?
-  emailSent   Boolean            @default(false)
-  emailCount  Int                @default(0)
-  isDeleted   Boolean            @default(false)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id         String             @id @default(uuid())
+  title      String
+  message    String
+  type       AnnouncementType   @default(INFO)
+  target     AnnouncementTarget @default(ALL)
+  sentByName String             @default("Admin")
+  sentById   String?
+  emailSent  Boolean            @default(false)
+  emailCount Int                @default(0)
+  isDeleted  Boolean            @default(false)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
 
   @@map("announcements")
 }
 
 model SupportTicket {
-  id          String        @id @default(uuid())
+  id          String         @id @default(uuid())
   subject     String
   message     String
-  senderName  String        @default("")
-  senderEmail String        @default("")
-  status      TicketStatus  @default(OPEN)
+  senderName  String         @default("")
+  senderEmail String         @default("")
+  status      TicketStatus   @default(OPEN)
   priority    TicketPriority @default(NORMAL)
-  adminReply  String        @default("")
+  adminReply  String         @default("")
   repliedAt   DateTime?
-  repliedBy   String        @default("")
-  isDeleted   Boolean       @default(false)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  repliedBy   String         @default("")
+  isDeleted   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
   @@map("supportTickets")
 }
 
 model Feedback {
-  id          String         @id @default(uuid())
-  senderName  String         @default("")
-  senderEmail String         @default("")
+  id          String           @id @default(uuid())
+  senderName  String           @default("")
+  senderEmail String           @default("")
   category    FeedbackCategory @default(GENERAL)
   message     String
   rating      Int?
-  status      FeedbackStatus @default(UNREAD)
-  adminNote   String         @default("")
-  isDeleted   Boolean        @default(false)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  status      FeedbackStatus   @default(UNREAD)
+  adminNote   String           @default("")
+  isDeleted   Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   @@map("feedbacks")
 }
@@ -276,6 +278,57 @@ model LoginLog {
 
   @@map("loginLogs")
 }
+
+// ── Moderation models ─────────────────────────────────────────────────────────
+
+model ContentReport {
+  id         String              @id @default(uuid())
+  commentId  String
+  reason     ReportReason        @default(OTHER)
+  details    String              @default("")
+  reportedBy String              @default("Anonymous")
+  status     ReportStatus        @default(PENDING)
+  resolvedBy String              @default("")
+  resolvedAt DateTime?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  comment    Comment             @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@map("contentReports")
+}
+
+model UserWarning {
+  id        String          @id @default(uuid())
+  userId    String
+  reason    String
+  severity  WarningSeverity @default(LOW)
+  issuedBy  String          @default("Admin")
+  note      String          @default("")
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("userWarnings")
+}
+
+model ModerationAppeal {
+  id          String       @id @default(uuid())
+  commentId   String
+  userId      String?
+  reason      String
+  status      AppealStatus @default(PENDING)
+  adminNote   String       @default("")
+  resolvedBy  String       @default("")
+  resolvedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  comment     Comment      @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("moderationAppeals")
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
 
 enum status {
   PENDING
@@ -338,4 +391,30 @@ enum FeedbackStatus {
   UNREAD
   READ
   RESOLVED
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  INAPPROPRIATE
+  MISINFORMATION
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
+enum WarningSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum AppealStatus {
+  PENDING
+  APPROVED
+  DENIED
 }
