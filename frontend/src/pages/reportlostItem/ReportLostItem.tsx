@@ -766,7 +766,7 @@ const ReportLostItem = () => {
                     <Field label="Description" required error={errors.description?.message as string} icon={<IconText />}>
                       <textarea {...register("description", { required: "Description is required" })}
                         rows={2} className={`${inputCls} resize-none`}
-                        placeholder="Describe the item color, brand, size, etc." />
+                        placeholder=" " />
                     </Field>
 
                     {/* Color dropdown for specific categories */}

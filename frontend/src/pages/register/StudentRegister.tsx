@@ -79,7 +79,7 @@ export const StudentRegister: React.FC = () => {
 
       if (!res.ok) {
         // studentService throws NOT_FOUND if schoolId isn't in masterlist
-        setError(json.message || 'School ID not found in masterlist. Contact your registrar.');
+        setError(json.message || 'School ID not found in masterlist. Please try again later.');
         return;
       }
 
@@ -93,7 +93,7 @@ export const StudentRegister: React.FC = () => {
       const checkJson = await checkRes.json();
 
       if (checkJson?.data?.alreadyRegistered) {
-        setError('An account with this School ID already exists. Please sign in.');
+        setError('School ID already registered. Please sign in.');
         return;
       }
 

@@ -7,7 +7,7 @@ const medalLabel = (i: number) =>
   i === 0 ? "🥇 1st Place" : i === 1 ? "🥈 2nd Place" : i === 2 ? "🥉 3rd Place" : null;
 
 const rankColor = (i: number) =>
-  i === 0 ? "text-yellow-400" : i === 1 ? "text-gray-300" : i === 2 ? "text-amber-600" : "text-gray-600";
+  i === 0 ? "text-blue-400" : i === 1 ? "text-gray-300" : i === 2 ? "text-blue-600" : "text-gray-600";
 
 const rankBg = (i: number, isMe: boolean) => {
   if (isMe) return "bg-blue-500/10 border-blue-500/25";
@@ -69,7 +69,7 @@ export default function StudentLeaderboard() {
               <span className="text-yellow-400 font-bold">{myPoints} pts</span>
             </p>
             <p className="text-gray-500 text-xs mt-0.5">
-              Report found items to earn more points and climb the ranks.
+              Report found items to earn points and rank up.
             </p>
           </div>
         </div>
@@ -157,8 +157,8 @@ export default function StudentLeaderboard() {
                       )}
                     </div>
                     <div className="col-span-2 flex items-center justify-end gap-1.5">
-                      <FaStar size={11} className="text-yellow-400" />
-                      <span className="text-yellow-400 font-black text-sm">{u.totalPoints}</span>
+                      <FaStar size={11} className="text-blue-400" />
+                      <span className="text-blue-400 font-black text-sm">{u.totalPoints}</span>
                       <span className="text-gray-600 text-xs">pts</span>
                     </div>
                   </div>
@@ -201,8 +201,8 @@ export default function StudentLeaderboard() {
 
                   {/* Points — shrink-0 so it never wraps */}
                   <div className="flex items-center gap-1 shrink-0">
-                    <FaStar size={10} className="text-yellow-400" />
-                    <span className="text-yellow-400 font-black text-xs">{u.totalPoints}</span>
+                    <FaStar size={10} className="text-blue-400" />
+                    <span className="text-blue-400 font-black text-xs">{u.totalPoints}</span>
                     <span className="text-gray-600 text-[10px]">pts</span>
                   </div>
                 </div>

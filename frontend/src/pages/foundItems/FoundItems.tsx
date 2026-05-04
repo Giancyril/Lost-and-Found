@@ -72,7 +72,7 @@ const CATEGORY_CONFIG = {
   },
   money: {
     itemName: 'Money',
-    description: '',
+    description: 'Money',
     colors: [],
     conditions: []
   },
@@ -837,16 +837,18 @@ const watchedSchoolEmail  = watch("schoolEmail");
     const categoryKey = addSelectedMenu.toLowerCase();
     const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
     if (!config || !colorValue) return;
+    const isOther = colorValue === "Other";
+    const c = colorValue.toLowerCase();
     let colorDescription = "";
     switch (categoryKey) {
-      case "bags":        colorDescription = `A ${colorValue.toLowerCase()} bag was found. `; break;
-      case "calculators": colorDescription = `A ${colorValue.toLowerCase()} calculator was found. `; break;
-      case "keys":        colorDescription = `Some ${colorValue.toLowerCase()} keys were found. `; break;
-      case "umbrellas":   colorDescription = `A ${colorValue.toLowerCase()} umbrella was found. `; break;
-      case "watches":     colorDescription = `A ${colorValue.toLowerCase()} watch was found. `; break;
-      case "money":       colorDescription = `${colorValue} was found. `; break;
-      case "device":      colorDescription = `A ${colorValue.toLowerCase()} device was found. `; break;
-      default:            colorDescription = `A ${colorValue.toLowerCase()} ${config.itemName.toLowerCase()} was found.`;
+      case "bags":        colorDescription = isOther ? `A bag of an unspecified color was found. ` : `A ${c} bag was found. `; break;
+      case "calculators": colorDescription = isOther ? `A calculator of an unspecified color was found. ` : `A ${c} calculator was found. `; break;
+      case "keys":        colorDescription = isOther ? `Some keys of an unspecified color were found. ` : `Some ${c} keys were found. `; break;
+      case "umbrellas":   colorDescription = isOther ? `An umbrella of an unspecified color was found. ` : `A ${c} umbrella was found. `; break;
+      case "watches":     colorDescription = isOther ? `A watch of an unspecified color was found. ` : `A ${c} watch was found. `; break;
+      case "money":       colorDescription = `Money was found. `; break;
+      case "device":      colorDescription = isOther ? `A device of an unspecified color was found. ` : `A ${c} device was found. `; break;
+      default:            colorDescription = isOther ? `A ${config.itemName.toLowerCase()} of an unspecified color was found.` : `A ${c} ${config.itemName.toLowerCase()} was found.`;
     }
     addSetValue("description", colorDescription, { shouldDirty: true });
   };
@@ -856,54 +858,68 @@ const watchedSchoolEmail  = watch("schoolEmail");
     const categoryKey = addSelectedMenu.toLowerCase();
     const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
     if (!config || !addSelectedColor || !conditionValue) return;
+    const isOther = addSelectedColor === "Other";
+    const colorPrefix = isOther ? "" : `${addSelectedColor.toLowerCase()} `;
     let enhancedDescription = "";
     switch (categoryKey) {
-      case "bags":
-        if (conditionValue === "Scratches")       enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with scratches was found. `;
-        else if (conditionValue === "Stickers")   enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with stickers was found. `;
-        else if (conditionValue === "Keychains")  enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag with keychains was found. `;
-        else                                      enhancedDescription = `A ${addSelectedColor.toLowerCase()} bag in good condition was found. `;
+      case "bags":{
+        const base = isOther ? "A bag" : `A ${addSelectedColor.toLowerCase()} bag`;
+        if (conditionValue === "Scratches")       enhancedDescription = `${base} with scratches was found. `;
+        else if (conditionValue === "Stickers")   enhancedDescription = `${base} with stickers was found. `;
+        else if (conditionValue === "Keychains")  enhancedDescription = `${base} with keychains was found. `;
+        else                                      enhancedDescription = `${base} in good condition was found. `;
         break;
-      case "calculators":
-        if (conditionValue === "Scratches")       enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with scratches was found. `;
-        else if (conditionValue === "Stickers")   enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with stickers was found. `;
-        else if (conditionValue === "Engravings") enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator with engravings was found. `;
-        else                                      enhancedDescription = `A ${addSelectedColor.toLowerCase()} calculator in good condition was found. `;
+      }
+      case "calculators":{
+        const base = isOther ? "A calculator" : `A ${addSelectedColor.toLowerCase()} calculator`;
+        if (conditionValue === "Scratches")       enhancedDescription = `${base} with scratches was found. `;
+        else if (conditionValue === "Stickers")   enhancedDescription = `${base} with stickers was found. `;
+        else if (conditionValue === "Engravings") enhancedDescription = `${base} with engravings was found. `;
+        else                                      enhancedDescription = `${base} in good condition was found. `;
         break;
-      case "keys":
-        if (conditionValue === "Scratches")       enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with scratches were found. `;
-        else if (conditionValue === "Stickers")   enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with stickers were found. `;
-        else if (conditionValue === "Keychains")  enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys with attached keychains were found. `;
-        else                                      enhancedDescription = `Some ${addSelectedColor.toLowerCase()} keys in good condition were found. `;
+      }
+      case "keys":{
+        const base = isOther ? "Some keys" : `Some ${addSelectedColor.toLowerCase()} keys`;
+        if (conditionValue === "Scratches")       enhancedDescription = `${base} with scratches were found. `;
+        else if (conditionValue === "Stickers")   enhancedDescription = `${base} with stickers were found. `;
+        else if (conditionValue === "Keychains")  enhancedDescription = `${base} with attached keychains were found. `;
+        else                                      enhancedDescription = `${base} in good condition were found. `;
         break;
-      case "umbrellas":
-        if (conditionValue === "Scratches")        enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with scratches was found. `;
-        else if (conditionValue === "Stickers")    enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with stickers was found. `;
-        else if (conditionValue === "Bent Frame")  enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella with a bent frame was found. `;
-        else                                       enhancedDescription = `A ${addSelectedColor.toLowerCase()} umbrella in good condition was found. `;
+      }
+      case "umbrellas":{
+        const base = isOther ? "An umbrella" : `A ${addSelectedColor.toLowerCase()} umbrella`;
+        if (conditionValue === "Scratches")        enhancedDescription = `${base} with scratches was found. `;
+        else if (conditionValue === "Stickers")    enhancedDescription = `${base} with stickers was found. `;
+        else if (conditionValue === "Bent Frame")  enhancedDescription = `${base} with a bent frame was found. `;
+        else                                       enhancedDescription = `${base} in good condition was found. `;
         break;
-      case "watches":
-        if (conditionValue === "Scratches")        enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with scratches was found. `;
-        else if (conditionValue === "Stickers")    enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with stickers was found. `;
-        else if (conditionValue === "Engravings")  enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch with engravings was found. `;
-        else                                       enhancedDescription = `A ${addSelectedColor.toLowerCase()} watch in good condition was found. `;
+      }
+      case "watches":{
+        const base = isOther ? "A watch" : `A ${addSelectedColor.toLowerCase()} watch`;
+        if (conditionValue === "Scratches")        enhancedDescription = `${base} with scratches was found. `;
+        else if (conditionValue === "Stickers")    enhancedDescription = `${base} with stickers was found. `;
+        else if (conditionValue === "Engravings")  enhancedDescription = `${base} with engravings was found. `;
+        else                                       enhancedDescription = `${base} in good condition was found. `;
         break;
+      }
       case "money":
-        if (conditionValue === "Coins")                    enhancedDescription = `${addSelectedColor} in the form of coins was found. `;
-        else if (conditionValue === "Bills")                 enhancedDescription = `${addSelectedColor} in the form of bills was found. `;
-        else if (conditionValue === "Mixed Coins and Bills") enhancedDescription = `${addSelectedColor} in the form of mixed coins and bills was found. `;
-        else if (conditionValue === "Wallet/Purse")         enhancedDescription = `${addSelectedColor} found in a wallet/purse was found. `;
-        else                                                 enhancedDescription = `${addSelectedColor} was found. `;
+        if (conditionValue === "Coins")                    enhancedDescription = `Money in the form of coins was found. `;
+        else if (conditionValue === "Bills")               enhancedDescription = `Money in the form of bills was found. `;
+        else if (conditionValue === "Mixed Coins and Bills") enhancedDescription = `Money in the form of mixed coins and bills was found. `;
+        else if (conditionValue === "Wallet/Purse")        enhancedDescription = `Money found inside a wallet/purse was found. `;
+        else                                               enhancedDescription = `Money was found. `;
         break;
-      case "device":
-        if (conditionValue === "Scratches")       enhancedDescription = `A ${addSelectedColor.toLowerCase()} device with scratches was found. `;
-        else if (conditionValue === "Cracks")     enhancedDescription = `A ${addSelectedColor.toLowerCase()} device with cracks was found. `;
-        else if (conditionValue === "Dents")      enhancedDescription = `A ${addSelectedColor.toLowerCase()} device with dents was found. `;
-        else if (conditionValue === "Stickers")   enhancedDescription = `A ${addSelectedColor.toLowerCase()} device with stickers was found. `;
-        else                                       enhancedDescription = `A ${addSelectedColor.toLowerCase()} device in good condition was found. `;
+      case "device":{
+        const base = isOther ? "A device" : `A ${addSelectedColor.toLowerCase()} device`;
+        if (conditionValue === "Scratches")       enhancedDescription = `${base} with scratches was found. `;
+        else if (conditionValue === "Cracks")     enhancedDescription = `${base} with cracks was found. `;
+        else if (conditionValue === "Dents")      enhancedDescription = `${base} with dents was found. `;
+        else if (conditionValue === "Stickers")   enhancedDescription = `${base} with stickers was found. `;
+        else                                       enhancedDescription = `${base} in good condition was found. `;
         break;
+      }
       default:
-        enhancedDescription = `A ${addSelectedColor.toLowerCase()} ${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()} was found. `;
+        enhancedDescription = `A ${colorPrefix}${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()} was found. `;
     }
     addSetValue("description", enhancedDescription, { shouldDirty: true });
   };

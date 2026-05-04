@@ -25,7 +25,7 @@ const Faq = () => {
         "Go to the Lost Items page and click 'Report Lost Item'. Fill in the details including item description, location it was lost, and date. You'll receive a confirmation email.",
     },
     {
-      question: "I found an item on campus. What should I do?",
+      question: " I found an item. What should I do?",
       answer:
         "You have two options: browse the Lost Items Board to see if the item matches a report, then click 'I Found This Item' on that listing or bring the item directly to the SAS Office",
     },
