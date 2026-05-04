@@ -258,6 +258,56 @@ graph LR
 ## Project Structure
 
 ```
+lost-and-found-main/
+├── server/                 # Backend application
+│   ├── src/
+│   │   ├── api/
+│   │   │   ├── analytics/    # Campus-wide analytics API
+│   │   │   ├── comments/     # Comment system API
+│   │   │   ├── moderation/   # Content moderation API
+│   │   │   ├── support/      # Support tickets API
+│   │   │   ├── feedback/     # Feedback management API
+│   │   │   ├── announcements/# Announcement manager API
+│   │   │   └── security/     # Security monitor & compliance API
+│   │   ├── app/
+│   │   │   ├── modules/    # Feature modules
+│   │   │   │   └── student/  # Student masterlist lookup & ID resolution
+│   │   │   ├── auth/       # Authentication
+│   │   │   ├── midddlewares/ # Express middlewares
+│   │   │   └── utils/      # Utility functions
+│   │   │       ├── moderationController.ts  # Keyword filter, reports, warnings, appeals
+│   │   │       ├── communicationController.ts
+│   │   │       ├── securityController.ts
+│   │   │       └── adminStats.ts
+│   │   └── prisma/         # Database schema
+│   └── package.json
+├── frontend/               # Frontend application
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── scanner/      # WebScannerModal — hybrid jsQR + QuaggaJS + native fallback
+│   │   │   ├── itemMatch/    # ItemMatchSuggestions — live match preview on report form
+│   │   │   ├── reputation/   # User reputation components
+│   │   │   ├── analytics/    # Analytics dashboard components
+│   │   │   ├── support/      # Support ticket components
+│   │   │   ├── feedback/     # Feedback management components
+│   │   │   ├── announcements/# Announcement manager components
+│   │   │   ├── security/     # Security monitor & compliance components
+│   │   │   └── ui/           # Shared UI — LocationAutocomplete, CustomDatePicker, etc.
+│   │   ├── pages/          # Page components
+│   │   │   └── support/      # SupportPage — public support ticket & feedback form
+│   │   ├── dashboard/      # Admin dashboard
+│   │   │   └── pages/
+│   │   │       ├── ContentModeration.tsx    # 4-tab moderation dashboard
+│   │   │       ├── CommunicationHub.tsx     # 5-tab communication dashboard
+│   │   │       ├── SecurityCompliance.tsx   # 4-tab security dashboard
+│   │   │       └── AdvancedAnalyticsPage.tsx
+│   │   ├── utils/          # sheetsLogger and other client utilities
+│   │   ├── types/          # TypeScript declarations (quagga.d.ts for custom types)
+│   │   └── docs/           # Documentation
+│   │
+│   └── package.json
+└── README.md
+```
 
 ## User Roles Matrix
 
@@ -284,7 +334,6 @@ The backend follows a RESTful pattern with the following core base routes:
 *   **Points**: `GET /points/leaderboard` - Fetch global student rankings.
 *   **Moderation**: `POST /moderation/reports` - Submit a content report for review.
 *   **Analytics**: `GET /analytics/stats` - Fetch real-time dashboard metrics (Admin only).
-
 
 ## Performance Benchmarks
 
