@@ -109,6 +109,13 @@ A dedicated security and governance layer for administrators.
   - Export to PDF/CSV
   - Audit-ready logs for data access, modifications, and deletions
 
+### Data Governance & Privacy
+- **ID Anonymization**: Sensitive student ID numbers are masked in public views.
+- **Institutional Guardrails**: Only `@nbsc.edu.ph` emails are permitted for student accounts.
+- **Soft-Delete Policy**: Items are never hard-deleted immediately; they enter a 30-day "grace period" before permanent removal.
+- **Audit Traceability**: Every sensitive action (Approvals/Rejections) is logged with the Admin's unique ID for accountability.
+
+
 ### Content Moderation
 A dedicated moderation layer for managing user-generated content, enforcing community standards, and handling disputes.
 
@@ -251,56 +258,33 @@ graph LR
 ## Project Structure
 
 ```
-lost-and-found-main/
-├── server/                 # Backend application
-│   ├── src/
-│   │   ├── api/
-│   │   │   ├── analytics/    # Campus-wide analytics API
-│   │   │   ├── comments/     # Comment system API
-│   │   │   ├── moderation/   # Content moderation API
-│   │   │   ├── support/      # Support tickets API
-│   │   │   ├── feedback/     # Feedback management API
-│   │   │   ├── announcements/# Announcement manager API
-│   │   │   └── security/     # Security monitor & compliance API
-│   │   ├── app/
-│   │   │   ├── modules/    # Feature modules
-│   │   │   │   └── student/  # Student masterlist lookup & ID resolution
-│   │   │   ├── auth/       # Authentication
-│   │   │   ├── midddlewares/ # Express middlewares
-│   │   │   └── utils/      # Utility functions
-│   │   │       ├── moderationController.ts  # Keyword filter, reports, warnings, appeals
-│   │   │       ├── communicationController.ts
-│   │   │       ├── securityController.ts
-│   │   │       └── adminStats.ts
-│   │   └── prisma/         # Database schema
-│   └── package.json
-├── frontend/               # Frontend application
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── scanner/      # WebScannerModal — hybrid jsQR + QuaggaJS + native fallback
-│   │   │   ├── itemMatch/    # ItemMatchSuggestions — live match preview on report form
-│   │   │   ├── reputation/   # User reputation components
-│   │   │   ├── analytics/    # Analytics dashboard components
-│   │   │   ├── support/      # Support ticket components
-│   │   │   ├── feedback/     # Feedback management components
-│   │   │   ├── announcements/# Announcement manager components
-│   │   │   ├── security/     # Security monitor & compliance components
-│   │   │   └── ui/           # Shared UI — LocationAutocomplete, CustomDatePicker, etc.
-│   │   ├── pages/          # Page components
-│   │   │   └── support/      # SupportPage — public support ticket & feedback form
-│   │   ├── dashboard/      # Admin dashboard
-│   │   │   └── pages/
-│   │   │       ├── ContentModeration.tsx    # 4-tab moderation dashboard
-│   │   │       ├── CommunicationHub.tsx     # 5-tab communication dashboard
-│   │   │       ├── SecurityCompliance.tsx   # 4-tab security dashboard
-│   │   │       └── AdvancedAnalyticsPage.tsx
-│   │   ├── utils/          # sheetsLogger and other client utilities
-│   │   ├── types/          # TypeScript declarations (quagga.d.ts for custom types)
-│   │   └── docs/           # Documentation
-│   │
-│   └── package.json
-└── README.md
-```
+
+## User Roles Matrix
+
+| Feature | Student/User | Admin/Staff |
+| :--- | :---: | :---: |
+| Report Lost/Found Items | ✅ | ✅ |
+| Claim Items | ✅ | ❌ |
+| View Public Analytics | ✅ | ✅ |
+| Community Discussions | ✅ | ✅ |
+| Manage Categories | ❌ | ✅ |
+| Moderate Comments | ❌ | ✅ |
+| Handle Support Tickets | ❌ | ✅ |
+| Security Monitoring | ❌ | ✅ |
+| Points Management | ❌ | ✅ |
+
+## API Documentation Overview
+
+The backend follows a RESTful pattern with the following core base routes:
+
+*   **Authentication**: `POST /auth/login` - Secure JWT-based authentication.
+*   **Items**: `GET /items/found` - Retrieve all publicly visible found items.
+*   **Reporting**: `POST /items/lost` - Submit a new lost item report.
+*   **Claims**: `POST /claims` - Initiate an ownership claim for a found item.
+*   **Points**: `GET /points/leaderboard` - Fetch global student rankings.
+*   **Moderation**: `POST /moderation/reports` - Submit a content report for review.
+*   **Analytics**: `GET /analytics/stats` - Fetch real-time dashboard metrics (Admin only).
+
 
 ## Performance Benchmarks
 
@@ -432,3 +416,21 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Authentication**: JWT-based authentication with secure password hashing
 - **CORS protection**: Cross-origin request protection
 - **Security honeypot**: Bot protection mechanisms
+## Development Roadmap
+
+### ? Phase 1: Foundation (Completed)
+- Core item reporting and claim workflow.
+- Secure JWT authentication and role-based access.
+- Basic category management.
+
+### ?? Phase 2: Intelligence (Current)
+- AI-powered item search and smart matching.
+- Hybrid barcode/QR scanner integration.
+- Real-time community discussions and moderation suite.
+- Live Google Sheets masterlist synchronization.
+
+### ??? Phase 3: Expansion (Upcoming)
+- **Mobile Application**: Native iOS/Android app for on-the-go reporting.
+- **Push Notifications**: Instant alerts for potential item matches.
+- **Multi-Campus Support**: Scalable architecture to support multiple school branches.
+- **NFC Integration**: Support for scanning student ID cards via NFC-enabled phones.
