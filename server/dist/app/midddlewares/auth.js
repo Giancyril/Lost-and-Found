@@ -18,18 +18,18 @@ const http_status_codes_1 = require("http-status-codes");
 const auth = () => {
     return (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const token = req.headers.authorization;
-            if (!token) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader) {
                 throw new error_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, "You are not authorized!");
             }
+            const token = authHeader.startsWith('Bearer ')
+                ? authHeader.slice(7)
+                : authHeader;
             const verifiedUser = utils_1.utils.verifyToken(token);
             req.user = verifiedUser;
             if (!verifiedUser) {
                 throw new error_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, "You are not authorized!");
             }
-            // if (requiredRoles.length && !requiredRoles.includes(verifiedUser.role)) {
-            //   throw new AppError(StatusCodes.FORBIDDEN, "Forbidden");
-            // }
             next();
         }
         catch (err) {

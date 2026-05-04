@@ -200,6 +200,219 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             unresolved: totalLost - totalResolved,
             matchRate: totalLost > 0 ? Math.round((totalResolved / totalLost) * 100) : 0,
         };
+        // ════════════════════════════════════════════════════════════════
+        // ── ADVANCED ANALYTICS ──────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════════
+        // ── USER ACTIVITY ─────────────────────────────────────────────
+        // Registration trend (last 6 months)
+        const userRegMap = {};
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${d.getFullYear()}-${d.getMonth()}`;
+            userRegMap[key] = { month: MONTH_LABELS[d.getMonth()], registrations: 0, admins: 0, users: 0 };
+        }
+        totalUsers.forEach((u) => {
+            const d = new Date(u.createdAt);
+            const key = `${d.getFullYear()}-${d.getMonth()}`;
+            if (userRegMap[key]) {
+                userRegMap[key].registrations++;
+                if (u.role === "ADMIN")
+                    userRegMap[key].admins++;
+                else
+                    userRegMap[key].users++;
+            }
+        });
+        result.userRegistrationTrend = Object.values(userRegMap);
+        // New users this month
+        result.newUsersThisMonth = totalUsers.filter((u) => isThisMonth(u.createdAt)).length;
+        result.newUsersThisWeek = totalUsers.filter((u) => isThisWeek(u.createdAt)).length;
+        // Role breakdown
+        const admins = totalUsers.filter((u) => u.role === "ADMIN").length;
+        const users = totalUsers.filter((u) => u.role !== "ADMIN").length;
+        result.userRoleBreakdown = { admins, users, total: totalUsers.length };
+        // Active vs blocked users
+        const activeUsers = totalUsers.filter((u) => u.activated && !u.isDeleted).length;
+        const blockedUsers = totalUsers.filter((u) => !u.activated).length;
+        const deletedUsers = totalUsers.filter((u) => u.isDeleted).length;
+        result.userStatusBreakdown = { active: activeUsers, blocked: blockedUsers, deleted: deletedUsers };
+        // Engagement: users who have submitted at least 1 found or lost item
+        const engagedUserIds = new Set();
+        foundItems === null || foundItems === void 0 ? void 0 : foundItems.forEach((i) => { if (i.userId)
+            engagedUserIds.add(i.userId); });
+        allLostItems.forEach((i) => { if (i.userId)
+            engagedUserIds.add(i.userId); });
+        const engagedUsers = engagedUserIds.size;
+        result.userEngagement = {
+            engagedUsers,
+            dormantUsers: Math.max(0, totalUsers.length - engagedUsers),
+            engagementRate: totalUsers.length > 0
+                ? Math.round((engagedUsers / totalUsers.length) * 100) : 0,
+        };
+        // Top claimants (users who submitted most claims)
+        const claimantCount = {};
+        claims.forEach((c) => {
+            var _a;
+            const name = c.claimantName || ((_a = c.user) === null || _a === void 0 ? void 0 : _a.username) || "Anonymous";
+            if (!claimantCount[name])
+                claimantCount[name] = { name, count: 0, approved: 0 };
+            claimantCount[name].count++;
+            if (c.status === "APPROVED")
+                claimantCount[name].approved++;
+        });
+        result.topClaimants = Object.values(claimantCount)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+        // ── ITEM FLOW ANALYTICS ───────────────────────────────────────
+        // Funnel: Lost reported → Found reported → Claim submitted → Claim approved
+        const totalFoundReported = (foundItems === null || foundItems === void 0 ? void 0 : foundItems.length) || 0;
+        const totalLostReported = allLostItems.length;
+        const totalClaimsSubmitted = claims.length;
+        const totalClaimsApproved = claims.filter((c) => c.status === "APPROVED").length;
+        result.itemFlowFunnel = {
+            lostReported: totalLostReported,
+            foundReported: totalFoundReported,
+            claimsSubmitted: totalClaimsSubmitted,
+            claimsApproved: totalClaimsApproved,
+            // Conversion rates
+            lostToFound: totalLostReported > 0
+                ? parseFloat(((totalFoundReported / Math.max(totalLostReported, totalFoundReported)) * 100).toFixed(1)) : 0,
+            foundToClaim: totalFoundReported > 0
+                ? parseFloat(((totalClaimsSubmitted / totalFoundReported) * 100).toFixed(1)) : 0,
+            claimToApproval: totalClaimsSubmitted > 0
+                ? parseFloat(((totalClaimsApproved / totalClaimsSubmitted) * 100).toFixed(1)) : 0,
+            overallRecovery: totalLostReported > 0
+                ? parseFloat(((totalClaimsApproved / totalLostReported) * 100).toFixed(1)) : 0,
+        };
+        // Monthly item flow (found + claims per month side by side)
+        const flowMap = {};
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${d.getFullYear()}-${d.getMonth()}`;
+            flowMap[key] = { month: MONTH_LABELS[d.getMonth()], found: 0, claimed: 0, lost: 0, pendingClaims: 0 };
+        }
+        foundItems === null || foundItems === void 0 ? void 0 : foundItems.forEach((i) => {
+            const d = new Date(i.createdAt);
+            const key = `${d.getFullYear()}-${d.getMonth()}`;
+            if (flowMap[key]) {
+                flowMap[key].found++;
+                if (i.isClaimed)
+                    flowMap[key].claimed++;
+            }
+        });
+        allLostItems.forEach((i) => {
+            const d = new Date(i.createdAt);
+            const key = `${d.getFullYear()}-${d.getMonth()}`;
+            if (flowMap[key])
+                flowMap[key].lost++;
+        });
+        claims.forEach((c) => {
+            const d = new Date(c.createdAt);
+            const key = `${d.getFullYear()}-${d.getMonth()}`;
+            if (flowMap[key] && c.status === "PENDING")
+                flowMap[key].pendingClaims++;
+        });
+        result.itemFlowMonthly = Object.values(flowMap);
+        // Category claim success rate
+        const catClaimMap = {};
+        foundItems === null || foundItems === void 0 ? void 0 : foundItems.forEach((i) => {
+            var _a, _b;
+            const name = (_b = (_a = i.category) === null || _a === void 0 ? void 0 : _a.name) !== null && _b !== void 0 ? _b : "Uncategorized";
+            if (!catClaimMap[name])
+                catClaimMap[name] = { name, found: 0, claimed: 0, rate: 0 };
+            catClaimMap[name].found++;
+            if (i.isClaimed)
+                catClaimMap[name].claimed++;
+        });
+        Object.values(catClaimMap).forEach((c) => {
+            c.rate = c.found > 0 ? Math.round((c.claimed / c.found) * 100) : 0;
+        });
+        result.categoryClaimRates = Object.values(catClaimMap)
+            .filter((c) => c.found >= 1)
+            .sort((a, b) => b.rate - a.rate)
+            .slice(0, 8);
+        // Average time from found → claimed (for approved claims)
+        const foundToClaimTimes = [];
+        claims.forEach((c) => {
+            var _a;
+            if (c.status === "APPROVED" && ((_a = c.foundItem) === null || _a === void 0 ? void 0 : _a.createdAt) && c.createdAt) {
+                const diff = new Date(c.createdAt).getTime() - new Date(c.foundItem.createdAt).getTime();
+                if (diff > 0)
+                    foundToClaimTimes.push(diff);
+            }
+        });
+        result.avgFoundToClaimDays = foundToClaimTimes.length > 0
+            ? parseFloat((foundToClaimTimes.reduce((a, b) => a + b, 0) / foundToClaimTimes.length / (1000 * 60 * 60 * 24)).toFixed(1))
+            : null;
+        // ── PERFORMANCE METRICS ───────────────────────────────────────
+        // Claim approval rate
+        const totalResolved2 = result.approvedClaims + result.rejectedClaims;
+        result.claimApprovalRate = totalResolved2 > 0
+            ? Math.round((result.approvedClaims / totalResolved2) * 100) : 0;
+        result.claimRejectionRate = totalResolved2 > 0
+            ? Math.round((result.rejectedClaims / totalResolved2) * 100) : 0;
+        // Pending claims older than N days
+        const pendingClaimsAge = claims
+            .filter((c) => c.status === "PENDING")
+            .map((c) => {
+            var _a;
+            return ({
+                id: c.id,
+                claimantName: c.claimantName || "Unknown",
+                itemName: ((_a = c.foundItem) === null || _a === void 0 ? void 0 : _a.foundItemName) || "Unknown item",
+                ageDays: Math.floor((now.getTime() - new Date(c.createdAt).getTime()) / (1000 * 60 * 60 * 24)),
+                createdAt: c.createdAt,
+            });
+        })
+            .sort((a, b) => b.ageDays - a.ageDays);
+        result.pendingClaimsAge = {
+            over3days: pendingClaimsAge.filter((c) => c.ageDays >= 3).length,
+            over7days: pendingClaimsAge.filter((c) => c.ageDays >= 7).length,
+            over14days: pendingClaimsAge.filter((c) => c.ageDays >= 14).length,
+            oldest: pendingClaimsAge.slice(0, 5),
+            avgAgeDays: pendingClaimsAge.length > 0
+                ? Math.round(pendingClaimsAge.reduce((s, c) => s + c.ageDays, 0) / pendingClaimsAge.length)
+                : 0,
+        };
+        // System throughput: items per week over last 6 weeks
+        const weeklyThroughput = [];
+        for (let i = 5; i >= 0; i--) {
+            const wStart = new Date(now);
+            wStart.setDate(now.getDate() - (i + 1) * 7);
+            wStart.setHours(0, 0, 0, 0);
+            const wEnd = new Date(now);
+            wEnd.setDate(now.getDate() - i * 7);
+            wEnd.setHours(23, 59, 59, 999);
+            const inRange = (d) => {
+                const t = new Date(d).getTime();
+                return t >= wStart.getTime() && t <= wEnd.getTime();
+            };
+            const weekLabel = `W${6 - i}`;
+            weeklyThroughput.push({
+                week: weekLabel,
+                found: (foundItems === null || foundItems === void 0 ? void 0 : foundItems.filter((item) => inRange(item.createdAt)).length) || 0,
+                lost: allLostItems.filter((item) => inRange(item.createdAt)).length,
+                claims: claims.filter((c) => inRange(c.createdAt)).length,
+            });
+        }
+        result.weeklyThroughput = weeklyThroughput;
+        // Items per user ratio
+        result.itemsPerUser = totalUsers.length > 0
+            ? parseFloat(((result.foundItems + result.lostItems) / totalUsers.length).toFixed(2)) : 0;
+        // Claim rate: claims submitted per found item
+        result.claimRatePerItem = result.foundItems > 0
+            ? parseFloat((result.totalClaims / result.foundItems).toFixed(2)) : 0;
+        // Overall system health score (0–100)
+        const healthFactors = [
+            // Lower pending claim ratio is better
+            result.totalClaims > 0 ? Math.max(0, 100 - Math.round((result.pendingClaims / result.totalClaims) * 100)) : 100,
+            // Higher claim approval rate is better
+            result.claimApprovalRate,
+            // Higher resolution rate is better
+            result.resolutionRate,
+            // Lower unclaimed age average is better (cap at 30 days)
+            Math.max(0, 100 - Math.round((result.unclaimedItemsAge.avgAgeDays / 30) * 100)),
+        ];
+        result.systemHealthScore = Math.round(healthFactors.reduce((a, b) => a + b, 0) / healthFactors.length);
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,

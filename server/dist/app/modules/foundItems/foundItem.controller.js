@@ -23,31 +23,47 @@ const sharp_1 = __importDefault(require("sharp"));
 const mailer_1 = require("../../utils/mailer");
 const emailTemplates_1 = require("../../utils/emailTemplates");
 const sheets_service_1 = require("../sheets/sheets.service");
-const points_service_1 = require("../points/points.service"); // ← NEW
+const points_service_1 = require("../points/points.service");
+const prisma_1 = __importDefault(require("../../config/prisma"));
 const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b;
     try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
-        const result = yield foundItem_service_1.foundItemService.createFoundItem(req.body, userId);
+        const requestUserId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        const isAdmin = ((_b = req.user) === null || _b === void 0 ? void 0 : _b.role) === "ADMIN";
+        // For admin submissions: find the student's User record by their email
+        // so the found item is linked to them and points go to them
+        let reporterUserId = undefined;
+        if (!isAdmin) {
+            // Student submitting directly — use their own account
+            reporterUserId = requestUserId;
+        }
+        else if (req.body.schoolEmail) {
+            // Admin submitting on behalf of student — look up by schoolEmail
+            const studentUser = yield prisma_1.default.user.findFirst({
+                where: { email: req.body.schoolEmail, role: "USER", isDeleted: false },
+                select: { id: true },
+            });
+            if (studentUser) {
+                reporterUserId = studentUser.id;
+            }
+        }
+        const result = yield foundItem_service_1.foundItemService.createFoundItem(req.body, reporterUserId);
         if (result === null || result === void 0 ? void 0 : result.id) {
-            // ── Award points to the reporter ────────────────────────────────────────
-            // Fire-and-forget: never blocks the response if points fail
-            if (userId) {
+            // Award 50pts to the student if their User account was found
+            if (reporterUserId) {
                 yield points_service_1.pointsService
-                    .award(userId, "FOUND_ITEM_REPORTED", result.id)
+                    .award(reporterUserId, "FOUND_ITEM_REPORTED", result.id)
                     .catch((err) => console.error("[Points] Failed to award points for found item:", err));
             }
-            // Log to Google Sheets
+            // ── Log to Google Sheets ─────────────────────────────────────────────────
             try {
                 const reportTimestamp = new Date().toISOString();
                 const studentId = req.body.studentId ||
-                    (req.body.schoolEmail
-                        ? req.body.schoolEmail.split("@")[0]
-                        : "N/A");
+                    (req.body.schoolEmail ? req.body.schoolEmail.split("@")[0] : "N/A");
                 yield (0, sheets_service_1.logToSheet)({
                     sheetName: "Found Items",
                     timestamp: reportTimestamp,
-                    studentId: studentId,
+                    studentId,
                     reporterName: req.body.reporterName || "SAS Office",
                     email: req.body.schoolEmail || "N/A",
                     itemName: req.body.foundItemName,
@@ -63,7 +79,7 @@ const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function
             catch (sheetsError) {
                 console.error("[Sheets] Failed to log found item to Google Sheets:", sheetsError);
             }
-            // Send confirmation email to the reporter
+            // ── Send confirmation email ──────────────────────────────────────────────
             try {
                 const fromName = process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
                 const fromEmail = process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
@@ -86,6 +102,7 @@ const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function
             catch (emailError) {
                 console.error("[Email] Failed to send found item confirmation:", emailError);
             }
+            // ── Smart matching ───────────────────────────────────────────────────────
             match_service_1.matchService.findMatchesForFoundItem(result).catch((err) => console.error("[SmartMatch] Error matching found item:", err));
         }
         (0, response_1.default)(res, {
@@ -302,14 +319,8 @@ const uploadFoundItemImages = (req, res) => __awaiter(void 0, void 0, void 0, fu
             let compressedBuffer = file.buffer;
             try {
                 compressedBuffer = yield (0, sharp_1.default)(file.buffer)
-                    .resize(1200, 1200, {
-                    fit: "inside",
-                    withoutEnlargement: true,
-                })
-                    .jpeg({
-                    quality: 80,
-                    progressive: true,
-                })
+                    .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+                    .jpeg({ quality: 80, progressive: true })
                     .toBuffer();
             }
             catch (error) {
@@ -325,10 +336,7 @@ const uploadFoundItemImages = (req, res) => __awaiter(void 0, void 0, void 0, fu
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,
             message: "Images uploaded successfully",
-            data: {
-                urls: uploadedUrls,
-                primaryImageUrl,
-            },
+            data: { urls: uploadedUrls, primaryImageUrl },
         });
     }
     catch (error) {

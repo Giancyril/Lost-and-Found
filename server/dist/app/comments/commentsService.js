@@ -13,8 +13,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.commentService = void 0;
-// v3 - fixed delete for anonymous/unauthenticated users
+// v4 - auto-moderation: keyword filter on createComment
 const prisma_1 = __importDefault(require("../config/prisma"));
+const moderationController_1 = require("../utils/moderationController");
 const COMMENT_INCLUDE = {
     user: {
         select: { id: true, name: true, userImg: true, role: true }
@@ -33,8 +34,15 @@ exports.commentService = {
     createComment(data) {
         return __awaiter(this, void 0, void 0, function* () {
             const { itemId, itemType, userId, content, isAnonymous, location, parentCommentId } = data;
+            // ── Auto-moderation ───────────────────────────────────────────────────────
+            // If the content contains a blocked keyword → hold as PENDING for admin review
+            // Otherwise → auto-approve immediately (existing behaviour)
+            const flaggedKeyword = (0, moderationController_1.containsBlockedKeyword)(content || '');
+            const autoStatus = flaggedKeyword ? 'PENDING' : 'APPROVED';
             return yield prisma_1.default.comment.create({
-                data: Object.assign({ itemId, itemType: (itemType || 'FOUND').toUpperCase(), content: content || '', location: location || null, isAnonymous: isAnonymous || !userId, parentCommentId: parentCommentId || null, status: 'APPROVED' }, (userId && { user: { connect: { id: userId } } })),
+                data: Object.assign(Object.assign({ itemId, itemType: (itemType || 'FOUND').toUpperCase(), content: content || '', location: location || null, isAnonymous: isAnonymous || !userId, status: autoStatus }, (parentCommentId && {
+                    parent: { connect: { id: parentCommentId } },
+                })), (userId && { user: { connect: { id: userId } } })),
                 include: COMMENT_INCLUDE,
             });
         });
@@ -63,7 +71,6 @@ exports.commentService = {
             }
             // If no userId and not admin, attempt anyway —
             // Prisma will throw P2025 (not found) which the controller catches as 500
-            // This is acceptable — anonymous users shouldn't be deleting in production
             yield prisma_1.default.comment.delete({ where });
             return true;
         });

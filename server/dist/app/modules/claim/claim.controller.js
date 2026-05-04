@@ -77,8 +77,9 @@ const getMyClaim = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 const updateClaimStatus = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
     try {
-        const result = yield claim_service_1.claimsService.updateClaimStatus(req.params.claimId, req.body);
+        const result = yield claim_service_1.claimsService.updateClaimStatus(req.params.claimId, req.body, { id: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id, name: ((_b = req.user) === null || _b === void 0 ? void 0 : _b.name) || ((_c = req.user) === null || _c === void 0 ? void 0 : _c.username) });
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,

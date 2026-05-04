@@ -9,7 +9,6 @@ const authHeaders = () => ({
   "Content-Type": "application/json",
 });
 
-// Matches the exact SVG user icon used in StudentLayout's profile avatar
 const UserIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className={`${className} opacity-90`}>
     <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
@@ -65,52 +64,48 @@ export default function StudentSettings() {
   ];
 
   return (
-    <div className="space-y-5 max-w-lg">
+    <div className="space-y-4 w-full max-w-2xl mx-auto px-1">
 
-      {/* ── Profile Card — mirrors StudentLayout avatar exactly ── */}
+      {/* ── Profile Card ── */}
       <div className="bg-gray-900 border border-white/[0.06] rounded-2xl overflow-hidden">
-        {/* Subtle top accent strip */}
         <div className="h-0.5 w-full bg-gradient-to-r from-blue-600 via-cyan-400 to-transparent" />
 
-        <div className="p-5 space-y-4">
+        <div className="p-4 space-y-3">
           <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Profile</p>
 
-          <div className="flex items-center gap-4">
-            {/* Avatar — identical markup to StudentLayout sidebar avatar */}
+          {/* Avatar row */}
+          <div className="flex items-center gap-3">
             <div className="relative shrink-0">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full
                 flex items-center justify-center border-2 border-gray-700">
-                <UserIcon className="w-7 h-7" />
+                <UserIcon className="w-6 h-6" />
               </div>
-              {/* Online dot */}
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500
                 border-2 border-gray-900 rounded-full" />
             </div>
 
-            {/* Info */}
             <div className="min-w-0 flex-1">
-              <p className="text-white font-bold text-base leading-tight truncate">
+              <p className="text-white font-bold text-sm leading-tight truncate">
                 {user?.name || user?.username || "Student"}
               </p>
               {user?.email && (
-                <p className="text-gray-600 text-xs mt-0.5 truncate">{user.email}</p>
+                <p className="text-gray-500 text-[11px] mt-0.5 truncate">{user.email}</p>
               )}
             </div>
 
-            {/* Points pill — matches topbar style */}
             <Link
               to="/dashboard/student/leaderboard"
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-yellow-400/10
-                text-yellow-300 border border-yellow-400/20 rounded-full text-[11px]
+              className="flex items-center gap-1 px-2 py-1 bg-yellow-400/10
+                text-yellow-300 border border-yellow-400/20 rounded-full text-[10px]
                 font-bold hover:bg-yellow-400/15 transition-colors shrink-0"
             >
-              <FaStar size={9} className="text-yellow-400" />
+              <FaStar size={8} className="text-yellow-400" />
               <span>Points</span>
             </Link>
           </div>
 
-          {/* Read-only details grid */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          {/* Details grid — 2 cols, tighter */}
+          <div className="grid grid-cols-2 gap-2">
             {[
               { label: "Full Name",  value: user?.name || user?.username || "—" },
               { label: "School ID", value: user?.schoolId || "—" },
@@ -118,11 +113,11 @@ export default function StudentSettings() {
               { label: "Email",     value: user?.email || "—" },
             ].map(({ label, value }) => (
               <div key={label}
-                className="bg-gray-800/50 border border-white/[0.05] rounded-xl px-3 py-2.5">
+                className="bg-gray-800/50 border border-white/[0.05] rounded-xl px-3 py-2">
                 <p className="text-[9px] uppercase tracking-widest text-gray-600 font-bold mb-0.5">
                   {label}
                 </p>
-                <p className="text-gray-300 text-xs font-mono truncate">{value}</p>
+                <p className="text-gray-300 text-[11px] font-mono truncate">{value}</p>
               </div>
             ))}
           </div>
@@ -130,7 +125,7 @@ export default function StudentSettings() {
       </div>
 
       {/* ── Change Password ── */}
-      <div className="bg-gray-900 border border-white/[0.06] rounded-2xl p-5 space-y-4">
+      <div className="bg-gray-900 border border-white/[0.06] rounded-2xl p-4 space-y-3">
         <div className="flex items-center gap-2">
           <FaKey size={11} className="text-blue-400" />
           <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">
@@ -174,20 +169,24 @@ export default function StudentSettings() {
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={pwLoading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
-              bg-blue-500/10 text-blue-300 border border-blue-500/25
-              hover:bg-blue-500/20 disabled:opacity-40 transition-colors"
-          >
-            {pwLoading && (
-              <div className="w-3.5 h-3.5 border border-blue-400 border-t-transparent rounded-full animate-spin" />
-            )}
-            {pwLoading ? "Saving…" : "Update Password"}
-          </button>
+          {/* Button aligned to the right */}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={pwLoading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
+                bg-blue-500/10 text-blue-300 border border-blue-500/25
+                hover:bg-blue-500/20 disabled:opacity-40 transition-colors"
+            >
+              {pwLoading && (
+                <div className="w-3.5 h-3.5 border border-blue-400 border-t-transparent rounded-full animate-spin" />
+              )}
+              {pwLoading ? "Saving…" : "Update Password"}
+            </button>
+          </div>
         </form>
       </div>
+
     </div>
   );
 }

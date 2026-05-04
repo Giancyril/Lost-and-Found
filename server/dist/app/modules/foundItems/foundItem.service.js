@@ -18,7 +18,6 @@ const storage_1 = require("../../utils/storage");
 const match_service_1 = require("../matching/match.service");
 const createFoundItem = (data, userId) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    // ── STORAGE FIX: convert base64 img to Storage URL before saving ──────────
     let imgUrl = (_a = data.img) !== null && _a !== void 0 ? _a : "";
     if (imgUrl.startsWith("data:")) {
         imgUrl = yield (0, storage_1.uploadBase64ToStorage)(imgUrl, "found", `found-${Date.now()}`);
@@ -49,7 +48,6 @@ const createFoundItem = (data, userId) => __awaiter(void 0, void 0, void 0, func
             data: { isFound: true },
         });
     }
-    // Trigger smart matching in background
     match_service_1.matchService.findMatchesForFoundItem(result).catch(err => console.error("[SmartMatch] Error during matching:", err));
     return result;
 });
@@ -80,7 +78,7 @@ const getFoundItem = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const maxRetries = 3;
     while (retryCount < maxRetries) {
         try {
-            const result = yield prisma_1.default.foundItem.findMany({
+            return yield prisma_1.default.foundItem.findMany({
                 where: whereConditions,
                 orderBy: { [sortBy]: sortOrder },
                 skip: (Number(page) - 1) * Number(limit),
@@ -103,16 +101,13 @@ const getFoundItem = (data) => __awaiter(void 0, void 0, void 0, function* () {
                     user: { select: { id: true, username: true, email: true, role: true } },
                 },
             });
-            return result;
         }
         catch (error) {
             retryCount++;
             console.error(`getFoundItem attempt ${retryCount} failed:`, error.message);
             if (retryCount >= maxRetries) {
-                console.error('getFoundItem: Max retries reached, throwing error');
-                throw new Error('Database connection failed. Please try again.');
+                throw new Error("Database connection failed. Please try again.");
             }
-            // Wait before retrying (exponential backoff)
             yield new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
         }
     }
@@ -130,9 +125,18 @@ const getSingleFoundItem = (id) => __awaiter(void 0, void 0, void 0, function* (
         },
     });
 });
+// FIX: Simplified to ONLY query by userId.
+// The previous version used schoolId/email fallbacks which leaked other
+// students' items when schoolId was undefined in the JWT.
+// Now that schoolId is included in the token (auth.service.ts fix), and
+// createFoundItem always saves userId when a student is logged in,
+// a simple userId filter is all that's needed.
 const getMyFoundItem = (user) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!(user === null || user === void 0 ? void 0 : user.id))
+        return [];
     return prisma_1.default.foundItem.findMany({
         where: { userId: user.id, isDeleted: false },
+        orderBy: { createdAt: "desc" },
         include: { user: true, category: true },
     });
 });
@@ -149,7 +153,6 @@ const editMyFoundItem = (data) => __awaiter(void 0, void 0, void 0, function* ()
         updateData.description = data.description;
     if ((data === null || data === void 0 ? void 0 : data.reporterName) !== undefined)
         updateData.reporterName = data.reporterName;
-    // Upload new image to Storage if base64 provided
     if ((_b = data === null || data === void 0 ? void 0 : data.img) === null || _b === void 0 ? void 0 : _b.startsWith("data:")) {
         updateData.img = yield (0, storage_1.uploadBase64ToStorage)(data.img, "found", data.id);
     }

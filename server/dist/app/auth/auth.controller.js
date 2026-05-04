@@ -16,24 +16,50 @@ exports.authController = void 0;
 const response_1 = __importDefault(require("../global/response"));
 const http_status_codes_1 = require("http-status-codes");
 const auth_service_1 = require("./auth.service");
-const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const securityController_1 = require("../utils/securityController");
+const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
-        const user = req.body;
-        const result = yield auth_service_1.authServices.loginUser(user);
+        const { email, password, username } = req.body;
+        // loginUser expects { username: <email or username>, password }
+        const user = yield auth_service_1.authServices.loginUser({
+            username: email || username, // ← pass as "username" key
+            password,
+        });
+        try {
+            yield (0, securityController_1.logLoginAttempt)({
+                userId: user.id,
+                username: user.username,
+                email: user.email,
+                ipAddress: (0, securityController_1.getClientIp)(req),
+                userAgent: req.headers["user-agent"] || "",
+                success: true,
+            });
+        }
+        catch (logErr) {
+            console.error("[LoginLog] Failed to log success:", logErr);
+        }
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,
-            message: 'User logged in successfully',
-            data: result,
+            message: "Login successful",
+            data: user,
         });
     }
     catch (error) {
-        (0, response_1.default)(res, {
-            statusCode: http_status_codes_1.StatusCodes.BAD_REQUEST,
-            success: false,
-            message: error === null || error === void 0 ? void 0 : error.message,
-            data: null,
-        });
+        try {
+            yield (0, securityController_1.logLoginAttempt)({
+                email: ((_a = req.body) === null || _a === void 0 ? void 0 : _a.email) || ((_b = req.body) === null || _b === void 0 ? void 0 : _b.username) || "",
+                ipAddress: (0, securityController_1.getClientIp)(req),
+                userAgent: req.headers["user-agent"] || "",
+                success: false,
+                reason: error.message,
+            });
+        }
+        catch (logErr) {
+            console.error("[LoginLog] Failed to log failure:", logErr);
+        }
+        next(error);
     }
 });
 const newPasswords = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

@@ -8,6 +8,6 @@ const prisma = new client_1.PrismaClient({
             url: process.env.DATABASE_URL,
         },
     },
-    log: ['query', 'info', 'warn', 'error'],
+    log: ['warn', 'error'], // ← removed 'query' and 'info'
 }).$extends((0, extension_accelerate_1.withAccelerate)());
 exports.default = prisma;

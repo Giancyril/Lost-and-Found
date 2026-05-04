@@ -116,10 +116,25 @@ const allUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         next(error);
     }
 });
+const backfillStudentData = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield user_service_1.userService.backfillCourseAndYearLevel();
+        (0, response_1.default)(res, {
+            statusCode: http_status_codes_1.StatusCodes.OK,
+            success: true,
+            message: `Backfill complete. Updated: ${result.updated}, Skipped: ${result.skipped}`,
+            data: result,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 exports.userController = {
     registerUser,
     allUsers,
     blockUser,
     changeUserRole,
     softDeleteUser,
+    backfillStudentData,
 };

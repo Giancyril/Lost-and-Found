@@ -31,6 +31,9 @@ const sheets_routes_1 = __importDefault(require("../modules/sheets/sheets.routes
 const upload_1 = require("../midddlewares/upload");
 const commentsRouter_1 = require("../comments/commentsRouter");
 const points_controller_1 = require("../modules/points/points.controller");
+const communicationController_1 = require("../utils/communicationController");
+const securityController_1 = require("../utils/securityController");
+const moderationController_1 = require("../utils/moderationController");
 const router = express_1.default.Router();
 ////////////////////////////////////////////////// user //////////////////////////////////////////////
 router.post("/register", user_controllers_1.userController.registerUser);
@@ -46,18 +49,21 @@ router.get("/item-categories", itemcategory_controller_1.itemcategoryController.
 router.put("/item-categories/:id", (0, validate_1.default)(itemCategory_validate_1.FoundItemCategorySchema.createFoundItemCategory), (0, auth_1.default)(), itemcategory_controller_1.itemcategoryController.updateItemCategory);
 router.delete("/item-categories/:id", (0, auth_1.default)(), itemcategory_controller_1.itemcategoryController.deleteItemCategory);
 ////////////////////////////////////////////////// found items //////////////////////////////////////////////
-router.post("/found-items/public", foundItem_controller_1.foundItemController.createFoundItem);
+// FIX: auth() added to /found-items/public so req.user is populated for students.
+// Without this, userId was always undefined → no points awarded, item saved with
+// userId: null, and "My Found Items" always returned empty.
+router.post("/found-items/public", (0, auth_1.default)(), foundItem_controller_1.foundItemController.createFoundItem);
 router.post("/found-items", (0, validate_1.default)(foundItems_validate_1.FoundItemSchema.createFoundItem), (0, auth_1.default)(), foundItem_controller_1.foundItemController.createFoundItem);
 router.get("/found-items", foundItem_controller_1.foundItemController.getFoundItem);
 router.get("/found-item/:id", foundItem_controller_1.foundItemController.getSingleFoundItem);
-router.post("/found-items/:id/images", upload_1.uploadImages.array('images', 5), foundItem_controller_1.foundItemController.uploadFoundItemImages);
+router.post("/found-items/:id/images", upload_1.uploadImages.array("images", 5), foundItem_controller_1.foundItemController.uploadFoundItemImages);
 // ── Archive routes (admin only) ──
 router.get("/found-items/archived", (0, auth_1.default)(), foundItem_controller_1.foundItemController.getArchivedFoundItems);
 router.get("/found-items/stale", (0, auth_1.default)(), foundItem_controller_1.foundItemController.getStaleFoundItems);
 router.put("/found-items/:id/archive", (0, auth_1.default)(), foundItem_controller_1.foundItemController.archiveFoundItem);
 router.put("/found-items/:id/restore", (0, auth_1.default)(), foundItem_controller_1.foundItemController.restoreFoundItem);
 ////////////////////////////////////////////////// lost items //////////////////////////////////////////////
-router.post("/lostItem", lost_controller_1.lostItemController.createLostItem);
+router.post("/lostItem", (0, auth_1.default)(), lost_controller_1.lostItemController.createLostItem);
 router.get("/lostItem", lost_controller_1.lostItemController.getLostItem);
 router.get("/lostItem/:id", lost_controller_1.lostItemController.getSingleLostItem);
 router.put("/found-lost", (0, auth_1.default)(), lost_controller_1.lostItemController.toggleFoundStatus);
@@ -68,7 +74,7 @@ router.get("/my/foundItem", (0, auth_1.default)(), foundItem_controller_1.foundI
 router.put("/my/foundItem", (0, auth_1.default)(), foundItem_controller_1.foundItemController.editMyFoundItem);
 router.delete("/my/foundItem/:id", (0, auth_1.default)(), foundItem_controller_1.foundItemController.deleteMyFoundItem);
 ////////////////////////////////////////////////// claims //////////////////////////////////////////////
-router.post("/claims", (0, validate_1.default)(claim_validate_1.ItemClaimSchema.createClaim), claim_controller_1.claimsController.createClaim);
+router.post("/claims", (0, auth_1.default)(), (0, validate_1.default)(claim_validate_1.ItemClaimSchema.createClaim), claim_controller_1.claimsController.createClaim);
 router.get("/claims", (0, auth_1.default)(), claim_controller_1.claimsController.getClaim);
 router.get("/my/claims", (0, auth_1.default)(), claim_controller_1.claimsController.getMyClaim);
 router.put("/claims/:claimId", (0, validate_1.default)(claim_validate_1.ItemClaimSchema.updateClaim), (0, auth_1.default)(), claim_controller_1.claimsController.updateClaimStatus);
@@ -98,6 +104,58 @@ router.put("/bulletin-posts/:id/resolve", (0, auth_1.default)(), bulletinPost_co
 router.use("/students", student_routes_1.studentRoutes);
 router.use("/sheets", sheets_routes_1.default);
 router.use("/", commentsRouter_1.commentsRouter);
+////////////////////////////////////////////////// points //////////////////////////////////////////////
 router.get("/points/my", (0, auth_1.default)(), points_controller_1.pointsController.getMyPoints);
 router.get("/points/leaderboard", points_controller_1.pointsController.getLeaderboard);
+router.post("/admin/backfill-students", (0, auth_1.default)(), user_controllers_1.userController.backfillStudentData);
+// Communication Hub stats
+router.get("/admin/comm-hub/stats", (0, auth_1.default)(), communicationController_1.getCommHubStats);
+// Announcements
+router.post("/admin/announcements", (0, auth_1.default)(), communicationController_1.createAnnouncement);
+router.get("/admin/announcements", (0, auth_1.default)(), communicationController_1.getAnnouncements);
+router.delete("/admin/announcements/:id", (0, auth_1.default)(), communicationController_1.deleteAnnouncement);
+// Support Tickets (public submit, admin manage)
+router.post("/tickets", communicationController_1.createTicket); // public — users submit
+router.get("/admin/tickets", (0, auth_1.default)(), communicationController_1.getTickets); // admin only
+router.put("/admin/tickets/:id/reply", (0, auth_1.default)(), communicationController_1.replyToTicket); // admin only
+router.put("/admin/tickets/:id/status", (0, auth_1.default)(), communicationController_1.updateTicketStatus); // admin only
+router.delete("/admin/tickets/:id", (0, auth_1.default)(), communicationController_1.deleteTicket); // admin only
+// Feedback (public submit, admin manage)
+router.post("/feedback", communicationController_1.submitFeedback); // public — users submit
+router.get("/admin/feedback", (0, auth_1.default)(), communicationController_1.getFeedbacks); // admin only
+router.put("/admin/feedback/:id/status", (0, auth_1.default)(), communicationController_1.updateFeedbackStatus); // admin only
+router.delete("/admin/feedback/:id", (0, auth_1.default)(), communicationController_1.deleteFeedback); // admin only
+// Security Monitor
+router.get("/admin/security/stats", (0, auth_1.default)(), securityController_1.getSecurityStats);
+router.get("/admin/security/logs", (0, auth_1.default)(), securityController_1.getLoginLogs);
+router.delete("/admin/security/logs", (0, auth_1.default)(), securityController_1.clearOldLogs);
+// Access Control
+router.get("/admin/security/access-control", (0, auth_1.default)(), securityController_1.getAccessControlData);
+// Data Privacy
+router.get("/admin/security/privacy", (0, auth_1.default)(), securityController_1.getPrivacyStats);
+router.get("/admin/security/export", (0, auth_1.default)(), securityController_1.exportUserData);
+router.get("/admin/security/purge-check", (0, auth_1.default)(), securityController_1.purgeDeletedUsers);
+// Compliance
+router.get("/admin/security/compliance", (0, auth_1.default)(), securityController_1.getComplianceReport);
+// Moderation stats
+router.get("/admin/moderation/stats", (0, auth_1.default)(), moderationController_1.getModerationStats);
+// Reported content
+router.get("/admin/moderation/reports", (0, auth_1.default)(), moderationController_1.getReports);
+router.post("/moderation/reports", moderationController_1.submitReport); // public — anyone can report
+router.put("/admin/moderation/reports/:id/resolve", (0, auth_1.default)(), moderationController_1.resolveReport);
+router.delete("/admin/moderation/reports/:id", (0, auth_1.default)(), moderationController_1.deleteReport);
+// Comment moderation queue
+router.get("/admin/moderation/comments", (0, auth_1.default)(), moderationController_1.getPendingComments);
+router.put("/admin/moderation/comments/:id", (0, auth_1.default)(), moderationController_1.moderateComment);
+// User behavior & warnings
+router.get("/admin/moderation/behavior", (0, auth_1.default)(), moderationController_1.getUserBehavior);
+router.post("/admin/moderation/warnings", (0, auth_1.default)(), moderationController_1.issueWarning);
+router.delete("/admin/moderation/warnings/:id", (0, auth_1.default)(), moderationController_1.deleteWarning);
+// Automated moderation
+router.get("/admin/moderation/keywords", (0, auth_1.default)(), moderationController_1.getKeywords);
+router.post("/admin/moderation/test", (0, auth_1.default)(), moderationController_1.testContent);
+// Appeals
+router.get("/admin/moderation/appeals", (0, auth_1.default)(), moderationController_1.getAppeals);
+router.post("/moderation/appeals", (0, auth_1.default)(), moderationController_1.submitAppeal); // requires login
+router.put("/admin/moderation/appeals/:id/resolve", (0, auth_1.default)(), moderationController_1.resolveAppeal);
 exports.default = router;

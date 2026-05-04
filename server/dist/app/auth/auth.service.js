@@ -19,14 +19,12 @@ const http_status_codes_1 = require("http-status-codes");
 const prisma_1 = __importDefault(require("../config/prisma"));
 const loginUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const { password, username: userNameEmail } = data;
-    // ── Find user by username, email, OR schoolId ─────────────────────────────
-    // This is the only change from the original — schoolId is now a third OR branch.
     const user = yield prisma_1.default.user.findFirst({
         where: {
             OR: [
                 { username: userNameEmail },
                 { email: userNameEmail },
-                { schoolId: userNameEmail }, // ← NEW: students log in with schoolId
+                { schoolId: userNameEmail },
             ],
         },
     });
@@ -36,18 +34,28 @@ const loginUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
     if (password && !(yield utils_1.utils.comparePasswords(password, user.password))) {
         throw new error_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Password is incorrect");
     }
-    const { id, name, email, role, userImg, username } = user;
-    const accessToken = utils_1.utils.createToken({ id, name, email, username, role, userImg });
+    const { id, name, email, role, userImg, username, schoolId } = user;
+    // FIX: schoolId is now included in the token payload so req.user.schoolId
+    // is available in all protected routes (e.g. getMyFoundItem).
+    const accessToken = utils_1.utils.createToken({
+        id,
+        name,
+        email,
+        username,
+        role,
+        userImg,
+        schoolId, // ← ADDED
+    });
     return {
         id: user.id,
         name: name || "User",
         username: user.username,
         email: user.email,
         role,
+        schoolId, // ← ADDED so frontend also gets it on login
         token: accessToken,
     };
 });
-// ── All other functions unchanged from your original ─────────────────────────
 const newPasswords = (data, user) => __awaiter(void 0, void 0, void 0, function* () {
     if (data.currentPassword === data.newPassword) {
         throw new error_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Password is same");
