@@ -119,7 +119,7 @@ const Services = () => {
         }
       `}</style>
 
-      <section id="features" className="py-24 bg-gray-950 relative overflow-hidden">
+      <section id="features" className="py-10 lg:py-24 bg-gray-950 relative overflow-hidden">
 
         {/* ── Ambient background blobs ── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -136,19 +136,19 @@ const Services = () => {
         <div className="relative z-10 px-4 sm:px-6 lg:px-16 mx-auto max-w-7xl">
 
           {/* ── Section header ── */}
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10 lg:mb-16">
             <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-4 lg:mb-5">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                <span className="text-blue-300 text-[11px] font-bold uppercase tracking-widest">Platform Features</span>
+                <span className="text-blue-300 text-[10px] lg:text-[11px] font-bold uppercase tracking-widest">Platform Features</span>
               </div>
-              <h2 className="text-4xl sm:text-5xl font-black text-white leading-[1.1] tracking-tight mb-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-5xl font-black text-white leading-tight lg:leading-[1.1] tracking-tight mb-2 lg:mb-4">
                 School Services
                 <span className="block bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
                   &amp; Features
                 </span>
               </h2>
-              <p className="text-gray-400 text-base leading-relaxed text-justify">
+              <p className="text-gray-400 text-sm lg:text-base leading-relaxed text-justify">
                 Everything SAS students and staff need to report, search, and recover lost items all in one place.
               </p>
             </div>
