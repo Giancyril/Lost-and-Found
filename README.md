@@ -222,20 +222,26 @@ graph TD
 
 ## Module Dependency
 
-The application is structured into interconnected modules that handle specific business logic while sharing core utilities and state.
+The application architecture is based on a modular dependency flow where core services provide the foundation for specialized features.
 
-### Backend Dependencies
-*   **Auth Module**: Foundation for all protected routes; verifies JWT and manages role-based access.
-*   **Item Module (Lost/Found)**: Core module; depends on **Category Module** and triggers **Matching Module** and **Sheets Logger** on submission.
-*   **Claim Module**: Depends on **Item Module** and **User Module**; logs changes to **Audit Log** and triggers **Points Module**.
-*   **Moderation Module**: Intercepts **Comment Module** submissions; manages user warnings and appeals.
-*   **Matching Module**: Background service; queries **LostItem** and **FoundItem** to find potential pairs and sends notifications via **Email Service**.
+```mermaid
+graph LR
+    subgraph BE_Deps ["Backend Module Flow"]
+        Auth[Auth Module] --> Items[Item Module]
+        Auth --> Claims[Claim Module]
+        Items --> Match[Matching Module]
+        Items --> Sheets[Sheets Logger]
+        Claims --> Points[Points Module]
+        Comments[Comment Module] --> Mod[Moderation Module]
+    end
 
-### Frontend Dependencies
-*   **Redux Store**: Central source of truth; modules like `auth`, `api`, and `ui` depend on this for synchronized state.
-*   **RTK Query (API)**: All page components depend on this for data fetching, caching, and automatic re-validation.
-*   **Scanner Module**: Standalone utility; utilized by **ReportFoundItem** to quickly resolve student identities.
-*   **Dashboard Module**: Composite module; integrates **Analytics**, **Moderation**, **Communication**, and **Security** sub-modules.
+    subgraph FE_Deps ["Frontend Module Flow"]
+        Store[Redux Store] --> API[RTK Query API]
+        API --> Pages[Feature Pages]
+        Scanner[Scanner Module] --> Report[Report Found Item]
+        Dashboard[Dashboard] --> SubMods[Security/Analytics/Comm]
+    end
+```
 
 - **Jest** for backend testing
 - **Vitest** for frontend testing
@@ -295,33 +301,6 @@ lost-and-found-main/
 │   └── package.json
 └── README.md
 ```
-
-## Database Models
-
-### Core Models
-- **User** — accounts with role, points, school ID, course, year level
-- **FoundItem** — reported found items with images, location, archive support
-- **LostItem** — reported lost items with smart matching support
-- **Claim** — ownership claims with audit log
-- **ClaimAuditLog** — full history of all claim status changes
-
-### Communication Models
-- **Announcement** — admin broadcasts with type and target audience
-- **SupportTicket** — help-desk tickets with priority and reply threading
-- **Feedback** — user-submitted feedback with category and rating
-
-### Security Models
-- **LoginLog** — authentication events with IP, user agent, success/failure
-
-### Moderation Models
-- **ContentReport** — user-submitted flags on comments (Spam, Inappropriate, Harassment, Misinformation)
-- **UserWarning** — admin-issued warnings with severity (Low, Medium, High)
-- **ModerationAppeal** — user appeals of rejected comments with resolution workflow
-
-### Other Models
-- **Comment** — threaded comments with status (Pending, Approved, Rejected), anonymous support
-- **Points** — point transaction history per user
-- **MatchNotification** — deduplication log for smart match email notifications
 
 ## Performance Benchmarks
 
