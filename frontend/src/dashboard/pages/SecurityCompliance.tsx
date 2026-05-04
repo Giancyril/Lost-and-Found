@@ -92,7 +92,6 @@ const StatCard = ({ label, value, color, bg, icon, sub }: any) => (
     <div>
       <p className={`text-2xl font-bold ${color}`}>{value ?? 0}</p>
       <p className="text-gray-500 text-xs font-medium">{label}</p>
-      {sub && <p className="text-gray-700 text-[10px]">{sub}</p>}
     </div>
   </div>
 );
@@ -139,10 +138,10 @@ const SecurityMonitorTab = () => {
     <div className="space-y-4 sm:space-y-6">
       {/* KPI row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Logins (24h)"   value={stats?.totalLogins24h}   color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"    icon={<FaSignInAlt size={14} className="text-cyan-400"/>} />
-        <StatCard label="Failed (24h)"   value={stats?.failedLogins24h}  color="text-red-400"     bg="bg-red-400/10 border-red-400/20"      icon={<FaTimesCircle size={14} className="text-red-400"/>} sub={`${stats?.failRate24h ?? 0}% fail rate`} />
-        <StatCard label="Suspicious IPs" value={stats?.suspiciousIps?.length ?? 0} color="text-orange-400" bg="bg-orange-400/10 border-orange-400/20" icon={<FaGlobe size={14} className="text-orange-400"/>} sub="5+ failed attempts" />
-        <StatCard label="Blocked Users"  value={stats?.blockedUsers}     color="text-yellow-400"  bg="bg-yellow-400/10 border-yellow-400/20" icon={<FaBan size={14} className="text-yellow-400"/>} />
+        <StatCard label="Logins (24h)"   value={stats?.totalLogins24h}            color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"    icon={<FaSignInAlt   size={14} className="text-cyan-400"   />} />
+        <StatCard label="Failed (24h)"   value={stats?.failedLogins24h}           color="text-red-400"     bg="bg-red-400/10 border-red-400/20"      icon={<FaTimesCircle size={14} className="text-red-400"   />} />
+        <StatCard label="Suspicious IPs" value={stats?.suspiciousIps?.length ?? 0} color="text-orange-400" bg="bg-orange-400/10 border-orange-400/20" icon={<FaGlobe       size={14} className="text-orange-400"/>} />
+        <StatCard label="Blocked Users"  value={stats?.blockedUsers}              color="text-yellow-400"  bg="bg-yellow-400/10 border-yellow-400/20" icon={<FaBan         size={14} className="text-yellow-400"/>} />
       </div>
 
       {/* Login trend chart */}
@@ -652,7 +651,7 @@ const SecurityCompliance = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
       {/* Tabs */}
-      <div className="grid grid-cols-5 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
+      <div className="grid grid-cols-4 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
       {TABS.map(tab => {
         const Icon   = tab.icon;
         const active = activeTab === tab.id;

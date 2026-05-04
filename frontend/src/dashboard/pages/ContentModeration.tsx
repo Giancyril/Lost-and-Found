@@ -80,12 +80,12 @@ const StatCard = ({ label, value, color, bg, icon }: any) => (
 
 const SectionCard = ({ title, subtitle, children, action }: any) => (
   <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-    <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-      <div>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-white/5">
+      <div className="min-w-0 flex-1">
         <h3 className="text-white text-sm font-semibold">{title}</h3>
         {subtitle && <p className="text-gray-500 text-xs mt-0.5">{subtitle}</p>}
       </div>
-      {action}
+      {action && <div className="w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">{action}</div>}
     </div>
     {children}
   </div>
@@ -122,10 +122,10 @@ const ReportedContentTab = () => {
     <div className="space-y-4">
       <SectionCard title="User Reports" subtitle="Comments flagged by users as inappropriate"
         action={
-          <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-lg p-1">
+          <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-lg p-1 min-w-full w-max">
             {["", "PENDING", "REVIEWED", "DISMISSED"].map(s => (
               <button key={s} onClick={() => setStatusFilter(s)}
-                className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${statusFilter === s ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                className={`flex-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all whitespace-nowrap shrink-0 ${statusFilter === s ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
                 {s || "All"}
               </button>
             ))}
@@ -183,10 +183,10 @@ const ReportedContentTab = () => {
 
       <SectionCard title="Comment Moderation Queue" subtitle="Review comments flagged by auto-moderation"
         action={
-          <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-lg p-1">
+          <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-lg p-1 min-w-full w-max">
             {["PENDING", "APPROVED", "REJECTED"].map(s => (
               <button key={s} onClick={() => setCommentFilter(s)}
-                className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${commentFilter === s ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                className={`flex-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all whitespace-nowrap shrink-0 ${commentFilter === s ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
                 {s}
               </button>
             ))}
@@ -489,10 +489,10 @@ const AppealProcessTab = () => {
 
       <SectionCard title="Moderation Appeals" subtitle="Users disputing rejected comments"
         action={
-          <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-lg p-1">
+          <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-lg p-1 min-w-full w-max">
             {["", "PENDING", "APPROVED", "DENIED"].map(s => (
               <button key={s} onClick={() => setStatusFilter(s)}
-                className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${statusFilter === s ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                className={`flex-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all whitespace-nowrap shrink-0 ${statusFilter === s ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
                 {s || "All"}
               </button>
             ))}
@@ -602,7 +602,7 @@ const ContentModeration = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
         {/* Tab strip — same pill style and spacing as CommunicationHub */}
-      <div className="grid grid-cols-5 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
+      <div className="grid grid-cols-4 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
         {TABS.map(tab => {
           const Icon   = tab.icon;
           const active = activeTab === tab.id;
