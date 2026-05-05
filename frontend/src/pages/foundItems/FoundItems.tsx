@@ -54,9 +54,9 @@ const CATEGORY_CONFIG = {
   },
   keys: {
     itemName: 'Keys',
-    description: 'Please select a color to auto-generate a detailed description.',
-    colors: ['Silver', 'Gold', 'Bronze', 'Black', 'Blue', 'Red', 'Other'],
-    conditions: ['Scratches', 'Stickers', 'Keychains', 'None']
+    description: 'A set of keys has been found on campus. To ensure they are returned to the correct owner, we have withheld details about the keychains or number of keys. Please visit the SAS office to identify and claim.',
+    colors: [],
+    conditions: []
   },
   umbrellas: {
     itemName: 'Umbrella',
@@ -90,13 +90,31 @@ const CATEGORY_CONFIG = {
   },
   documents: {
     itemName: 'Document',
-    description: 'Document',
+    description: 'Important personal documents have been recovered. For privacy reasons, the specific nature of these documents is not disclosed here. Please visit the SAS office with a valid ID to retrieve them.',
     colors: [],
     conditions: []
   },
   'wallets & purses': {
     itemName: 'Wallet/Purse',
     description: 'A wallet/purse has been turned in. To ensure the security of the owner\'s belongings, specific details such as color, brand, or contents are kept confidential. Please visit the SAS office to identify and claim your property.',
+    colors: [],
+    conditions: []
+  },
+  jewelry: {
+    itemName: 'Jewelry',
+    description: 'A piece of jewelry has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
+    colors: [],
+    conditions: []
+  },
+  accessories: {
+    itemName: 'Accessory',
+    description: 'An accessory has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
+    colors: [],
+    conditions: []
+  },
+  'flash drives & storage': {
+    itemName: 'Storage Device',
+    description: 'A storage device (USB Flash Drive/External Hard Drive) has been found. To protect the owner\'s data privacy, specific physical details are not listed. Please be prepared to describe the device or its contents at the SAS office to claim.',
     colors: [],
     conditions: []
   }
@@ -865,11 +883,16 @@ const watchedSchoolEmail  = watch("schoolEmail");
     switch (categoryKey) {
       case "bags":        colorDescription = isOther ? `A bag was found. ` : `A ${c} bag was found. `; break;
       case "calculators": colorDescription = isOther ? `A calculator was found. ` : `A ${c} calculator was found. `; break;
-      case "keys":        colorDescription = isOther ? `Some keys were found. ` : `Some ${c} keys were found. `; break;
       case "umbrellas":   colorDescription = isOther ? `An umbrella was found. ` : `A ${c} umbrella was found. `; break;
       case "watches":     colorDescription = isOther ? `A watch was found. ` : `A ${c} watch was found. `; break;
       case "money":       colorDescription = `Money was found. `; break;
-      case "wallets & purses": colorDescription = config.description; break;
+      case "wallets & purses": 
+      case "jewelry":
+      case "accessories":
+      case "keys":
+      case "documents":
+      case "flash drives & storage":
+        colorDescription = config.description; break;
       case "device":      colorDescription = isOther ? `A device was found. ` : `A ${c} device was found. `; break;
       default:            colorDescription = isOther ? `A ${config.itemName.toLowerCase()} was found.` : `A ${c} ${config.itemName.toLowerCase()} was found.`;
     }
@@ -903,15 +926,6 @@ const watchedSchoolEmail  = watch("schoolEmail");
         else                                      enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition was found. `;
         break;
       }
-      case "keys":{
-        const base = isOther ? "Some keys" : `Some ${addSelectedColor.toLowerCase()} keys`;
-        if (isNone)                               enhancedDescription = `${base} were found. `;
-        else if (conditionValue === "Scratches")  enhancedDescription = `${base} with scratches were found. `;
-        else if (conditionValue === "Stickers")   enhancedDescription = `${base} with stickers were found. `;
-        else if (conditionValue === "Keychains")  enhancedDescription = `${base} with attached keychains were found. `;
-        else                                      enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition were found. `;
-        break;
-      }
       case "umbrellas":{
         const base = isOther ? "An umbrella" : `A ${addSelectedColor.toLowerCase()} umbrella`;
         if (isNone)                                enhancedDescription = `${base} was found. `;
@@ -938,6 +952,11 @@ const watchedSchoolEmail  = watch("schoolEmail");
         else                                               enhancedDescription = `Money was found. `;
         break;
       case "wallets & purses":
+      case "jewelry":
+      case "accessories":
+      case "keys":
+      case "documents":
+      case "flash drives & storage":
         enhancedDescription = config.description;
         break;
       case "device":{
@@ -962,29 +981,38 @@ const watchedSchoolEmail  = watch("schoolEmail");
   const onAddSubmit = async (data: any) => {
     if (!addSelectedMenucategoryId) return;
     try {
-      const isAutoFillImage = (
-        addSelectedMenu?.toLowerCase().includes("money") || 
-        addSelectedMenu?.toLowerCase().includes("cash") || 
-        addSelectedMenu?.toLowerCase().includes("bill") || 
-        addSelectedMenu?.toLowerCase().includes("currency") || 
-        addSelectedMenu?.toLowerCase() === "id" || 
-        addSelectedMenu?.toLowerCase() === "identification" || 
-        addSelectedMenu?.toLowerCase().includes("device") || 
-        addSelectedMenu?.toLowerCase().includes("electronic") || 
-        addSelectedMenu?.toLowerCase().includes("gadget") ||
-        addSelectedMenu?.toLowerCase().includes("wallet") ||
-        addSelectedMenu?.toLowerCase().includes("purse")
-      );
+      const lowerMenu = addSelectedMenu?.toLowerCase() || "";
+      const isAutoFillImage = 
+        lowerMenu.includes("money") || 
+        lowerMenu.includes("cash") || 
+        lowerMenu.includes("bill") || 
+        lowerMenu.includes("currency") || 
+        lowerMenu === "id" || 
+        lowerMenu === "identification" || 
+        lowerMenu.includes("device") || 
+        lowerMenu.includes("electronic") || 
+        lowerMenu.includes("gadget") ||
+        lowerMenu.includes("wallet") ||
+        lowerMenu.includes("purse") ||
+        lowerMenu.includes("jewelry") ||
+        lowerMenu.includes("accessor") ||
+        lowerMenu.includes("key") ||
+        lowerMenu.includes("usb") ||
+        lowerMenu.includes("storage") ||
+        lowerMenu.includes("flash drive") ||
+        lowerMenu.includes("document");
 
-      const autoFillPath = (addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) 
-        ? "/money.jpg" 
-        : (addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification") 
-          ? "/id.jpg" 
-          : (addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) 
-            ? "/phone.png" 
-            : (addSelectedMenu?.toLowerCase().includes("wallet") || addSelectedMenu?.toLowerCase().includes("purse"))
-              ? "/wallet.jpg"
-              : "/phone.png"; // fallback
+      const autoFillPath = 
+        (lowerMenu.includes("money") || lowerMenu.includes("cash") || lowerMenu.includes("bill") || lowerMenu.includes("currency")) ? "/money.jpg" 
+        : (lowerMenu === "id" || lowerMenu === "identification") ? "/id.jpg" 
+        : (lowerMenu.includes("device") || lowerMenu.includes("electronic") || lowerMenu.includes("gadget")) ? "/phone.png" 
+        : (lowerMenu.includes("wallet") || lowerMenu.includes("purse")) ? "/wallet.jpg"
+        : (lowerMenu.includes("jewelry")) ? "/jewelry.jpg"
+        : (lowerMenu.includes("accessor")) ? "/Accessories.jpg"
+        : (lowerMenu.includes("key")) ? "/keys.jpg"
+        : (lowerMenu.includes("usb") || lowerMenu.includes("storage") || lowerMenu.includes("flash drive")) ? "/usb.jpg"
+        : (lowerMenu.includes("document")) ? "/id.jpg"
+        : "/phone.png";
 
       const res: any = await createFoundItem({
         img: isAutoFillImage ? autoFillPath : (addPreview || ""),
@@ -1413,17 +1441,14 @@ const watchedSchoolEmail  = watch("schoolEmail");
                     Item Photo <span className="text-red-400">*</span>
                   </label>
                   {!addPreview && !(
-                    addSelectedMenu?.toLowerCase().includes("money") || 
-                    addSelectedMenu?.toLowerCase().includes("cash") || 
-                    addSelectedMenu?.toLowerCase().includes("bill") || 
-                    addSelectedMenu?.toLowerCase().includes("currency") || 
-                    addSelectedMenu?.toLowerCase() === "id" || 
-                    addSelectedMenu?.toLowerCase() === "identification" || 
-                    addSelectedMenu?.toLowerCase().includes("device") || 
-                    addSelectedMenu?.toLowerCase().includes("electronic") || 
-                    addSelectedMenu?.toLowerCase().includes("gadget") ||
-                    addSelectedMenu?.toLowerCase().includes("wallet") ||
-                    addSelectedMenu?.toLowerCase().includes("purse")
+                    (() => {
+                      const lower = addSelectedMenu?.toLowerCase() || "";
+                      return lower.includes("money") || lower.includes("cash") || lower.includes("bill") || lower.includes("currency") || 
+                             lower === "id" || lower === "identification" || lower.includes("device") || lower.includes("electronic") || 
+                             lower.includes("gadget") || lower.includes("wallet") || lower.includes("purse") || lower.includes("jewelry") || 
+                             lower.includes("accessor") || lower.includes("key") || lower.includes("usb") || lower.includes("storage") ||
+                             lower.includes("flash drive") || lower.includes("document");
+                    })()
                   ) ? (
                     <div
                       className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
@@ -1449,15 +1474,19 @@ const watchedSchoolEmail  = watch("schoolEmail");
                       <div className="relative group">
                         <img 
                           src={
-                            (addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) 
-                              ? "/money.jpg" 
-                              : (addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification") 
-                                ? "/id.jpg" 
-                                : (addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) 
-                                  ? "/phone.png" 
-                                  : (addSelectedMenu?.toLowerCase().includes("wallet") || addSelectedMenu?.toLowerCase().includes("purse"))
-                                    ? "/wallet.jpg"
-                                    : addPreview
+                            (() => {
+                              const lower = addSelectedMenu?.toLowerCase() || "";
+                              if (lower.includes("money") || lower.includes("cash") || lower.includes("bill") || lower.includes("currency")) return "/money.jpg";
+                              if (lower === "id" || lower === "identification") return "/id.jpg";
+                              if (lower.includes("device") || lower.includes("electronic") || lower.includes("gadget")) return "/phone.png";
+                              if (lower.includes("wallet") || lower.includes("purse")) return "/wallet.jpg";
+                              if (lower.includes("jewelry")) return "/jewelry.jpg";
+                              if (lower.includes("accessor")) return "/Accessories.jpg";
+                              if (lower.includes("key")) return "/keys.jpg";
+                              if (lower.includes("usb") || lower.includes("storage") || lower.includes("flash drive")) return "/usb.jpg";
+                              if (lower.includes("document")) return "/id.jpg";
+                              return addPreview;
+                            })()
                           } 
                           alt="Preview" 
                           className="w-full max-h-44 object-cover" 
