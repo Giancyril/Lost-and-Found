@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useGetLostItemsQuery, useGetFoundItemsQuery, useAdminStatsQuery } from "../../redux/api/api";
 import { PointsTeaserBanner } from "../../components/home/PointsTeaserBanner";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 const Banner = () => {
+  useScrollReveal();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const { data: lostItems }  = useGetLostItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });

@@ -1,5 +1,6 @@
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { useState } from "react";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 interface FaqItem {
   question: string;
@@ -7,6 +8,7 @@ interface FaqItem {
 }
 
 const Faq = () => {
+  useScrollReveal();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const toggleFaq = (index: number) => {
@@ -76,33 +78,35 @@ const Faq = () => {
           </div>
 
           {/* Right — accordion */}
-          <ul className="lg:basis-1/2 divide-y divide-white/5 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+          <ul className="lg:basis-2/3 divide-y divide-white/5 bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
             {faqs.map((faq, index) => (
-              <li key={index}>
+              <li key={index} className="group">
                 <button
-                  className="w-full flex items-center justify-between gap-4 px-5 py-4 lg:px-8 lg:py-6 text-left hover:bg-white/[0.02] transition-colors focus:outline-none select-none"
+                  className="w-full flex items-center justify-between gap-6 px-6 py-5 lg:px-10 lg:py-8 text-left hover:bg-white/[0.03] transition-all duration-300 focus:outline-none select-none"
                   onClick={() => toggleFaq(index)}
                   aria-expanded={expandedIndex === index}
                 >
-                  <p className={`text-xs lg:text-base font-semibold leading-relaxed ${
-                    expandedIndex === index ? "text-white-400" : "text-white"
+                  <p className={`text-sm lg:text-lg font-bold leading-relaxed transition-colors duration-300 ${
+                    expandedIndex === index ? "text-blue-400" : "text-white group-hover:text-blue-300"
                   }`}>
                     {faq.question}
                   </p>
-                  <div className="shrink-0 ml-2">
+                  <div className={`shrink-0 ml-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    expandedIndex === index ? "bg-blue-500/20 rotate-180" : "bg-white/5"
+                  }`}>
                     {expandedIndex === index
-                      ? <FaMinus size={12} className="text-blue-400" />
-                      : <FaPlus  size={12} className="text-gray-600" />}
+                      ? <FaMinus size={14} className="text-blue-400" />
+                      : <FaPlus  size={14} className="text-gray-500 group-hover:text-blue-400" />}
                   </div>
                 </button>
-                <div className={`grid transition-all duration-300 ease-in-out ${
+                <div className={`grid transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                   expandedIndex === index 
-                    ? "grid-rows-[1fr] opacity-100 mb-2" 
+                    ? "grid-rows-[1fr] opacity-100" 
                     : "grid-rows-[0fr] opacity-0"
                 }`}>
-                  <div className="overflow-hidden px-5 lg:px-8">
-                    <div className="pb-5 lg:pb-8">
-                      <p className="text-gray-400 text-xs lg:text-sm leading-relaxed text-justify">
+                  <div className="overflow-hidden px-6 lg:px-10">
+                    <div className="pb-6 lg:pb-10 border-t border-white/5 pt-4">
+                      <p className="text-gray-400 text-sm lg:text-base leading-relaxed text-justify lg:text-left">
                         {faq.answer}
                       </p>
                     </div>

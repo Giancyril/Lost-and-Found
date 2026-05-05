@@ -4,6 +4,7 @@ import { FaSearch } from "react-icons/fa";
 import { IoLocationSharp, IoShieldCheckmark } from "react-icons/io5";
 import { FaGift } from "react-icons/fa6";
 import React from "react";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 interface Service {
   title: string;
@@ -80,6 +81,7 @@ const tagStyles: Record<string, string> = {
 };
 
 const Services = () => {
+  useScrollReveal();
   return (
     <>
       <style>{`

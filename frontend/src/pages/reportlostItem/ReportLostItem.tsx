@@ -11,6 +11,7 @@ import {
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 import {
   FaQrcode, FaUserCheck, FaTimes, FaSearch, FaSpinner,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
@@ -29,45 +30,93 @@ const MAX_SIZE_MB = 5;
 const CATEGORY_CONFIG = {
   bags: {
     itemName: 'Bag',
-    description: 'Please select a color to auto-generate a detailed description.',
+    description: 'Please describe the color, brand, and any contents or keychains.',
     colors: ['Black', 'Brown', 'Blue', 'Gray', 'Red', 'Green', 'Navy', 'Tan', 'White', 'Other'],
-    conditions: ['Scratches', 'Stickers', 'Keychains', 'None']
+    conditions: ['New', 'Good', 'Used', 'Damaged']
   },
   calculators: {
     itemName: 'Calculator',
-    description: 'Please select a color to auto-generate a detailed description. ',
+    description: 'Please specify the brand (e.g. Casio, Sharp) and any markings.',
     colors: ['Black', 'Gray', 'Blue', 'Silver', 'White', 'Other'],
-    conditions: ['Scratches', 'Stickers', 'Engravings', 'None']
+    conditions: ['New', 'Good', 'Used', 'Damaged']
   },
   keys: {
     itemName: 'Keys',
-    description: 'Please select a color to auto-generate a detailed description.',
-    colors: ['Silver', 'Gold', 'Bronze', 'Black', 'Blue', 'Red', 'Other'],
-    conditions: ['Scratches', 'Stickers', 'Keychains', 'None']
+    description: 'Please describe the number of keys and any attached keychains.',
+    colors: [],
+    conditions: []
   },
   umbrellas: {
     itemName: 'Umbrella',
-    description: 'Please select a color to auto-generate a detailed description.',
+    description: 'Please describe the color, pattern, and size.',
     colors: ['Black', 'Blue', 'Red', 'Yellow', 'Green', 'Pink', 'Purple', 'Clear', 'Patterned', 'Other'],
-    conditions: ['Scratches', 'Stickers', 'Bent Frame', 'None']
+    conditions: ['New', 'Good', 'Used', 'Damaged']
   },
   watches: {
     itemName: 'Watch',
-    description: 'Please select a color to auto-generate a detailed description. ',
+    description: 'Please describe the brand, strap color, and face design.',
     colors: ['Black', 'Brown', 'Silver', 'Gold', 'Blue', 'White', 'Rose Gold', 'Other'],
-    conditions: ['Scratches', 'Stickers', 'Engravings', 'None']
+    conditions: ['New', 'Good', 'Used', 'Damaged']
+  },
+  money: {
+    itemName: 'Money',
+    description: 'Please specify the amount and currency or if it was in a container.',
+    colors: [],
+    conditions: []
+  },
+  device: {
+    itemName: 'Device',
+    description: 'Please describe your device (brand, model, color, and unique features).',
+    colors: [],
+    conditions: []
   },
   id: {
     itemName: 'ID',
-    description: 'Identification Card',
+    description: 'Please specify the name on the ID and the institution.',
     colors: [],
     conditions: []
   },
   documents: {
     itemName: 'Document',
-    description: 'Document',
+    description: 'Please describe the type of document and the name on it.',
     colors: [],
     conditions: []
+  },
+  'wallets & purses': {
+    itemName: 'Wallet/Purse',
+    description: 'Please describe the color, material, brand, and contents.',
+    colors: [],
+    conditions: []
+  },
+  jewelry: {
+    itemName: 'Jewelry',
+    description: 'Please describe the material, design, and any unique features.',
+    colors: [],
+    conditions: []
+  },
+  accessories: {
+    itemName: 'Accessory',
+    description: 'Please describe the item (e.g. belt, scarf, hat) and its details.',
+    colors: [],
+    conditions: []
+  },
+  'flash drives & storage': {
+    itemName: 'Storage Device',
+    description: 'Please describe the brand, color, capacity, and any labels.',
+    colors: [],
+    conditions: []
+  },
+  'lunch boxes & food containers': {
+    itemName: 'Lunch Box/Container',
+    description: 'Please describe the color, size, and any contents.',
+    colors: ['Black', 'Blue', 'Red', 'Green', 'Pink', 'White', 'Clear', 'Other'],
+    conditions: ['New', 'Good', 'Used']
+  },
+  'sport equipment': {
+    itemName: 'Sport Equipment',
+    description: 'Please describe the type of equipment, brand, and any markings.',
+    colors: ['Black', 'White', 'Blue', 'Red', 'Orange', 'Yellow', 'Other'],
+    conditions: ['New', 'Good', 'Used', 'Damaged']
   }
 };
 
@@ -91,14 +140,13 @@ const getCategoryIcon = (name: string) => {
   if (n.includes("watch") || n.includes("clock"))                           return <FaClock      size={10} className="text-gray-300" />;
   if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask")) return <FaTint size={10} className="text-cyan-400" />;
   if (n.includes("money") || n.includes("cash") || n.includes("bill") || n.includes("currency")) return <FaMoneyBillWave size={10} className="text-green-400" />;
-  // Icons matching CategoriesManagement
   if (n.includes("art") || n.includes("paint") || n.includes("brush") || n.includes("drawing")) return <FaPaintBrush size={10} className="text-rose-400" />;
   if (n.includes("charger") || n.includes("cable") || n.includes("plug")) return <FaPlug size={10} className="text-yellow-400" />;
   if (n.includes("usb") || n.includes("flash") || n.includes("drive")) return <FaUsb size={10} className="text-blue-400" />;
   if (n.includes("accessor") || n.includes("jewel") || n.includes("bracelet")) return <FaGem size={10} className="text-pink-400" />;
   if (n.includes("food") || n.includes("lunch") || n.includes("container")) return <FaUtensils size={10} className="text-orange-400" />;
   if (n.includes("music") || n.includes("instrument") || n.includes("guitar")) return <FaMusic size={10} className="text-fuchsia-400" />;
-  if (n.includes("sport") || n.includes("ball") || n.includes("gym")) return <FaFootballBall size={10} className="text-red-400" />;
+  if (n.includes("sport") || n.includes("ball") || n.includes("gym") || n.includes("equip")) return <FaFootballBall size={10} className="text-red-400" />;
   return <FaTag size={10} className="text-blue-400" />;
 };
 
@@ -332,6 +380,7 @@ const CATEGORY_HELP_CONTENT = {
 };
 
 const ReportLostItem = () => {
+  useScrollReveal();
   const { register, formState: { errors }, reset, trigger, getValues, control, setValue, watch } = useForm({
   mode: "onChange",
   defaultValues: {
@@ -549,7 +598,7 @@ const ReportLostItem = () => {
   return (
     <>
       <section
-        className="min-h-screen flex items-center justify-center bg-gray-950 py-10 px-2 sm:px-4"
+        className="min-h-screen flex items-center justify-center bg-gray-950 py-10 px-2 sm:px-4 reveal"
         style={{ backgroundImage: "radial-gradient(ellipse at 60% 0%, rgba(59,130,246,0.07) 0%, transparent 60%)" }}
       >
         <div className="w-full max-w-2xl mx-auto">

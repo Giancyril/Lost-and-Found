@@ -37,6 +37,7 @@ import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModa
 import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 // ── Category configuration with auto-fill data ─────────────────────────────
 const CATEGORY_CONFIG = {
@@ -54,7 +55,7 @@ const CATEGORY_CONFIG = {
   },
   keys: {
     itemName: 'Keys',
-    description: 'A set of keys has been found on campus. To ensure they are returned to the correct owner, we have withheld details about the keychains or number of keys. Please visit the SAS office to identify and claim.',
+    description: 'An item has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
     colors: [],
     conditions: []
   },
@@ -78,13 +79,13 @@ const CATEGORY_CONFIG = {
   },
   device: {
     itemName: 'Device',
-    description: 'A device has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
+    description: 'An item has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
     colors: [],
     conditions: []
   },
   id: {
     itemName: 'ID',
-    description: 'Identification Card',
+    description: 'An item has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
     colors: [],
     conditions: []
   },
@@ -102,21 +103,33 @@ const CATEGORY_CONFIG = {
   },
   jewelry: {
     itemName: 'Jewelry',
-    description: 'A piece of jewelry has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
+    description: 'An item has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
     colors: [],
     conditions: []
   },
   accessories: {
     itemName: 'Accessory',
-    description: 'An accessory has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
+    description: 'An item has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
     colors: [],
     conditions: []
   },
   'flash drives & storage': {
     itemName: 'Storage Device',
-    description: 'A storage device (USB Flash Drive/External Hard Drive) has been found. To protect the owner\'s data privacy, specific physical details are not listed. Please be prepared to describe the device or its contents at the SAS office to claim.',
+    description: 'An item has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
     colors: [],
     conditions: []
+  },
+  'lunch boxes & food containers': {
+    itemName: 'Lunch Box/Container',
+    description: 'A food container or lunch box was found. Please visit the SAS office to identify and claim.',
+    colors: ['Black', 'Blue', 'Red', 'Green', 'Pink', 'White', 'Clear', 'Other'],
+    conditions: ['New', 'Good', 'Used']
+  },
+  'sport equipment': {
+    itemName: 'Sport Equipment',
+    description: 'A piece of sport equipment was found. Please visit the SAS office to identify and claim.',
+    colors: ['Black', 'White', 'Blue', 'Red', 'Orange', 'Yellow', 'Other'],
+    conditions: ['New', 'Good', 'Used', 'Damaged']
   }
 };
 
@@ -301,7 +314,7 @@ const FoundItemRow = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: a
     : "") || item?.img || "/bgimg.png";
 
   return (
-    <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-black/20">
+    <div className="reveal group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-black/20">
 
       {/* Mobile */}
       <div className="sm:hidden flex flex-col gap-2.5 p-3">
@@ -550,6 +563,7 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
             <div className="min-w-0">
               <p className="text-white text-sm font-semibold truncate">{item?.foundItemName}</p>
               <p className="text-gray-500 text-[10px] mt-0.5 flex items-center gap-1"><FaMapMarkerAlt size={8} /> {item?.location}</p>
+              <p className="text-gray-400 text-[10px] mt-1 line-clamp-2 leading-relaxed italic">{item?.description}</p>
             </div>
             <span className="shrink-0 px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full border border-blue-500/20">Available</span>
           </div>
@@ -648,6 +662,7 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const FoundItemsPage = () => {
+  useScrollReveal();
   const users: any = useUserVerification();
   const isAdmin    = users?.role === "ADMIN";
 
@@ -991,7 +1006,10 @@ const watchedSchoolEmail  = watch("schoolEmail");
         lowerMenu.includes("usb") ||
         lowerMenu.includes("storage") ||
         lowerMenu.includes("flash drive") ||
-        lowerMenu.includes("document");
+        lowerMenu.includes("document") ||
+        lowerMenu.includes("lunch") ||
+        lowerMenu.includes("food") ||
+        lowerMenu.includes("sport");
 
       const autoFillPath = 
         (lowerMenu.includes("money") || lowerMenu.includes("cash") || lowerMenu.includes("bill") || lowerMenu.includes("currency")) ? "/money.jpg" 
@@ -1003,6 +1021,8 @@ const watchedSchoolEmail  = watch("schoolEmail");
         : (lowerMenu.includes("key")) ? "/keys.jpg"
         : (lowerMenu.includes("usb") || lowerMenu.includes("storage") || lowerMenu.includes("flash drive")) ? "/usb.jpg"
         : (lowerMenu.includes("document")) ? "/id.jpg"
+        : (lowerMenu.includes("food") || lowerMenu.includes("lunch")) ? "/lunchbox.jpg"
+        : (lowerMenu.includes("sport")) ? "/sport.jpg"
         : "/phone.png";
 
       const res: any = await createFoundItem({
@@ -1065,7 +1085,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
   const sortValue = `${sortBy}-${sortOrder}`;
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-16">
+    <div className="min-h-screen bg-gray-950 pb-16 reveal">
 
       {/* ── Page header ── */}
       <div className="border-b border-white/5 bg-gray-900/50">
@@ -1096,7 +1116,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
 
       {/* ── Points Teaser Banner ── */}
     {!isAdmin && (
-      <div className="px-6 sm:px-10 lg:px-16 pt-5">
+      <div className="px-6 sm:px-10 lg:px-16 pt-5 reveal reveal-delay-1">
         <PointsTeaserBanner />
       </div>
     )}
