@@ -42,7 +42,7 @@ const Faq = () => {
   ];
 
   return (
-    <div className="py-10 lg:py-20 relative overflow-hidden bg-gray-950">
+    <div className="py-10 lg:py-20 relative overflow-hidden bg-gray-950 min-h-[500px] lg:min-h-[650px]">
 
       {/* Background */}
       <div className="absolute inset-0 z-0">
@@ -80,28 +80,34 @@ const Faq = () => {
             {faqs.map((faq, index) => (
               <li key={index}>
                 <button
-                  className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-white/[0.02] transition-colors focus:outline-none select-none"
+                  className="w-full flex items-center justify-between gap-4 px-5 py-4 lg:px-8 lg:py-6 text-left hover:bg-white/[0.02] transition-colors focus:outline-none select-none"
                   onClick={() => toggleFaq(index)}
                   aria-expanded={expandedIndex === index}
                 >
-                  <p className={`text-xs font-semibold leading-relaxed ${
-                    expandedIndex === index ? "text-white" : "text-white"
+                  <p className={`text-xs lg:text-base font-semibold leading-relaxed ${
+                    expandedIndex === index ? "text-white-400" : "text-white"
                   }`}>
                     {faq.question}
                   </p>
-                  <div className="shrink-0">
+                  <div className="shrink-0 ml-2">
                     {expandedIndex === index
-                      ? <FaMinus size={10} className="text-blue-400" />
-                      : <FaPlus  size={10} className="text-gray-600" />}
+                      ? <FaMinus size={12} className="text-blue-400" />
+                      : <FaPlus  size={12} className="text-gray-600" />}
                   </div>
                 </button>
-                {expandedIndex === index && (
-                  <div className="px-5 pb-4">
-                    <p className="text-gray-400 text-xs leading-relaxed text-justify">
-                      {faq.answer}
-                    </p>
+                <div className={`grid transition-all duration-300 ease-in-out ${
+                  expandedIndex === index 
+                    ? "grid-rows-[1fr] opacity-100 mb-2" 
+                    : "grid-rows-[0fr] opacity-0"
+                }`}>
+                  <div className="overflow-hidden px-5 lg:px-8">
+                    <div className="pb-5 lg:pb-8">
+                      <p className="text-gray-400 text-xs lg:text-sm leading-relaxed text-justify">
+                        {faq.answer}
+                      </p>
+                    </div>
                   </div>
-                )}
+                </div>
               </li>
             ))}
           </ul>

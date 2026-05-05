@@ -573,7 +573,7 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
                 {errors.claimantName && <p className="text-red-400 text-xs mt-1">{errors.claimantName.message as string}</p>}
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">School Email <span className="text-red-400">*</span></label>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Institutional Email <span className="text-red-400">*</span></label>
                 <div className="relative">
                   <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
                   <Controller

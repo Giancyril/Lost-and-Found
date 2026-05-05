@@ -720,7 +720,7 @@ const SingleFoundItem = () => {
                 {/* School Email */}
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
-                    School Email <span className="text-red-400">*</span>
+                    Institutional Email <span className="text-red-400">*</span>
                   </label>
                   <div className="relative">
                     <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
