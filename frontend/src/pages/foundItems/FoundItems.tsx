@@ -78,9 +78,9 @@ const CATEGORY_CONFIG = {
   },
   device: {
     itemName: 'Device',
-    description: 'Please select a color to auto-generate a detailed description.',
-    colors: ['Black', 'White', 'Silver', 'Gray', 'Blue', 'Red', 'Green', 'Other'],
-    conditions: ['Scratches', 'Cracks', 'Dents', 'Stickers', 'None']
+    description: 'A device has been turned in. For security and to ensure it returns to the rightful owner, specific details regarding the material, design, or brand are withheld. Please visit the SAS office for identification and verification.',
+    colors: [],
+    conditions: []
   },
   id: {
     itemName: 'ID',
@@ -168,7 +168,7 @@ const CATEGORY_HELP_CONTENT = {
   tip: (
     <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/20">
       <p className="text-gray-400 text-[11px] leading-relaxed text-justify">
-        Selecting the right category helps us match your item with found items faster. Categories like <span className="text-blue-400 font-semibold">bags</span>, <span className="text-blue-400 font-semibold">calculators</span>, <span className="text-blue-400 font-semibold">keys</span>, <span className="text-blue-400 font-semibold">umbrellas</span>, <span className="text-blue-400 font-semibold">watches</span>, <span className="text-blue-400 font-semibold">money</span>, and <span className="text-blue-400 font-semibold">device</span> have special auto-fill features.
+        Selecting the right category helps us match your item with found items faster. Categories like <span className="text-blue-400 font-semibold">bags</span>, <span className="text-blue-400 font-semibold">calculators</span>, <span className="text-blue-400 font-semibold">keys</span>, <span className="text-blue-400 font-semibold">umbrellas</span>, <span className="text-blue-400 font-semibold">watches</span>, <span className="text-blue-400 font-semibold">money</span>, <span className="text-blue-400 font-semibold">id</span>, <span className="text-blue-400 font-semibold">wallets</span>, <span className="text-blue-400 font-semibold">jewelry</span>, <span className="text-blue-400 font-semibold">accessories</span>, and <span className="text-blue-400 font-semibold">storage devices</span> have special auto-fill features.
       </p>
     </div>
   ),
@@ -892,8 +892,8 @@ const watchedSchoolEmail  = watch("schoolEmail");
       case "keys":
       case "documents":
       case "flash drives & storage":
+      case "device":
         colorDescription = config.description; break;
-      case "device":      colorDescription = isOther ? `A device was found. ` : `A ${c} device was found. `; break;
       default:            colorDescription = isOther ? `A ${config.itemName.toLowerCase()} was found.` : `A ${c} ${config.itemName.toLowerCase()} was found.`;
     }
     addSetValue("description", colorDescription, { shouldDirty: true });
@@ -957,18 +957,9 @@ const watchedSchoolEmail  = watch("schoolEmail");
       case "keys":
       case "documents":
       case "flash drives & storage":
+      case "device":
         enhancedDescription = config.description;
         break;
-      case "device":{
-        const base = isOther ? "A device" : `A ${addSelectedColor.toLowerCase()} device`;
-        if (isNone)                               enhancedDescription = `${base} was found. `;
-        else if (conditionValue === "Scratches")  enhancedDescription = `${base} with scratches was found. `;
-        else if (conditionValue === "Cracks")     enhancedDescription = `${base} with cracks was found. `;
-        else if (conditionValue === "Dents")      enhancedDescription = `${base} with dents was found. `;
-        else if (conditionValue === "Stickers")   enhancedDescription = `${base} with stickers was found. `;
-        else                                      enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition was found. `;
-        break;
-      }
       default: {
         const colorPrefix = isOther ? "" : `${addSelectedColor.toLowerCase()} `;
         const conditionPart = isNone ? "" : ` with ${conditionValue.toLowerCase()}`;
