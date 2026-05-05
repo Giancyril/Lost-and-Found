@@ -42,7 +42,7 @@ const Faq = () => {
   ];
 
   return (
-    <div className="py-10 lg:py-20 relative overflow-hidden bg-gray-950 min-h-[500px] lg:min-h-[650px]">
+    <div className="py-10 lg:py-20 relative overflow-hidden bg-gray-950 min-h-[500px] lg:min-h-[650px] reveal">
 
       {/* Background */}
       <div className="absolute inset-0 z-0">

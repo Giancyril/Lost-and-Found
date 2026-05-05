@@ -119,7 +119,7 @@ const Services = () => {
         }
       `}</style>
 
-      <section id="features" className="py-10 lg:py-24 bg-gray-950 relative overflow-hidden">
+      <section id="features" className="relative overflow-hidden bg-gray-950 py-10 lg:py-24 reveal">
 
         {/* ── Ambient background blobs ── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -156,13 +156,12 @@ const Services = () => {
             
           </div>
 
-          {/* ── Services grid ── */}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
             {services.map((service, index) => (
               <a
                 key={index}
                 href={service.tag === "Soon" ? undefined : service.link}
-                className={`svc-card group relative bg-gray-900 border border-gray-800 rounded-2xl p-3 xs:p-4 sm:p-6 flex flex-col gap-4 xs:gap-4 sm:gap-5 transition-all duration-300
+                className={`svc-card reveal reveal-delay-${(index % 3) + 1} group relative bg-gray-900 border border-gray-800 rounded-2xl p-3 xs:p-4 sm:p-6 flex flex-col gap-4 xs:gap-4 sm:gap-5 transition-all duration-300
                   ${service.tag === "Soon"
                     ? "cursor-default opacity-75"
                     : "cursor-pointer hover:bg-gray-800 hover:border-blue-700/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20"}`}

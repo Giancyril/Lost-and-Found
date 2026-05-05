@@ -37,7 +37,7 @@ const RecentLostItem = () => {
   if (items.length === 0) return null;
 
   return (
-    <div className="bg-gray-900 py-12">
+    <div className="bg-gray-900 py-12 reveal">
       <div className="mx-auto max-w-screen-2xl px-8 sm:px-12 lg:px-16 mb-10">
         <hr className="border-gray-800" />
       </div>

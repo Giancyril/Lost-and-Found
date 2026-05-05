@@ -125,7 +125,7 @@ const Banner = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
       `}</style>
 
-      <section className="relative overflow-hidden bg-gray-950">
+      <section className="relative overflow-hidden bg-gray-950 reveal">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-gray-950 to-gray-900" />
           <div className="absolute inset-0 opacity-5" style={{

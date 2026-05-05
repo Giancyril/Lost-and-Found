@@ -5,7 +5,10 @@ import { Outlet } from "react-router-dom";
 import SecurityHoneypot from "./components/SecurityHoneypot";
 import OnboardingTour from "./components/OnboardingTour";
 
+import { useScrollReveal } from "./hooks/useScrollReveal";
+
 function App() {
+  useScrollReveal();
   return (
     <>
       <SecurityHoneypot />
