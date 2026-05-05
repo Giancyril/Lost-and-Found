@@ -13,11 +13,22 @@ import path from "path";
 const keywordsFilePath = path.join(__dirname, "blockedKeywords.json");
 
 const DEFAULT_KEYWORDS = [
+  // English
   "spam", "scam", "fake", "fraud",
   "idiot", "stupid", "dumb", "moron",
   "hate", "kill", "threat",
   "porn", "sex", "nude",
   "drug", "weed", "shabu",
+
+  // Tagalog
+  "gago", "pakshet", "bwisit", "leche",
+  "punyeta", "lintik", "tarantado", "hayop", "tae",
+  "walang hiya",
+
+  // Bisaya / Cebuano
+  "yawa", "atay", "ataya", "buang", "boang",
+  "amaw", "oplok", "bogo", "libat", "litse",
+  "minatay", "yawards", "yowo",
 ];
 
 export let BLOCKED_KEYWORDS: string[] = [];

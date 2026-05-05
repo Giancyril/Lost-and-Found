@@ -170,7 +170,7 @@ const ReportedContentTab = () => {
                     {isPending && (
                       <div className="flex flex-col gap-1.5 shrink-0">
                         <button onClick={() => handleResolve(r.id, "REVIEWED", "REJECT")} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-lg transition-all"><FaBan size={8}/> Reject Comment</button>
-                        <button onClick={() => handleResolve(r.id, "REVIEWED", "APPROVE")} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-lg transition-all"><FaCheck size={8}/> Keep Comment</button>
+                        <button onClick={() => handleResolve(r.id, "REVIEWED", "APPROVE")} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-lg transition-all"><FaCheck size={8}/> Keep Comment</button>
                         <button onClick={() => handleResolve(r.id, "DISMISSED", "NONE")} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-500/10 hover:bg-gray-500/20 border border-gray-500/20 text-gray-400 text-[10px] font-bold rounded-lg transition-all"><FaTimes size={8}/> Dismiss</button>
                       </div>
                     )}
@@ -216,8 +216,8 @@ const ReportedContentTab = () => {
                     <p className="text-gray-700 text-[10px]">{timeAgo(c.createdAt)}</p>
                   </div>
                   <div className="flex flex-col gap-1.5 shrink-0">
-                    <button onClick={() => handleModerate(c.id, "APPROVED")} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-lg transition-all"><FaCheck size={8}/> Approve</button>
-                    <button onClick={() => handleModerate(c.id, "REJECTED")} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-lg transition-all"><FaTimes size={8}/> Reject</button>
+                    <button onClick={() => handleModerate(c.id, "APPROVED")} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-lg transition-all">Approve</button>
+                    <button onClick={() => handleModerate(c.id, "REJECTED")} className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-lg transition-all"> Reject</button>
                   </div>
                 </div>
               </div>
@@ -465,12 +465,10 @@ const AutomatedModerationTab = () => {
       <div className="bg-gray-900 border border-white/5 rounded-2xl p-5">
         {/* Header */}
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
-            <FaRobot size={13} className="text-cyan-400" />
-          </div>
+         
           <div>
             <h3 className="text-white text-sm font-semibold leading-none">How Auto-Moderation Works</h3>
-            <p className="text-gray-500 text-[10px] mt-0.5">Zero AI cost — runs entirely on-server for every comment submission</p>
+            <p className="text-gray-500 text-[10px] mt-0.5">Zero AI cost runs entirely on-server for every comment submission</p>
           </div>
           <span className="ml-auto text-[9px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0 hidden sm:inline-flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
@@ -557,11 +555,11 @@ const AutomatedModerationTab = () => {
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-white text-xs font-semibold truncate">Dynamic Keyword Management</p>
-                <p className="text-gray-500 text-[10px] mt-0.5 leading-relaxed text-justify">Add, edit or remove keywords in real-time no redeploy needed</p>
+                <p className="text-gray-500 text-[10px] mt-0.5 leading-relaxed text-justify">Add, edit or remove keywords in real-time</p>
               </div>
               <button
                 onClick={() => setShowKeywordModal(true)}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-blue-700 hover:bg-blue-600 border border-blue-500/40 text-white text-[11px] font-bold rounded-xl transition-all shadow-lg shadow-cyan-900/30 whitespace-nowrap"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-900/30"
               >
                 <FaBolt size={9} /> Manage
               </button>
@@ -654,7 +652,7 @@ const AutomatedModerationTab = () => {
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
               <div>
                 <h3 className="text-white text-sm font-bold flex items-center gap-2">
-                  <FaBolt className="text-cyan-400" size={12} /> Manage Blocked Keywords
+                  Manage Blocked Keywords
                 </h3>
                 <p className="text-gray-500 text-[11px] mt-0.5">{keywords.length} active · changes apply instantly</p>
               </div>
