@@ -3,10 +3,12 @@ import { Spinner } from "flowbite-react";
 import {
   FaClipboardList, FaSearch, FaCheckCircle, FaClock,
   FaExclamationCircle, FaBoxOpen, FaChevronRight, FaHistory,
-  FaMapMarkerAlt, FaChevronLeft,
+  FaMapMarkerAlt, FaChevronLeft, FaTimes,
 } from "react-icons/fa";
-import { useGetMyLostItemQuery, useMyClaimsQuery } from "../../redux/api/api";
+import { useGetMyLostItemQuery, useMyClaimsQuery, useLazyGetSingleLostItemQuery } from "../../redux/api/api";
 import { Link } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // ── Status Timeline ───────────────────────────────────────────────────────────
 const StatusTimeline = ({ steps }: {
@@ -119,7 +121,29 @@ const TrackingCard = ({ img, title, subtitle, statusLabel, statusColor, steps, a
 const ItemStatus = () => {
   const { data: myLostItems, isLoading: lostLoading } = useGetMyLostItemQuery({});
   const { data: myClaims,    isLoading: claimsLoading } = useMyClaimsQuery({});
+  const [triggerSearch, { data: searchResult, isFetching: searchLoading }] = useLazyGetSingleLostItemQuery();
+
   const [activeTab, setActiveTab] = useState(0);
+  const [searchId, setSearchId] = useState("");
+  const [isSearched, setIsSearched] = useState(false);
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!searchId.trim()) return;
+    try {
+      await triggerSearch(searchId.trim()).unwrap();
+      setIsSearched(true);
+      setActiveTab(0); // Switch to Lost Reports tab as it's a lost item ID
+    } catch (err: any) {
+      toast.error("Invalid Tracking Code or Item not found");
+      setIsSearched(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchId("");
+    setIsSearched(false);
+  };
 
   if (lostLoading || claimsLoading) return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center">
@@ -152,6 +176,43 @@ const ItemStatus = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Search Bar — matches LostItems style ── */}
+      <div className="px-4 sm:px-10 lg:px-16 py-5">
+        <form onSubmit={handleSearch} className="relative">
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
+          <input 
+            type="text" 
+            value={searchId} 
+            onChange={(e) => setSearchId(e.target.value)}
+            placeholder="Enter Tracking Code (e.g. TRK-XXXX)..."
+            className="w-full pl-11 pr-28 py-3 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" 
+          />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            {searchId && (
+              <button 
+                type="button"
+                onClick={clearSearch}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-xs rounded-lg transition-all"
+              >
+                <FaTimes size={9} /> Clear
+              </button>
+            )}
+            <button 
+              type="submit"
+              disabled={searchLoading}
+              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20"
+            >
+              {searchLoading ? "..." : "Track"}
+            </button>
+          </div>
+        </form>
+        {isSearched && (
+          <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-3 px-1 animate-pulse">
+            Showing result for code: {searchId}
+          </p>
+        )}
       </div>
 
       {/* ── Stats Row ── */}
@@ -207,7 +268,32 @@ const ItemStatus = () => {
 
         {activeTab === 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {myLostItems?.data?.length > 0 ? (
+            {isSearched && searchResult?.data ? (
+              // Show search result first if exists
+              (() => {
+                const item = searchResult.data;
+                const steps = [
+                  { label: "Report Submitted",   date: item.createdAt, status: "completed" as const, icon: <FaClipboardList size={12} /> },
+                  { label: "Under Staff Review", date: item.createdAt, status: item.isFound ? "completed" as const : "active" as const, icon: <FaClock size={12} /> },
+                  { label: "Actively Searching", status: item.isFound ? "completed" as const : "pending" as const, icon: <FaSearch size={12} /> },
+                  { label: "Item Recovered",     status: item.isFound ? "completed" as const : "pending" as const, icon: <FaCheckCircle size={12} /> },
+                ];
+                return (
+                  <TrackingCard key={item.id}
+                    img={item.img}
+                    title={item.lostItemName}
+                    subtitle={item.location}
+                    statusLabel={item.isFound ? "Recovered" : "Active"}
+                    statusColor={item.isFound
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : "bg-blue-500/10 text-blue-400 border-blue-500/20"}
+                    steps={steps}
+                    actionLink={`/lostItems/${item.id}`}
+                    actionText="View Details"
+                  />
+                );
+              })()
+            ) : myLostItems?.data?.length > 0 ? (
               myLostItems.data.map((item: any) => {
                 const steps = [
                   { label: "Report Submitted",   date: item.createdAt, status: "completed" as const, icon: <FaClipboardList size={12} /> },
@@ -233,8 +319,8 @@ const ItemStatus = () => {
             ) : (
               <EmptyState
                 icon={<FaExclamationCircle size={24} />}
-                title="No Active Reports"
-                description="You don't have any lost item reports being tracked."
+                title={isSearched ? "No Item Found" : "No Active Reports"}
+                description={isSearched ? "We couldn't find any report with that tracking code." : "You don't have any lost item reports being tracked."}
                 actionLink="/reportLostItem"
                 actionText="Report Lost Item"
               />
@@ -283,6 +369,7 @@ const ItemStatus = () => {
           </div>
         )}
       </div>
+      <ToastContainer position="top-right" autoClose={3000} theme="dark" style={{ top: "80px" }} />
     </div>
   );
 };

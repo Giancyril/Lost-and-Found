@@ -7,7 +7,7 @@ import { matchService } from "../matching/match.service";
 import { uploadFileToStorage } from "../../utils/storage";
 import sharp from "sharp";
 import { sendEmail } from "../../utils/mailer";
-import { lostItemReportedTemplate } from "../../utils/emailTemplates";
+import { lostItemReportedTemplate, foundItemReportedTemplate } from "../../utils/emailTemplates";
 import { logToSheet } from "../sheets/sheets.service";
 import { pointsService } from "../points/points.service";
 import prisma from "../../config/prisma";
@@ -79,7 +79,7 @@ const createFoundItem = async (req: Request, res: Response) => {
         const fromName  = process.env.SMTP_FROM_NAME  || "NBSC SAS Lost & Found";
         const fromEmail = process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
 
-        const template = lostItemReportedTemplate({
+        const template = foundItemReportedTemplate({
           reporterName: req.body.reporterName || "Unknown",
           itemName:     req.body.foundItemName,
           location:     req.body.location,

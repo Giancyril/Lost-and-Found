@@ -18,7 +18,7 @@ import {
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaTag,
   FaCheck, FaChevronDown, FaMoneyBillWave,
-  FaCalculator, FaPaintBrush, FaPlug, FaUsb, FaGem, FaUtensils, FaMusic, FaFootballBall
+  FaCalculator, FaPaintBrush, FaPlug, FaUsb, FaGem, FaUtensils, FaMusic, FaFootballBall, FaCopy
 } from "react-icons/fa";
 import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
 import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
@@ -562,6 +562,16 @@ const ReportLostItem = () => {
     if (valid) setStep((s) => s + 1);
   };
 
+  const [trackingCode, setTrackingCode] = useState<string | null>(null);
+
+  const handleCloseTrackingModal = () => {
+    setTrackingCode(null);
+    reset(); setSelectedFile(null); setPreview(""); setUploadError("");
+    setselectedMenu(""); setselectedMenucategoryId(""); setCategoryTouched(false);
+    setSelectedColor(""); setSelectedCondition("");
+    setStep(0); setScannedStudent(null); scannedAtRef.current = "";
+  };
+
   const onSubmit = async () => {
     if (!selectedFile) { setUploadError("Please upload a photo of the item."); return; }
     const data = getValues();
@@ -574,11 +584,13 @@ const ReportLostItem = () => {
       });
       if (res.error || res?.data?.success === false) { toast.error("Failed to report lost item"); return; }
 
-      toast.success("Lost item reported successfully");
-      reset(); setSelectedFile(null); setPreview(""); setUploadError("");
-      setselectedMenu(""); setselectedMenucategoryId(""); setCategoryTouched(false);
-      setSelectedColor(""); setSelectedCondition("");
-      setStep(0); setScannedStudent(null); scannedAtRef.current = "";
+      const createdId = res.data?.data?.id || res.data?.id;
+      if (createdId) {
+        setTrackingCode(createdId);
+      } else {
+        toast.success("Lost item reported successfully");
+        handleCloseTrackingModal();
+      }
     } catch { toast.error("Failed to report lost item"); }
   };
 
@@ -1155,6 +1167,48 @@ const ReportLostItem = () => {
             </div>
             <div className="px-5 pb-5 pt-2 border-t border-gray-800 shrink-0 flex items-center justify-center">
               <button onClick={() => setShowCategoryHelp(false)} className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors">Got it</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tracking Code Modal */}
+      {trackingCode && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-fadeIn">
+          <div className="bg-gray-900 border border-gray-700 rounded-3xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden relative transform scale-100 transition-transform">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500" />
+            <div className="p-8 flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                <FaCheck size={28} />
+              </div>
+              <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Report Submitted!</h2>
+              <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+                Your report has been received. Please save the Tracking Code below. You can use it on the <span className="text-blue-400 font-semibold">Track Status</span> page to monitor your item's progress.
+              </p>
+              
+              <div className="w-full bg-gray-950 border border-gray-800 rounded-2xl p-4 flex items-center justify-between gap-4 mb-8 group hover:border-blue-500/30 transition-colors shadow-inner">
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Tracking Code</p>
+                  <p className="text-white font-mono text-lg truncate tracking-wider">{trackingCode}</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(trackingCode);
+                    toast.success("Tracking code copied to clipboard!");
+                  }}
+                  className="shrink-0 p-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-all active:scale-95 border border-blue-500/20"
+                  title="Copy to clipboard"
+                >
+                  <FaCopy size={16} />
+                </button>
+              </div>
+
+              <button 
+                onClick={handleCloseTrackingModal}
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-xs rounded-xl transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
+              >
+                Got It, Close
+              </button>
             </div>
           </div>
         </div>

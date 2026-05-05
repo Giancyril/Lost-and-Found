@@ -376,6 +376,7 @@ export const {
   useDeleteCategoryMutation,
   useCreateLostItemMutation,
   useGetSingleLostItemQuery,
+  useLazyGetSingleLostItemQuery,
   useCreateFoundItemMutation,
   useGetFoundItemsQuery,
   useGetSingleFoundItemQuery,
