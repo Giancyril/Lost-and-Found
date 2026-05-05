@@ -148,66 +148,66 @@ router.post("/admin/backfill-students", auth(), userController.backfillStudentDa
 
 // Communication Hub stats
 router.get("/admin/comm-hub/stats", auth(), getCommHubStats);
- 
+
 // Announcements
 router.post("/admin/announcements", auth(), createAnnouncement);
 router.get("/admin/announcements", auth(), getAnnouncements);
 router.delete("/admin/announcements/:id", auth(), deleteAnnouncement);
- 
+
 // Support Tickets (public submit, admin manage)
 router.post("/tickets", createTicket);                                  // public — users submit
 router.get("/admin/tickets", auth(), getTickets);                       // admin only
 router.put("/admin/tickets/:id/reply", auth(), replyToTicket);          // admin only
 router.put("/admin/tickets/:id/status", auth(), updateTicketStatus);    // admin only
 router.delete("/admin/tickets/:id", auth(), deleteTicket);              // admin only
- 
+
 // Feedback (public submit, admin manage)
 router.post("/feedback", submitFeedback);                               // public — users submit
 router.get("/admin/feedback", auth(), getFeedbacks);                    // admin only
 router.put("/admin/feedback/:id/status", auth(), updateFeedbackStatus); // admin only
 router.delete("/admin/feedback/:id", auth(), deleteFeedback);           // admin only
- 
+
 // Security Monitor
-router.get("/admin/security/stats",      auth(), getSecurityStats);
-router.get("/admin/security/logs",       auth(), getLoginLogs);
-router.delete("/admin/security/logs",    auth(), clearOldLogs);
- 
+router.get("/admin/security/stats", auth(), getSecurityStats);
+router.get("/admin/security/logs", auth(), getLoginLogs);
+router.delete("/admin/security/logs", auth(), clearOldLogs);
+
 // Access Control
 router.get("/admin/security/access-control", auth(), getAccessControlData);
- 
+
 // Data Privacy
-router.get("/admin/security/privacy",    auth(), getPrivacyStats);
-router.get("/admin/security/export",     auth(), exportUserData);
+router.get("/admin/security/privacy", auth(), getPrivacyStats);
+router.get("/admin/security/export", auth(), exportUserData);
 router.get("/admin/security/purge-check", auth(), purgeDeletedUsers);
- 
+
 // Compliance
 router.get("/admin/security/compliance", auth(), getComplianceReport);
 
 // Moderation stats
-router.get("/admin/moderation/stats",               auth(), getModerationStats);
- 
+router.get("/admin/moderation/stats", auth(), getModerationStats);
+
 // Reported content
-router.get("/admin/moderation/reports",             auth(), getReports);
-router.post("/moderation/reports",                           submitReport);   // public — anyone can report
+router.get("/admin/moderation/reports", auth(), getReports);
+router.post("/moderation/reports", submitReport);   // public — anyone can report
 router.put("/admin/moderation/reports/:id/resolve", auth(), resolveReport);
-router.delete("/admin/moderation/reports/:id",      auth(), deleteReport);
- 
+router.delete("/admin/moderation/reports/:id", auth(), deleteReport);
+
 // Comment moderation queue
-router.get("/admin/moderation/comments",            auth(), getPendingComments);
-router.put("/admin/moderation/comments/:id",        auth(), moderateComment);
- 
+router.get("/admin/moderation/comments", auth(), getPendingComments);
+router.put("/admin/moderation/comments/:id", auth(), moderateComment);
+
 // User behavior & warnings
-router.get("/admin/moderation/behavior",            auth(), getUserBehavior);
-router.post("/admin/moderation/warnings",           auth(), issueWarning);
-router.delete("/admin/moderation/warnings/:id",     auth(), deleteWarning);
- 
+router.get("/admin/moderation/behavior", auth(), getUserBehavior);
+router.post("/admin/moderation/warnings", auth(), issueWarning);
+router.delete("/admin/moderation/warnings/:id", auth(), deleteWarning);
+
 // Automated moderation
-router.get("/admin/moderation/keywords",            auth(), getKeywords);
-router.post("/admin/moderation/test",               auth(), testContent);
- 
+router.get("/admin/moderation/keywords", auth(), getKeywords);
+router.post("/admin/moderation/test", auth(), testContent);
+
 // Appeals
-router.get("/admin/moderation/appeals",             auth(), getAppeals);
-router.post("/moderation/appeals",                  auth(), submitAppeal);    // requires login
+router.get("/admin/moderation/appeals", auth(), getAppeals);
+router.post("/moderation/appeals", auth(), submitAppeal);    // requires login
 router.put("/admin/moderation/appeals/:id/resolve", auth(), resolveAppeal);
 
 export default router;

@@ -26,7 +26,7 @@ import {
 import { useUserVerification } from "../../auth/auth";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-const openModal  = (setter: (v: boolean) => void) => { setter(true);  document.body.classList.add("modal-open");    };
+const openModal = (setter: (v: boolean) => void) => { setter(true); document.body.classList.add("modal-open"); };
 const closeModal = (setter: (v: boolean) => void) => { setter(false); document.body.classList.remove("modal-open"); };
 
 // ── Hide image for Wallets & Purses (admin always sees) ──
@@ -62,17 +62,17 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const next = () => setActiveIdx((i) => (i === images.length - 1 ? 0 : i + 1));
 
   if (images.length === 0) return (
-    <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
-      <img src="/bgimg.png" alt={alt} className="absolute inset-0 w-full h-full object-cover" />
-    </div>
-  );
+  <div className="relative w-full h-full min-h-[280px] lg:min-h-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+    <img src="/bgimg.png" alt={alt} className="absolute inset-0 w-full h-full object-cover" />
+  </div>
+);
 
-  if (images.length === 1) return (
-    <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
-      <img src={images[0]} alt={alt} className="absolute inset-0 w-full h-full object-cover"
-        onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
-    </div>
-  );
+if (images.length === 1) return (
+  <div className="relative w-full h-full min-h-[280px] lg:min-h-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+    <img src={images[0]} alt={alt} className="absolute inset-0 w-full h-full object-cover"
+      onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+  </div>
+);
 
   return (
     <div className="flex flex-col gap-3 h-full">
@@ -101,9 +101,8 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
       <div className="flex gap-2 overflow-x-auto pb-1">
         {images.map((src, idx) => (
           <button key={idx} onClick={() => setActiveIdx(idx)}
-            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-              idx === activeIdx ? "border-green-500 ring-2 ring-green-500/30" : "border-gray-700 hover:border-gray-500 opacity-60 hover:opacity-100"
-            }`}>
+            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${idx === activeIdx ? "border-green-500 ring-2 ring-green-500/30" : "border-gray-700 hover:border-gray-500 opacity-60 hover:opacity-100"
+              }`}>
             <img src={src} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover"
               onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
           </button>
@@ -126,12 +125,12 @@ const timeAgo = (d: string | null) => {
 };
 
 const STAGE_META: Record<string, { icon: React.ReactNode; color: string; ring: string; bg: string; line: string }> = {
-  reported:     { icon: <FaBoxOpen size={13} />,       color: "text-cyan-400",    ring: "border-cyan-500",    bg: "bg-cyan-500/10",    line: "bg-cyan-500/30"    },
-  claimed:      { icon: <FaClipboardList size={13} />, color: "text-yellow-400",  ring: "border-yellow-500",  bg: "bg-yellow-500/10",  line: "bg-yellow-500/30"  },
-  under_review: { icon: <FaClock size={13} />,         color: "text-orange-400",  ring: "border-orange-500",  bg: "bg-orange-500/10",  line: "bg-orange-500/30"  },
-  approved:     { icon: <FaCheckCircle size={13} />,   color: "text-emerald-400", ring: "border-emerald-500", bg: "bg-emerald-500/10", line: "bg-emerald-500/30" },
-  rejected:     { icon: <FaTimes size={13} />,         color: "text-red-400",     ring: "border-red-500",     bg: "bg-red-500/10",     line: "bg-red-500/30"     },
-  returned:     { icon: <FaHandshake size={13} />,     color: "text-violet-400",  ring: "border-violet-500",  bg: "bg-violet-500/10",  line: "bg-violet-500/30"  },
+  reported: { icon: <FaBoxOpen size={13} />, color: "text-cyan-400", ring: "border-cyan-500", bg: "bg-cyan-500/10", line: "bg-cyan-500/30" },
+  claimed: { icon: <FaClipboardList size={13} />, color: "text-yellow-400", ring: "border-yellow-500", bg: "bg-yellow-500/10", line: "bg-yellow-500/30" },
+  under_review: { icon: <FaClock size={13} />, color: "text-orange-400", ring: "border-orange-500", bg: "bg-orange-500/10", line: "bg-orange-500/30" },
+  approved: { icon: <FaCheckCircle size={13} />, color: "text-emerald-400", ring: "border-emerald-500", bg: "bg-emerald-500/10", line: "bg-emerald-500/30" },
+  rejected: { icon: <FaTimes size={13} />, color: "text-red-400", ring: "border-red-500", bg: "bg-red-500/10", line: "bg-red-500/30" },
+  returned: { icon: <FaHandshake size={13} />, color: "text-violet-400", ring: "border-violet-500", bg: "bg-violet-500/10", line: "bg-violet-500/30" },
 };
 
 function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () => void }) {
@@ -140,33 +139,33 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
 
   const claim: any =
     claimArr.find((c: any) => c.status === "APPROVED") ??
-    claimArr.find((c: any) => c.status === "PENDING")  ??
+    claimArr.find((c: any) => c.status === "PENDING") ??
     [...claimArr].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ?? null;
 
   const auditLogs: any[] = claim?.auditLogs ?? [];
-  const reportedAt  = foundItem?.createdAt ?? null;
-  const claimedAt   = claim?.createdAt ?? null;
+  const reportedAt = foundItem?.createdAt ?? null;
+  const claimedAt = claim?.createdAt ?? null;
   const approvedLog = auditLogs.find((l: any) => l.toStatus === "APPROVED");
   const rejectedLog = auditLogs.find((l: any) => l.toStatus === "REJECTED");
-  const approvedAt  = approvedLog?.createdAt ?? null;
-  const rejectedAt  = rejectedLog?.createdAt ?? null;
-  const returnedAt  = foundItem?.isClaimed && approvedAt ? approvedAt : null;
+  const approvedAt = approvedLog?.createdAt ?? null;
+  const rejectedAt = rejectedLog?.createdAt ?? null;
+  const returnedAt = foundItem?.isClaimed && approvedAt ? approvedAt : null;
 
   const stages = [
-    { id: "reported",     stage: "reported"     as const, label: "Item Reported",   sublabel: `Found at ${foundItem?.location ?? "—"}`,                                      time: reportedAt, actor: foundItem?.user?.username ?? "SAS Office", done: true,           active: !claimedAt },
-    { id: "claimed",      stage: "claimed"      as const, label: "Claim Submitted", sublabel: claim ? `By ${claim.claimantName ?? "Anonymous"}` : "No claim yet",             time: claimedAt,  actor: claim?.claimantName ?? "—",                done: !!claimedAt,    active: !!claimedAt && !approvedAt && !rejectedAt },
-    { id: "under_review", stage: "under_review" as const, label: "Under Review",    sublabel: claim ? "SAS office is verifying ownership" : "Awaiting claim submission",      time: claimedAt,  actor: "SAS Admin",                               done: !!claimedAt && (!!approvedAt || !!rejectedAt), active: !!claimedAt && !approvedAt && !rejectedAt },
+    { id: "reported", stage: "reported" as const, label: "Item Reported", sublabel: `Found at ${foundItem?.location ?? "—"}`, time: reportedAt, actor: foundItem?.user?.username ?? "SAS Office", done: true, active: !claimedAt },
+    { id: "claimed", stage: "claimed" as const, label: "Claim Submitted", sublabel: claim ? `By ${claim.claimantName ?? "Anonymous"}` : "No claim yet", time: claimedAt, actor: claim?.claimantName ?? "—", done: !!claimedAt, active: !!claimedAt && !approvedAt && !rejectedAt },
+    { id: "under_review", stage: "under_review" as const, label: "Under Review", sublabel: claim ? "SAS office is verifying ownership" : "Awaiting claim submission", time: claimedAt, actor: "SAS Admin", done: !!claimedAt && (!!approvedAt || !!rejectedAt), active: !!claimedAt && !approvedAt && !rejectedAt },
     ...(rejectedAt ? [
-      { id: "rejected",   stage: "rejected"     as const, label: "Claim Rejected",  sublabel: `Rejected by ${rejectedLog?.performedBy ?? "Admin"}`,                          time: rejectedAt, actor: rejectedLog?.performedBy ?? "Admin",        done: true,           active: true },
+      { id: "rejected", stage: "rejected" as const, label: "Claim Rejected", sublabel: `Rejected by ${rejectedLog?.performedBy ?? "Admin"}`, time: rejectedAt, actor: rejectedLog?.performedBy ?? "Admin", done: true, active: true },
     ] : [
-      { id: "approved",   stage: "approved"     as const, label: "Claim Approved",  sublabel: approvedAt ? `Approved by ${approvedLog?.performedBy ?? "Admin"}` : "Pending", time: approvedAt, actor: approvedLog?.performedBy ?? "—",            done: !!approvedAt,   active: !!approvedAt && !returnedAt },
-      { id: "returned",   stage: "returned"     as const, label: "Item Returned",   sublabel: returnedAt ? `Returned to ${claim?.claimantName ?? "owner"}` : "Pending",       time: returnedAt, actor: claim?.claimantName ?? "—",                done: !!returnedAt,   active: !!returnedAt },
+      { id: "approved", stage: "approved" as const, label: "Claim Approved", sublabel: approvedAt ? `Approved by ${approvedLog?.performedBy ?? "Admin"}` : "Pending", time: approvedAt, actor: approvedLog?.performedBy ?? "—", done: !!approvedAt, active: !!approvedAt && !returnedAt },
+      { id: "returned", stage: "returned" as const, label: "Item Returned", sublabel: returnedAt ? `Returned to ${claim?.claimantName ?? "owner"}` : "Pending", time: returnedAt, actor: claim?.claimantName ?? "—", done: !!returnedAt, active: !!returnedAt },
     ]),
   ];
 
   const doneCount = stages.filter(s => s.done).length;
-  const progress  = Math.round((doneCount / stages.length) * 100);
-  const current   = stages.filter(s => s.done).slice(-1)[0];
+  const progress = Math.round((doneCount / stages.length) * 100);
+  const current = stages.filter(s => s.done).slice(-1)[0];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
@@ -227,14 +226,13 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
             <div className="absolute left-[18px] top-5 bottom-5 w-px bg-gray-800" />
             <div className="space-y-0">
               {stages.map((stage, idx) => {
-                const meta   = STAGE_META[stage.stage];
+                const meta = STAGE_META[stage.stage];
                 const isLast = idx === stages.length - 1;
                 return (
                   <div key={stage.id} className="relative flex gap-4">
                     <div className="flex flex-col items-center shrink-0" style={{ width: 36 }}>
-                      <div className={`relative z-10 w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
-                        stage.done ? `${meta.ring} ${meta.bg} ${meta.color}` : "border-gray-700 bg-gray-800/80 text-gray-700"
-                      }`}>
+                      <div className={`relative z-10 w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${stage.done ? `${meta.ring} ${meta.bg} ${meta.color}` : "border-gray-700 bg-gray-800/80 text-gray-700"
+                        }`}>
                         {stage.done ? meta.icon : <div className="w-2.5 h-2.5 rounded-full bg-gray-700" />}
                       </div>
                       {!isLast && (
@@ -294,16 +292,16 @@ const SingleFoundItem = () => {
   const isAdmin = users?.role === "ADMIN";
 
   const { data: singleFoundItem, isLoading, refetch } = useGetSingleFoundItemQuery(foundItemId!);
-  const [createClaim, { isLoading: claimLoading }]    = useCreateClaimMutation();
-  const [updateClaimStatus]                           = useUpdateClaimStatusMutation();
-  const [isSubmitting, setIsSubmitting]               = useState(false);
-  const [isClaimModalOpen, setIsClaimModalOpen]       = useState(false);
-  const [isTimelineOpen, setIsTimelineOpen]           = useState(false);
-  const [lostDate, setLostDate]                       = useState("");
+  const [createClaim, { isLoading: claimLoading }] = useCreateClaimMutation();
+  const [updateClaimStatus] = useUpdateClaimStatusMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+  const [lostDate, setLostDate] = useState("");
   const [claimScannedStudent, setClaimScannedStudent] = useState<ScannedStudent | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-  const [showClaimScanner, setShowClaimScanner]       = useState(false);
+  const [showClaimScanner, setShowClaimScanner] = useState(false);
   const [isFetchingClaimStudent, setIsFetchingClaimStudent] = useState(false);
   const [getStudentByDetailsForClaim] = useLazyGetStudentByDetailsQuery();
 
@@ -317,7 +315,7 @@ const SingleFoundItem = () => {
 
   // ── FIX: watch the claim form fields for live values ──
   const watchedClaimantName = watch("claimantName") ?? "";
-  const watchedSchoolEmail  = watch("schoolEmail")  ?? "";
+  const watchedSchoolEmail = watch("schoolEmail") ?? "";
 
   const handleCloseClaimModal = () => {
     closeModal(setIsClaimModalOpen);
@@ -336,8 +334,8 @@ const SingleFoundItem = () => {
 
   // ── FIX: use watched values instead of querySelector ──
   const handleClaimFetchDetails = async () => {
-    const name  = watchedClaimantName?.trim() || "";
-    const email = watchedSchoolEmail?.trim()  || "";
+    const name = watchedClaimantName?.trim() || "";
+    const email = watchedSchoolEmail?.trim() || "";
 
     if (!name && !email) { toast.info("Please enter a name or email to fetch details"); return; }
 
@@ -367,14 +365,14 @@ const SingleFoundItem = () => {
 
       if (student?.name) {
         setClaimScannedStudent({
-          id:         student.id         || "",
-          name:       student.name       || "",
-          email:      student.email      || "",
+          id: student.id || "",
+          name: student.name || "",
+          email: student.email || "",
           department: student.department || student.course || "",
-          raw:        "manual_fetch",
+          raw: "manual_fetch",
         });
         setValue("claimantName", student.name);
-        setValue("schoolEmail",  student.email);
+        setValue("schoolEmail", student.email);
         toast.success(`Found: ${student.name}`);
       } else {
         toast.error("Student not found in masterlist");
@@ -488,116 +486,137 @@ const SingleFoundItem = () => {
       </div>
 
       {/* Main Content */}
-      <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
-          {/* Left: Image */}
-          <div className="relative flex flex-col h-full rounded-2xl overflow-hidden">
-            <div className="absolute top-3 left-3 z-10">
-              {isClaimed ? (
-                <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-emerald-500/30">
-                  <FaCheckCircle size={8} /> Claimed
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 bg-blue-600/90 text-white text-[10px] font-bold rounded-full backdrop-blur-sm border border-blue-500/30">
-                  Available
-                </span>
-              )}
-            </div>
-            {hideImage ? <HiddenImagePlaceholder /> : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />}
-          </div>
+<div className="w-full px-3 sm:px-8 lg:px-16 py-4 sm:py-10">
+  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 lg:items-stretch">
+
+    {/* Left: Image */}
+    <div className="lg:col-span-7 flex flex-col gap-3">
+      <div className="relative rounded-2xl overflow-hidden bg-gray-900 border border-white/5 shadow-2xl lg:h-full lg:min-h-0">
+        <div className="absolute top-3 left-3 z-10">
+          {isClaimed ? (
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-600/90 text-white text-[10px] font-black rounded-full backdrop-blur-md border border-emerald-500/30 shadow-lg uppercase tracking-wider">
+              <FaCheckCircle size={9} /> Claimed
+            </span>
+          ) : (
+            <span className="px-2.5 py-1 bg-blue-600/90 text-white text-[10px] font-black rounded-full backdrop-blur-md border border-blue-500/30 shadow-lg uppercase tracking-wider">
+              Available
+            </span>
+          )}
+        </div>
+        {hideImage ? <HiddenImagePlaceholder /> : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />}
+      </div>
+
+      {/* Mobile discussion button */}
+      <div className="lg:hidden">
+        <button
+          onClick={() => setIsCommentModalOpen(true)}
+          className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 border border-white/5 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-xs"
+        >
+          <FaComments size={13} className="text-blue-400" />
+          View Sightings & Discussion
+        </button>
+      </div>
+    </div>
 
           {/* Right: Info */}
-          <div className="flex flex-col h-full space-y-4">
-            <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
-              <h2 className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                <FaTag className="text-blue-500" size={10} /> Item Details
-              </h2>
-              <div className="grid grid-cols-2 gap-3 mb-1">
-                <div className="space-y-1">
-                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Category</p>
-                  <p className="text-white text-sm font-semibold">{foundItemData?.category?.name || "Uncategorized"}</p>
+          <div className="lg:col-span-5 flex flex-col gap-3">
+
+            {/* Primary Details Card */}
+            <div className="bg-gray-900 rounded-2xl p-4 border border-white/5 shadow-xl">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                  <FaTag className="text-blue-400" size={10} />
                 </div>
-                <div className="space-y-1 text-right">
-                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Found Date</p>
-                  <p className="text-white text-sm font-semibold flex items-center justify-end gap-1.5">
-                    <FaCalendarAlt className="text-blue-500" size={10} />
-                    {foundItemData?.date?.split("T")[0] || "—"}
+                <h2 className="text-gray-400 text-[10px] font-black uppercase tracking-widest">General Information</h2>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <p className="text-gray-600 text-[9px] font-black uppercase tracking-widest">Category</p>
+                  <p className="text-white text-sm font-bold">{foundItemData?.category?.name || "Uncategorized"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-gray-600 text-[9px] font-black uppercase tracking-widest">Found Date</p>
+                  <p className="text-white text-sm font-bold flex items-center gap-1.5">
+                    <FaCalendarAlt className="text-blue-500 shrink-0" size={10} />
+                    {foundItemData?.date ? new Date(foundItemData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "—"}
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
-              <h2 className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                <FaMapMarkerAlt className="text-blue-500" size={10} /> Location Found
-              </h2>
-              <div className="p-3 bg-gray-800 rounded-lg border border-gray-700/50">
-                <p className="text-white text-sm font-semibold">{foundItemData?.location}</p>
+              <div className="mt-4 pt-4 border-t border-white/[0.05]">
+                <p className="text-gray-600 text-[9px] font-black uppercase tracking-widest mb-2">Description</p>
+                <p className="text-gray-300 text-xs leading-relaxed text-justify whitespace-pre-wrap">
+                  {foundItemData?.description || "No description provided."}
+                </p>
               </div>
             </div>
 
-            <div className="bg-gray-900 rounded-xl p-5 border border-gray-800 flex-1">
-              <h2 className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                <FaClipboardList className="text-blue-500" size={10} /> Description
-              </h2>
-              <p className="text-gray-300 text-sm leading-relaxed text-justify whitespace-pre-wrap">
-                {foundItemData?.description || "No description provided."}
-              </p>
+            {/* Location Card */}
+            <div className="bg-gray-900 rounded-2xl p-4 border border-white/5 shadow-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                  <FaMapMarkerAlt className="text-blue-400" size={10} />
+                </div>
+                <h2 className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Location Found</h2>
+              </div>
+              <div className="p-3 bg-gray-800/50 rounded-xl border border-white/[0.03]">
+                <p className="text-white text-sm font-bold">{foundItemData?.location}</p>
+              </div>
             </div>
 
-            
-            {isClaimed ? (() => {
-              const claimArr = Array.isArray(foundItemData?.claim)
-                ? foundItemData.claim
-                : foundItemData?.claim ? [foundItemData.claim] : [];
-              const approvedClaim = claimArr.find((c: any) => c.status === "APPROVED");
-              const claimedAt = approvedClaim?.auditLogs?.find((l: any) => l.toStatus === "APPROVED")?.createdAt
-                ?? approvedClaim?.createdAt
-                ?? foundItemData?.updatedAt
-                ?? null;
-              return (
-                <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                    <FaHandshake className="text-blue-400" size={16} />
+            {/* Action Card */}
+            <div>
+              {isClaimed ? (
+                (() => {
+                  const claimArr = Array.isArray(foundItemData?.claim) ? foundItemData.claim : foundItemData?.claim ? [foundItemData.claim] : [];
+                  const approvedClaim = claimArr.find((c: any) => c.status === "APPROVED");
+                  const claimedAt = approvedClaim?.auditLogs?.find((l: any) => l.toStatus === "APPROVED")?.createdAt ?? approvedClaim?.createdAt ?? foundItemData?.updatedAt ?? null;
+                  return (
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                        <FaHandshake className="text-emerald-400" size={18} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-black leading-tight">Successfully Returned</p>
+                        <p className="text-emerald-400/80 text-[10px] mt-0.5 font-bold uppercase tracking-wide">
+                          {claimedAt ? `Processed ${timeAgo(claimedAt)}` : "Verified & Returned"}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="bg-blue-600/10 border border-blue-600/20 rounded-2xl p-4 flex flex-col gap-4">
+                  <div className="flex items-start gap-3">
+                    
+                    <div>
+                      <p className="text-white font-black text-sm">Is this yours?</p>
+                      <p className="text-gray-500 text-xs mt-1 leading-relaxed text-justify">
+                        Submit a claim with proof of ownership. The SAS office will verify before release.
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-bold">Already Claimed</p>
-                    <p className="text-blue-400/80 text-xs mt-0.5 font-medium">
-                      {claimedAt ? `Returned ${timeAgo(claimedAt)}` : "Successfully returned to owner"}
-                    </p>
-                  </div>
-                  <div className="shrink-0 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full">
-                    <p className="text-blue-400 text-[10px] font-bold uppercase tracking-widest">Returned</p>
-                  </div>
+                  <button onClick={() => openModal(setIsClaimModalOpen)}
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-all text-[11px] uppercase tracking-widest">
+                    Submit a Claim
+                  </button>
                 </div>
-              );
-            })() : (
-              <div className="space-y-3">
-                <div className="flex items-start gap-3 bg-gray-800 rounded-xl p-3">
-                  <FaBuilding className="text-blue-400 mt-0.5 shrink-0 text-lg" />
-                  <div>
-                    <p className="text-white text-sm font-semibold">Is this your item?</p>
-                    <p className="text-gray-400 text-xs mt-1 leading-relaxed">Submit a claim with proof of ownership. SAS office will review and contact you.</p>
-                  </div>
-                </div>
-                <button onClick={() => openModal(setIsClaimModalOpen)}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
-                  Submit a Claim
-                </button>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Desktop discussion button */}
+            <div className="hidden lg:block">
+              <button
+                onClick={() => setIsCommentModalOpen(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 border border-white/5 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-xs"
+              >
+                <FaComments size={13} className="text-blue-400" />
+                View Discussion & Sightings
+              </button>
+            </div>
+
           </div>
-        </div>
-
-        {/* Discussion & Sightings */}
-        <div className="mt-10 pt-10 border-t border-gray-800">
-          <button
-            onClick={() => setIsCommentModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-sm"
-          >
-            <FaComments size={14} className="text-blue-400" />
-            View Discussion & Sightings
-          </button>
         </div>
       </div>
 
@@ -791,7 +810,7 @@ const SingleFoundItem = () => {
                     className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
                   >
                     {isSubmitting || claimLoading
-                      ? <><svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Submitting...</>
+                      ? <><svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Submitting...</>
                       : <><FaClipboardList size={10} /> {isAdmin ? "Approve Claim" : "Submit Claim"}</>
                     }
                   </button>
@@ -806,12 +825,12 @@ const SingleFoundItem = () => {
         <BarcodeScannerModal onScan={handleClaimScan} onClose={() => setShowClaimScanner(false)} useFetchStudent={useFetchStudentForClaim} />
       )}
 
-      <CommentModal 
-        isOpen={isCommentModalOpen} 
-        onClose={() => setIsCommentModalOpen(false)} 
-        itemId={foundItemId!} 
-        itemType="found" 
-        itemName={singleFoundItem?.data?.foundItemName || "Item"} 
+      <CommentModal
+        isOpen={isCommentModalOpen}
+        onClose={() => setIsCommentModalOpen(false)}
+        itemId={foundItemId!}
+        itemType="found"
+        itemName={singleFoundItem?.data?.foundItemName || "Item"}
       />
 
       <ToastContainer position="top-right" autoClose={5000} theme="dark" />

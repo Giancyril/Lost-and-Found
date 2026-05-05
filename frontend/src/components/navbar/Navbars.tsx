@@ -19,28 +19,28 @@ import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../../redux/api/api
 
 const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className={`${className} opacity-90`}>
-    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
   </svg>
 );
 
 // ── Points reason label map ───────────────────────────────────────────────────
 const REASON_LABEL: Record<string, string> = {
   FOUND_ITEM_REPORTED: "Reported a found item",
-  CLAIM_APPROVED:      "Claim approved",
-  HELPFUL_COMMENT:     "Helpful comment",
+  CLAIM_APPROVED: "Claim approved",
+  HELPFUL_COMMENT: "Helpful comment",
 };
 const REASON_COLOR: Record<string, string> = {
   FOUND_ITEM_REPORTED: "text-emerald-400",
-  CLAIM_APPROVED:      "text-blue-400",
-  HELPFUL_COMMENT:     "text-violet-400",
+  CLAIM_APPROVED: "text-blue-400",
+  HELPFUL_COMMENT: "text-violet-400",
 };
 
 // ── Tier badge ────────────────────────────────────────────────────────────────
 const getTier = (pts: number) => {
-  if (pts >= 500) return { label: "Gold",   color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20"  };
-  if (pts >= 200) return { label: "Silver", color: "text-gray-300",    bg: "bg-gray-400/10 border-gray-400/20"      };
-  if (pts >= 50)  return { label: "Bronze", color: "text-amber-600",   bg: "bg-amber-600/10 border-amber-600/20"    };
-  return           { label: "Starter", color: "text-gray-500", bg: "bg-gray-700/30 border-gray-600/20" };
+  if (pts >= 500) return { label: "Gold", color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20" };
+  if (pts >= 200) return { label: "Silver", color: "text-gray-300", bg: "bg-gray-400/10 border-gray-400/20" };
+  if (pts >= 50) return { label: "Bronze", color: "text-amber-600", bg: "bg-amber-600/10 border-amber-600/20" };
+  return { label: "Starter", color: "text-gray-500", bg: "bg-gray-700/30 border-gray-600/20" };
 };
 
 // ── Points Dropdown ───────────────────────────────────────────────────────────
@@ -55,7 +55,7 @@ const PointsDropdown = ({ points, history, rank }: {
 
   // Next tier threshold
   const nextThreshold = points < 50 ? 50 : points < 200 ? 200 : points < 500 ? 500 : null;
-  const prevThreshold = points < 50 ? 0  : points < 200 ? 50  : points < 500 ? 200 : 500;
+  const prevThreshold = points < 50 ? 0 : points < 200 ? 50 : points < 500 ? 200 : 500;
   const progress = nextThreshold
     ? Math.round(((points - prevThreshold) / (nextThreshold - prevThreshold)) * 100)
     : 100;
@@ -155,9 +155,8 @@ const PointsDropdown = ({ points, history, rank }: {
                   style={{ scrollbarWidth: "none" }}>
                   {history.slice(0, 6).map((h: any, i: number) => (
                     <div key={i} className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-white/[0.03] transition-colors">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                        h.amount > 0 ? "bg-yellow-500/10" : "bg-red-500/10"
-                      }`}>
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${h.amount > 0 ? "bg-yellow-500/10" : "bg-red-500/10"
+                        }`}>
                         <FaStar size={9} className={h.amount > 0 ? "text-yellow-400" : "text-red-400"} />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -199,10 +198,10 @@ const PointsDropdown = ({ points, history, rank }: {
 
 // ── Main Navbar ───────────────────────────────────────────────────────────────
 export function Navbars() {
-  const navigate   = useNavigate();
+  const navigate = useNavigate();
   const users: any = useUserVerification();
 
-  const isAdmin    = users?.role === "ADMIN";
+  const isAdmin = users?.role === "ADMIN";
   const isLoggedIn = !!(users?.email || users?.id);
 
   const { data: pointsData, refetch: refetchPoints } = useGetMyPointsQuery(undefined, {
@@ -213,10 +212,10 @@ export function Navbars() {
     skip: !isLoggedIn || isAdmin,
   });
 
-  const points     = pointsData?.data?.totalPoints ?? 0;
-  const history    = pointsData?.data?.history     ?? [];
-  const board      = boardData?.data ?? [];
-  const rank       = board.findIndex((u: any) => u.id === users?.id) + 1;
+  const points = pointsData?.data?.totalPoints ?? 0;
+  const history = pointsData?.data?.history ?? [];
+  const board = boardData?.data ?? [];
+  const rank = board.findIndex((u: any) => u.id === users?.id) + 1;
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -434,11 +433,11 @@ export function Navbars() {
         <NavbarCollapse>
           <div className="flex flex-col md:flex-row md:items-center md:gap-8 lg:gap-14">
             {[
-              { label: "Home",             href: "/"               },
+              { label: "Home", href: "/" },
               { label: "Report Lost Item", href: "/reportlostItem" },
-              { label: "Lost Items",       href: "/lostItems"      },
-              { label: "Found Items",      href: "/foundItems"     },
-              { label: "Smart Search",     href: "/ai-search"      },
+              { label: "Lost Items", href: "/lostItems" },
+              { label: "Found Items", href: "/foundItems" },
+              { label: "Smart Search", href: "/ai-search" },
             ].map(({ label, href }) => (
               <NavbarLink key={href} href={href}
                 className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">

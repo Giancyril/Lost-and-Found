@@ -33,10 +33,10 @@ export const createAnnouncement = async (req: Request, res: Response) => {
 
       const emailPromises = targets.map((u: any) =>
         sendEmail({
-          fromName:  process.env.SMTP_FROM_NAME  || "NBSC SAS Lost & Found",
+          fromName: process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found",
           fromEmail: process.env.SMTP_FROM_EMAIL || "noreply@nbsc.edu.ph",
-          toEmail:   u.email,
-          subject:   `[NBSC SAS] ${title}`,
+          toEmail: u.email,
+          subject: `[NBSC SAS] ${title}`,
           html: announcementEmailTemplate({ title, message, type, recipientName: u.username || u.name || "User" }),
         }).catch(() => null)
       );
@@ -126,13 +126,13 @@ export const replyToTicket = async (req: Request, res: Response) => {
     // Send reply email if senderEmail exists
     if (ticket.senderEmail) {
       await sendEmail({
-        fromName:  process.env.SMTP_FROM_NAME  || "NBSC SAS Lost & Found",
+        fromName: process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found",
         fromEmail: process.env.SMTP_FROM_EMAIL || "noreply@nbsc.edu.ph",
-        toEmail:   ticket.senderEmail,
-        subject:   `Re: ${ticket.subject} — Support Reply`,
+        toEmail: ticket.senderEmail,
+        subject: `Re: ${ticket.subject} — Support Reply`,
         html: ticketReplyEmailTemplate({
           senderName: ticket.senderName || "User",
-          subject:    ticket.subject,
+          subject: ticket.subject,
           originalMessage: ticket.message,
           adminReply,
         }),

@@ -23,7 +23,7 @@ const shouldHideImage = (categoryName: string | undefined, isAdmin: boolean) => 
 };
 
 const HiddenImagePlaceholder = () => (
-  <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex flex-col items-center justify-center gap-4">
+  <div className="relative w-full h-full min-h-[280px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex flex-col items-center justify-center gap-4">
     <div className="w-20 h-20 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
       <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
@@ -42,13 +42,13 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const next = () => setActiveIdx((i) => (i === images.length - 1 ? 0 : i + 1));
 
   if (images.length === 0) return (
-    <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+    <div className="relative w-full h-full min-h-[280px] lg:min-h-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
       <img src="/bgimg.png" alt={alt} className="absolute inset-0 w-full h-full object-cover" />
     </div>
   );
 
   if (images.length === 1) return (
-    <div className="relative w-full h-full min-h-[430px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+    <div className="relative w-full h-full min-h-[280px] lg:min-h-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
       <img src={images[0]} alt={alt} className="absolute inset-0 w-full h-full object-cover"
         onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
     </div>
@@ -56,7 +56,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
 
   return (
     <div className="flex flex-col gap-3 h-full">
-      <div className="relative w-full flex-1 min-h-[380px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+      <div className="relative w-full flex-1 min-h-[280px] lg:min-h-0 rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
         <img src={images[activeIdx]} alt={`${alt} — photo ${activeIdx + 1}`}
           className="absolute inset-0 w-full h-full object-cover"
           onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
@@ -91,24 +91,22 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   );
 }
 
-const openModal  = (setter: (v: boolean) => void) => { setter(true);  document.body.classList.add("modal-open");    };
+const openModal = (setter: (v: boolean) => void) => { setter(true); document.body.classList.add("modal-open"); };
 const closeModal = (setter: (v: boolean) => void) => { setter(false); document.body.classList.remove("modal-open"); };
 
 const SingleLostItem = () => {
   const users: any = useUserVerification();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   const isAdmin = users?.role === "ADMIN";
 
   const { lostItem: lostItemId }: any = useParams();
   const { data: singleLostItem, isLoading, refetch } = useGetSingleLostItemQuery(lostItemId);
   const [createFoundItem, { isLoading: submitLoading }] = useCreateFoundItemMutation();
 
-  const [isModalOpen, setIsModalOpen]     = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-  const [foundDate, setFoundDate]         = useState(new Date().toISOString().split("T")[0]);
-  const [isSubmitting, setIsSubmitting]   = useState(false);
+  const [foundDate, setFoundDate] = useState(new Date().toISOString().split("T")[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [reportedFound, setReportedFound] = useState<boolean>(false);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
@@ -118,14 +116,14 @@ const SingleLostItem = () => {
     try {
       const foundData = {
         foundItemName: lostItem?.lostItemName,
-        description:   data.description,
-        img:           lostItem?.img || "",
-        location:      data.location,
-        date:          new Date(foundDate + "T00:00:00"),
-        claimProcess:  "Visit the SAS office with valid ID to claim this item.",
-        categoryId:    lostItem?.category?.id,
-        lostItemId:    lostItemId,
-        reporterName:  data.reporterName || "",
+        description: data.description,
+        img: lostItem?.img || "",
+        location: data.location,
+        date: new Date(foundDate + "T00:00:00"),
+        claimProcess: "Visit the SAS office with valid ID to claim this item.",
+        categoryId: lostItem?.category?.id,
+        lostItemId: lostItemId,
+        reporterName: data.reporterName || "",
       };
       const res: any = await createFoundItem(foundData);
       if (res?.data?.success == false) {
@@ -174,12 +172,15 @@ const SingleLostItem = () => {
   return (
     <>
       <div className="min-h-screen bg-gray-950">
+
         {/* Header */}
         <div className="border-b border-gray-800 bg-gray-950">
           <div className="w-full px-4 sm:px-10 lg:px-16 py-5">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{lostItemName || "Lost Item"}</h1>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">
+                  {lostItemName || "Lost Item"}
+                </h1>
                 <p className="text-gray-500 text-sm mt-1">Lost item details and information</p>
               </div>
             </div>
@@ -188,83 +189,113 @@ const SingleLostItem = () => {
 
         {/* Main Content */}
         <div className="w-full px-4 sm:px-10 lg:px-16 py-6 sm:py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 lg:items-stretch">
 
-            {/* Left: Image Carousel with "Lost" Overlay Badge */}
-            <div className="relative flex flex-col h-full rounded-2xl overflow-hidden">
-              {!alreadyFound && (
-                <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-red-600 text-white text-[10px] uppercase font-bold rounded-full shadow-lg border border-red-700/50 tracking-wider">
-                  Lost
-                </div>
-              )}
-              {hideImage ? (
-                <HiddenImagePlaceholder />
-              ) : (
-                <ImageCarousel images={imageList} alt={lostItemName} />
-              )}
+            {/* Left column — image + mobile discussion button */}
+            <div className="flex flex-col gap-3">
+
+              {/* Image */}
+              <div className="relative flex flex-col lg:h-full rounded-2xl overflow-hidden">
+                {!alreadyFound && (
+                  <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-red-600 text-white text-[10px] uppercase font-bold rounded-full shadow-lg border border-red-700/50 tracking-wider">
+                    Lost
+                  </div>
+                )}
+                {hideImage ? (
+                  <HiddenImagePlaceholder />
+                ) : (
+                  <ImageCarousel images={imageList} alt={lostItemName} />
+                )}
+              </div>
+
+              {/* Mobile discussion button — below image */}
+              <div className="lg:hidden">
+                <button
+                  onClick={() => setIsCommentModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 border border-white/5 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-xs"
+                >
+                  <FaComments size={13} className="text-blue-400" />
+                  View Discussion & Sightings
+                </button>
+              </div>
+
             </div>
 
             {/* Right: Details */}
-            <div className="space-y-4">
-              <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
-                <h2 className="text-xs font-bold text-white uppercase tracking-widest mb-3">Description</h2>
-                <p className="text-gray-400 leading-relaxed text-sm">{description || "No description available."}</p>
+            <div className="space-y-3">
+              <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
+                <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Description</h2>
+                <p className="text-gray-300 leading-relaxed text-xs">{description || "No description available."}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 {[
-                  { icon: <FaCalendarAlt size={12} />, label: "Date Lost",    value: date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Not specified" },
-                  { icon: <FaMapMarkerAlt size={12} />, label: "Location",    value: location || "Not specified" },
-                  { icon: <FaTag size={12} />,          label: "Category",    value: category?.name || "Uncategorized" },
-                  { icon: <FaUser size={12} />,         label: "Reported By", value: lostItem?.reporterName || user?.username || "Anonymous" },
+                  { icon: <FaCalendarAlt size={10} />, label: "Date Lost", value: date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Not specified" },
+                  { icon: <FaMapMarkerAlt size={10} />, label: "Location", value: location || "Not specified" },
+                  { icon: <FaTag size={10} />, label: "Category", value: category?.name || "Uncategorized" },
+                  { icon: <FaUser size={10} />, label: "Reported By", value: lostItem?.reporterName || user?.username || "Anonymous" },
                 ].map((item, i) => (
-                  <div key={i} className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-                    <div className="flex items-center gap-2 text-blue-400 mb-2">
+                  <div key={i} className="bg-gray-900 rounded-xl p-3 border border-gray-800">
+                    <div className="flex items-center gap-1.5 text-blue-400 mb-1.5">
                       {item.icon}
-                      <span className="text-xs font-bold uppercase tracking-widest truncate">{item.label}</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest truncate">{item.label}</span>
                     </div>
-                    <p className="text-gray-300 text-sm">{item.value}</p>
+                    <p className="text-gray-300 text-[11px] font-medium truncate">{item.value}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
-                <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2">Found This Item?</h3>
+              <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
+                <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Found This Item?</h3>
                 {alreadyFound ? (
-                  <div className="bg-green-900/20 border border-green-600/30 rounded-xl p-4 flex items-start gap-3">
-                    <span className="text-green-400 text-xl mt-0.5">✓</span>
+                  <div className="bg-green-900/20 border border-green-600/30 rounded-xl p-3 flex items-start gap-2.5">
+                    <span className="text-green-400 text-base mt-0.5">✓</span>
                     <div>
-                      <p className="text-green-400 text-sm font-semibold">
-                        {reportedFound ? "Thank you for reporting this!" : "This item has been marked as found!"}
+                      <p className="text-green-400 text-xs font-semibold">
+                        {reportedFound ? "Thank you for reporting!" : "Marked as found!"}
                       </p>
-                      <p className="text-green-400/70 text-xs mt-1 leading-relaxed">
-                        {reportedFound ? "Your report has been submitted." : "Someone has already reported finding this item."}
+                      <p className="text-green-400/70 text-[11px] mt-0.5 leading-relaxed">
+                        {reportedFound ? "Your report has been submitted." : "Someone already reported finding this."}
                       </p>
                     </div>
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-start gap-3 bg-gray-800/60 rounded-xl p-4 border border-gray-700 mb-4">
-                      <FaBoxOpen className="text-blue-400 mt-0.5 shrink-0 text-lg" />
+                    <div className="flex items-start gap-2.5 bg-gray-800/60 rounded-xl p-3 border border-gray-700 mb-3">
+                      <FaBoxOpen className="text-blue-400 mt-0.5 shrink-0" size={13} />
                       <div>
-                        <p className="text-white text-sm font-semibold">Did you find this item?</p>
-                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">Let the owner know by filling in where and when you found it. The SAS office will take it from there.</p>
+                        <p className="text-white text-xs font-semibold">Did you find this item?</p>
+                        <p className="text-gray-400 text-[11px] mt-0.5 leading-relaxed text-justify">
+                          Let the owner know where and when you found it.
+                        </p>
                       </div>
                     </div>
                     <button
                       onClick={() => openModal(setIsModalOpen)}
-                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 text-sm">
-                      I Found This Item
+                      className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-2 rounded-lg transition-all text-[11px] uppercase tracking-widest">
+                      <FaBoxOpen size={9} /> I Found This Item
                     </button>
                   </>
                 )}
               </div>
+
+              {/* Desktop discussion button */}
+              <div className="hidden lg:block">
+                <button
+                  onClick={() => setIsCommentModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 border border-white/5 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-xs"
+                >
+                  <FaComments size={13} className="text-blue-400" />
+                  View Discussion & Sightings
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
 
-        {/* Comments Section */}
-        <div className="w-full px-4 sm:px-10 lg:px-16 py-8 border-t border-gray-800">
+        {/* Bottom Comments Section — desktop only */}
+        <div className="hidden lg:block w-full px-4 sm:px-10 lg:px-16 py-8 border-t border-gray-800">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-white">Discussion & Sightings</h2>
           </div>
@@ -276,6 +307,7 @@ const SingleLostItem = () => {
             View Discussion & Sightings
           </button>
         </div>
+
       </div>
 
       {/* Modal */}
@@ -287,9 +319,7 @@ const SingleLostItem = () => {
                 <h3 className="text-base font-bold text-white">I found this item</h3>
                 <p className="text-gray-500 text-xs mt-0.5">Tell us where and when you found <span className="text-white font-medium">{lostItemName}</span></p>
               </div>
-              <button
-                onClick={() => closeModal(setIsModalOpen)}
-                className="text-gray-500 hover:text-white ml-4 mt-0.5 transition-colors">
+              <button onClick={() => closeModal(setIsModalOpen)} className="text-gray-500 hover:text-white ml-4 mt-0.5 transition-colors">
                 <FaTimes size={14} />
               </button>
             </div>
@@ -352,7 +382,9 @@ const SingleLostItem = () => {
                 </div>
 
                 <div className="flex items-start gap-2.5 bg-blue-500/5 border border-blue-500/15 rounded-lg px-4 py-3">
-                  <p className="text-blue-300/80 text-xs leading-relaxed text-justify">Your report will be submitted to the SAS office. The owner can visit and claim it with proof of ownership.</p>
+                  <p className="text-blue-300/80 text-xs leading-relaxed text-justify">
+                    Your report will be submitted to the SAS office. The owner can visit and claim it with proof of ownership.
+                  </p>
                 </div>
 
                 <div className="flex gap-3 pt-1">
@@ -374,12 +406,12 @@ const SingleLostItem = () => {
         </div>
       )}
 
-      <CommentModal 
-        isOpen={isCommentModalOpen} 
-        onClose={() => setIsCommentModalOpen(false)} 
-        itemId={lostItemId!} 
-        itemType="lost" 
-        itemName={lostItemName || "Item"} 
+      <CommentModal
+        isOpen={isCommentModalOpen}
+        onClose={() => setIsCommentModalOpen(false)}
+        itemId={lostItemId!}
+        itemType="lost"
+        itemName={lostItemName || "Item"}
       />
 
       <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
