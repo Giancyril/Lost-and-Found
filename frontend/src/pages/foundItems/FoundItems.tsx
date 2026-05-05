@@ -93,6 +93,12 @@ const CATEGORY_CONFIG = {
     description: 'Document',
     colors: [],
     conditions: []
+  },
+  'wallets & purses': {
+    itemName: 'Wallet/Purse',
+    description: 'A wallet/purse has been turned in. To ensure the security of the owner\'s belongings, specific details such as color, brand, or contents are kept confidential. Please visit the SAS office to identify and claim your property.',
+    colors: [],
+    conditions: []
   }
 };
 
@@ -863,6 +869,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
       case "umbrellas":   colorDescription = isOther ? `An umbrella was found. ` : `A ${c} umbrella was found. `; break;
       case "watches":     colorDescription = isOther ? `A watch was found. ` : `A ${c} watch was found. `; break;
       case "money":       colorDescription = `Money was found. `; break;
+      case "wallets & purses": colorDescription = config.description; break;
       case "device":      colorDescription = isOther ? `A device was found. ` : `A ${c} device was found. `; break;
       default:            colorDescription = isOther ? `A ${config.itemName.toLowerCase()} was found.` : `A ${c} ${config.itemName.toLowerCase()} was found.`;
     }
@@ -930,6 +937,9 @@ const watchedSchoolEmail  = watch("schoolEmail");
         else if (conditionValue === "Wallet/Purse")        enhancedDescription = `Money found inside a wallet/purse was found. `;
         else                                               enhancedDescription = `Money was found. `;
         break;
+      case "wallets & purses":
+        enhancedDescription = config.description;
+        break;
       case "device":{
         const base = isOther ? "A device" : `A ${addSelectedColor.toLowerCase()} device`;
         if (isNone)                               enhancedDescription = `${base} was found. `;
@@ -951,14 +961,33 @@ const watchedSchoolEmail  = watch("schoolEmail");
 
   const onAddSubmit = async (data: any) => {
     if (!addSelectedMenucategoryId) return;
-    if (!addSelectedFile && !addPreview && !(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency") || addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification" || addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget"))) {
-      setAddPhotoError("A photo of the item is required.");
-      return;
-    }
-    setAddPhotoError("");
     try {
+      const isAutoFillImage = (
+        addSelectedMenu?.toLowerCase().includes("money") || 
+        addSelectedMenu?.toLowerCase().includes("cash") || 
+        addSelectedMenu?.toLowerCase().includes("bill") || 
+        addSelectedMenu?.toLowerCase().includes("currency") || 
+        addSelectedMenu?.toLowerCase() === "id" || 
+        addSelectedMenu?.toLowerCase() === "identification" || 
+        addSelectedMenu?.toLowerCase().includes("device") || 
+        addSelectedMenu?.toLowerCase().includes("electronic") || 
+        addSelectedMenu?.toLowerCase().includes("gadget") ||
+        addSelectedMenu?.toLowerCase().includes("wallet") ||
+        addSelectedMenu?.toLowerCase().includes("purse")
+      );
+
+      const autoFillPath = (addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) 
+        ? "/money.jpg" 
+        : (addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification") 
+          ? "/id.jpg" 
+          : (addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) 
+            ? "/phone.png" 
+            : (addSelectedMenu?.toLowerCase().includes("wallet") || addSelectedMenu?.toLowerCase().includes("purse"))
+              ? "/wallet.jpg"
+              : "/phone.png"; // fallback
+
       const res: any = await createFoundItem({
-        img: (addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? "/money.jpg" : (addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification") ? "/id.jpg" : (addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) ? "/phone.png" : (addPreview || ""),
+        img: isAutoFillImage ? autoFillPath : (addPreview || ""),
         categoryId: addSelectedMenucategoryId,
         foundItemName: data.foundItemName,
         description: data.description,
@@ -1383,7 +1412,19 @@ const watchedSchoolEmail  = watch("schoolEmail");
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                     Item Photo <span className="text-red-400">*</span>
                   </label>
-                  {!addPreview && !(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency") || addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification" || addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) ? (
+                  {!addPreview && !(
+                    addSelectedMenu?.toLowerCase().includes("money") || 
+                    addSelectedMenu?.toLowerCase().includes("cash") || 
+                    addSelectedMenu?.toLowerCase().includes("bill") || 
+                    addSelectedMenu?.toLowerCase().includes("currency") || 
+                    addSelectedMenu?.toLowerCase() === "id" || 
+                    addSelectedMenu?.toLowerCase() === "identification" || 
+                    addSelectedMenu?.toLowerCase().includes("device") || 
+                    addSelectedMenu?.toLowerCase().includes("electronic") || 
+                    addSelectedMenu?.toLowerCase().includes("gadget") ||
+                    addSelectedMenu?.toLowerCase().includes("wallet") ||
+                    addSelectedMenu?.toLowerCase().includes("purse")
+                  ) ? (
                     <div
                       className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
                         ${addPhotoError ? "border-red-500/60 bg-red-900/5" : addIsDragging ? "border-blue-500 bg-blue-900/10" : "border-gray-700 bg-gray-800/40 hover:border-blue-500/60 hover:bg-gray-800/70"}`}
@@ -1406,7 +1447,21 @@ const watchedSchoolEmail  = watch("schoolEmail");
                   ) : (
                     <div className="rounded-xl overflow-hidden border border-gray-700 bg-gray-800">
                       <div className="relative group">
-                        <img src={(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? "/money.jpg" : (addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification") ? "/id.jpg" : (addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) ? "/phone.png" : addPreview} alt="Preview" className="w-full max-h-44 object-cover" />
+                        <img 
+                          src={
+                            (addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) 
+                              ? "/money.jpg" 
+                              : (addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification") 
+                                ? "/id.jpg" 
+                                : (addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) 
+                                  ? "/phone.png" 
+                                  : (addSelectedMenu?.toLowerCase().includes("wallet") || addSelectedMenu?.toLowerCase().includes("purse"))
+                                    ? "/wallet.jpg"
+                                    : addPreview
+                          } 
+                          alt="Preview" 
+                          className="w-full max-h-44 object-cover" 
+                        />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/55 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
                           <button type="button" onClick={() => addFileInputRef.current?.click()} className="bg-white/90 hover:bg-white text-gray-900 text-xs font-semibold px-4 py-2 rounded-lg">Change</button>
                           <button type="button" onClick={() => { setAddSelectedFile(null); setAddPreview(""); }} className="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-4 py-2 rounded-lg">Remove</button>

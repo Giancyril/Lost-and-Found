@@ -67,6 +67,12 @@ const CATEGORY_CONFIG = {
     description: 'Document',
     colors: [],
     conditions: []
+  },
+  'wallets & purses': {
+    itemName: 'Wallet/Purse',
+    description: 'A wallet/purse has been turned in. To ensure the security of the owner\'s belongings, specific details such as color, brand, or contents are kept confidential. Please visit the SAS office to identify and claim your property.',
+    colors: [],
+    conditions: []
   }
 };
 
