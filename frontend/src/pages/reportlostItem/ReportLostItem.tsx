@@ -1172,44 +1172,56 @@ const ReportLostItem = () => {
         </div>
       )}
 
-      {/* Tracking Code Modal */}
       {trackingCode && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-fadeIn">
-          <div className="bg-gray-900 border border-gray-700 rounded-3xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden relative transform scale-100 transition-transform">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500" />
-            <div className="p-8 flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                <FaCheck size={28} />
-              </div>
-              <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Report Submitted!</h2>
-              <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-                Your report has been received. Please save the Tracking Code below. You can use it on the <span className="text-blue-400 font-semibold">Track Status</span> page to monitor your item's progress.
-              </p>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+          <div className="bg-gray-900 border border-white/8 rounded-[20px] w-full max-w-[360px] overflow-hidden shadow-2xl">
+            
+            {/* Top accent bar */}
+            <div className="h-[3px] bg-gradient-to-r from-blue-500 via-cyan-400 to-violet-500" />
+
+            <div className="p-6 flex flex-col items-center gap-4">
               
-              <div className="w-full bg-gray-950 border border-gray-800 rounded-2xl p-4 flex items-center justify-between gap-4 mb-8 group hover:border-blue-500/30 transition-colors shadow-inner">
-                <div className="min-w-0 flex-1 text-left">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Tracking Code</p>
-                  <p className="text-white font-mono text-lg truncate tracking-wider">{trackingCode}</p>
+              {/* Check icon */}
+              <div className="w-11 h-11 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0">
+                <FaCheck size={18} className="text-emerald-400" />
+              </div>
+
+              {/* Title + description */}
+              <div className="text-center">
+                <h2 className="text-white text-[17px] font-bold tracking-tight mb-1.5">Report Submitted!</h2>
+                <p className="text-gray-500 text-[12px] leading-relaxed">
+                  Your report has been received. Save this tracking code to monitor your item on the{" "}
+                  <span className="text-blue-400 font-medium">Track Status</span> page.
+                </p>
+              </div>
+
+              {/* Tracking code box */}
+              <div className="w-full bg-gray-950 border border-white/6 rounded-xl p-3 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-bold text-gray-600 uppercase tracking-[0.15em] mb-1">Tracking Code</p>
+                  <p className="font-mono text-[13px] text-gray-200 truncate">{trackingCode}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     navigator.clipboard.writeText(trackingCode);
-                    toast.success("Tracking code copied to clipboard!");
+                    toast.success("Copied to clipboard!");
                   }}
-                  className="shrink-0 p-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-all active:scale-95 border border-blue-500/20"
-                  title="Copy to clipboard"
+                  className="shrink-0 p-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-lg transition-all active:scale-95"
+                  title="Copy"
                 >
-                  <FaCopy size={16} />
+                  <FaCopy size={13} className="text-blue-400" />
                 </button>
               </div>
 
-              <button 
+              {/* Close button */}
+              <button
                 onClick={handleCloseTrackingModal}
-                className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-xs rounded-xl transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
+                className="w-full py-[11px] bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white text-[12px] font-bold uppercase tracking-widest rounded-[10px] transition-all"
               >
                 Got It, Close
               </button>
             </div>
+
           </div>
         </div>
       )}

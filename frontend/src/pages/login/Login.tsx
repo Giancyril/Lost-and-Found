@@ -7,7 +7,7 @@ import { useLoginMutation } from "../../redux/api/api";
 import { useNavigate } from "react-router-dom";
 import { MdVisibility, MdVisibilityOff, MdEmail, MdLock, MdErrorOutline } from "react-icons/md";
 import { useState, useEffect } from "react";
-import FloatingLines from "../../components/FloatingLines";
+
 
 const LOCKOUT_DURATION = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 3;
@@ -97,30 +97,6 @@ const Login = () => {
   return (
     <>
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-950">
-
-        <div className="absolute inset-0 bg-gray-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_60%,rgba(37,99,235,0.12),transparent)]" />
-
-        <div className="absolute inset-0" style={{ mixBlendMode: 'screen' }}>
-          <FloatingLines
-            enabledWaves={["top", "middle", "bottom"]}
-            lineCount={[4, 6, 4]}
-            lineDistance={[6, 5, 7]}
-            animationSpeed={0.6}
-            interactive={true}
-            parallax={true}
-            bendRadius={4}
-            bendStrength={-0.4}
-            parallaxStrength={0.15}
-            linesGradient={[
-              "#1e3a5f",
-              "#2563eb",
-              "#22d3ee",
-              "#93c5fd",
-            ]}
-            mixBlendMode="screen"
-          />
-        </div>
 
         <div className="relative z-10 w-full max-w-sm px-6 -mt-16">
           <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/50 p-6 transition-all duration-300 hover:shadow-3xl hover:shadow-blue-500/10">

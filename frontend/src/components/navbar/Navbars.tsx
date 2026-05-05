@@ -452,13 +452,6 @@ export function Navbars() {
                 My Dashboard
               </NavbarLink>
             )}
-
-            {!isLoggedIn && (
-              <NavbarLink href="/register"
-                className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm sm:hidden">
-                Register
-              </NavbarLink>
-            )}
           </div>
         </NavbarCollapse>
       </Navbar>

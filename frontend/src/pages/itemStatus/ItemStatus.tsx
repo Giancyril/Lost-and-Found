@@ -9,6 +9,8 @@ import { useGetMyLostItemQuery, useMyClaimsQuery, useLazyGetSingleLostItemQuery 
 import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
+import { useUserVerification } from "../../auth/auth";
 
 // ── Status Timeline ───────────────────────────────────────────────────────────
 const StatusTimeline = ({ steps }: {
@@ -39,11 +41,6 @@ const StatusTimeline = ({ steps }: {
               <p className={`text-xs font-bold leading-tight ${
                 isCompleted ? "text-white" : isActive ? "text-cyan-400" : "text-gray-500"
               }`}>{step.label}</p>
-              {isActive && (
-                <span className="shrink-0 text-[9px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                  Active
-                </span>
-              )}
             </div>
             {step.date && (
               <p className="text-[10px] text-gray-600 mt-0.5">
@@ -75,12 +72,13 @@ const EmptyState = ({ icon, title, description, actionLink, actionText }: {
 );
 
 // ── Item Card ─────────────────────────────────────────────────────────────────
-const TrackingCard = ({ img, title, subtitle, statusLabel, statusColor, steps, actionLink, actionText }: {
+const TrackingCard = ({ img, title, subtitle, statusLabel, statusColor, steps, actionLink, actionText, delay = 1 }: {
   img: string; title: string; subtitle: string;
   statusLabel: string; statusColor: string;
   steps: any[]; actionLink: string; actionText: string;
+  delay?: number;
 }) => (
-  <div className="group bg-gray-900 border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-black/20 flex flex-col">
+  <div className={`reveal reveal-delay-${delay} group bg-gray-900 border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-black/20 flex flex-col`}>
     
     {/* Top row — image + info + status */}
     <div className="flex items-start gap-3 p-4 border-b border-white/[0.05]">
@@ -119,8 +117,12 @@ const TrackingCard = ({ img, title, subtitle, statusLabel, statusColor, steps, a
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const ItemStatus = () => {
-  const { data: myLostItems, isLoading: lostLoading } = useGetMyLostItemQuery({});
-  const { data: myClaims,    isLoading: claimsLoading } = useMyClaimsQuery({});
+  useScrollReveal();
+  const user: any = useUserVerification();
+  const isLoggedIn = !!user;
+
+  const { data: myLostItems, isLoading: lostLoading } = useGetMyLostItemQuery({}, { skip: !isLoggedIn });
+  const { data: myClaims,    isLoading: claimsLoading } = useMyClaimsQuery({}, { skip: !isLoggedIn });
   const [triggerSearch, { data: searchResult, isFetching: searchLoading }] = useLazyGetSingleLostItemQuery();
 
   const [activeTab, setActiveTab] = useState(0);
@@ -147,7 +149,7 @@ const ItemStatus = () => {
 
   if (lostLoading || claimsLoading) return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center">
-      <Spinner size="xl" className="text-blue-500 mb-4" />
+      <Spinner size="xl" className="text-blue-700 mb-4" />
       <p className="text-gray-500 text-xs font-semibold uppercase tracking-widest">Loading...</p>
     </div>
   );
@@ -158,10 +160,10 @@ const ItemStatus = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-16">
+    <div className="min-h-screen bg-gray-950 pb-16 reveal max-w-full overflow-x-hidden">
 
       {/* ── Page Header — matches LostItems style ── */}
-      <div className="border-b border-white/5 bg-gray-900/50">
+      <div className="border-b border-white/5 bg-gray-900/50 reveal">
         <div className="px-4 sm:px-10 lg:px-16 py-6 sm:py-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
@@ -179,66 +181,69 @@ const ItemStatus = () => {
       </div>
 
       {/* ── Search Bar — matches LostItems style ── */}
-      <div className="px-4 sm:px-10 lg:px-16 py-5">
-        <form onSubmit={handleSearch} className="relative">
-          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
-          <input 
-            type="text" 
-            value={searchId} 
-            onChange={(e) => setSearchId(e.target.value)}
-            placeholder="Enter Tracking Code (e.g. TRK-XXXX)..."
-            className="w-full pl-11 pr-28 py-3 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" 
-          />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+      <div className="px-4 sm:px-10 lg:px-16 py-5 reveal reveal-delay-1">
+        <form onSubmit={handleSearch} className="relative flex items-center">
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
+            <input 
+              type="text" 
+              value={searchId} 
+              onChange={(e) => setSearchId(e.target.value)}
+              placeholder="Enter Tracking Code..."
+              className="w-full pl-11 pr-32 sm:pr-44 py-3.5 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" 
+            />
+          </div>
+          <div className="absolute right-2 flex items-center gap-1.5 sm:gap-2">
             {searchId && (
               <button 
                 type="button"
                 onClick={clearSearch}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-xs rounded-lg transition-all"
+                className="flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white rounded-lg transition-all"
+                title="Clear Search"
               >
-                <FaTimes size={9} /> Clear
+                <FaTimes size={10} />
               </button>
             )}
             <button 
               type="submit"
               disabled={searchLoading}
-              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20"
+              className="px-4 sm:px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-[10px] sm:text-xs font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95 whitespace-nowrap"
             >
               {searchLoading ? "..." : "Track"}
             </button>
           </div>
         </form>
         {isSearched && (
-          <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-3 px-1 animate-pulse">
+          <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-3 px-1 animate-pulse break-all">
             Showing result for code: {searchId}
           </p>
         )}
       </div>
 
       {/* ── Stats Row ── */}
-      <div className="px-4 sm:px-10 lg:px-16 py-5">
-        <div className="grid grid-cols-3 gap-3">
+      <div className="px-4 sm:px-10 lg:px-16 py-5 reveal reveal-delay-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
-            { label: "Reports",  value: myLostItems?.data?.length || 0,  color: "text-blue-400",    bg: "bg-blue-500/5",    border: "border-blue-500/10",    icon: <FaSearch size={13} className="text-blue-400" /> },
-            { label: "Claims",   value: myClaims?.data?.length || 0,     color: "text-cyan-400",    bg: "bg-cyan-500/5",    border: "border-cyan-500/10",    icon: <FaHistory size={13} className="text-cyan-400" /> },
-            { label: "Recovered",value: myLostItems?.data?.filter((i: any) => i.isFound).length || 0, color: "text-emerald-400", bg: "bg-emerald-500/5", border: "border-emerald-500/10", icon: <FaCheckCircle size={13} className="text-emerald-400" /> },
+            { label: "Reports",  value: isLoggedIn ? (myLostItems?.data?.length || 0) : 0,  color: "text-blue-400",    bg: "bg-blue-500/5",    border: "border-blue-500/10",    icon: <FaSearch size={13} className="text-blue-400" /> },
+            { label: "Claims",   value: isLoggedIn ? (myClaims?.data?.length || 0) : 0,     color: "text-cyan-400",    bg: "bg-cyan-500/5",    border: "border-cyan-500/10",    icon: <FaHistory size={13} className="text-cyan-400" /> },
+            { label: "Recovered",value: isLoggedIn ? (myLostItems?.data?.filter((i: any) => i.isFound).length || 0) : 0, color: "text-emerald-400", bg: "bg-emerald-500/5", border: "border-emerald-500/10", icon: <FaCheckCircle size={13} className="text-emerald-400" />, className: "col-span-2 sm:col-span-1" },
           ].map((s, i) => (
-            <div key={i} className={`bg-gray-900 border ${s.border} rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col gap-2`}>
+            <div key={i} className={`bg-gray-900 border ${s.border} rounded-xl sm:rounded-2xl p-4 sm:p-5 flex flex-col gap-2 ${s.className || ""}`}>
               <div className="flex items-start justify-between gap-2">
-                <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${s.bg} border ${s.border} shrink-0`}>
+                <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${s.bg} border ${s.border} shrink-0`}>
                   {s.icon}
                 </div>
-                <span className={`text-2xl sm:text-3xl font-black leading-none tabular-nums ${s.color}`}>{s.value}</span>
+                <span className={`text-xl sm:text-3xl font-black leading-none tabular-nums ${s.color}`}>{s.value}</span>
               </div>
-              <p className="text-xs sm:text-sm font-semibold text-white leading-tight">{s.label}</p>
+              <p className="text-[10px] sm:text-sm font-semibold text-white leading-tight uppercase tracking-wider">{s.label}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* ── Tabs ── */}
-      <div className="px-4 sm:px-10 lg:px-16 mb-5">
-        <div className="flex items-center gap-2 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit">
+      <div className="px-4 sm:px-10 lg:px-16 mb-5 reveal reveal-delay-3 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit min-w-max">
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
             return (
@@ -290,11 +295,12 @@ const ItemStatus = () => {
                     steps={steps}
                     actionLink={`/lostItems/${item.id}`}
                     actionText="View Details"
+                    delay={1}
                   />
                 );
               })()
             ) : myLostItems?.data?.length > 0 ? (
-              myLostItems.data.map((item: any) => {
+              myLostItems.data.map((item: any, idx: number) => {
                 const steps = [
                   { label: "Report Submitted",   date: item.createdAt, status: "completed" as const, icon: <FaClipboardList size={12} /> },
                   { label: "Under Staff Review", date: item.createdAt, status: item.isFound ? "completed" as const : "active" as const, icon: <FaClock size={12} /> },
@@ -313,6 +319,7 @@ const ItemStatus = () => {
                     steps={steps}
                     actionLink={`/lostItems/${item.id}`}
                     actionText="View Details"
+                    delay={(idx % 4) + 1}
                   />
                 );
               })
@@ -331,7 +338,7 @@ const ItemStatus = () => {
         {activeTab === 1 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {myClaims?.data?.length > 0 ? (
-              myClaims.data.map((claim: any) => {
+              myClaims.data.map((claim: any, idx: number) => {
                 const isApproved = claim.status === "APPROVED";
                 const isRejected = claim.status === "REJECTED";
                 const steps = [
@@ -354,6 +361,7 @@ const ItemStatus = () => {
                     steps={steps}
                     actionLink={`/foundItems/${claim.foundItemId}`}
                     actionText="View Item"
+                    delay={(idx % 4) + 1}
                   />
                 );
               })
