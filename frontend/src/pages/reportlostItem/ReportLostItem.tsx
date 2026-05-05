@@ -379,6 +379,13 @@ const ReportLostItem = () => {
       setValue("color", "");
       setSelectedColor("");
       setSelectedCondition("");
+    } else {
+      // Clear fields if no config exists for the category
+      setValue("lostItemName", "");
+      setValue("description", "");
+      setValue("color", "");
+      setSelectedColor("");
+      setSelectedCondition("");
     }
   };
 
@@ -806,27 +813,29 @@ const ReportLostItem = () => {
                                 const categoryKey = selectedMenu.toLowerCase();
                                 const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
                                 if (config && colorValue) {
+                                  const isOther = colorValue === 'Other';
+                                  const c = colorValue.toLowerCase();
                                   let colorDescription = '';
                                   
                                   // Generate professional descriptions based on category and color
                                   switch (categoryKey) {
                                     case 'bags':
-                                      colorDescription = `I am reporting a lost ${colorValue.toLowerCase()} bag. `;
+                                      colorDescription = isOther ? `I am reporting a lost bag. ` : `I am reporting a lost ${c} bag. `;
                                       break;
                                     case 'calculators':
-                                      colorDescription = `I am reporting a lost ${colorValue.toLowerCase()} calculator. `;
+                                      colorDescription = isOther ? `I am reporting a lost calculator. ` : `I am reporting a lost ${c} calculator. `;
                                       break;
                                     case 'keys':
-                                      colorDescription = `I am reporting lost ${colorValue.toLowerCase()} keys. `;
+                                      colorDescription = isOther ? `I am reporting lost keys. ` : `I am reporting lost ${c} keys. `;
                                       break;
                                     case 'umbrellas':
-                                      colorDescription = `I am reporting a lost ${colorValue.toLowerCase()} umbrella. `;
+                                      colorDescription = isOther ? `I am reporting a lost umbrella. ` : `I am reporting a lost ${c} umbrella. `;
                                       break;
                                     case 'watches':
-                                      colorDescription = `I am reporting a lost ${colorValue.toLowerCase()} watch. `;
+                                      colorDescription = isOther ? `I am reporting a lost watch. ` : `I am reporting a lost ${c} watch. `;
                                       break;
                                     default:
-                                      colorDescription = `I am reporting a lost ${colorValue.toLowerCase()} ${config.itemName.toLowerCase()}. `;
+                                      colorDescription = isOther ? `I am reporting a lost ${config.itemName.toLowerCase()}. ` : `I am reporting a lost ${c} ${config.itemName.toLowerCase()}. `;
                                   }
                                   
                                   setValue("description", colorDescription);
@@ -861,67 +870,62 @@ const ReportLostItem = () => {
                                 const categoryKey = selectedMenu.toLowerCase();
                                 const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
                                 if (config && selectedColor && conditionValue) {
+                                  const isOther = selectedColor === 'Other';
+                                  const isNone = conditionValue === 'None';
                                   let enhancedDescription = '';
                                   
                                   // Generate enhanced descriptions based on category, color, and condition
                                   switch (categoryKey) {
-                                    case 'bags':
-                                      if (conditionValue === 'Scratches') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} bag with scratches. `;
-                                      } else if (conditionValue === 'Stickers') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} bag with stickers. `;
-                                      } else if (conditionValue === 'Keychains') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} bag with keychains. `;
-                                      } else {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} bag in good condition. `;
-                                      }
+                                    case 'bags': {
+                                      const base = isOther ? 'a lost bag' : `a lost ${selectedColor.toLowerCase()} bag`;
+                                      if (isNone)                               enhancedDescription = `I am reporting ${base}. `;
+                                      else if (conditionValue === 'Scratches')  enhancedDescription = `I am reporting ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I am reporting ${base} with stickers. `;
+                                      else if (conditionValue === 'Keychains')  enhancedDescription = `I am reporting ${base} with keychains. `;
+                                      else                                      enhancedDescription = `I am reporting ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
-                                    case 'calculators':
-                                      if (conditionValue === 'Scratches') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} calculator with scratches.`;
-                                      } else if (conditionValue === 'Stickers') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} calculator with stickers. `;
-                                      } else if (conditionValue === 'Engravings') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} calculator with engravings. `;
-                                      } else {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} calculator in good condition. `;
-                                      }
+                                    }
+                                    case 'calculators': {
+                                      const base = isOther ? 'a lost calculator' : `a lost ${selectedColor.toLowerCase()} calculator`;
+                                      if (isNone)                                enhancedDescription = `I am reporting ${base}. `;
+                                      else if (conditionValue === 'Scratches')   enhancedDescription = `I am reporting ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I am reporting ${base} with stickers. `;
+                                      else if (conditionValue === 'Engravings') enhancedDescription = `I am reporting ${base} with engravings. `;
+                                      else                                       enhancedDescription = `I am reporting ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
-                                    case 'keys':
-                                      if (conditionValue === 'Scratches') {
-                                        enhancedDescription = `I am reporting lost ${selectedColor.toLowerCase()} keys with scratches. `;
-                                      } else if (conditionValue === 'Stickers') {
-                                        enhancedDescription = `I am reporting lost ${selectedColor.toLowerCase()} keys with stickers. `;
-                                      } else if (conditionValue === 'Keychains') {
-                                        enhancedDescription = `I am reporting lost ${selectedColor.toLowerCase()} keys with attached keychains. `;
-                                      } else {
-                                        enhancedDescription = `I am reporting lost ${selectedColor.toLowerCase()} keys in good condition. `;
-                                      }
+                                    }
+                                    case 'keys': {
+                                      const base = isOther ? 'lost keys' : `lost ${selectedColor.toLowerCase()} keys`;
+                                      if (isNone)                               enhancedDescription = `I am reporting ${base}. `;
+                                      else if (conditionValue === 'Scratches')  enhancedDescription = `I am reporting ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I am reporting ${base} with stickers. `;
+                                      else if (conditionValue === 'Keychains')  enhancedDescription = `I am reporting ${base} with attached keychains. `;
+                                      else                                      enhancedDescription = `I am reporting ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
-                                    case 'umbrellas':
-                                      if (conditionValue === 'Scratches') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} umbrella with scratches. `;
-                                      } else if (conditionValue === 'Stickers') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} umbrella with stickers. `;
-                                      } else if (conditionValue === 'Bent Frame') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} umbrella with a bent frame. `;
-                                      } else {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} umbrella in good condition. `;
-                                      }
+                                    }
+                                    case 'umbrellas': {
+                                      const base = isOther ? 'a lost umbrella' : `a lost ${selectedColor.toLowerCase()} umbrella`;
+                                      if (isNone)                                enhancedDescription = `I am reporting ${base}. `;
+                                      else if (conditionValue === 'Scratches')   enhancedDescription = `I am reporting ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I am reporting ${base} with stickers. `;
+                                      else if (conditionValue === 'Bent Frame')  enhancedDescription = `I am reporting ${base} with a bent frame. `;
+                                      else                                       enhancedDescription = `I am reporting ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
-                                    case 'watches':
-                                      if (conditionValue === 'Scratches') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} watch with scratches. `;
-                                      } else if (conditionValue === 'Stickers') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} watch with stickers. `;
-                                      } else if (conditionValue === 'Engravings') {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} watch with engravings. `;
-                                      } else {
-                                        enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} watch in good condition. `;
-                                      }
+                                    }
+                                    case 'watches': {
+                                      const base = isOther ? 'a lost watch' : `a lost ${selectedColor.toLowerCase()} watch`;
+                                      if (isNone)                                enhancedDescription = `I am reporting ${base}. `;
+                                      else if (conditionValue === 'Scratches')   enhancedDescription = `I am reporting ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I am reporting ${base} with stickers. `;
+                                      else if (conditionValue === 'Engravings') enhancedDescription = `I am reporting ${base} with engravings. `;
+                                      else                                       enhancedDescription = `I am reporting ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
-                                    default:
-                                      enhancedDescription = `I am reporting a lost ${selectedColor.toLowerCase()} ${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()}. Please add details like the brand, size, condition details, and any special features.`;
+                                    }
+                                    default: {
+                                      const colorPart = isOther ? '' : `${selectedColor.toLowerCase()} `;
+                                      const conditionPart = isNone ? '' : ` with ${conditionValue.toLowerCase()}`;
+                                      enhancedDescription = `I am reporting a lost ${colorPart}${config.itemName.toLowerCase()}${conditionPart}. Please add details like the brand, size, and any special features.`;
+                                    }
                                   }
                                   
                                   setValue("description", enhancedDescription);

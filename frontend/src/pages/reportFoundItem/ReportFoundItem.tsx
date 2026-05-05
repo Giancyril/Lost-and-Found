@@ -370,12 +370,19 @@ const ReportLostItem = () => {
     
     if (config) {
       // Auto-fill item name
-      setValue("lostItemName", config.itemName);
+      setValue("foundItemName", config.itemName);
       
       // Auto-fill description (base description without color)
       setValue("description", config.description);
       
       // Reset color field when category changes
+      setValue("color", "");
+      setSelectedColor("");
+      setSelectedCondition("");
+    } else {
+      // Clear fields if no config exists for the category
+      setValue("foundItemName", "");
+      setValue("description", "");
       setValue("color", "");
       setSelectedColor("");
       setSelectedCondition("");
@@ -865,52 +872,59 @@ const ReportLostItem = () => {
                                 if (config && selectedColor && conditionValue) {
                                   const isOther = selectedColor === 'Other';
                                   let enhancedDescription = '';
+                                  const isNone = conditionValue === 'None';
                                   
                                   // Generate enhanced descriptions based on category, color, and condition
                                   switch (categoryKey) {
                                     case 'bags': {
-                                      const base = isOther ? 'a lost bag' : `a lost ${selectedColor.toLowerCase()} bag`;
-                                      if (conditionValue === 'Scratches')      enhancedDescription = `I am reporting ${base} with scratches. `;
-                                      else if (conditionValue === 'Stickers')  enhancedDescription = `I am reporting ${base} with stickers. `;
-                                      else if (conditionValue === 'Keychains') enhancedDescription = `I am reporting ${base} with keychains. `;
-                                      else                                     enhancedDescription = `I am reporting ${base}. `;
+                                      const base = isOther ? 'a bag' : `a ${selectedColor.toLowerCase()} bag`;
+                                      if (isNone)                               enhancedDescription = `I found ${base}. `;
+                                      else if (conditionValue === 'Scratches')  enhancedDescription = `I found ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I found ${base} with stickers. `;
+                                      else if (conditionValue === 'Keychains')  enhancedDescription = `I found ${base} with keychains. `;
+                                      else                                      enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
                                     }
                                     case 'calculators': {
-                                      const base = isOther ? 'a lost calculator' : `a lost ${selectedColor.toLowerCase()} calculator`;
-                                      if (conditionValue === 'Scratches')       enhancedDescription = `I am reporting ${base} with scratches. `;
-                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I am reporting ${base} with stickers. `;
-                                      else if (conditionValue === 'Engravings') enhancedDescription = `I am reporting ${base} with engravings. `;
-                                      else                                      enhancedDescription = `I am reporting ${base}. `;
+                                      const base = isOther ? 'a calculator' : `a ${selectedColor.toLowerCase()} calculator`;
+                                      if (isNone)                                enhancedDescription = `I found ${base}. `;
+                                      else if (conditionValue === 'Scratches')   enhancedDescription = `I found ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I found ${base} with stickers. `;
+                                      else if (conditionValue === 'Engravings') enhancedDescription = `I found ${base} with engravings. `;
+                                      else                                       enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
                                     }
                                     case 'keys': {
-                                      const base = isOther ? 'lost keys' : `lost ${selectedColor.toLowerCase()} keys`;
-                                      if (conditionValue === 'Scratches')      enhancedDescription = `I am reporting ${base} with scratches. `;
-                                      else if (conditionValue === 'Stickers')  enhancedDescription = `I am reporting ${base} with stickers. `;
-                                      else if (conditionValue === 'Keychains') enhancedDescription = `I am reporting ${base} with attached keychains. `;
-                                      else                                     enhancedDescription = `I am reporting ${base}. `;
+                                      const base = isOther ? 'keys' : `${selectedColor.toLowerCase()} keys`;
+                                      if (isNone)                               enhancedDescription = `I found ${base}. `;
+                                      else if (conditionValue === 'Scratches')  enhancedDescription = `I found ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I found ${base} with stickers. `;
+                                      else if (conditionValue === 'Keychains')  enhancedDescription = `I found ${base} with attached keychains. `;
+                                      else                                      enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
                                     }
                                     case 'umbrellas': {
-                                      const base = isOther ? 'a lost umbrella' : `a lost ${selectedColor.toLowerCase()} umbrella`;
-                                      if (conditionValue === 'Scratches')       enhancedDescription = `I am reporting ${base} with scratches. `;
-                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I am reporting ${base} with stickers. `;
-                                      else if (conditionValue === 'Bent Frame') enhancedDescription = `I am reporting ${base} with a bent frame. `;
-                                      else                                      enhancedDescription = `I am reporting ${base}. `;
+                                      const base = isOther ? 'an umbrella' : `a ${selectedColor.toLowerCase()} umbrella`;
+                                      if (isNone)                                enhancedDescription = `I found ${base}. `;
+                                      else if (conditionValue === 'Scratches')   enhancedDescription = `I found ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I found ${base} with stickers. `;
+                                      else if (conditionValue === 'Bent Frame')  enhancedDescription = `I found ${base} with a bent frame. `;
+                                      else                                       enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
                                     }
                                     case 'watches': {
-                                      const base = isOther ? 'a lost watch' : `a lost ${selectedColor.toLowerCase()} watch`;
-                                      if (conditionValue === 'Scratches')       enhancedDescription = `I am reporting ${base} with scratches. `;
-                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I am reporting ${base} with stickers. `;
-                                      else if (conditionValue === 'Engravings') enhancedDescription = `I am reporting ${base} with engravings. `;
-                                      else                                      enhancedDescription = `I am reporting ${base}. `;
+                                      const base = isOther ? 'a watch' : `a ${selectedColor.toLowerCase()} watch`;
+                                      if (isNone)                                enhancedDescription = `I found ${base}. `;
+                                      else if (conditionValue === 'Scratches')   enhancedDescription = `I found ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I found ${base} with stickers. `;
+                                      else if (conditionValue === 'Engravings') enhancedDescription = `I found ${base} with engravings. `;
+                                      else                                       enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
                                     }
                                     default: {
                                       const colorPart = isOther ? '' : `${selectedColor.toLowerCase()} `;
-                                      enhancedDescription = `I am reporting a lost ${colorPart}${config.itemName.toLowerCase()} with ${conditionValue.toLowerCase()}. `;
+                                      const conditionPart = isNone ? '' : ` with ${conditionValue.toLowerCase()}`;
+                                      enhancedDescription = `I found a ${colorPart}${config.itemName.toLowerCase()}${conditionPart}. `;
                                     }
                                   }
                                   
