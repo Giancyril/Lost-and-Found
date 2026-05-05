@@ -15,22 +15,22 @@ const createFoundItem = async (
   }
 
   const createData: any = {
-    categoryId:    data.categoryId,
-    description:   data.description,
-    date:          data.date,
-    claimProcess:  data.claimProcess || "Visit the SAS office with valid ID to claim this item.",
-    img:           imgUrl,
+    categoryId: data.categoryId,
+    description: data.description,
+    date: data.date,
+    claimProcess: data.claimProcess || "Visit the SAS office with valid ID to claim this item.",
+    img: imgUrl,
     foundItemName: data.foundItemName,
-    location:      data.location,
-    reporterName:  data.reporterName || "",
-    schoolEmail:   data.schoolEmail || "",
+    location: data.location,
+    reporterName: data.reporterName || "",
+    schoolEmail: data.schoolEmail || "",
   };
   if (userId) createData.userId = userId;
 
   const result = await prisma.foundItem.create({
     data: createData,
     include: {
-      user:     { select: { id: true, username: true, createdAt: true, updatedAt: true } },
+      user: { select: { id: true, username: true, createdAt: true, updatedAt: true } },
       category: true,
     },
   });
@@ -38,7 +38,7 @@ const createFoundItem = async (
   if (data.lostItemId) {
     await prisma.lostItem.update({
       where: { id: data.lostItemId },
-      data:  { isFound: true },
+      data: { isFound: true },
     });
   }
 
@@ -52,9 +52,9 @@ const createFoundItem = async (
 const getFoundItem = async (data: TFilter) => {
   const {
     searchTerm,
-    page      = 1,
-    limit     = 10,
-    sortBy    = "foundItemName",
+    page = 1,
+    limit = 10,
+    sortBy = "foundItemName",
     sortOrder = "asc",
     foundItemName,
     startDate,
@@ -62,7 +62,7 @@ const getFoundItem = async (data: TFilter) => {
   } = data;
 
   const whereConditions: Prisma.FoundItemWhereInput = {
-    isDeleted:  false,
+    isDeleted: false,
     isArchived: false,
   };
 
@@ -72,15 +72,15 @@ const getFoundItem = async (data: TFilter) => {
   if (searchTerm) {
     whereConditions.OR = [
       { foundItemName: { contains: searchTerm, mode: "insensitive" } },
-      { location:      { contains: searchTerm, mode: "insensitive" } },
-      { description:   { contains: searchTerm, mode: "insensitive" } },
+      { location: { contains: searchTerm, mode: "insensitive" } },
+      { description: { contains: searchTerm, mode: "insensitive" } },
     ];
   }
 
   if (startDate || endDate) {
     whereConditions.date = {};
     if (startDate) whereConditions.date.gte = new Date(startDate);
-    if (endDate)   whereConditions.date.lte = new Date(endDate);
+    if (endDate) whereConditions.date.lte = new Date(endDate);
   }
 
   let retryCount = 0;
@@ -89,10 +89,10 @@ const getFoundItem = async (data: TFilter) => {
   while (retryCount < maxRetries) {
     try {
       return await prisma.foundItem.findMany({
-        where:   whereConditions,
+        where: whereConditions,
         orderBy: { [sortBy]: sortOrder },
-        skip:    (Number(page) - 1) * Number(limit),
-        take:    Number(limit),
+        skip: (Number(page) - 1) * Number(limit),
+        take: Number(limit),
         select: {
           id: true,
           foundItemName: true,
@@ -126,7 +126,7 @@ const getSingleFoundItem = async (id: string) => {
   return prisma.foundItem.findFirst({
     where: { id, isDeleted: false },
     include: {
-      user:     { select: { id: true, email: true, username: true, role: true } },
+      user: { select: { id: true, email: true, username: true, role: true } },
       category: true,
       claim: {
         orderBy: { createdAt: "desc" },
@@ -146,7 +146,7 @@ const getMyFoundItem = async (user: JwtPayload) => {
   if (!user?.id) return [];
 
   return prisma.foundItem.findMany({
-    where:   { userId: user.id, isDeleted: false },
+    where: { userId: user.id, isDeleted: false },
     orderBy: { createdAt: "desc" },
     include: { user: true, category: true },
   });
@@ -154,11 +154,11 @@ const getMyFoundItem = async (user: JwtPayload) => {
 
 const editMyFoundItem = async (data: any) => {
   const updateData: any = {};
-  if (data?.foundItemName)              updateData.foundItemName = data.foundItemName;
-  if (data?.location)                   updateData.location      = data.location;
-  if (data?.date)                       updateData.date          = data.date;
-  if (data?.description)                updateData.description   = data.description;
-  if (data?.reporterName !== undefined) updateData.reporterName  = data.reporterName;
+  if (data?.foundItemName) updateData.foundItemName = data.foundItemName;
+  if (data?.location) updateData.location = data.location;
+  if (data?.date) updateData.date = data.date;
+  if (data?.description) updateData.description = data.description;
+  if (data?.reporterName !== undefined) updateData.reporterName = data.reporterName;
   if (data?.img?.startsWith("data:")) {
     updateData.img = await uploadBase64ToStorage(data.img, "found", data.id);
   }
@@ -169,32 +169,32 @@ const editMyFoundItem = async (data: any) => {
 const deleteMyFoundItem = async (id: string) => {
   return prisma.foundItem.update({
     where: { id },
-    data:  { isDeleted: true, deletedAt: new Date() },
+    data: { isDeleted: true, deletedAt: new Date() },
   });
 };
 
 const archiveFoundItem = async (id: string) => {
   return prisma.foundItem.update({
     where: { id },
-    data:  { isArchived: true, archivedAt: new Date() },
+    data: { isArchived: true, archivedAt: new Date() },
   });
 };
 
 const restoreFoundItem = async (id: string) => {
   return prisma.foundItem.update({
     where: { id },
-    data:  { isArchived: false, archivedAt: null },
+    data: { isArchived: false, archivedAt: null },
   });
 };
 
 const getArchivedFoundItems = async () => {
   return prisma.foundItem.findMany({
-    where:   { isDeleted: false, isArchived: true },
+    where: { isDeleted: false, isArchived: true },
     orderBy: { archivedAt: "desc" },
     include: {
-      user:     { select: { id: true, username: true, email: true } },
+      user: { select: { id: true, username: true, email: true } },
       category: true,
-      claim:    { select: { id: true, status: true, claimantName: true } },
+      claim: { select: { id: true, status: true, claimantName: true } },
     },
   });
 };
@@ -205,10 +205,10 @@ const getStaleFoundItems = async () => {
 
   return prisma.foundItem.findMany({
     where: {
-      isDeleted:  false,
+      isDeleted: false,
       isArchived: false,
-      isClaimed:  false,
-      createdAt:  { lte: thirtyDaysAgo },
+      isClaimed: false,
+      createdAt: { lte: thirtyDaysAgo },
     },
     include: { category: true },
   });
@@ -217,7 +217,7 @@ const getStaleFoundItems = async () => {
 const updateFoundItemImage = async (id: string, imageUrl: string) => {
   return prisma.foundItem.update({
     where: { id },
-    data:  { img: imageUrl },
+    data: { img: imageUrl },
   });
 };
 

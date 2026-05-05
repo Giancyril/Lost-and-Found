@@ -60,30 +60,30 @@ const AiSearch: React.FC = () => {
         <div className="absolute top-1/2 -right-20 w-64 h-64 bg-indigo-600/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 py-16">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 py-8 sm:py-16">
 
         {/* ── Hero ── */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">
+        <div className="text-center mb-8 lg:mb-12">
+          <h1 className="text-2xl sm:text-5xl font-bold text-white mb-2 sm:mb-4 tracking-tight">
             Smart Item Search
           </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-            Describe what you lost or found in natural language 
+          <p className="text-gray-400 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed">
+            Describe what you lost or found in natural language
           </p>
         </div>
 
         {/* ── Search bar ── */}
         <form onSubmit={handleSearch} className="mb-4">
-          <div className="flex flex-col sm:flex-row gap-3 bg-gray-900 border border-white/10 rounded-2xl p-3 shadow-2xl shadow-black/40">
+          <div className="flex flex-row gap-2 bg-gray-900 border border-white/10 rounded-2xl p-2 sm:p-3 transition-all duration-300 focus-within:border-cyan-500/50">
             <div className="flex-1 relative">
-              <FaRobot className="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-500" size={16} />
+              <FaRobot className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-500" size={14} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
-                placeholder="e.g., I lost a gray laptop with a sticker at Room 205..."
-                className="w-full pl-11 pr-4 py-3.5 bg-transparent text-white placeholder-gray-600 text-sm focus:outline-none"
+                placeholder="Describe what you lost or found..."
+                className="w-full pl-9 pr-2 py-2.5 sm:py-3.5 bg-transparent text-white placeholder-gray-600 text-xs sm:text-base focus:outline-none"
                 disabled={isLoading}
                 maxLength={200}
               />
@@ -91,10 +91,10 @@ const AiSearch: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading || !searchQuery.trim()}
-              className="flex items-center justify-center gap-2.5 px-6 py-3.5 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:text-gray-500 text-gray-950 font-semibold text-sm rounded-xl transition-all duration-200 shrink-0"
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-8 sm:py-3.5 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:text-gray-500 text-gray-950 font-bold text-xs sm:text-base rounded-xl transition-all duration-200 shrink-0active:scale-[0.98]"
             >
-              {isLoading ? <FaSpinner className="animate-spin" size={14} /> : <FaSearch size={14} />}
-              {isLoading ? "Searching..." : "Search"}
+              {isLoading ? <FaSpinner className="animate-spin" size={12} /> : <FaSearch size={12} />}
+              <span className="hidden sm:inline">{isLoading ? "Searching..." : "Search"}</span>
             </button>
           </div>
           {searchQuery && (
@@ -229,9 +229,9 @@ const AiSearch: React.FC = () => {
             <p className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-4">Tips for better results</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { n: "1", title: "Be descriptive", tip: "Include color, brand, size — e.g. \"black Lenovo laptop\"" },
-                { n: "2", title: "Add location",   tip: "\"near the library\", \"Room 205\", \"cafeteria\"" },
-                { n: "3", title: "Mention timing",  tip: "\"yesterday\", \"last Monday\", \"this morning\"" },
+                { n: "1", title: "Be descriptive", tip: "Include color, brand, size e.g. \"black laptop\"" },
+                { n: "2", title: "Add location", tip: "\"near the library\", \"court\", \"cafeteria\"" },
+                { n: "3", title: "Mention timing", tip: "\"yesterday\", \"last Monday\", \"this morning\"" },
                 { n: "4", title: "Unique features", tip: "Stickers, scratches, keychains, case color" },
               ].map((tip) => (
                 <div key={tip.n} className="flex items-start gap-3">

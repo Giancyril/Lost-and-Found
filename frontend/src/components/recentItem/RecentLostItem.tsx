@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useGetLostItemsQuery } from "../../redux/api/api";
 import { FaCalendarAlt, FaMapMarkerAlt, FaClock, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
 const shouldHideImage = (categoryName: string | undefined, isAdmin: boolean) => {
@@ -18,6 +19,7 @@ const timeAgo = (d: string) => {
 };
 
 const RecentLostItem = () => {
+  useScrollReveal();
   const users: any = useUserVerification();
   const isAdmin = users?.role === "ADMIN";
   const { data: lostItems, isLoading } = useGetLostItemsQuery({ limit: 50, sortBy: "date", sortOrder: "desc" });

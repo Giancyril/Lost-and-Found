@@ -4,7 +4,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { useState, useRef, useEffect } from "react";
 import {
   useCategoryQuery,
-  useCreateLostItemMutation,
+  useCreateFoundItemMutation,
   useGetStudentByIdQuery,
   useLazyGetStudentByDetailsQuery,
 } from "../../redux/api/api";
@@ -74,21 +74,21 @@ const CATEGORY_CONFIG = {
 // ── Category icon resolver ────────────────────────────────────────────────────
 const getCategoryIcon = (name: string) => {
   const n = name?.toLowerCase() ?? "";
-  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch"))   return <FaWallet    size={10} className="text-amber-400" />;
+  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch")) return <FaWallet size={10} className="text-amber-400" />;
   if (n.includes("phone") || n.includes("mobile") || n.includes("celphone")) return <FaMobileAlt size={10} className="text-cyan-400" />;
   if (n.includes("laptop") || n.includes("computer") || n.includes("electronic") || n.includes("device") || n.includes("gadget")) return <FaLaptop size={10} className="text-indigo-400" />;
-  if (n.includes("key"))                                                     return <FaKey        size={10} className="text-orange-400" />;
-  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage"))  return <FaBriefcase  size={10} className="text-amber-400" />;
+  if (n.includes("key")) return <FaKey size={10} className="text-orange-400" />;
+  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage")) return <FaBriefcase size={10} className="text-amber-400" />;
   if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod")) return <FaHeadphones size={10} className="text-green-400" />;
   if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass")) return <FaGlasses size={10} className="text-teal-400" />;
   if (n.includes("book") || n.includes("stationery") || n.includes("notebook")) return <FaBook size={10} className="text-yellow-400" />;
   if (n.includes("calculat")) return <FaCalculator size={10} className="text-lime-400" />;
-  if (n === "id" || n.includes("card") || n === "identification")              return <FaIdCard     size={10} className="text-blue-400" />;
-  if (n === "documents" || n === "document" || n.includes("paper"))           return <FaBook       size={10} className="text-yellow-400" />;
-  if (n.includes("umbrella"))                                                return <FaUmbrella   size={10} className="text-blue-400" />;
+  if (n === "id" || n.includes("card") || n === "identification") return <FaIdCard size={10} className="text-blue-400" />;
+  if (n === "documents" || n === "document" || n.includes("paper")) return <FaBook size={10} className="text-yellow-400" />;
+  if (n.includes("umbrella")) return <FaUmbrella size={10} className="text-blue-400" />;
   if (n.includes("cloth") || n.includes("shirt") || n.includes("uniform") || n.includes("wear")) return <FaTshirt size={10} className="text-purple-400" />;
-  if (n.includes("camera") || n.includes("photo"))                          return <FaCamera     size={10} className="text-violet-400" />;
-  if (n.includes("watch") || n.includes("clock"))                           return <FaClock      size={10} className="text-gray-300" />;
+  if (n.includes("camera") || n.includes("photo")) return <FaCamera size={10} className="text-violet-400" />;
+  if (n.includes("watch") || n.includes("clock")) return <FaClock size={10} className="text-gray-300" />;
   if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask")) return <FaTint size={10} className="text-cyan-400" />;
   if (n.includes("money") || n.includes("cash") || n.includes("bill") || n.includes("currency")) return <FaMoneyBillWave size={10} className="text-green-400" />;
   // Icons matching CategoriesManagement
@@ -261,10 +261,9 @@ const StepIndicator = ({ current }: { current: number }) => (
     {steps.map((label, i) => (
       <div key={i} className="flex items-start min-w-0">
         <div className="flex flex-col items-center gap-1">
-          <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300 ${
-            i < current ? "bg-blue-600 border-blue-600 text-white"
-            : i === current ? "bg-blue-600/20 border-blue-500 text-blue-400"
-            : "bg-gray-800 border-gray-700 text-gray-600"}`}>
+          <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300 ${i < current ? "bg-blue-600 border-blue-600 text-white"
+              : i === current ? "bg-blue-600/20 border-blue-500 text-blue-400"
+                : "bg-gray-800 border-gray-700 text-gray-600"}`}>
             {i < current ? (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
@@ -272,8 +271,7 @@ const StepIndicator = ({ current }: { current: number }) => (
             ) : (i + 1)}
           </div>
           <div className="h-7 flex items-start justify-center w-[54px] sm:w-auto">
-            <span className={`text-[8px] sm:text-[10px] font-medium text-center leading-tight sm:whitespace-nowrap ${
-              i === current ? "text-blue-400" : i < current ? "text-gray-400" : "text-gray-600"}`}>
+            <span className={`text-[8px] sm:text-[10px] font-medium text-center leading-tight sm:whitespace-nowrap ${i === current ? "text-blue-400" : i < current ? "text-gray-400" : "text-gray-600"}`}>
               {label}
             </span>
           </div>
@@ -318,7 +316,7 @@ const HELP_PAGES = [
 const CATEGORY_HELP_CONTENT = {
   tag: <><IconGrid size={8} /> Item Categories</>,
   steps: [
-    { n: "1", title: "Select a Category", desc: "Choose the most appropriate category for your lost item from the dropdown menu." },
+    { n: "1", title: "Select a Category", desc: "Choose the most appropriate category for the found item from the dropdown menu." },
     { n: "2", title: "Auto-fill Features", desc: "Some categories will automatically fill in the item name and provide color/condition options." },
     { n: "3", title: "Enhanced Description", desc: "The system will help generate a detailed description based on your selections." },
   ],
@@ -331,24 +329,24 @@ const CATEGORY_HELP_CONTENT = {
   ),
 };
 
-const ReportLostItem = () => {
+const ReportFoundItem = () => {
   const { register, formState: { errors }, reset, trigger, getValues, control, setValue, watch } = useForm({
-  mode: "onChange",
-  defaultValues: {
-    reporterName: "",
-    schoolEmail: "",
-    department: "",
-    lostItemName: "",
-    description: "",
-    location: "",
-    color: "",
-    condition: "",
-  }
-});
+    mode: "onChange",
+    defaultValues: {
+      reporterName: "",
+      schoolEmail: "",
+      department: "",
+      foundItemName: "",
+      description: "",
+      location: "",
+      color: "",
+      condition: "",
+    }
+  });
 
   const reporterName = watch("reporterName");
   const schoolEmail = watch("schoolEmail");
-  const lostItemName = watch("lostItemName");
+  const foundItemName = watch("foundItemName");
   const location = watch("location");
 
   // Track previous email value to prevent auto-fill loop
@@ -368,23 +366,23 @@ const ReportLostItem = () => {
   const [, setSelectedCondition] = useState("");
 
   const closeHelp = () => { setShowHelpModal(false); setHelpPage(0); };
-  const openHelp  = () => { setHelpPage(0); setShowHelpModal(true); };
+  const openHelp = () => { setHelpPage(0); setShowHelpModal(true); };
 
   const handleMenuChange = (menuName: string, categoryId: string) => {
     setselectedMenu(menuName);
     setselectedMenucategoryId(categoryId);
-    
+
     // Auto-fill functionality
     const categoryKey = menuName.toLowerCase();
     const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
-    
+
     if (config) {
       // Auto-fill item name
       setValue("foundItemName", config.itemName);
-      
+
       // Auto-fill description (base description without color)
       setValue("description", config.description);
-      
+
       // Reset color field when category changes
       setValue("color", "");
       setSelectedColor("");
@@ -399,7 +397,7 @@ const ReportLostItem = () => {
     }
   };
 
-  const [createLostItem, { isLoading }] = useCreateLostItemMutation();
+  const [createFoundItem, { isLoading }] = useCreateFoundItemMutation();
   const { data: Category, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery(undefined);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
 
@@ -438,44 +436,44 @@ const ReportLostItem = () => {
   const [getStudentByDetails, { isFetching: isFetchingByDetails }] = useLazyGetStudentByDetailsQuery();
 
   const handleFetchDetails = async () => {
-  // Read directly from watched values (more reliable with Controller fields)
-  const name  = reporterName?.trim() || "";
-  const email = schoolEmail?.trim()  || "";
+    // Read directly from watched values (more reliable with Controller fields)
+    const name = reporterName?.trim() || "";
+    const email = schoolEmail?.trim() || "";
 
-  if (!name && !email) {
-    toast.info("Please enter a name or email to fetch details");
-    return;
-  }
-  if (name && /^\d{8}$|^\d{4}-\d{2}-\d{2}$/.test(name)) {
-    toast.warn("Please enter a valid name");
-    return;
-  }
+    if (!name && !email) {
+      toast.info("Please enter a name or email to fetch details");
+      return;
+    }
+    if (name && /^\d{8}$|^\d{4}-\d{2}-\d{2}$/.test(name)) {
+      toast.warn("Please enter a valid name");
+      return;
+    }
 
-  try {
-    const res = await getStudentByDetails({ name, email }).unwrap();
-    // Backend sendResponse wraps in { success, data } — unwrap if needed
-    const student = res?.data ?? res;
+    try {
+      const res = await getStudentByDetails({ name, email }).unwrap();
+      // Backend sendResponse wraps in { success, data } — unwrap if needed
+      const student = res?.data ?? res;
 
-    if (student?.name) {
-      setValue("reporterName", student.name);
-      setValue("schoolEmail",  student.email);
-      // department is now returned by the service (alias for course)
-      setValue("department",   student.department || student.course || "");
-      setScannedStudent({
-        id:         student.id,
-        name:       student.name,
-        email:      student.email,
-        department: student.department || student.course || "",
-        raw:        "manual_fetch",
-      });
-      toast.success(`Found: ${student.name}`);
-    } else {
+      if (student?.name) {
+        setValue("reporterName", student.name);
+        setValue("schoolEmail", student.email);
+        // department is now returned by the service (alias for course)
+        setValue("department", student.department || student.course || "");
+        setScannedStudent({
+          id: student.id,
+          name: student.name,
+          email: student.email,
+          department: student.department || student.course || "",
+          raw: "manual_fetch",
+        });
+        toast.success(`Found: ${student.name}`);
+      } else {
+        toast.error("Student not found in masterlist");
+      }
+    } catch {
       toast.error("Student not found in masterlist");
     }
-  } catch {
-    toast.error("Student not found in masterlist");
-  }
-};
+  };
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
@@ -505,9 +503,9 @@ const ReportLostItem = () => {
 
   const nextStep = async () => {
     if (step >= 2) return;
-    const fields = step === 0 
-      ? ["reporterName", "schoolEmail"] 
-      : ["lostItemName", "description", "location", ...(selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.colors?.length > 0 ? ["color"] : []), ...(selectedColor && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 ? ["condition"] : [])];
+    const fields = step === 0
+      ? ["reporterName", "schoolEmail"]
+      : ["foundItemName", "description", "location", ...(selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.colors?.length > 0 ? ["color"] : []), ...(selectedColor && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 ? ["condition"] : [])];
     const valid = await trigger(fields as any);
     if (step === 1) { setCategoryTouched(true); if (!selectedMenucategoryId || !valid) return; }
     if (valid) setStep((s) => s + 1);
@@ -517,20 +515,20 @@ const ReportLostItem = () => {
     if (!selectedFile) { setUploadError("Please upload a photo of the item."); return; }
     const data = getValues();
     try {
-      const res: any = await createLostItem({
-        lostItemName: data.lostItemName, description: data.description,
+      const res: any = await createFoundItem({
+        foundItemName: data.foundItemName, description: data.description,
         categoryId: selectedMenucategoryId, img: preview || "",
         location: data.location, date: new Date(startDate + "T00:00:00"),
         reporterName: data.reporterName || "", schoolEmail: data.schoolEmail || "",
       });
-      if (res.error || res?.data?.success === false) { toast.error("Failed to report lost item"); return; }
+      if (res.error || res?.data?.success === false) { toast.error("Failed to report found item"); return; }
 
-      toast.success("Lost item reported successfully");
+      toast.success("Found item reported successfully");
       reset(); setSelectedFile(null); setPreview(""); setUploadError("");
       setselectedMenu(""); setselectedMenucategoryId(""); setCategoryTouched(false);
       setSelectedColor(""); setSelectedCondition("");
       setStep(0); setScannedStudent(null); scannedAtRef.current = "";
-    } catch { toast.error("Failed to report lost item"); }
+    } catch { toast.error("Failed to report found item"); }
   };
 
   // ── Build category options for CustomSelect ──
@@ -559,8 +557,8 @@ const ReportLostItem = () => {
               {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Report a Lost Item</h1>
-                  <p className="text-gray-500 text-sm mt-1">Help us reunite you with your belongings. Fill in the details carefully.</p>
+                  <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Report a Found Item</h1>
+                  <p className="text-gray-500 text-sm mt-1">Help us reunite owners with their belongings. Fill in the details carefully.</p>
                 </div>
               </div>
 
@@ -687,35 +685,35 @@ const ReportLostItem = () => {
                         <div className={`relative flex items-center ${inputCls} ring-0 focus-within:ring-2 focus-within:ring-blue-500/50`}>
                           <span className="text-gray-500 mr-2"><IconMail size={16} /></span>
                           <Controller
-                          name="schoolEmail"
-                          control={control}
-                          rules={{
-                            required: "School email is required",
-                            pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
-                          }}
-                          render={({ field }) => (
-                            <input
-                              {...field}
-                              type="email"
-                              autoComplete="off"
-                              className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm"
-                              placeholder=" "
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                const trimmedValue = value.trim();
-                                
-                                // Only auto-fill if current value is exactly 8 digits and previous value wasn't an email
-                                if (/^\d{8}$/.test(trimmedValue) && !prevEmailValue.includes('@')) {
-                                  setPrevEmailValue(`${trimmedValue}@nbsc.edu.ph`);
-                                  field.onChange(`${trimmedValue}@nbsc.edu.ph`);
-                                } else {
-                                  setPrevEmailValue(value);
-                                  field.onChange(value);
-                                }
-                              }}
-                            />
-                          )}
-                        />
+                            name="schoolEmail"
+                            control={control}
+                            rules={{
+                              required: "School email is required",
+                              pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+                            }}
+                            render={({ field }) => (
+                              <input
+                                {...field}
+                                type="email"
+                                autoComplete="off"
+                                className="bg-transparent border-none p-0 w-full focus:ring-0 text-sm"
+                                placeholder=" "
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  const trimmedValue = value.trim();
+
+                                  // Only auto-fill if current value is exactly 8 digits and previous value wasn't an email
+                                  if (/^\d{8}$/.test(trimmedValue) && !prevEmailValue.includes('@')) {
+                                    setPrevEmailValue(`${trimmedValue}@nbsc.edu.ph`);
+                                    field.onChange(`${trimmedValue}@nbsc.edu.ph`);
+                                  } else {
+                                    setPrevEmailValue(value);
+                                    field.onChange(value);
+                                  }
+                                }}
+                              />
+                            )}
+                          />
                         </div>
                         {errors.schoolEmail && <p className="text-red-400 text-[10px] mt-1">{errors.schoolEmail.message as string}</p>}
                       </div>
@@ -737,11 +735,11 @@ const ReportLostItem = () => {
                 {step === 1 && (
                   <div className="space-y-5">
                     <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
-                      <Field label="Item Name" required error={errors.lostItemName?.message as string} icon={<IconTag />}>
-                        <input {...register("lostItemName", { required: "Item name is required" })}
+                      <Field label="Item Name" required error={errors.foundItemName?.message as string} icon={<IconTag />}>
+                        <input {...register("foundItemName", { required: "Item name is required" })}
                           type="text" className={inputCls} placeholder=" " />
                       </Field>
-                      <Field label="Last Seen Location" required error={errors.location?.message as string} icon={<IconPin />}>
+                      <Field label="Found Location" required error={errors.location?.message as string} icon={<IconPin />}>
                         <Controller
                           name="location" control={control} rules={{ required: "Location is required" }}
                           render={({ field }) => (
@@ -749,8 +747,8 @@ const ReportLostItem = () => {
                           )}
                         />
                       </Field>
-                      <Field label="Date Lost" icon={<IconCalendar />}>
-                        <CustomDatePicker value={startDate} onChange={setStartDate} max={new Date().toISOString().split("T")[0]} placeholder="Select date lost" />
+                      <Field label="Date Found" icon={<IconCalendar />}>
+                        <CustomDatePicker value={startDate} onChange={setStartDate} max={new Date().toISOString().split("T")[0]} placeholder="Select date found" />
                       </Field>
 
                       {/* ── Category — CustomSelect replacing native <select> ── */}
@@ -818,7 +816,7 @@ const ReportLostItem = () => {
                                 field.onChange(colorValue);
                                 setSelectedColor(colorValue);
                                 setSelectedCondition(''); // Reset condition when color changes
-                                
+
                                 // Update description with color information
                                 const categoryKey = selectedMenu.toLowerCase();
                                 const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
@@ -826,28 +824,28 @@ const ReportLostItem = () => {
                                   const isOther = colorValue === 'Other';
                                   const c = colorValue.toLowerCase();
                                   let colorDescription = '';
-                                  
+
                                   // Generate professional descriptions based on category and color
                                   switch (categoryKey) {
                                     case 'bags':
-                                      colorDescription = isOther ? `I am reporting a lost bag of an unspecified color. ` : `I am reporting a lost ${c} bag. `;
+                                      colorDescription = isOther ? `I am reporting a found bag of an unspecified color. ` : `I am reporting a found ${c} bag. `;
                                       break;
                                     case 'calculators':
-                                      colorDescription = isOther ? `I am reporting a lost calculator of an unspecified color. ` : `I am reporting a lost ${c} calculator. `;
+                                      colorDescription = isOther ? `I am reporting a found calculator of an unspecified color. ` : `I am reporting a found ${c} calculator. `;
                                       break;
                                     case 'keys':
-                                      colorDescription = isOther ? `I am reporting lost keys of an unspecified color. ` : `I am reporting lost ${c} keys. `;
+                                      colorDescription = isOther ? `I am reporting found keys of an unspecified color. ` : `I am reporting found ${c} keys. `;
                                       break;
                                     case 'umbrellas':
-                                      colorDescription = isOther ? `I am reporting a lost umbrella of an unspecified color. ` : `I am reporting a lost ${c} umbrella. `;
+                                      colorDescription = isOther ? `I am reporting a found umbrella of an unspecified color. ` : `I am reporting a found ${c} umbrella. `;
                                       break;
                                     case 'watches':
-                                      colorDescription = isOther ? `I am reporting a lost watch of an unspecified color. ` : `I am reporting a lost ${c} watch. `;
+                                      colorDescription = isOther ? `I am reporting a found watch of an unspecified color. ` : `I am reporting a found ${c} watch. `;
                                       break;
                                     default:
-                                      colorDescription = isOther ? `I am reporting a lost ${config.itemName.toLowerCase()} of an unspecified color. ` : `I am reporting a lost ${c} ${config.itemName.toLowerCase()}. `;
+                                      colorDescription = isOther ? `I am reporting a found ${config.itemName.toLowerCase()} of an unspecified color. ` : `I am reporting a found ${c} ${config.itemName.toLowerCase()}. `;
                                   }
-                                  
+
                                   setValue("description", colorDescription);
                                 }
                               }}
@@ -856,7 +854,7 @@ const ReportLostItem = () => {
                         />
                       </Field>
                     )}
-                    
+
                     {/* Condition dropdown */}
                     {selectedColor && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 && (
                       <Field label="Condition" required error={errors.condition?.message as string} icon={<IconTag />}>
@@ -875,7 +873,7 @@ const ReportLostItem = () => {
                               onChange={(conditionValue) => {
                                 field.onChange(conditionValue);
                                 setSelectedCondition(conditionValue);
-                                
+
                                 // Update description with condition information
                                 const categoryKey = selectedMenu.toLowerCase();
                                 const config = CATEGORY_CONFIG[categoryKey as keyof typeof CATEGORY_CONFIG];
@@ -883,52 +881,52 @@ const ReportLostItem = () => {
                                   const isOther = selectedColor === 'Other';
                                   let enhancedDescription = '';
                                   const isNone = conditionValue === 'None';
-                                  
+
                                   // Generate enhanced descriptions based on category, color, and condition
                                   switch (categoryKey) {
                                     case 'bags': {
                                       const base = isOther ? 'a bag' : `a ${selectedColor.toLowerCase()} bag`;
-                                      if (isNone)                               enhancedDescription = `I found ${base}. `;
-                                      else if (conditionValue === 'Scratches')  enhancedDescription = `I found ${base} with scratches. `;
-                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I found ${base} with stickers. `;
-                                      else if (conditionValue === 'Keychains')  enhancedDescription = `I found ${base} with keychains. `;
-                                      else                                      enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
+                                      if (isNone) enhancedDescription = `I found ${base}. `;
+                                      else if (conditionValue === 'Scratches') enhancedDescription = `I found ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers') enhancedDescription = `I found ${base} with stickers. `;
+                                      else if (conditionValue === 'Keychains') enhancedDescription = `I found ${base} with keychains. `;
+                                      else enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
                                     }
                                     case 'calculators': {
                                       const base = isOther ? 'a calculator' : `a ${selectedColor.toLowerCase()} calculator`;
-                                      if (isNone)                                enhancedDescription = `I found ${base}. `;
-                                      else if (conditionValue === 'Scratches')   enhancedDescription = `I found ${base} with scratches. `;
-                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I found ${base} with stickers. `;
+                                      if (isNone) enhancedDescription = `I found ${base}. `;
+                                      else if (conditionValue === 'Scratches') enhancedDescription = `I found ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers') enhancedDescription = `I found ${base} with stickers. `;
                                       else if (conditionValue === 'Engravings') enhancedDescription = `I found ${base} with engravings. `;
-                                      else                                       enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
+                                      else enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
                                     }
                                     case 'keys': {
                                       const base = isOther ? 'keys' : `${selectedColor.toLowerCase()} keys`;
-                                      if (isNone)                               enhancedDescription = `I found ${base}. `;
-                                      else if (conditionValue === 'Scratches')  enhancedDescription = `I found ${base} with scratches. `;
-                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I found ${base} with stickers. `;
-                                      else if (conditionValue === 'Keychains')  enhancedDescription = `I found ${base} with attached keychains. `;
-                                      else                                      enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
+                                      if (isNone) enhancedDescription = `I found ${base}. `;
+                                      else if (conditionValue === 'Scratches') enhancedDescription = `I found ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers') enhancedDescription = `I found ${base} with stickers. `;
+                                      else if (conditionValue === 'Keychains') enhancedDescription = `I found ${base} with attached keychains. `;
+                                      else enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
                                     }
                                     case 'umbrellas': {
                                       const base = isOther ? 'an umbrella' : `a ${selectedColor.toLowerCase()} umbrella`;
-                                      if (isNone)                                enhancedDescription = `I found ${base}. `;
-                                      else if (conditionValue === 'Scratches')   enhancedDescription = `I found ${base} with scratches. `;
-                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I found ${base} with stickers. `;
-                                      else if (conditionValue === 'Bent Frame')  enhancedDescription = `I found ${base} with a bent frame. `;
-                                      else                                       enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
+                                      if (isNone) enhancedDescription = `I found ${base}. `;
+                                      else if (conditionValue === 'Scratches') enhancedDescription = `I found ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers') enhancedDescription = `I found ${base} with stickers. `;
+                                      else if (conditionValue === 'Bent Frame') enhancedDescription = `I found ${base} with a bent frame. `;
+                                      else enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
                                     }
                                     case 'watches': {
                                       const base = isOther ? 'a watch' : `a ${selectedColor.toLowerCase()} watch`;
-                                      if (isNone)                                enhancedDescription = `I found ${base}. `;
-                                      else if (conditionValue === 'Scratches')   enhancedDescription = `I found ${base} with scratches. `;
-                                      else if (conditionValue === 'Stickers')   enhancedDescription = `I found ${base} with stickers. `;
+                                      if (isNone) enhancedDescription = `I found ${base}. `;
+                                      else if (conditionValue === 'Scratches') enhancedDescription = `I found ${base} with scratches. `;
+                                      else if (conditionValue === 'Stickers') enhancedDescription = `I found ${base} with stickers. `;
                                       else if (conditionValue === 'Engravings') enhancedDescription = `I found ${base} with engravings. `;
-                                      else                                       enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
+                                      else enhancedDescription = `I found ${base} in ${conditionValue.toLowerCase()} condition. `;
                                       break;
                                     }
                                     default: {
@@ -937,7 +935,7 @@ const ReportLostItem = () => {
                                       enhancedDescription = `I found a ${colorPart}${config.itemName.toLowerCase()}${conditionPart}. `;
                                     }
                                   }
-                                  
+
                                   setValue("description", enhancedDescription);
                                 }
                               }}
@@ -950,7 +948,7 @@ const ReportLostItem = () => {
                     {selectedMenucategoryId && (
                       <ItemMatchSuggestions
                         categoryId={selectedMenucategoryId} categoryName={selectedMenu}
-                        itemName={(document.querySelector('input[name="lostItemName"]') as HTMLInputElement)?.value ?? ""}
+                        itemName={(document.querySelector('input[name="foundItemName"]') as HTMLInputElement)?.value ?? ""}
                         location={(document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? ""}
                       />
                     )}
@@ -963,11 +961,10 @@ const ReportLostItem = () => {
                     <Field label="Item Photo" required error={uploadError} icon={<IconImage />}>
                       {!preview ? (
                         <div
-                          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-200 ${
-                            uploadError ? "border-red-500/60 bg-red-900/5"
-                            : isDragging ? "border-blue-500 bg-blue-900/10"
-                            : "border-gray-700 bg-gray-800/40 hover:border-blue-500/70 hover:bg-gray-800/70"
-                          }`}
+                          className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-200 ${uploadError ? "border-red-500/60 bg-red-900/5"
+                              : isDragging ? "border-blue-500 bg-blue-900/10"
+                                : "border-gray-700 bg-gray-800/40 hover:border-blue-500/70 hover:bg-gray-800/70"
+                            }`}
                           onClick={() => fileInputRef.current?.click()}
                           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                           onDragLeave={() => setIsDragging(false)}
@@ -1014,7 +1011,7 @@ const ReportLostItem = () => {
                     <div className="rounded-xl bg-gray-800/50 border border-gray-700/60 p-4 space-y-2">
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Submission Summary</p>
                       {[
-                        { label: "Item", value: (document.querySelector('input[name="lostItemName"]') as HTMLInputElement)?.value },
+                        { label: "Item", value: (document.querySelector('input[name="foundItemName"]') as HTMLInputElement)?.value },
                         { label: "Location", value: (document.querySelector('input[name="location"]') as HTMLInputElement)?.value },
                         { label: "Category", value: selectedMenu },
                         { label: "Date", value: startDate ? new Date(startDate + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "" },
@@ -1039,11 +1036,11 @@ const ReportLostItem = () => {
                   {step < 2 ? (
                     <button type="button" onClick={nextStep}
                       disabled={
-                        step === 0 
+                        step === 0
                           ? Boolean(!reporterName || !schoolEmail || !!errors.reporterName || !!errors.schoolEmail)
-                          : Boolean(!lostItemName || !location || !description || !selectedMenucategoryId || !!errors.lostItemName || !!errors.location || !!errors.description || 
-                             (selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.colors?.length > 0 && (!color || !!errors.color)) || 
-                             (selectedColor && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 && (!condition || !!errors.condition)))
+                          : Boolean(!foundItemName || !location || !description || !selectedMenucategoryId || !!errors.foundItemName || !!errors.location || !!errors.description ||
+                            (selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.colors?.length > 0 && (!color || !!errors.color)) ||
+                            (selectedColor && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 && (!condition || !!errors.condition)))
                       }
                       className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all duration-200 shadow-lg">
                       Continue
@@ -1114,4 +1111,4 @@ const ReportLostItem = () => {
   );
 };
 
-export default ReportLostItem;
+export default ReportFoundItem;

@@ -136,21 +136,21 @@ const CATEGORY_CONFIG = {
 // ── Category icon resolver ────────────────────────────────────────────────────
 const getCategoryIcon = (name: string) => {
   const n = name?.toLowerCase() ?? "";
-  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch"))   return <FaWallet    size={9} className="text-amber-400" />;
+  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch")) return <FaWallet size={9} className="text-amber-400" />;
   if (n.includes("phone") || n.includes("mobile") || n.includes("celphone")) return <FaMobileAlt size={9} className="text-cyan-400" />;
   if (n.includes("laptop") || n.includes("computer") || n.includes("electronic") || n.includes("device") || n.includes("gadget")) return <FaLaptop size={9} className="text-indigo-400" />;
-  if (n.includes("key"))                                                     return <FaKey        size={9} className="text-orange-400" />;
-  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage"))  return <FaBriefcase  size={9} className="text-amber-400" />;
+  if (n.includes("key")) return <FaKey size={9} className="text-orange-400" />;
+  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage")) return <FaBriefcase size={9} className="text-amber-400" />;
   if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod")) return <FaHeadphones size={9} className="text-green-400" />;
   if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass")) return <FaGlasses size={9} className="text-teal-400" />;
   if (n.includes("book") || n.includes("stationery") || n.includes("notebook")) return <FaBook size={9} className="text-yellow-400" />;
   if (n.includes("calculat")) return <FaCalculator size={9} className="text-lime-400" />;
-  if (n === "id" || n.includes("card") || n === "identification")              return <FaIdCard     size={9} className="text-blue-400" />;
-  if (n === "documents" || n === "document" || n.includes("paper"))           return <FaBook       size={9} className="text-yellow-400" />;
-  if (n.includes("umbrella"))                                                return <FaUmbrella   size={9} className="text-blue-400" />;
+  if (n === "id" || n.includes("card") || n === "identification") return <FaIdCard size={9} className="text-blue-400" />;
+  if (n === "documents" || n === "document" || n.includes("paper")) return <FaBook size={9} className="text-yellow-400" />;
+  if (n.includes("umbrella")) return <FaUmbrella size={9} className="text-blue-400" />;
   if (n.includes("cloth") || n.includes("shirt") || n.includes("uniform") || n.includes("wear")) return <FaTshirt size={9} className="text-purple-400" />;
-  if (n.includes("camera") || n.includes("photo"))                          return <FaCamera     size={9} className="text-violet-400" />;
-  if (n.includes("watch") || n.includes("clock"))                           return <FaClock      size={9} className="text-gray-300" />;
+  if (n.includes("camera") || n.includes("photo")) return <FaCamera size={9} className="text-violet-400" />;
+  if (n.includes("watch") || n.includes("clock")) return <FaClock size={9} className="text-gray-300" />;
   if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask")) return <FaTint size={9} className="text-cyan-400" />;
   if (n.includes("money") || n.includes("cash") || n.includes("bill") || n.includes("currency")) return <FaMoneyBillWave size={9} className="text-green-400" />;
   // Icons matching CategoriesManagement
@@ -172,7 +172,7 @@ const shouldHideImage = (cat: string | undefined, isAdmin: boolean) => {
 
 // Category Help Modal Content
 const CATEGORY_HELP_CONTENT = {
-  tag: <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg> Item Categories</>,
+  tag: <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></svg> Item Categories</>,
   steps: [
     { n: "1", title: "Select a Category", desc: "Choose the most appropriate category for the found item from the dropdown menu." },
     { n: "2", title: "Help with Matching", desc: "The correct category helps us match the found item with lost items more effectively." },
@@ -250,9 +250,9 @@ const CustomSelect = ({ options, value, onChange }: {
 // ── Found Item Card ─────────────────────────────────────────────────────────
 const FoundItemCard = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: any; isAdmin: boolean; setClaimItem: (i: any) => void; onOpenComments: () => void }) => {
   const isClaimed = item?.isClaimed;
-  const daysAgo   = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
-  const hideImg   = shouldHideImage(item?.category?.name, isAdmin);
-  const dateStr   = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
+  const daysAgo = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
+  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
+  const dateStr = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
 
   return (
     <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col">
@@ -288,7 +288,7 @@ const FoundItemCard = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: 
           {item?.category?.name && <div className="flex items-center gap-2 text-xs text-gray-400"><div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">{getCategoryIcon(item.category.name)}</div><span>{item.category.name}</span></div>}
         </div>
         <div className="h-px bg-white/[0.04] mb-3" />
-        
+
         <div className="grid grid-cols-3 gap-1.5">
           {!isClaimed
             ? <button onClick={() => setClaimItem(item)} className="flex items-center justify-center py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">Claim</button>
@@ -306,8 +306,8 @@ const FoundItemCard = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: 
 // ── Found Item Row ──────────────────────────────────────────────────────────
 const FoundItemRow = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: any; isAdmin: boolean; setClaimItem: (i: any) => void; onOpenComments: () => void }) => {
   const isClaimed = item?.isClaimed;
-  const hideImg   = shouldHideImage(item?.category?.name, isAdmin);
-  const dateStr   = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
+  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
+  const dateStr = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
 
   const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
     ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
@@ -364,12 +364,12 @@ const FoundItemRow = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: a
         <div className="grid grid-cols-3 gap-1.5">
           {!isClaimed
             ? <button onClick={() => setClaimItem(item)}
-                className="flex items-center justify-center py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[10px] font-semibold rounded-lg transition-all">
-                Claim
-              </button>
+              className="flex items-center justify-center py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[10px] font-semibold rounded-lg transition-all">
+              Claim
+            </button>
             : <div className="flex items-center justify-center py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-lg">
-                Claimed
-              </div>}
+              Claimed
+            </div>}
           <button onClick={onOpenComments}
             className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] font-medium rounded-lg transition-all">
             Comments
@@ -401,14 +401,14 @@ const FoundItemRow = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: a
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          
+
           {!isClaimed
             ? <button onClick={() => setClaimItem(item)}
-                className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-[10px] font-bold rounded-lg transition-all">
-                Claim
-              </button>
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-[10px] font-bold rounded-lg transition-all">
+              Claim
+            </button>
             : <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-lg">Claimed</div>}
-            <button onClick={onOpenComments}
+          <button onClick={onOpenComments}
             className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-[10px] font-bold rounded-lg transition-all" title="Comments">
             Comments
           </button>
@@ -449,9 +449,9 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
   };
 
   const handleClaimFetchDetails = async () => {
-    const nameEl  = document.querySelector('#claim-modal input[name="claimantName"]') as HTMLInputElement;
-    const emailEl = document.querySelector('#claim-modal input[name="schoolEmail"]')  as HTMLInputElement;
-    const name  = nameEl?.value?.trim()  || "";
+    const nameEl = document.querySelector('#claim-modal input[name="claimantName"]') as HTMLInputElement;
+    const emailEl = document.querySelector('#claim-modal input[name="schoolEmail"]') as HTMLInputElement;
+    const name = nameEl?.value?.trim() || "";
     const email = emailEl?.value?.trim() || "";
     if (!name && !email) { toast.info("Please enter a name or email to fetch details"); return; }
     setIsFetchingClaimStudent(true);
@@ -459,7 +459,7 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
       let student = null;
       if (name) {
         try { const r = await getStudentByDetailsForClaim({ name, email: "" }).unwrap(); student = r.data ?? r; }
-        catch { if (email) { try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; } catch {} } }
+        catch { if (email) { try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; } catch { } } }
       } else {
         try { const r = await getStudentByDetailsForClaim({ name, email: "" }).unwrap(); student = r.data ?? r; }
         catch { toast.error("Student not found"); return; }
@@ -467,7 +467,7 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
       if (student) {
         setClaimScannedStudent({ id: student.id, name: student.name, email: student.email, department: student.department || "", raw: "manual_fetch" });
         claimSetValue("claimantName", student.name, { shouldDirty: true });
-        claimSetValue("schoolEmail",  student.email, { shouldDirty: true });
+        claimSetValue("schoolEmail", student.email, { shouldDirty: true });
         toast.success(`Found: ${student.name}`);
       } else { toast.error("Student not found in masterlist"); }
     } catch { toast.error("Student not found in masterlist"); }
@@ -477,10 +477,10 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
   const onSubmit = async (data: any) => {
     try {
       const res: any = await createClaim({
-        foundItemId:            item.id,
-        claimantName:           data.claimantName,
-        schoolEmail:            data.schoolEmail,
-        lostDate:               new Date(lostDate + "T00:00:00").toISOString(),
+        foundItemId: item.id,
+        claimantName: data.claimantName,
+        schoolEmail: data.schoolEmail,
+        lostDate: new Date(lostDate + "T00:00:00").toISOString(),
         distinguishingFeatures: data.distinguishingFeatures,
       });
       if (res?.data?.success) {
@@ -496,11 +496,11 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div id="claim-modal" className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
-  style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)' }}>
+        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)' }}>
         <div className="flex flex-col gap-3 px-5 py-4 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              
+
               <div className="min-w-0">
                 <h3 className="text-sm font-bold text-white truncate">Submit a Claim</h3>
                 <p className="text-gray-500 text-[11px] truncate">Prove ownership to retrieve this item</p>
@@ -591,35 +591,35 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
                 <div className="relative">
                   <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
                   <Controller
-                      name="schoolEmail"
-                      control={control}
-                      rules={{
-                        required: "School email is required",
-                        pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
-                      }}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          value={field.value ?? ""}
-                          type="email"
-                          placeholder=" "
-                          className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            const trimmedValue = value.trim();
-                            
-                            // Only auto-fill if current value is exactly 8 digits and previous value wasn't an email
-                            if (/^\d{8}$/.test(trimmedValue) && !prevClaimEmailValue.includes('@')) {
-                              setPrevClaimEmailValue(`${trimmedValue}@nbsc.edu.ph`);
-                              field.onChange(`${trimmedValue}@nbsc.edu.ph`);
-                            } else {
-                              setPrevClaimEmailValue(value);
-                              field.onChange(value);
-                            }
-                          }}
-                        />
-                      )}
-                    />
+                    name="schoolEmail"
+                    control={control}
+                    rules={{
+                      required: "School email is required",
+                      pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+                    }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        value={field.value ?? ""}
+                        type="email"
+                        placeholder=" "
+                        className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const trimmedValue = value.trim();
+
+                          // Only auto-fill if current value is exactly 8 digits and previous value wasn't an email
+                          if (/^\d{8}$/.test(trimmedValue) && !prevClaimEmailValue.includes('@')) {
+                            setPrevClaimEmailValue(`${trimmedValue}@nbsc.edu.ph`);
+                            field.onChange(`${trimmedValue}@nbsc.edu.ph`);
+                          } else {
+                            setPrevClaimEmailValue(value);
+                            field.onChange(value);
+                          }
+                        }}
+                      />
+                    )}
+                  />
                 </div>
                 {errors.schoolEmail && <p className="text-red-400 text-xs mt-1">{errors.schoolEmail.message as string}</p>}
               </div>
@@ -646,12 +646,12 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
               <div className="flex gap-2 pt-1">
                 <button type="button" onClick={() => { reset(); setLostDate(""); onClose(); }} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 text-xs font-medium rounded-xl transition-colors">Cancel</button>
                 <button type="submit" disabled={claimLoading || !lostDate} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
-                  {claimLoading ? <><svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Submitting...</> : <><FaClipboardList size={10} /> Submit Claim</>}
+                  {claimLoading ? <><svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Submitting...</> : <><FaClipboardList size={10} /> Submit Claim</>}
                 </button>
               </div>
             </form>
           )}
-         </div>
+        </div>
       </div>
       {showClaimScanner && (
         <BarcodeScannerModal onScan={handleClaimScan} onClose={() => setShowClaimScanner(false)} useFetchStudent={useFetchStudentForClaim} />
@@ -664,34 +664,34 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
 const FoundItemsPage = () => {
   useScrollReveal();
   const users: any = useUserVerification();
-  const isAdmin    = users?.role === "ADMIN";
+  const isAdmin = users?.role === "ADMIN";
 
   // ── Points teaser banner ──
   const isAuthenticated = !!users?.id || !!users?.email;
   const { data: pointsData } = useGetMyPointsQuery(undefined, { skip: !isAuthenticated || isAdmin });
   const totalPoints = pointsData?.data?.totalPoints ?? 0;
 
-  const [searchTerm, setSearchTerm]         = useState("");
-  const [fuzzyTerm, setFuzzyTerm]           = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [fuzzyTerm, setFuzzyTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
-  const [currentPage, setCurrentPage]       = useState(1);
-  const [sortBy, setSortBy]                 = useState("foundItemName");
-  const [sortOrder, setSortOrder]           = useState("asc");
-  const [viewMode, setViewMode]             = useState<"grid" | "list">(typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "grid");
-  const [claimItem, setClaimItem]           = useState<any>(null);
-  const [limit]                             = useState(12);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState("foundItemName");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [viewMode, setViewMode] = useState<"grid" | "list">(typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "grid");
+  const [claimItem, setClaimItem] = useState<any>(null);
+  const [limit] = useState(12);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [isAddModalOpen, setIsAddModalOpen]     = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showCategoryHelp, setShowCategoryHelp] = useState(false);
-  const [addSelectedFile, setAddSelectedFile]   = useState<File | null>(null);
-  const [addPreview, setAddPreview]             = useState<string>("");
-  const [addUploadError, setAddUploadError]     = useState("");
-  const [addPhotoError, setAddPhotoError]       = useState("");
-  const [addIsDragging, setAddIsDragging]       = useState(false);
-  const [addStartDate, setAddStartDate]         = useState(new Date().toISOString().split("T")[0]);
+  const [addSelectedFile, setAddSelectedFile] = useState<File | null>(null);
+  const [addPreview, setAddPreview] = useState<string>("");
+  const [addUploadError, setAddUploadError] = useState("");
+  const [addPhotoError, setAddPhotoError] = useState("");
+  const [addIsDragging, setAddIsDragging] = useState(false);
+  const [addStartDate, setAddStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [addSelectedMenucategoryId, setAddSelectedMenucategoryId] = useState("");
-  const [addSelectedMenu, setAddSelectedMenu]   = useState("");
+  const [addSelectedMenu, setAddSelectedMenu] = useState("");
   const [addSelectedColor, setAddSelectedColor] = useState("");
   const [addSelectedCondition, setAddSelectedCondition] = useState("");
   const addFileInputRef = useRef<HTMLInputElement>(null);
@@ -717,7 +717,7 @@ const FoundItemsPage = () => {
 
   const [getStudentByDetails, { isFetching: isFetchingByDetails }] = useLazyGetStudentByDetailsQuery();
 
-  const { data: foundItems, isLoading }        = useGetFoundItemsQuery({ searchTerm, page: currentPage, limit, sortBy, sortOrder });
+  const { data: foundItems, isLoading } = useGetFoundItemsQuery({ searchTerm, page: currentPage, limit, sortBy, sortOrder });
   const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery("");
   const [createFoundItem, { isLoading: isCreating }] = useCreateFoundItemMutation();
   const [uploadItemImages, { isLoading: isUploading }] = useUploadItemImagesMutation();
@@ -732,20 +732,20 @@ const FoundItemsPage = () => {
     control: addControl,
     watch,
   } = useForm({
-  mode: "onSubmit",
-  reValidateMode: "onSubmit",
-  defaultValues: {
-    reporterName: "",
-    schoolEmail: "",
-    department: "",
-    foundItemName: "",
-    description: "",
-    location: "",
-  },
-});
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
+    defaultValues: {
+      reporterName: "",
+      schoolEmail: "",
+      department: "",
+      foundItemName: "",
+      description: "",
+      location: "",
+    },
+  });
 
-const watchedReporterName = watch("reporterName");
-const watchedSchoolEmail  = watch("schoolEmail");
+  const watchedReporterName = watch("reporterName");
+  const watchedSchoolEmail = watch("schoolEmail");
 
   const handleFuzzyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
@@ -816,57 +816,57 @@ const watchedSchoolEmail  = watch("schoolEmail");
   };
 
   const handleFetchDetails = async () => {
-  // Use the form's live watched values instead of DOM querySelector
-  // (Controller-managed fields don't reliably expose via querySelector)
-  const name  = watchedReporterName?.trim() || "";
-  const email = watchedSchoolEmail?.trim()  || "";
- 
-  if (!name && !email) {
-    toast.info("Please enter a name or email to fetch details");
-    return;
-  }
- 
-  try {
-    // Try name first, fall back to email
-    let student: any = null;
- 
-    if (name) {
-      try {
-        const res = await getStudentByDetails({ name, email }).unwrap();
-        student = res?.data ?? res;
-      } catch {
-        // name search failed, try email below
-      }
+    // Use the form's live watched values instead of DOM querySelector
+    // (Controller-managed fields don't reliably expose via querySelector)
+    const name = watchedReporterName?.trim() || "";
+    const email = watchedSchoolEmail?.trim() || "";
+
+    if (!name && !email) {
+      toast.info("Please enter a name or email to fetch details");
+      return;
     }
- 
-    if (!student && email) {
-      try {
-        const res = await getStudentByDetails({ name: "", email }).unwrap();
-        student = res?.data ?? res;
-      } catch {
-        // email search also failed
+
+    try {
+      // Try name first, fall back to email
+      let student: any = null;
+
+      if (name) {
+        try {
+          const res = await getStudentByDetails({ name, email }).unwrap();
+          student = res?.data ?? res;
+        } catch {
+          // name search failed, try email below
+        }
       }
-    }
- 
-    if (student?.name) {
-      setScannedStudent({
-        id:         student.id         || "",
-        name:       student.name       || "",
-        email:      student.email      || "",
-        department: student.department || student.course || "",
-        raw:        "manual_fetch",
-      });
-      addSetValue("reporterName", student.name,                          { shouldDirty: true });
-      addSetValue("schoolEmail",  student.email,                         { shouldDirty: true });
-      addSetValue("department",   student.department || student.course || "", { shouldDirty: true });
-      toast.success(`Found: ${student.name}`);
-    } else {
+
+      if (!student && email) {
+        try {
+          const res = await getStudentByDetails({ name: "", email }).unwrap();
+          student = res?.data ?? res;
+        } catch {
+          // email search also failed
+        }
+      }
+
+      if (student?.name) {
+        setScannedStudent({
+          id: student.id || "",
+          name: student.name || "",
+          email: student.email || "",
+          department: student.department || student.course || "",
+          raw: "manual_fetch",
+        });
+        addSetValue("reporterName", student.name, { shouldDirty: true });
+        addSetValue("schoolEmail", student.email, { shouldDirty: true });
+        addSetValue("department", student.department || student.course || "", { shouldDirty: true });
+        toast.success(`Found: ${student.name}`);
+      } else {
+        toast.error("Student not found in masterlist");
+      }
+    } catch {
       toast.error("Student not found in masterlist");
     }
-  } catch {
-    toast.error("Student not found in masterlist");
-  }
-};
+  };
 
   const handleCategoryChange = (id: string) => {
     const cat = categoriesData?.data?.find((c: any) => c.id === id);
@@ -896,12 +896,12 @@ const watchedSchoolEmail  = watch("schoolEmail");
     const c = colorValue.toLowerCase();
     let colorDescription = "";
     switch (categoryKey) {
-      case "bags":        colorDescription = isOther ? `A bag was found. ` : `A ${c} bag was found. `; break;
+      case "bags": colorDescription = isOther ? `A bag was found. ` : `A ${c} bag was found. `; break;
       case "calculators": colorDescription = isOther ? `A calculator was found. ` : `A ${c} calculator was found. `; break;
-      case "umbrellas":   colorDescription = isOther ? `An umbrella was found. ` : `A ${c} umbrella was found. `; break;
-      case "watches":     colorDescription = isOther ? `A watch was found. ` : `A ${c} watch was found. `; break;
-      case "money":       colorDescription = `Money was found. `; break;
-      case "wallets & purses": 
+      case "umbrellas": colorDescription = isOther ? `An umbrella was found. ` : `A ${c} umbrella was found. `; break;
+      case "watches": colorDescription = isOther ? `A watch was found. ` : `A ${c} watch was found. `; break;
+      case "money": colorDescription = `Money was found. `; break;
+      case "wallets & purses":
       case "jewelry":
       case "accessories":
       case "keys":
@@ -909,7 +909,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
       case "flash drives & storage":
       case "device":
         colorDescription = config.description; break;
-      default:            colorDescription = isOther ? `A ${config.itemName.toLowerCase()} was found.` : `A ${c} ${config.itemName.toLowerCase()} was found.`;
+      default: colorDescription = isOther ? `A ${config.itemName.toLowerCase()} was found.` : `A ${c} ${config.itemName.toLowerCase()} was found.`;
     }
     addSetValue("description", colorDescription, { shouldDirty: true });
   };
@@ -923,48 +923,48 @@ const watchedSchoolEmail  = watch("schoolEmail");
     const isNone = conditionValue === "None";
     let enhancedDescription = "";
     switch (categoryKey) {
-      case "bags":{
+      case "bags": {
         const base = isOther ? "A bag" : `A ${addSelectedColor.toLowerCase()} bag`;
-        if (isNone)                               enhancedDescription = `${base} was found. `;
-        else if (conditionValue === "Scratches")  enhancedDescription = `${base} with scratches was found. `;
-        else if (conditionValue === "Stickers")   enhancedDescription = `${base} with stickers was found. `;
-        else if (conditionValue === "Keychains")  enhancedDescription = `${base} with keychains was found. `;
-        else                                      enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition was found. `;
+        if (isNone) enhancedDescription = `${base} was found. `;
+        else if (conditionValue === "Scratches") enhancedDescription = `${base} with scratches was found. `;
+        else if (conditionValue === "Stickers") enhancedDescription = `${base} with stickers was found. `;
+        else if (conditionValue === "Keychains") enhancedDescription = `${base} with keychains was found. `;
+        else enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition was found. `;
         break;
       }
-      case "calculators":{
+      case "calculators": {
         const base = isOther ? "A calculator" : `A ${addSelectedColor.toLowerCase()} calculator`;
-        if (isNone)                               enhancedDescription = `${base} was found. `;
-        else if (conditionValue === "Scratches")  enhancedDescription = `${base} with scratches was found. `;
-        else if (conditionValue === "Stickers")   enhancedDescription = `${base} with stickers was found. `;
+        if (isNone) enhancedDescription = `${base} was found. `;
+        else if (conditionValue === "Scratches") enhancedDescription = `${base} with scratches was found. `;
+        else if (conditionValue === "Stickers") enhancedDescription = `${base} with stickers was found. `;
         else if (conditionValue === "Engravings") enhancedDescription = `${base} with engravings was found. `;
-        else                                      enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition was found. `;
+        else enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition was found. `;
         break;
       }
-      case "umbrellas":{
+      case "umbrellas": {
         const base = isOther ? "An umbrella" : `A ${addSelectedColor.toLowerCase()} umbrella`;
-        if (isNone)                                enhancedDescription = `${base} was found. `;
-        else if (conditionValue === "Scratches")   enhancedDescription = `${base} with scratches was found. `;
-        else if (conditionValue === "Stickers")   enhancedDescription = `${base} with stickers was found. `;
-        else if (conditionValue === "Bent Frame")  enhancedDescription = `${base} with a bent frame was found. `;
-        else                                       enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition was found. `;
+        if (isNone) enhancedDescription = `${base} was found. `;
+        else if (conditionValue === "Scratches") enhancedDescription = `${base} with scratches was found. `;
+        else if (conditionValue === "Stickers") enhancedDescription = `${base} with stickers was found. `;
+        else if (conditionValue === "Bent Frame") enhancedDescription = `${base} with a bent frame was found. `;
+        else enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition was found. `;
         break;
       }
-      case "watches":{
+      case "watches": {
         const base = isOther ? "A watch" : `A ${addSelectedColor.toLowerCase()} watch`;
-        if (isNone)                                enhancedDescription = `${base} was found. `;
-        else if (conditionValue === "Scratches")   enhancedDescription = `${base} with scratches was found. `;
-        else if (conditionValue === "Stickers")   enhancedDescription = `${base} with stickers was found. `;
-        else if (conditionValue === "Engravings")  enhancedDescription = `${base} with engravings was found. `;
-        else                                       enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition was found. `;
+        if (isNone) enhancedDescription = `${base} was found. `;
+        else if (conditionValue === "Scratches") enhancedDescription = `${base} with scratches was found. `;
+        else if (conditionValue === "Stickers") enhancedDescription = `${base} with stickers was found. `;
+        else if (conditionValue === "Engravings") enhancedDescription = `${base} with engravings was found. `;
+        else enhancedDescription = `${base} in ${conditionValue.toLowerCase()} condition was found. `;
         break;
       }
       case "money":
-        if (conditionValue === "Coins")                    enhancedDescription = `Money in the form of coins was found. `;
-        else if (conditionValue === "Bills")               enhancedDescription = `Money in the form of bills was found. `;
+        if (conditionValue === "Coins") enhancedDescription = `Money in the form of coins was found. `;
+        else if (conditionValue === "Bills") enhancedDescription = `Money in the form of bills was found. `;
         else if (conditionValue === "Mixed Coins and Bills") enhancedDescription = `Money in the form of mixed coins and bills was found. `;
-        else if (conditionValue === "Wallet/Purse")        enhancedDescription = `Money found inside a wallet/purse was found. `;
-        else                                               enhancedDescription = `Money was found. `;
+        else if (conditionValue === "Wallet/Purse") enhancedDescription = `Money found inside a wallet/purse was found. `;
+        else enhancedDescription = `Money was found. `;
         break;
       case "wallets & purses":
       case "jewelry":
@@ -988,15 +988,15 @@ const watchedSchoolEmail  = watch("schoolEmail");
     if (!addSelectedMenucategoryId) return;
     try {
       const lowerMenu = addSelectedMenu?.toLowerCase() || "";
-      const isAutoFillImage = 
-        lowerMenu.includes("money") || 
-        lowerMenu.includes("cash") || 
-        lowerMenu.includes("bill") || 
-        lowerMenu.includes("currency") || 
-        lowerMenu === "id" || 
-        lowerMenu === "identification" || 
-        lowerMenu.includes("device") || 
-        lowerMenu.includes("electronic") || 
+      const isAutoFillImage =
+        lowerMenu.includes("money") ||
+        lowerMenu.includes("cash") ||
+        lowerMenu.includes("bill") ||
+        lowerMenu.includes("currency") ||
+        lowerMenu === "id" ||
+        lowerMenu === "identification" ||
+        lowerMenu.includes("device") ||
+        lowerMenu.includes("electronic") ||
         lowerMenu.includes("gadget") ||
         lowerMenu.includes("wallet") ||
         lowerMenu.includes("purse") ||
@@ -1011,19 +1011,19 @@ const watchedSchoolEmail  = watch("schoolEmail");
         lowerMenu.includes("food") ||
         lowerMenu.includes("sport");
 
-      const autoFillPath = 
-        (lowerMenu.includes("money") || lowerMenu.includes("cash") || lowerMenu.includes("bill") || lowerMenu.includes("currency")) ? "/money.jpg" 
-        : (lowerMenu === "id" || lowerMenu === "identification") ? "/id.jpg" 
-        : (lowerMenu.includes("device") || lowerMenu.includes("electronic") || lowerMenu.includes("gadget")) ? "/phone.png" 
-        : (lowerMenu.includes("wallet") || lowerMenu.includes("purse")) ? "/wallet.jpg"
-        : (lowerMenu.includes("jewelry")) ? "/jewelry.jpg"
-        : (lowerMenu.includes("accessor")) ? "/Accessories.jpg"
-        : (lowerMenu.includes("key")) ? "/keys.jpg"
-        : (lowerMenu.includes("usb") || lowerMenu.includes("storage") || lowerMenu.includes("flash drive")) ? "/usb.jpg"
-        : (lowerMenu.includes("document")) ? "/id.jpg"
-        : (lowerMenu.includes("food") || lowerMenu.includes("lunch")) ? "/lunchbox.jpg"
-        : (lowerMenu.includes("sport")) ? "/sport.jpg"
-        : "/phone.png";
+      const autoFillPath =
+        (lowerMenu.includes("money") || lowerMenu.includes("cash") || lowerMenu.includes("bill") || lowerMenu.includes("currency")) ? "/money.jpg"
+          : (lowerMenu === "id" || lowerMenu === "identification") ? "/id.jpg"
+            : (lowerMenu.includes("device") || lowerMenu.includes("electronic") || lowerMenu.includes("gadget")) ? "/phone.png"
+              : (lowerMenu.includes("wallet") || lowerMenu.includes("purse")) ? "/wallet.jpg"
+                : (lowerMenu.includes("jewelry")) ? "/jewelry.jpg"
+                  : (lowerMenu.includes("accessor")) ? "/Accessories.jpg"
+                    : (lowerMenu.includes("key")) ? "/keys.jpg"
+                      : (lowerMenu.includes("usb") || lowerMenu.includes("storage") || lowerMenu.includes("flash drive")) ? "/usb.jpg"
+                        : (lowerMenu.includes("document")) ? "/id.jpg"
+                          : (lowerMenu.includes("food") || lowerMenu.includes("lunch")) ? "/lunchbox.jpg"
+                            : (lowerMenu.includes("sport")) ? "/sport.jpg"
+                              : "/phone.png";
 
       const res: any = await createFoundItem({
         img: isAutoFillImage ? autoFillPath : (addPreview || ""),
@@ -1066,11 +1066,11 @@ const watchedSchoolEmail  = watch("schoolEmail");
   const pagedItems = filteredItems;
 
   const sortOptions = [
-    { value: "foundItemName-asc",  label: "Name (A–Z)" },
+    { value: "foundItemName-asc", label: "Name (A–Z)" },
     { value: "foundItemName-desc", label: "Name (Z–A)" },
-    { value: "date-desc",          label: "Date Found (Newest)" },
-    { value: "date-asc",           label: "Date Found (Oldest)" },
-    { value: "location-asc",       label: "Location (A–Z)" },
+    { value: "date-desc", label: "Date Found (Newest)" },
+    { value: "date-asc", label: "Date Found (Oldest)" },
+    { value: "location-asc", label: "Location (A–Z)" },
   ];
 
   const categoryOptions = [
@@ -1115,11 +1115,11 @@ const watchedSchoolEmail  = watch("schoolEmail");
       </div>
 
       {/* ── Points Teaser Banner ── */}
-    {!isAdmin && (
-      <div className="px-6 sm:px-10 lg:px-16 pt-5 reveal reveal-delay-1">
-        <PointsTeaserBanner />
-      </div>
-    )}
+      {!isAdmin && (
+        <div className="px-6 sm:px-10 lg:px-16 pt-5 reveal reveal-delay-1">
+          <PointsTeaserBanner />
+        </div>
+      )}
 
       {/* ── Search & filters ── */}
       <div className="px-6 sm:px-10 lg:px-16 py-5">
@@ -1187,7 +1187,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
         ) : (
           <div className={viewMode === "grid" ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-2"}>
             {filteredItems.map((item: any) => (
-              viewMode === "grid" 
+              viewMode === "grid"
                 ? <FoundItemCard key={item.id} item={item} isAdmin={isAdmin} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
                 : <FoundItemRow key={item.id} item={item} isAdmin={isAdmin} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
             ))}
@@ -1282,7 +1282,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                 <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                       Your Name <span className="text-red-400">*</span>
                     </label>
                     <input {...addRegister("reporterName", { required: "Finder's name is required" })} type="text" placeholder="Enter name or scan ID" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
@@ -1290,7 +1290,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-10 5L2 7" /></svg>
                       Institutional Email <span className="text-red-400">*</span>
                     </label>
                     <Controller
@@ -1310,7 +1310,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                           onChange={(e) => {
                             const value = e.target.value;
                             const trimmedValue = value.trim();
-                            
+
                             // Only auto-fill if current value is exactly 8 digits and previous value wasn't an email
                             if (/^\d{8}$/.test(trimmedValue) && !prevAddEmailValue.includes('@')) {
                               setPrevAddEmailValue(`${trimmedValue}@nbsc.edu.ph`);
@@ -1330,7 +1330,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                 {/* ── Department ── */}
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" /></svg>
                     Department / Course
                   </label>
                   <input {...addRegister("department")} type="text" readOnly placeholder="Auto-filled from masterlist..." className="w-full px-4 py-2.5 bg-gray-800/40 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none transition-all text-sm italic" />
@@ -1340,7 +1340,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                 <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
                       Item Name <span className="text-red-400">*</span>
                     </label>
                     <input {...addRegister("foundItemName", { required: "Item name is required" })} type="text" placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
@@ -1349,7 +1349,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-1.5">
                       <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></svg>
                         Category <span className="text-red-400">*</span>
                       </label>
                       <button type="button" onClick={() => setShowCategoryHelp(true)} className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-400 hover:text-white flex items-center justify-center transition-all" title="About categories">
@@ -1375,7 +1375,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                 {addSelectedMenu && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.length > 0 && (
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
                       Color
                     </label>
                     <CustomSelect
@@ -1390,7 +1390,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                 {addSelectedColor && (
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/></svg>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
                       Condition
                     </label>
                     <CustomSelect
@@ -1406,7 +1406,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                   {/* ── Where Found — now using LocationAutocomplete ── */}
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
                       Where Found <span className="text-red-400">*</span>
                     </label>
                     <Controller
@@ -1428,7 +1428,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
 
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
                       Date Found
                     </label>
                     <CustomDatePicker value={addStartDate} onChange={setAddStartDate} max={new Date().toISOString().split("T")[0]} placeholder="Select date found" />
@@ -1438,7 +1438,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                 {/* ── Description ── */}
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                     Description <span className="text-red-400">*</span>
                   </label>
                   <textarea {...addRegister("description", { required: "Description is required" })} rows={2} placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none" />
@@ -1448,17 +1448,17 @@ const watchedSchoolEmail  = watch("schoolEmail");
                 {/* ── Item Photo ── */}
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
                     Item Photo <span className="text-red-400">*</span>
                   </label>
                   {!addPreview && !(
                     (() => {
                       const lower = addSelectedMenu?.toLowerCase() || "";
-                      return lower.includes("money") || lower.includes("cash") || lower.includes("bill") || lower.includes("currency") || 
-                             lower === "id" || lower === "identification" || lower.includes("device") || lower.includes("electronic") || 
-                             lower.includes("gadget") || lower.includes("wallet") || lower.includes("purse") || lower.includes("jewelry") || 
-                             lower.includes("accessor") || lower.includes("key") || lower.includes("usb") || lower.includes("storage") ||
-                             lower.includes("flash drive") || lower.includes("document");
+                      return lower.includes("money") || lower.includes("cash") || lower.includes("bill") || lower.includes("currency") ||
+                        lower === "id" || lower === "identification" || lower.includes("device") || lower.includes("electronic") ||
+                        lower.includes("gadget") || lower.includes("wallet") || lower.includes("purse") || lower.includes("jewelry") ||
+                        lower.includes("accessor") || lower.includes("key") || lower.includes("usb") || lower.includes("storage") ||
+                        lower.includes("flash drive") || lower.includes("document");
                     })()
                   ) ? (
                     <div
@@ -1472,7 +1472,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                       <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
                       <div className="flex flex-col items-center gap-2.5">
                         <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center ${addPhotoError ? "bg-red-900/20 border-red-500/30 text-red-400" : "bg-gray-800 border-gray-700 text-gray-400"}`}>
-                          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
                         </div>
                         <div>
                           <p className="text-sm text-gray-300"><span className="text-blue-400 font-semibold">Click to upload</span> or drag & drop</p>
@@ -1483,7 +1483,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                   ) : (
                     <div className="rounded-xl overflow-hidden border border-gray-700 bg-gray-800">
                       <div className="relative group">
-                        <img 
+                        <img
                           src={
                             (() => {
                               const lower = addSelectedMenu?.toLowerCase() || "";
@@ -1498,9 +1498,9 @@ const watchedSchoolEmail  = watch("schoolEmail");
                               if (lower.includes("document")) return "/id.jpg";
                               return addPreview;
                             })()
-                          } 
-                          alt="Preview" 
-                          className="w-full max-h-44 object-cover" 
+                          }
+                          alt="Preview"
+                          className="w-full max-h-44 object-cover"
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/55 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
                           <button type="button" onClick={() => addFileInputRef.current?.click()} className="bg-white/90 hover:bg-white text-gray-900 text-xs font-semibold px-4 py-2 rounded-lg">Change</button>
@@ -1521,7 +1521,7 @@ const watchedSchoolEmail  = watch("schoolEmail");
                 {/* ── Claim Instructions (static) ── */}
                 <div className="flex items-start gap-3 px-3.5 py-3 bg-blue-500/5 border border-blue-500/15 rounded-xl">
                   <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Claim Instructions</p>
@@ -1599,14 +1599,14 @@ const watchedSchoolEmail  = watch("schoolEmail");
       )}
 
       {claimItem && <QuickClaimModal item={claimItem} onClose={() => setClaimItem(null)} />}
-      
+
       {/* Comment Modal */}
-      <CommentModal 
-        isOpen={!!commentItem} 
-        onClose={() => setCommentItem(null)} 
-        itemId={commentItem?.id || ""} 
-        itemType="found" 
-        itemName={commentItem?.foundItemName || "Item"} 
+      <CommentModal
+        isOpen={!!commentItem}
+        onClose={() => setCommentItem(null)}
+        itemId={commentItem?.id || ""}
+        itemType="found"
+        itemName={commentItem?.foundItemName || "Item"}
       />
 
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
