@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { io } from 'socket.io-client';
-import type { Socket } from 'socket.io-client';
+import io from 'socket.io-client';
+
+type SocketType = ReturnType<typeof io>;
 
 interface UseSocketOptions {
   autoConnect?: boolean;
@@ -22,7 +23,7 @@ const getSocketUrl = () => {
 };
 
 export const useSocket = (options: UseSocketOptions = {}) => {
-  const [socketInstance, setSocket] = useState<Socket | null>(null);
+  const [socketInstance, setSocket] = useState<SocketType | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const reconnectAttempts = useRef(0);
@@ -35,7 +36,7 @@ export const useSocket = (options: UseSocketOptions = {}) => {
     const SOCKET_URL = getSocketUrl();
     console.log('🔌 Attempting socket connection to:', SOCKET_URL);
 
-    let socket: Socket;
+    let socket: SocketType;
     try {
       socket = io(SOCKET_URL, {
         auth: { token: options.token || '' },
@@ -48,7 +49,7 @@ export const useSocket = (options: UseSocketOptions = {}) => {
         // If your backend is at /socket.io, this is default, but sometimes it helps to be explicit
         path: '/socket.io/', 
         withCredentials: true
-      });
+      } as any);
     } catch (e) {
       console.error('Socket initialization failed:', e);
       hasGivenUp.current = true;
@@ -64,7 +65,7 @@ export const useSocket = (options: UseSocketOptions = {}) => {
       hasGivenUp.current = false;
     });
 
-    socket.on('connect_error', (err) => {
+    socket.on('connect_error', (err: any) => {
       console.warn('❌ Socket connection error:', err.message);
       setIsConnected(false);
       reconnectAttempts.current++;
@@ -77,7 +78,7 @@ export const useSocket = (options: UseSocketOptions = {}) => {
       }
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', (reason: any) => {
       console.log('🔌 Socket disconnected:', reason);
       setIsConnected(false);
     });

@@ -79,9 +79,8 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
       <div className="flex gap-2 overflow-x-auto pb-1">
         {images.map((src, idx) => (
           <button key={idx} onClick={() => setActiveIdx(idx)}
-            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-              idx === activeIdx ? "border-blue-500 ring-2 ring-blue-500/30" : "border-gray-700 hover:border-gray-500 opacity-60 hover:opacity-100"
-            }`}>
+            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${idx === activeIdx ? "border-blue-500 ring-2 ring-blue-500/30" : "border-gray-700 hover:border-gray-500 opacity-60 hover:opacity-100"
+              }`}>
             <img src={src} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover"
               onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
           </button>
@@ -294,19 +293,6 @@ const SingleLostItem = () => {
           </div>
         </div>
 
-        {/* Bottom Comments Section — desktop only */}
-        <div className="hidden lg:block w-full px-4 sm:px-10 lg:px-16 py-8 border-t border-gray-800">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-white">Discussion & Sightings</h2>
-          </div>
-          <button
-            onClick={() => setIsCommentModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-sm"
-          >
-            <FaComments size={14} className="text-blue-400" />
-            View Discussion & Sightings
-          </button>
-        </div>
 
       </div>
 

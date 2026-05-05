@@ -44,6 +44,7 @@ import CommunicationHub from "./dashboard/pages/CommunicationHub.tsx";
 import SupportPage from "./pages/support/SupportPage.tsx";
 import SecurityPage from "./dashboard/pages/SecurityCompliance.tsx";
 import ContentModeration from "./dashboard/pages/ContentModeration.tsx";
+import ItemStatus from "./pages/itemStatus/ItemStatus.tsx";
 
 const router = createBrowserRouter([
   {
@@ -64,6 +65,7 @@ const router = createBrowserRouter([
       { path: "/ai-search", element: <AiSearch /> },
       { path: "/bulletin", element: <BulletinBoard /> },
       { path: "/support", element: <SupportPage /> },
+      { path: "/itemStatus", element: <ItemStatus /> },
     ],
   },
 

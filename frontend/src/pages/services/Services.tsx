@@ -67,7 +67,7 @@ const services: Service[] = [
     title: "Item Status Tracking",
     description: "Monitor your lost item report in real time from submission and review to recovery and return.",
     accent: "from-blue-500 to-blue-700",
-    tag: "Soon",
+    tag: "Core",
     link: "/itemStatus",
   },
   
