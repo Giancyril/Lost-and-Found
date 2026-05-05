@@ -18,8 +18,8 @@ interface TimelineEvent {
 
 interface Props {
   foundItem:      any;
-  currentUserId?: string; // logged-in user's id — shows their own claim if available
-  claims?:        any[];  // unused — we read directly from foundItem.claim
+  currentUserId?: string; 
+  claims?:        any[];  
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

@@ -76,39 +76,32 @@ const Faq = () => {
           </div>
 
           {/* Right — accordion */}
-          <ul className="lg:basis-1/2 space-y-1.5 lg:space-y-2">
+          <ul className="lg:basis-1/2 divide-y divide-white/5 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
             {faqs.map((faq, index) => (
-              <li
-                key={index}
-                className="bg-white/5 border border-white/10 rounded-lg overflow-hidden backdrop-blur-sm"
-              >
+              <li key={index}>
                 <button
-                  className="relative flex gap-3 items-center w-full px-4 py-3 lg:p-6 text-sm lg:text-base font-semibold text-left hover:bg-white/5 transition-all duration-200"
+                  className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-white/[0.02] transition-colors focus:outline-none select-none"
                   onClick={() => toggleFaq(index)}
                   aria-expanded={expandedIndex === index}
                 >
-                  <span className="flex-1 text-white text-left text-sm lg:text-base leading-snug">
+                  <p className={`text-xs font-semibold leading-relaxed ${
+                    expandedIndex === index ? "text-white" : "text-white"
+                  }`}>
                     {faq.question}
-                  </span>
-                  <div className="text-blue-400 shrink-0 text-xs lg:text-sm">
-                    {expandedIndex === index ? <FaMinus /> : <FaPlus />}
+                  </p>
+                  <div className="shrink-0">
+                    {expandedIndex === index
+                      ? <FaMinus size={10} className="text-blue-400" />
+                      : <FaPlus  size={10} className="text-gray-600" />}
                   </div>
                 </button>
-                <div
-                  className={`transition-[max-height] duration-500 ease-in-out overflow-hidden ${
-                    expandedIndex === index ? "max-h-[300px]" : "max-h-0"
-                  }`}
-                >
-                  <div
-                    className={`px-4 pb-4 lg:px-6 lg:pb-6 transform transition-transform duration-500 ${
-                      expandedIndex === index ? "translate-y-0" : "-translate-y-4"
-                    }`}
-                  >
-                    <div className="text-gray-400 text-xs lg:text-sm leading-relaxed text-justify">
+                {expandedIndex === index && (
+                  <div className="px-5 pb-4">
+                    <p className="text-gray-400 text-xs leading-relaxed text-justify">
                       {faq.answer}
-                    </div>
+                    </p>
                   </div>
-                </div>
+                )}
               </li>
             ))}
           </ul>
