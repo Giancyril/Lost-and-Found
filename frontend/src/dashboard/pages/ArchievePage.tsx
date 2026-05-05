@@ -163,7 +163,7 @@ const ArchivePage = () => {
       {activeTab === "stale" && (
         <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl px-4 py-3 flex items-start gap-3">
           <FaExclamationTriangle className="text-orange-400 shrink-0 mt-0.5" size={13} />
-          <p className="text-orange-300 text-xs leading-relaxed">
+          <p className="text-orange-300 text-xs leading-relaxed text-justify">
             These found items have been <strong>unclaimed for 30+ days</strong>. You can archive them to remove them from the public listing, or leave them visible. Archived items can be restored at any time.
           </p>
         </div>
@@ -171,7 +171,7 @@ const ArchivePage = () => {
       {activeTab === "archived" && (
         <div className="bg-gray-800/50 border border-white/5 rounded-xl px-4 py-3 flex items-start gap-3">
           <FaArchive className="text-gray-400 shrink-0 mt-0.5" size={13} />
-          <p className="text-gray-400 text-xs leading-relaxed">
+          <p className="text-gray-400 text-xs leading-relaxed text-justify">
             Archived items are <strong>hidden from the public found items page</strong>. Restore an item to make it visible again, or permanently delete it to remove it completely.
           </p>
         </div>

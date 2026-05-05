@@ -42,16 +42,16 @@ interface StatCardProps {
   accent: string; href: string; sub?: string; subColor?: string;
 }
 const StatCard = ({ label, value, icon, accent, href, sub, subColor }: StatCardProps) => (
-  <Link to={href} className="group relative bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 hover:border-white/10 transition-all duration-200 overflow-hidden">
+  <Link to={href} className="group relative bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 hover:border-white/10 transition-all duration-200 overflow-hidden">
     <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${accent} blur-3xl scale-150`} />
     <div className="relative flex items-start justify-between">
-      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${accent} bg-opacity-10`}>{icon}</div>
-      <FaArrowRight size={11} className="text-gray-600 group-hover:text-gray-400 group-hover:translate-x-0.5 transition-all mt-1" />
+      <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center ${accent} bg-opacity-10`}>{icon}</div>
+      <FaArrowRight size={10} className="text-gray-600 group-hover:text-gray-400 group-hover:translate-x-0.5 transition-all mt-0.5" />
     </div>
     <div className="relative">
-      <p className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{value ?? "—"}</p>
-      <p className="text-gray-500 text-xs mt-0.5 font-medium">{label}</p>
-      {sub && <p className={`text-[11px] mt-1.5 font-medium ${subColor ?? "text-gray-500"}`}>{sub}</p>}
+      <p className="text-xl sm:text-2xl font-bold text-white tracking-tight">{value ?? "—"}</p>
+      <p className="text-gray-500 text-[11px] mt-0.5 font-medium">{label}</p>
+      {sub && <p className={`text-[10px] mt-1 font-medium ${subColor ?? "text-gray-500"}`}>{sub}</p>}
     </div>
   </Link>
 );
@@ -178,10 +178,10 @@ const Dashboard = () => {
 
       {/* Primary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard label="Found Items"    value={stats?.foundItems ?? 0}    icon={<FaSearch size={15} className="text-cyan-400" />}            accent="bg-cyan-500/5"   href="/dashboard/found-items" sub={`+${stats?.foundThisWeek ?? 0} this week`}  subColor="text-cyan-400"   />
-        <StatCard label="Lost Items"     value={stats?.lostItems ?? 0}     icon={<FaExclamationTriangle size={15} className="text-red-400" />} accent="bg-red-500/5"    href="/dashboard/lost-items"  sub={`+${stats?.lostThisWeek ?? 0} this week`}   subColor="text-red-400"    />
-        <StatCard label="Pending Claims" value={stats?.pendingClaims ?? 0} icon={<FaClipboardList size={15} className="text-yellow-400" />}   accent="bg-yellow-500/5" href="/dashboard/claims"       sub={`${stats?.approvedClaims ?? 0} approved · ${stats?.rejectedClaims ?? 0} rejected`} subColor="text-yellow-400" />
-        <StatCard label="Total Users"    value={stats?.totalUsers ?? 0}    icon={<FaUsers size={15} className="text-violet-400" />}           accent="bg-violet-500/5" href="/dashboard/users"        sub={`${stats?.totalClaims ?? 0} total claims`}  subColor="text-violet-400" />
+        <StatCard label="Found Items"    value={stats?.foundItems ?? 0}    icon={<FaSearch size={13} className="text-cyan-400" />}            accent="bg-cyan-500/5"   href="/dashboard/found-items" sub={`+${stats?.foundThisWeek ?? 0} this week`}  subColor="text-cyan-400"   />
+        <StatCard label="Lost Items"     value={stats?.lostItems ?? 0}     icon={<FaExclamationTriangle size={13} className="text-red-400" />} accent="bg-red-500/5"    href="/dashboard/lost-items"  sub={`+${stats?.lostThisWeek ?? 0} this week`}   subColor="text-red-400"    />
+        <StatCard label="Pending Claims" value={stats?.pendingClaims ?? 0} icon={<FaClipboardList size={13} className="text-yellow-400" />}   accent="bg-yellow-500/5" href="/dashboard/claims"       sub={`${stats?.approvedClaims ?? 0} approved · ${stats?.rejectedClaims ?? 0} rejected`} subColor="text-yellow-400" />
+        <StatCard label="Total Users"    value={stats?.totalUsers ?? 0}    icon={<FaUsers size={13} className="text-violet-400" />}           accent="bg-violet-500/5" href="/dashboard/users"        sub={`${stats?.totalClaims ?? 0} total claims`}  subColor="text-violet-400" />
       </div>
 
       {/* Rates + Weekly */}

@@ -559,7 +559,7 @@ const AutomatedModerationTab = () => {
               </div>
               <button
                 onClick={() => setShowKeywordModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-900/30"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold transition-all"
               >
                 <FaBolt size={9} /> Manage
               </button>

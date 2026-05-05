@@ -660,11 +660,10 @@ const SecurityCompliance = () => {
             title={tab.label}
             className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-[11px] font-medium transition-colors w-full focus:outline-none select-none
               ${active
-                ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.15)]"
+                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
                 : "text-gray-500 hover:text-gray-200 hover:bg-white/5 border border-transparent"
               }`}>
-            <Icon size={14} className={`transition-colors shrink-0 ${active ? "text-cyan-400" : "text-gray-600"}`} />
-            {/* Hide text on mobile, show on sm+ */}
+            <Icon size={10} className={`transition-colors shrink-0 ${active ? "text-cyan-400" : "text-gray-600"}`} />
             <span className="hidden sm:inline">{tab.label}</span>
           </button>
         );
