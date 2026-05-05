@@ -239,7 +239,7 @@ export const getCommHubStats = async (req: Request, res: Response) => {
 
 const announcementEmailTemplate = (data: { title: string; message: string; type: string; recipientName: string }) => {
   const accentColor = data.type === "URGENT" ? "#ef4444" : data.type === "WARNING" ? "#f59e0b" : data.type === "SUCCESS" ? "#10b981" : "#0891b2";
-  const badge = data.type === "URGENT" ? "🚨 URGENT" : data.type === "WARNING" ? "⚠️ NOTICE" : data.type === "SUCCESS" ? "✅ UPDATE" : "📢 ANNOUNCEMENT";
+  const badge = data.type === "URGENT" ? " URGENT" : data.type === "WARNING" ? " NOTICE" : data.type === "SUCCESS" ? " UPDATE" : " ANNOUNCEMENT";
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
   <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 0;">

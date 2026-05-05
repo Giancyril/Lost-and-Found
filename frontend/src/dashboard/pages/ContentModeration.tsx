@@ -27,6 +27,8 @@ const modApi = baseApi.injectEndpoints({
     issueWarning:        builder.mutation({ query: (data: any) => ({ url: "/admin/moderation/warnings", method: "POST", body: data }), invalidatesTags: ["moderation"] }),
     deleteWarning:       builder.mutation({ query: (id: string) => ({ url: `/admin/moderation/warnings/${id}`, method: "DELETE" }), invalidatesTags: ["moderation"] }),
     getKeywords:         builder.query({ query: () => ({ url: "/admin/moderation/keywords", method: "GET" }), providesTags: ["moderation"] }),
+    addKeyword:          builder.mutation({ query: (data: any) => ({ url: "/admin/moderation/keywords", method: "POST", body: data }), invalidatesTags: ["moderation"] }),
+    removeKeyword:       builder.mutation({ query: (keyword: string) => ({ url: `/admin/moderation/keywords/${keyword}`, method: "DELETE" }), invalidatesTags: ["moderation"] }),
     testContent:         builder.mutation({ query: (data: any) => ({ url: "/admin/moderation/test", method: "POST", body: data }) }),
     getAppeals:          builder.query({ query: (s?: string) => ({ url: "/admin/moderation/appeals",  method: "GET", params: s ? { status: s } : {} }), providesTags: ["moderation"] }),
     resolveAppeal:       builder.mutation({ query: ({ id, ...data }: any) => ({ url: `/admin/moderation/appeals/${id}/resolve`, method: "PUT", body: data }), invalidatesTags: ["moderation"] }),
@@ -38,7 +40,7 @@ const {
   useGetModerationStatsQuery, useGetReportsQuery, useResolveReportMutation, useDeleteReportMutation,
   useGetPendingCommentsQuery, useModerateCommentMutation,
   useGetUserBehaviorQuery, useIssueWarningMutation, useDeleteWarningMutation,
-  useGetKeywordsQuery, useTestContentMutation,
+  useGetKeywordsQuery, useAddKeywordMutation, useRemoveKeywordMutation, useTestContentMutation,
   useGetAppealsQuery, useResolveAppealMutation,
 } = modApi;
 
@@ -78,8 +80,8 @@ const StatCard = ({ label, value, color, bg, icon }: any) => (
   </div>
 );
 
-const SectionCard = ({ title, subtitle, children, action }: any) => (
-  <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+const SectionCard = ({ title, subtitle, children, action, className = "" }: any) => (
+  <div className={`bg-gray-900 border border-white/5 rounded-2xl overflow-hidden ${className}`}>
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-white/5">
       <div className="min-w-0 flex-1">
         <h3 className="text-white text-sm font-semibold">{title}</h3>
@@ -373,11 +375,33 @@ const UserBehaviorTab = () => {
 // ════════════════════════════════════════════════════════════════════════════════
 // TAB: AUTOMATED MODERATION
 // ════════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════════
+// TAB: AUTOMATED MODERATION  — drop-in replacement
+// ════════════════════════════════════════════════════════════════════════════════
+//
+// CHANGES vs original:
+//  • Full-width "Pipeline" card on top — shows the 4-step flow horizontally
+//    with connecting arrows; much cleaner than the stacked list
+//  • Two equal-height columns below:
+//      LEFT  — Blocked Keywords (compact tag cloud + count badge)
+//      RIGHT — Content Tester (primary action, generous space)
+//  • Dynamic Keyword Management promo merged as a sticky footer banner
+//    inside the Keywords card (no more orphaned gradient card)
+//  • Consistent border accent colors, glow effects, and micro-animations
+//
+// Usage: replace the AutomatedModerationTab const in ContentModeration.tsx
+
 const AutomatedModerationTab = () => {
-  const { data: kwData } = useGetKeywordsQuery(undefined);
-  const [testContent, { isLoading: isTesting }] = useTestContentMutation();
-  const [testText, setTestText]   = useState("");
-  const [testResult, setTestResult] = useState<any>(null);
+  const { data: kwData, refetch: refetchKeywords } = useGetKeywordsQuery(undefined);
+  const [addKeyword,    { isLoading: isAdding   }] = useAddKeywordMutation();
+  const [removeKeyword, { isLoading: isRemoving }] = useRemoveKeywordMutation();
+  const [testContent,   { isLoading: isTesting  }] = useTestContentMutation();
+
+  const [testText,          setTestText         ] = useState("");
+  const [testResult,        setTestResult       ] = useState<any>(null);
+  const [showKeywordModal,  setShowKeywordModal ] = useState(false);
+  const [newKeyword,        setNewKeyword       ] = useState("");
+
   const keywords: string[] = kwData?.data?.keywords || [];
 
   const handleTest = async () => {
@@ -387,75 +411,304 @@ const AutomatedModerationTab = () => {
     else toast.error("Test failed");
   };
 
+  const handleAddKeyword = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!newKeyword.trim()) { toast.error("Enter a keyword"); return; }
+    const res: any = await addKeyword({ keyword: newKeyword });
+    if (res?.data?.success) {
+      toast.success(`"${newKeyword}" added`);
+      setNewKeyword("");
+      refetchKeywords();
+    } else {
+      toast.error(res?.error?.data?.message || "Failed to add keyword");
+    }
+  };
+
+  const handleRemoveKeyword = async (kw: string) => {
+    const res: any = await removeKeyword(kw);
+    if (res?.data?.success) { toast.success(`"${kw}" removed`); refetchKeywords(); }
+    else toast.error(res?.error?.data?.message || "Failed to remove");
+  };
+
+  // ── Pipeline steps ──────────────────────────────────────────────────────────
+  const STEPS = [
+    {
+      num: "01", icon: FaComment,
+      title: "Submission",
+      desc:  "User posts a comment on any lost or found item report",
+      color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20",
+    },
+    {
+      num: "02", icon: FaRobot,
+      title: "Keyword Scan",
+      desc:  "Content is instantly checked against the blocked keyword list",
+      color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20",
+    },
+    {
+      num: "03", icon: FaBolt,
+      title: "Auto-Decision",
+      desc:  "Clean → approved instantly. Flagged → held as PENDING",
+      color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20",
+    },
+    {
+      num: "04", icon: FaShieldAlt,
+      title: "Admin Review",
+      desc:  "Pending comments surface in Reported Content for manual action",
+      color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20",
+    },
+  ];
+
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center"><FaRobot size={16} className="text-cyan-400"/></div>
-          <div><h3 className="text-white text-sm font-bold">How Auto-Moderation Works</h3><p className="text-gray-500 text-[10px]">No AI API cost — runs locally on every comment submission</p></div>
+    <div className="space-y-4">
+
+      {/* ── Row 1: Pipeline ─────────────────────────────────────────────────── */}
+      <div className="bg-gray-900 border border-white/5 rounded-2xl p-5">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+            <FaRobot size={13} className="text-cyan-400" />
+          </div>
+          <div>
+            <h3 className="text-white text-sm font-semibold leading-none">How Auto-Moderation Works</h3>
+            <p className="text-gray-500 text-[10px] mt-0.5">Zero AI cost — runs entirely on-server for every comment submission</p>
+          </div>
+          <span className="ml-auto text-[9px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0 hidden sm:inline-flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+            LIVE
+          </span>
         </div>
-        <div className="space-y-2.5">
-          {[
-            { step:"1", title:"Comment submitted", desc:"A user submits a comment on any found/lost item" },
-            { step:"2", title:"Keyword scan",      desc:"Content is checked against the blocked keyword list" },
-            { step:"3", title:"Auto-decision",     desc:"Clean content → APPROVED immediately. Flagged → PENDING for admin review" },
-            { step:"4", title:"Admin review",      desc:"Pending comments appear in the Reported Content tab for manual approve/reject" },
-          ].map(s => (
-            <div key={s.step} className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-black flex items-center justify-center shrink-0">{s.step}</div>
-              <div><p className="text-white text-xs font-semibold">{s.title}</p><p className="text-gray-500 text-[10px] mt-0.5">{s.desc}</p></div>
-            </div>
-          ))}
+
+        {/* Steps grid — 4 columns on desktop, 2 on mobile */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {STEPS.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div key={s.num} className="relative">
+                {/* Arrow connector — only between steps, desktop only */}
+                {i < STEPS.length - 1 && (
+                  <div className="hidden lg:flex absolute -right-1.5 top-1/2 -translate-y-1/2 z-10 w-3 items-center justify-center">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 6h8M7 3l3 3-3 3" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                )}
+
+                <div className={`h-full flex flex-col gap-3 p-4 rounded-xl border ${s.bg} transition-all duration-200 hover:brightness-110`}>
+                  <div className="flex items-center justify-between">
+                    <div className={`w-8 h-8 rounded-lg border flex items-center justify-center ${s.bg}`}>
+                      <Icon size={13} className={s.color} />
+                    </div>
+                    <span className={`text-[10px] font-black ${s.color} opacity-40`}>{s.num}</span>
+                  </div>
+                  <div>
+                    <p className="text-white text-xs font-semibold leading-none mb-1">{s.title}</p>
+                    <p className="text-gray-500 text-[10px] leading-relaxed">{s.desc}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <SectionCard title="Blocked Keywords" subtitle={`${keywords.length} keywords — defined in moderationController.ts`}>
-        <div className="p-5 space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {keywords.map((kw:string) => <span key={kw} className="px-2.5 py-1 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded-lg">{kw}</span>)}
-          </div>
-          <div className="pt-2 border-t border-white/5">
-            <p className="text-gray-600 text-[10px] leading-relaxed">
-              Edit the <code className="bg-gray-800 px-1 rounded text-cyan-300 text-[10px]">BLOCKED_KEYWORDS</code> array in{" "}
-              <code className="bg-gray-800 px-1 rounded text-cyan-300 text-[10px]">src/utils/moderationController.ts</code> and redeploy.
-            </p>
-          </div>
-        </div>
-      </SectionCard>
+      {/* ── Row 2: Two equal columns ─────────────────────────────────────────── */}
+      {/* h-[420px] fixes the row height so neither card can push the other down */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:h-[420px]">
 
-      <SectionCard title="Content Tester" subtitle="Test a piece of text against the keyword filter">
-        <div className="p-5 space-y-4">
-            <textarea value={testText} onChange={e => { setTestText(e.target.value); setTestResult(null); }} rows={4}
-            placeholder="Paste or type any text here to test it against the filter..."
-            className="w-full px-4 py-3 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/30"/>
-            <div className="flex items-center justify-end gap-2">
-            {(testText || testResult) && (
-                <button
-                onClick={() => { setTestText(""); setTestResult(null); }}
-                className="flex items-center gap-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs font-bold transition-all">
-                <FaTimes size={10}/> Clear
-                </button>
-            )}
-            <button onClick={handleTest} disabled={isTesting}
-                className="flex items-center gap-2 px-4 py-1.5 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all">
-                {isTesting ? <><FaSpinner className="animate-spin" size={10}/> Testing…</> : <><FaBolt size={10}/> Test Content</>}
-            </button>
+        {/* ── LEFT: Blocked Keywords ─────────────────────────────────────────── */}
+        <div className="bg-gray-900 border border-white/5 rounded-2xl flex flex-col overflow-hidden">
+          {/* Card header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
+            <div>
+              <h3 className="text-white text-sm font-semibold">Blocked Keywords</h3>
+              <p className="text-gray-500 text-[10px] mt-0.5">Flagged on every comment submission</p>
             </div>
-            {testResult && (
-            <div className={`p-4 rounded-xl border flex items-start gap-3 ${testResult.clean ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20"}`}>
-                {testResult.clean ? <FaCheckCircle size={16} className="text-emerald-400 shrink-0 mt-0.5"/> : <FaTimesCircle size={16} className="text-red-400 shrink-0 mt-0.5"/>}
-                <div>
-                <p className={`text-sm font-bold ${testResult.clean ? "text-emerald-400" : "text-red-400"}`}>
-                    {testResult.clean ? "✓ Content is clean" : `✗ Blocked keyword found: "${testResult.flaggedKeyword}"`}
-                </p>
-                <p className="text-gray-500 text-xs mt-0.5">
-                    {testResult.clean ? "This text would be auto-approved when submitted as a comment." : "This text would be held as PENDING and require admin review."}
-                </p>
-                </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400">
+                {keywords.length} active
+              </span>
             </div>
+          </div>
+
+          {/* Keyword cloud — scrollable so it never pushes the footer */}
+          <div className="flex-1 overflow-y-auto p-5">
+            {keywords.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-24 text-gray-700">
+                <FaShieldAlt size={20} className="mb-2 opacity-30" />
+                <p className="text-xs">No blocked keywords yet</p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {keywords.map((kw: string) => (
+                  <span
+                    key={kw}
+                    className="group relative inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-800/80 border border-gray-700/50 hover:border-red-500/30 text-gray-300 text-[11px] font-mono rounded-lg transition-all duration-150"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500/50 shrink-0" />
+                    {kw}
+                  </span>
+                ))}
+              </div>
             )}
+          </div>
+
+          {/* Promo footer — replaces the standalone gradient card */}
+          <div className="px-5 py-4 border-t border-white/5 bg-gradient-to-r from-cyan-950/40 to-blue-950/40">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-white text-xs font-semibold truncate">Dynamic Keyword Management</p>
+                <p className="text-gray-500 text-[10px] mt-0.5 leading-relaxed text-justify">Add, edit or remove keywords in real-time no redeploy needed</p>
+              </div>
+              <button
+                onClick={() => setShowKeywordModal(true)}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-blue-700 hover:bg-blue-600 border border-blue-500/40 text-white text-[11px] font-bold rounded-xl transition-all shadow-lg shadow-cyan-900/30 whitespace-nowrap"
+              >
+                <FaBolt size={9} /> Manage
+              </button>
+            </div>
+          </div>
         </div>
-     </SectionCard>
+
+        {/* ── RIGHT: Content Tester ──────────────────────────────────────────── */}
+        <div className="bg-gray-900 border border-white/5 rounded-2xl flex flex-col overflow-hidden">
+          {/* Card header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
+            <div>
+              <h3 className="text-white text-sm font-semibold">Content Tester</h3>
+              <p className="text-gray-500 text-[10px] mt-0.5">Simulate a comment scan before deploying new keywords</p>
+            </div>
+            
+          </div>
+
+          {/* Tester body — overflow-hidden keeps everything inside the fixed card height */}
+          <div className="flex-1 overflow-hidden p-5 flex flex-col gap-3">
+            {/* textarea uses flex-1 min-h-0 so it shrinks when the result banner appears */}
+            <textarea
+              value={testText}
+              onChange={e => { setTestText(e.target.value); setTestResult(null); }}
+              placeholder="Paste or type any text here to run it through the keyword filter…"
+              className="w-full flex-1 min-h-0 px-4 py-3 bg-gray-800/70 border border-gray-700/50 hover:border-gray-600/60 focus:border-cyan-500/40 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all duration-150"
+            />
+
+            {/* Result banner */}
+            {testResult && (
+              <div
+                className={`flex items-start gap-3 p-4 rounded-xl border transition-all ${
+                  testResult.clean
+                    ? "bg-emerald-500/5 border-emerald-500/20"
+                    : "bg-red-500/5 border-red-500/20"
+                }`}
+              >
+                {testResult.clean
+                  ? <FaCheckCircle size={15} className="text-emerald-400 shrink-0 mt-0.5" />
+                  : <FaTimesCircle size={15} className="text-red-400 shrink-0 mt-0.5" />
+                }
+                <div>
+                  <p className={`text-xs font-bold ${testResult.clean ? "text-emerald-400" : "text-red-400"}`}>
+                    {testResult.clean
+                      ? "Content is clean — would be auto-approved"
+                      : `Blocked keyword detected: "${testResult.flaggedKeyword}"`
+                    }
+                  </p>
+                  <p className="text-gray-500 text-[10px] mt-0.5">
+                    {testResult.clean
+                      ? "This text passes all current keyword filters."
+                      : "This text would be held as PENDING and require admin review."
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2 mt-auto">
+              {(testText || testResult) && (
+                <button
+                  onClick={() => { setTestText(""); setTestResult(null); }}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-gray-700/50 text-gray-400 hover:text-white rounded-lg text-[11px] font-medium transition-all"
+                >
+                  <FaTimes size={9} /> Clear
+                </button>
+              )}
+              <button
+                onClick={handleTest}
+                disabled={isTesting || !testText.trim()}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-900/30"
+              >
+                {isTesting
+                  ? <><FaSpinner className="animate-spin" size={10} /> Scanning…</>
+                  : <><FaBolt size={10} /> Test Content</>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Keyword management modal (unchanged logic, refined visuals) ─────── */}
+      {showKeywordModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[85vh]"
+            style={{ borderTop: "2px solid #06b6d4" }}>
+
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
+              <div>
+                <h3 className="text-white text-sm font-bold flex items-center gap-2">
+                  <FaBolt className="text-cyan-400" size={12} /> Manage Blocked Keywords
+                </h3>
+                <p className="text-gray-500 text-[11px] mt-0.5">{keywords.length} active · changes apply instantly</p>
+              </div>
+              <button onClick={() => setShowKeywordModal(false)}
+                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                <FaTimes size={12} />
+              </button>
+            </div>
+
+            <div className="p-5 flex-1 overflow-y-auto min-h-0">
+              {keywords.length === 0 ? (
+                <p className="text-gray-600 text-sm text-center py-6">No keywords configured yet.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {keywords.map((kw: string) => (
+                    <div key={kw}
+                      className="group flex items-center gap-1.5 px-2.5 py-1 bg-gray-800 border border-white/8 hover:border-red-500/30 text-gray-300 text-xs font-mono rounded-lg transition-all">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500/50 shrink-0" />
+                      {kw}
+                      <button
+                        onClick={() => handleRemoveKeyword(kw)}
+                        disabled={isRemoving}
+                        className="w-4 h-4 rounded hover:bg-red-500/20 text-gray-600 hover:text-red-400 flex items-center justify-center transition-colors ml-0.5"
+                      >
+                        <FaTimes size={8} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-white/5 bg-gray-800/40 shrink-0">
+              <form onSubmit={handleAddKeyword} className="flex gap-2">
+                <input
+                  type="text"
+                  value={newKeyword}
+                  onChange={e => setNewKeyword(e.target.value)}
+                  placeholder="Add a new blocked keyword…"
+                  className="flex-1 px-3 py-1.5 bg-gray-900 border border-white/10 hover:border-white/20 focus:border-cyan-500/40 rounded-lg text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/20 font-mono transition-all"
+                />
+                <button
+                  type="submit"
+                  disabled={isAdding || !newKeyword.trim()}
+                  className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap"
+                >
+                  {isAdding ? <FaSpinner className="animate-spin" size={12} /> : <FaCheck size={12} />} Add
+                </button>
+              </form>
+              <p className="text-gray-600 text-[10px] mt-2">Keywords are matched case-insensitively against all new comments.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

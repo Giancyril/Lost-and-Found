@@ -49,7 +49,7 @@ import {
   getReports, submitReport, resolveReport, deleteReport,
   getPendingComments, moderateComment,
   getUserBehavior, issueWarning, deleteWarning,
-  getKeywords, testContent,
+  getKeywords, addKeyword, removeKeyword, testContent,
   getAppeals, submitAppeal, resolveAppeal,
 } from "../utils/moderationController";
 
@@ -203,6 +203,8 @@ router.delete("/admin/moderation/warnings/:id", auth(), deleteWarning);
 
 // Automated moderation
 router.get("/admin/moderation/keywords", auth(), getKeywords);
+router.post("/admin/moderation/keywords", auth(), addKeyword);
+router.delete("/admin/moderation/keywords/:keyword", auth(), removeKeyword);
 router.post("/admin/moderation/test", auth(), testContent);
 
 // Appeals

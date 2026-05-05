@@ -5,15 +5,47 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+import fs from "fs";
+import path from "path";
+
 // ── Keyword blocklist for automated moderation ────────────────────────────────
-// Add/remove words as needed for your school context
-export const BLOCKED_KEYWORDS = [
+
+const keywordsFilePath = path.join(__dirname, "blockedKeywords.json");
+
+const DEFAULT_KEYWORDS = [
   "spam", "scam", "fake", "fraud",
   "idiot", "stupid", "dumb", "moron",
   "hate", "kill", "threat",
   "porn", "sex", "nude",
   "drug", "weed", "shabu",
 ];
+
+export let BLOCKED_KEYWORDS: string[] = [];
+
+const loadKeywords = () => {
+  try {
+    if (fs.existsSync(keywordsFilePath)) {
+      const data = fs.readFileSync(keywordsFilePath, "utf8");
+      BLOCKED_KEYWORDS = JSON.parse(data);
+    } else {
+      BLOCKED_KEYWORDS = [...DEFAULT_KEYWORDS];
+      saveKeywords();
+    }
+  } catch (error) {
+    console.error("Error loading keywords:", error);
+    BLOCKED_KEYWORDS = [...DEFAULT_KEYWORDS];
+  }
+};
+
+const saveKeywords = () => {
+  try {
+    fs.writeFileSync(keywordsFilePath, JSON.stringify(BLOCKED_KEYWORDS, null, 2));
+  } catch (error) {
+    console.error("Error saving keywords:", error);
+  }
+};
+
+loadKeywords();
 
 export const containsBlockedKeyword = (text: string): string | null => {
   const lower = text.toLowerCase();
@@ -267,6 +299,42 @@ export const getKeywords = async (_req: Request, res: Response) => {
     message: "Keywords retrieved",
     data: { keywords: BLOCKED_KEYWORDS, count: BLOCKED_KEYWORDS.length },
   });
+};
+
+export const addKeyword = async (req: Request, res: Response) => {
+  try {
+    const { keyword } = req.body;
+    if (!keyword || typeof keyword !== "string") {
+      return sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: "Valid keyword is required", data: null });
+    }
+    const kw = keyword.toLowerCase().trim();
+    if (BLOCKED_KEYWORDS.includes(kw)) {
+      return sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: "Keyword already exists", data: null });
+    }
+    BLOCKED_KEYWORDS.push(kw);
+    saveKeywords();
+    sendResponse(res, { statusCode: StatusCodes.CREATED, success: true, message: "Keyword added", data: { keyword: kw } });
+  } catch (error: any) {
+    sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: error?.message, data: null });
+  }
+};
+
+export const removeKeyword = async (req: Request, res: Response) => {
+  try {
+    const { keyword } = req.params;
+    if (!keyword) {
+      return sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: "Keyword is required", data: null });
+    }
+    const kw = keyword.toLowerCase().trim();
+    if (!BLOCKED_KEYWORDS.includes(kw)) {
+      return sendResponse(res, { statusCode: StatusCodes.NOT_FOUND, success: false, message: "Keyword not found", data: null });
+    }
+    BLOCKED_KEYWORDS = BLOCKED_KEYWORDS.filter(k => k !== kw);
+    saveKeywords();
+    sendResponse(res, { statusCode: StatusCodes.OK, success: true, message: "Keyword removed", data: { keyword: kw } });
+  } catch (error: any) {
+    sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: error?.message, data: null });
+  }
 };
 
 export const testContent = async (req: Request, res: Response) => {

@@ -246,8 +246,8 @@ const OverviewTab = ({ stats }: { stats: any }) => {
         subtitle="When items are most commonly reported lost or found"
         action={
           <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-lg p-1">
-            <ChartToggle active={peakView === "days"}  label="By Day"  onClick={() => setPeakView("days")}  />
-            <ChartToggle active={peakView === "hours"} label="By Hour" onClick={() => setPeakView("hours")} />
+            <ChartToggle active={peakView === "days"}  label=" Day"  onClick={() => setPeakView("days")}  />
+            <ChartToggle active={peakView === "hours"} label=" Hour" onClick={() => setPeakView("hours")} />
           </div>
         }
       >
