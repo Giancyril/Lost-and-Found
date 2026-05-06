@@ -71,6 +71,19 @@ A comprehensive lost and found management system built with modern web technolog
 - **Performance Optimized**: Local storage caching, optimistic updates, and efficient re-rendering
 - **Accessibility**: ARIA labels, keyboard navigation, and screen reader support
 
+### Real-Time Communication & Messaging
+- **Secure Community Chat**: A private, claim-linked messaging system that facilitates direct communication between reporters and claimants.
+  - **Contextual Chat Rooms**: Chat rooms are automatically generated for each approved claim, keeping conversations focused on specific items.
+  - **Anonymized Identity**: To maintain privacy, participants are identified as "Community Member" or "Reporter" until they choose to share personal details.
+  - **Real-Time Synchronization**: Powered by Socket.io for instant message delivery, typing indicators, and online status tracking.
+  - **Integrated with Claims**: Chat access is strictly controlled based on claim status and user roles.
+
+- **Web Push Notifications**: Cross-platform background alerts that keep users informed even when the application is closed.
+  - **Instant Alerts**: Get notified immediately for new chat messages, claim status changes (Approvals/Rejections), and smart item matches.
+  - **Service Worker Integration**: Reliable background processing ensures notifications reach the user's device regardless of browser state.
+  - **Cross-Device Support**: Works on Desktop (Chrome, Edge, Firefox) and Mobile (Android Chrome) to ensure high visibility.
+  - **One-Click Actions**: Notifications lead directly to the relevant chat room or claim detail page for a seamless experience.
+
 ### Communication Hub
 A centralized admin panel for all outbound and inbound user communications.
 
@@ -173,6 +186,7 @@ A dedicated moderation layer for managing user-generated content, enforcing comm
 - **Zod** for schema validation
 - **Socket.io** for real-time communication
 - **Redis** for caching and session management
+- **Web Push API** with VAPID for cross-platform background notifications
 
 ### Frontend
 - **React 19** with TypeScript
@@ -187,6 +201,7 @@ A dedicated moderation layer for managing user-generated content, enforcing comm
 - **Web Scanner Stack**: jsQR (QR codes) + QuaggaJS (1D barcodes) + native BarcodeDetector fallback for high-performance scanning
 - **browser-image-compression** for client-side image optimization before upload
 - **Socket.io Client** for real-time updates
+- **Web Push API** & Service Workers for background alert delivery
 ### Other
 - **React Icons** for enhanced UI components
 - **Framer Motion** for smooth UI transitions and animations
@@ -249,6 +264,7 @@ graph LR
         API --> Pages[Feature Pages]
         Scanner[Scanner Module] --> Report[Report Found Item]
         Dashboard[Dashboard] --> SubMods[Security/Analytics/Comm]
+        Chat[Chat Module] --> Push[Push Notification Module]
     end
 ```
 
@@ -271,8 +287,11 @@ lost-and-found-main/
 │   │   │   ├── feedback/     # Feedback management API
 │   │   │   ├── announcements/# Announcement manager API
 │   │   │   └── security/     # Security monitor & compliance API
+│   │   ├── websocket/      # Socket.io handlers for real-time chat & notifications
 │   │   ├── app/
 │   │   │   ├── modules/    # Feature modules
+│   │   │   │   ├── chat/     # Real-time messaging service & controller
+│   │   │   │   ├── push/     # Web Push subscription & delivery service
 │   │   │   │   └── student/  # Student masterlist lookup & ID resolution
 │   │   │   ├── auth/       # Authentication
 │   │   │   ├── midddlewares/ # Express middlewares
@@ -295,6 +314,13 @@ lost-and-found-main/
 │   │   │   ├── announcements/# Announcement manager components
 │   │   │   ├── security/     # Security monitor & compliance components
 │   │   │   └── ui/           # Shared UI — LocationAutocomplete, CustomDatePicker, etc.
+│   │   ├── redux/          # State management
+│   │   │   └── api/
+│   │   │       ├── api.ts      # Core API endpoints
+│   │   │       ├── chatApi.ts  # Real-time messaging endpoints
+│   │   │       └── pushApi.ts  # Push notification endpoints
+│   │   ├── hooks/          # Custom hooks
+│   │   │   └── usePushNotifications.ts # Push subscription logic
 │   │   ├── pages/          # Page components
 │   │   │   └── support/      # SupportPage — public support ticket & feedback form
 │   │   ├── dashboard/      # Admin dashboard

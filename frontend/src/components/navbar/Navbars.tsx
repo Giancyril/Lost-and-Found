@@ -395,22 +395,22 @@ export function Navbars() {
                     <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
                     <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                       <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/[0.05]">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
-                          <UserIcon className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-white text-sm font-medium truncate">
-                            {users?.name || users?.username || "Student"}
-                          </p>
-                          <p className="text-gray-500 text-[10px] font-mono truncate">
-                            {users?.schoolId || "Student"}
-                          </p>
-                        </div>
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
+                        <UserIcon className="w-5 h-5" />
                       </div>
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <p className="text-white text-[11px] font-medium leading-tight break-words line-clamp-2">
+                          {users?.name || users?.username || "Student"}
+                        </p>
+                        <p className="text-gray-500 text-[10px] font-mono mt-0.5">
+                          {users?.schoolId || "Student"}
+                        </p>
+                      </div>
+                    </div>
                       <div className="py-1">
                         <Link to="/dashboard/student" onClick={() => setProfileOpen(false)}
                           className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
-                          <FaTachometerAlt size={12} className="text-gray-500 shrink-0" /> My Dashboard
+                          <FaTachometerAlt size={12} className="text-gray-500 shrink-0" />Dashboard
                         </Link>
                       </div>
                       <div className="border-t border-white/[0.05] py-1">
@@ -445,13 +445,6 @@ export function Navbars() {
                 {label}
               </NavbarLink>
             ))}
-
-            {isLoggedIn && !isAdmin && (
-              <NavbarLink href="/dashboard/student"
-                className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm md:hidden">
-                My Dashboard
-              </NavbarLink>
-            )}
           </div>
         </NavbarCollapse>
       </Navbar>

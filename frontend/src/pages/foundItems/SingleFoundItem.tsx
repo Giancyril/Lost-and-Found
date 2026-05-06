@@ -594,10 +594,10 @@ const SingleFoundItem = () => {
                 </div>
                 <h2 className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Location Found</h2>
               </div>
-              <div className="flex items-center gap-2.5 p-2.5 bg-gray-800/60 rounded-xl border border-white/[0.04]">
-                <FaMapMarkerAlt className="text-blue-400 shrink-0" size={11} />
+              
+                
                 <p className="text-gray-300 text-xs leading-relaxed text-justify whitespace-pre-wrap">{foundItemData?.location}</p>
-              </div>
+              
             </div>
 
             {/* Action Card */}
