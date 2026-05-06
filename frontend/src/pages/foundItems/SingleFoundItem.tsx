@@ -10,8 +10,9 @@ import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
 import { Spinner } from "flowbite-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+ import { toast, ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { useInitiateChatMutation } from "../../redux/api/chatApi";
 import { CommentSection } from "../../components/comments/CommentSection";
 import { CommentModal } from "../../components/comments/CommentModal";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
@@ -302,8 +303,10 @@ const SingleFoundItem = () => {
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [showClaimScanner, setShowClaimScanner] = useState(false);
-  const [isFetchingClaimStudent, setIsFetchingClaimStudent] = useState(false);
+   const [isFetchingClaimStudent, setIsFetchingClaimStudent] = useState(false);
   const [getStudentByDetailsForClaim] = useLazyGetStudentByDetailsQuery();
+  const [initiateChat] = useInitiateChatMutation();
+  const navigate = useNavigate();
 
   const useFetchStudentForClaim = (id: string) => {
     const trimmed = id?.trim() ?? "";
@@ -409,8 +412,29 @@ const SingleFoundItem = () => {
       }
     } catch {
       toast.error("An unexpected error occurred.");
-    } finally {
+     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleInitiateChat = async () => {
+    const userClaim = foundItemData?.claim?.find((c: any) => c.userId === users?.id);
+    if (!userClaim) {
+      toast.error("You need to submit a claim first before chatting.");
+      return;
+    }
+
+    try {
+      const res = await initiateChat({
+        claimId: userClaim.id,
+        reporterId: foundItemData.userId || foundItemData.user?.id,
+      }).unwrap();
+
+      if (res.success) {
+        navigate(`/dashboard/${users.role === "ADMIN" ? "" : "student/"}chat?roomId=${res.data.id}`);
+      }
+    } catch (err) {
+      toast.error("Failed to initiate chat.");
     }
   };
 
@@ -473,13 +497,21 @@ const SingleFoundItem = () => {
                 onClick={() => openModal(setIsTimelineOpen)}
                 className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all"
               >
-                <FaClipboardList size={10} /> View Lifecycle
-                {claimCount > 0 && (
+                 {claimCount > 0 && (
                   <span className="ml-0.5 bg-blue-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-none">
                     {claimCount}
                   </span>
                 )}
               </button>
+
+              {foundItemData?.claim?.some((c: any) => c.userId === users?.id) && (
+                <button
+                  onClick={handleInitiateChat}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all"
+                >
+                  <FaComments size={10} /> Chat with Reporter
+                </button>
+              )}
             </div>
           </div>
         </div>

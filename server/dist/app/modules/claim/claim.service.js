@@ -37,6 +37,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.claimsService = void 0;
 const prisma_1 = __importDefault(require("../../config/prisma"));
+const push_service_1 = require("../push/push.service");
 const createClaim = (item, user) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.default.claim.create({
         data: Object.assign({ foundItemId: item.foundItemId, distinguishingFeatures: item.distinguishingFeatures, lostDate: item.lostDate, claimantName: item.claimantName || "", contactNumber: item.contactNumber || "", schoolEmail: item.schoolEmail || "" }, ((user === null || user === void 0 ? void 0 : user.id) ? { userId: user.id } : {})),
@@ -97,6 +98,18 @@ const updateClaimStatus = (claimId, data, performer) => __awaiter(void 0, void 0
         yield prisma_1.default.claimAuditLog.create({
             data: Object.assign(Object.assign({ claimId, action: data.status, fromStatus: fromStatus, toStatus: data.status, performedBy: (performer === null || performer === void 0 ? void 0 : performer.name) || "Admin" }, ((performer === null || performer === void 0 ? void 0 : performer.id) ? { performedById: performer.id } : {})), { note: data.note || "" }),
         });
+        // Trigger Push Notification to claimant
+        if (result.userId) {
+            yield push_service_1.pushService.sendNotificationToUser(result.userId, {
+                title: `Claim ${data.status}`,
+                body: `Your claim for "${(existing === null || existing === void 0 ? void 0 : existing.foundItemName) || 'an item'}" has been ${data.status.toLowerCase()}.`,
+                data: {
+                    type: "CLAIM_UPDATE",
+                    claimId: result.id,
+                    status: data.status,
+                },
+            });
+        }
     }
     if (data.status === "APPROVED") {
         yield prisma_1.default.foundItem.update({

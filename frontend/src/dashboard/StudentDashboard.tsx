@@ -7,7 +7,9 @@ import {
   FaChartLine, FaHistory, FaMapMarkerAlt, FaCalendarAlt,
   FaBolt, FaChevronRight, FaUser,
 } from "react-icons/fa";
-import { MdVerified } from "react-icons/md";
+ import { MdVerified } from "react-icons/md";
+import { usePushNotifications } from "../hooks/usePushNotifications";
+import { FaBell } from "react-icons/fa";
 import {
   useGetMyPointsQuery,
   useGetMyFoundItemQuery,
@@ -97,7 +99,8 @@ export default function StudentDashboard() {
   const foundItems    = foundData?.data  ?? [];
   const lostItems     = lostData?.data   ?? [];
   const claims        = claimsData?.data ?? [];
-  const board         = boardData?.data  ?? [];
+   const board         = boardData?.data  ?? [];
+  const { permission, subscribe, isSupported } = usePushNotifications();
 
   const myRank         = board.findIndex((u: any) => u.id === user?.id) + 1;
   const approvedClaims = claims.filter((c: any) => c.status === "APPROVED").length;
@@ -122,8 +125,29 @@ export default function StudentDashboard() {
   const top3 = board.slice(0, 3);
   const rest = board.slice(3, 10);
 
-  return (
+   return (
     <div className="space-y-4 sm:space-y-6 text-white max-w-7xl mx-auto">
+      
+      {/* ── Push Notification Banner ── */}
+      {isSupported && permission === "default" && (
+        <div className="bg-gradient-to-r from-blue-600/20 to-cyan-500/20 border border-blue-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse-slow">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+              <FaBell className="text-blue-400" size={16} />
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm">Stay Updated!</p>
+              <p className="text-gray-400 text-xs">Enable push notifications to get real-time alerts for item matches and chat messages.</p>
+            </div>
+          </div>
+          <button
+            onClick={subscribe}
+            className="w-full sm:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-blue-500/20 uppercase tracking-widest active:scale-95"
+          >
+            Enable Notifications
+          </button>
+        </div>
+      )}
 
       {/* ── Profile Card ──────────────────────────────────────────────── */}
       <div className="relative bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">

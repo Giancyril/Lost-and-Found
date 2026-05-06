@@ -25,7 +25,9 @@ A comprehensive lost and found management system built with modern web technolog
   - **Multi-Image Upload**: Found items support up to 6 images per report with a cover photo selector
   - **Image Preview**: Inline image preview and remove/replace controls
 - **Location Autocomplete**: Smart location input with campus-aware suggestions for faster and more consistent location entry
-- **Live Item Match Suggestions**: While filling out a lost item report, the system queries existing found items and surfaces potential matches in real time before the form is even submitted
+ - **Live Item Match Suggestions**: While filling out a lost item report, the system queries existing found items and surfaces potential matches in real time before the form is even submitted
+- **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details — participants are identified as "Community Member" to maintain privacy
+- **Web Push Notifications**: Real-time browser alerts for new messages, potential item matches, and claim status updates, using the Web Push API for reliable background delivery
 
 ### Campus Features
 - **Enhanced Discussion Threads**: Real-time community discussions with voting, pinning, and moderation tools
@@ -480,11 +482,11 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 
 ###  Phase 3: Expansion (Current)
 - **Mobile Application**: Native iOS/Android app for on-the-go reporting.
-- **Push Notifications**: Instant alerts for potential item matches.
+- [x] **Push Notifications**: Real-time alerts for item matches, claim updates, and chat messages using Web Push API.
 - **Progressive Web App (PWA)**: Installable web application with offline capabilities for reporting items without Wi-Fi.
 - **Voice-Enabled Reporting**: Hands-free item reporting using AI-powered speech-to-text transcription.
 - **Interactive Indoor Maps**: Precise location pinning on multi-level campus building maps.
-- **Anonymized Community Chat**: Secure, private communication channel between reporters and claimants.
+- [x] **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details.
 - **Digital Receipts & Documentation**: Automated PDF generation for successful handovers and community certificates.
 
 ###  Phase 4: Ecosystem & Sustainability (Upcoming)

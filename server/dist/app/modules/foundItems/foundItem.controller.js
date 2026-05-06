@@ -83,7 +83,7 @@ const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function
             try {
                 const fromName = process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
                 const fromEmail = process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
-                const template = (0, emailTemplates_1.lostItemReportedTemplate)({
+                const template = (0, emailTemplates_1.foundItemReportedTemplate)({
                     reporterName: req.body.reporterName || "Unknown",
                     itemName: req.body.foundItemName,
                     location: req.body.location,

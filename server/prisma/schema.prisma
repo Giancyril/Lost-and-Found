@@ -34,6 +34,8 @@ model User {
   loginLogs         LoginLog[]
   userWarnings      UserWarning[]
   moderationAppeals ModerationAppeal[]
+  chatMessages      ChatMessage[]
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
 }
@@ -116,6 +118,7 @@ model Claim {
   auditLogs              ClaimAuditLog[]
   foundItem              FoundItem       @relation(fields: [foundItemId], references: [id])
   user                   User?           @relation(fields: [userId], references: [id])
+  chatRoom               ChatRoom?
 
   @@map("claims")
 }
@@ -326,6 +329,43 @@ model ModerationAppeal {
   user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("moderationAppeals")
+}
+
+model ChatRoom {
+  id          String        @id @default(uuid())
+  claimId     String?       @unique
+  foundItemId String?
+  participants String[]     // Array of user IDs
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  messages    ChatMessage[]
+  claim       Claim?        @relation(fields: [claimId], references: [id])
+
+  @@map("chatRooms")
+}
+
+model ChatMessage {
+  id         String   @id @default(uuid())
+  chatRoomId String
+  senderId   String
+  content    String
+  createdAt  DateTime @default(now())
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  sender     User     @relation(fields: [senderId], references: [id])
+
+  @@map("chatMessages")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("pushSubscriptions")
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────

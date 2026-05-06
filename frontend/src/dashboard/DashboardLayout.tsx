@@ -54,7 +54,8 @@ const menuItems = [
   { title: "Security", icon: FaShieldAlt, path: "/dashboard/security" },
   { title: "Accounts", icon: FaUserShield, path: "/dashboard/users" },
   { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
-  { title: "Settings", icon: FaCog, path: "/dashboard/settings" },
+   { title: "Settings", icon: FaCog, path: "/dashboard/settings" },
+  { title: "Messages", icon: FaBullhorn, path: "/dashboard/chat" },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {

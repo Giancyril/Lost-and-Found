@@ -11,6 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.socketHandlers = void 0;
 const commentsService_1 = require("../app/comments/commentsService");
+const chat_service_1 = require("../app/modules/chat/chat.service");
+const push_service_1 = require("../app/modules/push/push.service");
 const socketHandlers = (io, socket) => {
     // Join item room for real-time updates
     socket.on('join-item', (itemId) => {
@@ -101,5 +103,46 @@ const socketHandlers = (io, socket) => {
             isTyping: false
         });
     });
+    // ── CHAT HANDLERS ───────────────────────────────────────────────────────────
+    socket.on('join-chat', (chatRoomId) => {
+        const roomName = `chat-${chatRoomId}`;
+        socket.join(roomName);
+        console.log(`User ${socket.userId} joined chat room: ${roomName}`);
+    });
+    socket.on('leave-chat', (chatRoomId) => {
+        const roomName = `chat-${chatRoomId}`;
+        socket.leave(roomName);
+        console.log(`User ${socket.userId} left chat room: ${roomName}`);
+    });
+    socket.on('send-message', (data) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            if (!socket.userId)
+                throw new Error('Unauthorized');
+            const message = yield chat_service_1.chatService.saveMessage(data.chatRoomId, socket.userId, data.content);
+            const roomName = `chat-${data.chatRoomId}`;
+            // Emit to everyone in the room INCLUDING the sender (for confirmation)
+            io.to(roomName).emit('message-received', message);
+            // Trigger Push Notification to other participants
+            const room = yield chat_service_1.chatService.getChatRoomById(data.chatRoomId);
+            if (room) {
+                const recipients = room.participants.filter((id) => id !== socket.userId);
+                for (const recipientId of recipients) {
+                    yield push_service_1.pushService.sendNotificationToUser(recipientId, {
+                        title: `New message from ${socket.userName || 'Someone'}`,
+                        body: data.content.length > 50 ? data.content.substring(0, 47) + '...' : data.content,
+                        data: {
+                            type: 'CHAT',
+                            chatRoomId: data.chatRoomId,
+                        }
+                    });
+                }
+            }
+            console.log(`Message sent in room ${data.chatRoomId} by ${socket.userId}`);
+        }
+        catch (error) {
+            console.error('Error sending message:', error);
+            socket.emit('error', { message: 'Failed to send message' });
+        }
+    }));
 };
 exports.socketHandlers = socketHandlers;

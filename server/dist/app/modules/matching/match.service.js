@@ -17,6 +17,7 @@ const prisma_1 = __importDefault(require("../../config/prisma"));
 const campusLocations_1 = require("../../utils/campusLocations");
 const mailer_1 = require("../../utils/mailer");
 const emailTemplates_1 = require("../../utils/emailTemplates");
+const push_service_1 = require("../push/push.service");
 const MATCH_THRESHOLD_KM = 0.1; // 100 meters
 // ── Haversine formula ─────────────────────────────────────────────────────────
 const deg2rad = (deg) => deg * (Math.PI / 180);
@@ -143,6 +144,17 @@ const notifyMatch = (lostItem, foundItem) => __awaiter(void 0, void 0, void 0, f
             html: template.html,
         });
         console.log(`[SmartMatch] Notification sent → ${lostItem.schoolEmail} | lost: ${lostItem.id} | found: ${foundItem.id}`);
+        // Trigger Push Notification
+        if (lostItem.userId) {
+            yield push_service_1.pushService.sendNotificationToUser(lostItem.userId, {
+                title: "Potential Match Found!",
+                body: `We found an item that matches your reported lost "${lostItem.lostItemName}".`,
+                data: {
+                    type: "MATCH",
+                    foundItemId: foundItem.id,
+                },
+            });
+        }
     }
     catch (error) {
         // FIX 3: Roll back the deduplication record so we can retry on the next trigger

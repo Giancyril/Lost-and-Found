@@ -22,7 +22,9 @@ import { createPostSchema, createTipSchema } from "../modules/bulletinPost/bulle
 import { postCreationLimiter, tipSubmissionLimiter } from "../midddlewares/bulletinRateLimit";
 import { getMatchNotifications } from "../utils/getMatchNotifications";
 import { studentRoutes } from "../modules/student/student.routes";
-import sheetsRoutes from "../modules/sheets/sheets.routes";
+ import sheetsRoutes from "../modules/sheets/sheets.routes";
+ import { chatRoutes } from "../modules/chat/chat.routes";
+import { pushRoutes } from "../modules/push/push.routes";
 import { uploadImages } from "../midddlewares/upload";
 import { commentsRouter } from "../comments/commentsRouter";
 import { pointsController } from "../modules/points/points.controller";
@@ -136,8 +138,10 @@ router.delete("/bulletin-posts/:id", auth(), bulletinPostController.deletePost);
 router.delete("/bulletin-posts/:id/tips/:tipId", auth(), bulletinPostController.deleteTip);
 router.put("/bulletin-posts/:id/resolve", auth(), bulletinPostController.resolvePost);
 
-router.use("/students", studentRoutes);
+ router.use("/students", studentRoutes);
 router.use("/sheets", sheetsRoutes);
+ router.use("/chat", chatRoutes);
+router.use("/notifications", pushRoutes);
 router.use("/", commentsRouter);
 
 ////////////////////////////////////////////////// points //////////////////////////////////////////////

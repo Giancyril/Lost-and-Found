@@ -5,7 +5,7 @@ import {
   FaTachometerAlt, FaBoxOpen, FaSearch, FaClipboardList,
   FaTrophy, FaCog, FaBars, FaTimes, FaHome, FaSignOutAlt,
   FaChevronLeft, FaChevronRight, FaChevronDown, FaStar,
-  FaChartLine, FaArrowRight, FaMedal,
+  FaChartLine, FaArrowRight, FaMedal, FaBullhorn,
 } from "react-icons/fa";
 import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../redux/api/api";
 
@@ -28,6 +28,7 @@ const NAV_ITEMS = [
     section: "COMMUNITY",
     items: [
       { label: "Leaderboard",    href: "/dashboard/student/leaderboard",  icon: <FaTrophy size={14} /> },
+      { label: "Messages",       href: "/dashboard/student/chat",         icon: <FaBullhorn size={14} /> },
     ],
   },
   {

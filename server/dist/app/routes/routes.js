@@ -28,6 +28,8 @@ const bulletinRateLimit_1 = require("../midddlewares/bulletinRateLimit");
 const getMatchNotifications_1 = require("../utils/getMatchNotifications");
 const student_routes_1 = require("../modules/student/student.routes");
 const sheets_routes_1 = __importDefault(require("../modules/sheets/sheets.routes"));
+const chat_routes_1 = require("../modules/chat/chat.routes");
+const push_routes_1 = require("../modules/push/push.routes");
 const upload_1 = require("../midddlewares/upload");
 const commentsRouter_1 = require("../comments/commentsRouter");
 const points_controller_1 = require("../modules/points/points.controller");
@@ -103,6 +105,8 @@ router.delete("/bulletin-posts/:id/tips/:tipId", (0, auth_1.default)(), bulletin
 router.put("/bulletin-posts/:id/resolve", (0, auth_1.default)(), bulletinPost_controller_1.bulletinPostController.resolvePost);
 router.use("/students", student_routes_1.studentRoutes);
 router.use("/sheets", sheets_routes_1.default);
+router.use("/chat", chat_routes_1.chatRoutes);
+router.use("/notifications", push_routes_1.pushRoutes);
 router.use("/", commentsRouter_1.commentsRouter);
 ////////////////////////////////////////////////// points //////////////////////////////////////////////
 router.get("/points/my", (0, auth_1.default)(), points_controller_1.pointsController.getMyPoints);
@@ -153,6 +157,8 @@ router.post("/admin/moderation/warnings", (0, auth_1.default)(), moderationContr
 router.delete("/admin/moderation/warnings/:id", (0, auth_1.default)(), moderationController_1.deleteWarning);
 // Automated moderation
 router.get("/admin/moderation/keywords", (0, auth_1.default)(), moderationController_1.getKeywords);
+router.post("/admin/moderation/keywords", (0, auth_1.default)(), moderationController_1.addKeyword);
+router.delete("/admin/moderation/keywords/:keyword", (0, auth_1.default)(), moderationController_1.removeKeyword);
 router.post("/admin/moderation/test", (0, auth_1.default)(), moderationController_1.testContent);
 // Appeals
 router.get("/admin/moderation/appeals", (0, auth_1.default)(), moderationController_1.getAppeals);

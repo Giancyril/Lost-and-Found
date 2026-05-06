@@ -2,7 +2,8 @@ import { FoundItem, LostItem } from "@prisma/client";
 import prisma from "../../config/prisma";
 import { getCoordinates } from "../../utils/campusLocations";
 import { sendEmail } from "../../utils/mailer";
-import { smartMatchNotificationTemplate } from "../../utils/emailTemplates";
+ import { smartMatchNotificationTemplate } from "../../utils/emailTemplates";
+import { pushService } from "../push/push.service";
 
 const MATCH_THRESHOLD_KM = 0.1; // 100 meters
 
@@ -180,9 +181,21 @@ const senderName = process.env.SMTP_FROM_NAME ?? "NBSC Lost & Found";
       subject:   template.subject,
       html:      template.html,
     });
-    console.log(
+     console.log(
       `[SmartMatch] Notification sent → ${lostItem.schoolEmail} | lost: ${lostItem.id} | found: ${foundItem.id}`
     );
+
+    // Trigger Push Notification
+    if (lostItem.userId) {
+      await pushService.sendNotificationToUser(lostItem.userId, {
+        title: "Potential Match Found!",
+        body: `We found an item that matches your reported lost "${lostItem.lostItemName}".`,
+        data: {
+          type: "MATCH",
+          foundItemId: foundItem.id,
+        },
+      });
+    }
   } catch (error) {
     // FIX 3: Roll back the deduplication record so we can retry on the next trigger
     await prisma.matchNotification

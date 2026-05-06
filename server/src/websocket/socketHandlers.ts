@@ -2,6 +2,9 @@ import { Server } from 'socket.io';
 import { ExtendedSocket } from '../types/socket';
 import { commentService } from '../app/comments/commentsService';
 import { getRedisClient } from '../redis/redisClient';
+import { chatService } from '../app/modules/chat/chat.service';
+import { pushService } from '../app/modules/push/push.service';
+import prisma from '../app/config/prisma';
 
 export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
   // Join item room for real-time updates
@@ -111,10 +114,62 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
 
   socket.on('typing-stop', (data) => {
     const roomName = `item-${data.itemId}`;
-    socket.to(roomName).emit('user-typing', {
+     socket.to(roomName).emit('user-typing', {
       userId: socket.userId,
       userName: socket.userName,
       isTyping: false
     });
+  });
+
+  // ── CHAT HANDLERS ───────────────────────────────────────────────────────────
+
+  socket.on('join-chat', (chatRoomId: string) => {
+    const roomName = `chat-${chatRoomId}`;
+    socket.join(roomName);
+    console.log(`User ${socket.userId} joined chat room: ${roomName}`);
+  });
+
+  socket.on('leave-chat', (chatRoomId: string) => {
+    const roomName = `chat-${chatRoomId}`;
+    socket.leave(roomName);
+    console.log(`User ${socket.userId} left chat room: ${roomName}`);
+  });
+
+  socket.on('send-message', async (data: { chatRoomId: string, content: string }) => {
+    try {
+      if (!socket.userId) throw new Error('Unauthorized');
+
+      const message = await chatService.saveMessage(
+        data.chatRoomId,
+        socket.userId,
+        data.content
+      );
+
+       const roomName = `chat-${data.chatRoomId}`;
+      // Emit to everyone in the room INCLUDING the sender (for confirmation)
+      io.to(roomName).emit('message-received', message);
+
+      // Trigger Push Notification to other participants
+      const room = await chatService.getChatRoomById(data.chatRoomId);
+
+       if (room) {
+        const recipients = (room.participants as string[]).filter((id: string) => id !== socket.userId);
+        for (const recipientId of recipients) {
+          await pushService.sendNotificationToUser(recipientId, {
+            title: `New message from ${socket.userName || 'Someone'}`,
+            body: data.content.length > 50 ? data.content.substring(0, 47) + '...' : data.content,
+            data: {
+              type: 'CHAT',
+              chatRoomId: data.chatRoomId,
+            }
+          });
+        }
+      }
+
+      console.log(`Message sent in room ${data.chatRoomId} by ${socket.userId}`);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      socket.emit('error', { message: 'Failed to send message' });
+    }
   });
 };

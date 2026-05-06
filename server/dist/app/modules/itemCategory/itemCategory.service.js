@@ -34,6 +34,12 @@ const updateItemCategory = (id, data) => __awaiter(void 0, void 0, void 0, funct
     return result;
 });
 const deleteItemCategory = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    // Check if there are any lost or found items using this category
+    const foundItemsCount = yield prisma_1.default.foundItem.count({ where: { categoryId: id } });
+    const lostItemsCount = yield prisma_1.default.lostItem.count({ where: { categoryId: id } });
+    if (foundItemsCount > 0 || lostItemsCount > 0) {
+        throw new Error(`Cannot delete category: ${foundItemsCount} found item(s) and ${lostItemsCount} lost item(s) are still using it. Please reassign or delete these items first.`);
+    }
     const result = yield prisma_1.default.itemCategory.delete({
         where: { id },
     });

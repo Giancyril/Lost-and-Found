@@ -43,8 +43,9 @@ import StudentRegistry from "./dashboard/pages/StudentRegistry.tsx";
 import CommunicationHub from "./dashboard/pages/CommunicationHub.tsx";
 import SupportPage from "./pages/support/SupportPage.tsx";
 import SecurityPage from "./dashboard/pages/SecurityCompliance.tsx";
-import ContentModeration from "./dashboard/pages/ContentModeration.tsx";
+ import ContentModeration from "./dashboard/pages/ContentModeration.tsx";
 import ItemStatus from "./pages/itemStatus/ItemStatus.tsx";
+import ChatPage from "./dashboard/pages/ChatPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -91,16 +92,18 @@ const router = createBrowserRouter([
   { path: "/dashboard/archive", element: <DashboardLayout><ArchievePage /></DashboardLayout> },
   { path: "/dashboard/myFoundItems", element: <DashboardLayout><MyFoundItems /></DashboardLayout> },
   { path: "/dashboard/myLostItems", element: <DashboardLayout><MyLostItems /></DashboardLayout> },
-  { path: "/dashboard/security", element: <DashboardLayout><SecurityPage /></DashboardLayout> },
+   { path: "/dashboard/security", element: <DashboardLayout><SecurityPage /></DashboardLayout> },
   { path: "/dashboard/moderation", element: <DashboardLayout><ContentModeration /></DashboardLayout> },
+  { path: "/dashboard/chat", element: <DashboardLayout><ChatPage /></DashboardLayout> },
 
   // ── Student Dashboard routes ──────────────────────────────────────────────
   { path: "/dashboard/student", element: <StudentLayout><StudentDashboard /></StudentLayout> },
   { path: "/dashboard/student/found-items", element: <StudentLayout><StudentFoundItems /></StudentLayout> },
   { path: "/dashboard/student/lost-items", element: <StudentLayout><StudentLostItems /></StudentLayout> },
   { path: "/dashboard/student/claims", element: <StudentLayout><StudentClaims /></StudentLayout> },
-  { path: "/dashboard/student/leaderboard", element: <StudentLayout><StudentLeaderboard /></StudentLayout> },
+   { path: "/dashboard/student/leaderboard", element: <StudentLayout><StudentLeaderboard /></StudentLayout> },
   { path: "/dashboard/student/settings", element: <StudentLayout><StudentSettings /></StudentLayout> },
+  { path: "/dashboard/student/chat", element: <StudentLayout><ChatPage /></StudentLayout> },
 ]);
 
 createRoot(document.getElementById("root")!).render(

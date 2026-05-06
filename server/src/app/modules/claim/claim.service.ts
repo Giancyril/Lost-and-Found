@@ -1,6 +1,7 @@
 import { Claim, status } from "@prisma/client";
 import { JwtPayload } from "jsonwebtoken";
-import prisma from "../../config/prisma";
+ import prisma from "../../config/prisma";
+import { pushService } from "../push/push.service";
 
 const createClaim = async (
   item: Claim & { claimantName?: string; contactNumber?: string; schoolEmail?: string },
@@ -86,9 +87,22 @@ const updateClaimStatus = async (
         toStatus:    data.status,
         performedBy: performer?.name || "Admin",
         ...(performer?.id ? { performedById: performer.id } : {}),
-        note: (data as any).note || "",
+         note: (data as any).note || "",
       },
     });
+
+    // Trigger Push Notification to claimant
+    if (result.userId) {
+      await pushService.sendNotificationToUser(result.userId, {
+        title: `Claim ${data.status}`,
+        body: `Your claim for "${(existing as any)?.foundItemName || 'an item'}" has been ${data.status.toLowerCase()}.`,
+        data: {
+          type: "CLAIM_UPDATE",
+          claimId: result.id,
+          status: data.status,
+        },
+      });
+    }
   }
 
   if (data.status === "APPROVED") {
