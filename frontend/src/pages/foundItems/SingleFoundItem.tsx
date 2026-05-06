@@ -566,11 +566,11 @@ const SingleFoundItem = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Category</p>
+                  <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1.5">Category</p>
                   <p className="text-gray-300 text-xs leading-relaxed text-justify whitespace-pre-wrap">{foundItemData?.category?.name || "Uncategorized"}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Found Date</p>
+                  <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1.5">Found Date</p>
                   <p className="text-gray-300 text-xs leading-relaxed text-justify whitespace-pre-wrap">
                     
                     {foundItemData?.date ? new Date(foundItemData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "—"}
@@ -579,7 +579,7 @@ const SingleFoundItem = () => {
               </div>
 
               <div className="mt-4 pt-4 border-t border-white/[0.05]">
-                <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Description</p>
+                <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1.5">Description</p>
                 <p className="text-gray-300 text-xs leading-relaxed text-justify whitespace-pre-wrap">
                   {foundItemData?.description || "No description provided."}
                 </p>

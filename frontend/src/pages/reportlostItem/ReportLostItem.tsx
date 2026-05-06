@@ -1182,8 +1182,8 @@ const ReportLostItem = () => {
             <div className="p-6 flex flex-col items-center gap-4">
               
               {/* Check icon */}
-              <div className="w-11 h-11 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0">
-                <FaCheck size={18} className="text-emerald-400" />
+              <div className="w-11 h-11 rounded-full bg-blue-500/10 border border-blue-500/25 flex items-center justify-center shrink-0">
+                <FaCheck size={18} className="text-blue-400" />
               </div>
 
               {/* Title + description */}

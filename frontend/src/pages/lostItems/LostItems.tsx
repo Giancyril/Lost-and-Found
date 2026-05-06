@@ -197,7 +197,8 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto">
+    <div className="flex min-h-full items-center justify-center p-4">
       <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
           <h3 className="text-white font-bold text-sm">Share Report</h3>
@@ -212,16 +213,18 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
             {shareUrl}
           </div>
           <button onClick={handleCopy}
-            className={`w-full py-3 flex items-center justify-center gap-2 font-bold rounded-xl transition-all
-              ${copied
-                ? "bg-green-600/80 border border-green-500/30 text-white"
-                : "bg-blue-600 hover:bg-blue-500 text-white"}`}>
-            {copied ? <><FaCheckCircle size={12} /> Copied!</> : <><FaCopy size={12} /> Copy Link</>}
+            className={`w-full py-2 flex items-center justify-center gap-2 text-xs font-semibold rounded-xl transition-all ${
+              copied
+                ? "bg-blue-600/80 border border-blue-500/30 text-white"
+                : "bg-blue-600/80 border-blue-500/30 text-white"
+            }`}>
+            {copied ? <><FaCheckCircle size={10} /> Copied!</> : <><FaCopy size={10} /> Copy Link</>}
           </button>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 // ── Group Header ──────────────────────────────────────────────────────────────

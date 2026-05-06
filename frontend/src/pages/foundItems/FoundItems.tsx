@@ -1226,10 +1226,11 @@ const FoundItemsPage = () => {
 
       {/* ── Add Found Item Modal ── */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-[100] grid place-items-center p-4 sm:p-6 overflow-y-auto">
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={closeAddModal} />
-          <div className="relative bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl sm:max-w-4xl lg:max-w-5xl flex flex-col max-h-[90vh]"
-            style={{ borderTop: "2px solid #3b82f6" }}>
+<div className="fixed inset-0 z-[100] overflow-y-auto">
+  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={closeAddModal} />
+  <div className="flex min-h-full items-start sm:items-center justify-center p-4 sm:p-6">
+    <div className="relative bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl sm:max-w-4xl lg:max-w-5xl flex flex-col max-h-[90vh]"
+      style={{ borderTop: "2px solid #3b82f6" }}>
 
             {/* ── Modal header ── */}
             <div className="flex flex-col gap-3 px-4 sm:px-6 py-4 border-b border-white/5 shrink-0">
@@ -1565,6 +1566,7 @@ const FoundItemsPage = () => {
               </button>
             </div>
           </div>
+        </div>
         </div>
       )}
 

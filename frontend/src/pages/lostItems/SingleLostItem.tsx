@@ -223,29 +223,26 @@ const SingleLostItem = () => {
             {/* Right: Details */}
             <div className="space-y-3">
               <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-                <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Description</h2>
+                <h2 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">Description</h2>
                 <p className="text-gray-300 leading-relaxed text-xs">{description || "No description available."}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { icon: <FaCalendarAlt size={10} />, label: "Date Lost", value: date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Not specified" },
-                  { icon: <FaMapMarkerAlt size={10} />, label: "Location", value: location || "Not specified" },
-                  { icon: <FaTag size={10} />, label: "Category", value: category?.name || "Uncategorized" },
-                  { icon: <FaUser size={10} />, label: "Reported By", value: lostItem?.reporterName || user?.username || "Anonymous" },
+                  { label: "Date Lost",    value: date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Not specified" },
+                  { label: "Location",    value: location || "Not specified" },
+                  { label: "Category",    value: category?.name || "Uncategorized" },
+                  { label: "Reported By", value: lostItem?.reporterName || user?.username || "Anonymous" },
                 ].map((item, i) => (
                   <div key={i} className="bg-gray-900 rounded-xl p-3 border border-gray-800">
-                    <div className="flex items-center gap-1.5 text-blue-400 mb-1.5">
-                      {item.icon}
-                      <span className="text-[9px] font-black uppercase tracking-widest truncate">{item.label}</span>
-                    </div>
+                    <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1.5">{item.label}</p>
                     <p className="text-gray-300 text-[11px] font-medium truncate">{item.value}</p>
                   </div>
                 ))}
               </div>
 
               <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-                <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Found This Item?</h3>
+              
                 {alreadyFound ? (
                   <div className="bg-green-900/20 border border-green-600/30 rounded-xl p-3 flex items-start gap-2.5">
                     <span className="text-green-400 text-base mt-0.5">✓</span>
