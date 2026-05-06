@@ -467,24 +467,24 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Security honeypot**: Bot protection mechanisms
 ## Development Roadmap
 
-### ✅ Phase 1: Foundation (Completed)
+###  Phase 1: Foundation (Completed)
 - Core item reporting and claim workflow.
 - Secure JWT authentication and role-based access.
 - Basic category management.
 
-### ✅ Phase 2: Intelligence (Completed)
+###  Phase 2: Intelligence (Completed)
 - AI-powered item search and smart matching.
 - Hybrid barcode/QR scanner integration.
 - Real-time community discussions and moderation suite.
 - Live Google Sheets masterlist synchronization.
 
-### 🚀 Phase 3: Expansion (Current)
+###  Phase 3: Expansion (Current)
 - **Mobile Application**: Native iOS/Android app for on-the-go reporting.
 - **Push Notifications**: Instant alerts for potential item matches.
-- **Multi-Campus Support**: Scalable architecture to support multiple school branches.
-- **NFC Integration**: Support for scanning student ID cards via NFC-enabled phones.
+- **Verified Handover Workflow**: Secure QR-code based confirmation system between the claimant and the reporter for safe and verified item return.
+- **Digital Receipts & Documentation**: Automated PDF generation for successful handovers and community contribution certificates.
 
-### 💎 Phase 4: Ecosystem & Sustainability (Upcoming)
+###  Phase 4: Ecosystem & Sustainability (Upcoming)
 - **Rewards Store**: Redeem earned points for campus perks, library credits, or university merchandise.
 - **AI Image Recognition**: Automatic item categorization and feature extraction from uploaded photos using computer vision.
 - **Kiosk Mode**: Specialized interface for physical "Lost & Found" touchscreens in high-traffic campus areas.
