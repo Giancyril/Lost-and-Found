@@ -88,6 +88,11 @@ const getChatRoomsForUser = async (userId: string) => {
         orderBy: { createdAt: "desc" },
         take: 1,
       },
+      readStatuses: {
+        where: {
+          userId,
+        },
+      },
     },
     orderBy: { updatedAt: "desc" },
   });
@@ -115,10 +120,30 @@ const getChatRoomById = async (id: string) => {
   });
 };
 
+const markRoomAsRead = async (chatRoomId: string, userId: string) => {
+  return await (prisma as any).chatReadStatus.upsert({
+    where: {
+      chatRoomId_userId: {
+        chatRoomId,
+        userId,
+      },
+    },
+    update: {
+      lastReadAt: new Date(),
+    },
+    create: {
+      chatRoomId,
+      userId,
+      lastReadAt: new Date(),
+    },
+  });
+};
+
 export const chatService = {
   createOrGetChatRoom,
   saveMessage,
   getChatRoomsForUser,
   getMessages,
   getChatRoomById,
+  markRoomAsRead,
 };

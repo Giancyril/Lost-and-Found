@@ -18,6 +18,13 @@ export const chatApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["chat"],
     }),
+    markAsRead: builder.mutation({
+      query: (roomId) => ({
+        url: `/chat/mark-as-read/${roomId}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["chat"],
+    }),
   }),
 });
 
@@ -25,4 +32,5 @@ export const {
   useGetMyChatRoomsQuery,
   useGetChatMessagesQuery,
   useInitiateChatMutation,
+  useMarkAsReadMutation,
 } = chatApi;

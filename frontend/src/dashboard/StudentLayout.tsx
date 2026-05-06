@@ -372,8 +372,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
 
 
       {/* Nav sections */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4 custom-scrollbar">
         {NAV_ITEMS.map(({ section, items }) => (
           <div key={section}>
             {!collapsed && (
@@ -468,7 +467,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         </header>
 
         {/* ── Page content ── */}
-        <main className="flex-1 p-4 sm:p-5 lg:p-7 overflow-auto bg-gray-950">
+        <main className="flex-1 p-4 sm:p-5 lg:p-7 overflow-auto bg-gray-950 custom-scrollbar">
           {children}
         </main>
 

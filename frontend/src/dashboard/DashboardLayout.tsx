@@ -195,13 +195,7 @@ const NotificationBell = () => {
                 <button onClick={() => setOpen(false)} className="sm:hidden text-gray-500 hover:text-white ml-1"><FaTimes size={13} /></button>
               </div>
             </div>
-            <div
-              className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto divide-y divide-white/5"
-              style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
-              }}
-            >
+            <div className="max-h-[60vh] sm:max-h-[420px] overflow-y-auto divide-y divide-white/5 custom-scrollbar">
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-gray-600">
                   <FaBell size={24} className="mb-3 opacity-30" />
@@ -379,8 +373,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 scrollbar-hide"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 custom-scrollbar">
           {!sidebarCollapsed && <p className="text-[10px] uppercase tracking-widest text-gray-600 font-medium px-2 mb-3">Menu</p>}
 
           {menuItems.map((item, idx) => {
@@ -439,7 +432,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-5 lg:p-7 overflow-auto bg-gray-950">{children}</main>
+        <main className="flex-1 p-4 sm:p-5 lg:p-7 overflow-auto bg-gray-950 custom-scrollbar">{children}</main>
       </div>
 
       <ToastContainer position="top-right" autoClose={4000} hideProgressBar newestOnTop closeOnClick theme="dark"

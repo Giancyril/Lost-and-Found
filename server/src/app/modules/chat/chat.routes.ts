@@ -7,5 +7,6 @@ const router = express.Router();
 router.get("/rooms", auth(), chatController.getMyChatRooms);
 router.get("/messages/:roomId", auth(), chatController.getChatMessages);
 router.post("/initiate", auth(), chatController.initiateChat);
+router.patch("/mark-as-read/:roomId", auth(), chatController.markAsRead);
 
 export const chatRoutes = router;

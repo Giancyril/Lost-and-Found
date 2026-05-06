@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FaPaperPlane, FaUserCircle, FaInbox, FaCircle, FaArrowLeft } from "react-icons/fa";
-import { useGetMyChatRoomsQuery, useGetChatMessagesQuery } from "../../redux/api/chatApi";
+import { useGetMyChatRoomsQuery, useGetChatMessagesQuery, useMarkAsReadMutation } from "../../redux/api/chatApi";
 import { useSocket } from "../../hooks/useSocket";
 import { getUserLocalStorage } from "../../auth/auth";
 import { format } from "date-fns";
@@ -20,20 +20,33 @@ const ChatPage = () => {
   const { data: initialMessages, isLoading: messagesLoading } = useGetChatMessagesQuery(activeRoomId, {
     skip: !activeRoomId,
   });
+  const [markAsRead] = useMarkAsReadMutation();
 
   const rooms = roomsData?.data || [];
   const currentRoom = rooms.find((r: any) => r.id === activeRoomId);
   const currentUser = JSON.parse(atob(token?.split(".")[1] || "{}"));
+  const unreadCount = rooms.filter((room: any) => {
+    const lastMsg = room.messages?.[0];
+    const lastReadAt = room.readStatuses?.[0]?.lastReadAt;
+    return lastMsg && (!lastReadAt || new Date(lastMsg.createdAt) > new Date(lastReadAt)) && lastMsg.senderId !== currentUser.id;
+  }).length;
+
+  useEffect(() => {
+    if (activeRoomId) {
+      markAsRead(activeRoomId);
+    }
+  }, [activeRoomId, markAsRead]);
 
   useEffect(() => {
     if (!socket) return;
     socket.on("message-received", (newMessage: any) => {
       if (newMessage.chatRoomId === activeRoomId) {
         setMessages((prev) => [...prev, newMessage]);
+        markAsRead(activeRoomId); // Also mark as read if we are in the room
       }
     });
     return () => { socket.off("message-received"); };
-  }, [socket, activeRoomId]);
+  }, [socket, activeRoomId, markAsRead]);
 
   useEffect(() => {
     if (socket && activeRoomId && isConnected) {
@@ -85,15 +98,15 @@ const ChatPage = () => {
         <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2.5">
           <FaInbox className="text-blue-400" size={13} />
           <h2 className="text-white font-bold text-sm">Messages</h2>
-          {rooms.length > 0 && (
+          {unreadCount > 0 && (
             <span className="ml-auto text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">
-              {rooms.length}
+              {unreadCount}
             </span>
           )}
         </div>
 
         {/* Room List */}
-        <div className="flex-1 overflow-y-auto py-2 px-2 space-y-1">
+        <div className="flex-1 overflow-y-auto py-2 px-2 space-y-1 custom-scrollbar">
           {roomsLoading ? (
             <div className="flex justify-center py-10">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-400" />
@@ -111,6 +124,11 @@ const ChatPage = () => {
               const isActive = room.id === activeRoomId;
               const lastMsg  = room.messages?.[0];
               const itemName = room.claim?.foundItem?.foundItemName || "Lost Item";
+              
+              // Unread logic
+              const lastReadAt = room.readStatuses?.[0]?.lastReadAt;
+              const hasUnread = lastMsg && (!lastReadAt || new Date(lastMsg.createdAt) > new Date(lastReadAt)) && lastMsg.senderId !== currentUser.id;
+
               return (
                 <button key={room.id} onClick={() => handleSelectRoom(room.id)}
                   className={`w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 ${
@@ -118,14 +136,15 @@ const ChatPage = () => {
                       ? "bg-blue-500/10 border border-blue-500/20"
                       : "hover:bg-white/5 border border-transparent hover:border-white/5"
                   }`}>
-                  <div className="w-9 h-9 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0 relative">
                     <FaUserCircle className="text-gray-500" size={20} />
+                    {hasUnread && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 border-2 border-gray-900 rounded-full" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-semibold truncate ${isActive ? "text-white" : "text-gray-300"}`}>
+                    <p className={`text-xs font-semibold truncate ${isActive || hasUnread ? "text-white" : "text-gray-300"}`}>
                       {itemName}
                     </p>
-                    <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                    <p className={`text-[11px] truncate mt-0.5 ${hasUnread ? "text-blue-400 font-medium" : "text-gray-500"}`}>
                       {lastMsg?.content || "No messages yet"}
                     </p>
                   </div>
@@ -170,7 +189,7 @@ const ChatPage = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-3">
+            <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-3 custom-scrollbar">
               {messagesLoading ? (
                 <div className="flex justify-center py-20">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400" />

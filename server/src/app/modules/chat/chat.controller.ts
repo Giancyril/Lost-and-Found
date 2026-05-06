@@ -44,8 +44,21 @@ const initiateChat = async (req: Request, res: Response) => {
   });
 };
 
+const markAsRead = async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+  const userId = (req as any).user.id;
+  await chatService.markRoomAsRead(roomId, userId);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Room marked as read successfully",
+    data: null,
+  });
+};
+
 export const chatController = {
   getMyChatRooms,
   getChatMessages,
   initiateChat,
+  markAsRead,
 };

@@ -36,6 +36,7 @@ model User {
   moderationAppeals ModerationAppeal[]
   chatMessages      ChatMessage[]
   pushSubscriptions PushSubscription[]
+  chatReadStatuses  ChatReadStatus[]
 
   @@map("users")
 }
@@ -340,6 +341,7 @@ model ChatRoom {
   updatedAt   DateTime      @updatedAt
   messages    ChatMessage[]
   claim       Claim?        @relation(fields: [claimId], references: [id])
+  readStatuses ChatReadStatus[]
 
   @@map("chatRooms")
 }
@@ -354,6 +356,18 @@ model ChatMessage {
   sender     User     @relation(fields: [senderId], references: [id])
 
   @@map("chatMessages")
+}
+
+model ChatReadStatus {
+  id         String   @id @default(uuid())
+  chatRoomId String
+  userId     String
+  lastReadAt DateTime @default(now())
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatRoomId, userId])
+  @@map("chatReadStatuses")
 }
 
 model PushSubscription {
