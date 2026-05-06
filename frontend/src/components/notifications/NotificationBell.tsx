@@ -194,7 +194,6 @@ const NotificationBell = () => {
           {/* List */}
           <div className="max-h-80 overflow-y-auto divide-y divide-gray-800/60 custom-scrollbar">
             {items.length === 0 ? (
-            {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-gray-600">
                 <FaBell size={20} className="mb-2 opacity-30" />
                 <p className="text-xs">No notifications yet</p>

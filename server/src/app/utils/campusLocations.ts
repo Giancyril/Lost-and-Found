@@ -1,48 +1,30 @@
 export const CAMPUS_COORDINATES: Record<string, [number, number]> = {
   // ── Buildings ──
-  "library":              [8.359250, 124.867972],
-  "canteen":              [8.359417, 124.868389],
-  "gymnasium":            [8.360000, 124.868861],
-  "chapel":               [8.3540, 124.8608],
-  "administration":       [8.3545, 124.8610],
-  "admin":                [8.3545, 124.8610],
-  "registrar":            [8.3544, 124.8611],
+  "library":              [8.359281, 124.867780],
+  "canteen":              [8.359419, 124.868418],
+  "admin":                [8.360750, 124.869363],
+  "registrar":            [8.359873, 124.867330],
   "swdc":                 [8.360139, 124.867389],
-  "sas":                  [8.3543, 124.8613],
-  "sas office":           [8.3543, 124.8613],
-  "clinic":               [8.3541, 124.8609],
-  "cashier":              [8.3546, 124.8611],
+  "clinic":               [8.359184, 124.868153],
+  "cashier":              [8.360674, 124.869340],
 
   // ── Rooms / Floors ──
   // (Mapped dynamically in getCoordinates)
 
   // ── Areas ──
-  "parking lot":          [8.3533, 124.8616],
-  "parking":              [8.3533, 124.8616],
-  "entrance":             [8.3532, 124.8612],
-  "gate":                 [8.3531, 124.8612],
-  "quadrangle":           [8.3538, 124.8613],
-  "quad":                 [8.3538, 124.8613],
-  "corridor":             [8.3539, 124.8612],
-  "hallway":              [8.3539, 124.8612],
-  "comfort room":         [8.3537, 124.8611],
-  "cr":                   [8.3537, 124.8611],
-  "restroom":             [8.3537, 124.8611],
-  "cafeteria":            [8.359417, 124.868389],
-  "grandstand":           [8.3534, 124.8619],
-  "basketball court":     [8.360000, 124.868861],
-  "court":                [8.360000, 124.868861],
+  "parking lot":          [8.360900, 124.867650],
+  "parking":              [8.360900, 124.867650],
+  "entrance":             [8.361211, 124.867778],
+  "gate":                 [8.361242, 124.867601],
+  "cafeteria":            [8.359424, 124.868400],
+  "basketball court":     [8.360030, 124.868857],
+  "court":                [8.360030, 124.868857],
   "field":                [8.359778, 124.868333],
   "oval":                 [8.359778, 124.868333],
 
   // ── Colleges / Departments ──
-  "college of engineering":         [8.3542, 124.8618],
-  "college of education":           [8.3544, 124.8616],
-  "college of arts and sciences":   [8.3541, 124.8615],
-  "college of business":            [8.359083, 124.868472],
-  "business administration":        [8.359083, 124.868472],
-  "ite building":                   [8.3540, 124.8619],
-  "ics building":                   [8.3540, 124.8619],
+  "business administration":        [8.359024, 124.868586],
+  "ics building":                   [8.361053, 124.868808],
 
   // ── Default fallback — center of campus ──
   "unknown":              [8.3596, 124.8682],
