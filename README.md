@@ -478,14 +478,25 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - Real-time community discussions and moderation suite.
 - Live Google Sheets masterlist synchronization.
 
-###  Phase 3: Expansion (Current)
+### 🚀 Phase 3: Expansion (Current)
 - **Mobile Application**: Native iOS/Android app for on-the-go reporting.
 - **Push Notifications**: Instant alerts for potential item matches.
-- **Verified Handover Workflow**: Secure QR-code based confirmation system between the claimant and the reporter for safe and verified item return.
-- **Digital Receipts & Documentation**: Automated PDF generation for successful handovers and community contribution certificates.
+- **Institutional API Integration**: Connecting with school registrar or library systems for deeper student validation.
+- **Progressive Web App (PWA)**: Installable web application with offline capabilities for reporting items without Wi-Fi.
+- **Voice-Enabled Reporting**: Hands-free item reporting using AI-powered speech-to-text transcription.
+- **Interactive Indoor Maps**: Precise location pinning on multi-level campus building maps.
+- **Global Search (Command Palette)**: Quick-action command center (`Ctrl+K`) for instant navigation and record lookups.
+- **Anonymized Community Chat**: Secure, private communication channel between reporters and claimants.
+- **Digital Receipts & Documentation**: Automated PDF generation for successful handovers and community certificates.
 
-###  Phase 4: Ecosystem & Sustainability (Upcoming)
+### 💎 Phase 4: Ecosystem & Sustainability (Upcoming)
 - **Rewards Store**: Redeem earned points for campus perks, library credits, or university merchandise.
-- **AI Image Recognition**: Automatic item categorization and feature extraction from uploaded photos using computer vision.
+- **AI Image Recognition**: Automatic item categorization and feature extraction from uploaded photos.
+- **Smart Categorization**: Automated category and tag suggestions based on item photos using computer vision.
+- **Verified "Hero" Badges**: Achievement system recognizing students with multiple successful item returns.
+- **Department Leaderboards**: Gamified campus-wide competition to encourage community helpfulness.
+- **Locker Integration**: Secure item handover via smart campus lockers with one-time access codes.
 - **Kiosk Mode**: Specialized interface for physical "Lost & Found" touchscreens in high-traffic campus areas.
 - **Predictive Analytics**: Forecasting high-risk zones and peak times for lost items to optimize campus patrol.
+- **Sentiment-Based Moderation**: AI-driven prioritization of high-value or high-distress reports.
+- **Event-Based Focus Zones**: Temporary moderation and tracking modules for major campus events and festivals.
