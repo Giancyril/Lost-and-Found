@@ -2,6 +2,22 @@
 import prisma from "../../config/prisma";
 
 const createOrGetChatRoom = async (claimId: string, participants: string[]) => {
+  if (!claimId) {
+    throw new Error("claimId is required to create or get a chat room");
+  }
+
+  // Ensure we have at least 2 participants. If not, add an admin.
+  let finalParticipants = [...participants];
+  if (finalParticipants.length < 2) {
+    const admin = await (prisma as any).user.findFirst({
+      where: { role: "ADMIN", isDeleted: false },
+      select: { id: true }
+    });
+    if (admin && !finalParticipants.includes(admin.id)) {
+      finalParticipants.push(admin.id);
+    }
+  }
+
   // Check if room already exists for this claim
   let room = await (prisma as any).chatRoom.findUnique({
     where: { claimId },
@@ -13,11 +29,11 @@ const createOrGetChatRoom = async (claimId: string, participants: string[]) => {
     },
   });
 
-   if (!room) {
+  if (!room) {
     room = await (prisma as any).chatRoom.create({
       data: {
         claimId,
-        participants,
+        participants: finalParticipants,
       },
       include: {
         messages: true,

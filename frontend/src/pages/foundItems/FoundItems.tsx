@@ -1,6 +1,7 @@
 import imageCompression from "browser-image-compression";
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useInitiateChatMutation } from "../../redux/api/chatApi";
 import {
   FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight,
   FaTimes, FaTh, FaList, FaTag, FaPlus,
@@ -246,9 +247,8 @@ const CustomSelect = ({ options, value, onChange }: {
     </div>
   );
 };
-
 // ── Found Item Card ─────────────────────────────────────────────────────────
-const FoundItemCard = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: any; isAdmin: boolean; setClaimItem: (i: any) => void; onOpenComments: () => void }) => {
+const FoundItemCard = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser, onInitiateChat }: { item: any; setClaimItem: (item: any) => void; onOpenComments: () => void; isAdmin: boolean; currentUser: any; onInitiateChat: (item: any) => void }) => {
   const isClaimed = item?.isClaimed;
   const daysAgo = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
   const hideImg = shouldHideImage(item?.category?.name, isAdmin);
@@ -290,13 +290,16 @@ const FoundItemCard = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: 
         <div className="h-px bg-white/[0.04] mb-3" />
 
         <div className="grid grid-cols-3 gap-1.5">
-          {!isClaimed
-            ? <button onClick={() => setClaimItem(item)} className="flex items-center justify-center py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">Claim</button>
-            : <div className="flex items-center justify-center py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg">Claimed</div>}
+          {(() => {
+            const hasMyClaim = item?.claim?.some((c: any) => c.userId === currentUser?.id);
+            if (hasMyClaim) return <button onClick={() => onInitiateChat(item)} className="flex items-center justify-center py-2.5 sm:py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs sm:text-[11px] font-bold rounded-lg transition-all">Chat</button>;
+            if (isClaimed) return <div className="flex items-center justify-center py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg">Claimed</div>;
+            return <button onClick={() => setClaimItem(item)} className="flex items-center justify-center py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">Claim</button>;
+          })()}
           <button onClick={onOpenComments} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
             Comments
           </button>
-          <Link to={`/foundItems/${item.id}`} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-500 hover:text-white text-[11px] font-medium rounded-lg transition-all">Details</Link>
+          <Link to={`/foundItems/${item.id}`} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">Details</Link>
         </div>
       </div>
     </div>
@@ -304,118 +307,65 @@ const FoundItemCard = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: 
 };
 
 // ── Found Item Row ──────────────────────────────────────────────────────────
-const FoundItemRow = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: any; isAdmin: boolean; setClaimItem: (i: any) => void; onOpenComments: () => void }) => {
-  const isClaimed = item?.isClaimed;
-  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
+const FoundItemRow = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser, onInitiateChat }: { item: any; setClaimItem: (item: any) => void; onOpenComments: () => void; isAdmin: boolean; currentUser: any; onInitiateChat: (item: any) => void }) => {
   const dateStr = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
 
+  const isClaimed = item?.isClaimed || item?.claimStatus === "CLAIMED";
+  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
   const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
     ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
     : "") || item?.img || "/bgimg.png";
 
-  return (
-    <div className="reveal group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-black/20">
+  const hasMyClaim = item?.claim?.some((c: any) => c.userId === currentUser?.id);
 
-      {/* Mobile */}
-      <div className="sm:hidden flex flex-col gap-2.5 p-3">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-800 shrink-0">
-            {hideImg ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                </svg>
-              </div>
-            ) : (
-              <img src={imgSrc} alt={item?.foundItemName}
-                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                className="w-full h-full object-cover" />
-            )}
+  return (
+    <div className="reveal group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl transition-all duration-200 p-3 sm:p-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+        {/* Top Section: Image & Info */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-gray-800 shrink-0 border border-white/5">
+            {!hideImg && <img src={imgSrc} alt={item.foundItemName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition-colors">
-              {item?.foundItemName}
-            </p>
-            <p className="text-gray-500 text-[11px] mt-0.5 flex items-center gap-1 truncate">
-              <FaMapMarkerAlt size={7} className="text-blue-400 shrink-0" />
-              <span className="truncate">{item?.location}</span>
-            </p>
-            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              <span className="text-gray-600 text-[10px]">{dateStr}</span>
-              {item?.category?.name && (
-                <>
-                  <span className="text-gray-700 text-[10px]">·</span>
-                  <span className="flex items-center gap-0.5 text-gray-500 text-[10px]">
-                    {getCategoryIcon(item.category.name)}
-                    <span className="truncate max-w-[80px]">{item.category.name}</span>
-                  </span>
-                </>
-              )}
-              {isClaimed && (
-                <>
-                  <span className="text-gray-700 text-[10px]">·</span>
-                  <span className="text-blue-400 text-[10px] font-semibold">Claimed</span>
-                </>
-              )}
+            <div className="flex items-center gap-2 mb-0.5">
+              <h3 className="text-white text-sm sm:text-base font-bold truncate group-hover:text-blue-400 transition-colors">{item.foundItemName}</h3>
+              {isClaimed && <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest rounded-md border border-blue-500/20 shrink-0">Claimed</span>}
             </div>
+            <p className="text-gray-500 text-[10px] sm:text-xs font-medium flex items-center gap-2">
+              <span className="truncate">{item.location}</span>
+              <span className="text-gray-700">·</span>
+              <span className="shrink-0">{dateStr}</span>
+            </p>
           </div>
         </div>
-        <div className="h-px bg-white/[0.05]" />
-        <div className="grid grid-cols-3 gap-1.5">
-          {!isClaimed
-            ? <button onClick={() => setClaimItem(item)}
-              className="flex items-center justify-center py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[10px] font-semibold rounded-lg transition-all">
-              Claim
-            </button>
-            : <div className="flex items-center justify-center py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-lg">
-              Claimed
-            </div>}
-          <button onClick={onOpenComments}
-            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] font-medium rounded-lg transition-all">
-            Comments
-          </button>
-          <Link to={`/foundItems/${item.id}`}
-            className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[10px] font-medium rounded-lg transition-all">
-            Details
-          </Link>
-        </div>
-      </div>
 
-      {/* Desktop */}
-      <div className="hidden sm:flex items-center gap-4 px-4 py-3">
-        <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0 border border-white/5">
-          {!hideImg && (
-            <img src={imgSrc} alt={item?.foundItemName}
-              className="w-full h-full object-cover"
-              onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <h3 className="text-white text-sm font-bold truncate group-hover:text-blue-400 transition-colors">{item?.foundItemName}</h3>
-            {isClaimed && <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest rounded-md border border-blue-500/20 shrink-0">Claimed</span>}
-          </div>
-          <div className="flex items-center gap-3 text-[10px] text-gray-500 font-medium">
-            <span className="flex items-center gap-1"><FaMapMarkerAlt size={8} /> {item?.location}</span>
-            <span className="flex items-center gap-1"><FaCalendarAlt size={8} /> {dateStr}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        {/* Action Buttons Section */}
+        <div className="flex items-center gap-2 pt-3 sm:pt-0 border-t border-white/[0.03] sm:border-t-0 sm:shrink-0 sm:ml-auto">
+          <div className="flex items-center gap-1.5 w-full sm:w-auto">
+            {hasMyClaim ? (
+              <button onClick={() => onInitiateChat(item)}
+                className="flex-1 sm:flex-none px-4 py-2 sm:px-3 sm:py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs sm:text-[10px] font-bold rounded-lg hover:bg-blue-500/20 transition-all flex items-center justify-center gap-1.5">
+                 Chat
+              </button>
+            ) : isClaimed ? (
+              <div className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs sm:text-[10px] font-bold rounded-lg text-center">Claimed</div>
+            ) : (
+              <button onClick={() => setClaimItem(item)}
+                className="flex-1 sm:flex-none px-4 py-2 sm:px-3 sm:py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-xs sm:text-[10px] font-bold rounded-lg transition-all">
+                Claim
+              </button>
+            )}
 
-          {!isClaimed
-            ? <button onClick={() => setClaimItem(item)}
-              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-[10px] font-bold rounded-lg transition-all">
-              Claim
+            <button onClick={onOpenComments}
+              className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-xs sm:text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5" title="Comments">
+              
+              <span className="xs:inline sm:inline">Comments</span>
             </button>
-            : <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold rounded-lg">Claimed</div>}
-          <button onClick={onOpenComments}
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-[10px] font-bold rounded-lg transition-all" title="Comments">
-            Comments
-          </button>
-          <Link to={`/foundItems/${item.id}`}
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-[10px] font-bold rounded-lg transition-all">
-            Details
-          </Link>
+            <Link to={`/foundItems/${item.id}`}
+              className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-xs sm:text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5">
+              <span className="xs:inline sm:inline">Details</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
@@ -423,9 +373,9 @@ const FoundItemRow = ({ item, isAdmin, setClaimItem, onOpenComments }: { item: a
 };
 
 // ── Quick Claim Modal ─────────────────────────────────────────────────────────
-const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
+const QuickClaimModal = ({ item, onClose, onInitiateChat }: { item: any; onClose: () => void; onInitiateChat: (item: any) => void }) => {
   const [createClaim, { isLoading: claimLoading }] = useCreateClaimMutation();
-  const { register, handleSubmit, formState: { errors }, reset, control, setValue: claimSetValue } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset, control, setValue: claimSetValue, watch } = useForm();
   const [submitted, setSubmitted] = useState(false);
   const [prevClaimEmailValue, setPrevClaimEmailValue] = useState("");
   const [lostDate, setLostDate] = useState("");
@@ -448,30 +398,48 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
     toast.success(`Student identified: ${student.name}`);
   };
 
+  const watchedClaimantName = watch("claimantName") ?? "";
+  const watchedSchoolEmail = watch("schoolEmail") ?? "";
+
   const handleClaimFetchDetails = async () => {
-    const nameEl = document.querySelector('#claim-modal input[name="claimantName"]') as HTMLInputElement;
-    const emailEl = document.querySelector('#claim-modal input[name="schoolEmail"]') as HTMLInputElement;
-    const name = nameEl?.value?.trim() || "";
-    const email = emailEl?.value?.trim() || "";
+    const name = watchedClaimantName?.trim() || "";
+    const email = watchedSchoolEmail?.trim() || "";
     if (!name && !email) { toast.info("Please enter a name or email to fetch details"); return; }
     setIsFetchingClaimStudent(true);
     try {
-      let student = null;
+      let student: any = null;
       if (name) {
-        try { const r = await getStudentByDetailsForClaim({ name, email: "" }).unwrap(); student = r.data ?? r; }
-        catch { if (email) { try { const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap(); student = r.data ?? r; } catch { } } }
+        try {
+          const r = await getStudentByDetailsForClaim({ name, email: "" }).unwrap();
+          student = r.data ?? r;
+        } catch {
+          if (email) {
+            try {
+              const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap();
+              student = r.data ?? r;
+            } catch { }
+          }
+        }
       } else {
-        try { const r = await getStudentByDetailsForClaim({ name, email: "" }).unwrap(); student = r.data ?? r; }
-        catch { toast.error("Student not found"); return; }
+        try {
+          const r = await getStudentByDetailsForClaim({ name: "", email }).unwrap();
+          student = r.data ?? r;
+        } catch { }
       }
-      if (student) {
+
+      if (student?.name) {
         setClaimScannedStudent({ id: student.id, name: student.name, email: student.email, department: student.department || "", raw: "manual_fetch" });
         claimSetValue("claimantName", student.name, { shouldDirty: true });
         claimSetValue("schoolEmail", student.email, { shouldDirty: true });
         toast.success(`Found: ${student.name}`);
-      } else { toast.error("Student not found in masterlist"); }
-    } catch { toast.error("Student not found in masterlist"); }
-    finally { setIsFetchingClaimStudent(false); }
+      } else {
+        toast.error("Student not found in masterlist");
+      }
+    } catch {
+      toast.error("Student not found in masterlist");
+    } finally {
+      setIsFetchingClaimStudent(false);
+    }
   };
 
   const onSubmit = async (data: any) => {
@@ -494,8 +462,9 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div id="claim-modal" className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
+    <div className="fixed inset-0 z-[100] grid place-items-center p-4 sm:p-6 overflow-y-auto">
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div id="claim-modal" className="relative bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[90vh]"
         style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)' }}>
         <div className="flex flex-col gap-3 px-5 py-4 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
           <div className="flex items-center justify-between gap-2">
@@ -555,7 +524,7 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
             </div>
           )}
         </div>
-        <div className="p-5">
+        <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
           <div className="flex items-center gap-3 bg-gray-800/60 border border-white/5 rounded-xl p-3 mb-5">
             <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? "") : "") || item?.img || "/bgimg.png"}
               alt={item?.foundItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
@@ -573,7 +542,16 @@ const QuickClaimModal = ({ item, onClose }: { item: any; onClose: () => void }) 
                 <FaCheckCircle className="text-blue-400" size={24} />
               </div>
               <p className="text-white font-semibold">Claim Submitted!</p>
-              <p className="text-gray-500 text-xs mt-1.5 leading-relaxed max-w-xs mx-auto">The SAS office will review your proof and contact you via your school email.</p>
+              <p className="text-gray-500 text-xs mt-1.5 leading-relaxed max-w-xs mx-auto mb-5">The SAS office will review your proof and contact you via your school email.</p>
+              <button
+                onClick={() => {
+                  onClose();
+                  onInitiateChat(item.id);
+                }}
+                className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                <FaComments size={13} /> Chat with Reporter
+              </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
@@ -719,6 +697,31 @@ const FoundItemsPage = () => {
 
   const { data: foundItems, isLoading } = useGetFoundItemsQuery({ searchTerm, page: currentPage, limit, sortBy, sortOrder });
   const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery("");
+  const [initiateChat] = useInitiateChatMutation();
+  const navigate = useNavigate();
+
+  const handleInitiateChat = async (item: any) => {
+    console.log("[DEBUG] FoundItems - Initiating chat for item:", item);
+    try {
+      const userClaim = item?.claim?.find((c: any) => c.userId === users?.id);
+      if (!userClaim) {
+        toast.error("You need to submit a claim first before chatting.");
+        return;
+      }
+
+      const res = await initiateChat({
+        claimId: userClaim.id,
+        reporterId: item.userId || item.user?.id
+      }).unwrap();
+
+      if (res.data?.id || res.id) {
+        navigate(`/dashboard/${users?.role === "ADMIN" ? "" : "student/"}chat?roomId=${res.data?.id || res.id}`);
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Could not start chat");
+    }
+  };
+
   const [createFoundItem, { isLoading: isCreating }] = useCreateFoundItemMutation();
   const [uploadItemImages, { isLoading: isUploading }] = useUploadItemImagesMutation();
   const isBusy = isCreating || isUploading;
@@ -751,8 +754,13 @@ const FoundItemsPage = () => {
     const v = e.target.value;
     setFuzzyTerm(v);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => { setSearchTerm(v); setCurrentPage(1); }, 400);
+    searchTimerRef.current = setTimeout(() => {
+      setSearchTerm(v);
+      setCurrentPage(1);
+    }, 400);
   };
+
+
   const clearSearch = () => { setFuzzyTerm(""); setSearchTerm(""); setCurrentPage(1); };
 
   const handleAddFileChange = async (files: FileList | null) => {
@@ -1188,8 +1196,8 @@ const FoundItemsPage = () => {
           <div className={viewMode === "grid" ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-2"}>
             {filteredItems.map((item: any) => (
               viewMode === "grid"
-                ? <FoundItemCard key={item.id} item={item} isAdmin={isAdmin} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
-                : <FoundItemRow key={item.id} item={item} isAdmin={isAdmin} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
+                ? <FoundItemCard key={item.id} item={item} isAdmin={isAdmin} currentUser={users} onInitiateChat={handleInitiateChat} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
+                : <FoundItemRow key={item.id} item={item} isAdmin={isAdmin} currentUser={users} onInitiateChat={handleInitiateChat} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
             ))}
           </div>
         )}
@@ -1218,8 +1226,9 @@ const FoundItemsPage = () => {
 
       {/* ── Add Found Item Modal ── */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl sm:max-w-4xl lg:max-w-5xl flex flex-col max-h-[92vh]"
+        <div className="fixed inset-0 z-[100] grid place-items-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={closeAddModal} />
+          <div className="relative bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl sm:max-w-4xl lg:max-w-5xl flex flex-col max-h-[90vh]"
             style={{ borderTop: "2px solid #3b82f6" }}>
 
             {/* ── Modal header ── */}
@@ -1283,15 +1292,15 @@ const FoundItemsPage = () => {
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                      Your Name <span className="text-red-400">*</span>
+                      Finder's Name <span className="text-red-400">*</span>
                     </label>
-                    <input {...addRegister("reporterName", { required: "Finder's name is required" })} type="text" placeholder="Enter name or scan ID" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
+                    <input {...addRegister("reporterName", { required: "Finder's name is required" })} type="text" placeholder="Enter student name or scan ID" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
                     {addErrors.reporterName && <p className="text-red-400 text-xs">{addErrors.reporterName?.message as string}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-10 5L2 7" /></svg>
-                      Institutional Email <span className="text-red-400">*</span>
+                      Finder's Email <span className="text-red-400">*</span>
                     </label>
                     <Controller
                       name="schoolEmail"
@@ -1561,8 +1570,9 @@ const FoundItemsPage = () => {
 
       {/* ── Category Help Modal ── */}
       {showCategoryHelp && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col">
+        <div className="fixed inset-0 z-[100] grid place-items-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowCategoryHelp(false)} />
+          <div className="relative bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
               <h3 className="text-sm font-bold text-white">About Categories</h3>
               <button onClick={() => setShowCategoryHelp(false)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
@@ -1598,7 +1608,7 @@ const FoundItemsPage = () => {
         <BarcodeScannerModal onScan={handleScan} onClose={() => setShowScanner(false)} useFetchStudent={useFetchStudent} />
       )}
 
-      {claimItem && <QuickClaimModal item={claimItem} onClose={() => setClaimItem(null)} />}
+      {claimItem && <QuickClaimModal item={claimItem} onInitiateChat={handleInitiateChat} onClose={() => setClaimItem(null)} />}
 
       {/* Comment Modal */}
       <CommentModal

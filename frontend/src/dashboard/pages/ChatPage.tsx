@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FaPaperPlane, FaUserCircle, FaInbox, FaCircle } from "react-icons/fa";
+import { FaPaperPlane, FaUserCircle, FaInbox, FaCircle, FaArrowLeft } from "react-icons/fa";
 import { useGetMyChatRoomsQuery, useGetChatMessagesQuery } from "../../redux/api/chatApi";
 import { useSocket } from "../../hooks/useSocket";
 import { getUserLocalStorage } from "../../auth/auth";
@@ -11,6 +11,7 @@ const ChatPage = () => {
   const activeRoomId = searchParams.get("roomId");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
+  const [showSidebar, setShowSidebar] = useState(!activeRoomId);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const token = getUserLocalStorage();
@@ -24,99 +25,111 @@ const ChatPage = () => {
   const currentRoom = rooms.find((r: any) => r.id === activeRoomId);
   const currentUser = JSON.parse(atob(token?.split(".")[1] || "{}"));
 
-  // Handle incoming messages
   useEffect(() => {
     if (!socket) return;
-
     socket.on("message-received", (newMessage: any) => {
       if (newMessage.chatRoomId === activeRoomId) {
         setMessages((prev) => [...prev, newMessage]);
       }
     });
-
-    return () => {
-      socket.off("message-received");
-    };
+    return () => { socket.off("message-received"); };
   }, [socket, activeRoomId]);
 
-  // Handle room joining
   useEffect(() => {
     if (socket && activeRoomId && isConnected) {
       socket.emit("join-chat", activeRoomId);
     }
     return () => {
-      if (socket && activeRoomId) {
-        socket.emit("leave-chat", activeRoomId);
-      }
+      if (socket && activeRoomId) socket.emit("leave-chat", activeRoomId);
     };
   }, [socket, activeRoomId, isConnected]);
 
-  // Load initial messages
   useEffect(() => {
-    if (initialMessages?.data) {
-      setMessages(initialMessages.data);
-    }
+    if (initialMessages?.data) setMessages(initialMessages.data);
   }, [initialMessages]);
 
-  // Scroll to bottom
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // On mobile, show chat when room selected
+  const handleSelectRoom = (roomId: string) => {
+    setSearchParams({ roomId });
+    setShowSidebar(false);
+  };
+
+  const handleBack = () => {
+    setShowSidebar(true);
+  };
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !activeRoomId || !socket) return;
-
-    socket.emit("send-message", {
-      chatRoomId: activeRoomId,
-      content: message,
-    });
+    socket.emit("send-message", { chatRoomId: activeRoomId, content: message });
     setMessage("");
   };
 
-  const getOtherParticipant = (room: any) => {
-    const otherId = room.participants.find((id: string) => id !== currentUser.id);
-    // In a real app, you'd fetch the user's name/img. For now, we'll label them "Participant"
-    return { name: "Community Member", id: otherId };
-  };
+  const getInitials = (name: string) =>
+    name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
 
   return (
-    <div className="flex h-[calc(100vh-140px)] bg-gray-900 rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
-      {/* Rooms Sidebar */}
-      <div className="w-80 border-r border-white/5 flex flex-col bg-gray-900/50">
-        <div className="p-4 border-b border-white/5">
-          <h2 className="text-white font-semibold flex items-center gap-2">
-            <FaInbox className="text-cyan-400" /> Messages
-          </h2>
+    <div className="flex h-[calc(100vh-120px)] sm:h-[calc(100vh-140px)] bg-gray-900 rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
+
+      {/* ── Sidebar ── */}
+      <div className={`
+        ${showSidebar ? "flex" : "hidden"} sm:flex
+        w-full sm:w-72 lg:w-80
+        border-r border-white/5 flex-col bg-gray-900/50 shrink-0
+      `}>
+        {/* Sidebar Header */}
+        <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2.5">
+          <FaInbox className="text-blue-400" size={13} />
+          <h2 className="text-white font-bold text-sm">Messages</h2>
+          {rooms.length > 0 && (
+            <span className="ml-auto text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">
+              {rooms.length}
+            </span>
+          )}
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+
+        {/* Room List */}
+        <div className="flex-1 overflow-y-auto py-2 px-2 space-y-1">
           {roomsLoading ? (
-            <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-400"></div></div>
+            <div className="flex justify-center py-10">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-400" />
+            </div>
           ) : rooms.length === 0 ? (
-            <div className="text-center py-10 text-gray-500 text-sm italic">No conversations yet.</div>
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-gray-800 border border-white/5 flex items-center justify-center mb-3">
+                <FaInbox className="text-gray-600" size={18} />
+              </div>
+              <p className="text-gray-500 text-xs font-medium">No conversations yet</p>
+              <p className="text-gray-600 text-[11px] mt-1">Your chats will appear here</p>
+            </div>
           ) : (
             rooms.map((room: any) => {
-              const other = getOtherParticipant(room);
               const isActive = room.id === activeRoomId;
-              const lastMsg = room.messages?.[0];
+              const lastMsg  = room.messages?.[0];
+              const itemName = room.claim?.foundItem?.foundItemName || "Lost Item";
               return (
-                <button
-                  key={room.id}
-                  onClick={() => setSearchParams({ roomId: room.id })}
+                <button key={room.id} onClick={() => handleSelectRoom(room.id)}
                   className={`w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 ${
-                    isActive ? "bg-cyan-500/10 border border-cyan-500/20" : "hover:bg-white/5 border border-transparent"
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border border-white/5">
-                    <FaUserCircle className="text-gray-600 text-2xl" />
+                    isActive
+                      ? "bg-blue-500/10 border border-blue-500/20"
+                      : "hover:bg-white/5 border border-transparent hover:border-white/5"
+                  }`}>
+                  <div className="w-9 h-9 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0">
+                    <FaUserCircle className="text-gray-500" size={20} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium truncate ${isActive ? "text-white" : "text-gray-300"}`}>
-                      Item: {room.claim?.foundItem?.foundItemName || "Lost Item"}
+                    <p className={`text-xs font-semibold truncate ${isActive ? "text-white" : "text-gray-300"}`}>
+                      {itemName}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">{lastMsg?.content || "No messages yet"}</p>
+                    <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                      {lastMsg?.content || "No messages yet"}
+                    </p>
                   </div>
-                  {isActive && <FaCircle className="text-cyan-400 w-2 h-2" />}
+                  {isActive && <FaCircle className="text-blue-400 shrink-0" size={6} />}
                 </button>
               );
             })
@@ -124,35 +137,73 @@ const ChatPage = () => {
         </div>
       </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col bg-gray-950/20">
+      {/* ── Chat Area ── */}
+      <div className={`
+        ${!showSidebar ? "flex" : "hidden"} sm:flex
+        flex-1 flex-col bg-gray-950/20 min-w-0
+      `}>
         {activeRoomId ? (
           <>
-            {/* Header */}
-            <div className="p-4 border-b border-white/5 bg-gray-900/30 flex items-center justify-between">
-              <div>
-                <h3 className="text-white font-medium">Chat regarding: {currentRoom?.claim?.foundItem?.foundItemName}</h3>
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`}></span>
-                  <span className="text-[10px] text-gray-500 uppercase tracking-widest">{isConnected ? "Connected" : "Disconnected"}</span>
+            {/* Chat Header */}
+            <div className="px-3 sm:px-4 py-3 border-b border-white/5 bg-gray-900/40 flex items-center gap-3 shrink-0">
+              {/* Back button — mobile only */}
+              <button onClick={handleBack}
+                className="sm:hidden w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0">
+                <FaArrowLeft size={12} />
+              </button>
+
+              <div className="w-8 h-8 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0">
+                <FaUserCircle className="text-gray-500" size={18} />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-xs font-bold truncate">
+                  {currentRoom?.claim?.foundItem?.foundItemName || "Chat"}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isConnected ? "bg-emerald-500" : "bg-red-500"}`} />
+                  <span className="text-[10px] text-gray-500 uppercase tracking-widest">
+                    {isConnected ? "Connected" : "Disconnected"}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-3">
               {messagesLoading ? (
-                <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div></div>
+                <div className="flex justify-center py-20">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400" />
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-10">
+                  <div className="w-12 h-12 rounded-2xl bg-gray-900 border border-white/5 flex items-center justify-center mb-3">
+                    <FaInbox className="text-gray-600" size={18} />
+                  </div>
+                  <p className="text-gray-500 text-xs font-medium">No messages yet</p>
+                  <p className="text-gray-600 text-[11px] mt-1">Send a message to start the conversation</p>
+                </div>
               ) : (
                 messages.map((msg, idx) => {
                   const isMe = msg.senderId === currentUser.id;
                   return (
                     <div key={msg.id || idx} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 shadow-lg ${
-                        isMe ? "bg-cyan-600 text-white rounded-br-none" : "bg-gray-800 text-gray-100 rounded-bl-none border border-white/5"
-                      }`}>
-                        <p className="text-sm leading-relaxed">{msg.content}</p>
-                        <p className={`text-[10px] mt-1 opacity-60 ${isMe ? "text-right" : "text-left"}`}>
+                      {!isMe && (
+                        <div className="w-6 h-6 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center mr-2 shrink-0 self-end mb-1">
+                          <FaUserCircle className="text-gray-500" size={14} />
+                        </div>
+                      )}
+                      <div className={`max-w-[75%] sm:max-w-[65%] ${
+                        isMe ? "items-end" : "items-start"
+                      } flex flex-col gap-0.5`}>
+                        <div className={`rounded-2xl px-3 py-2 ${
+                          isMe
+                            ? "bg-blue-600 text-white rounded-br-sm"
+                            : "bg-gray-800 text-gray-100 border border-white/5 rounded-bl-sm"
+                        }`}>
+                          <p className="text-xs sm:text-sm leading-relaxed">{msg.content}</p>
+                        </div>
+                        <p className="text-[10px] text-gray-600 px-1">
                           {format(new Date(msg.createdAt), "p")}
                         </p>
                       </div>
@@ -164,30 +215,33 @@ const ChatPage = () => {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5 bg-gray-900/30">
-              <div className="relative flex items-center">
+            <form onSubmit={handleSendMessage}
+              className="px-3 sm:px-4 py-3 border-t border-white/5 bg-gray-900/40 shrink-0">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="w-full bg-gray-800 border border-white/10 text-white text-sm rounded-xl py-3 pl-4 pr-12 focus:outline-none focus:border-cyan-500/50 transition-all"
+                  className="flex-1 min-w-0 bg-gray-800 border border-white/10 text-white text-xs sm:text-sm rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-blue-500/50 transition-all placeholder-gray-600"
                 />
-                <button
-                  type="submit"
-                  disabled={!message.trim()}
-                  className="absolute right-2 p-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition-colors disabled:opacity-50"
-                >
-                  <FaPaperPlane size={14} />
+                <button type="submit" disabled={!message.trim()}
+                  className="w-9 h-9 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl flex items-center justify-center transition-all shrink-0 active:scale-95">
+                  <FaPaperPlane size={12} />
                 </button>
               </div>
             </form>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-500 opacity-50">
-            <FaInbox size={48} className="mb-4" />
-            <p className="text-lg font-medium">Select a conversation to start chatting</p>
-            <p className="text-sm">Communicate securely with other campus members</p>
+          /* No room selected — desktop empty state */
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
+            <div className="w-14 h-14 rounded-2xl bg-gray-900 border border-white/5 flex items-center justify-center mb-4">
+              <FaInbox className="text-gray-600" size={22} />
+            </div>
+            <p className="text-white text-sm font-semibold">Select a conversation</p>
+            <p className="text-gray-500 text-xs mt-1 max-w-xs">
+              Choose a chat from the sidebar to start messaging
+            </p>
           </div>
         )}
       </div>

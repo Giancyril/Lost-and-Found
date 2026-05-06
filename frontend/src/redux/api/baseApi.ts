@@ -8,11 +8,11 @@ const getBaseUrl = () => {
     const serverUrl = import.meta.env.VITE_SERVER_URL;
     if (!serverUrl) {
       console.error("VITE_SERVER_URL is not set!");
-      return "http://localhost:5000/api";
+      return "http://localhost:5001/api";
     }
     return `${serverUrl}/api`;
   }
-  return "http://127.0.0.1:5000/api";
+  return "http://localhost:5001/api";
 };
 
 export const baseApi = createApi({

@@ -5,11 +5,15 @@ import prisma from "../../config/prisma";
 const publicVapidKey = process.env.VAPID_PUBLIC_KEY || "";
 const privateVapidKey = process.env.VAPID_PRIVATE_KEY || "";
 
-webpush.setVapidDetails(
-  "mailto:example@yourdomain.org",
-  publicVapidKey,
-  privateVapidKey
-);
+if (publicVapidKey && privateVapidKey) {
+  webpush.setVapidDetails(
+    "mailto:example@yourdomain.org",
+    publicVapidKey,
+    privateVapidKey
+  );
+} else {
+  console.warn("VAPID keys are not set. Push notifications will not work.");
+}
 
 const subscribeUser = async (userId: string, subscription: any) => {
   return await (prisma as any).pushSubscription.upsert({

@@ -10,8 +10,8 @@ import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
 import { Spinner } from "flowbite-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
- import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useInitiateChatMutation } from "../../redux/api/chatApi";
 import { CommentSection } from "../../components/comments/CommentSection";
 import { CommentModal } from "../../components/comments/CommentModal";
@@ -63,17 +63,17 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const next = () => setActiveIdx((i) => (i === images.length - 1 ? 0 : i + 1));
 
   if (images.length === 0) return (
-  <div className="relative w-full h-full min-h-[280px] lg:min-h-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
-    <img src="/bgimg.png" alt={alt} className="absolute inset-0 w-full h-full object-cover" />
-  </div>
-);
+    <div className="relative w-full h-full min-h-[280px] lg:min-h-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+      <img src="/bgimg.png" alt={alt} className="absolute inset-0 w-full h-full object-cover" />
+    </div>
+  );
 
-if (images.length === 1) return (
-  <div className="relative w-full h-full min-h-[280px] lg:min-h-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
-    <img src={images[0]} alt={alt} className="absolute inset-0 w-full h-full object-cover"
-      onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
-  </div>
-);
+  if (images.length === 1) return (
+    <div className="relative w-full h-full min-h-[280px] lg:min-h-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+      <img src={images[0]} alt={alt} className="absolute inset-0 w-full h-full object-cover"
+        onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-3 h-full">
@@ -169,8 +169,9 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
   const current = stages.filter(s => s.done).slice(-1)[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg bg-gray-900 border border-white/10 rounded-2xl shadow-2xl max-h-[88vh] flex flex-col">
+    <div className="fixed inset-0 z-50 grid place-items-center p-4 sm:p-6 overflow-y-auto">
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-gray-900 border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] my-auto">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
@@ -303,7 +304,7 @@ const SingleFoundItem = () => {
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [showClaimScanner, setShowClaimScanner] = useState(false);
-   const [isFetchingClaimStudent, setIsFetchingClaimStudent] = useState(false);
+  const [isFetchingClaimStudent, setIsFetchingClaimStudent] = useState(false);
   const [getStudentByDetailsForClaim] = useLazyGetStudentByDetailsQuery();
   const [initiateChat] = useInitiateChatMutation();
   const navigate = useNavigate();
@@ -412,7 +413,7 @@ const SingleFoundItem = () => {
       }
     } catch {
       toast.error("An unexpected error occurred.");
-     } finally {
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -492,13 +493,14 @@ const SingleFoundItem = () => {
               </h1>
               <p className="text-gray-500 text-sm mt-1">Item details & discussion</p>
             </div>
-            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
+            <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2.5 sm:shrink-0">
               <button
                 onClick={() => openModal(setIsTimelineOpen)}
-                className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all"
+                className="relative flex items-center justify-center gap-2 px-4 py-2.5 xs:px-3 xs:py-1.5 rounded-xl xs:rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all"
               >
-                 {claimCount > 0 && (
-                  <span className="ml-0.5 bg-blue-500 text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-none">
+                <FaClipboardList size={12} className="xs:size-[10px]" /> View Lifecycle
+                {claimCount > 0 && (
+                  <span className="ml-1 bg-blue-500 text-white text-[10px] xs:text-[9px] font-black rounded-full px-2 py-0.5 leading-none">
                     {claimCount}
                   </span>
                 )}
@@ -507,9 +509,9 @@ const SingleFoundItem = () => {
               {foundItemData?.claim?.some((c: any) => c.userId === users?.id) && (
                 <button
                   onClick={handleInitiateChat}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 xs:px-3 xs:py-1.5 rounded-xl xs:rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all"
                 >
-                  <FaComments size={10} /> Chat with Reporter
+                  <FaComments size={12} className="xs:size-[10px]" /> Chat with Reporter
                 </button>
               )}
             </div>
@@ -518,37 +520,37 @@ const SingleFoundItem = () => {
       </div>
 
       {/* Main Content */}
-<div className="w-full px-3 sm:px-8 lg:px-16 py-4 sm:py-10">
-  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 lg:items-stretch">
+      <div className="w-full px-3 sm:px-8 lg:px-16 py-4 sm:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 lg:items-stretch">
 
-    {/* Left: Image */}
-    <div className="lg:col-span-7 flex flex-col gap-3">
-      <div className="relative rounded-2xl overflow-hidden bg-gray-900 border border-white/5 shadow-2xl lg:h-full lg:min-h-0">
-        <div className="absolute top-3 left-3 z-10">
-          {isClaimed ? (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-600/90 text-white text-[10px] font-black rounded-full backdrop-blur-md border border-emerald-500/30 shadow-lg uppercase tracking-wider">
-              <FaCheckCircle size={9} /> Claimed
-            </span>
-          ) : (
-            <span className="px-2.5 py-1 bg-blue-600/90 text-white text-[10px] font-black rounded-full backdrop-blur-md border border-blue-500/30 shadow-lg uppercase tracking-wider">
-              Available
-            </span>
-          )}
-        </div>
-        {hideImage ? <HiddenImagePlaceholder /> : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />}
-      </div>
+          {/* Left: Image */}
+          <div className="lg:col-span-7 flex flex-col gap-3">
+            <div className="relative rounded-2xl overflow-hidden bg-gray-900 border border-white/5 shadow-2xl lg:h-full lg:min-h-0">
+              <div className="absolute top-3 left-3 z-10">
+                {isClaimed ? (
+                  <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-600/90 text-white text-[10px] font-black rounded-full backdrop-blur-md border border-emerald-500/30 shadow-lg uppercase tracking-wider">
+                    <FaCheckCircle size={9} /> Claimed
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 bg-blue-600/90 text-white text-[10px] font-black rounded-full backdrop-blur-md border border-blue-500/30 shadow-lg uppercase tracking-wider">
+                    Available
+                  </span>
+                )}
+              </div>
+              {hideImage ? <HiddenImagePlaceholder /> : <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />}
+            </div>
 
-      {/* Mobile discussion button */}
-      <div className="lg:hidden">
-        <button
-          onClick={() => setIsCommentModalOpen(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 border border-white/5 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-xs"
-        >
-          <FaComments size={13} className="text-blue-400" />
-          View Sightings & Discussion
-        </button>
-      </div>
-    </div>
+            {/* Mobile discussion button */}
+            <div className="lg:hidden">
+              <button
+                onClick={() => setIsCommentModalOpen(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 border border-white/5 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-xs"
+              >
+                <FaComments size={13} className="text-blue-400" />
+                View Sightings & Discussion
+              </button>
+            </div>
+          </div>
 
           {/* Right: Info */}
           <div className="lg:col-span-5 flex flex-col gap-3">
@@ -618,10 +620,27 @@ const SingleFoundItem = () => {
                     </div>
                   );
                 })()
+              ) : foundItemData?.claim?.some((c: any) => c.userId === users?.id) ? (
+                <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl p-4 flex flex-col gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                      <FaCheckCircle className="text-cyan-400" size={18} />
+                    </div>
+                    <div>
+                      <p className="text-white font-black text-sm">Claim Submitted</p>
+                      <p className="text-gray-500 text-xs mt-1 leading-relaxed text-justify">
+                        You have submitted a claim for this item. You can now chat with the reporter to coordinate.
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={handleInitiateChat}
+                    className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-black py-3 sm:py-2.5 px-4 rounded-xl transition-all text-xs sm:text-[11px] uppercase tracking-widest flex items-center justify-center gap-2.5">
+                    <FaComments size={14} className="sm:size-[13px]" /> Chat with Reporter
+                  </button>
+                </div>
               ) : (
                 <div className="bg-blue-600/10 border border-blue-600/20 rounded-2xl p-4 flex flex-col gap-4">
                   <div className="flex items-start gap-3">
-                    
                     <div>
                       <p className="text-white font-black text-sm">Is this yours?</p>
                       <p className="text-gray-500 text-xs mt-1 leading-relaxed text-justify">
@@ -630,7 +649,7 @@ const SingleFoundItem = () => {
                     </div>
                   </div>
                   <button onClick={() => openModal(setIsClaimModalOpen)}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-all text-[11px] uppercase tracking-widest">
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 sm:py-2.5 px-4 rounded-xl transition-all text-xs sm:text-[11px] uppercase tracking-widest">
                     Submit a Claim
                   </button>
                 </div>
@@ -658,10 +677,11 @@ const SingleFoundItem = () => {
       )}
 
       {isClaimModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[60] grid place-items-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => closeModal(setIsClaimModalOpen)} />
           <div
             id="single-claim-modal"
-            className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-white/10 shadow-2xl flex flex-col max-h-[90vh] my-auto"
             style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.2) rgba(255,255,255,0.05)" }}
           >
             {/* ── Header ── */}
@@ -730,7 +750,7 @@ const SingleFoundItem = () => {
             </div>
 
             {/* ── Body ── */}
-            <div className="p-5">
+            <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
               {/* Item preview strip */}
               <div className="flex items-center gap-3 bg-gray-800/60 border border-white/5 rounded-xl p-3 mb-5">
                 <img
@@ -826,9 +846,9 @@ const SingleFoundItem = () => {
                     Once submitted, the SAS office will verify your proof and contact you via school email before releasing the item.
                   </p>
                 </div>
-
+                <br />
                 {/* Buttons */}
-                <div className="flex gap-2 pt-1">
+                <div className="flex gap-2 pt-2 pb-1">
                   <button
                     type="button"
                     onClick={handleCloseClaimModal}

@@ -5,7 +5,7 @@ import { initializeSocket } from "./websocket/socketServer";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 const httpServer = createServer(app);
 
 // Initialize Socket.io
@@ -13,7 +13,7 @@ const io = initializeSocket(httpServer);
 app.set("io", io);
 
 async function main() {
-  httpServer.listen(PORT, () => {
+  httpServer.listen(Number(PORT), "0.0.0.0", () => {
     console.log(`Server running on port ${PORT} with WebSockets enabled`);
   });
 }

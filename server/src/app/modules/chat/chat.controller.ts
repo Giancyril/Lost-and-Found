@@ -28,7 +28,14 @@ const getChatMessages = async (req: Request, res: Response) => {
 const initiateChat = async (req: Request, res: Response) => {
   const { claimId, reporterId } = req.body;
   const userId = (req as any).user.id;
-  const result = await chatService.createOrGetChatRoom(claimId, [userId, reporterId]);
+  
+  // Ensure we don't have undefined in participants array
+  const participants = [userId, reporterId].filter(id => !!id);
+  
+  // If only one participant (e.g. reporterId was missing), 
+  // the service will need to handle it or we could add a default admin
+  const result = await chatService.createOrGetChatRoom(claimId, participants);
+  
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
