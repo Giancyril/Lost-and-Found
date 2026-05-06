@@ -75,10 +75,9 @@ router.delete("/item-categories/:id", auth(), itemcategoryController.deleteItemC
 
 ////////////////////////////////////////////////// found items //////////////////////////////////////////////
 
-// FIX: auth() added to /found-items/public so req.user is populated for students.
-// Without this, userId was always undefined → no points awarded, item saved with
-// userId: null, and "My Found Items" always returned empty.
-router.post("/found-items/public", auth(), foundItemController.createFoundItem);
+// FIX: auth(true) makes authentication optional, allowing BOTH guests and
+// logged-in users to report lost items. If logged in, req.user is populated.
+router.post("/found-items/public", auth(true), foundItemController.createFoundItem);
 
 router.post("/found-items", validateRequest(FoundItemSchema.createFoundItem), auth(), foundItemController.createFoundItem);
 router.get("/found-items", foundItemController.getFoundItem);
@@ -92,7 +91,7 @@ router.put("/found-items/:id/archive", auth(), foundItemController.archiveFoundI
 router.put("/found-items/:id/restore", auth(), foundItemController.restoreFoundItem);
 
 ////////////////////////////////////////////////// lost items //////////////////////////////////////////////
-router.post("/lostItem", auth(), lostItemController.createLostItem);
+router.post("/lostItem", auth(true), lostItemController.createLostItem);
 router.get("/lostItem", lostItemController.getLostItem);
 router.get("/lostItem/:id", lostItemController.getSingleLostItem);
 

@@ -352,7 +352,11 @@ const LostItemsManagement = () => {
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Category</p><p className="text-gray-300 mt-0.5">{item.category?.name || "—"}</p></div>
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Location</p><p className="text-gray-300 mt-0.5">{item.location}</p></div>
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Date Lost</p><p className="text-gray-300 mt-0.5">{new Date(item.date).toLocaleDateString()}</p></div>
-              <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Reporter</p><p className="text-gray-300 mt-0.5">{item.user?.username || "—"}</p></div>
+              <div>
+                <p className="text-gray-600 text-[10px] uppercase tracking-widest">Reporter</p>
+                <p className="text-gray-300 mt-0.5 text-[11px] font-medium truncate">{item.user?.username || item.reporterName || "—"}</p>
+                {item.schoolEmail && <p className="text-blue-400/70 text-[9px] truncate">{item.schoolEmail}</p>}
+              </div>
             </div>
             <div className="flex gap-2 pt-1">
               <button onClick={() => handleEdit(item)} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 rounded-xl text-xs font-semibold transition-all">

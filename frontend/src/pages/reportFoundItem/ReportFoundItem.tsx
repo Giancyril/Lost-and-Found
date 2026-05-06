@@ -1067,7 +1067,7 @@ const ReportFoundItem = () => {
           </p>
         </div>
       </section>
-      <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
+      <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px", zIndex: 9999 }} theme="dark" />
       {showScanner && (
         <BarcodeScannerModal onScan={handleScan} onClose={() => setShowScanner(false)} useFetchStudent={useFetchStudent} />
       )}

@@ -6,7 +6,8 @@ export const CAMPUS_COORDINATES: Record<string, [number, number]> = {
   "canteen":              [8.359419, 124.868418],
   "admin":                [8.360750, 124.869363],
   "registrar":            [8.359873, 124.867330],
-  "swdc":                 [8.360139, 124.867389],
+  "SWDC":                 [8.360139, 124.867389],
+  "SWDC groundfloor":     [8.360202, 124.867461],
   "clinic":               [8.359184, 124.868153],
   "cashier":              [8.360674, 124.869340],
 
@@ -55,7 +56,7 @@ export const getCoordinates = (location: string): [number, number] | null => {
 
     // Dynamic Range Mapping
     // SWDC Building: Rooms 201 - 210
-    if (num >= 201 && num <= 210) return CAMPUS_COORDINATES["swdc"];
+    if (num >= 201 && num <= 210) return CAMPUS_COORDINATES["SWDC"];
     // Business Administration: Rooms 301 - 320
     if (num >= 301 && num <= 320) return CAMPUS_COORDINATES["business administration"];
 
