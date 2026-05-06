@@ -17,6 +17,7 @@ const Banner = () => {
       title: "SAS Lost & Found",
       subtitle: "Management System",
       description: "The official lost and found platform for SAS students, staff, and faculty. Report missing belongings or help return found items quickly and securely within our school community.",
+      descShort:   "Report missing belongings or help return found items quickly and securely.",
       primaryButton:   { text: "Report a Lost Item",    href: "/reportlostItem" },
       secondaryButton: { text: "Check Recovered items", href: "/FoundItems"     },
     },
@@ -25,6 +26,7 @@ const Banner = () => {
       title: "Help a Fellow",
       subtitle: "Student?",
       description: "If you've found something on school grounds, please report it here. Your act of honesty helps reunite students and staff with their belongings and strengthens our school community.",
+      descShort:   "Report found items to help reunite students with their belongings and strengthen our school community.",
       primaryButton:   { text: "Report a Lost Item",    href: "/reportlostItem" },
       secondaryButton: { text: "Check Recovered items", href: "/FoundItems"     },
     },
@@ -33,6 +35,7 @@ const Banner = () => {
       title: "Stay Updated on",
       subtitle: "Your Reports",
       description: "Monitor the status of your lost item reports and claim requests in real time. Our lost and found system ensures you're notified the moment your item is located.",
+      descShort:   "Monitor your lost item reports and claims in real time. Get notified the moment your item is located.",
       primaryButton:   { text: "Report a Lost Item",    href: "/reportlostItem" },
       secondaryButton: { text: "Check Recovered items", href: "/FoundItems"     },
     },
@@ -160,10 +163,11 @@ const Banner = () => {
 
               <div className="w-12 h-[3px] bg-gradient-to-r from-blue-500 to-cyan-400 mb-3 lg:mb-4 rounded-full" />
 
-              {/* Description */}
-              <p className="mb-4 lg:mb-5 text-sm lg:text-lg font-light text-gray-400 max-w-lg leading-relaxed line-clamp-3 lg:line-clamp-none text-justify">
-                {s.description}
-              </p>
+              {/* Description — Responsive text */}
+              <div className="mb-4 lg:mb-5 text-sm lg:text-lg font-light text-gray-400 max-w-lg leading-relaxed text-justify">
+                <p className="lg:hidden">{s.descShort}</p>
+                <p className="hidden lg:block">{s.description}</p>
+              </div>
 
               {/* Points Teaser Banner */}
               <div className="mb-3 max-w-lg">
