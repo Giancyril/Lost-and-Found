@@ -130,21 +130,21 @@ export default function StudentDashboard() {
       
       {/* ── Push Notification Banner ── */}
       {isSupported && permission === "default" && (
-        <div className="bg-gradient-to-r from-blue-600/20 to-cyan-500/20 border border-blue-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse-slow">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
-              <FaBell className="text-blue-400" size={16} />
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm">Stay Updated!</p>
-              <p className="text-gray-400 text-xs">Enable push notifications to get real-time alerts for item matches and chat messages.</p>
-            </div>
+        <div className="bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-5 flex items-center gap-3 sm:gap-4">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+            <FaBell size={13} className="text-blue-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs sm:text-sm font-bold leading-tight">Stay Updated!</p>
+            <p className="text-gray-500 text-[11px] sm:text-xs mt-0.5 leading-relaxed line-clamp-1 sm:line-clamp-none">
+              Enable notifications for real-time alerts on item matches and messages.
+            </p>
           </div>
           <button
             onClick={subscribe}
-            className="w-full sm:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-blue-500/20 uppercase tracking-widest active:scale-95"
-          >
-            Enable Notifications
+            className="shrink-0 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs sm:text-sm font-medium rounded-xl transition-all">
+            <span className="sm:hidden">Enable</span>
+            <span className="hidden sm:inline">Enable Notifications</span>
           </button>
         </div>
       )}

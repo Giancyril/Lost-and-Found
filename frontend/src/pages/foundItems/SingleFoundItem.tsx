@@ -566,20 +566,20 @@ const SingleFoundItem = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <p className="text-gray-600 text-[9px] font-black uppercase tracking-widest">Category</p>
-                  <p className="text-white text-sm font-bold">{foundItemData?.category?.name || "Uncategorized"}</p>
+                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Category</p>
+                  <p className="text-gray-300 text-xs leading-relaxed text-justify whitespace-pre-wrap">{foundItemData?.category?.name || "Uncategorized"}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-gray-600 text-[9px] font-black uppercase tracking-widest">Found Date</p>
-                  <p className="text-white text-sm font-bold flex items-center gap-1.5">
-                    <FaCalendarAlt className="text-blue-500 shrink-0" size={10} />
+                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Found Date</p>
+                  <p className="text-gray-300 text-xs leading-relaxed text-justify whitespace-pre-wrap">
+                    
                     {foundItemData?.date ? new Date(foundItemData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "—"}
                   </p>
                 </div>
               </div>
 
               <div className="mt-4 pt-4 border-t border-white/[0.05]">
-                <p className="text-gray-600 text-[9px] font-black uppercase tracking-widest mb-2">Description</p>
+                <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Description</p>
                 <p className="text-gray-300 text-xs leading-relaxed text-justify whitespace-pre-wrap">
                   {foundItemData?.description || "No description provided."}
                 </p>
@@ -587,15 +587,16 @@ const SingleFoundItem = () => {
             </div>
 
             {/* Location Card */}
-            <div className="bg-gray-900 rounded-2xl p-4 border border-white/5 shadow-xl">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                  <FaMapMarkerAlt className="text-blue-400" size={10} />
+            <div className="bg-gray-900 rounded-2xl p-3.5 border border-white/5 shadow-xl">
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="w-5 h-5 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                  <FaMapMarkerAlt className="text-blue-400" size={9} />
                 </div>
                 <h2 className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Location Found</h2>
               </div>
-              <div className="p-3 bg-gray-800/50 rounded-xl border border-white/[0.03]">
-                <p className="text-white text-sm font-bold">{foundItemData?.location}</p>
+              <div className="flex items-center gap-2.5 p-2.5 bg-gray-800/60 rounded-xl border border-white/[0.04]">
+                <FaMapMarkerAlt className="text-blue-400 shrink-0" size={11} />
+                <p className="text-gray-300 text-xs leading-relaxed text-justify whitespace-pre-wrap">{foundItemData?.location}</p>
               </div>
             </div>
 
@@ -607,12 +608,12 @@ const SingleFoundItem = () => {
                   const approvedClaim = claimArr.find((c: any) => c.status === "APPROVED");
                   const claimedAt = approvedClaim?.auditLogs?.find((l: any) => l.toStatus === "APPROVED")?.createdAt ?? approvedClaim?.createdAt ?? foundItemData?.updatedAt ?? null;
                   return (
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                        <FaHandshake className="text-emerald-400" size={18} />
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                        <FaHandshake className="text-emerald-400" size={14} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-black leading-tight">Successfully Returned</p>
+                        <p className="text-white text-xs font-black leading-tight">Successfully Returned</p>
                         <p className="text-emerald-400/80 text-[10px] mt-0.5 font-bold uppercase tracking-wide">
                           {claimedAt ? `Processed ${timeAgo(claimedAt)}` : "Verified & Returned"}
                         </p>
@@ -621,36 +622,39 @@ const SingleFoundItem = () => {
                   );
                 })()
               ) : foundItemData?.claim?.some((c: any) => c.userId === users?.id) ? (
-                <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl p-4 flex flex-col gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/20 flex items-center justify-center shrink-0">
-                      <FaCheckCircle className="text-cyan-400" size={18} />
-                    </div>
-                    <div>
-                      <p className="text-white font-black text-sm">Claim Submitted</p>
-                      <p className="text-gray-500 text-xs mt-1 leading-relaxed text-justify">
-                        You have submitted a claim for this item. You can now chat with the reporter to coordinate.
-                      </p>
-                    </div>
+                <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                    <FaCheckCircle className="text-cyan-400" size={13} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-xs font-black leading-tight">Claim Submitted</p>
+                    <p className="text-gray-500 text-[10px] mt-0.5 leading-relaxed">
+                      Coordinate with the reporter below.
+                    </p>
                   </div>
                   <button onClick={handleInitiateChat}
-                    className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-black py-3 sm:py-2.5 px-4 rounded-xl transition-all text-xs sm:text-[11px] uppercase tracking-widest flex items-center justify-center gap-2.5">
-                    <FaComments size={14} className="sm:size-[13px]" /> Chat with Reporter
+                    className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-xl transition-all">
+                    <FaComments size={10} />
+                    <span className="hidden sm:inline">Chat</span>
+                    <span className="sm:hidden">Chat</span>
                   </button>
                 </div>
               ) : (
-                <div className="bg-blue-600/10 border border-blue-600/20 rounded-2xl p-4 flex flex-col gap-4">
-                  <div className="flex items-start gap-3">
+                <div className="bg-gray-900/80 border border-white/[0.06] rounded-2xl p-3 flex flex-col gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                      <FaBuilding className="text-blue-400" size={10} />
+                    </div>
                     <div>
-                      <p className="text-white font-black text-sm">Is this yours?</p>
-                      <p className="text-gray-500 text-xs mt-1 leading-relaxed text-justify">
-                        Submit a claim with proof of ownership. The SAS office will verify before release.
+                      <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Is this yours?</p>
+                      <p className="text-gray-500 text-[10px] leading-relaxed">
+                        Submit a claim the SAS office will verify before release.
                       </p>
                     </div>
                   </div>
                   <button onClick={() => openModal(setIsClaimModalOpen)}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 sm:py-2.5 px-4 rounded-xl transition-all text-xs sm:text-[11px] uppercase tracking-widest">
-                    Submit a Claim
+                    className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-2 rounded-lg transition-all text-[11px] uppercase tracking-widest shadow-lg shadow-blue-900/30">
+                    <FaClipboardList size={9} /> Submit a Claim
                   </button>
                 </div>
               )}

@@ -155,22 +155,22 @@ const Dashboard = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Push Notification Banner */}
-      <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0">
-            <FaBell size={18} className="text-cyan-400" />
-          </div>
-          <div>
-            <h3 className="text-white text-sm font-semibold">Real-Time Alerts</h3>
-            <p className="text-gray-500 text-xs">Enable push notifications to get instant alerts for new claims and reports.</p>
-          </div>
+      <div className="bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-5 flex items-center gap-3 sm:gap-4">
+        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+          <FaBell size={13} className="text-blue-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-white text-xs sm:text-sm font-bold leading-tight">Real-Time Alerts</h3>
+          <p className="text-gray-500 text-[11px] sm:text-xs mt-0.5 leading-relaxed line-clamp-1 sm:line-clamp-none">
+            Get instant alerts for new claims and reports.
+          </p>
         </div>
         {isSupported && (
           <button
             onClick={subscribe}
-            className="w-full sm:w-auto px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/20"
-          >
-            Enable Notifications
+            className="shrink-0 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs sm:text-sm font-medium rounded-xl transition-all">
+            <span className="sm:hidden">Enable</span>
+            <span className="hidden sm:inline">Enable Notifications</span>
           </button>
         )}
       </div>
