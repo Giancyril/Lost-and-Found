@@ -5,7 +5,7 @@ import {
   FaTachometerAlt, FaBoxOpen, FaSearch, FaClipboardList,
   FaTrophy, FaCog, FaBars, FaTimes, FaHome, FaSignOutAlt,
   FaChevronLeft, FaChevronRight, FaChevronDown, FaStar,
-  FaChartLine, FaArrowRight, FaMedal, FaBullhorn,
+  FaChartLine, FaArrowRight, FaMedal, FaBullhorn, FaMapMarkerAlt,
 } from "react-icons/fa";
 import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../redux/api/api";
 
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
     section: "MENU",
     items: [
       { label: "Overview",       href: "/dashboard/student",              icon: <FaTachometerAlt size={14} /> },
+      { label: "Indoor Map",     href: "/indoor-map",                     icon: <FaMapMarkerAlt size={14} /> },
     ],
   },
   {

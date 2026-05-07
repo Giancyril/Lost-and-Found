@@ -196,21 +196,22 @@ const LostItemsManagement = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
-          { label: "Total Reports",      value: items.length,                                     icon: <FaClipboardList size={14} className="text-red-400" />,      accent: "bg-red-500/5",    sub: "all time",               subColor: "text-gray-500"    },
-          { label: "Active",             value: items.filter((i: LostItem) => !i.isFound).length, icon: <IoMdRadioButtonOn size={14} className="text-orange-400" />, accent: "bg-orange-500/5", sub: "still missing",          subColor: "text-orange-400"  },
-          { label: "Resolved This Week", value: resolvedThisWeek,                                 icon: <MdCheckCircle size={14} className="text-emerald-400" />,    accent: "bg-emerald-500/5",sub: "found in last 7 days",   subColor: "text-emerald-400" },
+          { label: "Total Reports",      value: items.length,                                     icon: <FaClipboardList size={12} className="text-red-400" />,      accent: "bg-red-500/10",    sub: "all time",               subColor: "text-gray-500"    },
+          { label: "Active",             value: items.filter((i: LostItem) => !i.isFound).length, icon: <IoMdRadioButtonOn size={12} className="text-orange-400" />, accent: "bg-orange-500/10", sub: "still missing",          subColor: "text-orange-400"  },
+          { label: "Resolved This Week", value: resolvedThisWeek,                                 icon: <MdCheckCircle size={12} className="text-emerald-400" />,    accent: "bg-emerald-500/10",sub: "found in last 7 days",   subColor: "text-emerald-400" },
         ].map(({ label, value, icon, accent, sub, subColor }) => (
-          <div key={label} className={`min-w-0 relative bg-gray-900 border border-white/5 rounded-2xl p-2.5 flex flex-col gap-2 overflow-hidden`}>
-            <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
-            <div className="relative">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${accent}`}>{icon}</div>
+          <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-5 flex flex-col items-start gap-4 overflow-hidden min-h-[140px] sm:min-h-[160px]">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${accent} shrink-0`}>
+              {icon}
             </div>
-            <div className="relative">
-              <p className="text-lg sm:text-xl font-bold text-white tracking-tight">{value}</p>
-              <p className="text-gray-500 text-[11px] mt-0.5 font-medium">{label}</p>
-              <p className={`text-[10px] mt-1 font-medium ${subColor}`}>{sub}</p>
+            <div className="flex flex-col gap-1.5 w-full">
+              <p className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-none">{value}</p>
+              <div className="space-y-1">
+                <p className="text-gray-500 text-[10px] sm:text-xs font-semibold leading-tight">{label}</p>
+                <p className={`text-[9px] sm:text-[10px] font-bold ${subColor} leading-tight uppercase tracking-wider`}>{sub}</p>
+              </div>
             </div>
           </div>
         ))}

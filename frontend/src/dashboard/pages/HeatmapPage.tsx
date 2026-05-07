@@ -4,6 +4,7 @@ import { useGetLocationStatsQuery } from "../../redux/api/api";
 import {
   FaMapMarkedAlt, FaSearch, FaExclamationTriangle,
   FaCheckCircle, FaLayerGroup, FaThermometerHalf, FaList, FaMap,
+  FaClipboardList, FaBoxOpen,
 } from "react-icons/fa";
 import { getCoordinates, CAMPUS_CENTER, CAMPUS_ZOOM } from "../../utils/campusLocations";
 import "leaflet/dist/leaflet.css";
@@ -181,16 +182,24 @@ const HeatmapPage = () => {
         .leaflet-container { background: #0f172a; }
       `}</style>
 
-      {/* ── Stats ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
-          { label: "Total Reports", value: totals.total, color: "text-cyan-400",    bg: "bg-cyan-500/10 border-cyan-500/20"      },
-          { label: "Found Items",   value: totals.found, color: "text-emerald-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
-          { label: "Lost Items",    value: totals.lost,  color: "text-red-400",     bg: "bg-cyan-500/10 border-cyan-500/20"         },
+          { label: "Total Reports", value: totals.total, icon: <FaClipboardList size={12} className="text-cyan-400" />,    accent: "bg-cyan-500/10",    sub: "all locations", subColor: "text-gray-500" },
+          { label: "Total Found",   value: totals.found, icon: <FaCheckCircle size={12} className="text-emerald-400" />, accent: "bg-emerald-500/10", sub: "mapped locations", subColor: "text-emerald-400" },
+          { label: "Total Lost",    value: totals.lost,  icon: <FaExclamationTriangle size={12} className="text-red-400" />, accent: "bg-red-500/10", sub: "reported hotspots", subColor: "text-red-400" },
         ].map(s => (
-          <div key={s.label} className={`rounded-2xl border p-4 flex flex-col gap-1 ${s.bg} bg-gray-900`}>
-            <p className={`text-2xl sm:text-3xl font-bold ${s.color}`}>{s.value}</p>
-            <p className="text-gray-500 text-xs font-medium">{s.label}</p>
+          <div key={s.label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-5 flex flex-col items-start gap-4 overflow-hidden min-h-[140px] sm:min-h-[160px]">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${s.accent} shrink-0`}>
+              {s.icon}
+            </div>
+            <div className="flex flex-col gap-1.5 w-full">
+              <p className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-none">{s.value}</p>
+              <div className="space-y-1">
+                <p className="text-gray-500 text-[10px] sm:text-xs font-semibold leading-tight">{s.label}</p>
+                <p className={`text-[9px] sm:text-[10px] font-bold ${s.subColor} leading-tight uppercase tracking-wider`}>{s.sub}</p>
+              </div>
+            </div>
           </div>
         ))}
       </div>

@@ -277,9 +277,10 @@ const ArchivePage = () => {
                         <button
                           onClick={() => handleDelete(item)}
                           disabled={deleting === item.id}
-                          className="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
                         >
                           <FaTrash size={10} />
+                          {deleting === item.id ? "Deleting..." : "Delete"}
                         </button>
                       </>
                     )}

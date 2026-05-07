@@ -507,13 +507,9 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - Live Google Sheets masterlist synchronization.
 
 ###  Phase 3: Expansion (Current)
-- **Mobile Application**: Native iOS/Android app for on-the-go reporting.
-- [x] **Push Notifications**: Real-time alerts for item matches, claim updates, and chat messages using Web Push API.
-- **Progressive Web App (PWA)**: Installable web application with offline capabilities for reporting items without Wi-Fi.
-- **Voice-Enabled Reporting**: Hands-free item reporting using AI-powered speech-to-text transcription.
+- **Push Notifications**: Real-time alerts for item matches, claim updates, and chat messages using Web Push API.
 - **Interactive Indoor Maps**: Precise location pinning on multi-level campus building maps.
-- [x] **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details.
-- **Digital Receipts & Documentation**: Automated PDF generation for successful handovers and community certificates.
+- **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details.
 
 ###  Phase 4: Ecosystem & Sustainability (Upcoming)
 - **Rewards Store**: Redeem earned points for campus perks, library credits, or university merchandise.

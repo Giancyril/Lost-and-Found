@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
-  FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt,
+  FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt, FaMapMarkerAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, 
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate, 
   FaUserShield, FaFlag,
@@ -43,6 +43,7 @@ const menuItems = [
   // Insights
   { title: "Analytics", icon: FaChartLine, path: "/dashboard/analytics" },
   { title: "Heatmap", icon: FaMapMarkedAlt, path: "/dashboard/heatmap" },
+  { title: "Indoor Map", icon: FaMapMarkerAlt, path: "/indoor-map" },
   { title: "Communication", icon: FaBullhorn, path: "/dashboard/comm-hub" },
   { title: "Content Moderation", icon: FaFlag, path: "/dashboard/moderation" },
 

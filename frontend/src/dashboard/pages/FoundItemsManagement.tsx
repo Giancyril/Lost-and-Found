@@ -201,19 +201,22 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
-          { label: "Total Items", value: items.length,                                        accent: "bg-cyan-500/5",    icon: <FaSearch size={15} className="text-cyan-400" />,    sub: "all found items",     subColor: "text-gray-500"    },
-          { label: "Active",      value: items.filter((i: FoundItem) => !i.isClaimed).length, accent: "bg-emerald-500/5", icon: <FaBoxOpen size={15} className="text-emerald-400" />, sub: "awaiting claim",      subColor: "text-emerald-400" },
-          { label: "Claimed",     value: items.filter((i: FoundItem) => i.isClaimed).length,  accent: "bg-yellow-500/5",  icon: <FaArchive size={15} className="text-yellow-400" />,  sub: "successfully claimed", subColor: "text-yellow-400"  },
+          { label: "Total Items", value: items.length,                                        accent: "bg-cyan-500/10",    icon: <FaSearch size={12} className="text-cyan-400" />,    sub: "all found items",     subColor: "text-gray-500"    },
+          { label: "Active",      value: items.filter((i: FoundItem) => !i.isClaimed).length, accent: "bg-emerald-500/10", icon: <FaBoxOpen size={12} className="text-emerald-400" />, sub: "awaiting claim",      subColor: "text-emerald-400" },
+          { label: "Claimed",     value: items.filter((i: FoundItem) => i.isClaimed).length,  accent: "bg-yellow-500/10",  icon: <FaArchive size={12} className="text-yellow-400" />,  sub: "successfully claimed", subColor: "text-yellow-400"  },
         ].map(({ label, value, accent, icon, sub, subColor }) => (
-          <div key={label} className="min-w-0 relative bg-gray-900 border border-white/5 rounded-2xl p-2.5 flex flex-col gap-2 overflow-hidden">
-            <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
-            <div className="relative"><div className={`w-9 h-9 rounded-xl flex items-center justify-center ${accent}`}>{icon}</div></div>
-            <div className="relative">
-              <p className="text-lg sm:text-xl font-bold text-white tracking-tight">{value}</p>
-              <p className="text-gray-500 text-[11px] mt-0.5 font-medium">{label}</p>
-              <p className={`text-[10px] mt-1 font-medium ${subColor}`}>{sub}</p>
+          <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-5 flex flex-col items-start gap-4 overflow-hidden min-h-[140px] sm:min-h-[160px]">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${accent} shrink-0`}>
+              {icon}
+            </div>
+            <div className="flex flex-col gap-1.5 w-full">
+              <p className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-none">{value}</p>
+              <div className="space-y-1">
+                <p className="text-gray-500 text-[10px] sm:text-xs font-semibold leading-tight">{label}</p>
+                <p className={`text-[9px] sm:text-[10px] font-bold ${subColor} leading-tight uppercase tracking-wider`}>{sub}</p>
+              </div>
             </div>
           </div>
         ))}

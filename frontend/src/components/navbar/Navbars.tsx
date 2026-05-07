@@ -438,6 +438,7 @@ export function Navbars() {
               { label: "Lost Items", href: "/lostItems" },
               { label: "Found Items", href: "/foundItems" },
               { label: "Smart Search", href: "/ai-search" },
+              { label: "Indoor Map", href: "/indoor-map" },
               { label: "Track Status", href: "/itemStatus" },
             ].map(({ label, href }) => (
               <NavbarLink key={href} href={href}

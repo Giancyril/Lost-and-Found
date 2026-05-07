@@ -46,6 +46,7 @@ import SecurityPage from "./dashboard/pages/SecurityCompliance.tsx";
  import ContentModeration from "./dashboard/pages/ContentModeration.tsx";
 import ItemStatus from "./pages/itemStatus/ItemStatus.tsx";
 import ChatPage from "./dashboard/pages/ChatPage.tsx";
+import IndoorMapPage from "./pages/IndoorMapPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -67,6 +68,7 @@ const router = createBrowserRouter([
       { path: "/bulletin", element: <BulletinBoard /> },
       { path: "/support", element: <SupportPage /> },
       { path: "/itemStatus", element: <ItemStatus /> },
+      { path: "/indoor-map", element: <IndoorMapPage /> },
     ],
   },
 
