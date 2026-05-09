@@ -6,7 +6,7 @@ import {
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt, FaMapMarkerAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, 
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate, 
-  FaUserShield, FaFlag,
+  FaUserShield, FaFlag, FaComments
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -43,7 +43,6 @@ const menuItems = [
   // Insights
   { title: "Analytics", icon: FaChartLine, path: "/dashboard/analytics" },
   { title: "Heatmap", icon: FaMapMarkedAlt, path: "/dashboard/heatmap" },
-  { title: "Indoor Map", icon: FaMapMarkerAlt, path: "/indoor-map" },
   { title: "Communication", icon: FaBullhorn, path: "/dashboard/comm-hub" },
   { title: "Content Moderation", icon: FaFlag, path: "/dashboard/moderation" },
 
@@ -56,7 +55,6 @@ const menuItems = [
   { title: "Accounts", icon: FaUserShield, path: "/dashboard/users" },
   { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
    { title: "Settings", icon: FaCog, path: "/dashboard/settings" },
-  { title: "Messages", icon: FaBullhorn, path: "/dashboard/chat" },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
@@ -381,12 +379,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             const active = isActive(item.path, item.exact);
             const Icon = item.icon;
 
-            // Section dividers
-            const showDivider =
-            (!sidebarCollapsed && idx === 1) ? "Item Management" :
-            (!sidebarCollapsed && idx === 5) ? "Insights" :
-            (!sidebarCollapsed && idx === 9)  ? "Student Management" :
-            (!sidebarCollapsed && idx === 10) ? "Administration" : null;
+            // Section dividers - Path-based for robustness
+            const sectionTitles: Record<string, string> = {
+              "/dashboard/lost-items": "Item Management",
+              "/dashboard/analytics": "Insights",
+              "/dashboard/students": "Student Management",
+              "/dashboard/report": "Administration"
+            };
+            const showDivider = !sidebarCollapsed ? sectionTitles[item.path] : null;
 
             return (
               <div key={item.path}>
@@ -428,6 +428,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <p className="text-gray-500 text-xs truncate hidden sm:block">{pageMeta.subtitle}</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            <Link 
+              to="/dashboard/chat" 
+              title="Messages"
+              className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all"
+            >
+              <FaComments size={14} />
+            </Link>
             <NotificationBell />
             <ProfileDropdown initials={initials} user={user} handleSignOut={handleSignOut} />
           </div>
