@@ -8,6 +8,7 @@ export function CustomDatePicker({
   max,
   min,
   openUp = false,
+  size = "md",
 }: {
   value: string;
   onChange: (val: string) => void;
@@ -15,6 +16,7 @@ export function CustomDatePicker({
   max?: string;
   min?: string;
   openUp?: boolean;
+  size?: "sm" | "md";
 }) {
   const [open,      setOpen]      = useState(false);
   const [viewYear,  setViewYear]  = useState(() => value ? parseInt(value.split("-")[0]) : new Date().getFullYear());
@@ -87,12 +89,14 @@ export function CustomDatePicker({
     <div ref={ref} className="relative">
       <div
         onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center gap-2 px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg cursor-pointer select-none transition-all duration-200 text-sm ${
+        className={`w-full flex items-center gap-2 bg-gray-800/60 border border-gray-700 rounded-lg cursor-pointer select-none transition-all duration-200 ${
+          size === "sm" ? "px-3 py-1.5 text-xs" : "px-4 py-2.5 text-sm"
+        } ${
           open ? "ring-2 ring-blue-500/60 focus:border-blue-500" : "hover:border-gray-600"
         } ${value ? "text-white" : "text-gray-500"}`}
       >
-        <FaCalendarAlt size={11} className={value ? "text-blue-400 shrink-0" : "text-gray-600 shrink-0"} />
-        <span className="text-sm flex-1 truncate whitespace-nowrap">{display}</span>
+        <FaCalendarAlt size={size === "sm" ? 10 : 11} className={value ? "text-blue-400 shrink-0" : "text-gray-600 shrink-0"} />
+        <span className={`${size === "sm" ? "text-xs" : "text-sm"} flex-1 truncate whitespace-nowrap`}>{display}</span>
         {value && (
           <span
             role="button"

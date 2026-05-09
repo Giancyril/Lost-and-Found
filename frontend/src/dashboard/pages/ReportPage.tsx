@@ -118,7 +118,7 @@ const ReportPage = () => {
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-5 py-2 rounded-xl text-xs font-semibold transition-all duration-300 outline-none select-none ${
+                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 outline-none select-none ${
                   period === p
                     ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm"
                     : "text-gray-500 hover:text-gray-300 border border-transparent"
@@ -138,22 +138,24 @@ const ReportPage = () => {
             }`}
             style={{ overflow: period === "custom" ? "visible" : "hidden", maxWidth: period === "custom" ? "600px" : "0px" }}
           >
-            <div className="w-36 sm:w-40 shrink-0">
+            <div className="w-32 sm:w-36 shrink-0">
               <CustomDatePicker
                 value={fromDate}
                 onChange={setFromDate}
                 max={toDate || new Date().toISOString().split("T")[0]}
                 placeholder="From date"
+                size="sm"
               />
             </div>
             <span className="text-gray-600 text-[10px] font-medium uppercase tracking-wider shrink-0">to</span>
-            <div className="w-36 sm:w-40 shrink-0">
+            <div className="w-32 sm:w-36 shrink-0">
               <CustomDatePicker
                 value={toDate}
                 onChange={setToDate}
                 min={fromDate}
                 max={new Date().toISOString().split("T")[0]}
                 placeholder="To date"
+                size="sm"
               />
             </div>
           </div>
@@ -161,11 +163,11 @@ const ReportPage = () => {
           {/* Print & Download Buttons */}
           <div className="flex items-center gap-2 ml-auto">
             <button onClick={handlePrint}
-              className="flex items-center gap-1.5 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-white/10 text-gray-300 hover:text-white text-xs font-medium rounded-xl transition-all active:scale-95">
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/10 text-gray-300 hover:text-white text-xs font-medium rounded-xl transition-all active:scale-95">
               <FaPrint size={12} /> <span className="hidden sm:inline">Print</span>
             </button>
             <button onClick={handleDownload}
-              className="flex items-center gap-1.5 px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-xl transition-all active:scale-95">
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-xl transition-all active:scale-95">
               <FaDownload size={12} /> <span className="hidden sm:inline">Download</span>
             </button>
           </div>
