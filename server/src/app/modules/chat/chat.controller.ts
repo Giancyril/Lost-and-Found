@@ -26,15 +26,16 @@ const getChatMessages = async (req: Request, res: Response) => {
 };
 
 const initiateChat = async (req: Request, res: Response) => {
-  const { claimId, reporterId } = req.body;
+  const { claimId, reporterId, studentId } = req.body;
   const userId = (req as any).user.id;
   
-  // Ensure we don't have undefined in participants array
-  const participants = [userId, reporterId].filter(id => !!id);
+  // Use either reporterId or studentId as the second participant
+  const targetId = reporterId || studentId;
   
-  // If only one participant (e.g. reporterId was missing), 
-  // the service will need to handle it or we could add a default admin
-  const result = await chatService.createOrGetChatRoom(claimId, participants);
+  // Ensure we have both participants
+  const participants = [userId, targetId].filter(id => !!id);
+  
+  const result = await chatService.createOrGetChatRoom(claimId || null, participants);
   
   sendResponse(res, {
     statusCode: StatusCodes.OK,

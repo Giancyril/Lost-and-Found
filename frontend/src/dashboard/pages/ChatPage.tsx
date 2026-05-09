@@ -123,7 +123,10 @@ const ChatPage = () => {
             rooms.map((room: any) => {
               const isActive = room.id === activeRoomId;
               const lastMsg  = room.messages?.[0];
-              const itemName = room.claim?.foundItem?.foundItemName || "Lost Item";
+              const otherUser = room.participantUsers?.find((u: any) => u.id !== currentUser.id);
+              const displayName = otherUser 
+                ? (otherUser.role === "ADMIN" ? "Admin" : (otherUser.name || otherUser.username))
+                : (room.claim?.foundItem?.foundItemName || "Lost Item");
               
               // Unread logic
               const lastReadAt = room.readStatuses?.[0]?.lastReadAt;
@@ -142,7 +145,10 @@ const ChatPage = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-xs font-semibold truncate ${isActive || hasUnread ? "text-white" : "text-gray-300"}`}>
-                      {itemName}
+                      {displayName}
+                    </p>
+                    <p className="text-[9px] text-gray-500 uppercase tracking-tighter truncate">
+                      {room.claim?.foundItem?.foundItemName || "General Chat"}
                     </p>
                     <p className={`text-[11px] truncate mt-0.5 ${hasUnread ? "text-blue-400 font-medium" : "text-gray-500"}`}>
                       {lastMsg?.content || "No messages yet"}
@@ -177,7 +183,12 @@ const ChatPage = () => {
 
               <div className="flex-1 min-w-0">
                 <p className="text-white text-xs font-bold truncate">
-                  {currentRoom?.claim?.foundItem?.foundItemName || "Chat"}
+                  {(() => {
+                    const otherUser = currentRoom?.participantUsers?.find((u: any) => u.id !== currentUser.id);
+                    return otherUser 
+                      ? (otherUser.role === "ADMIN" ? "Admin" : (otherUser.name || otherUser.username))
+                      : "Direct Chat";
+                  })()}
                 </p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isConnected ? "bg-emerald-500" : "bg-red-500"}`} />
@@ -233,6 +244,31 @@ const ChatPage = () => {
               <div ref={scrollRef} />
             </div>
 
+            {/* Admin Quick Replies */}
+            {currentUser?.role === "ADMIN" && (
+              <div className="px-3 sm:px-4 py-2 border-t border-white/5 bg-gray-950/20 overflow-x-auto flex items-center gap-2 custom-scrollbar whitespace-nowrap">
+                <span className="text-[10px] text-gray-600 font-bold uppercase tracking-wider mr-1">Quick Templates:</span>
+                {[
+                  { label: "Verify", text: "Hello! To verify ownership, could you please provide more details about this item (e.g., brand, specific marks, or content inside)?" },
+                  { label: "Pickup Ready", text: "Good news! Your item is now ready for pickup at the SAS Office. Please bring your school ID for verification." },
+                  { label: "Claim Approved", text: "Your ownership claim has been successfully verified and approved. You may now coordinate the pickup at your earliest convenience." },
+                  { label: "Found Report", text: "Thank you for reporting this found item! It has been logged into the system. You can surrender it to the SAS Office." },
+                ].map((tpl) => (
+                  <button
+                    key={tpl.label}
+                    type="button"
+                    onClick={() => {
+                      if (!activeRoomId || !socket) return;
+                      socket.emit("send-message", { chatRoomId: activeRoomId, content: tpl.text });
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold hover:bg-blue-500 hover:text-white transition-all whitespace-nowrap active:scale-95"
+                  >
+                    {tpl.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Input */}
             <form onSubmit={handleSendMessage}
               className="px-3 sm:px-4 py-3 border-t border-white/5 bg-gray-900/40 shrink-0">
@@ -252,15 +288,89 @@ const ChatPage = () => {
             </form>
           </>
         ) : (
-          /* No room selected — desktop empty state */
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
-            <div className="w-14 h-14 rounded-2xl bg-gray-900 border border-white/5 flex items-center justify-center mb-4">
-              <FaInbox className="text-gray-600" size={22} />
+          /* No room selected — desktop empty state with role-based suggestions */
+          <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-950/40">
+            <div className="max-w-2xl w-full">
+              <div className="text-center mb-10">
+                <div className="w-16 h-16 rounded-3xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-500/5">
+                  <FaInbox className="text-blue-400" size={28} />
+                </div>
+                <h2 className="text-white text-xl font-black tracking-tight">
+                  {currentUser?.role === "ADMIN" ? "Admin Communication Hub" : "Student Support Center"}
+                </h2>
+                <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto leading-relaxed">
+                  {currentUser?.role === "ADMIN" 
+                    ? "Select a conversation from the sidebar to manage claims and coordinate pickups with students."
+                    : "Select a conversation to chat with our staff about your claims or reported items."}
+                </p>
+              </div>
+
+              {/* Suggestions Grid */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                {(currentUser?.role === "ADMIN" ? [
+                  {
+                    title: "Ownership Verification",
+                    desc: "Ask for unique marks, brands, or specific contents to verify the claimant.",
+                    tip: "Example: 'Could you describe any unique scratches or contents inside?'"
+                  },
+                  {
+                    title: "Pickup Coordination",
+                    desc: "Coordinate a safe time and location for the student to retrieve their item.",
+                    tip: "Example: 'Your item is at the SAS Office. Bring your ID for verification.'"
+                  },
+                  {
+                    title: "Found Item Follow-up",
+                    desc: "Thank students for reporting found items and guide them to surrendering it.",
+                    tip: "Example: 'Thank you for your report! Please surrender the item to SAS.'"
+                  },
+                  {
+                    title: "Claim Resolution",
+                    desc: "Notify users once their claim has been officially verified and closed.",
+                    tip: "Example: 'Your claim for this item has been approved. Coordination complete.'"
+                  }
+                ] : [
+                  {
+                    title: "Inquire About Claims",
+                    desc: "Ask for updates on your pending ownership claims or verification status.",
+                    tip: "Example: 'Hi! I'd like to check the status of my claim for the blue wallet.'"
+                  },
+                  {
+                    title: "Report Updates",
+                    desc: "Provide additional details about an item you reported found or lost.",
+                    tip: "Example: 'I found additional contents inside the bag I reported earlier.'"
+                  },
+                  {
+                    title: "Pickup Inquiries",
+                    desc: "Ask for office hours or specific instructions for picking up your item.",
+                    tip: "Example: 'What time can I visit the SAS office to retrieve my ID?'"
+                  },
+                  {
+                    title: "General Assistance",
+                    desc: "Need help with the platform? Our staff is here to guide you.",
+                    tip: "Example: 'I'm having trouble uploading images for my report. Can you help?'"
+                  }
+                ]).map((s, i) => (
+                  <div key={i} className="p-4 rounded-2xl bg-gray-900 border border-white/5 hover:border-blue-500/30 transition-all group">
+                    <h3 className="text-blue-400 text-xs font-bold uppercase tracking-wider mb-2">{s.title}</h3>
+                    <p className="text-gray-300 text-[11px] leading-relaxed mb-3">{s.desc}</p>
+                    <div className="p-2 rounded-lg bg-black/40 text-[10px] text-gray-500 italic border border-white/5 group-hover:text-gray-400 transition-colors">
+                      {s.tip}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-10 flex items-center justify-center gap-3">
+                <div className="h-px w-8 bg-white/5" />
+                <p className="text-[10px] text-gray-600 font-bold uppercase tracking-[0.2em]">Platform Guidelines</p>
+                <div className="h-px w-8 bg-white/5" />
+              </div>
+              <p className="text-center text-gray-500 text-[10px] mt-3 leading-relaxed max-w-md mx-auto italic">
+                {currentUser?.role === "ADMIN"
+                  ? "Remember to maintain professional language and verify identity via Student ID before releasing any items."
+                  : "Please be patient as our staff reviews your reports. Always provide accurate information for faster verification."}
+              </p>
             </div>
-            <p className="text-white text-sm font-semibold">Select a conversation</p>
-            <p className="text-gray-500 text-xs mt-1 max-w-xs">
-              Choose a chat from the sidebar to start messaging
-            </p>
           </div>
         )}
       </div>

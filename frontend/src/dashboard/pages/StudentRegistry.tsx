@@ -2,8 +2,9 @@ import { useState } from "react";
 import {
   FaSearch, FaUsers, FaUserCheck, FaUserTimes, FaUserShield,
   FaTrash, FaTimes, FaCheck, FaChevronDown,
-  FaIdCard, FaGraduationCap, FaStar,
+  FaIdCard, FaGraduationCap, FaStar, FaComment
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { MdAdminPanelSettings } from "react-icons/md";
 import { toast } from "react-toastify";
 import {
@@ -12,6 +13,7 @@ import {
   useChangeUserRoleMutation,
   useSoftDeleteUserMutation,
 } from "../../redux/api/api";
+import { useInitiateChatMutation } from "../../redux/api/chatApi";
 
 interface Student {
   id: string;
@@ -64,6 +66,21 @@ const StudentRegistry = () => {
   const [blockUser]      = useBlockUserMutation();
   const [changeUserRole] = useChangeUserRoleMutation();
   const [softDeleteUser] = useSoftDeleteUserMutation();
+  const [initiateChat]   = useInitiateChatMutation();
+  const navigate = useNavigate();
+
+  const handleStartChat = async (student: Student) => {
+    try {
+      const res = await initiateChat({ studentId: student.id }).unwrap();
+      if (res.data?.id) {
+        navigate(`/dashboard/chat?roomId=${res.data.id}`);
+      } else {
+        toast.error("Could not determine chat room ID.");
+      }
+    } catch (err: any) {
+      toast.error(err.data?.message || "Failed to initiate chat.");
+    }
+  };
 
   if (isLoading)
     return (
@@ -342,6 +359,13 @@ const StudentRegistry = () => {
                 {/* Actions */}
                 <div className="col-span-1 flex items-center justify-end gap-1">
                   <button
+                    onClick={() => handleStartChat(s)}
+                    title="Message Student"
+                    className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center text-blue-400 transition-colors"
+                  >
+                    <FaComment size={11} />
+                  </button>
+                  <button
                     onClick={() => { setBlockTarget(s); setBlockModalOpen(true); }}
                     title={!s.activated ? "Unblock" : "Block"}
                     className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-colors ${
@@ -408,6 +432,12 @@ const StudentRegistry = () => {
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Points</p><p className="text-yellow-400 mt-0.5 flex items-center gap-1"><FaStar size={9} />{s.totalPoints ?? 0}</p></div>
             </div>
             <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => handleStartChat(s)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl text-xs font-semibold transition-all"
+              >
+                <FaComment size={10} /> Message
+              </button>
               <button
                 onClick={() => { setBlockTarget(s); setBlockModalOpen(true); }}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold border transition-all ${
