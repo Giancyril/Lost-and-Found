@@ -289,12 +289,10 @@ const ChatPage = () => {
           </>
         ) : (
           /* No room selected — desktop empty state with role-based suggestions */
-          <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-950/40">
-            <div className="max-w-2xl w-full">
+          <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 bg-gray-950/40 overflow-y-auto custom-scrollbar">
+            <div className="max-w-2xl w-full flex flex-col items-center">
               <div className="text-center mb-10">
-                <div className="w-16 h-16 rounded-3xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-500/5">
-                  <FaInbox className="text-blue-400" size={28} />
-                </div>
+               
                 <h2 className="text-white text-xl font-black tracking-tight">
                   {currentUser?.role === "ADMIN" ? "Admin Communication Hub" : "Student Support Center"}
                 </h2>
@@ -304,9 +302,9 @@ const ChatPage = () => {
                     : "Select a conversation to chat with our staff about your claims or reported items."}
                 </p>
               </div>
-
+ 
               {/* Suggestions Grid */}
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 {(currentUser?.role === "ADMIN" ? [
                   {
                     title: "Ownership Verification",
@@ -350,26 +348,18 @@ const ChatPage = () => {
                     tip: "Example: 'I'm having trouble uploading images for my report. Can you help?'"
                   }
                 ]).map((s, i) => (
-                  <div key={i} className="p-4 rounded-2xl bg-gray-900 border border-white/5 hover:border-blue-500/30 transition-all group">
+                  <div key={i} className="p-4 rounded-2xl bg-gray-900/60 border border-white/5 hover:border-blue-500/30 transition-all group flex flex-col h-full">
                     <h3 className="text-blue-400 text-xs font-bold uppercase tracking-wider mb-2">{s.title}</h3>
-                    <p className="text-gray-300 text-[11px] leading-relaxed mb-3">{s.desc}</p>
+                    <p className="text-gray-300 text-[11px] leading-relaxed mb-3 flex-1">{s.desc}</p>
                     <div className="p-2 rounded-lg bg-black/40 text-[10px] text-gray-500 italic border border-white/5 group-hover:text-gray-400 transition-colors">
                       {s.tip}
                     </div>
                   </div>
                 ))}
               </div>
-
-              <div className="mt-10 flex items-center justify-center gap-3">
-                <div className="h-px w-8 bg-white/5" />
-                <p className="text-[10px] text-gray-600 font-bold uppercase tracking-[0.2em]">Platform Guidelines</p>
-                <div className="h-px w-8 bg-white/5" />
-              </div>
-              <p className="text-center text-gray-500 text-[10px] mt-3 leading-relaxed max-w-md mx-auto italic">
-                {currentUser?.role === "ADMIN"
-                  ? "Remember to maintain professional language and verify identity via Student ID before releasing any items."
-                  : "Please be patient as our staff reviews your reports. Always provide accurate information for faster verification."}
-              </p>
+ 
+             
+             
             </div>
           </div>
         )}

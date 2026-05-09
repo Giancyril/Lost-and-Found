@@ -15,7 +15,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { baseApi } from "../../redux/api/baseApi";
 import {
   useBlockUserMutation,
-  useChangeUserRoleMutation,
   useSoftDeleteUserMutation,
 } from "../../redux/api/api";
 
@@ -263,7 +262,6 @@ const SecurityMonitorTab = () => {
 const AccessControlTab = () => {
   const { data: accessData, isLoading, refetch } = useGetAccessControlQuery(undefined);
   const [blockUser]      = useBlockUserMutation();
-  const [changeRole]     = useChangeUserRoleMutation();
   const [deleteUser]     = useSoftDeleteUserMutation();
   const [search, setSearch]   = useState("");
   const [roleFilter, setRoleFilter] = useState("");
@@ -286,14 +284,6 @@ const AccessControlTab = () => {
     const res: any = await blockUser(id);
     if (res?.data?.success) { toast.success(`${name} status updated`); refetch(); }
     else toast.error("Failed to update user status");
-  };
-
-  const handleRoleChange = async (id: string, currentRole: string, name: string) => {
-    const newRole = currentRole === "ADMIN" ? "USER" : "ADMIN";
-    if (!confirm(`Change ${name}'s role to ${newRole}?`)) return;
-    const res: any = await changeRole({ id, role: newRole });
-    if (res?.data?.success) { toast.success(`${name} is now ${newRole}`); refetch(); }
-    else toast.error("Failed to change role");
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -371,10 +361,6 @@ const AccessControlTab = () => {
                       className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all text-[10px]
                         ${u.activated ? "bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400" : "bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400"}`}>
                       {u.activated ? <FaBan size={9} /> : <FaUserCheck size={9} />}
-                    </button>
-                    <button onClick={() => handleRoleChange(u.id, u.role, u.username)} title="Toggle admin role"
-                      className="w-7 h-7 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 text-violet-400 flex items-center justify-center transition-all">
-                      <FaUserShield size={9} />
                     </button>
                     <button onClick={() => handleDelete(u.id, u.username)} title="Delete user"
                       className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 flex items-center justify-center transition-all">

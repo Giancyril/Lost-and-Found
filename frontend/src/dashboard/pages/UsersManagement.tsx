@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import {
   useGetAllUsersQuery,
   useBlockUserMutation,
-  useChangeUserRoleMutation,
   useSoftDeleteUserMutation,
   useRegistersMutation,
 } from "../../redux/api/api";
@@ -41,7 +40,6 @@ const UsersManagement = () => {
 
   const { data: allUsersData, isLoading } = useGetAllUsersQuery(undefined);
   const [blockUser]      = useBlockUserMutation();
-  const [changeUserRole] = useChangeUserRoleMutation();
   const [softDeleteUser] = useSoftDeleteUserMutation();
   const [registerUser]   = useRegistersMutation();
 
@@ -85,9 +83,7 @@ const UsersManagement = () => {
     try {
       const res: any = await registerUser({ username: data.username, email: data.email, password: data.password });
       if (res?.error) { toast.error(res.error?.data?.message || "Failed"); return; }
-      const newUserId = res?.data?.data?.id;
-      if (newUserId) await changeUserRole({ id: newUserId, role: "ADMIN" }).unwrap();
-      toast.success(`Admin "${data.username}" created!`);
+      toast.success(`User "${data.username}" created!`);
       setIsCreateModalOpen(false); reset();
     } catch { toast.error("Failed to create admin"); }
     finally { setIsCreating(false); }

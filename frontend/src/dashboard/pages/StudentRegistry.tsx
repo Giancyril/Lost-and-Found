@@ -42,23 +42,23 @@ const getInitials = (name?: string, email?: string) => {
 const ROLES = ["USER", "ADMIN"] as const;
 
 const StudentRegistry = () => {
-  const [searchTerm, setSearchTerm]     = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "BLOCKED">("ALL");
   const [courseFilter, setCourseFilter] = useState("ALL");
-  const [courseOpen, setCourseOpen]     = useState(false);
+  const [courseOpen, setCourseOpen] = useState(false);
 
   const [blockModalOpen, setBlockModalOpen] = useState(false);
-  const [blockTarget, setBlockTarget]       = useState<Student | null>(null);
+  const [blockTarget, setBlockTarget] = useState<Student | null>(null);
   const [isBlockLoading, setIsBlockLoading] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget]       = useState<Student | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
   const { data: usersData, isLoading, error } = useGetAllUsersQuery(undefined);
-  const [blockUser]      = useBlockUserMutation();
+  const [blockUser] = useBlockUserMutation();
   const [softDeleteUser] = useSoftDeleteUserMutation();
-  const [initiateChat]   = useInitiateChatMutation();
+  const [initiateChat] = useInitiateChatMutation();
   const navigate = useNavigate();
 
   const handleStartChat = async (student: Student) => {
@@ -113,9 +113,9 @@ const StudentRegistry = () => {
     return matchSearch && matchStatus && matchCourse;
   });
 
-  const totalActive  = allStudents.filter((s) => s.activated).length;
+  const totalActive = allStudents.filter((s) => s.activated).length;
   const totalBlocked = allStudents.filter((s) => !s.activated).length;
-  const totalAdmins  = allStudents.filter((s) => s.role === "ADMIN").length;
+  const totalPoints = allStudents.reduce((sum, s) => sum + (s.totalPoints || 0), 0);
 
   const handleBlockConfirm = async () => {
     if (!blockTarget) return;
@@ -152,8 +152,8 @@ const StudentRegistry = () => {
   };
 
   const STATUS_TABS = [
-    { label: "All",     value: "ALL"     as const },
-    { label: "Active",  value: "ACTIVE"  as const },
+    { label: "All", value: "ALL" as const },
+    { label: "Active", value: "ACTIVE" as const },
     { label: "Blocked", value: "BLOCKED" as const },
   ];
 
@@ -161,12 +161,12 @@ const StudentRegistry = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* ── Stats ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { label: "Total Students", value: allStudents.length, icon: <FaUsers size={14} className="text-blue-400" />,       accent: "bg-blue-500/5",   sub: "registered accounts", subColor: "text-blue-400"   },
-          { label: "Active",         value: totalActive,        icon: <FaUserCheck size={14} className="text-green-400" />,  accent: "bg-green-500/5",  sub: "currently active",    subColor: "text-green-400"  },
-          { label: "Blocked",        value: totalBlocked,       icon: <FaUserTimes size={14} className="text-red-400" />,    accent: "bg-red-500/5",    sub: "restricted access",   subColor: "text-red-400"    },
-          { label: "Admins",         value: totalAdmins,        icon: <FaUserShield size={14} className="text-violet-400" />,accent: "bg-violet-500/5", sub: "elevated roles",      subColor: "text-violet-400" },
+          { label: "Total Students", value: allStudents.length, icon: <FaUsers size={12} className="text-blue-400" />, accent: "bg-blue-500/5", sub: "registered accounts", subColor: "text-blue-400" },
+          { label: "Active", value: totalActive, icon: <FaUserCheck size={12} className="text-green-400" />, accent: "bg-green-500/5", sub: "currently active", subColor: "text-green-400" },
+          { label: "Blocked", value: totalBlocked, icon: <FaUserTimes size={12} className="text-red-400" />, accent: "bg-red-500/5", sub: "restricted access", subColor: "text-red-400" },
+          { label: "Global Points", value: totalPoints.toLocaleString(), icon: <FaStar size={12} className="text-yellow-400" />, accent: "bg-yellow-500/5", sub: "total community impact", subColor: "text-yellow-400" },
         ].map(({ label, value, icon, accent, sub, subColor }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-2.5 flex flex-col gap-2 overflow-hidden">
             <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
@@ -215,11 +215,10 @@ const StudentRegistry = () => {
                           key={opt.id}
                           type="button"
                           onClick={() => { setCourseFilter(opt.id === "ALL" ? "ALL" : opt.name); setCourseOpen(false); }}
-                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
-                            courseFilter === opt.id || courseFilter === opt.name
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${courseFilter === opt.id || courseFilter === opt.name
                               ? "bg-white/5 text-white font-semibold"
                               : "text-gray-400 hover:bg-white/[0.03] hover:text-white"
-                          }`}
+                            }`}
                         >
                           {opt.name}
                           {(courseFilter === opt.id || courseFilter === opt.name) && (
@@ -240,11 +239,10 @@ const StudentRegistry = () => {
                 <button
                   key={value}
                   onClick={() => setStatusFilter(value)}
-                  className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap focus:outline-none select-none ${
-                    statusFilter === value
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap focus:outline-none select-none ${statusFilter === value
                       ? "bg-violet-500/10 text-violet-300 border border-violet-500/20"
                       : "text-gray-400"
-                  }`}
+                    }`}
                 >
                   {label}
                 </button>
@@ -313,22 +311,20 @@ const StudentRegistry = () => {
 
                 {/* Status */}
                 <div className="col-span-1">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                    !s.activated
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${!s.activated
                       ? "bg-red-400/10 text-red-400 border-red-400/20"
                       : "bg-emerald-400/10 text-emerald-400 border-emerald-400/20"
-                  }`}>
+                    }`}>
                     {!s.activated ? "Blocked" : "Active"}
                   </span>
                 </div>
 
                 {/* Role */}
                 <div className="col-span-1 flex justify-center">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                    s.role === "ADMIN"
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${s.role === "ADMIN"
                       ? "bg-violet-400/10 text-violet-400 border-violet-400/20"
                       : "bg-white/5 text-gray-400 border-white/10"
-                  }`}>
+                    }`}>
                     {s.role}
                   </span>
                 </div>
@@ -345,11 +341,10 @@ const StudentRegistry = () => {
                   <button
                     onClick={() => { setBlockTarget(s); setBlockModalOpen(true); }}
                     title={!s.activated ? "Unblock" : "Block"}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-colors ${
-                      !s.activated
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-colors ${!s.activated
                         ? "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-400"
                         : "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20 text-orange-400"
-                    }`}
+                      }`}
                   >
                     {!s.activated ? <FaCheck size={11} /> : <FaTimes size={11} />}
                   </button>
@@ -387,12 +382,10 @@ const StudentRegistry = () => {
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                  !s.activated ? "bg-red-400/10 text-red-400 border-red-400/20" : "bg-emerald-400/10 text-emerald-400 border-emerald-400/20"
-                }`}>{!s.activated ? "Blocked" : "Active"}</span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                  s.role === "ADMIN" ? "bg-violet-400/10 text-violet-400 border-violet-400/20" : "bg-white/5 text-gray-400 border-white/10"
-                }`}>{s.role}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${!s.activated ? "bg-red-400/10 text-red-400 border-red-400/20" : "bg-emerald-400/10 text-emerald-400 border-emerald-400/20"
+                  }`}>{!s.activated ? "Blocked" : "Active"}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${s.role === "ADMIN" ? "bg-violet-400/10 text-violet-400 border-violet-400/20" : "bg-white/5 text-gray-400 border-white/10"
+                  }`}>{s.role}</span>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-white/5">
@@ -410,11 +403,10 @@ const StudentRegistry = () => {
               </button>
               <button
                 onClick={() => { setBlockTarget(s); setBlockModalOpen(true); }}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                  !s.activated
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold border transition-all ${!s.activated
                     ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                     : "bg-orange-500/10 border-orange-500/20 text-orange-400"
-                }`}
+                  }`}
               >
                 {!s.activated ? <><FaCheck size={10} /> Unblock</> : <><FaTimes size={10} /> Block</>}
               </button>
@@ -435,11 +427,10 @@ const StudentRegistry = () => {
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
               <div className="flex items-center gap-3">
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                  !blockTarget.activated
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${!blockTarget.activated
                     ? "bg-emerald-500/10 border border-emerald-500/20"
                     : "bg-orange-500/10 border border-orange-500/20"
-                }`}>
+                  }`}>
                   {!blockTarget.activated
                     ? <FaCheck size={11} className="text-emerald-400" />
                     : <FaTimes size={11} className="text-orange-400" />}
@@ -469,9 +460,8 @@ const StudentRegistry = () => {
                   <p className="text-gray-400 text-xs mt-0.5">{blockTarget.schoolId ?? "—"} · {blockTarget.email}</p>
                 </div>
               </div>
-              <div className={`border rounded-xl px-3.5 py-2.5 ${
-                !blockTarget.activated ? "bg-emerald-500/5 border-emerald-500/15" : "bg-orange-500/5 border-orange-500/15"
-              }`}>
+              <div className={`border rounded-xl px-3.5 py-2.5 ${!blockTarget.activated ? "bg-emerald-500/5 border-emerald-500/15" : "bg-orange-500/5 border-orange-500/15"
+                }`}>
                 <p className={`text-xs leading-relaxed ${!blockTarget.activated ? "text-emerald-300/80" : "text-orange-300/80"}`}>
                   {!blockTarget.activated
                     ? "This will restore the student's ability to log in and use the system."
@@ -484,11 +474,10 @@ const StudentRegistry = () => {
                   Cancel
                 </button>
                 <button onClick={handleBlockConfirm} disabled={isBlockLoading}
-                  className={`flex-1 disabled:opacity-50 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 border ${
-                    !blockTarget.activated
+                  className={`flex-1 disabled:opacity-50 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 border ${!blockTarget.activated
                       ? "bg-emerald-500/10 hover:bg-emerald-500 border-emerald-500/30 text-emerald-400 hover:text-white"
                       : "bg-orange-500/10 hover:bg-orange-500 border-orange-500/30 text-orange-400 hover:text-white"
-                  }`}>
+                    }`}>
                   {isBlockLoading ? <Spinner /> : !blockTarget.activated ? "Unblock Account" : "Block Account"}
                 </button>
               </div>
