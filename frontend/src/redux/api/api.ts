@@ -147,10 +147,6 @@ const api = baseApi.injectEndpoints({
       query: (id: string) => ({ url: `/block/user/${id}`, method: "PUT" }),
       invalidatesTags: ["users"],
     }),
-    changeUserRole: builder.mutation({
-      query: ({ id, role }: { id: string; role: string }) => ({ url: `/change-role/${id}`, method: "PUT", body: { role } }),
-      invalidatesTags: ["users"],
-    }),
     softDeleteUser: builder.mutation({
       query: (id: string) => ({ url: `/delete-user/${id}`, method: "DELETE" }),
       invalidatesTags: ["users"],
@@ -396,7 +392,6 @@ export const {
   useGetLocationStatsQuery,
   useGetAuditLogsQuery,
   useBlockUserMutation,
-  useChangeUserRoleMutation,
   useSoftDeleteUserMutation,
   useGetAllUsersQuery,
   useGetAllClaimsQuery,

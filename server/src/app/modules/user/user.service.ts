@@ -95,27 +95,6 @@ const blockUser = async (id: string) => {
   }
 };
 
-const changeUserRole = async (id: string, role: string) => {
-  const updatedUser = await prisma.user.update({
-    where: {
-      id,
-    },
-    data: {
-      role: role as any,
-    },
-  });
-
-  return {
-    id: updatedUser.id,
-    username: updatedUser.username,
-    email: updatedUser.email,
-    role: updatedUser.role,
-    activated: updatedUser.activated,
-    createdAt: updatedUser.createdAt,
-    updatedAt: updatedUser.updatedAt,
-  };
-};
-
 const softDeleteUser = async (id: string) => {
   const user = await prisma.user.findUnique({
     where: { id },
@@ -180,7 +159,6 @@ export const userService = {
   registerUser,
   allUsers,
   blockUser,
-  changeUserRole,
   softDeleteUser,
   backfillCourseAndYearLevel, 
 };

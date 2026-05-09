@@ -117,7 +117,6 @@ router.get("/admin/stats", adminStats);
 router.get("/admin/location-stats", locationStats);
 router.get("/admin/audit-logs", auth(), getAuditLogs);
 router.put("/block/user/:id", auth(), userController.blockUser);
-router.put("/change-role/:id", auth(), userController.changeUserRole);
 router.delete("/delete-user/:id", auth(), userController.softDeleteUser);
 router.get("/admin/match-notifications", auth(), getMatchNotifications);
 

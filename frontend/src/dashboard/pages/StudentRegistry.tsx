@@ -5,12 +5,10 @@ import {
   FaIdCard, FaGraduationCap, FaStar, FaComment
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { MdAdminPanelSettings } from "react-icons/md";
 import { toast } from "react-toastify";
 import {
   useGetAllUsersQuery,
   useBlockUserMutation,
-  useChangeUserRoleMutation,
   useSoftDeleteUserMutation,
 } from "../../redux/api/api";
 import { useInitiateChatMutation } from "../../redux/api/chatApi";
@@ -53,18 +51,12 @@ const StudentRegistry = () => {
   const [blockTarget, setBlockTarget]       = useState<Student | null>(null);
   const [isBlockLoading, setIsBlockLoading] = useState(false);
 
-  const [roleModalOpen, setRoleModalOpen] = useState(false);
-  const [roleTarget, setRoleTarget]       = useState<Student | null>(null);
-  const [selectedRole, setSelectedRole]   = useState<string>("USER");
-  const [isRoleLoading, setIsRoleLoading] = useState(false);
-
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget]       = useState<Student | null>(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
   const { data: usersData, isLoading, error } = useGetAllUsersQuery(undefined);
   const [blockUser]      = useBlockUserMutation();
-  const [changeUserRole] = useChangeUserRoleMutation();
   const [softDeleteUser] = useSoftDeleteUserMutation();
   const [initiateChat]   = useInitiateChatMutation();
   const navigate = useNavigate();
@@ -141,21 +133,6 @@ const StudentRegistry = () => {
       toast.error("Failed to update block status.");
     } finally {
       setIsBlockLoading(false);
-    }
-  };
-
-  const handleRoleConfirm = async () => {
-    if (!roleTarget) return;
-    setIsRoleLoading(true);
-    try {
-      await changeUserRole({ id: roleTarget.id, role: selectedRole }).unwrap();
-      toast.success(`Role updated to ${selectedRole}.`);
-      setRoleModalOpen(false);
-      setRoleTarget(null);
-    } catch {
-      toast.error("Failed to update role.");
-    } finally {
-      setIsRoleLoading(false);
     }
   };
 
@@ -377,13 +354,6 @@ const StudentRegistry = () => {
                     {!s.activated ? <FaCheck size={11} /> : <FaTimes size={11} />}
                   </button>
                   <button
-                    onClick={() => { setRoleTarget(s); setSelectedRole(s.role); setRoleModalOpen(true); }}
-                    title="Change Role"
-                    className="w-7 h-7 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 flex items-center justify-center text-violet-400 transition-colors"
-                  >
-                    <MdAdminPanelSettings size={13} />
-                  </button>
-                  <button
                     onClick={() => { setDeleteTarget(s); setDeleteModalOpen(true); }}
                     title="Delete"
                     className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"
@@ -447,12 +417,6 @@ const StudentRegistry = () => {
                 }`}
               >
                 {!s.activated ? <><FaCheck size={10} /> Unblock</> : <><FaTimes size={10} /> Block</>}
-              </button>
-              <button
-                onClick={() => { setRoleTarget(s); setSelectedRole(s.role); setRoleModalOpen(true); }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-xl text-xs font-semibold transition-all"
-              >
-                <MdAdminPanelSettings size={12} /> Role
               </button>
               <button
                 onClick={() => { setDeleteTarget(s); setDeleteModalOpen(true); }}
@@ -526,61 +490,6 @@ const StudentRegistry = () => {
                       : "bg-orange-500/10 hover:bg-orange-500 border-orange-500/30 text-orange-400 hover:text-white"
                   }`}>
                   {isBlockLoading ? <Spinner /> : !blockTarget.activated ? "Unblock Account" : "Block Account"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Change Role Modal ── */}
-      {roleModalOpen && roleTarget && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
-                  <MdAdminPanelSettings size={13} className="text-violet-400" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-white">Change Role</h2>
-                  <p className="text-gray-500 text-[11px]">Update {roleTarget.name?.split(" ")[0] ?? roleTarget.username}'s system role</p>
-                </div>
-              </div>
-              <button onClick={() => { setRoleModalOpen(false); setRoleTarget(null); }} disabled={isRoleLoading}
-                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                <FaTimes size={12} />
-              </button>
-            </div>
-            <div className="p-5 space-y-3">
-              {ROLES.map((role) => (
-                <button key={role} type="button" onClick={() => setSelectedRole(role)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
-                    selectedRole === role
-                      ? "bg-violet-500/[0.08] border-violet-500/25"
-                      : "bg-gray-800/40 border-white/5 hover:bg-white/[0.03]"
-                  }`}>
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                    selectedRole === role ? "border-violet-400" : "border-white/20"
-                  }`}>
-                    {selectedRole === role && <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />}
-                  </div>
-                  <div>
-                    <p className="text-white text-xs font-semibold">{role}</p>
-                    <p className="text-gray-500 text-[11px] mt-0.5">
-                      {role === "ADMIN" ? "Full dashboard access & management" : "Can report, claim and view items"}
-                    </p>
-                  </div>
-                </button>
-              ))}
-              <div className="flex gap-2 pt-1">
-                <button onClick={() => { setRoleModalOpen(false); setRoleTarget(null); }} disabled={isRoleLoading}
-                  className="flex-1 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 py-2.5 rounded-xl text-xs font-medium transition-colors">
-                  Cancel
-                </button>
-                <button onClick={handleRoleConfirm} disabled={isRoleLoading}
-                  className="flex-1 bg-violet-500/10 hover:bg-violet-500 border border-violet-500/30 text-violet-400 hover:text-white disabled:opacity-50 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5">
-                  {isRoleLoading ? <><Spinner /> Updating...</> : <><MdAdminPanelSettings size={11} /> Update Role</>}
                 </button>
               </div>
             </div>
