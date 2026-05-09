@@ -439,6 +439,7 @@ const FloorShell = ({ floorIdx, isActive, isTopFloor }: FloorShellProps) => {
           ))}
         </group>
       )}
+
     </group>
   );
 };
@@ -473,13 +474,28 @@ const RoomTile = ({
   const tintOpacity = isSelected ? 0.35 : isHovered ? 0.22 : 0;
   const opacityMod = isActiveFloor ? 1 : 0.15;
 
+  // Prevent click when dragging
+  const downPos = useRef({ x: 0, y: 0 });
+  const handlePointerDown = (e: any) => {
+    downPos.current = { x: e.nativeEvent.clientX, y: e.nativeEvent.clientY };
+  };
+  const handleSafeClick = (e: any, id: string) => {
+    e.stopPropagation();
+    const dist = Math.sqrt(
+      Math.pow(e.nativeEvent.clientX - downPos.current.x, 2) +
+      Math.pow(e.nativeEvent.clientY - downPos.current.y, 2)
+    );
+    if (dist < 5) onClick(id); // 5px threshold
+  };
+
   return (
     <group>
       <mesh
         position={[layout.x, y, roomZ]}
         onPointerOver={(e) => { e.stopPropagation(); onHover(layout.id); document.body.style.cursor = "pointer"; }}
         onPointerOut={(e) => { e.stopPropagation(); onHover(null); document.body.style.cursor = "auto"; }}
-        onClick={(e) => { e.stopPropagation(); onClick(layout.id); }}
+        onPointerDown={handlePointerDown}
+        onClick={(e) => handleSafeClick(e, layout.id)}
         visible={tint !== null}
       >
         <boxGeometry args={[ROOM_W - 0.1, ROOM_H - 0.1, ROOM_D - 0.1]} />
@@ -490,22 +506,66 @@ const RoomTile = ({
         <RoomFurniture x={layout.x} z={roomZ} baseY={baseY} side={layout.side} />
       )}
 
+      {/* Floating Item Orb inside room - with X-ray effect */}
+      {isSelected && hasItems && (
+        <Float speed={5} rotationIntensity={2} floatIntensity={0.5}>
+          <group position={[layout.x, baseY + ROOM_H * 0.45, roomZ]}>
+            {/* Outer soft glow */}
+            <mesh>
+              <sphereGeometry args={[0.2, 32, 32]} />
+              <meshStandardMaterial
+                color={foundCount > 0 ? "#10b981" : "#ef4444"}
+                emissive={foundCount > 0 ? "#10b981" : "#ef4444"}
+                emissiveIntensity={2}
+                transparent
+                opacity={0.4}
+              />
+            </mesh>
+            {/* Bright inner core */}
+            <mesh>
+              <sphereGeometry args={[0.08, 32, 32]} />
+              <meshStandardMaterial
+                color={foundCount > 0 ? "#34d399" : "#fca5a5"}
+                emissive={foundCount > 0 ? "#34d399" : "#fca5a5"}
+                emissiveIntensity={6}
+              />
+            </mesh>
+            {/* Local point light */}
+            <pointLight
+              intensity={2.5}
+              distance={3}
+              color={foundCount > 0 ? "#10b981" : "#ef4444"}
+              decay={1.5}
+            />
+          </group>
+        </Float>
+      )}
+
+      {/* Door - becomes transparent when selected so we can see the orb inside */}
       <mesh position={[layout.x, baseY + DOOR_H / 2, wallZ + (WALL_T * 0.5)]} castShadow>
         <boxGeometry args={[DOOR_W * 0.92, DOOR_H, WALL_T * 0.5]} />
-        <meshStandardMaterial color={isSelected ? palette.doorSelected : isActiveFloor ? palette.door : palette.doorFrame} transparent={!isActiveFloor} opacity={isActiveFloor ? 1 : 0.35} roughness={0.6} emissive={isSelected ? palette.doorSelected : "#000000"} emissiveIntensity={isSelected ? 0.4 : 0} />
+        <meshStandardMaterial 
+          color={isSelected ? palette.doorSelected : isActiveFloor ? palette.door : palette.doorFrame} 
+          transparent={isSelected || !isActiveFloor} 
+          opacity={isSelected ? 0.25 : isActiveFloor ? 1 : 0.35} 
+          roughness={0.6} 
+          emissive={isSelected ? palette.doorSelected : "#000000"} 
+          emissiveIntensity={isSelected ? 0.4 : 0} 
+        />
       </mesh>
-      <mesh position={[layout.x + DOOR_W * 0.32, baseY + DOOR_H / 2, wallZ + (WALL_T * 1.1)]}>
+      <mesh position={[layout.x + DOOR_W * 0.32, baseY + DOOR_H / 2, wallZ + (WALL_T * 1.1)]} visible={!isSelected}>
         <sphereGeometry args={[0.04, 12, 12]} />
         <meshStandardMaterial color="#fbbf24" metalness={0.6} roughness={0.3} />
       </mesh>
 
       <Text
         position={[layout.x, baseY + DOOR_H + 0.18, wallZ + (WALL_T * 1.15)]}
-        fontSize={0.13}
-        color={isActiveFloor ? palette.text : palette.textDim}
+        fontSize={isSelected ? 0.16 : 0.13}
+        color={isSelected ? palette.accentBlue : isActiveFloor ? palette.text : palette.textDim}
         anchorX="center"
         anchorY="middle"
-        fillOpacity={isActiveFloor ? 1 : 0.4}
+        fillOpacity={isActiveFloor || isSelected ? 1 : 0.4}
+        fontWeight={isSelected ? "bold" : "normal"}
       >
         {layout.id.replace("SC-", "")}
       </Text>
@@ -516,7 +576,8 @@ const RoomTile = ({
             <Float speed={4} rotationIntensity={1.5} floatIntensity={1.5}>
               <group
                 position={[foundCount > 0 ? -0.22 : 0, 0, 0]}
-                onClick={(e) => { e.stopPropagation(); onClick(layout.id); }}
+                onPointerDown={handlePointerDown}
+                onClick={(e) => handleSafeClick(e, layout.id)}
                 onPointerOver={() => (document.body.style.cursor = "pointer")}
                 onPointerOut={() => (document.body.style.cursor = "auto")}
               >
@@ -536,7 +597,8 @@ const RoomTile = ({
             <Float speed={3.5} rotationIntensity={1.5} floatIntensity={1.4}>
               <group
                 position={[lostCount > 0 ? 0.22 : 0, 0, 0]}
-                onClick={(e) => { e.stopPropagation(); onClick(layout.id); }}
+                onPointerDown={handlePointerDown}
+                onClick={(e) => handleSafeClick(e, layout.id)}
                 onPointerOver={() => (document.body.style.cursor = "pointer")}
                 onPointerOut={() => (document.body.style.cursor = "auto")}
               >
@@ -856,11 +918,14 @@ const MiniMap = ({
   const toX = (x: number) => PAD + (x + TOTAL_W / 2 + 1) * SCALE;
   const toY = (z: number) => PAD + 18 + (z + BUILDING_DEPTH / 2 + 0.8) * SCALE;
 
-  const itemCount = (id: string) =>
-    items.filter((it) => {
-      const loc = (it?.location || "").toLowerCase();
-      return loc.includes(id.toLowerCase()) || loc.includes(id.replace("SC-", "").toLowerCase());
+  const itemCount = (id: string) => {
+    const ridShort = id.replace("SC-", "").toLowerCase();
+    const regex = new RegExp(`(^|\\W)${ridShort}(\\W|$)`, 'i');
+    return items.filter((it) => {
+      const loc = (it?.foundLocation || it?.location || "").toLowerCase();
+      return loc === id.toLowerCase() || regex.test(loc);
     }).length;
+  };
 
   const stroke = isNight ? "#334155" : "#e2e8f0";
   const fillRoom = isNight ? "#1e2638" : "#f8fafc";
@@ -882,7 +947,7 @@ const MiniMap = ({
   return (
     <div
       className="absolute"
-      style={{ bottom: 0, left: 0, right: 0, zIndex: 100 }}
+      style={{ bottom: 0, left: 0, right: 0, zIndex: 30 }}
     >
       <div
         className={`border-t transition-all duration-400 overflow-hidden ${
@@ -1070,8 +1135,9 @@ const IndoorMap3D = ({
     const rid = roomId.toLowerCase();
     const ridShort = roomId.replace("SC-", "").toLowerCase();
     const roomItems = items.filter((item) => {
-      const loc = (item.foundLocation || item.location || "").toLowerCase();
-      return loc === rid || loc === ridShort || loc.includes(ridShort);
+      const loc = (item.foundLocation || item.location || "").toLowerCase().trim();
+      const regex = new RegExp(`(^|\\W)${ridShort}(\\W|$)`, 'i');
+      return loc === rid || regex.test(loc);
     });
     return {
       foundCount: roomItems.filter((i) => i.type === "found").length,
@@ -1172,7 +1238,7 @@ const IndoorMap3D = ({
       </ThemeContext.Provider>
 
       {/* HUD: Title top-left */}
-      <div className="absolute top-3 left-3 pointer-events-none" style={{ zIndex: 50 }}>
+      <div className="absolute top-3 left-3 pointer-events-none" style={{ zIndex: 20 }}>
         <div className={`${hudBg} backdrop-blur-md border ${hudBorder} px-3 py-2 rounded-xl shadow-sm transition-colors duration-500`}>
           <h3 className={`${hudTextStrong} font-black text-[10px] uppercase tracking-tighter`}>
             SWDC Building
@@ -1189,7 +1255,7 @@ const IndoorMap3D = ({
       {/* HUD: Floor switcher + Day/Night — right side pill group */}
       <div
         className="absolute right-3 flex flex-col gap-1.5"
-        style={{ top: "12px", zIndex: 50 }}
+        style={{ top: "12px", zIndex: 20 }}
         data-testid="map-hud-floors"
       >
         {/* Day/Night toggle */}

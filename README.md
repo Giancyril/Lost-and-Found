@@ -17,6 +17,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Student Masterlist Integration**: Google Sheets-backed masterlist that resolves student name, email, and department from a scanned or entered ID — with fuzzy name matching and ID normalization
 - **Real-Time Notifications**: Email notifications for potential matches and claim status updates
 - **Interactive Maps**: Location-based visualization using Leaflet maps with heat mapping
+- **Indoor 3D Map**: Interactive, multi-level 3D campus building maps for precise room-level item localization (Desktop use only)
 - **Archive System**: Automated archiving of stale items to keep the database clean
 - **Audit Logging**: Comprehensive audit trail for all administrative actions
 - **Sheets Activity Logger**: Every lost and found report submission is logged to a Google Sheet in real time for offline recordkeeping and audit trails
@@ -277,79 +278,41 @@ graph LR
 
 ```
 lost-and-found-main/
-├── server/                 # Backend application
+├── server/                 # Backend application (Node.js/Express/TypeScript)
 │   ├── src/
-│   │   ├── api/
-│   │   │   ├── analytics/    # Campus-wide analytics API
-│   │   │   ├── comments/     # Comment system API
-│   │   │   ├── moderation/   # Content moderation API
-│   │   │   ├── support/      # Support tickets API
-│   │   │   ├── feedback/     # Feedback management API
-│   │   │   ├── announcements/# Announcement manager API
-│   │   │   └── security/     # Security monitor & compliance API
-│   │   ├── websocket/      # Socket.io handlers for real-time chat & notifications
 │   │   ├── app/
-│   │   │   ├── modules/    # Feature modules
-│   │   │   │   ├── chat/     # Real-time messaging service & controller
-│   │   │   │   ├── push/     # Web Push subscription & delivery service
-│   │   │   │   └── student/  # Student masterlist lookup & ID resolution
-│   │   │   ├── auth/       # Authentication
-│   │   │   ├── midddlewares/ # Express middlewares
-│   │   │   └── utils/      # Utility functions
-│   │   │       ├── moderationController.ts  # Keyword filter, reports, warnings, appeals
-│   │   │       ├── communicationController.ts
-│   │   │       ├── securityController.ts
-│   │   │       └── adminStats.ts
-│   │   └── prisma/         # Database schema
+│   │   │   ├── modules/    # Feature-based logic (Items, Claims, Points, Chat, Push, Student)
+│   │   │   │   ├── matching/ # Smart matching algorithm logic
+│   │   │   │   ├── student/  # Institutional masterlist resolution service
+│   │   │   │   └── chat/     # Real-time messaging service & logic
+│   │   │   ├── routes/     # Centralized API route definitions
+│   │   │   ├── auth/       # JWT authentication and authorization logic
+│   │   │   ├── midddlewares/ # Express middlewares (Validation, Security, Auth Guards)
+│   │   │   └── utils/      # Controllers for Moderation, Comm Hub, and Security
+│   │   ├── websocket/      # Socket.io handlers for real-time chat & system alerts
+│   │   └── prisma/         # Database schema, seeding, and migrations
 │   └── package.json
-├── frontend/               # Frontend application
+├── frontend/               # Frontend application (React/Vite/Tailwind)
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── scanner/      # WebScannerModal — hybrid jsQR + QuaggaJS + native fallback
-│   │   │   ├── itemMatch/    # ItemMatchSuggestions — live match preview on report form
-│   │   │   ├── reputation/   # User reputation components
-│   │   │   ├── analytics/    # Analytics dashboard components
-│   │   │   ├── support/      # Support ticket components
-│   │   │   ├── feedback/     # Feedback management components
-│   │   │   ├── announcements/# Announcement manager components
-│   │   │   ├── security/     # Security monitor & compliance components
-│   │   │   └── ui/           # Shared UI — LocationAutocomplete, CustomDatePicker, etc.
-│   │   ├── redux/          # State management
-│   │   │   └── api/
-│   │   │       ├── api.ts      # Core API endpoints
-│   │   │       ├── chatApi.ts  # Real-time messaging endpoints
-│   │   │       └── pushApi.ts  # Push notification endpoints
-│   │   ├── hooks/          # Custom hooks
-│   │   │   └── usePushNotifications.ts # Push subscription logic
-│   │   ├── pages/          # Page components
-│   │   │   └── support/      # SupportPage — public support ticket & feedback form
-│   │   ├── dashboard/      # Admin dashboard
-│   │   │   └── pages/
-│   │   │       ├── ContentModeration.tsx    # 4-tab moderation dashboard
-│   │   │       ├── CommunicationHub.tsx     # 5-tab communication dashboard
-│   │   │       ├── SecurityCompliance.tsx   # 4-tab security dashboard
-│   │   │       └── AdvancedAnalyticsPage.tsx
-│   │   ├── utils/          # sheetsLogger and other client utilities
-│   │   ├── types/          # TypeScript declarations (quagga.d.ts for custom types)
-│   │   └── docs/           # Documentation
-│   │
+│   │   │   ├── scanner/      # WebScannerModal — hybrid QR/Barcode scanning engine
+│   │   │   ├── itemMatch/    # Real-time found item suggestions for report forms
+│   │   │   ├── comments/     # Nested real-time comment and interaction system
+│   │   │   └── ui/           # Shared design system (Autocomplete, DatePickers, etc.)
+│   │   ├── dashboard/      # Management dashboards for Admins and Students
+│   │   │   ├── pages/      # Admin modules: Moderation, Comm Hub, Security, Analytics
+│   │   │   └── student-pages/# Student-specific dashboard views and points history
+│   │   ├── pages/          # Main application views
+│   │   │   ├── IndoorMapPage.tsx # 3D Map responsive layout container
+│   │   │   ├── IndoorMap3D.tsx   # Three.js interactive building canvas
+│   │   │   └── support/      # Public support ticketing and feedback interface
+│   │   ├── redux/          # State management and RTK Query API slices
+│   │   ├── hooks/          # usePushNotifications, useScanner, and verification hooks
+│   │   └── store/          # Redux store configuration
 │   └── package.json
+├── google-apps-script/     # Gviz API handlers for Google Sheets automation
 └── README.md
 ```
-
-## User Roles Matrix
-
-| Feature | Student/User | Admin/Staff |
-| :--- | :---: | :---: |
-| Report Lost/Found Items | ✅ | ✅ |
-| Claim Items | ✅ | ❌ |
-| View Public Analytics | ✅ | ✅ |
-| Community Discussions | ✅ | ✅ |
-| Manage Categories | ❌ | ✅ |
-| Moderate Comments | ❌ | ✅ |
-| Handle Support Tickets | ❌ | ✅ |
-| Security Monitoring | ❌ | ✅ |
-| Points Management | ❌ | ✅ |
 
 ## API Documentation Overview
 
@@ -506,16 +469,18 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - Real-time community discussions and moderation suite.
 - Live Google Sheets masterlist synchronization.
 
-###  Phase 3: Expansion (Current)
+###  Phase 3: Expansion (Completed)
 - **Push Notifications**: Real-time alerts for item matches, claim updates, and chat messages using Web Push API.
-- **Interactive Indoor Maps**: Precise location pinning on multi-level campus building maps.
+- **Interactive Indoor 3D Maps**: Precise location pinning on multi-level campus building maps (Desktop use only).
 - **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details.
 
-###  Phase 4: Ecosystem & Sustainability (Upcoming)
+###  Phase 4: Ecosystem & Sustainability (Current)
 - **Rewards Store**: Redeem earned points for campus perks, library credits, or university merchandise.
 - **AI Image Recognition**: Automatic item categorization and feature extraction from uploaded photos.
 - **Smart Categorization**: Automated category and tag suggestions based on item photos using computer vision.
 - **Verified "Hero" Badges**: Achievement system recognizing students with multiple successful item returns.
+
+### Phase 5: Advanced Features (Upcoming)
 - **Department Leaderboards**: Gamified campus-wide competition to encourage community helpfulness.
 - **Kiosk Mode**: Specialized interface for physical "Lost & Found" touchscreens in high-traffic campus areas.
 - **Predictive Analytics**: Forecasting high-risk zones and peak times for lost items to optimize campus patrol.
