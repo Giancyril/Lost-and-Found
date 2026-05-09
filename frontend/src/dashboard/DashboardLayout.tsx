@@ -18,6 +18,7 @@ import {
   useGetLostItemsQuery,
   useGetSecurityStatsQuery,
 } from "../redux/api/api";
+import ChatDropdown from "./components/ChatDropdown";
 
 interface DashboardLayoutProps { children: React.ReactNode; }
 
@@ -54,7 +55,8 @@ const menuItems = [
   { title: "Security", icon: FaShieldAlt, path: "/dashboard/security" },
   { title: "Accounts", icon: FaUserShield, path: "/dashboard/users" },
   { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
-   { title: "Settings", icon: FaCog, path: "/dashboard/settings" },
+  { title: "Chat", icon: FaComments, path: "/dashboard/chat" },
+  { title: "Settings", icon: FaCog, path: "/dashboard/settings" },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
@@ -73,6 +75,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/categories": { title: "Categories", subtitle: "Create and organize item categories for better sorting." },
   "/dashboard/settings": { title: "Settings", subtitle: "Configure system preferences and account settings." },
   "/dashboard/security": { title: "Security", subtitle: "Monitor login activity, access control, and compliance reports." },
+  "/dashboard/chat": { title: "Messenger", subtitle: "Real-time communication hub for claims and support." },
 };
 
 const timeAgo = (dateStr: string) => {
@@ -428,13 +431,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <p className="text-gray-500 text-xs truncate hidden sm:block">{pageMeta.subtitle}</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link 
-              to="/dashboard/chat" 
-              title="Messages"
-              className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all"
-            >
-              <FaComments size={14} />
-            </Link>
+            <ChatDropdown />
             <NotificationBell />
             <ProfileDropdown initials={initials} user={user} handleSignOut={handleSignOut} />
           </div>
