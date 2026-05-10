@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -21,19 +22,19 @@ import { useScrollReveal } from "../../hooks/useScrollReveal";
 // ── Category icon resolver ────────────────────────────────────────────────────
 const getCategoryIcon = (name: string) => {
   const n = name?.toLowerCase() ?? "";
-  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch"))       return <FaWallet    size={9} className="text-amber-400" />;
-  if (n.includes("phone") || n.includes("mobile") || n.includes("celphone"))    return <FaMobileAlt size={9} className="text-cyan-400" />;
+  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch")) return <FaWallet size={9} className="text-amber-400" />;
+  if (n.includes("phone") || n.includes("mobile") || n.includes("celphone")) return <FaMobileAlt size={9} className="text-cyan-400" />;
   if (n.includes("laptop") || n.includes("computer") || n.includes("electronic") || n.includes("device") || n.includes("gadget")) return <FaLaptop size={9} className="text-indigo-400" />;
-  if (n.includes("key"))                                                          return <FaKey       size={9} className="text-orange-400" />;
-  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage"))      return <FaBriefcase size={9} className="text-amber-400" />;
+  if (n.includes("key")) return <FaKey size={9} className="text-orange-400" />;
+  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage")) return <FaBriefcase size={9} className="text-amber-400" />;
   if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod")) return <FaHeadphones size={9} className="text-green-400" />;
-  if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass")) return <FaGlasses    size={9} className="text-teal-400" />;
-  if (n.includes("book") || n.includes("stationery") || n.includes("notebook"))  return <FaBook      size={9} className="text-yellow-400" />;
-  if (n.includes("id") || n.includes("card") || n.includes("document"))          return <FaIdCard    size={9} className="text-blue-400" />;
-  if (n.includes("umbrella"))                                                     return <FaUmbrella  size={9} className="text-blue-400" />;
+  if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass")) return <FaGlasses size={9} className="text-teal-400" />;
+  if (n.includes("book") || n.includes("stationery") || n.includes("notebook")) return <FaBook size={9} className="text-yellow-400" />;
+  if (n.includes("id") || n.includes("card") || n.includes("document")) return <FaIdCard size={9} className="text-blue-400" />;
+  if (n.includes("umbrella")) return <FaUmbrella size={9} className="text-blue-400" />;
   if (n.includes("cloth") || n.includes("shirt") || n.includes("uniform") || n.includes("wear")) return <FaTshirt size={9} className="text-purple-400" />;
-  if (n.includes("camera") || n.includes("photo"))                               return <FaCamera    size={9} className="text-violet-400" />;
-  if (n.includes("watch") || n.includes("clock"))                                return <FaClock     size={9} className="text-gray-300" />;
+  if (n.includes("camera") || n.includes("photo")) return <FaCamera size={9} className="text-violet-400" />;
+  if (n.includes("watch") || n.includes("clock")) return <FaClock size={9} className="text-gray-300" />;
   if (n.includes("water") || n.includes("bottle") || n.includes("tumbler") || n.includes("flask")) return <FaTint size={9} className="text-cyan-400" />;
   if (n.includes("money") || n.includes("cash") || n.includes("bill") || n.includes("currency")) return <FaMoneyBillWave size={9} className="text-green-400" />;
   // Icons matching CategoriesManagement
@@ -85,14 +86,13 @@ const CustomSelect = ({ options, value, onChange }: {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm rounded-xl border transition-all duration-150 outline-none bg-gray-900
-          ${open ? "border-blue-500/50 ring-2 ring-blue-500/10 text-white" : "border-white/5 hover:border-white/10 text-gray-300"}`}
+        className="w-full flex items-center justify-between gap-1.5 px-2.5 py-2 text-xs rounded-xl border border-white/5 outline-none bg-gray-900 text-gray-300"
       >
-        <span className="flex items-center gap-2 truncate min-w-0">
+        <span className="flex items-center gap-1.5 truncate min-w-0">
           {selected?.icon && <span className="shrink-0">{selected.icon}</span>}
-          <span className="truncate text-sm">{selected?.label ?? <span className="text-gray-500">Select…</span>}</span>
+          <span className="truncate text-xs">{selected?.label ?? <span className="text-gray-500">Select…</span>}</span>
         </span>
-        <FaChevronDown size={9} className={`shrink-0 text-gray-500 transition-transform duration-200 ${open ? "rotate-180 text-blue-400" : ""}`} />
+        <FaChevronDown size={8} className={`shrink-0 text-gray-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div className="absolute z-50 mt-1.5 w-full min-w-[160px] bg-[#0d1f3c] border border-blue-900/40 rounded-xl shadow-2xl shadow-black/70 overflow-hidden">
@@ -103,7 +103,7 @@ const CustomSelect = ({ options, value, onChange }: {
               return (
                 <button key={opt.value} type="button"
                   onClick={() => { onChange(opt.value); setOpen(false); }}
-                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left transition-colors duration-100
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs text-left transition-colors duration-100
                     ${isActive ? "bg-blue-500/10 text-blue-300" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
                 >
                   <span className="flex items-center gap-2 truncate min-w-0">
@@ -125,31 +125,31 @@ const CustomSelect = ({ options, value, onChange }: {
 const CommunityStatsBanner = ({ activeReports }: { activeReports: number }) => {
   const cards = [
     {
-      icon:    <FaFire size={15} className="text-red-400" />,
-      iconBg:  "bg-red-500/10 border border-red-500/20",
-      value:   activeReports,
-      label:   "Active Reports",
-      sub:     "missing on campus",
-      subColor:"text-red-400",
-      accent:  "border-red-500/10",
+      icon: <FaFire size={15} className="text-red-400" />,
+      iconBg: "bg-red-500/10 border border-red-500/20",
+      value: activeReports,
+      label: "Active Reports",
+      sub: "missing on campus",
+      subColor: "text-red-400",
+      accent: "border-red-500/10",
     },
     {
-      icon:    <FaStar size={15} className="text-emerald-400" />,
-      iconBg:  "bg-emerald-500/10 border border-emerald-500/20",
-      value:   activeReports > 0 ? Math.ceil(activeReports * 0.4) : 0,
-      label:   "Community Reports",
-      sub:     "submitted this month",
-      subColor:"text-emerald-400",
-      accent:  "border-emerald-500/10",
+      icon: <FaStar size={15} className="text-emerald-400" />,
+      iconBg: "bg-emerald-500/10 border border-emerald-500/20",
+      value: activeReports > 0 ? Math.ceil(activeReports * 0.4) : 0,
+      label: "Community Reports",
+      sub: "submitted this month",
+      subColor: "text-emerald-400",
+      accent: "border-emerald-500/10",
     },
     {
-      icon:    <FaCheckCircle size={15} className="text-blue-400" />,
-      iconBg:  "bg-blue-500/10 border border-blue-500/20",
-      value:   activeReports > 0 ? Math.floor(activeReports * 0.15) : 0,
-      label:   "Items Recovered",
-      sub:     "found & returned",
-      subColor:"text-blue-400",
-      accent:  "border-blue-500/10",
+      icon: <FaCheckCircle size={15} className="text-blue-400" />,
+      iconBg: "bg-blue-500/10 border border-blue-500/20",
+      value: activeReports > 0 ? Math.floor(activeReports * 0.15) : 0,
+      label: "Items Recovered",
+      sub: "found & returned",
+      subColor: "text-blue-400",
+      accent: "border-blue-500/10",
     },
   ];
 
@@ -197,34 +197,33 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
   };
 
   return (
-  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto">
-    <div className="flex min-h-full items-center justify-center p-4">
-      <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <h3 className="text-white font-bold text-sm">Share Report</h3>
-          <button onClick={onClose}
-            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-            <FaTimes size={12} />
-          </button>
-        </div>
-        <div className="p-5 space-y-4">
-          <p className="text-gray-400 text-sm">Anyone with this link can view the report details.</p>
-          <div className="bg-gray-950 border border-gray-800 p-4 rounded-xl text-xs truncate text-blue-400 font-mono">
-            {shareUrl}
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+            <h3 className="text-white font-bold text-sm">Share Report</h3>
+            <button onClick={onClose}
+              className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+              <FaTimes size={12} />
+            </button>
           </div>
-          <button onClick={handleCopy}
-            className={`w-full py-2 flex items-center justify-center gap-2 text-xs font-semibold rounded-xl transition-all ${
-              copied
-                ? "bg-blue-600/80 border border-blue-500/30 text-white"
-                : "bg-blue-600/80 border-blue-500/30 text-white"
-            }`}>
-            {copied ? <><FaCheckCircle size={10} /> Copied!</> : <><FaCopy size={10} /> Copy Link</>}
-          </button>
+          <div className="p-5 space-y-4">
+            <p className="text-gray-400 text-sm">Anyone with this link can view the report details.</p>
+            <div className="bg-gray-950 border border-gray-800 p-4 rounded-xl text-xs truncate text-blue-400 font-mono">
+              {shareUrl}
+            </div>
+            <button onClick={handleCopy}
+              className={`w-full py-2 flex items-center justify-center gap-2 text-xs font-semibold rounded-xl transition-all ${copied
+                  ? "bg-blue-600/80 border border-blue-500/30 text-white"
+                  : "bg-blue-600/80 border-blue-500/30 text-white"
+                }`}>
+              {copied ? <><FaCheckCircle size={10} /> Copied!</> : <><FaCopy size={10} /> Copy Link</>}
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
 // ── Group Header ──────────────────────────────────────────────────────────────
@@ -232,9 +231,9 @@ const GroupHeader = ({ label, count, accent }: {
   label: string; count: number; accent: "red" | "yellow" | "gray";
 }) => {
   const colors = {
-    red:    { dot: "bg-red-400 animate-pulse",  text: "text-red-400",    border: "border-red-500/20",    badge: "bg-red-500/10 text-red-400 border-red-500/20" },
-    yellow: { dot: "bg-yellow-400",             text: "text-yellow-400", border: "border-yellow-500/20", badge: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
-    gray:   { dot: "bg-gray-500",               text: "text-gray-500",   border: "border-white/5",       badge: "bg-white/5 text-gray-500 border-white/10" },
+    red: { dot: "bg-red-400 animate-pulse", text: "text-red-400", border: "border-red-500/20", badge: "bg-red-500/10 text-red-400 border-red-500/20" },
+    yellow: { dot: "bg-yellow-400", text: "text-yellow-400", border: "border-yellow-500/20", badge: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
+    gray: { dot: "bg-gray-500", text: "text-gray-500", border: "border-white/5", badge: "bg-white/5 text-gray-500 border-white/10" },
   }[accent];
 
   return (
@@ -260,8 +259,8 @@ const ItemCard = ({
 
   const ageBadgeClass =
     daysAgo > 30 ? "bg-red-500/10 text-red-400 border-red-500/20"
-    : daysAgo > 7 ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-    : "bg-black/50 text-white border-white/15";
+      : daysAgo > 7 ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+        : "bg-black/50 text-white border-white/15";
 
   const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
     ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
@@ -356,14 +355,14 @@ const ItemRow = ({
 }: {
   item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void;
 }) => {
-  const daysAgo     = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
+  const daysAgo = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
   const lostDateStr = item?.date?.split("T")[0] ?? "—";
-  const hideImg     = shouldHideImage(item?.category?.name, isAdmin);
+  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
 
   const ageColor =
     daysAgo > 30 ? "text-red-400"
-    : daysAgo > 7 ? "text-amber-400"
-    : "text-gray-500";
+      : daysAgo > 7 ? "text-amber-400"
+        : "text-gray-500";
 
   const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
     ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? "")
@@ -422,12 +421,12 @@ const ItemRow = ({
           </Link>
           <button onClick={onOpenComments}
             className="flex items-center justify-center gap-1 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 text-[10px] font-medium rounded-lg transition-all">
-              Comment
+            Comment
           </button>
           <button onClick={onShare}
             className="flex items-center justify-center gap-1 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 text-[10px] font-medium rounded-lg transition-all">
             Share
-          </button>      
+          </button>
         </div>
       </div>
 
@@ -463,9 +462,9 @@ const ItemRow = ({
         <div className="col-span-2">
           {item?.category?.name
             ? <span className="flex items-center gap-1.5 text-xs text-gray-400">
-                {getCategoryIcon(item.category.name)}
-                <span className="truncate">{item.category.name}</span>
-              </span>
+              {getCategoryIcon(item.category.name)}
+              <span className="truncate">{item.category.name}</span>
+            </span>
             : <span className="text-gray-600 text-xs">—</span>}
         </div>
         <div className="col-span-2">
@@ -487,7 +486,7 @@ const ItemRow = ({
             className="flex items-center justify-center px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all whitespace-nowrap">
             Share
           </button>
-          
+
         </div>
       </div>
     </div>
@@ -498,17 +497,17 @@ const ItemRow = ({
 const LostItemsPage = () => {
   useScrollReveal();
   const users: any = useUserVerification();
-  const isAdmin    = users?.role === "ADMIN";
+  const isAdmin = users?.role === "ADMIN";
 
-  const [searchTerm, setSearchTerm]         = useState("");
-  const [fuzzyTerm, setFuzzyTerm]           = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [fuzzyTerm, setFuzzyTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
-  const [currentPage, setCurrentPage]       = useState(1);
-  const [sortBy, setSortBy]                 = useState("date");
-  const [sortOrder, setSortOrder]           = useState("desc");
-  const [shareItem, setShareItem]           = useState<any>(null);
-  const [commentItem, setCommentItem]       = useState<any>(null);
-  const [viewMode, setViewMode]             = useState<"grid" | "list">(
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [shareItem, setShareItem] = useState<any>(null);
+  const [commentItem, setCommentItem] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">(
     typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "grid"
   );
   const [limit] = useState(12);
@@ -545,15 +544,15 @@ const LostItemsPage = () => {
     return { today, week, older };
   }, [filteredItems]);
 
-  const totalPages   = lostItems?.meta?.totalPage || 1;
+  const totalPages = lostItems?.meta?.totalPage || 1;
   const totalReports = lostItems?.meta?.total || filteredItems.length;
 
   const sortOptions = [
-    { value: "date-desc",         label: "Date Lost (Newest)" },
-    { value: "date-asc",          label: "Date Lost (Oldest)" },
-    { value: "lostItemName-asc",  label: "Name (A–Z)" },
+    { value: "date-desc", label: "Date Lost (Newest)" },
+    { value: "date-asc", label: "Date Lost (Oldest)" },
+    { value: "lostItemName-asc", label: "Name (A–Z)" },
     { value: "lostItemName-desc", label: "Name (Z–A)" },
-    { value: "location-asc",      label: "Location (A–Z)" },
+    { value: "location-asc", label: "Location (A–Z)" },
   ];
 
   const categoryOptions = [
@@ -561,7 +560,7 @@ const LostItemsPage = () => {
     ...(categoriesData?.data?.map((cat: any) => ({
       value: cat.name,
       label: cat.name,
-      icon:  getCategoryIcon(cat.name),
+      icon: getCategoryIcon(cat.name),
     })) ?? []),
   ];
 
@@ -622,23 +621,20 @@ const LostItemsPage = () => {
       {/* ── Search & filters ── */}
       <div className="px-6 sm:px-10 lg:px-16 py-5">
         <div className="flex flex-col gap-3">
-          <div className="relative">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
-            <input type="text" value={fuzzyTerm} onChange={handleFuzzyChange}
-              placeholder="Search by name, location, or description..."
-              className="w-full pl-11 pr-28 py-3 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" />
-            {fuzzyTerm && (
-              <button onClick={clearSearch}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-xs rounded-lg transition-all">
-                <FaTimes size={9} /> Clear
-              </button>
-            )}
-          </div>
+          {/* Search + View Toggle Row */}
           <div className="flex items-center gap-2">
-            <CustomSelect options={sortOptions} value={sortValue}
-              onChange={(v) => { const [f, o] = v.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }} />
-            <CustomSelect options={categoryOptions} value={categoryFilter}
-              onChange={(v) => { setCategoryFilter(v); setCurrentPage(1); }} />
+            <div className="relative flex-1">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={11} />
+              <input type="text" value={fuzzyTerm} onChange={handleFuzzyChange}
+                placeholder="Search by name, location, or description..."
+                className="w-full h-9 pl-9 pr-20 bg-gray-900 border border-white/5 rounded-xl text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" />
+              {fuzzyTerm && (
+                <button onClick={clearSearch}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2 py-1 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] rounded-lg transition-all">
+                  <FaTimes size={8} /> Clear
+                </button>
+              )}
+            </div>
             <div className="flex gap-0.5 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
               <button onClick={() => setViewMode("grid")} title="Grid view"
                 className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-500/10 text-blue-400" : "text-gray-500 hover:text-white"}`}>
@@ -649,6 +645,13 @@ const LostItemsPage = () => {
                 <FaList size={12} />
               </button>
             </div>
+          </div>
+          {/* Filter Dropdowns Row */}
+          <div className="grid grid-cols-2 gap-2">
+            <CustomSelect options={sortOptions} value={sortValue}
+              onChange={(v) => { const [f, o] = v.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }} />
+            <CustomSelect options={categoryOptions} value={categoryFilter}
+              onChange={(v) => { setCategoryFilter(v); setCurrentPage(1); }} />
           </div>
           {fuzzyTerm && (
             <p className="text-xs text-gray-600 pl-1">
@@ -704,8 +707,8 @@ const LostItemsPage = () => {
                 <div className="col-span-2 text-right">Actions</div>
               </div>
             )}
-            {renderGroup(groupedItems.today, "Today",         "gray")}
-            {renderGroup(groupedItems.week,  "This Week",     "gray")}
+            {renderGroup(groupedItems.today, "Today", "gray")}
+            {renderGroup(groupedItems.week, "This Week", "gray")}
             {renderGroup(groupedItems.older, "Older Reports", "gray")}
           </>
         )}
@@ -726,7 +729,7 @@ const LostItemsPage = () => {
               const pages: React.ReactNode[] = [];
               const max = 5;
               let start = Math.max(1, currentPage - Math.floor(max / 2));
-              const end  = Math.min(totalPages, start + max - 1);
+              const end = Math.min(totalPages, start + max - 1);
               if (end - start + 1 < max) start = Math.max(1, end - max + 1);
               if (start > 1) {
                 pages.push(<button key={1} onClick={() => setCurrentPage(1)} className="px-3 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">1</button>);

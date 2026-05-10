@@ -222,20 +222,20 @@ const ItemStatus = () => {
 
       {/* ── Stats Row ── */}
       <div className="px-4 sm:px-10 lg:px-16 py-5 reveal reveal-delay-2">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {[
             { label: "Reports",  value: isLoggedIn ? (myLostItems?.data?.length || 0) : 0,  color: "text-blue-400",    bg: "bg-blue-500/5",    border: "border-blue-500/10",    icon: <FaSearch size={13} className="text-blue-400" /> },
             { label: "Claims",   value: isLoggedIn ? (myClaims?.data?.length || 0) : 0,     color: "text-cyan-400",    bg: "bg-cyan-500/5",    border: "border-cyan-500/10",    icon: <FaHistory size={13} className="text-cyan-400" /> },
-            { label: "Recovered",value: isLoggedIn ? (myLostItems?.data?.filter((i: any) => i.isFound).length || 0) : 0, color: "text-emerald-400", bg: "bg-emerald-500/5", border: "border-emerald-500/10", icon: <FaCheckCircle size={13} className="text-emerald-400" />, className: "col-span-2 sm:col-span-1" },
+            { label: "Recovered",value: isLoggedIn ? (myLostItems?.data?.filter((i: any) => i.isFound).length || 0) : 0, color: "text-emerald-400", bg: "bg-emerald-500/5", border: "border-emerald-500/10", icon: <FaCheckCircle size={13} className="text-emerald-400" />, className: "" },
           ].map((s, i) => (
-            <div key={i} className={`bg-gray-900 border ${s.border} rounded-xl sm:rounded-2xl p-4 sm:p-5 flex flex-col gap-2 ${s.className || ""}`}>
+            <div key={i} className={`bg-gray-900 border ${s.border} rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col gap-2 sm:gap-3 ${s.className || ""}`}>
               <div className="flex items-start justify-between gap-2">
-                <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${s.bg} border ${s.border} shrink-0`}>
+                <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${s.bg} border ${s.border} shrink-0`}>
                   {s.icon}
                 </div>
-                <span className={`text-xl sm:text-3xl font-black leading-none tabular-nums ${s.color}`}>{s.value}</span>
+                <span className={`text-2xl sm:text-3xl font-black leading-none tabular-nums ${s.color}`}>{s.value}</span>
               </div>
-              <p className="text-[10px] sm:text-sm font-semibold text-white leading-tight uppercase tracking-wider">{s.label}</p>
+              <p className="text-xs sm:text-sm font-semibold text-white leading-tight uppercase tracking-wider">{s.label}</p>
             </div>
           ))}
         </div>

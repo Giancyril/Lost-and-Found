@@ -4,8 +4,8 @@ import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt, FaMapMarkerAlt,
-  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt, 
-  FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate, 
+  FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
+  FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate,
   FaUserShield, FaFlag, FaComments
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
@@ -55,7 +55,6 @@ const menuItems = [
   { title: "Security", icon: FaShieldAlt, path: "/dashboard/security" },
   { title: "Accounts", icon: FaUserShield, path: "/dashboard/users" },
   { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
-  { title: "Chat", icon: FaComments, path: "/dashboard/chat" },
   { title: "Settings", icon: FaCog, path: "/dashboard/settings" },
 ];
 
@@ -65,11 +64,11 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/found-items": { title: "Found Items", subtitle: "Review and manage all recovered items awaiting claim." },
   "/dashboard/claims": { title: "Claims", subtitle: "Review, verify and process submitted ownership claims." },
   "/dashboard/archive": { title: "Archive Log", subtitle: "Browse archived items and restore or permanently remove them." },
-  "/dashboard/analytics": { title: "Analytics", subtitle: "Monthly trends, category breakdown and top reporters, user activity, item flow, and performance metrics."},
+  "/dashboard/analytics": { title: "Analytics", subtitle: "Monthly trends, category breakdown and top reporters, user activity, item flow, and performance metrics." },
   "/dashboard/heatmap": { title: "Heatmap", subtitle: "Visualize where items are most commonly lost or found." },
   "/dashboard/comm-hub": { title: "Communication Hub", subtitle: "Announcements, support tickets, feedback and broadcasts." },
   "/dashboard/report": { title: "Report", subtitle: "Generate and export weekly or monthly summary reports." },
-    "/dashboard/moderation":{ title: "Content Moderation",   subtitle: "Review flagged content, manage reports, and moderate community posts." },
+  "/dashboard/moderation": { title: "Content Moderation", subtitle: "Review flagged content, manage reports, and moderate community posts." },
   "/dashboard/students": { title: "Students", subtitle: "View and manage all registered student accounts." },
   "/dashboard/users": { title: "Users", subtitle: "View and manage all registered system users." },
   "/dashboard/categories": { title: "Categories", subtitle: "Create and organize item categories for better sorting." },

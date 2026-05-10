@@ -21,18 +21,18 @@ const postJSON = async (url: string, data: any) => {
 
 // ── Dropdown data ─────────────────────────────────────────────────────────────
 const PRIORITIES = [
-  { value: "LOW",    icon: "🌱", label: "Low",    sub: "General question",       bg: "#dcfce7", color: "#166534" },
+  { value: "LOW", icon: "🌱", label: "Low", sub: "General question", bg: "#dcfce7", color: "#166534" },
   { value: "NORMAL", icon: "⚡", label: "Normal", sub: "Issue affecting my use", bg: "#fef3c7", color: "#92400e" },
-  { value: "HIGH",   icon: "🔥", label: "High",   sub: "Urgent issue",           bg: "#fee2e2", color: "#991b1b" },
-  { value: "URGENT", icon: "🚨", label: "Urgent", sub: "Critical problem",       bg: "#fce7f3", color: "#9d174d" },
+  { value: "HIGH", icon: "🔥", label: "High", sub: "Urgent issue", bg: "#fee2e2", color: "#991b1b" },
+  { value: "URGENT", icon: "🚨", label: "Urgent", sub: "Critical problem", bg: "#fce7f3", color: "#9d174d" },
 ];
 
 const CATEGORIES = [
-  { value: "GENERAL",    icon: "💬", label: "General Feedback", sub: "General comments or questions",      bg: "#ede9fe", color: "#5b21b6" },
-  { value: "BUG",        icon: "🐛", label: "Bug Report",       sub: "Something is broken or not working", bg: "#fee2e2", color: "#991b1b" },
-  { value: "FEATURE",    icon: "✨", label: "Feature Request",  sub: "Suggest a new feature",              bg: "#ede9fe", color: "#5b21b6" },
-  { value: "COMPLAINT",  icon: "⚠️", label: "Complaint",        sub: "Report a negative experience",       bg: "#fef3c7", color: "#92400e" },
-  { value: "COMPLIMENT", icon: "🌟", label: "Compliment",       sub: "Share positive feedback",            bg: "#dcfce7", color: "#166534" },
+  { value: "GENERAL", icon: "💬", label: "General Feedback", sub: "General comments or questions", bg: "#ede9fe", color: "#5b21b6" },
+  { value: "BUG", icon: "🐛", label: "Bug Report", sub: "Something is broken or not working", bg: "#fee2e2", color: "#991b1b" },
+  { value: "FEATURE", icon: "✨", label: "Feature Request", sub: "Suggest a new feature", bg: "#ede9fe", color: "#5b21b6" },
+  { value: "COMPLAINT", icon: "⚠️", label: "Complaint", sub: "Report a negative experience", bg: "#fef3c7", color: "#92400e" },
+  { value: "COMPLIMENT", icon: "🌟", label: "Compliment", sub: "Share positive feedback", bg: "#dcfce7", color: "#166534" },
 ];
 
 // ── Custom Dropdown ───────────────────────────────────────────────────────────
@@ -60,10 +60,10 @@ const CustomDropdown = ({
   const ref = useRef<HTMLDivElement>(null);
   const selected = options.find(o => o.value === value) ?? options[0];
 
-  const ring     = accentColor === "cyan" ? "border-cyan-500/40"  : "border-blue-500/40";
-  const activeBg = accentColor === "cyan" ? "bg-cyan-500/10"      : "bg-blue-500/10";
-  const dotColor = accentColor === "cyan" ? "bg-cyan-400"         : "bg-blue-400";
-  const textSel  = accentColor === "cyan" ? "text-cyan-300"       : "text-blue-300";
+  const ring = accentColor === "cyan" ? "border-cyan-500/40" : "border-blue-500/40";
+  const activeBg = accentColor === "cyan" ? "bg-cyan-500/10" : "bg-blue-500/10";
+  const dotColor = accentColor === "cyan" ? "bg-cyan-400" : "bg-blue-400";
+  const textSel = accentColor === "cyan" ? "text-cyan-300" : "text-blue-300";
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
@@ -78,9 +78,8 @@ const CustomDropdown = ({
       {/* Trigger */}
       <div
         onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-2.5 px-3 py-2.5 bg-gray-800 border rounded-xl cursor-pointer transition-colors ${
-          open ? ring + " border" : "border-white/10 hover:border-white/20"
-        }`}
+        className={`flex items-center gap-2.5 px-3 py-2.5 bg-gray-800 border rounded-xl cursor-pointer transition-colors ${open ? ring + " border" : "border-white/10 hover:border-white/20"
+          }`}
       >
         <span
           className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
@@ -171,20 +170,20 @@ const FAQS = [
 // ════════════════════════════════════════════════════════════════════════════════
 const SupportPage = () => {
   const [activeTab, setActiveTab] = useState<"ticket" | "feedback">("ticket");
-  const [openFaq, setOpenFaq]     = useState<number | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // Ticket form
   const [ticket, setTicket] = useState({
     subject: "", message: "", senderName: "", senderEmail: "", priority: "NORMAL",
   });
-  const [ticketSent,    setTicketSent]    = useState(false);
+  const [ticketSent, setTicketSent] = useState(false);
   const [ticketLoading, setTicketLoading] = useState(false);
 
   // Feedback form
   const [feedback, setFeedback] = useState({
     senderName: "", senderEmail: "", category: "GENERAL", message: "", rating: 0,
   });
-  const [feedbackSent,    setFeedbackSent]    = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   const handleTicketSubmit = async (e: React.FormEvent) => {
@@ -210,6 +209,32 @@ const SupportPage = () => {
     } catch { toast.error("Something went wrong. Please try again."); }
     finally { setFeedbackLoading(false); }
   };
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const checkStatus = () => {
+      const now = new Date();
+      const day = now.getDay();
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+
+      if (day === 0 || day === 6) {
+        setIsOpen(false);
+        return;
+      }
+
+      const totalMinutes = hour * 60 + minute;
+      const startMinutes = 7 * 60 + 30; // 7:30 AM
+      const endMinutes = 18 * 60; // 6:00 PM
+
+      setIsOpen(totalMinutes >= startMinutes && totalMinutes < endMinutes);
+    };
+
+    checkStatus();
+    const timer = setInterval(checkStatus, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <>
@@ -252,16 +277,16 @@ const SupportPage = () => {
               </span>
             </h1>
             <p className="text-gray-400 text-base max-w-lg mx-auto leading-relaxed">
-              Submit a support ticket, send us feedback, or browse our FAQ. The SAS office is available Monday–Friday, 8AM–5PM.
+              Submit a support ticket, send us feedback, or browse our FAQ. The SAS office is available Monday–Friday, 7:30AM–6:00PM.
             </p>
           </div>
 
           {/* ── Quick info cards ── */}
           <div className="fade-up fade-up-2 grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
             {[
-              { icon: <BiSupport size={18} className="text-blue-400" />,   label: "Office Hours",   value: "Mon–Fri, 8AM–5PM",    bg: "bg-blue-500/10 border-blue-500/20" },
-              { icon: <FaEnvelope size={14} className="text-blue-400" />,  label: "Email Support",  value: "sas@nbsc.edu.ph",     bg: "bg-blue-500/10 border-blue-500/20" },
-              { icon: <FaTicketAlt size={14} className="text-blue-400"/>,label: "Response Time",  value: "1–3 business days",   bg: "bg-blue-500/10 border-blue-500/20" },
+              { icon: <BiSupport size={18} className="text-blue-400" />, label: "Office Hours", value: "Mon–Fri, 7:30AM–6:00PM", bg: "bg-blue-500/10 border-blue-500/20" },
+              { icon: <FaEnvelope size={14} className="text-blue-400" />, label: "Email Support", value: "sas@nbsc.edu.ph", bg: "bg-blue-500/10 border-blue-500/20" },
+              { icon: <FaTicketAlt size={14} className="text-blue-400" />, label: "Response Time", value: "1–3 business days", bg: "bg-blue-500/10 border-blue-500/20" },
             ].map((c, i) => (
               <div key={i} className={`flex items-center gap-3 p-4 rounded-2xl border bg-gray-900 ${c.bg}`}>
                 <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${c.bg}`}>{c.icon}</div>
@@ -281,8 +306,8 @@ const SupportPage = () => {
               {/* Tab switcher */}
               <div className="flex bg-gray-900 border border-white/5 rounded-2xl p-1 gap-1">
                 {([
-                  { id: "ticket",   label: "Support Ticket", icon: <FaTicketAlt size={11} /> },
-                  { id: "feedback", label: "Send Feedback",  icon: <FaCommentDots size={11} /> },
+                  { id: "ticket", label: "Support Ticket", icon: <FaTicketAlt size={11} /> },
+                  { id: "feedback", label: "Send Feedback", icon: <FaCommentDots size={11} /> },
                 ] as const).map(tab => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center justify-center gap-2 flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors focus:outline-none select-none
@@ -505,8 +530,8 @@ const SupportPage = () => {
                 <div className="space-y-2.5">
                   {[
                     { emoji: "", label: "Location", value: "NBSC SWDC - Building" },
-                    { emoji: "", label: "Hours",    value: "Mon–Fri, 8:00 AM – 5:00 PM" },
-                   
+                    { emoji: "", label: "Hours", value: "Mon–Fri, 7:30 AM – 6:00 PM" },
+
                   ].map((item) => (
                     <div key={item.label} className="flex items-start gap-2.5">
                       <span className="text-sm shrink-0 mt-0.5">{item.emoji}</span>
@@ -522,7 +547,7 @@ const SupportPage = () => {
 
                 {/* When visiting tips */}
                 <div>
-                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-2">When visiting the office</p>
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-2">When visiting the website</p>
                   <div className="space-y-1.5 text-justify">
                     {[
                       "Always use Fetch Student Info or scan your ID when reporting it auto-fills your name and email instantly.",
@@ -536,13 +561,15 @@ const SupportPage = () => {
                   </div>
                 </div>
 
-               
+
 
                 {/* Status */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <p className="text-emerald-400 text-[11px] font-semibold">Office currently open</p>
+                    <span className={`w-2 h-2 rounded-full animate-pulse ${isOpen ? "bg-emerald-400" : "bg-red-400"}`} />
+                    <p className={`${isOpen ? "text-emerald-400" : "text-red-400"} text-[11px] font-semibold`}>
+                      {isOpen ? "Office currently open" : "Office currently closed"}
+                    </p>
                   </div>
                   <p className="text-gray-700 text-[10px]">Mon–Fri only</p>
                 </div>
