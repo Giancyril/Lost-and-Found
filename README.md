@@ -17,7 +17,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Student Masterlist Integration**: Google Sheets-backed masterlist that resolves student name, email, and department from a scanned or entered ID — with fuzzy name matching and ID normalization
 - **Real-Time Notifications**: Email notifications for potential matches and claim status updates
 - **Interactive Maps**: Location-based visualization using Leaflet maps with heat mapping
-- **Indoor 3D Map**: Interactive, multi-level 3D campus building maps for precise room-level item localization (Desktop use only)
+- **Indoor 3D Map**: Interactive, multi-level 3D campus building maps for precise room-level item localization with integrated heat mapping to visualize item-density patterns across floors (Desktop use only)
 - **Archive System**: Automated archiving of stale items to keep the database clean
 - **Audit Logging**: Comprehensive audit trail for all administrative actions
 - **Sheets Activity Logger**: Every lost and found report submission is logged to a Google Sheet in real time for offline recordkeeping and audit trails
@@ -432,6 +432,13 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Camera Management**: Front/back camera switching with proper stream cleanup and error handling
 - **Type Safety**: Full TypeScript support with custom type declarations for QuaggaJS library
 
+### Indoor 3D Map & Heatmap
+- **Three.js powered canvas**: High-performance interactive 3D building models with floor-by-floor navigation and multi-level viewing.
+- **Dynamic Heatmapping**: Visualizes lost and found item density directly onto the 3D floor plan, allowing administrators to identify high-traffic loss zones.
+- **Precise Localization**: Allows users to pin items to exact room coordinates rather than just general building names.
+- **Floor-level Filtering**: Isolate specific floors to view item data and heatmap intensity for targeted building analysis.
+- **Real-Time Data Integration**: Heatmap colors and intensities update automatically as new items are reported and pinned to rooms.
+
 ### Student Masterlist Integration
 - **Google Sheets backend**: Reads directly from a shared Google Sheet via the Gviz JSON API — no manual data entry required
 - **ID normalization**: Strips dashes and spaces before comparing so `2024-1521` and `20241521` both match correctly
@@ -477,7 +484,7 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 
 ###  Phase 3: Expansion (Completed)
 - **Push Notifications**: Real-time alerts for item matches, claim updates, and chat messages using Web Push API.
-- **Interactive Indoor 3D Maps**: Precise location pinning on multi-level campus building maps (Desktop use only).
+- **Interactive Indoor 3D Maps**: Precise location pinning and floor-level heat mapping on multi-level campus building maps (Desktop use only).
 - **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details.
 
 ###  Phase 4: Ecosystem & Sustainability (Current)
