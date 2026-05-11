@@ -32,16 +32,29 @@ interface LocationStat {
   lng?:     number;
 }
 
+interface AggregatedLocation {
+  lat: number;
+  lng: number;
+  totalFound: number;
+  totalLost: number;
+  totalItems: number;
+  rooms: {
+    name: string;
+    found: number;
+    lost: number;
+  }[];
+}
+
 // ── Heat color helpers ──
 const getHeatColor = (val: number, max: number) => {
   const pct = val / max;
-  if (pct >= 0.75) return { hex: "#4f46e5", label: "Critical", badge: "bg-indigo-50 text-indigo-600 border-indigo-200", bar: "bg-indigo-600" };
-  if (pct >= 0.5)  return { hex: "#4f46e5", label: "High",     badge: "bg-indigo-50 text-indigo-600 border-indigo-200", bar: "bg-indigo-600" };
-  if (pct >= 0.25) return { hex: "#4f46e5", label: "Medium",   badge: "bg-indigo-50 text-indigo-600 border-indigo-200", bar: "bg-indigo-600" };
-  return               { hex: "#4f46e5", label: "Low",      badge: "bg-indigo-50 text-indigo-600 border-indigo-200", bar: "bg-indigo-600" };
+  if (pct >= 0.75) return { hex: "#4f46e5", label: "Critical", badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20", bar: "bg-indigo-600" };
+  if (pct >= 0.5)  return { hex: "#4f46e5", label: "High",     badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20", bar: "bg-indigo-600" };
+  if (pct >= 0.25) return { hex: "#4f46e5", label: "Medium",   badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20", bar: "bg-indigo-600" };
+  return               { hex: "#4f46e5", label: "Low",      badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20", bar: "bg-indigo-600" };
 };
 
-// ── Heatmap layer using canvas circles (White Markers with Indigo Outlines) ──
+// ── Heatmap layer with Multi-Room Aggregation Logic ──
 function HeatLayer({ points, filter, max }: {
   points: LocationStat[];
   filter: Filter;
@@ -50,20 +63,35 @@ function HeatLayer({ points, filter, max }: {
   const map = useMap();
   const layerRef = useRef<L.LayerGroup | null>(null);
 
+  const aggregated = useMemo(() => {
+    const groups: { [key: string]: AggregatedLocation } = {};
+    points.forEach(p => {
+      if (!p.lat || !p.lng) return;
+      const key = `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`;
+      if (!groups[key]) {
+        groups[key] = { lat: p.lat, lng: p.lng, totalFound: 0, totalLost: 0, totalItems: 0, rooms: [] };
+      }
+      groups[key].totalFound += p.found;
+      groups[key].totalLost += p.lost;
+      groups[key].totalItems += p.total;
+      groups[key].rooms.push({ name: p.location, found: p.found, lost: p.lost });
+    });
+    return Object.values(groups);
+  }, [points]);
+
   useEffect(() => {
     if (layerRef.current) map.removeLayer(layerRef.current);
     const layer = L.layerGroup();
 
-    points.forEach(p => {
-      if (!p.lat || !p.lng) return;
-      const value = filter === "found" ? p.found : filter === "lost" ? p.lost : p.total;
+    aggregated.forEach(group => {
+      const value = filter === "found" ? group.totalFound : filter === "lost" ? group.totalLost : group.totalItems;
       if (value === 0) return;
 
       const pct    = value / max;
       const color  = getHeatColor(value, max);
       const radius = 12 + pct * 25;
 
-      L.circleMarker([p.lat, p.lng], {
+      L.circleMarker([group.lat, group.lng], {
         radius:      radius + 10,
         color:       "transparent",
         fillColor:   color.hex,
@@ -71,8 +99,7 @@ function HeatLayer({ points, filter, max }: {
         weight:      0,
       }).addTo(layer);
 
-      // Main Marker with Hover Tooltip
-      const marker = L.circleMarker([p.lat, p.lng], {
+      const marker = L.circleMarker([group.lat, group.lng], {
         radius,
         color:       "#ffffff",
         fillColor:   color.hex,
@@ -80,39 +107,36 @@ function HeatLayer({ points, filter, max }: {
         weight:      2.5,
       }).addTo(layer);
 
-      // Professional Glassmorphic Tooltip
-      marker.bindTooltip(`
-        <div style="
-          font-family: 'Inter', sans-serif;
-          min-width: 160px;
-          padding: 12px;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(8px);
-          border-radius: 14px;
-          box-shadow: 0 12px 32px rgba(0,0,0,0.12);
-          border: 1px solid rgba(255,255,255,0.2);
-        ">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <div style="width: 4px; height: 14px; background: #4f46e5; border-radius: 2px;"></div>
-            <p style="font-weight: 800; font-size: 13px; margin: 0; color: #1e293b; letter-spacing: -0.01em;">${p.location}</p>
+      const roomsHtml = group.rooms.map(r => `
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.04);">
+          <span style="font-size: 11px; font-weight: 600; color: #334155; white-space: nowrap;">${r.name}</span>
+          <div style="display: flex; gap: 8px; font-size: 11px; font-weight: 800; shrink-0;">
+            <span style="color: #10b981;">${r.found}</span>
+            <span style="color: #ef4444;">${r.lost}</span>
           </div>
-          <div style="display: grid; grid-template-cols: 1fr 1fr; gap: 10px; padding-top: 4px; border-top: 1px solid rgba(0,0,0,0.04);">
-            <div style="display: flex; flex-direction: column;">
-              <span style="font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Found</span>
-              <span style="font-size: 16px; font-weight: 800; color: #10b981;">${p.found}</span>
-            </div>
-            <div style="display: flex; flex-direction: column;">
-              <span style="font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Lost</span>
-              <span style="font-size: 16px; font-weight: 800; color: #ef4444;">${p.lost}</span>
-            </div>
+        </div>
+      `).join("");
+
+      marker.bindTooltip(`
+        <div style="font-family:'Inter',sans-serif;min-width:240px;padding:16px;background:white;border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,0.18)">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <span style="font-size: 10px; font-weight: 900; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Location Activity</span>
+            <span style="font-size: 10px; font-weight: 800; color: #4f46e5; background: rgba(79,70,229,0.08); padding: 2px 8px; border-radius: 6px;">${group.rooms.length} Areas</span>
+          </div>
+          <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+             <span style="font-size: 28px; font-weight: 900; color: #1e293b; line-height: 1;">${value}</span>
+             <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.2;">Reports</span>
+                <span style="font-size: 10px; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.2;">Found/Lost</span>
+             </div>
+          </div>
+          <div style="max-height: 140px; overflow-y: auto; padding-right: 4px;">
+             ${roomsHtml}
           </div>
         </div>
       `, {
         className: "custom-tooltip",
         direction: "top",
-        offset: [0, -10],
-        opacity: 1,
-        permanent: false,
         sticky: true
       });
     });
@@ -120,7 +144,7 @@ function HeatLayer({ points, filter, max }: {
     layer.addTo(map);
     layerRef.current = layer;
     return () => { map.removeLayer(layer); };
-  }, [points, filter, max, map]);
+  }, [aggregated, filter, max, map]);
 
   return null;
 }
@@ -312,8 +336,7 @@ const IndoorMapPage = () => {
           ) : (
             <div className="px-6 sm:px-10 lg:px-16 py-6 flex-1 flex flex-col gap-6 animate-in fade-in duration-500 overflow-hidden">
               <style>{`
-                .custom-popup .leaflet-popup-content-wrapper { background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-                .custom-popup .leaflet-popup-tip { background: #ffffff; }
+                .custom-tooltip { background: white !important; border: none !important; box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important; border-radius: 14px !important; }
                 .leaflet-container { background: #111827; border-radius: 1.5rem; }
               `}</style>
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start h-full">
@@ -331,6 +354,25 @@ const IndoorMapPage = () => {
                       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" maxZoom={20} />
                       <HeatLayer points={mappableStats} filter={heatmapFilter} max={maxFilter} />
                     </MapContainer>
+
+                    {/* Intensity Scale Overlay */}
+                    <div className="absolute bottom-6 left-6 p-4 bg-gray-900/90 backdrop-blur-md border border-white/10 rounded-2xl z-[1000] shadow-2xl pointer-events-none">
+                       <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Intensity Scale</p>
+                       <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                             <div className="w-2 h-2 rounded-full bg-indigo-600" />
+                             <span className="text-[10px] font-bold text-gray-300">High</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                             <div className="w-2 h-2 rounded-full bg-indigo-400" />
+                             <span className="text-[10px] font-bold text-gray-300">Med</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                             <div className="w-2 h-2 rounded-full bg-gray-500" />
+                             <span className="text-[10px] font-bold text-gray-300">Low</span>
+                          </div>
+                       </div>
+                    </div>
                   </div>
                 </div>
                 <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col h-[540px]">
@@ -345,7 +387,7 @@ const IndoorMapPage = () => {
                       const pct = Math.round((val / maxFilter) * 100);
                       return (
                         <div key={loc.location} className="p-3 bg-white/[0.03] border border-white/5 rounded-xl space-y-2 hover:border-indigo-500/30 transition-colors group">
-                          <div className="flex items-center justify-between"><p className="text-gray-200 text-xs font-bold truncate pr-2 group-hover:text-indigo-400 transition-colors">{loc.location}</p><span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${heat.badge.replace("bg-indigo-50", "bg-indigo-500/10").replace("text-indigo-600", "text-indigo-400").replace("border-indigo-200", "border-indigo-500/20")}`}>{heat.label}</span></div>
+                          <div className="flex items-center justify-between"><p className="text-gray-200 text-xs font-bold truncate pr-2 group-hover:text-indigo-400 transition-colors">{loc.location}</p><span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${heat.badge}`}>{heat.label}</span></div>
                           <div className="flex items-center gap-2"><div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden"><div className={`h-full ${heat.bar} transition-all duration-500`} style={{ width: `${pct}%` }} /></div><span className="text-gray-500 text-[10px] font-bold">{pct}%</span></div>
                         </div>
                       );
