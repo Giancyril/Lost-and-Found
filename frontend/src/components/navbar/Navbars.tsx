@@ -6,12 +6,13 @@ import {
   NavbarCollapse,
   NavbarLink,
 } from "flowbite-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Modals from "../modal/Modal";
 import { ToastContainer } from "react-toastify";
 import {
   FaCog, FaSignOutAlt, FaTachometerAlt, FaChevronDown,
   FaTv, FaStar, FaTrophy, FaBoxOpen, FaChartLine, FaArrowRight,
+  FaExclamationTriangle, FaSearch, FaMap, FaClipboardList
 } from "react-icons/fa";
 import { useState, useRef, useEffect } from "react";
 import NotificationBell from "../notifications/NotificationBell";
@@ -74,20 +75,21 @@ const PointsDropdown = ({ points, history, rank }: {
       <button
         type="button"
         onClick={() => setOpen(p => !p)}
-        className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold
-          border transition-all duration-200 hover:scale-105 active:scale-95
-          bg-yellow-400/10 text-yellow-300 border-yellow-400/20 hover:bg-yellow-400/15`}
+        className="relative w-9 h-9 flex items-center justify-center rounded-full
+          bg-yellow-400/10 text-yellow-300 border border-yellow-400/20 
+          hover:border-yellow-400/50 hover:bg-yellow-400/20 transition-all duration-200"
       >
-        <FaStar size={9} className="text-yellow-400" />
-        <span>{points} pts</span>
-        <FaChevronDown size={7} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <FaStar size={14} className="text-yellow-400" />
+        <span className="absolute -top-1 -right-1 min-w-[18px] h-4 px-1 bg-yellow-500 text-gray-950 text-[9px] font-black rounded-full flex items-center justify-center border border-gray-950 shadow-sm">
+          {points >= 1000 ? `${(points / 1000).toFixed(1)}k` : points}
+        </span>
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-10 w-72 bg-gray-900 border border-white/10
-            rounded-2xl shadow-2xl shadow-black/60 overflow-hidden z-50">
+          <div className="fixed md:absolute left-3 right-3 md:left-auto md:right-0 top-[72px] md:top-11 w-auto md:w-72 bg-gray-900 border border-white/10
+            rounded-2xl shadow-2xl shadow-black/80 overflow-hidden z-50">
 
             {/* Header */}
             <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-yellow-500/5 to-transparent border-b border-white/[0.05]">
@@ -196,9 +198,73 @@ const PointsDropdown = ({ points, history, rank }: {
   );
 };
 
+// ── Nav Dropdown ──────────────────────────────────────────────────────────────
+const NavDropdown = ({ label, items }: {
+  label: string;
+  items: { label: string; href: string; icon?: React.ReactNode; color?: string; bg?: string }[];
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
+  const isActive = items.some(item => location.pathname === item.href);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(p => !p)}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all duration-200 font-semibold text-sm whitespace-nowrap
+          ${isActive ? "text-blue-400 bg-blue-500/10" : "text-gray-200 hover:text-white hover:bg-gray-800"}`}
+      >
+        {label}
+        <FaChevronDown size={8} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 mt-2 w-48 bg-gray-900 border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+          {/* top accent line */}
+          <div className="h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+          <div className="p-1.5">
+            {items.map((item) => {
+              const active = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 group
+                    ${active ? "bg-blue-500/10 text-blue-400" : "text-gray-300 hover:text-white hover:bg-white/[0.05]"}`}
+                >
+                  {item.icon && (
+                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${item.bg ?? "bg-white/5"}`}>
+                      <span className={item.color ?? "text-gray-400"}>{item.icon}</span>
+                    </span>
+                  )}
+                  <span className="font-medium">{item.label}</span>
+                  {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Main Navbar ───────────────────────────────────────────────────────────────
 export function Navbars() {
   const navigate = useNavigate();
+  const location = useLocation();
   const users: any = useUserVerification();
 
   const isAdmin = users?.role === "ADMIN";
@@ -219,6 +285,13 @@ export function Navbars() {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -265,7 +338,7 @@ export function Navbars() {
 
   return (
     <>
-      <Navbar fluid className="sticky top-0 z-50 bg-gray-950/95 backdrop-blur-md border-b border-gray-800 shadow-2xl">
+      <Navbar fluid className="sticky top-0 z-50 bg-[#0a0f1d]/95 backdrop-blur-md border-b border-gray-800 shadow-2xl py-1 md:py-1.5 !overflow-visible">
 
         {/* Brand */}
         <NavbarBrand
@@ -287,7 +360,7 @@ export function Navbars() {
         </NavbarBrand>
 
         {/* Right side */}
-        <div className="flex md:order-2 items-center gap-2">
+        <div className="flex md:order-2 items-center gap-2 !overflow-visible">
           <NotificationBell />
 
           {/* Not logged in */}
@@ -379,11 +452,11 @@ export function Navbars() {
                     </div>
                     <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-gray-900 rounded-full" />
                   </div>
-                  <div className="hidden sm:block text-left">
-                    <p className="text-white text-sm font-semibold leading-none">
+                  <div className="hidden sm:block text-left max-w-[100px]">
+                    <p className="text-white text-sm font-semibold leading-none truncate">
                       {users?.name?.split(' ')[0] || users?.username || "Student"}
                     </p>
-                    <p className="text-gray-500 text-xs mt-0.5 font-mono">
+                    <p className="text-gray-500 text-[10px] mt-0.5 font-mono truncate">
                       {users?.schoolId || "STUDENT"}
                     </p>
                   </div>
@@ -395,18 +468,18 @@ export function Navbars() {
                     <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
                     <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                       <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/[0.05]">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
-                        <UserIcon className="w-5 h-5" />
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
+                          <UserIcon className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <p className="text-white text-[11px] font-medium leading-tight break-words line-clamp-2">
+                            {users?.name || users?.username || "Student"}
+                          </p>
+                          <p className="text-gray-500 text-[10px] font-mono mt-0.5">
+                            {users?.schoolId || "Student"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0 overflow-hidden">
-                        <p className="text-white text-[11px] font-medium leading-tight break-words line-clamp-2">
-                          {users?.name || users?.username || "Student"}
-                        </p>
-                        <p className="text-gray-500 text-[10px] font-mono mt-0.5">
-                          {users?.schoolId || "Student"}
-                        </p>
-                      </div>
-                    </div>
                       <div className="py-1">
                         <Link to="/dashboard/student" onClick={() => setProfileOpen(false)}
                           className="flex items-center gap-2.5 px-4 py-2.5 text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-sm">
@@ -426,28 +499,179 @@ export function Navbars() {
             </>
           )}
 
-          <NavbarToggle />
+          {/* Replace NavbarToggle with a custom one */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(p => !p)}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors md:hidden"
+          >
+            <i className={`ti ${mobileMenuOpen ? "ti-x" : "ti-menu-2"} text-[17px]`} aria-hidden="true" />
+          </button>
         </div>
 
-        {/* Nav Links */}
-        <NavbarCollapse>
-          <div className="flex flex-col md:flex-row md:items-center md:gap-8 lg:gap-14">
+        {/* ── Mobile menu styles ── */}
+        <style>{`
+          @media (max-width: 767px) {
+            .mobile-nav-menu {
+              position: absolute;
+              top: 100%;
+              left: 0;
+              width: 100%;
+              max-height: 90vh;
+              overflow-y: auto;
+              background-color: #0a0f1d; /* Custom dark navy */
+              border-bottom: 1px solid rgba(255,255,255,0.06);
+              z-index: 50;
+              transform-origin: top center;
+            }
+            .mobile-nav-menu.open {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+              pointer-events: auto;
+              transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.4,0,0.2,1);
+            }
+            .mobile-nav-menu.closed {
+              opacity: 0;
+              transform: translateY(-8px) scale(0.98);
+              pointer-events: none;
+              display: block;
+              transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.4,0,0.2,1);
+            }
+          }
+        `}</style>
+
+        {/* Mobile menu — manually controlled */}
+        <div className={`mobile-nav-menu md:hidden ${mobileMenuOpen ? "open" : "closed"}`}>
+          <div className="px-2 pt-1 pb-3">
+
+            {isLoggedIn && (
+              <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 border-2 border-blue-500/30">
+                  <span className="text-sm font-medium text-white">{initial}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-white truncate">
+                    {users?.name || users?.username || (isAdmin ? "Admin" : "Student")}
+                  </p>
+                  <p className="text-[11px] text-white/35 mt-0.5">
+                    {isAdmin ? "Administrator" : `Student · ${users?.schoolId || "NBSC"}`}
+                  </p>
+                </div>
+                {!isAdmin && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded-full shrink-0">
+                    <FaStar size={9} className="text-yellow-400" />
+                    <span className="text-[11px] font-medium text-yellow-300">{points} pts</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <p className="text-[10px] text-white/25 uppercase tracking-widest px-3 mb-1.5">Navigation</p>
+
+            {[
+              { label: "Home",             href: "/",              icon: "ti-home",             iconColor: "text-blue-400",    iconBg: "bg-blue-500/10"    },
+              { label: "Found Items",      href: "/foundItems",    icon: "ti-package",          iconColor: "text-emerald-400", iconBg: "bg-emerald-500/10" },
+              { label: "Lost Items",       href: "/lostItems",     icon: "ti-alert-triangle",   iconColor: "text-red-400",     iconBg: "bg-red-500/10"     },
+              { label: "Report Lost Item", href: "/reportLostItem", icon: "ti-file-description", iconColor: "text-orange-400",  iconBg: "bg-orange-500/10"  },
+              { label: "Smart Search",     href: "/ai-search",     icon: "ti-sparkles",         iconColor: "text-violet-400",  iconBg: "bg-violet-500/10"  },
+              { label: "Track Status",     href: "/itemStatus",    icon: "ti-radar",            iconColor: "text-cyan-400",    iconBg: "bg-cyan-500/10"    },
+            ].map(({ label, href, icon, iconColor, iconBg }) => (
+              <Link
+                key={href}
+                to={href}
+                onClick={closeMobileMenu}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-all duration-150 mb-0.5 group"
+              >
+                <span className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}>
+                  <i className={`ti ${icon} text-[15px] ${iconColor}`} aria-hidden="true" />
+                </span>
+                <span className="flex-1 text-sm text-white/70 group-hover:text-white transition-colors duration-150">{label}</span>
+                <i className="ti ti-chevron-right text-[13px] text-white/10 group-hover:text-white/25 transition-colors duration-150" aria-hidden="true" />
+              </Link>
+            ))}
+
+            
+
+            {isLoggedIn && isAdmin && (
+              <Link to="/dashboard" onClick={closeMobileMenu}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] transition-all duration-150 mb-0.5 group">
+                <span className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <i className="ti ti-layout-dashboard text-[15px] text-blue-400" aria-hidden="true" />
+                </span>
+                <span className="flex-1 text-sm text-white/70 group-hover:text-white transition-colors duration-150">Admin Dashboard</span>
+                <i className="ti ti-chevron-right text-[13px] text-white/10 group-hover:text-white/25 transition-colors duration-150" aria-hidden="true" />
+              </Link>
+            )}
+
+            {isLoggedIn && (
+              <>
+                <div className="h-px bg-white/[0.05] my-2" />
+                <button type="button"
+                  onClick={() => { closeMobileMenu(); handleSignOut(); }}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-500/[0.06] transition-all duration-150 w-full group">
+                  <span className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                    <i className="ti ti-logout text-[15px] text-red-400" aria-hidden="true" />
+                  </span>
+                  <span className="flex-1 text-sm text-red-400/80 group-hover:text-red-400 text-left transition-colors duration-150">Sign Out</span>
+                </button>
+              </>
+            )}
+
+            <div className="h-2" />
+          </div>
+        </div>
+
+        {/* Desktop links — unchanged */}
+        <NavbarCollapse className="hidden md:flex">
+          <div className="hidden md:flex md:items-center md:gap-6 lg:gap-8 py-2 md:py-0">
             {[
               { label: "Home", href: "/" },
-              { label: "Report Lost Item", href: "/reportlostItem" },
-              { label: "Lost Items", href: "/lostItems" },
-              { label: "Found Items", href: "/foundItems" },
-              { label: "Smart Search", href: "/ai-search" },
-              { label: "Indoor Map", href: "/indoor-map", desktopOnly: true },
-              { label: "Track Status", href: "/itemStatus" },
-            ].map(({ label, href, desktopOnly }) => (
-              <span key={href} className={desktopOnly ? "hidden md:block" : undefined}>
-                <NavbarLink href={href}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2.5 tracking-wide rounded-lg transition-all duration-200 font-medium text-sm whitespace-nowrap">
+              { label: "Report Item", href: "/reportlostItem" },
+            ].map(({ label, href }) => {
+              const isActive = location.pathname === href;
+              return (
+                <Link
+                  key={href}
+                  to={href}
+                  className={`px-3 py-1.5 rounded-lg transition-all duration-200 font-semibold text-sm whitespace-nowrap
+                    ${isActive ? "text-blue-400 bg-blue-500/10" : "text-gray-200 hover:text-white hover:bg-gray-800"}`}
+                >
                   {label}
-                </NavbarLink>
-              </span>
-            ))}
+                </Link>
+              );
+            })}
+
+            <NavDropdown
+            label="Items"
+            items={[
+              { label: "Lost Items",  href: "/lostItems",  icon: <FaExclamationTriangle size={11} />, color: "text-red-400",     bg: "bg-red-500/10"     },
+              { label: "Found Items", href: "/foundItems", icon: <FaBoxOpen size={11} />,             color: "text-emerald-400", bg: "bg-emerald-500/10" },
+            ]}
+            />
+
+            <NavDropdown
+              label="Tools"
+              items={[
+                { label: "Smart Search", href: "/ai-search",   icon: <FaSearch size={11} />, color: "text-violet-400", bg: "bg-violet-500/10" },
+                { label: "Indoor Map",   href: "/indoor-map",  icon: <FaMap size={11} />,    color: "text-cyan-400",   bg: "bg-cyan-500/10"   },
+              ]}
+            />
+
+            {[
+              { label: "Track Status", href: "/itemStatus" },
+            ].map(({ label, href }) => {
+              const isActive = location.pathname === href;
+              return (
+                <Link
+                  key={href}
+                  to={href}
+                  className={`px-3 py-1.5 rounded-lg transition-all duration-200 font-semibold text-sm whitespace-nowrap
+                    ${isActive ? "text-blue-400 bg-blue-500/10" : "text-gray-200 hover:text-white hover:bg-gray-800"}`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </div>
         </NavbarCollapse>
       </Navbar>

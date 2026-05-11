@@ -13,12 +13,14 @@ export const PointsBadge: React.FC<PointsBadgeProps> = ({ points, compact = fals
     return (
       <Link
         to="/points"
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5
-          bg-yellow-400/10 text-yellow-300 border border-yellow-400/20 rounded-xl
-          text-[11px] font-bold hover:bg-yellow-400/20 transition-colors"
+        className="relative w-9 h-9 flex items-center justify-center rounded-full
+          bg-yellow-400/10 text-yellow-300 border border-yellow-400/20
+          hover:bg-yellow-400/20 hover:border-yellow-400/50 transition-all duration-200"
       >
-        <FaStar size={9} className="text-yellow-400" />
-        {points.toLocaleString()} pts
+        <FaStar size={14} className="text-yellow-400" />
+        <span className="absolute -top-1 -right-1 min-w-[18px] h-4 px-1 bg-yellow-500 text-gray-950 text-[9px] font-black rounded-full flex items-center justify-center border border-gray-950 shadow-sm">
+          {points >= 1000 ? `${(points / 1000).toFixed(1)}k` : points}
+        </span>
       </Link>
     );
   }
