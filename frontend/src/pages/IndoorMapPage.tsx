@@ -71,26 +71,50 @@ function HeatLayer({ points, filter, max }: {
         weight:      0,
       }).addTo(layer);
 
-      L.circleMarker([p.lat, p.lng], {
+      // Main Marker with Hover Tooltip
+      const marker = L.circleMarker([p.lat, p.lng], {
         radius,
         color:       "#ffffff",
         fillColor:   color.hex,
-        fillOpacity: 0.75,
-        weight:      2,
-      })
-        .bindPopup(`
-          <div style="font-family:'Inter',sans-serif;min-width:140px;padding:4px 0">
-            <p style="font-weight:700;font-size:12px;margin:0 0 4px;color:#1e293b">${p.location}</p>
-            <div style="display:flex;gap:8px;font-size:10px;color:#64748b">
-              <span>Found: <b style="color:#10b981">${p.found}</b></span>
-              <span>Lost: <b style="color:#ef4444">${p.lost}</b></span>
+        fillOpacity: 0.85,
+        weight:      2.5,
+      }).addTo(layer);
+
+      // Professional Glassmorphic Tooltip
+      marker.bindTooltip(`
+        <div style="
+          font-family: 'Inter', sans-serif;
+          min-width: 160px;
+          padding: 12px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(8px);
+          border-radius: 14px;
+          box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+          border: 1px solid rgba(255,255,255,0.2);
+        ">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="width: 4px; height: 14px; background: #4f46e5; border-radius: 2px;"></div>
+            <p style="font-weight: 800; font-size: 13px; margin: 0; color: #1e293b; letter-spacing: -0.01em;">${p.location}</p>
+          </div>
+          <div style="display: grid; grid-template-cols: 1fr 1fr; gap: 10px; padding-top: 4px; border-top: 1px solid rgba(0,0,0,0.04);">
+            <div style="display: flex; flex-direction: column;">
+              <span style="font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Found</span>
+              <span style="font-size: 16px; font-weight: 800; color: #10b981;">${p.found}</span>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <span style="font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Lost</span>
+              <span style="font-size: 16px; font-weight: 800; color: #ef4444;">${p.lost}</span>
             </div>
           </div>
-        `, {
-          className: "custom-popup",
-          maxWidth:  200,
-        })
-        .addTo(layer);
+        </div>
+      `, {
+        className: "custom-tooltip",
+        direction: "top",
+        offset: [0, -10],
+        opacity: 1,
+        permanent: false,
+        sticky: true
+      });
     });
 
     layer.addTo(map);
