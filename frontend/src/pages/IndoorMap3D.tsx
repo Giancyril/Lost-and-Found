@@ -470,6 +470,7 @@ const RoomTile = ({
   const halfDepth = BUILDING_DEPTH / 2;
   const roomZ = -halfDepth + ROOM_D / 2;
   const wallZ = roomZ + ROOM_D / 2;
+  
   const tint = isSelected ? palette.selectedTint : isHovered ? palette.hoverTint : null;
   const tintOpacity = isSelected ? 0.35 : isHovered ? 0.22 : 0;
   const opacityMod = isActiveFloor ? 1 : 0.15;
@@ -902,6 +903,8 @@ interface MiniMapProps {
   onHover: (id: string | null) => void;
   items: any[];
   isNight: boolean;
+  showHeatmap?: boolean;
+  heatmapData?: any[];
 }
 
 const MiniMap = ({

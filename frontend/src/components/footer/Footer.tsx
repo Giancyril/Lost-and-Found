@@ -19,8 +19,8 @@ const Footers = () => {
                 <FaInfoCircle size={11} />
               </div>
               {/* Using Link ensures this works from ANY page in your app */}
-              <Link 
-                to="/about" 
+              <Link
+                to="/about"
                 className="text-gray-500 hover:text-blue-400 text-sm text-left leading-relaxed transition-colors duration-200"
               >
                 SAS Lost &amp; Found Management System

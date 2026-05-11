@@ -86,11 +86,11 @@ const CustomSelect = ({ options, value, onChange }: {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between gap-1.5 px-2.5 py-2 text-xs rounded-xl border border-white/5 outline-none bg-gray-900 text-gray-300"
+        className="w-full flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm rounded-xl border border-white/5 outline-none bg-gray-900 text-gray-300"
       >
-        <span className="flex items-center gap-1.5 truncate min-w-0">
+        <span className="flex items-center gap-1.5 sm:gap-2 truncate min-w-0">
           {selected?.icon && <span className="shrink-0">{selected.icon}</span>}
-          <span className="truncate text-xs">{selected?.label ?? <span className="text-gray-500">Select…</span>}</span>
+          <span className="truncate text-xs sm:text-sm">{selected?.label ?? <span className="text-gray-500">Select…</span>}</span>
         </span>
         <FaChevronDown size={8} className={`shrink-0 text-gray-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
@@ -624,18 +624,18 @@ const LostItemsPage = () => {
           {/* Search + View Toggle Row */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={11} />
+              <FaSearch className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
               <input type="text" value={fuzzyTerm} onChange={handleFuzzyChange}
                 placeholder="Search by name, location, or description..."
-                className="w-full h-9 pl-9 pr-20 bg-gray-900 border border-white/5 rounded-xl text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" />
+                className="w-full h-9 sm:h-auto pl-9 sm:pl-11 pr-20 sm:pr-28 sm:py-3 bg-gray-900 border border-white/5 rounded-xl text-white text-xs sm:text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" />
               {fuzzyTerm && (
                 <button onClick={clearSearch}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2 py-1 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] rounded-lg transition-all">
-                  <FaTimes size={8} /> Clear
+                  className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] sm:text-xs rounded-lg transition-all">
+                  <FaTimes size={9} /> Clear
                 </button>
               )}
             </div>
-            <div className="flex gap-0.5 bg-gray-900 border border-white/5 rounded-xl p-1 shrink-0">
+            <div className="flex gap-0.5 bg-gray-900 border border-white/5 rounded-xl p-1 sm:py-2 shrink-0">
               <button onClick={() => setViewMode("grid")} title="Grid view"
                 className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-500/10 text-blue-400" : "text-gray-500 hover:text-white"}`}>
                 <FaTh size={12} />
