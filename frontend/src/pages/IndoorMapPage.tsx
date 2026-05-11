@@ -274,7 +274,9 @@ const IndoorMapPage = () => {
                 <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
               </div>
               <div className="w-80 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col">
-                <div className="p-4 border-b border-white/5"><h3 className="text-white text-sm font-semibold">Room Details</h3></div>
+                <div className="p-4 border-b border-white/5 flex items-center gap-2">
+                  <h3 className="text-white text-[11px] font-bold uppercase tracking-widest">Room Details</h3>
+                </div>
                 {!selectedRoom ? (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-500"><FaInfoCircle size={22} className="mb-3" /><p className="text-sm">Select a room</p></div>
                 ) : (
@@ -313,7 +315,7 @@ const IndoorMapPage = () => {
                 </div>
                 <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col">
                   <div className="p-4 border-b border-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-2"><FaLayerGroup size={12} className="text-indigo-400" /><h3 className="text-white text-[11px] font-bold uppercase tracking-widest">Active Hotspots</h3></div>
+                    <div className="flex items-center gap-2"><h3 className="text-white text-[11px] font-bold uppercase tracking-widest">Active Hotspots</h3></div>
                     <span className="text-[10px] text-gray-500 font-bold">{mappableStats.length}</span>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-2">

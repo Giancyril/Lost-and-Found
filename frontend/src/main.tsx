@@ -6,8 +6,7 @@ import Providers from "./providers/Providers.tsx";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import Home from "./pages/home/Home.tsx";
 import Login from "./pages/login/Login.tsx";
-import { StudentLogin } from "./pages/login/StudentLogin.tsx";
-import { StudentRegister } from "./pages/register/StudentRegister.tsx";
+import StudentAuth from "./pages/login/StudentAuth.tsx";
 import FoundItemsPage from "./pages/foundItems/FoundItems.tsx";
 import SingleFoundItem from "./pages/foundItems/SingleFoundItem.tsx";
 import LostItemsPage from "./pages/lostItems/LostItems.tsx";
@@ -43,7 +42,7 @@ import StudentRegistry from "./dashboard/pages/StudentRegistry.tsx";
 import CommunicationHub from "./dashboard/pages/CommunicationHub.tsx";
 import SupportPage from "./pages/support/SupportPage.tsx";
 import SecurityPage from "./dashboard/pages/SecurityCompliance.tsx";
- import ContentModeration from "./dashboard/pages/ContentModeration.tsx";
+import ContentModeration from "./dashboard/pages/ContentModeration.tsx";
 import ItemStatus from "./pages/itemStatus/ItemStatus.tsx";
 import ChatPage from "./dashboard/pages/ChatPage.tsx";
 import IndoorMapPage from "./pages/IndoorMapPage.tsx";
@@ -55,8 +54,8 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <Home /> },
       { path: "/about", element: <AboutUs /> },
-      { path: "/login", element: <StudentLogin /> },
-      { path: "/register", element: <StudentRegister /> },
+      { path: "/login", element: <StudentAuth key="student-auth" /> },
+      { path: "/register", element: <StudentAuth key="student-auth" /> },
       { path: "/admin", element: <Login /> },
       { path: "/foundItems", element: <FoundItemsPage /> },
       { path: "/lostItems", element: <LostItemsPage /> },
@@ -94,7 +93,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/archive", element: <DashboardLayout><ArchievePage /></DashboardLayout> },
   { path: "/dashboard/myFoundItems", element: <DashboardLayout><MyFoundItems /></DashboardLayout> },
   { path: "/dashboard/myLostItems", element: <DashboardLayout><MyLostItems /></DashboardLayout> },
-   { path: "/dashboard/security", element: <DashboardLayout><SecurityPage /></DashboardLayout> },
+  { path: "/dashboard/security", element: <DashboardLayout><SecurityPage /></DashboardLayout> },
   { path: "/dashboard/moderation", element: <DashboardLayout><ContentModeration /></DashboardLayout> },
   { path: "/dashboard/chat", element: <DashboardLayout><ChatPage /></DashboardLayout> },
 
@@ -103,7 +102,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/student/found-items", element: <StudentLayout><StudentFoundItems /></StudentLayout> },
   { path: "/dashboard/student/lost-items", element: <StudentLayout><StudentLostItems /></StudentLayout> },
   { path: "/dashboard/student/claims", element: <StudentLayout><StudentClaims /></StudentLayout> },
-   { path: "/dashboard/student/leaderboard", element: <StudentLayout><StudentLeaderboard /></StudentLayout> },
+  { path: "/dashboard/student/leaderboard", element: <StudentLayout><StudentLeaderboard /></StudentLayout> },
   { path: "/dashboard/student/settings", element: <StudentLayout><StudentSettings /></StudentLayout> },
   { path: "/dashboard/student/chat", element: <StudentLayout><ChatPage /></StudentLayout> },
 ]);

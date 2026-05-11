@@ -100,7 +100,7 @@ const Login = () => {
 
         <div className="relative z-10 w-full max-w-sm px-6 -mt-16">
           <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/50 p-6 transition-all duration-300 hover:shadow-3xl hover:shadow-blue-500/10">
-            
+
             {/* Header */}
             <div className="mb-6 text-center">
               <div className="flex flex-col items-center gap-2 mb-4">
@@ -134,11 +134,10 @@ const Login = () => {
                     disabled={isLocked}
                     onFocus={() => setIsFocused('username')}
                     onBlur={() => setIsFocused(null)}
-                    className={`w-full bg-gray-800/60 border ${
-                      isFocused === 'username'
+                    className={`w-full bg-gray-800/60 border ${isFocused === 'username'
                         ? 'border-blue-500/50 ring-2 ring-blue-500/30'
                         : 'border-white/10'
-                    } text-white placeholder-gray-500 rounded-lg px-3 py-2.5 focus:outline-none transition-all duration-300 text-sm disabled:opacity-40 disabled:cursor-not-allowed`}
+                      } text-white placeholder-gray-500 rounded-lg px-3 py-2.5 focus:outline-none transition-all duration-300 text-sm disabled:opacity-40 disabled:cursor-not-allowed`}
                     placeholder=" "
                   />
                   {isFocused === 'username' && (
@@ -168,11 +167,10 @@ const Login = () => {
                     disabled={isLocked}
                     onFocus={() => setIsFocused('password')}
                     onBlur={() => setIsFocused(null)}
-                    className={`w-full bg-gray-800/60 border ${
-                      isFocused === 'password'
+                    className={`w-full bg-gray-800/60 border ${isFocused === 'password'
                         ? 'border-blue-500/50 ring-2 ring-blue-500/30'
                         : 'border-white/10'
-                    } text-white placeholder-gray-500 rounded-lg px-3 py-2.5 pr-10 focus:outline-none transition-all duration-300 text-sm disabled:opacity-40 disabled:cursor-not-allowed`}
+                      } text-white placeholder-gray-500 rounded-lg px-3 py-2.5 pr-10 focus:outline-none transition-all duration-300 text-sm disabled:opacity-40 disabled:cursor-not-allowed`}
                     placeholder=" "
                   />
                   <button
