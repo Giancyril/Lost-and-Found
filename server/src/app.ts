@@ -1,5 +1,6 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import dotenv from "dotenv";
 import router from "./app/routes/routes";
 import errorHandler from "./app/midddlewares/errorHandler";
@@ -8,7 +9,9 @@ dotenv.config();
 
 const app: Application = express();
 
-app.set('trust proxy', 1);
+app.use(helmet());
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
 
 const corsOptions = {
   origin: [
@@ -28,7 +31,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // ✅ preflight uses same options
+app.options("*", cors(corsOptions));
 
 // Increase body size limit to 10mb to support base64 image uploads
 app.use(express.json({ limit: "10mb" }));
