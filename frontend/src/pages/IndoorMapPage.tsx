@@ -46,12 +46,19 @@ interface AggregatedLocation {
   }[];
 }
 
+const HEAT_SCALE = [
+  { label: "High",    hex: "#1d4ed8", badge: "bg-blue-500/10 text-blue-300 border-blue-500/20", bar: "bg-blue-500", dot: "bg-blue-500" },
+  { label: "Medium",  hex: "#3b82f6", badge: "bg-sky-500/10 text-sky-300 border-sky-500/20", bar: "bg-sky-500", dot: "bg-sky-500" },
+  { label: "Low",     hex: "#60a5fa", badge: "bg-sky-400/10 text-sky-200 border-sky-400/20", bar: "bg-sky-400", dot: "bg-sky-400" },
+  { label: "Minimal", hex: "#dbeafe", badge: "bg-sky-200/10 text-sky-200 border-sky-200/20", bar: "bg-sky-200", dot: "bg-sky-200" },
+];
+
 const getHeatColor = (val: number, max: number) => {
   const pct = val / max;
-  if (pct >= 0.75) return { hex: "#4f46e5", label: "Critical", badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20", bar: "bg-indigo-600" };
-  if (pct >= 0.5)  return { hex: "#4f46e5", label: "High",     badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20", bar: "bg-indigo-600" };
-  if (pct >= 0.25) return { hex: "#4f46e5", label: "Medium",   badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20", bar: "bg-indigo-600" };
-  return               { hex: "#4f46e5", label: "Low",      badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20", bar: "bg-indigo-600" };
+  if (pct >= 0.75) return HEAT_SCALE[0];
+  if (pct >= 0.5)  return HEAT_SCALE[1];
+  if (pct >= 0.25) return HEAT_SCALE[2];
+  return HEAT_SCALE[3];
 };
 
 function HeatLayer({ points, filter, max }: {
@@ -169,33 +176,42 @@ const IndoorMapPage = () => {
   const [bottomSheetHeight, setBottomSheetHeight] = useState<"peek" | "half" | "full">("peek");
   const [mapMode, setMapMode] = useState<"indoor" | "heatmap">("indoor");
   const [heatmapFilter, setHeatmapFilter] = useState<Filter>("all");
-
   const { data: foundData } = useGetFoundItemsQuery({});
   const { data: lostData } = useGetLostItemsQuery({});
-  const { data: statsData } = useGetLocationStatsQuery(undefined, { skip: mapMode !== "heatmap" });
-
-  const rawStats: LocationStat[] = useMemo(() => {
-    const stats = (statsData as any)?.data ?? [];
-    return stats.map((r: LocationStat) => {
-      const coords = getCoordinates(r.location);
-      return { ...r, lat: coords?.[0], lng: coords?.[1] };
-    });
-  }, [statsData]);
-
-  const mappableStats = useMemo(() => rawStats.filter(r => r.lat && r.lng), [rawStats]);
-  const maxTotal = useMemo(() => Math.max(...rawStats.map(r => r.total), 1), [rawStats]);
-  const maxFilter = useMemo(() => Math.max(...rawStats.map(r =>
-    heatmapFilter === "found" ? r.found : heatmapFilter === "lost" ? r.lost : r.total
-  ), 1), [rawStats, heatmapFilter]);
 
   const allItems = useMemo(() => {
-    const found = (foundData as any)?.data || [];
+    const found = ((foundData as any)?.data || []).filter((i: any) => !i.isClaimed && i.status !== "Claimed");
     const lost = (lostData as any)?.data || [];
     return [
       ...found.map((i: any) => ({ ...i, type: "found" })),
       ...lost.map((i: any) => ({ ...i, type: "lost" })),
     ];
   }, [foundData, lostData]);
+
+  const rawStats: LocationStat[] = useMemo(() => {
+    const statsMap: { [key: string]: LocationStat } = {};
+    
+    allItems.forEach(item => {
+      const loc = item.location || item.foundLocation || "Unknown";
+      if (!statsMap[loc]) {
+        statsMap[loc] = { location: loc, found: 0, lost: 0, total: 0 };
+      }
+      if (item.type === "found") statsMap[loc].found++;
+      else statsMap[loc].lost++;
+      statsMap[loc].total++;
+    });
+
+    return Object.values(statsMap).map(r => {
+      const coords = getCoordinates(r.location);
+      return { ...r, lat: coords?.[0], lng: coords?.[1] };
+    });
+  }, [allItems]);
+
+  const mappableStats = useMemo(() => rawStats.filter(r => r.lat && r.lng), [rawStats]);
+  const maxTotal = useMemo(() => Math.max(...rawStats.map(r => r.total), 1), [rawStats]);
+  const maxFilter = useMemo(() => Math.max(...rawStats.map(r =>
+    heatmapFilter === "found" ? r.found : heatmapFilter === "lost" ? r.lost : r.total
+  ), 1), [rawStats, heatmapFilter]);
 
   const roomItems = useMemo(() => {
     if (!selectedRoom) return [];
@@ -284,10 +300,13 @@ const IndoorMapPage = () => {
                     </MapContainer>
                     <div className="absolute bottom-6 left-6 p-4 bg-gray-900/90 backdrop-blur-md border border-white/10 rounded-2xl z-[1000] pointer-events-none">
                        <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Intensity</p>
-                       <div className="flex gap-4">
-                          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-600" /><span className="text-[10px] font-bold text-gray-300">High</span></div>
-                          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-400" /><span className="text-[10px] font-bold text-gray-300">Med</span></div>
-                          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gray-500" /><span className="text-[10px] font-bold text-gray-300">Low</span></div>
+                       <div className="flex gap-3">
+                         {HEAT_SCALE.map((level) => (
+                           <div key={level.label} className="flex items-center gap-2">
+                             <div className={`w-2 h-2 rounded-full ${level.dot}`} />
+                             <span className="text-[10px] font-bold text-gray-300">{level.label}</span>
+                           </div>
+                         ))}
                        </div>
                     </div>
                   </div>
