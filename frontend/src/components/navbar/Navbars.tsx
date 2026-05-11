@@ -376,7 +376,7 @@ export function Navbars() {
 
           {/* Admin dropdown */}
           {isLoggedIn && isAdmin && (
-            <div ref={profileRef} className="relative">
+            <div ref={profileRef} className="relative hidden md:block">
               <button type="button" onClick={() => setProfileOpen(p => !p)}
                 className="flex items-center gap-2.5 cursor-pointer group focus:outline-none">
                 <div className="relative">
@@ -399,7 +399,7 @@ export function Navbars() {
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 top-12 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                <div className="absolute right-0 top-12 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 hidden md:block">
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/[0.05]">
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center shrink-0">
                       <span className="text-white font-bold text-xs">{initial}</span>
@@ -441,7 +441,7 @@ export function Navbars() {
               <PointsDropdown points={points} history={history} rank={rank} />
 
               {/* ── Student profile dropdown ── */}
-              <div ref={profileRef} className="relative">
+              <div ref={profileRef} className="relative hidden md:block">
                 <button type="button" onClick={() => setProfileOpen(p => !p)}
                   className="flex items-center gap-2 cursor-pointer group focus:outline-none">
                   <div className="relative">
@@ -465,8 +465,8 @@ export function Navbars() {
 
                 {profileOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                    <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                    <div className="fixed inset-0 z-40 hidden md:block" onClick={() => setProfileOpen(false)} />
+                    <div className="absolute right-0 top-11 w-52 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 hidden md:block">
                       <div className="flex items-center gap-3 px-4 py-3 bg-gray-800/50 border-b border-white/[0.05]">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
                           <UserIcon className="w-5 h-5" />
@@ -547,7 +547,7 @@ export function Navbars() {
             {isLoggedIn && (
               <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl bg-blue-500/5 border border-blue-500/10">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0 border-2 border-blue-500/30">
-                  <span className="text-sm font-medium text-white">{initial}</span>
+                  <UserIcon className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-white truncate">
@@ -566,7 +566,18 @@ export function Navbars() {
               </div>
             )}
 
-            <p className="text-[10px] text-white/25 uppercase tracking-widest px-3 mb-1.5">Navigation</p>
+            {isLoggedIn && (
+              <Link to={isAdmin ? "/dashboard" : "/dashboard/student"} onClick={closeMobileMenu}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] transition-all duration-150 mb-4 group border border-white/[0.05]">
+                <span className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <i className="ti ti-layout-dashboard text-[15px] text-blue-400" aria-hidden="true" />
+                </span>
+                <span className="flex-1 text-sm font-medium text-white group-hover:text-blue-300 transition-colors duration-150">Go to Dashboard</span>
+                <i className="ti ti-chevron-right text-[13px] text-white/20 group-hover:text-white transition-colors duration-150" aria-hidden="true" />
+              </Link>
+            )}
+
+            <p className={`text-[10px] text-white/25 uppercase tracking-widest px-3 mb-1.5 ${!isLoggedIn ? "mt-2" : ""}`}>Navigation</p>
 
             {[
               { label: "Home",             href: "/",              icon: "ti-home",             iconColor: "text-blue-400",    iconBg: "bg-blue-500/10"    },
@@ -592,16 +603,7 @@ export function Navbars() {
 
             
 
-            {isLoggedIn && isAdmin && (
-              <Link to="/dashboard" onClick={closeMobileMenu}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] transition-all duration-150 mb-0.5 group">
-                <span className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                  <i className="ti ti-layout-dashboard text-[15px] text-blue-400" aria-hidden="true" />
-                </span>
-                <span className="flex-1 text-sm text-white/70 group-hover:text-white transition-colors duration-150">Admin Dashboard</span>
-                <i className="ti ti-chevron-right text-[13px] text-white/10 group-hover:text-white/25 transition-colors duration-150" aria-hidden="true" />
-              </Link>
-            )}
+            {/* Redundant dashboard links removed, handled at the top */}
 
             {isLoggedIn && (
               <>

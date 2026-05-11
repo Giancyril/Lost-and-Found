@@ -239,7 +239,8 @@ const ChatDropdown = () => {
                <button 
                  onClick={() => { 
                    setOpen(false); 
-                   navigate(activeRoomId ? `/dashboard/chat?roomId=${activeRoomId}` : "/dashboard/chat"); 
+                   const chatPath = currentUser?.role === "ADMIN" ? "/dashboard/chat" : "/dashboard/student/chat";
+                   navigate(activeRoomId ? `${chatPath}?roomId=${activeRoomId}` : chatPath); 
                  }} 
                  className="text-blue-400 hover:text-blue-300 text-[10px] font-bold uppercase tracking-widest"
                >

@@ -5,9 +5,10 @@ import {
   FaTachometerAlt, FaBoxOpen, FaSearch, FaClipboardList,
   FaTrophy, FaCog, FaBars, FaTimes, FaHome, FaSignOutAlt,
   FaChevronLeft, FaChevronRight, FaChevronDown, FaStar,
-  FaChartLine, FaArrowRight, FaMedal, FaBullhorn, FaMapMarkerAlt,
+  FaChartLine, FaArrowRight, FaMedal, FaBullhorn, FaMapMarkerAlt, FaUser
 } from "react-icons/fa";
 import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../redux/api/api";
+import ChatDropdown from "./components/ChatDropdown";
 
 const NAV_ITEMS = [
   {
@@ -73,12 +74,12 @@ const REASON_COLOR: Record<string, string> = {
 };
 
 // ── Avatar ───────────────────────────────────────────────────────────────────
-const Avatar = ({ name, size = "md" }: { name?: string; size?: "sm" | "md" | "lg" }) => {
-  const initial = name ? name.trim()[0].toUpperCase() : "S";
+const Avatar = ({ size = "md" }: { name?: string; size?: "sm" | "md" | "lg" }) => {
   const sz = size === "sm" ? "w-7 h-7 text-xs" : size === "lg" ? "w-11 h-11 text-base" : "w-9 h-9 text-sm";
+  const iconSize = size === "sm" ? 12 : size === "lg" ? 18 : 14;
   return (
     <div className={`${sz} rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center font-bold text-white shrink-0`}>
-      {initial}
+      <FaUser size={iconSize} />
     </div>
   );
 };
@@ -108,11 +109,16 @@ const PointsDropdown = ({ points, history, rank }: { points: number; history: an
       <button
         type="button"
         onClick={() => setOpen(p => !p)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all duration-200 hover:scale-105 active:scale-95 bg-yellow-400/10 text-yellow-300 border-yellow-400/20 hover:bg-yellow-400/15"
+        className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-all border ${
+          open 
+            ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400" 
+            : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+        }`}
       >
-        <FaStar size={9} className="text-yellow-400" />
-        <span>{points.toLocaleString()} pts</span>
-        <FaChevronDown size={7} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <FaStar size={14} className="text-yellow-400" />
+        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-yellow-500 text-gray-950 text-[9px] font-black rounded-full flex items-center justify-center px-1 border-2 border-gray-900 shadow-sm">
+          {points >= 1000 ? `${(points / 1000).toFixed(1)}k` : points}
+        </span>
       </button>
 
       {open && (
@@ -462,6 +468,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
 
           {/* Right section */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <ChatDropdown />
             <PointsDropdown points={points} history={history} rank={rank} />
             <ProfileDropdown user={user} onSignOut={handleSignOut} />
           </div>
