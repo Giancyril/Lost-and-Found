@@ -1,7 +1,7 @@
 # Security Hardening Report
 **Project:** NBSC SAS Lost & Found System  
 **Date:** May 11, 2026  
-**Status:** ✅ Completed
+**Status:** Completed
 
 ---
 
@@ -11,11 +11,11 @@ A full dependency audit and security hardening pass was performed on both the se
 
 | Area | Before | After |
 |---|---|---|
-| Server vulnerabilities | 21 | ✅ 0 |
-| Frontend vulnerabilities | 21 | ✅ 0 |
-| Security headers | ❌ None | ✅ All active |
-| X-Powered-By exposed | ❌ Yes | ✅ Removed |
-| JWT secret strength | ❌ < 64 chars | ✅ 64+ bytes |
+| Server vulnerabilities | 21 |  0 |
+| Frontend vulnerabilities | 21 |  0 |
+| Security headers |  None |  All active |
+| X-Powered-By exposed |  Yes |  Removed |
+| JWT secret strength |  < 64 chars |  64+ bytes |
 
 ---
 
@@ -150,23 +150,23 @@ Get-Content .env | Select-String "JWT_SECRET"
 
 These were identified during the audit but not yet completed. Address in order of priority:
 
-### 🔴 Critical (Do Next)
+### Critical (Do Next)
 - [ ] **IDOR on claims/items** — Log in as User A, attempt to access/modify User B's claim using User A's token. Verify the server rejects it.
 - [ ] **Approve own claim** — Attempt to approve a claim you submitted yourself via the API directly (bypass the UI).
 - [ ] **Google Sheets Gviz endpoint** — Open the raw student masterlist Gviz URL in an incognito browser. It must return 403 or require auth.
 
-### 🟠 High Priority
+### High Priority
 - [ ] **Socket.io `join_room` auth** — Use `wscat` or a custom socket client to join a room without a valid claim. Server must reject unauthenticated room joins.
 - [ ] **Rate limiting on auth routes** — Verify `express-rate-limit` is applied to `POST /api/login` and `POST /api/register`.
 - [ ] **CORS lock** — Remove `http://localhost:5173` from allowed origins before deploying to production.
 
-### 🟡 Medium Priority
+### Medium Priority
 - [ ] **ReDoS on moderation keyword filter** — Send a 10,000-character string to `POST /api/moderation/test`. If the server hangs, the regex has a ReDoS vulnerability.
 - [ ] **Email domain validation bypass** — Test `user@nbsc.edu.ph.evil.com` and `user@nbsc.edu.ph%00@evil.com` against the registration endpoint.
 - [ ] **Scanner injection** — Test pipe-delimited input `ID|Name|Dept|<script>alert(1)</script>` through the barcode scanner to confirm DOM sanitization.
 - [ ] **File upload MIME validation** — Upload a `.php` file renamed to `.jpg` to the item photo endpoint. Verify it is rejected by content type, not just extension.
 
-### 🟢 Low Priority
+### Low Priority
 - [ ] **Points farming** — Verify a user cannot earn points by repeatedly submitting and deleting found item reports.
 - [ ] **Image count enforcement** — Confirm the 5-image limit on found items is validated server-side, not just client-side.
 - [ ] **NODE_ENV in production** — Ensure `NODE_ENV=production` is set in the Vercel/Render environment, not just locally.
@@ -194,5 +194,3 @@ These were identified during the audit but not yet completed. Address in order o
 | `server/.env` | Regenerated `JWT_SECRET` to 64+ byte value |
 
 ---
-
-*Generated from security audit session — NBSC SAS Lost & Found System*
