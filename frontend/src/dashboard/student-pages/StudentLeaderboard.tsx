@@ -11,9 +11,9 @@ const rankColor = (i: number) =>
 
 const rankBg = (i: number, isMe: boolean) => {
   if (isMe) return "bg-blue-500/10 border-blue-500/25";
-  if (i === 0) return "bg-yellow-500/5 border-yellow-500/15";
-  if (i === 1) return "bg-gray-500/5 border-gray-500/15";
-  if (i === 2) return "bg-amber-600/5 border-amber-600/15";
+  if (i === 0) return "bg-blue-500/5 border-blue-500/15";
+  if (i === 1) return "bg-blue-500/5 border-blue-500/15";
+  if (i === 2) return "bg-blue-500/5 border-blue-500/15";
   return "bg-gray-900 border-white/[0.05]";
 };
 
