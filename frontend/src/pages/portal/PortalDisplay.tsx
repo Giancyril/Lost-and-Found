@@ -51,122 +51,15 @@ const isRestrictedCategory = (cat?: string) =>
 
 // ── Slide type constants ──────────────────────────────────────────────────────
 const SLIDE_TYPE = {
-  ITEMS:  "items",
-  POINTS: "points",
-  QR:     "qr",
+  ITEMS: "items",
+  QR:    "qr",
 } as const;
 
 // ── Points Banner Slide ───────────────────────────────────────────────────────
-const PointsBannerSlide = () => {
-  const steps = [
-    { num: "01", title: "Find a Lost Item",       desc: "Submit details of a found item to assist in its successful recovery and return." },
-    { num: "02", title: "Report It Here",          desc: "Visit the SAS Lost & Found system and log the item with a description and location." },
-    { num: "03", title: "Earn 50 Points",          desc: "Every verified found item report credits your account with 50 reward points." },
-    { num: "04", title: "Climb the Leaderboard",   desc: "Earn points for each return to climb the integrity leaderboard and gain campus recognition." },
-  ];
-
-  return (
-    <div className="h-full w-full bg-slate-900 flex flex-col overflow-hidden">
-      <div className="h-1 w-full bg-blue-500 shrink-0" />
-
-      <div className="flex-1 flex items-center justify-center px-6 py-6 min-h-0">
-        <div className="w-full max-w-5xl flex flex-col gap-6">
-
-          {/* Header */}
-          <div className="text-center">
-            <p className="text-blue-400/70 text-xs font-bold uppercase tracking-[0.3em] mb-2">
-              Campus Rewards Program
-            </p>
-            <h1 className="text-white text-3xl md:text-4xl font-black tracking-tight">
-              Help Others.{" "}
-              <span className="text-blue-500">Earn Points.</span>
-            </h1>
-            <p className="text-slate-400 text-sm mt-2 max-w-2xl mx-auto text-justify" style={{ hyphens: "auto" }}>
-              Every found item you report earns you <span className="text-blue-400 font-bold">50 points</span> and helps a fellow student recover their belongings.
-            </p>
-          </div>
-
-          {/* Steps */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {steps.map((step, i) => (
-              <div
-                key={step.num}
-                className="relative flex flex-col gap-3 rounded-2xl p-4 overflow-hidden"
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(59,130,246,0.2)",
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-black text-sm"
-                    style={{
-                      background: "linear-gradient(135deg, rgba(59,130,246,0.3), rgba(37,99,235,0.2))",
-                      border: "1px solid rgba(59,130,246,0.3)",
-                      color: "#60a5fa",
-                    }}
-                  >
-                    {step.num}
-                  </div>
-                  {i < steps.length - 1 && (
-                    <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(59,130,246,0.3)" strokeWidth="2">
-                        <path d="M9 18l6-6-6-6" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="text-white font-bold text-sm leading-tight">{step.title}</p>
-                  {/* ── text-justify applied here ── */}
-                  <p className="text-slate-400 text-xs mt-1 leading-relaxed text-justify" style={{ hyphens: "auto" }}>
-                    {step.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom CTA row */}
-          <div
-            className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl px-6 py-4"
-            style={{
-              background: "linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.06))",
-              border: "1px solid rgba(59,130,246,0.2)",
-            }}
-          >
-            <div className="flex items-center gap-4">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-                style={{ background: "linear-gradient(135deg, #3b82f6, #1d4ed8)" }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-7 h-7">
-                  <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-white font-black text-lg leading-none">50 Points Per Report</p>
-                <p className="text-blue-400/70 text-xs mt-1 font-medium">Awarded for the highest points accumulated</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 text-center sm:text-right">
-              <div className="h-10 w-px bg-white/10 hidden sm:block" />
-              <div>
-                <p className="text-slate-400 text-xs font-medium">Register at</p>
-                <p className="text-white font-black text-sm tracking-tight break-all">lost-and-found-liart-seven.vercel.app/register</p>
-                <p className="text-blue-400/60 text-[10px] mt-0.5 uppercase tracking-widest font-bold">Use your School ID</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <div className="h-1 w-full bg-blue-500 shrink-0" />
-    </div>
-  );
-};
+// Points banner slide has been disabled to remove the reward points display.
+// const PointsBannerSlide = () => {
+//   return null;
+// };
 
 // ── Combined QR Slide ─────────────────────────────────────────────────────────
 // Layout: centered header → two QR cards side-by-side, each with its own
@@ -647,7 +540,6 @@ const Ticker = ({ lostCount, foundCount }: { lostCount: number; foundCount: numb
     `${foundCount} item${foundCount !== 1 ? "s" : ""} recovered and awaiting claim`,
     "Visit the SAS Office to report or claim an item",
     "Bring your school ID when claiming found items",
-    "Report a found item and earn 50 reward points!",
     "NBSC Student Affairs and Services — Lost & Found Management System",
   ];
   const repeated = [...items, ...items];
@@ -699,12 +591,11 @@ const PortalDisplay = () => {
   const totalLostSlides  = Math.max(Math.ceil(lostMapped.length  / 4), 1);
   const totalFoundSlides = Math.max(Math.ceil(foundMapped.length / 4), 1);
 
-  // Slide order: items... → points banner → combined QR
-  const totalSlides = totalLostSlides + totalFoundSlides + 2;
+  // Slide order: items... → combined QR
+  const totalSlides = totalLostSlides + totalFoundSlides + 1;
 
   const getSlideType = (idx: number) => {
-    if (idx < totalLostSlides + totalFoundSlides)   return SLIDE_TYPE.ITEMS;
-    if (idx === totalLostSlides + totalFoundSlides) return SLIDE_TYPE.POINTS;
+    if (idx < totalLostSlides + totalFoundSlides) return SLIDE_TYPE.ITEMS;
     return SLIDE_TYPE.QR;
   };
 
@@ -717,10 +608,7 @@ const PortalDisplay = () => {
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     const type = getSlideType(slideIndex);
-    const duration =
-      type === SLIDE_TYPE.QR     ? 15000 :
-      type === SLIDE_TYPE.POINTS ? 10000 :
-      SLIDE_DURATION;
+    const duration = type === SLIDE_TYPE.QR ? 15000 : SLIDE_DURATION;
     timerRef.current = setTimeout(() => { advanceSlide(); }, duration);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [slideIndex, totalLostSlides, totalFoundSlides, advanceSlide]);
@@ -823,10 +711,6 @@ const PortalDisplay = () => {
           {currentSlideType === SLIDE_TYPE.QR ? (
             <div className="col-span-2 h-full overflow-hidden">
               <CombinedQRSlide />
-            </div>
-          ) : currentSlideType === SLIDE_TYPE.POINTS ? (
-            <div className="col-span-2 h-full overflow-hidden">
-              <PointsBannerSlide />
             </div>
           ) : (
             <>
