@@ -116,9 +116,9 @@ function HeatLayer({ points, filter, max }: {
       const roomsHtml = group.rooms.map(r => `
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.04);">
           <span style="font-size: 11px; font-weight: 600; color: #334155; white-space: nowrap;">${r.name}</span>
-          <div style="display: flex; gap: 8px; font-size: 11px; font-weight: 800;">
-            <span style="color: #10b981;">${r.found}</span>
-            <span style="color: #ef4444;">${r.lost}</span>
+          <div style="display: flex; gap: 12px; font-size: 11px; font-weight: 800;">
+            <span style="color: #10b981;">Found: ${r.found}</span>
+            <span style="color: #ef4444;">Lost: ${r.lost}</span>
           </div>
         </div>
       `).join("");
@@ -133,7 +133,7 @@ function HeatLayer({ points, filter, max }: {
              <span style="font-size: 28px; font-weight: 900; color: #1e293b; line-height: 1;">${value}</span>
              <div style="display: flex; flex-direction: column;">
                 <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.2;">Reports</span>
-                <span style="font-size: 10px; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.2;">Found/Lost</span>
+                <span style="font-size: 10px; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.2;">Found & Lost Items</span>
              </div>
           </div>
           <div style="max-height: 140px; overflow-y: auto; padding-right: 4px;">

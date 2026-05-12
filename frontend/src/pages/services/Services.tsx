@@ -16,13 +16,13 @@ interface Service {
 
 const getServiceIcon = (title: string): React.ReactElement => {
   const iconMapping: { [key: string]: React.ReactElement } = {
-    "Lost Item Reporting":        <TbReport size="20" />,
-    "Search for Lost Items":      <FaSearch size="18" />,
-    "Location-Based Services":    <IoLocationSharp size="20" />,
-    "Help Desk Support":          <BiSupport size="20" />,
-    "Item Claiming":              <FaGift size="18" />,
-    "Data Encryption & Privacy":  <IoShieldCheckmark size="20" />,
-    
+    "Lost Item Reporting": <TbReport size="20" />,
+    "Search for Lost Items": <FaSearch size="18" />,
+    "Location-Based Services": <IoLocationSharp size="20" />,
+    "Help Desk Support": <BiSupport size="20" />,
+    "Item Claiming": <FaGift size="18" />,
+    "Data Encryption & Privacy": <IoShieldCheckmark size="20" />,
+
   };
   return iconMapping[title] || <FaSearch size="22" />;
 };
@@ -33,7 +33,7 @@ const services: Service[] = [
     description: "Submit descriptions, locations, and photos directly through the school portal. Fast, simple, and tracked from day one.",
     accent: "from-blue-500 to-blue-700",
     tag: "Core",
-    link: "/reportlostItem",
+    link: "/reportLostItem",
   },
   {
     title: "Search for Lost Items",
@@ -54,14 +54,14 @@ const services: Service[] = [
     description: "Submit claims for found items with verification. Browse available items and claim yours through the secure verification process.",
     accent: "from-blue-500 to-blue-700",
     tag: "Core",
-    link: "/lostItems",
+    link: "/foundItems",
   },
   {
     title: "Smart AI Search",
     description: "Describe your lost item in plain words. The system finds the closest matches from the database instantly.",
     accent: "from-blue-500 to-blue-700",
     tag: "Beta",
-    link: "/aiSearch",
+    link: "/ai-search",
   },
   {
     title: "Item Status Tracking",
@@ -70,13 +70,13 @@ const services: Service[] = [
     tag: "Core",
     link: "/itemStatus",
   },
-  
+
 ];
 
 const tagStyles: Record<string, string> = {
-  Core:   "bg-blue-500/15 text-blue-300 border-blue-500/25",
-  Beta:   "bg-blue-500/15 text-blue-300 border-blue-500/25",
-  Soon:   "bg-blue-500/15 text-blue-300 border-blue-500/25",
+  Core: "bg-blue-500/15 text-blue-300 border-blue-500/25",
+  Beta: "bg-blue-500/15 text-blue-300 border-blue-500/25",
+  Soon: "bg-blue-500/15 text-blue-300 border-blue-500/25",
   Browse: "bg-blue-500/15 text-blue-300 border-blue-500/25",
 };
 
@@ -155,7 +155,7 @@ const Services = () => {
               </p>
             </div>
 
-            
+
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
@@ -217,20 +217,20 @@ const Services = () => {
           </div>
 
           {/* ── Bottom CTA strip ── */}
-          <div className="mt-10 flex flex-row items-center justify-between gap-3 bg-gray-900/60 border border-white/5 rounded-2xl px-4 py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                <BiSupport className="text-blue-400 w-5 h-5" />
+          <div className="mt-10 flex flex-row items-center justify-between gap-2 bg-gray-900/60 border border-white/5 rounded-2xl px-3 py-3 sm:px-4 sm:py-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                <BiSupport className="text-blue-400 w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <p className="text-white text-xs font-semibold">Need Assistance?</p>
-                <p className="text-gray-500 text-[10px]">Visit our office or message us for support.</p>
+                <p className="text-white text-[11px] sm:text-xs font-semibold">Need Assistance?</p>
+                <p className="text-gray-500 text-[9px] sm:text-[10px]">Visit our office or message us for support.</p>
               </div>
             </div>
             <a href="/support"
-                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-900/40">
+              className="shrink-0 inline-flex items-center gap-1 px-2.5 py-2 sm:px-3 sm:py-2 bg-blue-600 hover:bg-blue-500 text-white text-[10px] sm:text-xs font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-900/40">
               Contact Support
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </a>

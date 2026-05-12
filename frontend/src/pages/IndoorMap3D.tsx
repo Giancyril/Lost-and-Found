@@ -1011,100 +1011,101 @@ const MiniMap = ({
         </div>
 
         {/* Scrollable SVG */}
-        {!isCollapsed && (
-          <div
-            className="px-3 pb-2"
-            style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}
+        {/* Scrollable SVG */}
+        <div
+          className={`px-3 pb-2 transition-all duration-500 ease-in-out ${
+            isCollapsed ? "opacity-0 pointer-events-none translate-y-2" : "opacity-100 pointer-events-auto translate-y-0"
+          }`}
+          style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}
+        >
+          <svg
+            width="100%"
+            height={`${Math.round(svgH * 1.4)}px`}
+            viewBox={`0 0 ${svgW} ${svgH}`}
+            style={{ minWidth: "320px", display: "block" }}
+            preserveAspectRatio="xMidYMid meet"
           >
-            <svg
-              width="100%"
-              height={`${Math.round(svgH * 1.4)}px`}
-              viewBox={`0 0 ${svgW} ${svgH}`}
-              style={{ minWidth: "320px", display: "block" }}
-              preserveAspectRatio="xMidYMid meet"
+            {/* Corridor */}
+            <rect
+              x={toX(-TOTAL_W / 2)}
+              y={toY(halfDepth - CORRIDOR_W)}
+              width={TOTAL_W * SCALE}
+              height={CORRIDOR_W * SCALE}
+              fill={corridor}
+              rx={2}
+            />
+            {/* Lobby / Elevator */}
+            <rect
+              x={toX(-LOBBY_W / 2)}
+              y={toY(-halfDepth + ROOM_D / 2)}
+              width={LOBBY_W * SCALE}
+              height={ROOM_D * SCALE}
+              fill={isNight ? "#334155" : "#e2e8f0"}
+              stroke={stroke}
+              strokeWidth={0.5}
+              rx={2}
+            />
+            <text
+              x={toX(0)}
+              y={toY(-halfDepth + ROOM_D / 2) + 2}
+              fontSize="5"
+              fontWeight="700"
+              fill={titleCol}
+              textAnchor="middle"
             >
-              {/* Corridor */}
-              <rect
-                x={toX(-TOTAL_W / 2)}
-                y={toY(halfDepth - CORRIDOR_W)}
-                width={TOTAL_W * SCALE}
-                height={CORRIDOR_W * SCALE}
-                fill={corridor}
-                rx={2}
-              />
-              {/* Lobby / Elevator */}
-              <rect
-                x={toX(-LOBBY_W / 2)}
-                y={toY(-halfDepth + ROOM_D / 2)}
-                width={LOBBY_W * SCALE}
-                height={ROOM_D * SCALE}
-                fill={isNight ? "#334155" : "#e2e8f0"}
-                stroke={stroke}
-                strokeWidth={0.5}
-                rx={2}
-              />
-              <text
-                x={toX(0)}
-                y={toY(-halfDepth + ROOM_D / 2) + 2}
-                fontSize="5"
-                fontWeight="700"
-                fill={titleCol}
-                textAnchor="middle"
-              >
-                ▼▲
-              </text>
+              ▼▲
+            </text>
 
-              {/* Rooms */}
-              {floorRooms.map((r) => {
-                const isSel = selectedRoomId === r.id;
-                const isHov = hoveredRoom === r.id;
-                const x = toX(r.x - ROOM_W / 2);
-                const y = toY(-halfDepth + ROOM_D / 2 - ROOM_D / 2);
-                const ww = ROOM_W * SCALE;
-                const hh = ROOM_D * SCALE;
-                const count = itemCount(r.id);
-                return (
-                  <g
-                    key={r.id}
-                    onClick={() => onSelect(r.id)}
-                    onMouseEnter={() => onHover(r.id)}
-                    onMouseLeave={() => onHover(null)}
-                    style={{ cursor: "pointer" }}
+            {/* Rooms */}
+            {floorRooms.map((r) => {
+              const isSel = selectedRoomId === r.id;
+              const isHov = hoveredRoom === r.id;
+              const x = toX(r.x - ROOM_W / 2);
+              const y = toY(-halfDepth + ROOM_D / 2 - ROOM_D / 2);
+              const ww = ROOM_W * SCALE;
+              const hh = ROOM_D * SCALE;
+              const count = itemCount(r.id);
+              return (
+                <g
+                  key={r.id}
+                  onClick={() => onSelect(r.id)}
+                  onMouseEnter={() => onHover(r.id)}
+                  onMouseLeave={() => onHover(null)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <rect
+                    x={x} y={y} width={ww} height={hh}
+                    fill={isSel ? accent : isHov ? accentSoft : fillRoom}
+                    stroke={isSel ? accent : isHov ? "#93c5fd" : stroke}
+                    strokeWidth={isSel ? 1.5 : 0.5}
+                    rx={2}
+                  />
+                  {isSel && (
+                    <rect x={x} y={y} width={ww} height={hh} fill="none" stroke={accent} strokeWidth={2.5} rx={2} opacity={0.25} />
+                  )}
+                  <text
+                    x={x + ww / 2} y={y + hh / 2 + 2.5}
+                    fontSize="6" fontWeight={isSel ? "900" : "700"}
+                    fill={isSel ? "#ffffff" : textCol}
+                    textAnchor="middle"
                   >
-                    <rect
-                      x={x} y={y} width={ww} height={hh}
-                      fill={isSel ? accent : isHov ? accentSoft : fillRoom}
-                      stroke={isSel ? accent : isHov ? "#93c5fd" : stroke}
-                      strokeWidth={isSel ? 1.5 : 0.5}
-                      rx={2}
-                    />
-                    {isSel && (
-                      <rect x={x} y={y} width={ww} height={hh} fill="none" stroke={accent} strokeWidth={2.5} rx={2} opacity={0.25} />
-                    )}
-                    <text
-                      x={x + ww / 2} y={y + hh / 2 + 2.5}
-                      fontSize="6" fontWeight={isSel ? "900" : "700"}
-                      fill={isSel ? "#ffffff" : textCol}
-                      textAnchor="middle"
-                    >
-                      {r.id.replace("SC-", "")}
-                    </text>
-                    {count > 0 && (
-                      <g>
-                        <circle cx={x + ww - 3.5} cy={y + 3.5} r={3.5} fill="#f59e0b" stroke={isNight ? "#0b1020" : "#ffffff"} strokeWidth={0.8} />
-                        <text x={x + ww - 3.5} y={y + 5.5} fontSize="4" fontWeight="900" fill="#1e293b" textAnchor="middle">{count}</text>
-                      </g>
-                    )}
-                  </g>
-                );
-              })}
+                    {r.id.replace("SC-", "")}
+                  </text>
+                  {count > 0 && (
+                    <g>
+                      <circle cx={x + ww - 3.5} cy={y + 3.5} r={3.5} fill="#f59e0b" stroke={isNight ? "#0b1020" : "#ffffff"} strokeWidth={0.8} />
+                      <text x={x + ww - 3.5} y={y + 5.5} fontSize="4" fontWeight="900" fill="#1e293b" textAnchor="middle">{count}</text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
 
-              {/* Wing labels */}
-              <text x={toX(-TOTAL_W / 2 + 0.3)} y={toY(-halfDepth - 0.3)} fontSize="5" fontWeight="700" fill={textCol} textAnchor="start" letterSpacing="0.5">LEFT WING</text>
-              <text x={toX(TOTAL_W / 2 - 0.3)} y={toY(-halfDepth - 0.3)} fontSize="5" fontWeight="700" fill={textCol} textAnchor="end" letterSpacing="0.5">RIGHT WING</text>
-            </svg>
-          </div>
-        )}
+            {/* Wing labels */}
+            <text x={toX(-TOTAL_W / 2 + 0.3)} y={toY(-halfDepth - 0.3)} fontSize="5" fontWeight="700" fill={textCol} textAnchor="start" letterSpacing="0.5">LEFT WING</text>
+            <text x={toX(TOTAL_W / 2 - 0.3)} y={toY(-halfDepth - 0.3)} fontSize="5" fontWeight="700" fill={textCol} textAnchor="end" letterSpacing="0.5">RIGHT WING</text>
+          </svg>
+        </div>
       </div>
     </div>
   );

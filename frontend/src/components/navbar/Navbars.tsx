@@ -580,12 +580,12 @@ export function Navbars() {
             <p className={`text-[10px] text-white/25 uppercase tracking-widest px-3 mb-1.5 ${!isLoggedIn ? "mt-2" : ""}`}>Navigation</p>
 
             {[
-              { label: "Home",             href: "/",              icon: "ti-home",             iconColor: "text-blue-400",    iconBg: "bg-blue-500/10"    },
-              { label: "Found Items",      href: "/foundItems",    icon: "ti-package",          iconColor: "text-emerald-400", iconBg: "bg-emerald-500/10" },
-              { label: "Lost Items",       href: "/lostItems",     icon: "ti-alert-triangle",   iconColor: "text-red-400",     iconBg: "bg-red-500/10"     },
-              { label: "Report Lost Item", href: "/reportLostItem", icon: "ti-file-description", iconColor: "text-orange-400",  iconBg: "bg-orange-500/10"  },
-              { label: "Smart Search",     href: "/ai-search",     icon: "ti-sparkles",         iconColor: "text-violet-400",  iconBg: "bg-violet-500/10"  },
-              { label: "Track Status",     href: "/itemStatus",    icon: "ti-radar",            iconColor: "text-cyan-400",    iconBg: "bg-cyan-500/10"    },
+              { label: "Home", href: "/", icon: "ti-home", iconColor: "text-blue-400", iconBg: "bg-blue-500/10" },
+              { label: "Found Items", href: "/foundItems", icon: "ti-package", iconColor: "text-emerald-400", iconBg: "bg-emerald-500/10" },
+              { label: "Lost Items", href: "/lostItems", icon: "ti-alert-triangle", iconColor: "text-red-400", iconBg: "bg-red-500/10" },
+              { label: "Report Lost Item", href: "/reportLostItem", icon: "ti-file-description", iconColor: "text-orange-400", iconBg: "bg-orange-500/10" },
+              { label: "Smart Search", href: "/ai-search", icon: "ti-sparkles", iconColor: "text-violet-400", iconBg: "bg-violet-500/10" },
+              { label: "Track Status", href: "/itemStatus", icon: "ti-radar", iconColor: "text-cyan-400", iconBg: "bg-cyan-500/10" },
             ].map(({ label, href, icon, iconColor, iconBg }) => (
               <Link
                 key={href}
@@ -601,7 +601,7 @@ export function Navbars() {
               </Link>
             ))}
 
-            
+
 
             {/* Redundant dashboard links removed, handled at the top */}
 
@@ -644,18 +644,18 @@ export function Navbars() {
             })}
 
             <NavDropdown
-            label="Items"
-            items={[
-              { label: "Lost Items",  href: "/lostItems",  icon: <FaExclamationTriangle size={11} />, color: "text-red-400",     bg: "bg-red-500/10"     },
-              { label: "Found Items", href: "/foundItems", icon: <FaBoxOpen size={11} />,             color: "text-emerald-400", bg: "bg-emerald-500/10" },
-            ]}
+              label="Items"
+              items={[
+                { label: "Lost Items", href: "/lostItems", icon: <FaExclamationTriangle size={11} />, color: "text-red-400", bg: "bg-red-500/10" },
+                { label: "Found Items", href: "/foundItems", icon: <FaBoxOpen size={11} />, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+              ]}
             />
 
             <NavDropdown
               label="Tools"
               items={[
-                { label: "Smart Search", href: "/ai-search",   icon: <FaSearch size={11} />, color: "text-violet-400", bg: "bg-violet-500/10" },
-                { label: "Indoor Map",   href: "/indoor-map",  icon: <FaMap size={11} />,    color: "text-cyan-400",   bg: "bg-cyan-500/10"   },
+                { label: "Smart Search", href: "/ai-search", icon: <FaSearch size={11} />, color: "text-violet-400", bg: "bg-violet-500/10" },
+                { label: "Indoor Map", href: "/indoor-map", icon: <FaMap size={11} />, color: "text-cyan-400", bg: "bg-cyan-500/10" },
               ]}
             />
 

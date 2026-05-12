@@ -484,7 +484,7 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 
 ###  Phase 3: Expansion (Completed)
 - **Push Notifications**: Real-time alerts for item matches, claim updates, and chat messages using Web Push API.
-- **Interactive Indoor 3D Maps**: Precise location pinning and floor-level heat mapping on multi-level campus building maps (Desktop use only).
+- **Interactive Indoor 3D Maps & Heatmap Implementation**: Multi-level 3D campus building maps with precise room pinning and dynamic heat mapping to visualize high-loss zones (Desktop use only).
 - **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details.
 
 ###  Phase 4: Ecosystem & Sustainability (Current)

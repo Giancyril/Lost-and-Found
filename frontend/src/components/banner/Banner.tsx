@@ -51,7 +51,7 @@ const Banner = () => {
   const s = slides[currentSlide];
 
   const RecentLostPanel = () => (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-3">
         <p className="text-white font-semibold text-sm">Recent Lost Items</p>
         <a href="/lostItems" className="text-blue-400 text-xs hover:text-blue-300 transition-colors">View all</a>
@@ -59,12 +59,12 @@ const Banner = () => {
       {lostItems?.data?.length > 0 ? (
         <div className="space-y-2 max-h-36 overflow-y-auto pr-1 custom-scrollbar">
           {lostItems.data.map((item: any) => (
-            <div key={item.id} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+            <div key={item.id} className="flex items-center justify-between bg-white/5 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
               <div className="min-w-0">
                 <p className="text-white text-xs font-medium truncate">{item.lostItemName}</p>
                 <p className="text-gray-500 text-xs truncate">{item.date?.split("T")[0]} · {item.location}</p>
               </div>
-              <span className="ml-2 shrink-0 text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full border border-yellow-500/20">
+              <span className="ml-2 shrink-0 text-[10px] sm:text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full border border-yellow-500/20">
                 {item.isFound ? "✓ Found" : "Pending"}
               </span>
             </div>
@@ -77,7 +77,7 @@ const Banner = () => {
   );
 
   const RecentFoundPanel = () => (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-3">
         <p className="text-white font-semibold text-sm">Recent Found Items</p>
         <a href="/foundItems" className="text-blue-400 text-xs hover:text-blue-300 transition-colors">View all</a>
@@ -85,7 +85,7 @@ const Banner = () => {
       {foundItems?.data?.length > 0 ? (
         <div className="space-y-2 max-h-36 overflow-y-auto pr-1 custom-scrollbar">
           {foundItems.data.map((item: any) => (
-            <div key={item.id} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+            <div key={item.id} className="flex items-center justify-between bg-white/5 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
               <div className="min-w-0">
                 <p className="text-white text-xs font-medium truncate">
                   {item.foundItemName || item.lostItemName || item.name}
@@ -93,9 +93,9 @@ const Banner = () => {
                 <p className="text-gray-500 text-xs truncate">{item.date?.split("T")[0]} · {item.location}</p>
               </div>
               {item.isClaimed ? (
-                <span className="ml-2 shrink-0 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20">Claimed</span>
+                <span className="ml-2 shrink-0 text-[10px] sm:text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20">Claimed</span>
               ) : (
-                <span className="ml-2 shrink-0 text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">Available</span>
+                <span className="ml-2 shrink-0 text-[10px] sm:text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">Available</span>
               )}
             </div>
           ))}
@@ -107,15 +107,15 @@ const Banner = () => {
   );
 
   const StatsRow = () => (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-2 sm:gap-3">
       {[
         [stats?.data?.lostItems    ?? lostItems?.data?.length  ?? 0, "Lost Reports"  ],
         [stats?.data?.foundItems   ?? foundItems?.data?.length ?? 0, "Found Reports" ],
         [stats?.data?.claimedItems ?? "—",                           "Claimed Items" ],
       ].map(([num, label]) => (
-        <div key={label as string} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center backdrop-blur-sm">
-          <p className="text-blue-400 font-black text-xl">{num as React.ReactNode}</p>
-          <p className="text-gray-500 text-xs mt-0.5">{label as React.ReactNode}</p>
+        <div key={label as string} className="bg-white/5 border border-white/10 rounded-xl p-2 sm:p-3 text-center backdrop-blur-sm">
+          <p className="text-blue-400 font-black text-lg sm:text-xl">{num as React.ReactNode}</p>
+          <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">{label as React.ReactNode}</p>
         </div>
       ))}
     </div>

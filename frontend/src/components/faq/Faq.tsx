@@ -17,7 +17,7 @@ const Faq = () => {
 
   const faqs: FaqItem[] = [
     {
-      question: "Do I need an account to use this system?",
+      question: "Do I need an account to use this?",
       answer:
         "No account is needed. Students and visitors can freely browse the Lost Items Board and Found Items Board without logging in.",
     },
