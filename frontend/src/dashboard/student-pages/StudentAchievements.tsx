@@ -121,12 +121,12 @@ const StudentAchievements: React.FC = () => {
           />
         </div>
         
-        <div className="flex flex-wrap gap-1 pt-0.5">
+        <div className="flex flex-wrap gap-1.5 pt-0.5">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setFilter(cat.id)}
-              className={`flex items-center gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[8px] sm:text-[10px] font-bold uppercase tracking-widest transition-all border
+              className={`flex-1 min-w-fit flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[8px] sm:text-[10px] font-bold uppercase tracking-widest transition-all border
                 ${filter === cat.id 
                   ? "bg-blue-500/10 text-blue-400 border-blue-500/20" 
                   : "bg-gray-800/50 text-gray-500 hover:text-gray-300 border-transparent"}`}
