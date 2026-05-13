@@ -37,6 +37,7 @@ model User {
   chatMessages      ChatMessage[]
   pushSubscriptions PushSubscription[]
   chatReadStatuses  ChatReadStatus[]
+  userAchievements  UserAchievement[]
 
   @@map("users")
 }
@@ -471,4 +472,43 @@ enum AppealStatus {
   PENDING
   APPROVED
   DENIED
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g. "FIRST_FOUND_ITEM"
+  name        String // e.g. "First Responder"
+  description String
+  icon        String // emoji or icon name
+  tier        AchievementTier
+  category    String
+  xp          Int      @default(0) // bonus XP on unlock
+  secret      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  seen          Boolean  @default(false) // false = show popup
+
+  user        User        @relation(fields: [userId], references: [id])
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+  @@map("userAchievements")
+}
+
+enum AchievementTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  LEGEND
 }

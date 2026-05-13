@@ -11,6 +11,7 @@ import { lostItemReportedTemplate, foundItemReportedTemplate } from "../../utils
 import { logToSheet } from "../sheets/sheets.service";
 import { pointsService } from "../points/points.service";
 import prisma from "../../config/prisma";
+import { checkFoundItemAchievements, checkPointAchievements } from "../../utils/achievementService";
 
 
 const createFoundItem = async (req: Request, res: Response) => {
@@ -103,6 +104,16 @@ const createFoundItem = async (req: Request, res: Response) => {
       matchService.findMatchesForFoundItem(result).catch((err) =>
         console.error("[SmartMatch] Error matching found item:", err)
       );
+
+      // ── Achievement triggers ────────────────────────────────────────────────
+      if (reporterUserId) {
+        checkFoundItemAchievements(reporterUserId).catch(err => 
+          console.error("[Achievement] Error checking found item badges:", err)
+        );
+        checkPointAchievements(reporterUserId).catch(err => 
+          console.error("[Achievement] Error checking point badges:", err)
+        );
+      }
     }
 
     sendResponse(res, {

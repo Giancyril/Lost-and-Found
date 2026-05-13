@@ -3,6 +3,7 @@ import sendResponse from "../../global/response";
 import { StatusCodes } from "http-status-codes";
 import { Claim } from "@prisma/client";
 import { claimsService } from "./claim.service";
+import { checkClaimAchievements, checkPointAchievements } from "../../utils/achievementService";
 
 const createClaim = async (req: Request, res: Response) => {
   try {
@@ -16,6 +17,14 @@ const createClaim = async (req: Request, res: Response) => {
       message: "Claim created successfully",
       data: result,
     });
+
+    // ── Achievement triggers ────────────────────────────────────────────────
+    const userId = (result as any).userId || (req.user as any)?.id;
+    if (userId) {
+      checkClaimAchievements(userId).catch(err => 
+        console.error("[Achievement] Error checking claim badges:", err)
+      );
+    }
   } catch (error: any) {
     sendResponse(res, {
       statusCode: StatusCodes.BAD_REQUEST,
@@ -78,6 +87,18 @@ const updateClaimStatus = async (req: Request, res: Response, next: NextFunction
       message: "Claims updated successfully",
       data: result,
     });
+
+    // ── Achievement triggers ────────────────────────────────────────────────
+    if (result && (result as any).userId) {
+      checkClaimAchievements((result as any).userId).catch(err => 
+        console.error("[Achievement] Error checking claim badges:", err)
+      );
+      if (req.body.status === "APPROVED") {
+        checkPointAchievements((result as any).userId).catch(err => 
+          console.error("[Achievement] Error checking point badges:", err)
+        );
+      }
+    }
   } catch (error: any) {
     next(error);
   }

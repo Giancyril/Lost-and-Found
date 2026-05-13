@@ -6,7 +6,7 @@ import {
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt, FaMapMarkerAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate,
-  FaUserShield, FaFlag, FaComments
+  FaUserShield, FaFlag, FaComments, FaMedal
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 import { ToastContainer } from "react-toastify";
@@ -45,6 +45,7 @@ const menuItems = [
   { title: "Analytics", icon: FaChartLine, path: "/dashboard/analytics" },
   { title: "Heatmap", icon: FaMapMarkedAlt, path: "/dashboard/heatmap" },
   { title: "Communication", icon: FaBullhorn, path: "/dashboard/comm-hub" },
+  { title: "Achievements", icon: FaMedal, path: "/dashboard/achievements" },
   { title: "Content Moderation", icon: FaFlag, path: "/dashboard/moderation" },
 
   // Student Management
@@ -67,6 +68,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/analytics": { title: "Analytics", subtitle: "Monthly trends, category breakdown and top reporters, user activity, item flow, and performance metrics." },
   "/dashboard/heatmap": { title: "Heatmap", subtitle: "Visualize where items are most commonly lost or found." },
   "/dashboard/comm-hub": { title: "Communication Hub", subtitle: "Announcements, support tickets, feedback and broadcasts." },
+  "/dashboard/achievements": { title: "Achievements", subtitle: "Monitor badge distribution and top community contributors." },
   "/dashboard/report": { title: "Report", subtitle: "Generate and export weekly or monthly summary reports." },
   "/dashboard/moderation": { title: "Content Moderation", subtitle: "Review flagged content, manage reports, and moderate community posts." },
   "/dashboard/students": { title: "Students", subtitle: "View and manage all registered student accounts." },

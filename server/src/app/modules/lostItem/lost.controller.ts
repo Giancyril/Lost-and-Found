@@ -7,6 +7,7 @@ import { matchService } from "../matching/match.service";
 import { sendEmail } from "../../utils/mailer";
 import { lostItemReportedTemplate } from "../../utils/emailTemplates";
 import { logToSheet } from "../sheets/sheets.service";
+import { checkLostItemAchievements, checkPointAchievements } from "../../utils/achievementService";
 
 const toggleFoundStatus = async (req: Request, res: Response) => {
   try {
@@ -92,6 +93,16 @@ const createLostItem = async (req: Request, res: Response) => {
       matchService.findMatchesForLostItem(result).catch((err) =>
         console.error("[SmartMatch] Error matching lost item:", err)
       );
+
+      // ── Achievement triggers ────────────────────────────────────────────────
+      if (userId) {
+        checkLostItemAchievements(userId).catch(err => 
+          console.error("[Achievement] Error checking lost item badges:", err)
+        );
+        checkPointAchievements(userId).catch(err => 
+          console.error("[Achievement] Error checking point badges:", err)
+        );
+      }
     }
 
     sendResponse(res, {

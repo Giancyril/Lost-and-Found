@@ -30,6 +30,7 @@ const NAV_ITEMS = [
     section: "COMMUNITY",
     items: [
       { label: "Leaderboard",    href: "/dashboard/student/leaderboard",  icon: <FaTrophy size={14} /> },
+      { label: "Achievements",   href: "/dashboard/student/achievements", icon: <FaMedal size={14} /> },
       { label: "Messages",       href: "/dashboard/student/chat",         icon: <FaBullhorn size={14} /> },
     ],
   },
@@ -47,6 +48,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/student/lost-items":  { title: "My Lost Items",  subtitle: "Items you reported as lost on campus." },
   "/dashboard/student/claims":      { title: "My Claims",      subtitle: "Track the status of your item claims." },
   "/dashboard/student/leaderboard": { title: "Leaderboard",    subtitle: "Top students ranked by points earned." },
+  "/dashboard/student/achievements": { title: "Achievements", subtitle: "Collection of badges earned through community contribution." },
   "/dashboard/student/settings":    { title: "Settings",       subtitle: "Manage your account preferences." },
 };
 

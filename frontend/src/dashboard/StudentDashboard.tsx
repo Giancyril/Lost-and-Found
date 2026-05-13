@@ -17,6 +17,17 @@ import {
   useMyClaimsQuery,
   useGetLeaderboardQuery,
 } from "../redux/api/api";
+import { baseApi } from "../redux/api/baseApi";
+
+const achievementApi = baseApi.injectEndpoints({
+  endpoints: (b) => ({
+    getMyAchievements: b.query({ 
+      query: () => ({ url: "/achievements/my", method: "GET" }),
+      providesTags: ["achievements"],
+    }),
+  }),
+  overrideExisting: false,
+});
 
 const fmt = (d: string) => new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
@@ -92,14 +103,16 @@ export default function StudentDashboard() {
   const { data: lostData,   isLoading: p3 } = useGetMyLostItemQuery(undefined);
   const { data: claimsData, isLoading: p4 } = useMyClaimsQuery(undefined);
   const { data: boardData,  isLoading: p5 } = useGetLeaderboardQuery(undefined);
+  const { data: achievementData, isLoading: p6 } = (achievementApi as any).useGetMyAchievementsQuery();
 
-  const loading       = p1 || p2 || p3 || p4 || p5;
+  const loading       = p1 || p2 || p3 || p4 || p5 || p6;
   const totalPoints   = pointsData?.data?.totalPoints ?? 0;
   const pointsHistory = pointsData?.data?.history ?? [];
   const foundItems    = foundData?.data  ?? [];
   const lostItems     = lostData?.data   ?? [];
   const claims        = claimsData?.data ?? [];
-   const board         = boardData?.data  ?? [];
+  const board         = boardData?.data  ?? [];
+  const myAchievements = achievementData?.data ?? [];
   const { permission, subscribe, isSupported } = usePushNotifications();
 
   const myRank         = board.findIndex((u: any) => u.id === user?.id) + 1;
@@ -189,6 +202,11 @@ export default function StudentDashboard() {
                   <span className="text-gray-500 text-xs">rank</span>
                 </div>
               )}
+              <Link to="/dashboard/student/achievements" className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
+                <FaMedal size={11} className="text-purple-400" />
+                <span className="text-white font-bold text-sm">{myAchievements.length}</span>
+                <span className="text-gray-500 text-xs">badges</span>
+              </Link>
               <Link to="/reportFoundItem"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-400 text-xs font-semibold hover:bg-blue-500/10 transition-colors">
                 <FaBolt size={9} /> Report items to earn more points
@@ -233,6 +251,11 @@ export default function StudentDashboard() {
                 <span className="text-gray-500 text-xs">rank</span>
               </div>
             )}
+            <Link to="/dashboard/student/achievements" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/5 bg-white/5">
+              <FaMedal size={10} className="text-purple-400" />
+              <span className="text-white font-bold text-sm">{myAchievements.length}</span>
+              <span className="text-gray-500 text-xs">badges</span>
+            </Link>
             <Link to="/reportFoundItem"
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-400/5 text-emerald-400 text-[10px] font-semibold">
               <FaBolt size={8} /> Report items to earn more points
