@@ -163,27 +163,27 @@ const StudentAchievements: React.FC = () => {
                 </div>
 
                 {/* Badge Name */}
-                <h3 className={`text-[8px] sm:text-[10px] font-black uppercase tracking-widest leading-tight
+                <h3 className={`text-[7px] sm:text-[10px] font-black uppercase tracking-widest leading-tight
                   ${isUnlocked ? style.text : "text-gray-600"}`}>
                   {isSecret ? "???" : ach.name}
                 </h3>
 
                 {/* Tier Label */}
                 {!isSecret && (
-                  <span className={`mt-1.5 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border
+                  <span className={`mt-1 sm:mt-1.5 text-[6px] sm:text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full border
                     ${isUnlocked ? `${style.bg} ${style.border} ${style.text}` : "bg-white/5 border-white/5 text-gray-700"}`}>
                     {ach.tier}
                   </span>
                 )}
 
                 {/* Info Overlay on Hover */}
-                <div className="absolute inset-0 bg-gray-950/95 flex flex-col items-center justify-center p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                   <p className="text-[10px] text-gray-300 font-bold leading-relaxed">
+                <div className="absolute inset-0 bg-gray-950/95 flex flex-col items-center justify-center p-2 sm:p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                   <p className="text-[8px] sm:text-[10px] text-gray-300 font-bold leading-tight sm:leading-relaxed">
                      {isSecret ? "Unlock this secret achievement to reveal its details." : ach.description}
                    </p>
                    {isUnlocked && (
-                     <div className="mt-3 space-y-1">
-                        <p className="text-[8px] text-emerald-400 font-black uppercase">+{ach.xp} XP Earned</p>
+                     <div className="mt-2 sm:mt-3 space-y-0.5 sm:space-y-1">
+                        <p className="text-[6px] sm:text-[8px] text-emerald-400 font-black uppercase">+{ach.xp} XP</p>
                         {unlockData && (
                           <p className="text-[7px] text-gray-500 font-bold uppercase">
                             {new Date(unlockData.unlockedAt).toLocaleDateString()}

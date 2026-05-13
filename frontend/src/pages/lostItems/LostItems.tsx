@@ -214,8 +214,8 @@ const ShareModal = ({ item, onClose }: { item: any; onClose: () => void }) => {
             </div>
             <button onClick={handleCopy}
               className={`w-full py-2 flex items-center justify-center gap-2 text-xs font-semibold rounded-xl transition-all ${copied
-                  ? "bg-blue-600/80 border border-blue-500/30 text-white"
-                  : "bg-blue-600/80 border-blue-500/30 text-white"
+                ? "bg-blue-600/80 border border-blue-500/30 text-white"
+                : "bg-blue-600/80 border-blue-500/30 text-white"
                 }`}>
               {copied ? <><FaCheckCircle size={10} /> Copied!</> : <><FaCopy size={10} /> Copy Link</>}
             </button>

@@ -1231,345 +1231,357 @@ const FoundItemsPage = () => {
 
       {/* ── Add Found Item Modal ── */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto">
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={closeAddModal} />
-          <div className="flex min-h-full items-start sm:items-center justify-center p-4 sm:p-6">
-            <div className="relative bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl sm:max-w-4xl lg:max-w-5xl flex flex-col max-h-[90vh]"
-              style={{ borderTop: "2px solid #3b82f6" }}>
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-start justify-center p-4 sm:p-6 pt-10">
+          <div className="absolute inset-0" onClick={closeAddModal} />
+          <div className="relative bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl sm:max-w-4xl lg:max-w-5xl flex flex-col shadow-2xl shadow-black/50"
+            style={{ borderTop: "2px solid #3b82f6", maxHeight: "90vh" }}>
 
-              {/* ── Modal header ── */}
-              <div className="flex flex-col gap-3 px-4 sm:px-6 py-4 border-b border-white/5 shrink-0">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="min-w-0">
-                      <h2 className="text-sm font-bold text-white truncate">Log a Found Item</h2>
-                      <p className="text-gray-500 text-[11px] mt-0.5 truncate">Record an item recovered on campus</p>
-                    </div>
+            {/* ── Modal header ── */}
+            <div className="px-4 sm:px-6 py-5 border-b border-white/5 shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="min-w-0">
+                    <h2 className="text-base sm:text-lg font-bold text-white truncate">Log a Found Item</h2>
+                    <p className="text-gray-500 text-[11px] sm:text-xs mt-0.5 truncate">Record an item recovered on campus</p>
                   </div>
-                  <button onClick={closeAddModal} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0">
+                </div>
+                <div className="flex items-center w-full">
+                {/* This container will hold your buttons and push them to the right */}
+                <div className="ml-auto flex items-center gap-2">
+                  <button 
+                    onClick={handleFetchDetails} 
+                    disabled={isFetchingByDetails}
+                    className="px-2.5 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50"
+                  >
+                    {isFetchingByDetails ? <FaSpinner className="animate-spin" size={9} /> : <FaSearch size={9} />}
+                    <span className="leading-none">Fetch Info</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setShowScanner(true)}
+                    className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider active:scale-95"
+                  >
+                    <FaQrcode size={9} /> 
+                    <span className="leading-none">Scan ID</span>
+                  </button>
+
+                  <button 
+                    onClick={closeAddModal} 
+                    className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0"
+                  >
                     <FaTimes size={12} />
                   </button>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap sm:justify-end">
-                  <button onClick={handleFetchDetails} disabled={isFetchingByDetails}
-                    className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50">
-                    {isFetchingByDetails ? <FaSpinner className="animate-spin" size={8} /> : <FaSearch size={8} />}
-                    Fetch Student Info
-                  </button>
-                  <button onClick={() => setShowScanner(true)}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider active:scale-95">
-                    <FaQrcode className="w-2.5 h-2.5" /> Scan Student ID
-                  </button>
-                </div>
-              </div>{/* ── end modal header ── */}
+              </div>
+              </div>
+            </div>{/* ── end modal header ── */}
 
-              {/* ── Modal body ── */}
-              <div
-                className="overflow-y-auto flex-1 px-6 py-5"
-                style={{
-                  scrollbarWidth: 'thin',
-                  scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
-                }}
-              >
-                {scannedStudent && (
-                  <div className="group relative overflow-hidden bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6 transition-all duration-300">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-blue-500/10 transition-all duration-500" />
-                    <div className="flex items-center justify-between relative z-10">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner group-hover:scale-110 transition-transform duration-300">
-                          <FaUserCheck size={18} />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-black text-white tracking-tight uppercase">{scannedStudent.name}</h4>
-                          <p className="text-[10px] font-bold text-blue-400/70 uppercase tracking-widest mt-0.5">ID: {scannedStudent.id}</p>
-                        </div>
+            {/* ── Modal body ── */}
+            <div
+              className="overflow-y-auto flex-1 px-6 py-5"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
+              }}
+            >
+              {scannedStudent && (
+                <div className="group relative overflow-hidden bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6 transition-all duration-300">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-blue-500/10 transition-all duration-500" />
+                  <div className="flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                        <FaUserCheck size={18} />
                       </div>
-                      <button onClick={clearScan} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all hover:rotate-90">
-                        <FaTimes size={12} />
+                      <div>
+                        <h4 className="text-sm font-black text-white tracking-tight uppercase">{scannedStudent.name}</h4>
+                        <p className="text-[10px] font-bold text-blue-400/70 uppercase tracking-widest mt-0.5">ID: {scannedStudent.id}</p>
+                      </div>
+                    </div>
+                    <button onClick={clearScan} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all hover:rotate-90">
+                      <FaTimes size={12} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <form id="add-found-form" onSubmit={handleAddSubmit(onAddSubmit)} className="space-y-4">
+
+                {/* ── Reporter Information ── */}
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                      Finder's Name <span className="text-red-400">*</span>
+                    </label>
+                    <input {...addRegister("reporterName", { required: "Finder's name is required" })} type="text" placeholder="Enter student name or scan ID" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
+                    {addErrors.reporterName && <p className="text-red-400 text-xs">{addErrors.reporterName?.message as string}</p>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-10 5L2 7" /></svg>
+                      Finder's Email <span className="text-red-400">*</span>
+                    </label>
+                    <Controller
+                      name="schoolEmail"
+                      control={addControl}
+                      rules={{
+                        required: "School email is required",
+                        pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
+                      }}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          value={field.value ?? ""}
+                          type="email"
+                          placeholder=" "
+                          className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const trimmedValue = value.trim();
+
+                            // Only auto-fill if current value is exactly 8 digits and previous value wasn't an email
+                            if (/^\d{8}$/.test(trimmedValue) && !prevAddEmailValue.includes('@')) {
+                              setPrevAddEmailValue(`${trimmedValue}@nbsc.edu.ph`);
+                              field.onChange(`${trimmedValue}@nbsc.edu.ph`);
+                            } else {
+                              setPrevAddEmailValue(value);
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      )}
+                    />
+                    {addErrors.schoolEmail && <p className="text-red-400 text-xs">{addErrors.schoolEmail?.message as string}</p>}
+                  </div>
+                </div>
+
+                {/* ── Department ── */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" /></svg>
+                    Department / Course
+                  </label>
+                  <input {...addRegister("department")} type="text" readOnly placeholder="Auto-filled from masterlist..." className="w-full px-4 py-2.5 bg-gray-800/40 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none transition-all text-sm italic" />
+                </div>
+
+                {/* ── Item Name + Category ── */}
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
+                      Item Name <span className="text-red-400">*</span>
+                    </label>
+                    <input {...addRegister("foundItemName", { required: "Item name is required" })} type="text" placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
+                    {addErrors.foundItemName && <p className="text-red-400 text-xs">{addErrors.foundItemName?.message as string}</p>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></svg>
+                        Category <span className="text-red-400">*</span>
+                      </label>
+                      <button type="button" onClick={() => setShowCategoryHelp(true)} className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-400 hover:text-white flex items-center justify-center transition-all" title="About categories">
+                        <span className="text-[9px] font-black leading-none">i</span>
                       </button>
                     </div>
+                    {categoriesLoading ? (
+                      <div className="w-full px-3 py-2.5 text-sm text-gray-500 bg-gray-800/60 border border-gray-700 rounded-xl">Loading categories...</div>
+                    ) : categoriesError ? (
+                      <div className="w-full px-3 py-2.5 text-sm text-red-400 bg-gray-800/60 border border-red-500/30 rounded-xl">Failed to load categories</div>
+                    ) : (
+                      <CustomSelect
+                        options={categoriesData?.data?.map((cat: any) => ({ value: cat.id, label: cat.name, icon: getCategoryIcon(cat.name) })) ?? []}
+                        value={addSelectedMenucategoryId}
+                        onChange={handleCategoryChange}
+                      />
+                    )}
+                    {!addSelectedMenu && <p className="text-red-400 text-xs">Category is required</p>}
+                  </div>
+                </div>{/* ── end Item Name + Category grid ── */}
+
+                {/* ── Color (only for configured categories with colors) ── */}
+                {addSelectedMenu && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
+                      Color
+                    </label>
+                    <CustomSelect
+                      options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.map(color => ({ value: color, label: color, icon: null }))}
+                      value={addSelectedColor}
+                      onChange={handleColorChange}
+                    />
                   </div>
                 )}
 
-                <form id="add-found-form" onSubmit={handleAddSubmit(onAddSubmit)} className="space-y-4">
-
-                  {/* ── Reporter Information ── */}
-                  <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                        Finder's Name <span className="text-red-400">*</span>
-                      </label>
-                      <input {...addRegister("reporterName", { required: "Finder's name is required" })} type="text" placeholder="Enter student name or scan ID" className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
-                      {addErrors.reporterName && <p className="text-red-400 text-xs">{addErrors.reporterName?.message as string}</p>}
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-10 5L2 7" /></svg>
-                        Finder's Email <span className="text-red-400">*</span>
-                      </label>
-                      <Controller
-                        name="schoolEmail"
-                        control={addControl}
-                        rules={{
-                          required: "School email is required",
-                          pattern: { value: /^[^\s@]+@nbsc\.edu\.ph$/i, message: "Must be a valid NBSC email" },
-                        }}
-                        render={({ field }) => (
-                          <input
-                            {...field}
-                            value={field.value ?? ""}
-                            type="email"
-                            placeholder=" "
-                            className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              const trimmedValue = value.trim();
-
-                              // Only auto-fill if current value is exactly 8 digits and previous value wasn't an email
-                              if (/^\d{8}$/.test(trimmedValue) && !prevAddEmailValue.includes('@')) {
-                                setPrevAddEmailValue(`${trimmedValue}@nbsc.edu.ph`);
-                                field.onChange(`${trimmedValue}@nbsc.edu.ph`);
-                              } else {
-                                setPrevAddEmailValue(value);
-                                field.onChange(value);
-                              }
-                            }}
-                          />
-                        )}
-                      />
-                      {addErrors.schoolEmail && <p className="text-red-400 text-xs">{addErrors.schoolEmail?.message as string}</p>}
-                    </div>
-                  </div>
-
-                  {/* ── Department ── */}
+                {/* ── Condition (only after color is selected) ── */}
+                {addSelectedColor && (
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" /></svg>
-                      Department / Course
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
+                      Condition
                     </label>
-                    <input {...addRegister("department")} type="text" readOnly placeholder="Auto-filled from masterlist..." className="w-full px-4 py-2.5 bg-gray-800/40 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none transition-all text-sm italic" />
+                    <CustomSelect
+                      options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].conditions.map(condition => ({ value: condition, label: condition, icon: null }))}
+                      value={addSelectedCondition}
+                      onChange={handleConditionChange}
+                    />
                   </div>
+                )}
 
-                  {/* ── Item Name + Category ── */}
-                  <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
-                        Item Name <span className="text-red-400">*</span>
-                      </label>
-                      <input {...addRegister("foundItemName", { required: "Item name is required" })} type="text" placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
-                      {addErrors.foundItemName && <p className="text-red-400 text-xs">{addErrors.foundItemName?.message as string}</p>}
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></svg>
-                          Category <span className="text-red-400">*</span>
-                        </label>
-                        <button type="button" onClick={() => setShowCategoryHelp(true)} className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-400 hover:text-white flex items-center justify-center transition-all" title="About categories">
-                          <span className="text-[9px] font-black leading-none">i</span>
-                        </button>
-                      </div>
-                      {categoriesLoading ? (
-                        <div className="w-full px-3 py-2.5 text-sm text-gray-500 bg-gray-800/60 border border-gray-700 rounded-xl">Loading categories...</div>
-                      ) : categoriesError ? (
-                        <div className="w-full px-3 py-2.5 text-sm text-red-400 bg-gray-800/60 border border-red-500/30 rounded-xl">Failed to load categories</div>
-                      ) : (
-                        <CustomSelect
-                          options={categoriesData?.data?.map((cat: any) => ({ value: cat.id, label: cat.name, icon: getCategoryIcon(cat.name) })) ?? []}
-                          value={addSelectedMenucategoryId}
-                          onChange={handleCategoryChange}
+                {/* ── Where Found + Date Found ── */}
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+                  {/* ── Where Found — now using LocationAutocomplete ── */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                      Where Found <span className="text-red-400">*</span>
+                    </label>
+                    <Controller
+                      name="location"
+                      control={addControl}
+                      rules={{ required: "Location is required" }}
+                      render={({ field }) => (
+                        <LocationAutocomplete
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
+                          placeholder="e.g. Library, Room 205"
                         />
                       )}
-                      {!addSelectedMenu && <p className="text-red-400 text-xs">Category is required</p>}
-                    </div>
-                  </div>{/* ── end Item Name + Category grid ── */}
-
-                  {/* ── Color (only for configured categories with colors) ── */}
-                  {addSelectedMenu && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG] && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.length > 0 && (
-                    <div className="flex flex-col gap-1.5">
-                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
-                        Color
-                      </label>
-                      <CustomSelect
-                        options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].colors.map(color => ({ value: color, label: color, icon: null }))}
-                        value={addSelectedColor}
-                        onChange={handleColorChange}
-                      />
-                    </div>
-                  )}
-
-                  {/* ── Condition (only after color is selected) ── */}
-                  {addSelectedColor && (
-                    <div className="flex flex-col gap-1.5">
-                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
-                        Condition
-                      </label>
-                      <CustomSelect
-                        options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].conditions.map(condition => ({ value: condition, label: condition, icon: null }))}
-                        value={addSelectedCondition}
-                        onChange={handleConditionChange}
-                      />
-                    </div>
-                  )}
-
-                  {/* ── Where Found + Date Found ── */}
-                  <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-                    {/* ── Where Found — now using LocationAutocomplete ── */}
-                    <div className="flex flex-col gap-1.5">
-                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
-                        Where Found <span className="text-red-400">*</span>
-                      </label>
-                      <Controller
-                        name="location"
-                        control={addControl}
-                        rules={{ required: "Location is required" }}
-                        render={({ field }) => (
-                          <LocationAutocomplete
-                            value={field.value || ""}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm"
-                            placeholder="e.g. Library, Room 205"
-                          />
-                        )}
-                      />
-                      {addErrors.location && <p className="text-red-400 text-xs">{addErrors.location?.message as string}</p>}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
-                        Date Found
-                      </label>
-                      <CustomDatePicker value={addStartDate} onChange={setAddStartDate} max={new Date().toISOString().split("T")[0]} placeholder="Select date found" />
-                    </div>
+                    />
+                    {addErrors.location && <p className="text-red-400 text-xs">{addErrors.location?.message as string}</p>}
                   </div>
 
-                  {/* ── Description ── */}
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                      Description <span className="text-red-400">*</span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
+                      Date Found
                     </label>
-                    <textarea {...addRegister("description", { required: "Description is required" })} rows={2} placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none" />
-                    {addErrors.description && <p className="text-red-400 text-xs">{addErrors.description?.message as string}</p>}
+                    <CustomDatePicker value={addStartDate} onChange={setAddStartDate} max={new Date().toISOString().split("T")[0]} placeholder="Select date found" />
                   </div>
+                </div>
 
-                  {/* ── Item Photo ── */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
-                      Item Photo <span className="text-red-400">*</span>
-                    </label>
-                    {!addPreview && !(
-                      (() => {
-                        const lower = addSelectedMenu?.toLowerCase() || "";
-                        return lower.includes("money") || lower.includes("cash") || lower.includes("bill") || lower.includes("currency") ||
-                          lower === "id" || lower === "identification" || lower.includes("device") || lower.includes("electronic") ||
-                          lower.includes("gadget") || lower.includes("wallet") || lower.includes("purse") || lower.includes("jewelry") ||
-                          lower.includes("accessor") || lower.includes("key") || lower.includes("usb") || lower.includes("storage") ||
-                          lower.includes("flash drive") || lower.includes("document");
-                      })()
-                    ) ? (
-                      <div
-                        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
+                {/* ── Description ── */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                    Description <span className="text-red-400">*</span>
+                  </label>
+                  <textarea {...addRegister("description", { required: "Description is required" })} rows={2} placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none" />
+                  {addErrors.description && <p className="text-red-400 text-xs">{addErrors.description?.message as string}</p>}
+                </div>
+
+                {/* ── Item Photo ── */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
+                    Item Photo <span className="text-red-400">*</span>
+                  </label>
+                  {!addPreview && !(
+                    (() => {
+                      const lower = addSelectedMenu?.toLowerCase() || "";
+                      return lower.includes("money") || lower.includes("cash") || lower.includes("bill") || lower.includes("currency") ||
+                        lower === "id" || lower === "identification" || lower.includes("device") || lower.includes("electronic") ||
+                        lower.includes("gadget") || lower.includes("wallet") || lower.includes("purse") || lower.includes("jewelry") ||
+                        lower.includes("accessor") || lower.includes("key") || lower.includes("usb") || lower.includes("storage") ||
+                        lower.includes("flash drive") || lower.includes("document");
+                    })()
+                  ) ? (
+                    <div
+                      className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
                         ${addPhotoError ? "border-red-500/60 bg-red-900/5" : addIsDragging ? "border-blue-500 bg-blue-900/10" : "border-gray-700 bg-gray-800/40 hover:border-blue-500/60 hover:bg-gray-800/70"}`}
-                        onClick={() => addFileInputRef.current?.click()}
-                        onDragOver={e => { e.preventDefault(); setAddIsDragging(true); }}
-                        onDragLeave={() => setAddIsDragging(false)}
-                        onDrop={e => { e.preventDefault(); setAddIsDragging(false); handleAddFileChange(e.dataTransfer.files); }}
-                      >
-                        <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
-                        <div className="flex flex-col items-center gap-2.5">
-                          <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center ${addPhotoError ? "bg-red-900/20 border-red-500/30 text-red-400" : "bg-gray-800 border-gray-700 text-gray-400"}`}>
-                            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-300"><span className="text-blue-400 font-semibold">Click to upload</span> or drag & drop</p>
-                            <p className="text-xs text-gray-600 mt-0.5">JPG, PNG, WEBP · Max {MAX_SIZE_MB}MB</p>
-                          </div>
+                      onClick={() => addFileInputRef.current?.click()}
+                      onDragOver={e => { e.preventDefault(); setAddIsDragging(true); }}
+                      onDragLeave={() => setAddIsDragging(false)}
+                      onDrop={e => { e.preventDefault(); setAddIsDragging(false); handleAddFileChange(e.dataTransfer.files); }}
+                    >
+                      <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAddFileChange(e.target.files)} />
+                      <div className="flex flex-col items-center gap-2.5">
+                        <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center ${addPhotoError ? "bg-red-900/20 border-red-500/30 text-red-400" : "bg-gray-800 border-gray-700 text-gray-400"}`}>
+                          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-300"><span className="text-blue-400 font-semibold">Click to upload</span> or drag & drop</p>
+                          <p className="text-xs text-gray-600 mt-0.5">JPG, PNG, WEBP · Max {MAX_SIZE_MB}MB</p>
                         </div>
                       </div>
-                    ) : (
-                      <div className="rounded-xl overflow-hidden border border-gray-700 bg-gray-800">
-                        <div className="relative group">
-                          <img
-                            src={
-                              (() => {
-                                const lower = addSelectedMenu?.toLowerCase() || "";
-                                if (lower.includes("money") || lower.includes("cash") || lower.includes("bill") || lower.includes("currency")) return "/money.jpg";
-                                if (lower === "id" || lower === "identification") return "/id.jpg";
-                                if (lower.includes("device") || lower.includes("electronic") || lower.includes("gadget")) return "/phone.png";
-                                if (lower.includes("wallet") || lower.includes("purse")) return "/wallet.jpg";
-                                if (lower.includes("jewelry")) return "/jewelry.jpg";
-                                if (lower.includes("accessor")) return "/Accessories.jpg";
-                                if (lower.includes("key")) return "/keys.jpg";
-                                if (lower.includes("usb") || lower.includes("storage") || lower.includes("flash drive")) return "/usb.jpg";
-                                if (lower.includes("document")) return "/id.jpg";
-                                return addPreview;
-                              })()
-                            }
-                            alt="Preview"
-                            className="w-full max-h-44 object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/55 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
-                            <button type="button" onClick={() => addFileInputRef.current?.click()} className="bg-white/90 hover:bg-white text-gray-900 text-xs font-semibold px-4 py-2 rounded-lg">Change</button>
-                            <button type="button" onClick={() => { setAddSelectedFile(null); setAddPreview(""); }} className="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-4 py-2 rounded-lg">Remove</button>
-                          </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl overflow-hidden border border-gray-700 bg-gray-800">
+                      <div className="relative group">
+                        <img
+                          src={
+                            (() => {
+                              const lower = addSelectedMenu?.toLowerCase() || "";
+                              if (lower.includes("money") || lower.includes("cash") || lower.includes("bill") || lower.includes("currency")) return "/money.jpg";
+                              if (lower === "id" || lower === "identification") return "/id.jpg";
+                              if (lower.includes("device") || lower.includes("electronic") || lower.includes("gadget")) return "/phone.png";
+                              if (lower.includes("wallet") || lower.includes("purse")) return "/wallet.jpg";
+                              if (lower.includes("jewelry")) return "/jewelry.jpg";
+                              if (lower.includes("accessor")) return "/Accessories.jpg";
+                              if (lower.includes("key")) return "/keys.jpg";
+                              if (lower.includes("usb") || lower.includes("storage") || lower.includes("flash drive")) return "/usb.jpg";
+                              if (lower.includes("document")) return "/id.jpg";
+                              return addPreview;
+                            })()
+                          }
+                          alt="Preview"
+                          className="w-full max-h-44 object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/55 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
+                          <button type="button" onClick={() => addFileInputRef.current?.click()} className="bg-white/90 hover:bg-white text-gray-900 text-xs font-semibold px-4 py-2 rounded-lg">Change</button>
+                          <button type="button" onClick={() => { setAddSelectedFile(null); setAddPreview(""); }} className="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-4 py-2 rounded-lg">Remove</button>
                         </div>
-                        <div className="px-4 py-2.5 border-t border-gray-700 flex items-center justify-between">
-                          <span className="text-xs text-gray-400 truncate">{(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? "money.jpg (Default)" : (addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification") ? "id.jpg (Default)" : (addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) ? "phone.png (Default)" : (addSelectedFile?.name || "")}</span>
-                          <span className="text-xs text-gray-500 ml-3 shrink-0">{(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency") || addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification" || addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) ? "Default image" : (addSelectedFile ? (addSelectedFile.size < 1024 * 1024 ? (addSelectedFile.size / 1024).toFixed(1) + " KB" : (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB") : "")}</span>
-                        </div>
-                        <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleAddFileChange(e.target.files)} />
                       </div>
-                    )}
-                    {addUploadError && <p className="text-red-400 text-xs">{addUploadError}</p>}
-                    {addPhotoError && !addUploadError && <p className="text-red-400 text-xs">{addPhotoError}</p>}
-                  </div>
-
-                  {/* ── Claim Instructions (static) ── */}
-                  <div className="flex items-start gap-3 px-3.5 py-3 bg-blue-500/5 border border-blue-500/15 rounded-xl">
-                    <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+                      <div className="px-4 py-2.5 border-t border-gray-700 flex items-center justify-between">
+                        <span className="text-xs text-gray-400 truncate">{(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? "money.jpg (Default)" : (addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification") ? "id.jpg (Default)" : (addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) ? "phone.png (Default)" : (addSelectedFile?.name || "")}</span>
+                        <span className="text-xs text-gray-500 ml-3 shrink-0">{(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency") || addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification" || addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) ? "Default image" : (addSelectedFile ? (addSelectedFile.size < 1024 * 1024 ? (addSelectedFile.size / 1024).toFixed(1) + " KB" : (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB") : "")}</span>
+                      </div>
+                      <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleAddFileChange(e.target.files)} />
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Claim Instructions</p>
-                      <p className="text-blue-300/70 text-[11px] leading-relaxed">Visit the SAS office with a valid school ID to claim this item.</p>
-                    </div>
+                  )}
+                  {addUploadError && <p className="text-red-400 text-xs">{addUploadError}</p>}
+                  {addPhotoError && !addUploadError && <p className="text-red-400 text-xs">{addPhotoError}</p>}
+                </div>
+
+                {/* ── Claim Instructions (static) ── */}
+                <div className="flex items-start gap-3 px-3.5 py-3 bg-blue-500/5 border border-blue-500/15 rounded-xl">
+                  <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
                   </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Claim Instructions</p>
+                    <p className="text-blue-300/70 text-[11px] leading-relaxed">Visit the SAS office with a valid school ID to claim this item.</p>
+                  </div>
+                </div>
 
-                  {/* ── Possible Matches Found ── */}
-                  {(() => {
-                    const itemName = (document.querySelector('input[name="foundItemName"]') as HTMLInputElement)?.value ?? "";
-                    const location = (document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? "";
-                    const description = (document.querySelector('textarea[name="description"]') as HTMLTextAreaElement)?.value ?? "";
-                    const allFieldsFilled = itemName.trim() !== "" && location.trim() !== "" && description.trim() !== "" && addSelectedMenucategoryId !== "";
-                    return allFieldsFilled && !(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? (
-                      <ItemMatchSuggestions
-                        categoryId={addSelectedMenucategoryId}
-                        categoryName={addSelectedMenu}
-                        itemName={itemName}
-                        location={location}
-                      />
-                    ) : null;
-                  })()}
-                </form>
-              </div>{/* ── end modal body ── */}
+                {/* ── Possible Matches Found ── */}
+                {(() => {
+                  const itemName = (document.querySelector('input[name="foundItemName"]') as HTMLInputElement)?.value ?? "";
+                  const location = (document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? "";
+                  const description = (document.querySelector('textarea[name="description"]') as HTMLTextAreaElement)?.value ?? "";
+                  const allFieldsFilled = itemName.trim() !== "" && location.trim() !== "" && description.trim() !== "" && addSelectedMenucategoryId !== "";
+                  return allFieldsFilled && !(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? (
+                    <ItemMatchSuggestions
+                      categoryId={addSelectedMenucategoryId}
+                      categoryName={addSelectedMenu}
+                      itemName={itemName}
+                      location={location}
+                    />
+                  ) : null;
+                })()}
+              </form>
+            </div>{/* ── end modal body ── */}
 
-              {/* ── Modal footer ── */}
-              <div className="px-6 py-4 border-t border-white/5 flex gap-3 shrink-0 bg-gray-900 rounded-b-2xl">
-                <button type="button" onClick={closeAddModal} disabled={isBusy} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
-                <button type="submit" form="add-found-form" disabled={isBusy || (!addSelectedFile && !addPreview && !(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency") || addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification" || addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")))}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-                  {isBusy ? (<><Spinner size="sm" /> Submitting…</>) : "Submit Found Item"}
-                </button>
-              </div>
+            {/* ── Modal footer ── */}
+            <div className="px-6 py-4 border-t border-white/5 flex gap-3 shrink-0 bg-gray-900 rounded-b-2xl">
+              <button type="button" onClick={closeAddModal} disabled={isBusy} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
+              <button type="submit" form="add-found-form" disabled={isBusy || (!addSelectedFile && !addPreview && !(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency") || addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification" || addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")))}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                {isBusy ? (<><Spinner size="sm" /> Submitting…</>) : "Submit Found Item"}
+              </button>
             </div>
           </div>
         </div>

@@ -219,8 +219,8 @@ export const AchievementPopup = ({
                 </div>
               )}
 
-              {/* Countdown bar */}
-              <div className="h-1 bg-white/6 rounded-full overflow-hidden mb-4">
+              {/* Countdown bar — subtler gray background */}
+              <div className="h-1 bg-gray-800/80 rounded-full overflow-hidden mb-4">
                 <div className={`ach-countdown h-full rounded-full ${t.bar}`} />
               </div>
 
@@ -228,8 +228,8 @@ export const AchievementPopup = ({
               <div className="flex gap-2">
                 <button
                   onClick={onClose}
-                  className="flex-1 py-2 sm:py-2.5 bg-white/5 hover:bg-white/10
-                    border border-white/8 text-gray-400 hover:text-gray-300
+                  className="flex-1 py-2 sm:py-2.5 bg-gray-800/50 hover:bg-gray-700/60
+                    border border-gray-700/50 text-gray-400 hover:text-gray-300
                     text-xs sm:text-sm font-semibold rounded-xl transition-colors"
                 >
                   Dismiss
