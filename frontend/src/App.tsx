@@ -19,7 +19,7 @@ function App() {
       <Navbars />
       <Outlet />
       <Footers />
-      {current && <AchievementPopup achievement={current} onClose={dismiss} />}
+      {current && <AchievementPopup key={current.id} achievement={current} onClose={dismiss} />}
     </>
   );
 }
