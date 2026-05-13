@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { baseApi } from "../../redux/api/baseApi";
 import { 
   FaTrophy, FaUsers, FaChartBar, FaSearch,
-  FaMedal, FaCrown, FaStar, FaBoxOpen, FaClipboardList
+  FaMedal, FaCrown, FaStar, FaBoxOpen, FaClipboardList,
+  FaChevronDown
 } from "react-icons/fa";
 
 const achievementApi = baseApi.injectEndpoints({
@@ -152,31 +153,7 @@ const AchievementsManagement: React.FC = () => {
             
             <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 max-h-[600px] overflow-y-auto custom-scrollbar">
               {filteredStats.map((ach: any) => (
-                <div key={ach.id} className="p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl flex items-center gap-3 group hover:border-white/10 hover:bg-white/[0.03] transition-all">
-                  <div className="text-2xl grayscale group-hover:grayscale-0 transition-all filter drop-shadow-sm">
-                    {ach.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start gap-2">
-                      <h3 className="text-[10px] font-black text-white uppercase tracking-widest truncate">{ach.name}</h3>
-                      <span className={`text-[8px] font-black uppercase shrink-0 ${TIER_COLORS[ach.tier] || "text-gray-500"}`}>
-                        {ach.tier}
-                      </span>
-                    </div>
-                    
-                    <div className="mt-2 flex items-center gap-3">
-                      <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500/40 rounded-full transition-all duration-1000"
-                          style={{ width: `${Math.min(100, (ach._count.userAchievements / 50) * 100)}%` }}
-                        />
-                      </div>
-                      <span className="text-[9px] font-black text-gray-500 whitespace-nowrap">
-                        {ach._count.userAchievements} <span className="text-[7px]">EARNED</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                <AchievementStatCard key={ach.id} ach={ach} />
               ))}
               {filteredStats.length === 0 && (
                 <div className="col-span-full py-20 text-center text-gray-700 font-bold uppercase tracking-widest text-xs">
@@ -187,6 +164,65 @@ const AchievementsManagement: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+const AchievementStatCard = ({ ach }: { ach: any }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className={`p-3 bg-white/[0.02] border rounded-xl transition-all duration-300 group
+      ${isExpanded ? "border-blue-500/30 bg-white/[0.04] ring-1 ring-blue-500/10" : "border-white/[0.05] hover:border-white/10 hover:bg-white/[0.03]"}`}>
+      <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="text-2xl grayscale group-hover:grayscale-0 transition-all filter drop-shadow-sm shrink-0">
+          {ach.icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start gap-2">
+            <h3 className="text-[10px] font-black text-white uppercase tracking-widest truncate">{ach.name}</h3>
+            <div className="flex items-center gap-2">
+              <span className={`text-[8px] font-black uppercase shrink-0 ${TIER_COLORS[ach.tier] || "text-gray-500"}`}>
+                {ach.tier}
+              </span>
+              <FaChevronDown size={8} className={`text-gray-600 transition-transform duration-300 ${isExpanded ? "rotate-180 text-blue-400" : ""}`} />
+            </div>
+          </div>
+          
+          <div className="mt-2 flex items-center gap-3">
+            <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-blue-500/40 rounded-full transition-all duration-1000"
+                style={{ width: `${Math.min(100, (ach._count.userAchievements / 50) * 100)}%` }}
+              />
+            </div>
+            <span className="text-[9px] font-black text-gray-500 whitespace-nowrap">
+              {ach._count.userAchievements} <span className="text-[7px]">EARNED</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="mt-3 pt-3 border-t border-white/5 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="space-y-2">
+            <div>
+              <p className="text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">Description</p>
+              <p className="text-[10px] text-gray-300 leading-relaxed italic">"{ach.description}"</p>
+            </div>
+            <div className="flex items-center gap-4 pt-1">
+              <div>
+                <p className="text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-0.5">Category</p>
+                <p className="text-[9px] text-blue-400 font-black uppercase">{ach.category}</p>
+              </div>
+              <div>
+                <p className="text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-0.5">Reward</p>
+                <p className="text-[9px] text-emerald-400 font-black uppercase">+{ach.xp} XP</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
