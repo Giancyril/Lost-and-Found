@@ -36,7 +36,10 @@ const achievementApi = baseApi.injectEndpoints({
         }
       },
     }),
-
+    unlockSecretAchievement: b.mutation({
+      query: (body: { secretKey: string }) => ({ url: "/achievements/unlock-secret", method: "POST", body }),
+      invalidatesTags: ["achievements"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -74,16 +77,133 @@ const CATEGORIES = [
   { id: "special", label: "Special", icon: <FaClock size={12} /> },
 ];
 
+const AchievementModal = ({ ach, onClose, onViewAll }: { ach: any, onClose: () => void, onViewAll: () => void }) => {
+  useEffect(() => {
+    const playRareSound = () => {
+      try {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+
+        const playCrystallineNote = (freq: number, start: number, duration: number, volume: number) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, start);
+          gain.gain.setValueAtTime(0, start);
+          gain.gain.linearRampToValueAtTime(volume, start + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(start);
+          osc.stop(start + duration);
+        };
+
+        const thudOsc = ctx.createOscillator();
+        const thudGain = ctx.createGain();
+        thudOsc.type = 'sine';
+        thudOsc.frequency.setValueAtTime(55, now);
+        thudOsc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
+        thudGain.gain.setValueAtTime(0, now);
+        thudGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+        thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        thudOsc.connect(thudGain);
+        thudGain.connect(ctx.destination);
+        thudOsc.start(now);
+        thudOsc.stop(now + 0.6);
+
+        const shimVol = 0.08;
+        playCrystallineNote(1174.66, now + 0.05, 0.8, shimVol);
+        playCrystallineNote(1479.98, now + 0.10, 0.8, shimVol);
+        playCrystallineNote(1760.00, now + 0.15, 0.8, shimVol);
+        playCrystallineNote(2349.32, now + 0.20, 1.0, shimVol + 0.02);
+
+        const airOsc = ctx.createOscillator();
+        const airGain = ctx.createGain();
+        airOsc.type = 'sine';
+        airOsc.frequency.setValueAtTime(2349.32, now + 0.20);
+        airGain.gain.setValueAtTime(0, now + 0.20);
+        airGain.gain.linearRampToValueAtTime(0.04, now + 0.25);
+        airGain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+        airOsc.connect(airGain);
+        airGain.connect(ctx.destination);
+        airOsc.start(now + 0.20);
+        airOsc.stop(now + 2.0);
+
+        setTimeout(() => { if (ctx.state !== 'closed') ctx.close(); }, 3000);
+      } catch (e) {
+        console.warn("Rare soundscape failed to play", e);
+      }
+    };
+    playRareSound();
+  }, []);
+
+  if (!ach) return null;
+  const style = TIER_STYLES[ach.tier as keyof typeof TIER_STYLES] || TIER_STYLES.BRONZE;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-500">
+      <div className="bg-[#0f172a] border border-white/10 rounded-[1.5rem] w-full max-w-[240px] sm:max-w-[280px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
+        <div className="relative pt-6 pb-4 px-4 flex flex-col items-center justify-center bg-[#1e293b]/30">
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
+          <div className="relative z-10 mb-3 flex items-center gap-1 text-[7px] font-black text-gray-500 uppercase tracking-[0.2em]">
+            <span>🎉</span> ACHIEVEMENT UNLOCKED!
+          </div>
+          <div className="relative z-10 w-14 h-14 bg-[#0f172a] border border-white/10 rounded-2xl flex items-center justify-center text-3xl shadow-2xl mb-4 ring-1 ring-white/10">
+            <div className={`absolute inset-0 opacity-20 blur-xl rounded-full ${style.bg}`} />
+            <span className="relative z-10 drop-shadow-2xl">{ach.icon}</span>
+          </div>
+          <div className={`relative z-10 px-2.5 py-1 rounded-full border border-white/10 bg-[#1e293b] text-[6px] sm:text-[7px] font-black uppercase tracking-widest flex items-center gap-1 ${style.text}`}>
+            <span>
+              {ach.tier === 'BRONZE' ? '🥉' : ach.tier === 'SILVER' ? '🥈' : ach.tier === 'GOLD' ? '🥇' : ach.tier === 'PLATINUM' ? '💎' : '👑'}
+            </span>
+            {ach.tier} TIER
+          </div>
+        </div>
+        <div className="px-5 pt-5 pb-6 text-center flex flex-col items-center bg-[#0f172a]">
+          <h3 className="text-lg font-black text-white mb-1 tracking-tight">{ach.name}</h3>
+          <p className="text-gray-400 text-[9px] font-medium mb-5 leading-relaxed max-w-[95%] mx-auto">
+            {ach.description}
+          </p>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400/10 border border-yellow-400/20 rounded-full text-yellow-500 font-black text-[8px] uppercase tracking-wider mb-6">
+            <FaStar size={8} className="animate-pulse" />
+            +{ach.xp} Bonus XP
+          </div>
+          <div className="w-full h-px bg-white/5 mb-5" />
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <button
+              onClick={onClose}
+              className="py-2.5 bg-[#1e293b]/50 hover:bg-[#1e293b] text-gray-400 hover:text-white font-black text-[7px] uppercase tracking-widest rounded-lg border border-white/5 transition-all active:scale-95"
+            >
+              Dismiss
+            </button>
+            <button
+              onClick={onViewAll}
+              className="py-2.5 bg-[#1e293b]/50 hover:bg-[#1e293b] text-white font-black text-[7px] uppercase tracking-widest rounded-lg border border-white/5 transition-all active:scale-95"
+            >
+              View All
+            </button>
+          </div>
+          <p className="mt-4 text-[7px] text-gray-700 font-bold uppercase tracking-widest opacity-40">Auto-dismisses in a few seconds...</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const StudentAchievements: React.FC = () => {
   const user: any = useUserVerification();
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [unlockedAchievement, setUnlockedAchievement] = useState<any>(null);
+  const [isUnlocking, setIsUnlocking] = useState(false);
 
   const { data: allData, isLoading: loadingAll } = (achievementApi as any).useGetAllAchievementsQuery();
   const { data: myData, isLoading: loadingMy } = (achievementApi as any).useGetMyAchievementsQuery();
   const [togglePin] = (achievementApi as any).useTogglePinAchievementMutation();
+  const [unlockSecret] = (achievementApi as any).useUnlockSecretAchievementMutation();
 
 
   const allAchievements = allData?.data?.achievements || [];
@@ -105,137 +225,21 @@ const StudentAchievements: React.FC = () => {
     );
   }
 
-  const AchievementModal = ({ ach, onClose }: { ach: any, onClose: () => void }) => {
-    useEffect(() => {
-      // High-Fidelity "Xbox Rare Achievement" Shimmer Sound
-      const playRareSound = () => {
-        try {
-          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-          if (!AudioCtx) return;
-          const ctx = new AudioCtx();
-          const now = ctx.currentTime;
 
-          const playCrystallineNote = (freq: number, start: number, duration: number, volume: number) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            // Use triangle for the main body but add a high sine for clarity
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, start);
-            gain.gain.setValueAtTime(0, start);
-            gain.gain.linearRampToValueAtTime(volume, start + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(start);
-            osc.stop(start + duration);
-          };
-
-          // 1. Deep Vibrating Sub-Bass (The "Thud")
-          const thudOsc = ctx.createOscillator();
-          const thudGain = ctx.createGain();
-          thudOsc.type = 'sine';
-          thudOsc.frequency.setValueAtTime(55, now); // A1
-          thudOsc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
-          thudGain.gain.setValueAtTime(0, now);
-          thudGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
-          thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-          thudOsc.connect(thudGain);
-          thudGain.connect(ctx.destination);
-          thudOsc.start(now);
-          thudOsc.stop(now + 0.6);
-
-          // 2. Rapid Crystalline Arpeggio (The "Shimmer")
-          // We cascade these very quickly to create a "glassy" effect
-          const shimVol = 0.08;
-          playCrystallineNote(1174.66, now + 0.05, 0.8, shimVol); // D6
-          playCrystallineNote(1479.98, now + 0.10, 0.8, shimVol); // F#6
-          playCrystallineNote(1760.00, now + 0.15, 0.8, shimVol); // A6
-          playCrystallineNote(2349.32, now + 0.20, 1.0, shimVol + 0.02); // D7
-
-          // 3. Shimmering High-End Ring (Airy tail)
-          const airOsc = ctx.createOscillator();
-          const airGain = ctx.createGain();
-          airOsc.type = 'sine';
-          airOsc.frequency.setValueAtTime(2349.32, now + 0.20);
-          airGain.gain.setValueAtTime(0, now + 0.20);
-          airGain.gain.linearRampToValueAtTime(0.04, now + 0.25);
-          airGain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
-          airOsc.connect(airGain);
-          airGain.connect(ctx.destination);
-          airOsc.start(now + 0.20);
-          airOsc.stop(now + 2.0);
-
-        } catch (e) {
-          console.warn("Rare soundscape failed to play", e);
-        }
-      };
-
-      playRareSound();
-    }, []);
-
-    if (!ach) return null;
-    const style = TIER_STYLES[ach.tier as keyof typeof TIER_STYLES] || TIER_STYLES.BRONZE;
-
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-500">
-        <div className="bg-[#0f172a] border border-white/10 rounded-[1.5rem] w-full max-w-[240px] sm:max-w-[280px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
-
-          {/* Header Section with Dotted Grid */}
-          <div className="relative pt-6 pb-4 px-4 flex flex-col items-center justify-center bg-[#1e293b]/30">
-            {/* Dotted Grid Pattern */}
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
-
-            <div className="relative z-10 mb-3 flex items-center gap-1 text-[7px] font-black text-gray-500 uppercase tracking-[0.2em]">
-              <span>🎉</span> ACHIEVEMENT UNLOCKED!
-            </div>
-
-            <div className="relative z-10 w-14 h-14 bg-[#0f172a] border border-white/10 rounded-2xl flex items-center justify-center text-3xl shadow-2xl mb-4 ring-1 ring-white/10">
-              <div className={`absolute inset-0 opacity-20 blur-xl rounded-full ${style.bg}`} />
-              <span className="relative z-10 drop-shadow-2xl">{ach.icon}</span>
-            </div>
-
-            <div className={`relative z-10 px-2.5 py-1 rounded-full border border-white/10 bg-[#1e293b] text-[6px] sm:text-[7px] font-black uppercase tracking-widest flex items-center gap-1 ${style.text}`}>
-              <span>
-                {ach.tier === 'BRONZE' ? '🥉' : ach.tier === 'SILVER' ? '🥈' : ach.tier === 'GOLD' ? '🥇' : ach.tier === 'PLATINUM' ? '💎' : '👑'}
-              </span>
-              {ach.tier} TIER
-            </div>
-          </div>
-
-          {/* Body Section */}
-          <div className="px-5 pt-5 pb-6 text-center flex flex-col items-center bg-[#0f172a]">
-            <h3 className="text-lg font-black text-white mb-1 tracking-tight">{ach.name}</h3>
-            <p className="text-gray-400 text-[9px] font-medium mb-5 leading-relaxed max-w-[95%] mx-auto">
-              {ach.description}
-            </p>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400/10 border border-yellow-400/20 rounded-full text-yellow-500 font-black text-[8px] uppercase tracking-wider mb-6">
-              <FaStar size={8} className="animate-pulse" />
-              +{ach.xp} Bonus XP
-            </div>
-
-            <div className="w-full h-px bg-white/5 mb-5" />
-
-            <div className="grid grid-cols-2 gap-2 w-full">
-              <button
-                onClick={onClose}
-                className="py-2.5 bg-[#1e293b]/50 hover:bg-[#1e293b] text-gray-400 hover:text-white font-black text-[7px] uppercase tracking-widest rounded-lg border border-white/5 transition-all active:scale-95"
-              >
-                Dismiss
-              </button>
-              <button
-                onClick={() => { onClose(); setFilter('all'); }}
-                className="py-2.5 bg-[#1e293b]/50 hover:bg-[#1e293b] text-white font-black text-[7px] uppercase tracking-widest rounded-lg border border-white/5 transition-all active:scale-95"
-              >
-                View All
-              </button>
-            </div>
-
-            <p className="mt-4 text-[7px] text-gray-700 font-bold uppercase tracking-widest opacity-40">Auto-dismisses in a few seconds...</p>
-          </div>
-        </div>
-      </div>
-    );
+  const handleUnlockSecret = async (key: string) => {
+    if (isUnlocking) return;
+    setIsUnlocking(true);
+    try {
+      const res = await unlockSecret({ secretKey: key }).unwrap();
+      if (res.success) {
+        setUnlockedAchievement(res.data.achievement);
+        localStorage.removeItem("easter_egg_clicks");
+      }
+    } catch (err: any) {
+      console.error("Unlock failed", err);
+    } finally {
+      setIsUnlocking(false);
+    }
   };
 
 
@@ -263,6 +267,7 @@ const StudentAchievements: React.FC = () => {
         <AchievementModal
           ach={unlockedAchievement}
           onClose={() => setUnlockedAchievement(null)}
+          onViewAll={() => { setUnlockedAchievement(null); setFilter('all'); }}
         />
       )}
       <style>{`
@@ -301,11 +306,24 @@ const StudentAchievements: React.FC = () => {
             icon: <FaBolt size={11} className="text-purple-400" />,
             bg: "bg-purple-500/10",
             accent: "text-purple-400",
+            onClick: () => {
+              if (isUnlocking) return;
+              const hasEgg = unlockedKeys.has("EASTER_EGG");
+              if (hasEgg) return;
+
+              const count = parseInt(localStorage.getItem('easter_egg_clicks') || '0') + 1;
+              localStorage.setItem('easter_egg_clicks', count.toString());
+
+              if (count >= 10) {
+                handleUnlockSecret("EASTER_EGG");
+              }
+            }
           },
-        ].map(({ label, value, icon, bg, accent }: any) => (
+        ].map(({ label, value, icon, bg, accent, onClick }: any) => (
           <div
             key={label}
-            className="bg-gray-900 border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex items-center justify-between transition-all relative overflow-hidden"
+            onClick={onClick}
+            className={`bg-gray-900 border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex items-center justify-between transition-all relative overflow-hidden ${onClick ? 'cursor-help active:scale-95' : ''}`}
           >
             <div>
               <p className={`text-lg sm:text-2xl font-bold tracking-tight ${accent}`}>{value}</p>
