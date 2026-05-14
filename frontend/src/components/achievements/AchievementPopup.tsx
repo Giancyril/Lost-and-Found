@@ -178,7 +178,7 @@ export const AchievementPopup = ({
 
               {/* Unlocked label */}
               <p className={`text-[10px] sm:text-[11px] font-black uppercase tracking-[0.28em] ${t.text} mb-3 flex items-center justify-center gap-1.5`}>
-                🎉 Achievement Unlocked!
+                 Achievement Unlocked!
               </p>
 
               {/* Badge icon */}

@@ -36,10 +36,7 @@ const achievementApi = baseApi.injectEndpoints({
         }
       },
     }),
-    unlockSecretAchievement: b.mutation({
-      query: (body: { secretKey: string }) => ({ url: "/achievements/unlock-secret", method: "POST", body }),
-      invalidatesTags: ["achievements"],
-    }),
+
   }),
   overrideExisting: false,
 });
@@ -87,7 +84,7 @@ const StudentAchievements: React.FC = () => {
   const { data: allData, isLoading: loadingAll } = (achievementApi as any).useGetAllAchievementsQuery();
   const { data: myData, isLoading: loadingMy } = (achievementApi as any).useGetMyAchievementsQuery();
   const [togglePin] = (achievementApi as any).useTogglePinAchievementMutation();
-  const [unlockSecret] = (achievementApi as any).useUnlockSecretAchievementMutation();
+
 
   const allAchievements = allData?.data?.achievements || [];
   const totalUsers = allData?.data?.totalUsers || 1;
@@ -240,23 +237,9 @@ const StudentAchievements: React.FC = () => {
       </div>
     );
   };
-  const handleUnlockSecret = async (key: string) => {
-    try {
-      const res = await unlockSecret({ secretKey: key }).unwrap();
-      if (res.success) {
-        setUnlockedAchievement(res.data.achievement);
-        localStorage.removeItem("easter_egg_clicks");
-      }
-    } catch (err: any) {
-      console.error("Unlock failed", err);
-    }
-  };
 
-  const pinnedAchievements = myAchievements.filter((a: any) => a.isPinned).map((ua: any) => {
-    const ach = ua.achievement;
-    const isTestLegend = ach.name === "New Recruit" || ach.name === "Egg Hunter";
-    return { ...ua, achievement: { ...ach, tier: isTestLegend ? "LEGEND" : ach.tier } };
-  });
+
+  const pinnedAchievements = myAchievements.filter((a: any) => a.isPinned);
 
   const filteredAchievements = allAchievements
     .filter((a: any) => {
@@ -309,10 +292,6 @@ const StudentAchievements: React.FC = () => {
             icon: <FaMedal size={11} className="text-blue-400" />,
             bg: "bg-blue-500/10",
             accent: "text-white",
-            onClick: () => {
-              const egg = allAchievements.find((a: any) => a.key === 'EASTER_EGG');
-              if (egg) setUnlockedAchievement(egg);
-            }
           },
           { label: "Total Badges", value: stats.total, icon: <FaTrophy size={11} className="text-yellow-400" />, bg: "bg-yellow-500/10", accent: "text-yellow-400" },
           { label: "Bonus XP", value: stats.points, icon: <FaStar size={11} className="text-emerald-400" />, bg: "bg-emerald-500/10", accent: "text-emerald-400" },
@@ -322,23 +301,11 @@ const StudentAchievements: React.FC = () => {
             icon: <FaBolt size={11} className="text-purple-400" />,
             bg: "bg-purple-500/10",
             accent: "text-purple-400",
-            onClick: () => {
-              const hasEgg = unlockedKeys.has("EASTER_EGG");
-              if (hasEgg) return;
-
-              const count = parseInt(localStorage.getItem('easter_egg_clicks') || '0') + 1;
-              localStorage.setItem('easter_egg_clicks', count.toString());
-
-              if (count >= 10) {
-                handleUnlockSecret("EASTER_EGG");
-              }
-            }
           },
-        ].map(({ label, value, icon, bg, accent, onClick }: any) => (
+        ].map(({ label, value, icon, bg, accent }: any) => (
           <div
             key={label}
-            onClick={onClick}
-            className={`bg-gray-900 border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex items-center justify-between transition-all relative overflow-hidden ${onClick ? 'cursor-help active:scale-95' : ''}`}
+            className="bg-gray-900 border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex items-center justify-between transition-all relative overflow-hidden"
           >
             <div>
               <p className={`text-lg sm:text-2xl font-bold tracking-tight ${accent}`}>{value}</p>
@@ -414,9 +381,7 @@ const StudentAchievements: React.FC = () => {
         {filteredAchievements.map((ach: any) => {
           const isUnlocked = unlockedKeys.has(ach.key);
 
-          // TEST OVERRIDE: Treat specific badges as LEGEND for testing animations
-          const isTestLegend = isUnlocked && (ach.name === "New Recruit" || ach.name === "Egg Hunter");
-          const currentTier = isTestLegend ? "LEGEND" : ach.tier;
+          const currentTier = ach.tier;
 
           const style = TIER_STYLES[currentTier as keyof typeof TIER_STYLES] || TIER_STYLES.BRONZE;
           const unlockData = myAchievements.find((ma: any) => ma.achievement.key === ach.key);

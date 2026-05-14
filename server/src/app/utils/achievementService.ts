@@ -105,7 +105,7 @@ export const ACHIEVEMENTS = {
   GLITCH_MATRIX: { key: "GLITCH_MATRIX", name: "Matrix Break", description: "Found a hidden developer credit", icon: "👾", tier: "PLATINUM", category: "special", xp: 2000, secret: true },
   THE_ARCHITECT: { key: "THE_ARCHITECT", name: "World Builder", description: "View the system documentation or help guide", icon: "📐", tier: "BRONZE", category: "special", xp: 100, secret: true },
   SECRET_CODE: { key: "SECRET_CODE", name: "Konami Code", description: "Entered a secret sequence in the dashboard", icon: "🎮", tier: "GOLD", category: "special", xp: 500, secret: true },
-  DARK_MODE_LOVER: { key: "DARK_MODE_LOVER", name: "Creature of the Night", description: "Use the system in dark mode for 10 hours", icon: "🌙", tier: "SILVER", category: "special", xp: 100 },
+  DARK_MODE_LOVER: { key: "DARK_MODE_LOVER", name: "System Specialist", description: "Explore all core features of the Lost and Found system", icon: "🛠️", tier: "SILVER", category: "special", xp: 100 },
   HELP_GUIDE_READER: { key: "HELP_GUIDE_READER", name: "Student Handbook", description: "Read the entire help guide", icon: "📖", tier: "BRONZE", category: "special", xp: 50 },
   TICKET_MASTER: { key: "TICKET_MASTER", name: "Support Hero", description: "Resolve your first support ticket", icon: "🎫", tier: "GOLD", category: "special", xp: 300 },
   PROFILE_WARRIOR: { key: "PROFILE_WARRIOR", name: "Identity Shift", description: "Change your profile name or username once", icon: "🎭", tier: "BRONZE", category: "special", xp: 50 },
