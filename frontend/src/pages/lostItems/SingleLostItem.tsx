@@ -3,9 +3,9 @@ import { useParams, Link } from "react-router-dom";
 import { useGetSingleLostItemQuery, useCreateFoundItemMutation } from "../../redux/api/api";
 import { Spinner } from "flowbite-react";
 import { useForm } from "react-hook-form";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
-import "react-toastify/dist/ReactToastify.css";
+
 import {
   FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaUser, FaTag,
   FaTimes, FaBoxOpen, FaChevronLeft, FaChevronRight,
@@ -397,7 +397,7 @@ const SingleLostItem = () => {
         itemName={lostItemName || "Item"}
       />
 
-      <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
+
     </>
   );
 };

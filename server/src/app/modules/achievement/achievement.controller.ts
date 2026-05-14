@@ -2,9 +2,20 @@ import { Request, Response } from "express";
 import prisma from "../../config/prisma";
 import sendResponse from "../../global/response";
 import { StatusCodes } from "http-status-codes";
+import { ACHIEVEMENTS, awardAchievement, seedAchievements } from "../../utils/achievementService";
 
 const getAchievements = async (req: Request, res: Response) => {
   try {
+    // Self-healing: Ensure all achievements are seeded, specifically checking for secret ones
+    const eggExists = await (prisma as any).achievement.findUnique({ where: { key: "EASTER_EGG" } });
+    const dbCount = await (prisma as any).achievement.count();
+    const defCount = Object.keys(ACHIEVEMENTS).length;
+    
+    if (!eggExists || dbCount < defCount) {
+      console.log("🌱 Achievements out of sync or missing secret badges, re-seeding...");
+      await seedAchievements();
+    }
+
     const achievements = await (prisma as any).achievement.findMany({
       include: {
         _count: {
@@ -208,6 +219,42 @@ const getAllUserAchievements = async (req: Request, res: Response) => {
   }
 };
 
+const unlockSecretAchievement = async (req: Request, res: Response) => {
+  try {
+    const { secretKey } = req.body;
+    const userId = (req as any).user.id;
+
+    if (!secretKey || secretKey !== "EASTER_EGG") {
+      return res.status(400).json({ success: false, message: "Invalid secret key" });
+    }
+
+    let result = await awardAchievement(userId, "EASTER_EGG");
+    
+    // If null, it might already be unlocked. Let's find and return it to trigger the modal.
+    if (!result) {
+      const achievementData = await (prisma as any).achievement.findUnique({ where: { key: "EASTER_EGG" } });
+      if (achievementData) {
+        result = await (prisma as any).userAchievement.findUnique({
+          where: { userId_achievementId: { userId, achievementId: achievementData.id } },
+          include: { achievement: true }
+        });
+      }
+    }
+
+    if (!result) {
+      return res.status(400).json({ success: false, message: "Achievement invalid or not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Secret achievement unlocked!",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
 export const achievementController = {
   getAchievements,
   getMyAchievements,
@@ -215,4 +262,5 @@ export const achievementController = {
   markAchievementsSeen,
   getAllUserAchievements,
   togglePinAchievement,
+  unlockSecretAchievement,
 };

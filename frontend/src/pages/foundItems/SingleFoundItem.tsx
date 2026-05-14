@@ -10,13 +10,13 @@ import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
 import { Spinner } from "flowbite-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useInitiateChatMutation } from "../../redux/api/chatApi";
 import { CommentSection } from "../../components/comments/CommentSection";
 import { CommentModal } from "../../components/comments/CommentModal";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
-import "react-toastify/dist/ReactToastify.css";
+
 import {
   FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaUser, FaTag,
   FaTimes, FaBuilding, FaCheckCircle, FaEnvelope,
@@ -889,7 +889,7 @@ const SingleFoundItem = () => {
         itemName={singleFoundItem?.data?.foundItemName || "Item"}
       />
 
-      <ToastContainer position="top-right" autoClose={5000} theme="dark" />
+
     </div>
   );
 };

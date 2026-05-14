@@ -8,7 +8,6 @@ import {
 } from "flowbite-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Modals from "../modal/Modal";
-import { ToastContainer } from "react-toastify";
 import {
   FaCog, FaSignOutAlt, FaTachometerAlt, FaChevronDown,
   FaTv, FaStar, FaTrophy, FaBoxOpen, FaChartLine, FaArrowRight,
@@ -677,9 +676,6 @@ export function Navbars() {
           </div>
         </NavbarCollapse>
       </Navbar>
-
-      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false}
-        newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="dark" />
     </>
   );
 }

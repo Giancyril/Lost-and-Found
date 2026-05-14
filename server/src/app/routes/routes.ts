@@ -153,6 +153,7 @@ router.get("/achievements/my", auth(), achievementController.getMyAchievements);
 router.put("/achievements/:achievementId/pin", auth(), achievementController.togglePinAchievement);
 router.get("/achievements/unseen", auth(), achievementController.getUnseenAchievements);
 router.post("/achievements/mark-seen", auth(), achievementController.markAchievementsSeen);
+router.post("/achievements/unlock-secret", auth(), achievementController.unlockSecretAchievement);
 router.get("/admin/achievements", auth(), achievementController.getAllUserAchievements);
 
 router.post("/admin/backfill-students", auth(), userController.backfillStudentData);

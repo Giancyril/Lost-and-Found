@@ -9,8 +9,7 @@ import {
   FaUserShield, FaFlag, FaComments, FaMedal
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+
 import Modals from "../components/modal/Modal";
 import {
   useGetAllClaimsQuery,
@@ -441,8 +440,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <main className="flex-1 p-4 sm:p-5 lg:p-7 overflow-auto bg-gray-950 custom-scrollbar">{children}</main>
       </div>
 
-      <ToastContainer position="top-right" autoClose={4000} hideProgressBar newestOnTop closeOnClick theme="dark"
-        toastClassName="!bg-gray-800 !border !border-white/10 !rounded-xl !text-sm !text-white shadow-2xl" />
+
     </div>
   );
 };

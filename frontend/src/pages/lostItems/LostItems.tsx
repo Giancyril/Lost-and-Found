@@ -12,8 +12,7 @@ import {
   FaPaintBrush, FaPlug, FaUsb, FaGem, FaUtensils,
   FaMusic, FaFootballBall,
 } from "react-icons/fa";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { useGetLostItemsQuery, useCategoryQuery } from "../../redux/api/api";
 import { useUserVerification } from "../../auth/auth";
 import { CommentModal } from "../../components/comments/CommentModal";
@@ -767,7 +766,7 @@ const LostItemsPage = () => {
         itemName={commentItem?.lostItemName || "Item"}
       />
 
-      <ToastContainer position="top-right" autoClose={3000} theme="dark" />
+
     </div>
   );
 };

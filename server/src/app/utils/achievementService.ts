@@ -134,7 +134,20 @@ export const seedAchievements = async () => {
 
 export const awardAchievement = async (userId: string, achievementKey: string) => {
   try {
-    const achievementData = await prisma.achievement.findUnique({ where: { key: achievementKey } });
+    let achievementData = await prisma.achievement.findUnique({ where: { key: achievementKey } });
+    
+    // Resilience: If achievement doesn't exist in DB, create it from ACHIEVEMENTS list
+    if (!achievementData) {
+      const def = (ACHIEVEMENTS as any)[achievementKey];
+      if (def) {
+        achievementData = await prisma.achievement.upsert({
+          where: { key: achievementKey },
+          update: { name: def.name, description: def.description, icon: def.icon, tier: def.tier as any, category: def.category, xp: def.xp, secret: def.secret || false },
+          create: { key: achievementKey, name: def.name, description: def.description, icon: def.icon, tier: def.tier as any, category: def.category, xp: def.xp, secret: def.secret || false },
+        });
+      }
+    }
+
     if (!achievementData) return null;
     const existing = await prisma.userAchievement.findUnique({ where: { userId_achievementId: { userId, achievementId: achievementData.id } } });
     if (existing) return null;
