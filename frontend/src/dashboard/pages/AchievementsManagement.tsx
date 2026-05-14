@@ -34,6 +34,7 @@ const TIER_COLORS: Record<string, string> = {
 
 const AchievementsManagement: React.FC = () => {
   const [search, setSearch] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const { data, isLoading } = (achievementApi as any).useGetAdminAchievementsQuery();
 
   if (isLoading) {
@@ -151,9 +152,14 @@ const AchievementsManagement: React.FC = () => {
               </div>
             </div>
             
-            <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 max-h-[600px] overflow-y-auto custom-scrollbar">
+            <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 max-h-[600px] overflow-y-auto custom-scrollbar items-start">
               {filteredStats.map((ach: any) => (
-                <AchievementStatCard key={ach.id} ach={ach} />
+                <AchievementStatCard 
+                  key={ach.id} 
+                  ach={ach} 
+                  isExpanded={expandedId === ach.id}
+                  onToggle={() => setExpandedId(prev => prev === ach.id ? null : ach.id)}
+                />
               ))}
               {filteredStats.length === 0 && (
                 <div className="col-span-full py-20 text-center text-gray-700 font-bold uppercase tracking-widest text-xs">
@@ -168,13 +174,11 @@ const AchievementsManagement: React.FC = () => {
   );
 };
 
-const AchievementStatCard = ({ ach }: { ach: any }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
+const AchievementStatCard = ({ ach, isExpanded, onToggle }: { ach: any, isExpanded: boolean, onToggle: () => void }) => {
   return (
     <div className={`p-3 bg-white/[0.02] border rounded-xl transition-all duration-300 group
       ${isExpanded ? "border-blue-500/30 bg-white/[0.04] ring-1 ring-blue-500/10" : "border-white/[0.05] hover:border-white/10 hover:bg-white/[0.03]"}`}>
-      <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+      <div className="flex items-center gap-3 cursor-pointer" onClick={onToggle}>
         <div className="text-2xl grayscale group-hover:grayscale-0 transition-all filter drop-shadow-sm shrink-0">
           {ach.icon}
         </div>
@@ -203,9 +207,10 @@ const AchievementStatCard = ({ ach }: { ach: any }) => {
         </div>
       </div>
 
-      {isExpanded && (
-        <div className="mt-3 pt-3 border-t border-white/5 animate-in fade-in slide-in-from-top-1 duration-200">
-          <div className="space-y-2">
+      {/* Smooth Expanding Details */}
+      <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0 mt-0"}`}>
+        <div className="overflow-hidden">
+          <div className="pt-3 border-t border-white/5 space-y-2">
             <div>
               <p className="text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">Description</p>
               <p className="text-[10px] text-gray-300 leading-relaxed italic">"{ach.description}"</p>
@@ -222,7 +227,7 @@ const AchievementStatCard = ({ ach }: { ach: any }) => {
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

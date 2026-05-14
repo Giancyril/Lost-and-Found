@@ -232,15 +232,17 @@ const unlockSecretAchievement = async (req: Request, res: Response) => {
     const { secretKey } = req.body;
     const userId = (req as any).user.id;
 
-    if (!secretKey || secretKey !== "EASTER_EGG") {
+    const VALID_SECRETS = ["EASTER_EGG", "CREATURE_OF_NIGHT"];
+
+    if (!secretKey || !VALID_SECRETS.includes(secretKey)) {
       return res.status(400).json({ success: false, message: "Invalid secret key" });
     }
 
-    let result = await awardAchievement(userId, "EASTER_EGG");
+    let result = await awardAchievement(userId, secretKey);
     
     // If null, it might already be unlocked. Let's find and return it to trigger the modal.
     if (!result) {
-      const achievementData = await (prisma as any).achievement.findFirst({ where: { key: "EASTER_EGG" } });
+      const achievementData = await (prisma as any).achievement.findFirst({ where: { key: secretKey } });
       if (achievementData) {
         result = await (prisma as any).userAchievement.findUnique({
           where: { userId_achievementId: { userId, achievementId: achievementData.id } },

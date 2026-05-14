@@ -67,6 +67,7 @@ router.post("/login", validateRequest(UserSchema.userLoginSchema), authControlle
 router.post("/change-password", auth(), validateRequest(UserSchema.changePasswordSchema), authController.newPasswords);
 router.post("/change-email", auth(), validateRequest(UserSchema.changeEmailSchema), authController.changeEmail);
 router.post("/change-username", auth(), validateRequest(UserSchema.changeUsernameSchema), authController.changeUsername);
+router.put("/update-profile", auth(), userController.updateUser);
 
 ////////////////////////////////////////////////// categories //////////////////////////////////////////////
 router.post("/item-categories", validateRequest(FoundItemCategorySchema.createFoundItemCategory), auth(), itemcategoryController.createItemCategory);
