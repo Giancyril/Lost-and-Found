@@ -6,13 +6,21 @@ import { ACHIEVEMENTS, awardAchievement, seedAchievements } from "../../utils/ac
 
 const getAchievements = async (req: Request, res: Response) => {
   try {
-    // Self-healing: Ensure all achievements are seeded, specifically checking for secret ones
-    const eggExists = await (prisma as any).achievement.findUnique({ where: { key: "EASTER_EGG" } });
+    // Self-healing: Ensure all achievements are seeded, specifically checking for secret ones and tier updates
+    const eggExists = await (prisma as any).achievement.findFirst({ where: { key: "EASTER_EGG" } });
     const dbCount = await (prisma as any).achievement.count();
     const defCount = Object.keys(ACHIEVEMENTS).length;
     
-    if (!eggExists || dbCount < defCount) {
-      console.log("🌱 Achievements out of sync or missing secret badges, re-seeding...");
+    // Force re-seed if egg is missing, count is off, OR if the egg is not yet LEGEND
+    if (!eggExists || dbCount < defCount || eggExists.tier !== "LEGEND") {
+      console.log("🌱 Achievements out of sync, missing badges, or requiring tier updates. Re-seeding...");
+      // Explicitly update the Egg Hunter if it exists but is wrong
+      if (eggExists && eggExists.tier !== "LEGEND") {
+        await (prisma as any).achievement.update({
+          where: { id: eggExists.id },
+          data: { tier: "LEGEND" }
+        });
+      }
       await seedAchievements();
     }
 
@@ -232,7 +240,7 @@ const unlockSecretAchievement = async (req: Request, res: Response) => {
     
     // If null, it might already be unlocked. Let's find and return it to trigger the modal.
     if (!result) {
-      const achievementData = await (prisma as any).achievement.findUnique({ where: { key: "EASTER_EGG" } });
+      const achievementData = await (prisma as any).achievement.findFirst({ where: { key: "EASTER_EGG" } });
       if (achievementData) {
         result = await (prisma as any).userAchievement.findUnique({
           where: { userId_achievementId: { userId, achievementId: achievementData.id } },

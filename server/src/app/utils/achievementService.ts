@@ -92,7 +92,7 @@ export const ACHIEVEMENTS = {
   CAKE_IS_A_LIE: { key: "CAKE_IS_A_LIE", name: "The Cake is a Lie", description: "Try to claim an item that was already claimed", icon: "🍰", tier: "GOLD", category: "special", xp: 500, secret: true },
   FUS_RO_DAH: { key: "FUS_RO_DAH", name: "Unstoppable Force", description: "Submit reports from 3 different campus locations", icon: "🐲", tier: "PLATINUM", category: "special", xp: 750, secret: true },
   WRECK_IT: { key: "WRECK_IT", name: "Wreck-It Ralph", description: "Have 3 claims rejected in a row", icon: "🧱", tier: "SILVER", category: "special", xp: 10, secret: true },
-  EASTER_EGG: { key: "EASTER_EGG", name: "Egg Hunter", description: "Click a hidden UI element", icon: "🥚", tier: "BRONZE", category: "special", xp: 100, secret: true },
+  EASTER_EGG: { key: "EASTER_EGG", name: "Egg Hunter", description: "Click a hidden UI element", icon: "🥚", tier: "LEGEND", category: "special", xp: 100, secret: true },
   PACIFIST_RUN: { key: "PACIFIST_RUN", name: "Pacifist", description: "Turn in 10 items without ever losing one", icon: "🕊️", tier: "PLATINUM", category: "special", xp: 1000, secret: true },
   MODEL_CITIZEN: { key: "MODEL_CITIZEN", name: "Fashion Souls", description: "Upload your first profile picture", icon: "📸", tier: "BRONZE", category: "special", xp: 50 },
   QR_APPRENTICE: { key: "QR_APPRENTICE", name: "Cyberpunk", description: "Use the QR scanner for the first time", icon: "📱", tier: "BRONZE", category: "special", xp: 50 },
@@ -118,9 +118,6 @@ export const ACHIEVEMENTS = {
 } as const;
 
 export const seedAchievements = async () => {
-  console.log("🌱 Clearing old achievements...");
-  await prisma.achievement.deleteMany();
-  
   console.log("🌱 Seeding achievements...");
   for (const [key, data] of Object.entries(ACHIEVEMENTS)) {
     await prisma.achievement.upsert({
