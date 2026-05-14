@@ -150,6 +150,7 @@ router.get("/points/leaderboard", pointsController.getLeaderboard);
 //////////////////////////////////////////////// achievements //////////////////////////////////////////////
 router.get("/achievements", auth(), achievementController.getAchievements);
 router.get("/achievements/my", auth(), achievementController.getMyAchievements);
+router.put("/achievements/:achievementId/pin", auth(), achievementController.togglePinAchievement);
 router.get("/achievements/unseen", auth(), achievementController.getUnseenAchievements);
 router.post("/achievements/mark-seen", auth(), achievementController.markAchievementsSeen);
 router.get("/admin/achievements", auth(), achievementController.getAllUserAchievements);

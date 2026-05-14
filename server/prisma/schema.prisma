@@ -497,6 +497,7 @@ model UserAchievement {
   achievementId String
   unlockedAt    DateTime @default(now())
   seen          Boolean  @default(false) // false = show popup
+  isPinned      Boolean  @default(false) // showcase
 
   user        User        @relation(fields: [userId], references: [id])
   achievement Achievement @relation(fields: [achievementId], references: [id])
