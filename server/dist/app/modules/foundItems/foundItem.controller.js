@@ -25,6 +25,7 @@ const emailTemplates_1 = require("../../utils/emailTemplates");
 const sheets_service_1 = require("../sheets/sheets.service");
 const points_service_1 = require("../points/points.service");
 const prisma_1 = __importDefault(require("../../config/prisma"));
+const achievementService_1 = require("../../utils/achievementService");
 const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
@@ -104,6 +105,11 @@ const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function
             }
             // ── Smart matching ───────────────────────────────────────────────────────
             match_service_1.matchService.findMatchesForFoundItem(result).catch((err) => console.error("[SmartMatch] Error matching found item:", err));
+            // ── Achievement triggers ────────────────────────────────────────────────
+            if (reporterUserId) {
+                (0, achievementService_1.checkFoundItemAchievements)(reporterUserId).catch(err => console.error("[Achievement] Error checking found item badges:", err));
+                (0, achievementService_1.checkPointAchievements)(reporterUserId).catch(err => console.error("[Achievement] Error checking point badges:", err));
+            }
         }
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.CREATED,

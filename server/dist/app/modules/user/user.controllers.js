@@ -61,27 +61,6 @@ const blockUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function
         });
     }
 });
-const changeUserRole = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const id = req.params.id;
-        const { role } = req.body;
-        const result = yield user_service_1.userService.changeUserRole(id, role);
-        (0, response_1.default)(res, {
-            statusCode: http_status_codes_1.StatusCodes.OK,
-            success: true,
-            message: "User role changed successfully",
-            data: result,
-        });
-    }
-    catch (error) {
-        (0, response_1.default)(res, {
-            statusCode: http_status_codes_1.StatusCodes.BAD_REQUEST,
-            success: false,
-            message: "Failed to change user role",
-            data: null,
-        });
-    }
-});
 const softDeleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = req.params.id;
@@ -130,11 +109,27 @@ const backfillStudentData = (req, res, next) => __awaiter(void 0, void 0, void 0
         next(error);
     }
 });
+const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = req.user.id;
+        const data = req.body;
+        const result = yield user_service_1.userService.updateUser(id, data);
+        (0, response_1.default)(res, {
+            statusCode: http_status_codes_1.StatusCodes.OK,
+            success: true,
+            message: "User profile updated successfully",
+            data: result,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 exports.userController = {
     registerUser,
     allUsers,
     blockUser,
-    changeUserRole,
     softDeleteUser,
     backfillStudentData,
+    updateUser,
 };

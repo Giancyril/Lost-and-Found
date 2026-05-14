@@ -155,10 +155,21 @@ const backfillCourseAndYearLevel = async () => {
   return results;
 };
 
+const updateUser = async (id: string, data: Partial<User>) => {
+  const result = await prisma.user.update({
+    where: {
+      id,
+    },
+    data,
+  });
+  return result;
+};
+
 export const userService = {
   registerUser,
   allUsers,
   blockUser,
   softDeleteUser,
-  backfillCourseAndYearLevel, 
+  backfillCourseAndYearLevel,
+  updateUser,
 };

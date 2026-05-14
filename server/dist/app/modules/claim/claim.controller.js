@@ -16,7 +16,9 @@ exports.claimsController = void 0;
 const response_1 = __importDefault(require("../../global/response"));
 const http_status_codes_1 = require("http-status-codes");
 const claim_service_1 = require("./claim.service");
+const achievementService_1 = require("../../utils/achievementService");
 const createClaim = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const item = req.body;
         // req.user is undefined for students (no auth) — service handles this gracefully
@@ -27,6 +29,11 @@ const createClaim = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             message: "Claim created successfully",
             data: result,
         });
+        // ── Achievement triggers ────────────────────────────────────────────────
+        const userId = result.userId || ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id);
+        if (userId) {
+            (0, achievementService_1.checkClaimAchievements)(userId).catch(err => console.error("[Achievement] Error checking claim badges:", err));
+        }
     }
     catch (error) {
         (0, response_1.default)(res, {
@@ -77,15 +84,22 @@ const getMyClaim = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 const updateClaimStatus = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
+    var _b, _c, _d;
     try {
-        const result = yield claim_service_1.claimsService.updateClaimStatus(req.params.claimId, req.body, { id: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id, name: ((_b = req.user) === null || _b === void 0 ? void 0 : _b.name) || ((_c = req.user) === null || _c === void 0 ? void 0 : _c.username) });
+        const result = yield claim_service_1.claimsService.updateClaimStatus(req.params.claimId, req.body, { id: (_b = req.user) === null || _b === void 0 ? void 0 : _b.id, name: ((_c = req.user) === null || _c === void 0 ? void 0 : _c.name) || ((_d = req.user) === null || _d === void 0 ? void 0 : _d.username) });
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,
             message: "Claims updated successfully",
             data: result,
         });
+        // ── Achievement triggers ────────────────────────────────────────────────
+        if (result && result.userId) {
+            (0, achievementService_1.checkClaimAchievements)(result.userId).catch(err => console.error("[Achievement] Error checking claim badges:", err));
+            if (req.body.status === "APPROVED") {
+                (0, achievementService_1.checkPointAchievements)(result.userId).catch(err => console.error("[Achievement] Error checking point badges:", err));
+            }
+        }
     }
     catch (error) {
         next(error);

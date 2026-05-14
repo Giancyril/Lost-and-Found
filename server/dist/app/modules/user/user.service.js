@@ -121,25 +121,6 @@ const blockUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
         return "active";
     }
 });
-const changeUserRole = (id, role) => __awaiter(void 0, void 0, void 0, function* () {
-    const updatedUser = yield prisma_1.default.user.update({
-        where: {
-            id,
-        },
-        data: {
-            role: role,
-        },
-    });
-    return {
-        id: updatedUser.id,
-        username: updatedUser.username,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        activated: updatedUser.activated,
-        createdAt: updatedUser.createdAt,
-        updatedAt: updatedUser.updatedAt,
-    };
-});
 const softDeleteUser = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield prisma_1.default.user.findUnique({
         where: { id },
@@ -192,11 +173,20 @@ const backfillCourseAndYearLevel = () => __awaiter(void 0, void 0, void 0, funct
     }
     return results;
 });
+const updateUser = (id, data) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield prisma_1.default.user.update({
+        where: {
+            id,
+        },
+        data,
+    });
+    return result;
+});
 exports.userService = {
     registerUser,
     allUsers,
     blockUser,
-    changeUserRole,
     softDeleteUser,
     backfillCourseAndYearLevel,
+    updateUser,
 };

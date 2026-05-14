@@ -34,6 +34,7 @@ const upload_1 = require("../midddlewares/upload");
 const commentsRouter_1 = require("../comments/commentsRouter");
 const points_controller_1 = require("../modules/points/points.controller");
 const communicationController_1 = require("../utils/communicationController");
+const achievement_controller_1 = require("../modules/achievement/achievement.controller");
 const securityController_1 = require("../utils/securityController");
 const moderationController_1 = require("../utils/moderationController");
 const router = express_1.default.Router();
@@ -45,16 +46,16 @@ router.post("/login", (0, validate_1.default)(user_validate_1.UserSchema.userLog
 router.post("/change-password", (0, auth_1.default)(), (0, validate_1.default)(user_validate_1.UserSchema.changePasswordSchema), auth_controller_1.authController.newPasswords);
 router.post("/change-email", (0, auth_1.default)(), (0, validate_1.default)(user_validate_1.UserSchema.changeEmailSchema), auth_controller_1.authController.changeEmail);
 router.post("/change-username", (0, auth_1.default)(), (0, validate_1.default)(user_validate_1.UserSchema.changeUsernameSchema), auth_controller_1.authController.changeUsername);
+router.put("/update-profile", (0, auth_1.default)(), user_controllers_1.userController.updateUser);
 ////////////////////////////////////////////////// categories //////////////////////////////////////////////
 router.post("/item-categories", (0, validate_1.default)(itemCategory_validate_1.FoundItemCategorySchema.createFoundItemCategory), (0, auth_1.default)(), itemcategory_controller_1.itemcategoryController.createItemCategory);
 router.get("/item-categories", itemcategory_controller_1.itemcategoryController.getItemCategory);
 router.put("/item-categories/:id", (0, validate_1.default)(itemCategory_validate_1.FoundItemCategorySchema.createFoundItemCategory), (0, auth_1.default)(), itemcategory_controller_1.itemcategoryController.updateItemCategory);
 router.delete("/item-categories/:id", (0, auth_1.default)(), itemcategory_controller_1.itemcategoryController.deleteItemCategory);
 ////////////////////////////////////////////////// found items //////////////////////////////////////////////
-// FIX: auth() added to /found-items/public so req.user is populated for students.
-// Without this, userId was always undefined → no points awarded, item saved with
-// userId: null, and "My Found Items" always returned empty.
-router.post("/found-items/public", (0, auth_1.default)(), foundItem_controller_1.foundItemController.createFoundItem);
+// FIX: auth(true) makes authentication optional, allowing BOTH guests and
+// logged-in users to report lost items. If logged in, req.user is populated.
+router.post("/found-items/public", (0, auth_1.default)(true), foundItem_controller_1.foundItemController.createFoundItem);
 router.post("/found-items", (0, validate_1.default)(foundItems_validate_1.FoundItemSchema.createFoundItem), (0, auth_1.default)(), foundItem_controller_1.foundItemController.createFoundItem);
 router.get("/found-items", foundItem_controller_1.foundItemController.getFoundItem);
 router.get("/found-item/:id", foundItem_controller_1.foundItemController.getSingleFoundItem);
@@ -65,7 +66,7 @@ router.get("/found-items/stale", (0, auth_1.default)(), foundItem_controller_1.f
 router.put("/found-items/:id/archive", (0, auth_1.default)(), foundItem_controller_1.foundItemController.archiveFoundItem);
 router.put("/found-items/:id/restore", (0, auth_1.default)(), foundItem_controller_1.foundItemController.restoreFoundItem);
 ////////////////////////////////////////////////// lost items //////////////////////////////////////////////
-router.post("/lostItem", (0, auth_1.default)(), lost_controller_1.lostItemController.createLostItem);
+router.post("/lostItem", (0, auth_1.default)(true), lost_controller_1.lostItemController.createLostItem);
 router.get("/lostItem", lost_controller_1.lostItemController.getLostItem);
 router.get("/lostItem/:id", lost_controller_1.lostItemController.getSingleLostItem);
 router.put("/found-lost", (0, auth_1.default)(), lost_controller_1.lostItemController.toggleFoundStatus);
@@ -87,7 +88,6 @@ router.get("/admin/stats", adminStats_1.adminStats);
 router.get("/admin/location-stats", locationStats_1.locationStats);
 router.get("/admin/audit-logs", (0, auth_1.default)(), auditLog_1.getAuditLogs);
 router.put("/block/user/:id", (0, auth_1.default)(), user_controllers_1.userController.blockUser);
-router.put("/change-role/:id", (0, auth_1.default)(), user_controllers_1.userController.changeUserRole);
 router.delete("/delete-user/:id", (0, auth_1.default)(), user_controllers_1.userController.softDeleteUser);
 router.get("/admin/match-notifications", (0, auth_1.default)(), getMatchNotifications_1.getMatchNotifications);
 ////////////////////////////////////////////////// AI search //////////////////////////////////////////////
@@ -111,6 +111,14 @@ router.use("/", commentsRouter_1.commentsRouter);
 ////////////////////////////////////////////////// points //////////////////////////////////////////////
 router.get("/points/my", (0, auth_1.default)(), points_controller_1.pointsController.getMyPoints);
 router.get("/points/leaderboard", points_controller_1.pointsController.getLeaderboard);
+//////////////////////////////////////////////// achievements //////////////////////////////////////////////
+router.get("/achievements", (0, auth_1.default)(), achievement_controller_1.achievementController.getAchievements);
+router.get("/achievements/my", (0, auth_1.default)(), achievement_controller_1.achievementController.getMyAchievements);
+router.put("/achievements/:achievementId/pin", (0, auth_1.default)(), achievement_controller_1.achievementController.togglePinAchievement);
+router.get("/achievements/unseen", (0, auth_1.default)(), achievement_controller_1.achievementController.getUnseenAchievements);
+router.post("/achievements/mark-seen", (0, auth_1.default)(), achievement_controller_1.achievementController.markAchievementsSeen);
+router.post("/achievements/unlock-secret", (0, auth_1.default)(), achievement_controller_1.achievementController.unlockSecretAchievement);
+router.get("/admin/achievements", (0, auth_1.default)(), achievement_controller_1.achievementController.getAllUserAchievements);
 router.post("/admin/backfill-students", (0, auth_1.default)(), user_controllers_1.userController.backfillStudentData);
 // Communication Hub stats
 router.get("/admin/comm-hub/stats", (0, auth_1.default)(), communicationController_1.getCommHubStats);

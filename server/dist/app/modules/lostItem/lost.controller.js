@@ -21,6 +21,7 @@ const match_service_1 = require("../matching/match.service");
 const mailer_1 = require("../../utils/mailer");
 const emailTemplates_1 = require("../../utils/emailTemplates");
 const sheets_service_1 = require("../sheets/sheets.service");
+const achievementService_1 = require("../../utils/achievementService");
 const toggleFoundStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.body;
@@ -99,6 +100,11 @@ const createLostItem = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 console.error("[Email] Failed to send lost item confirmation:", emailError);
             }
             match_service_1.matchService.findMatchesForLostItem(result).catch((err) => console.error("[SmartMatch] Error matching lost item:", err));
+            // ── Achievement triggers ────────────────────────────────────────────────
+            if (userId) {
+                (0, achievementService_1.checkLostItemAchievements)(userId).catch(err => console.error("[Achievement] Error checking lost item badges:", err));
+                (0, achievementService_1.checkPointAchievements)(userId).catch(err => console.error("[Achievement] Error checking point badges:", err));
+            }
         }
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.CREATED,

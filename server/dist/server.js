@@ -17,14 +17,14 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const http_1 = require("http");
 const socketServer_1 = require("./websocket/socketServer");
 dotenv_1.default.config();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 const httpServer = (0, http_1.createServer)(app_1.default);
 // Initialize Socket.io
 const io = (0, socketServer_1.initializeSocket)(httpServer);
 app_1.default.set("io", io);
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        httpServer.listen(PORT, () => {
+        httpServer.listen(Number(PORT), "0.0.0.0", () => {
             console.log(`Server running on port ${PORT} with WebSockets enabled`);
         });
     });

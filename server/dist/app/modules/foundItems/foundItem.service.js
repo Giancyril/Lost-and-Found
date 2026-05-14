@@ -99,6 +99,7 @@ const getFoundItem = (data) => __awaiter(void 0, void 0, void 0, function* () {
                     updatedAt: true,
                     category: { select: { id: true, name: true } },
                     user: { select: { id: true, username: true, email: true, role: true } },
+                    claim: { select: { id: true, userId: true, status: true } },
                 },
             });
         }

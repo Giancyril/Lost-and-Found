@@ -15,11 +15,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils/utils");
 const error_1 = __importDefault(require("../global/error"));
 const http_status_codes_1 = require("http-status-codes");
-const auth = () => {
+const auth = (isOptional = false) => {
     return (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const authHeader = req.headers.authorization;
+            console.log(`[AUTH DEBUG] Method: ${req.method} URL: ${req.originalUrl} Optional: ${isOptional}`);
+            console.log(`[AUTH DEBUG] Auth Header:`, authHeader ? authHeader.substring(0, 50) + '...' : 'MISSING');
             if (!authHeader) {
+                if (isOptional) {
+                    return next();
+                }
+                console.warn(`[AUTH DEBUG] No auth header found for protected route`);
                 throw new error_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, "You are not authorized!");
             }
             const token = authHeader.startsWith('Bearer ')
@@ -33,6 +39,10 @@ const auth = () => {
             next();
         }
         catch (err) {
+            if (isOptional) {
+                console.log(`[AUTH DEBUG] Optional auth failed, proceeding as guest:`, err.message);
+                return next();
+            }
             if (err.name === "TokenExpiredError" || err.name === "JsonWebTokenError" || err.name === "NotBeforeError") {
                 return next(new error_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, "Invalid or expired token"));
             }

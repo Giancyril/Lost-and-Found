@@ -105,10 +105,27 @@ const backfillStudentData = async (
   }
 };
 
+const updateUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = (req as any).user.id;
+    const data = req.body;
+    const result = await userService.updateUser(id, data);
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "User profile updated successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const userController = {
   registerUser,
   allUsers,
   blockUser,
   softDeleteUser,
-  backfillStudentData, 
+  backfillStudentData,
+  updateUser,
 };
