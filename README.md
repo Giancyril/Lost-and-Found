@@ -31,7 +31,6 @@ A comprehensive lost and found management system built with modern web technolog
 - **Web Push Notifications**: Real-time browser alerts for new messages, potential item matches, and claim status updates, using the Web Push API for reliable background delivery
 
 ### Campus Features
-- **Enhanced Discussion Threads**: Real-time community discussions with voting, pinning, and moderation tools
 - **Points System**: Comprehensive gamification system with point rewards for various activities
   - **Points for Actions**: Earn points for reporting items, successful claims, helpful comments, and community contributions
   - **Leaderboard**: Real-time leaderboard showing top contributors and point rankings
@@ -488,7 +487,6 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details.
 
 ###  Phase 4: Ecosystem & Sustainability (Current)
-- **Rewards Store**: Redeem earned points for campus perks, library credits, or university merchandise.
 - **AI Image Recognition**: Automatic item categorization and feature extraction from uploaded photos.
 - **Smart Categorization**: Automated category and tag suggestions based on item photos using computer vision.
 - **Verified "Hero" Badges**: Achievement system recognizing students with multiple successful item returns.
