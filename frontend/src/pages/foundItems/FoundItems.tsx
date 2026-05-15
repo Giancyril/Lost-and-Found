@@ -131,6 +131,12 @@ const CATEGORY_CONFIG = {
     description: 'A piece of sport equipment was found. Please visit the SAS office to identify and claim.',
     colors: ['Black', 'White', 'Blue', 'Red', 'Orange', 'Yellow', 'Other'],
     conditions: ['New', 'Good', 'Used', 'Damaged']
+  },
+  'eyeglasses & sunglasses': {
+    itemName: 'Eyeglasses/Sunglasses',
+    description: 'A pair of eyeglasses or sunglasses was found. Please visit the SAS office to identify and claim.',
+    colors: ['Black', 'Brown', 'Gold', 'Silver', 'Clear', 'Blue', 'Pink', 'Other'],
+    conditions: ['Scratches', 'None']
   }
 };
 
@@ -829,12 +835,15 @@ const FoundItemsPage = () => {
 
       if (res.success && res.data) {
         const aiData = res.data;
-        addSetValue("foundItemName", aiData.itemName, { shouldDirty: true });
-        addSetValue("description", aiData.description, { shouldDirty: true });
         
+        // 1. Set category first (this usually triggers generic auto-fills)
         if (aiData.categoryId) {
           handleCategoryChange(aiData.categoryId);
         }
+
+        // 2. Apply AI-specific overrides AFTER category change to prevent overwriting
+        addSetValue("foundItemName", aiData.itemName, { shouldDirty: true, shouldValidate: true });
+        addSetValue("description", aiData.description, { shouldDirty: true, shouldValidate: true });
         
         if (aiData.color) {
           setAddSelectedColor(aiData.color);
@@ -1316,11 +1325,11 @@ const FoundItemsPage = () => {
                   <button
                     type="button"
                     onClick={() => aiFileInputRef.current?.click()}
-                    className="px-2.5 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-[9px] font-black text-indigo-400 hover:text-indigo-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95"
+                    className="px-2.5 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95"
                     title="Let AI identify the item from a photo"
                   >
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /><path d="M5 3v4" /><path d="M19 17v4" /><path d="M3 5h4" /><path d="M17 19h4" /></svg>
-                    <span className="leading-none">Magic AI Scan</span>
+                    <span className="leading-none">AI Scan</span>
                     <input ref={aiFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAiScan(e.target.files)} />
                   </button>
 
@@ -1482,14 +1491,14 @@ const FoundItemsPage = () => {
                 )}
 
                 {/* ── Condition (only after color is selected) ── */}
-                {addSelectedColor && (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
-                      Condition
-                    </label>
-                    <CustomSelect
-                      options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].conditions.map(condition => ({ value: condition, label: condition, icon: null }))}
+                    {addSelectedColor && CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 && (
+                      <div className="flex flex-col gap-1.5">
+                        <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
+                          Condition
+                        </label>
+                        <CustomSelect
+                          options={CATEGORY_CONFIG[addSelectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG].conditions.map(condition => ({ value: condition, label: condition, icon: null }))}
                       value={addSelectedCondition}
                       onChange={handleConditionChange}
                     />
