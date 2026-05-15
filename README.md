@@ -12,6 +12,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Role-Based Access**: Admin and user roles with different permission levels
 
 ### Advanced Features
+- **Magic AI Scan**: Instantly identify items from a single photo — automatically populates item name, detailed description, color, and condition using computer vision
 - **AI-Powered Search**: Integration with Google Gemini AI for intelligent item search and matching
 - **High-Performance Web Scanner**: Next-generation hybrid barcode scanner using jsQR + QuaggaJS + native fallback for 1-2 second scan performance — 3-5x faster than previous implementation
 - **Student Masterlist Integration**: Google Sheets-backed masterlist that resolves student name, email, and department from a scanned or entered ID — with fuzzy name matching and ID normalization
@@ -186,7 +187,8 @@ A dedicated moderation layer for managing user-generated content, enforcing comm
 - **Prisma ORM** with PostgreSQL database
 - **JWT** for authentication
 - **bcrypt** for password hashing
-- **Google Gemini AI** for intelligent search
+- **Google Gemini AI** (gemini-flash-latest) for intelligent search and image recognition
+- **Axios** for high-reliability Google Sheets Gviz API lookups with network-level timeouts
 - **Google Sheets Gviz API** for student masterlist lookups and activity logging
 - **Nodemailer** for email notifications
 - **Zod** for schema validation
@@ -308,6 +310,8 @@ lost-and-found-main/
 │   │   │   ├── pages/      # Admin modules: Moderation, Comm Hub, Security, Analytics
 │   │   │   └── student-pages/# Student-specific dashboard views and points history
 │   │   ├── pages/          # Main application views
+│   │   │   ├── foundItems/   # Found items board with Magic AI Scan integration
+│   │   │   ├── reportlostItem/ # Lost item reporting with AI scan and auto-fill
 │   │   │   ├── IndoorMapPage.tsx # 3D Map responsive layout container
 │   │   │   ├── IndoorMap3D.tsx   # Three.js interactive building canvas
 │   │   │   └── support/      # Public support ticketing and feedback interface
@@ -486,9 +490,10 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Interactive Indoor 3D Maps & Heatmap Implementation**: Multi-level 3D campus building maps with precise room pinning and dynamic heat mapping to visualize high-loss zones (Desktop use only).
 - **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details.
 
-###  Phase 4: Ecosystem & Sustainability (Current)
-- **AI Image Recognition**: Automatic item categorization and feature extraction from uploaded photos.
+###  Phase 4: Ecosystem & Sustainability (Completed)
+- **Magic AI Scan**: Automatic item categorization and feature extraction from uploaded photos for both lost and found reports.
 - **Smart Categorization**: Automated category and tag suggestions based on item photos using computer vision.
+- **Institutional Resilience**: Hardened Masterlist connectivity with network-level timeouts and Axios integration.
 - **Verified "Hero" Badges**: Achievement system recognizing students with multiple successful item returns.
 
 ### Phase 5: Advanced Features (Upcoming)
