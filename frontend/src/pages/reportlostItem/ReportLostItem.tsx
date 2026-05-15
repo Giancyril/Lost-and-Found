@@ -412,6 +412,7 @@ const ReportLostItem = () => {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [helpPage, setHelpPage] = useState(0);
   const [showCategoryHelp, setShowCategoryHelp] = useState(false);
+  const [showAiHelp, setShowAiHelp] = useState(false);
   const [selectedColor, setSelectedColor] = useState("");
   const [, setSelectedCondition] = useState("");
 
@@ -534,7 +535,7 @@ const ReportLostItem = () => {
     try {
       // Compress for AI
       const compressedFile = await imageCompression(file, { maxSizeMB: 0.2, maxWidthOrHeight: 800, useWebWorker: true });
-      
+
       // Create preview for UI
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve) => {
@@ -551,7 +552,7 @@ const ReportLostItem = () => {
 
       if (res.success && res.data) {
         const aiData = res.data;
-        
+
         // 1. Set category first (this usually triggers generic auto-fills)
         if (aiData.categoryId) {
           handleMenuChange(aiData.categoryName, aiData.categoryId);
@@ -560,10 +561,10 @@ const ReportLostItem = () => {
         // 2. Apply AI-specific overrides AFTER category change to prevent overwriting
         setValue("lostItemName", aiData.itemName, { shouldDirty: true, shouldValidate: true });
         setValue("description", aiData.description, { shouldDirty: true, shouldValidate: true });
-        
-        if (aiData.color) { 
-          setValue("color", aiData.color, { shouldDirty: true }); 
-          setSelectedColor(aiData.color); 
+
+        if (aiData.color) {
+          setValue("color", aiData.color, { shouldDirty: true });
+          setSelectedColor(aiData.color);
         }
         if (aiData.condition) {
           setValue("condition", aiData.condition, { shouldDirty: true });
@@ -859,15 +860,25 @@ const ReportLostItem = () => {
                       <div className="flex items-center gap-2 sm:gap-3">
                         
                         <div>
-                          <p className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider"> AI Scan</p>
-                          <p className="text-[9px] sm:text-[10px] text-gray-500">Auto-fill details from a photo</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">AI Scan</p>
+                            <button
+                              type="button"
+                              onClick={() => setShowAiHelp(true)}
+                              className="w-3.5 h-3.5 rounded-full bg-gray-700/50 hover:bg-gray-600 border border-gray-600/50 text-gray-400 hover:text-white flex items-center justify-center transition-all"
+                              title="How it works"
+                            >
+                              <span className="text-[8px] font-black leading-none">i</span>
+                            </button>
+                          </div>
+                          <p className="text-[9px] sm:text-[10px] text-gray-500">Auto-fill details from a photo.</p>
                         </div>
                       </div>
                       <label className="cursor-pointer px-2.5 py-1.5 sm:px-4 sm:py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[9px] sm:text-[10px] font-black rounded-lg transition-all uppercase tracking-widest active:scale-95 flex items-center gap-1.5 sm:gap-2 shrink-0">
                         {isAiRecognizing ? (
                           <><FaSpinner className="animate-spin" size={9} /> Analyzing...</>
                         ) : (
-                          <><FaCamera size={9} /> Scan Item</>
+                          <><FaCamera size={9} /> AI SCAN</>
                         )}
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
                       </label>
@@ -1296,6 +1307,43 @@ const ReportLostItem = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+      {/* AI Help Modal */}
+      {showAiHelp && (
+        <div className="fixed inset-0 z-[110] grid place-items-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowAiHelp(false)} />
+          <div className="relative bg-gray-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col overflow-hidden">
+            <div className="h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
+              <div className="flex items-center gap-2">
+                
+                <h3 className="text-sm font-bold text-white tracking-tight uppercase"> AI Scan</h3>
+              </div>
+              <button onClick={() => setShowAiHelp(false)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                <FaTimes size={12} />
+              </button>
+            </div>
+            <div className="px-6 py-6 space-y-5">
+              {[
+                { n: "1", title: "Take or Upload Photo", desc: "Snap a clear picture of the item. For best results, use good lighting and keep the item centered." },
+                { n: "2", title: "AI Identification", desc: "Our AI analyzes the image to detect the item name, category, color, and specific markings." },
+                { n: "3", title: "Review & Edit", desc: "The form will auto-fill instantly. You can still manually refine any details before submitting." },
+              ].map(({ n, title, desc }) => (
+                <div key={n} className="flex gap-4">
+                  <div className="shrink-0 w-6 h-6 rounded-full border bg-indigo-500/10 border-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-black">{n}</div>
+                  <div>
+                    <p className="text-white text-xs font-semibold tracking-tight">{title}</p>
+                    <p className="text-gray-500 text-[11px] mt-1 leading-relaxed text-justify">{desc}</p>
+                  </div>
+                </div>
+              ))}
+              
+            </div>
+            <div className="px-5 py-4 border-t border-gray-800 shrink-0 flex items-center justify-center">
+              <button onClick={() => setShowAiHelp(false)} className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-indigo-900/20 active:scale-95">Got it</button>
+            </div>
           </div>
         </div>
       )}
