@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   FaShieldAlt, FaLock, FaUserShield, FaFileAlt,
   FaExclamationTriangle, FaCheckCircle, FaTimesCircle,
   FaSignInAlt, FaBan, FaTrash, FaUserCheck, FaUserSlash,
   FaDownload, FaSync, FaEye, FaClock, FaGlobe,
-  FaChartBar, FaUsers, FaDatabase,
+  FaChartBar, FaUsers, FaDatabase, FaChevronDown, FaCheck,
 } from "react-icons/fa";
 import {
   LineChart, Line, BarChart, Bar,
@@ -106,6 +106,62 @@ const SectionCard = ({ title, subtitle, children, action }: any) => (
     {children}
   </div>
 );
+
+const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
+  options: { id: string, name: string }[];
+  value: string;
+  onChange: (v: string) => void;
+  allLabel?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selected = value === "" ? allLabel : options.find(o => o.id === value)?.name ?? allLabel;
+
+  return (
+    <div ref={ref} className="relative w-full sm:w-52">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-900 border border-white/10 rounded-xl text-white text-sm focus:outline-none transition-all focus:ring-2 focus:ring-cyan-500/30"
+      >
+        <span className="truncate text-left">{selected}</span>
+        <FaChevronDown size={11} className={`text-gray-400 shrink-0 ml-2 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute z-50 top-full mt-2 left-0 w-full bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+          <div className="max-h-56 overflow-y-auto custom-scrollbar">
+            {[{ id: "", name: allLabel }, ...options].map(opt => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => { onChange(opt.id); setOpen(false); }}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
+                  value === opt.id
+                    ? "bg-white/5 text-white font-semibold"
+                    : "text-gray-400 hover:bg-white/[0.03] hover:text-white"
+                }`}
+              >
+                {opt.name}
+                {value === opt.id && (
+                  <FaCheck size={9} className="text-gray-400 shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ════════════════════════════════════════════════════════════════════════════════
 // TAB: SECURITY MONITOR
@@ -316,19 +372,25 @@ const AccessControlTab = () => {
       <div className="flex flex-col sm:flex-row gap-3">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or email..."
           className="flex-1 px-4 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
-        <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
-          className="px-4 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30">
-          <option value="">All Roles</option>
-          <option value="ADMIN">Admin</option>
-          <option value="USER">User</option>
-        </select>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30">
-          <option value="">All Status</option>
-          <option value="active">Active</option>
-          <option value="blocked">Blocked</option>
-          <option value="deleted">Deleted</option>
-        </select>
+        <CustomDropdown
+          value={roleFilter}
+          onChange={setRoleFilter}
+          options={[
+            { id: "ADMIN", name: "Admin" },
+            { id: "USER",  name: "User"  },
+          ]}
+          allLabel="All Roles"
+        />
+        <CustomDropdown
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { id: "active",  name: "Active"  },
+            { id: "blocked", name: "Blocked" },
+            { id: "deleted", name: "Deleted" },
+          ]}
+          allLabel="All Status"
+        />
       </div>
 
       {/* User table */}

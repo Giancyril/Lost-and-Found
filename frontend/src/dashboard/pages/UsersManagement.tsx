@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaTrash, FaSearch, FaShieldAlt, FaBan, FaPlus, FaTimes, FaEye, FaEyeSlash, FaChevronDown, FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
@@ -25,6 +25,62 @@ const Spinner = () => (
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
   </svg>
 );
+
+const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
+  options: { id: string, name: string }[];
+  value: string;
+  onChange: (v: string) => void;
+  allLabel?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selected = value === "ALL" ? allLabel : options.find(o => o.id === value)?.name ?? allLabel;
+
+  return (
+    <div ref={ref} className="relative w-full sm:w-56">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800/80 border border-white/10 rounded-2xl text-white text-sm focus:outline-none transition-all"
+      >
+        <span className="truncate text-left">{selected}</span>
+        <FaChevronDown size={11} className={`text-gray-400 shrink-0 ml-2 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute z-50 top-full mt-2 left-0 w-full bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+          <div className="max-h-56 overflow-y-auto custom-scrollbar">
+            {[{ id: "ALL", name: allLabel }, ...options].map(opt => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => { onChange(opt.id); setOpen(false); }}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
+                  value === opt.id
+                    ? "bg-white/5 text-white font-semibold"
+                    : "text-gray-400 hover:bg-white/[0.03] hover:text-white"
+                }`}
+              >
+                {opt.name}
+                {value === opt.id && (
+                  <FaCheck size={9} className="text-gray-400 shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const UsersManagement = () => {
   const [searchTerm, setSearchTerm]         = useState("");
@@ -170,12 +226,15 @@ const UsersManagement = () => {
     <input type="text" placeholder="Search by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
       className="w-full pl-9 pr-4 py-2.5 bg-gray-800/80 border border-transparent rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all" />
   </div>
-  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-    className="px-3 py-2.5 bg-gray-800 border border-transparent rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all">
-          <option value="ALL">All Status</option>
-          <option value="ACTIVE">Active</option>
-          <option value="SUSPENDED">Suspended</option>
-        </select>
+    <CustomDropdown
+      value={statusFilter}
+      onChange={setStatusFilter}
+      options={[
+        { id: "ACTIVE",    name: "Active" },
+        { id: "SUSPENDED", name: "Suspended" },
+      ]}
+      allLabel="All Status"
+    />
       </div>
 
       {/* Table */}
