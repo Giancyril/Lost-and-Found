@@ -6,6 +6,7 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../global/error";
 import prisma from "../../config/prisma";
+import axios from "axios";
 
 const SHEET_ID         = "1-uxgLmMS13UbC_BvcVjxeGjlJUgykvRIbb4D0y7zrPI";
 const MASTERLIST_SHEET = "Copy of Master List";
@@ -40,26 +41,58 @@ const parseRow = (row: any) => {
 };
 
 const parseGvizResponse = (data: string) => {
-  const jsonStr = data.substring(data.indexOf("(") + 1, data.lastIndexOf(")"));
-  const json    = JSON.parse(jsonStr);
-  return (json.table.rows as any[]).filter(r => r.c && r.c[0]?.v).map(parseRow);
+  try {
+    const startIdx = data.indexOf("(");
+    const endIdx = data.lastIndexOf(")");
+    
+    if (startIdx === -1 || endIdx === -1) {
+      console.error("[Masterlist] Invalid Gviz response format. Raw data starts with:", data.substring(0, 100));
+      throw new Error("Invalid Gviz response format (missing parentheses)");
+    }
+
+    const jsonStr = data.substring(startIdx + 1, endIdx);
+    const json    = JSON.parse(jsonStr);
+    
+    if (!json.table || !json.table.rows) {
+      console.error("[Masterlist] Unexpected JSON structure:", JSON.stringify(json).substring(0, 200));
+      throw new Error("Gviz response missing table/rows");
+    }
+
+    return (json.table.rows as any[]).filter(r => r.c && r.c[0]?.v).map(parseRow);
+  } catch (err: any) {
+    console.error("[Masterlist] Parsing Failure:", err.message);
+    throw err;
+  }
 };
 
 const fetchMasterlist = async () => {
   try {
-    const response = await fetch(GVIZ_URL);
-    if (!response.ok) {
+    console.log("[Masterlist] Fetching from:", GVIZ_URL);
+    const response = await axios.get(GVIZ_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      },
+      timeout: 10000 // 10s timeout
+    });
+    
+    if (response.status !== 200) {
+      console.error("[Masterlist] Google Sheets HTTP Error:", response.status, response.statusText);
       throw new AppError(
         StatusCodes.SERVICE_UNAVAILABLE,
-        `Google Sheets error (${response.status}). Ensure the sheet is shared publicly.`
+        `Google Sheets error (${response.status}). Check if the sheet is public.`
       );
     }
-    return parseGvizResponse(await response.text());
+
+    return parseGvizResponse(response.data);
   } catch (err: any) {
+    console.error("[Masterlist] Pipeline Failure:", {
+      message: err.message,
+      url: GVIZ_URL
+    });
     if (err instanceof AppError) throw err;
     throw new AppError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      "Failed to fetch student masterlist from Google Sheets."
+      `Failed to fetch student masterlist: ${err.message}`
     );
   }
 };

@@ -5,8 +5,7 @@ import {
   FaPaperPlane, FaCheckCircle, FaSpinner, FaStar, FaRegStar,
   FaChevronDown, FaChevronUp,
 } from "react-icons/fa";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -580,8 +579,6 @@ const SupportPage = () => {
         </div>
       </div>
 
-      <ToastContainer position="top-right" autoClose={3000} theme="dark"
-        toastClassName="!bg-gray-800 !border !border-white/10 !rounded-xl !text-sm !text-white shadow-2xl" />
     </>
   );
 };

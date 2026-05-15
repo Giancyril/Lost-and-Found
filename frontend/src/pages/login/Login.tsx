@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import Modals from "../../components/modal/Modal";
-import { ToastContainer } from "react-toastify";
 import { setUserLocalStorage } from "../../auth/auth";
 import { useLoginMutation } from "../../redux/api/api";
 import { useNavigate } from "react-router-dom";
@@ -237,7 +236,6 @@ const Login = () => {
         </div>
       </section>
 
-      <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px" }} theme="dark" />
     </>
   );
 };

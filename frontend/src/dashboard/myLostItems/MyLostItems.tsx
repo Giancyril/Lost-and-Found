@@ -26,7 +26,6 @@ import {
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Modals from "../../components/modal/Modal";
-import { ToastContainer } from "react-toastify";
 
 const MyLostItems = () => {
   const { data: myLostItems, isLoading } = useGetMyLostItemQuery({});
@@ -501,18 +500,6 @@ const MyLostItems = () => {
         </div>
       </Modal>
 
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
     </div>
   );
 };

@@ -470,7 +470,7 @@ const RoomTile = ({
   const halfDepth = BUILDING_DEPTH / 2;
   const roomZ = -halfDepth + ROOM_D / 2;
   const wallZ = roomZ + ROOM_D / 2;
-  
+
   const tint = isSelected ? palette.selectedTint : isHovered ? palette.hoverTint : null;
   const tintOpacity = isSelected ? 0.35 : isHovered ? 0.22 : 0;
   const opacityMod = isActiveFloor ? 1 : 0.15;
@@ -545,13 +545,13 @@ const RoomTile = ({
       {/* Door - becomes transparent when selected so we can see the orb inside */}
       <mesh position={[layout.x, baseY + DOOR_H / 2, wallZ + (WALL_T * 0.5)]} castShadow>
         <boxGeometry args={[DOOR_W * 0.92, DOOR_H, WALL_T * 0.5]} />
-        <meshStandardMaterial 
-          color={isSelected ? palette.doorSelected : isActiveFloor ? palette.door : palette.doorFrame} 
-          transparent={isSelected || !isActiveFloor} 
-          opacity={isSelected ? 0.25 : isActiveFloor ? 1 : 0.35} 
-          roughness={0.6} 
-          emissive={isSelected ? palette.doorSelected : "#000000"} 
-          emissiveIntensity={isSelected ? 0.4 : 0} 
+        <meshStandardMaterial
+          color={isSelected ? palette.doorSelected : isActiveFloor ? palette.door : palette.doorFrame}
+          transparent={isSelected || !isActiveFloor}
+          opacity={isSelected ? 0.25 : isActiveFloor ? 1 : 0.35}
+          roughness={0.6}
+          emissive={isSelected ? palette.doorSelected : "#000000"}
+          emissiveIntensity={isSelected ? 0.4 : 0}
         />
       </mesh>
       <mesh position={[layout.x + DOOR_W * 0.32, baseY + DOOR_H / 2, wallZ + (WALL_T * 1.1)]} visible={!isSelected}>
@@ -953,11 +953,10 @@ const MiniMap = ({
       style={{ bottom: 0, left: 0, right: 0, zIndex: 30 }}
     >
       <div
-        className={`border-t transition-all duration-400 overflow-hidden ${
-          isNight
+        className={`border-t transition-all duration-400 overflow-hidden ${isNight
             ? "bg-slate-900/92 border-white/8 backdrop-blur-xl"
             : "bg-white/94 border-slate-200/70 backdrop-blur-xl"
-        }`}
+          }`}
         style={{ maxHeight: isCollapsed ? "36px" : "150px" }}
       >
         {/* Header row */}
@@ -968,9 +967,8 @@ const MiniMap = ({
           <div className="flex items-center gap-2">
             {/* Floor badge */}
             <span
-              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
-                isNight ? "bg-blue-500/20 text-blue-300" : "bg-blue-50 text-blue-600"
-              }`}
+              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${isNight ? "bg-blue-500/20 text-blue-300" : "bg-blue-50 text-blue-600"
+                }`}
             >
               F{activeFloorIdx + 1}
             </span>
@@ -982,9 +980,8 @@ const MiniMap = ({
             </span>
             {selectedRoom && (
               <span
-                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                  isNight ? "bg-blue-600/25 text-blue-300" : "bg-blue-100 text-blue-600"
-                }`}
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${isNight ? "bg-blue-600/25 text-blue-300" : "bg-blue-100 text-blue-600"
+                  }`}
               >
                 <span className="w-1 h-1 rounded-full bg-blue-500 inline-block" />
                 {selectedRoom.replace("SC-", "")}
@@ -1013,9 +1010,8 @@ const MiniMap = ({
         {/* Scrollable SVG */}
         {/* Scrollable SVG */}
         <div
-          className={`px-3 pb-2 transition-all duration-500 ease-in-out ${
-            isCollapsed ? "opacity-0 pointer-events-none translate-y-2" : "opacity-100 pointer-events-auto translate-y-0"
-          }`}
+          className={`px-3 pb-2 transition-all duration-500 ease-in-out ${isCollapsed ? "opacity-0 pointer-events-none translate-y-2" : "opacity-100 pointer-events-auto translate-y-0"
+            }`}
           style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}
         >
           <svg

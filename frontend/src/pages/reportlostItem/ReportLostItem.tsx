@@ -1,12 +1,13 @@
 import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { useState, useRef, useEffect } from "react";
 import {
   useCategoryQuery,
   useCreateLostItemMutation,
   useGetStudentByIdQuery,
   useLazyGetStudentByDetailsQuery,
+  useAiRecognizeMutation,
 } from "../../redux/api/api";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
@@ -18,7 +19,7 @@ import {
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaTag,
   FaCheck, FaChevronDown, FaMoneyBillWave,
-  FaCalculator, FaPaintBrush, FaPlug, FaUsb, FaGem, FaUtensils, FaMusic, FaFootballBall, FaCopy
+  FaCalculator, FaPaintBrush, FaPlug, FaUsb, FaGem, FaUtensils, FaMusic, FaFootballBall, FaCopy, FaMagic
 } from "react-icons/fa";
 import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
 import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
@@ -447,6 +448,7 @@ const ReportLostItem = () => {
   };
 
   const [createLostItem, { isLoading }] = useCreateLostItemMutation();
+  const [aiRecognize, { isLoading: isAiRecognizing }] = useAiRecognizeMutation();
   const { data: Category, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery(undefined);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
 
@@ -521,6 +523,63 @@ const ReportLostItem = () => {
       }
     } catch {
       toast.error("Student not found in masterlist");
+    }
+  };
+
+  const handleAiScan = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    const toastId = toast.loading("AI is analyzing your photo...");
+
+    try {
+      // Compress for AI
+      const compressedFile = await imageCompression(file, { maxSizeMB: 0.2, maxWidthOrHeight: 800, useWebWorker: true });
+      
+      // Create preview for UI
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(compressedFile);
+      });
+      const base64Image = await base64Promise;
+
+      // Prepare FormData (Not using base64 for the API call anymore)
+      const formData = new FormData();
+      formData.append("image", compressedFile);
+
+      const res = await aiRecognize(formData).unwrap();
+
+      if (res.success && res.data) {
+        const aiData = res.data;
+        
+        // 1. Set category first (this usually triggers generic auto-fills)
+        if (aiData.categoryId) {
+          handleMenuChange(aiData.categoryName, aiData.categoryId);
+        }
+
+        // 2. Apply AI-specific overrides AFTER category change to prevent overwriting
+        setValue("lostItemName", aiData.itemName, { shouldDirty: true, shouldValidate: true });
+        setValue("description", aiData.description, { shouldDirty: true, shouldValidate: true });
+        
+        if (aiData.color) { 
+          setValue("color", aiData.color, { shouldDirty: true }); 
+          setSelectedColor(aiData.color); 
+        }
+        if (aiData.condition) {
+          setValue("condition", aiData.condition, { shouldDirty: true });
+        }
+
+        // Also prepare the image preview
+        setSelectedFile(file);
+        setPreview(base64Image);
+
+        toast.update(toastId, { render: "Magic Scan successful! Fields auto-filled.", type: "success", isLoading: false, autoClose: 3000 });
+      } else {
+        toast.update(toastId, { render: "AI could not recognize the item clearly.", type: "warning", isLoading: false, autoClose: 3000 });
+      }
+    } catch (error) {
+      console.error("AI Scan Error:", error);
+      toast.update(toastId, { render: "AI scan failed. Please fill manually.", type: "error", isLoading: false, autoClose: 3000 });
     }
   };
 
@@ -795,6 +854,25 @@ const ReportLostItem = () => {
                 {/* ── Step 1: Item Details ── */}
                 {step === 1 && (
                   <div className="space-y-5">
+                    {/* Magic AI Scan Button */}
+                    <div className="flex justify-between items-center bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 sm:p-4 mb-2 animate-fadeIn">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        
+                        <div>
+                          <p className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider"> AI Scan</p>
+                          <p className="text-[9px] sm:text-[10px] text-gray-500">Auto-fill details from a photo</p>
+                        </div>
+                      </div>
+                      <label className="cursor-pointer px-2.5 py-1.5 sm:px-4 sm:py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[9px] sm:text-[10px] font-black rounded-lg transition-all uppercase tracking-widest active:scale-95 flex items-center gap-1.5 sm:gap-2 shrink-0">
+                        {isAiRecognizing ? (
+                          <><FaSpinner className="animate-spin" size={9} /> Analyzing...</>
+                        ) : (
+                          <><FaCamera size={9} /> Scan Item</>
+                        )}
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
+                      </label>
+                    </div>
+
                     <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
                       <Field label="Item Name" required error={errors.lostItemName?.message as string} icon={<IconTag />}>
                         <input {...register("lostItemName", { required: "Item name is required" })}
@@ -1128,7 +1206,6 @@ const ReportLostItem = () => {
           </p>
         </div>
       </section>
-      <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px", zIndex: 9999 }} theme="dark" />
       {showScanner && (
         <BarcodeScannerModal onScan={handleScan} onClose={() => setShowScanner(false)} useFetchStudent={useFetchStudent} />
       )}

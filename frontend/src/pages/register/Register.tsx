@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import Modals from "../../components/modal/Modal";
-import { ToastContainer } from "react-toastify";
 import { useRegistersMutation } from "../../redux/api/api";
 import { useNavigate } from "react-router-dom";
 import {
@@ -238,7 +237,6 @@ const Register = () => {
           </div>
         </div>
       </section>
-      <ToastContainer />
     </>
   );
 };

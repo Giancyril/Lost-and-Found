@@ -1,12 +1,13 @@
 import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { useState, useRef, useEffect } from "react";
 import {
   useCategoryQuery,
   useCreateFoundItemMutation,
   useGetStudentByIdQuery,
   useLazyGetStudentByDetailsQuery,
+  useAiRecognizeMutation,
 } from "../../redux/api/api";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
@@ -17,7 +18,7 @@ import {
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
   FaTshirt, FaCamera, FaClock, FaTint, FaTag,
   FaCheck, FaChevronDown, FaMoneyBillWave,
-  FaCalculator, FaPaintBrush, FaPlug, FaUsb, FaGem, FaUtensils, FaMusic, FaFootballBall
+  FaCalculator, FaPaintBrush, FaPlug, FaUsb, FaGem, FaUtensils, FaMusic, FaFootballBall, FaMagic
 } from "react-icons/fa";
 import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
 import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
@@ -398,6 +399,7 @@ const ReportFoundItem = () => {
   };
 
   const [createFoundItem, { isLoading }] = useCreateFoundItemMutation();
+  const [aiRecognize, { isLoading: isAiRecognizing }] = useAiRecognizeMutation();
   const { data: Category, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery(undefined);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
 
@@ -472,6 +474,51 @@ const ReportFoundItem = () => {
       }
     } catch {
       toast.error("Student not found in masterlist");
+    }
+  };
+
+  const handleAiScan = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    const toastId = toast.loading("AI is analyzing your photo...");
+
+    try {
+      // Compress for AI
+      const compressedFile = await imageCompression(file, { maxSizeMB: 0.2, maxWidthOrHeight: 800, useWebWorker: true });
+      
+      // Create preview for UI
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(compressedFile);
+      });
+      const base64Image = await base64Promise;
+
+      // Prepare FormData (Not using base64 for the API call anymore)
+      const formData = new FormData();
+      formData.append("image", compressedFile);
+
+      const res = await aiRecognize(formData).unwrap();
+
+      if (res.success && res.data) {
+        const aiData = res.data;
+        setValue("foundItemName", aiData.itemName);
+        setValue("description", aiData.description);
+        if (aiData.categoryId) handleMenuChange(aiData.categoryName, aiData.categoryId);
+        if (aiData.color) { setValue("color", aiData.color); setSelectedColor(aiData.color); }
+        if (aiData.condition) setValue("condition", aiData.condition);
+
+        // Also prepare the image preview
+        setSelectedFile(file);
+        setPreview(base64Image);
+
+        toast.update(toastId, { render: "Magic Scan successful! Fields auto-filled.", type: "success", isLoading: false, autoClose: 3000 });
+      } else {
+        toast.update(toastId, { render: "AI could not recognize the item clearly.", type: "warning", isLoading: false, autoClose: 3000 });
+      }
+    } catch (error) {
+      console.error("AI Scan Error:", error);
+      toast.update(toastId, { render: "AI scan failed. Please fill manually.", type: "error", isLoading: false, autoClose: 3000 });
     }
   };
 
@@ -734,6 +781,27 @@ const ReportFoundItem = () => {
                 {/* ── Step 1: Item Details ── */}
                 {step === 1 && (
                   <div className="space-y-5">
+                    {/* Magic AI Scan Button */}
+                    <div className="flex justify-between items-center bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 mb-2 animate-fadeIn">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
+                          <FaMagic size={18} className={isAiRecognizing ? "animate-pulse" : ""} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-white uppercase tracking-wider">Magic AI Scan</p>
+                          <p className="text-[10px] text-gray-500">Auto-fill details from a photo</p>
+                        </div>
+                      </div>
+                      <label className="cursor-pointer px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black rounded-lg transition-all uppercase tracking-widest active:scale-95 flex items-center gap-2">
+                        {isAiRecognizing ? (
+                          <><FaSpinner className="animate-spin" size={10} /> Analyzing...</>
+                        ) : (
+                          <><FaCamera size={10} /> Scan Item</>
+                        )}
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
+                      </label>
+                    </div>
+
                     <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
                       <Field label="Item Name" required error={errors.foundItemName?.message as string} icon={<IconTag />}>
                         <input {...register("foundItemName", { required: "Item name is required" })}
@@ -1067,7 +1135,6 @@ const ReportFoundItem = () => {
           </p>
         </div>
       </section>
-      <ToastContainer position="top-right" autoClose={3000} style={{ top: "70px", zIndex: 9999 }} theme="dark" />
       {showScanner && (
         <BarcodeScannerModal onScan={handleScan} onClose={() => setShowScanner(false)} useFetchStudent={useFetchStudent} />
       )}

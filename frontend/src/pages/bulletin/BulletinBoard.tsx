@@ -4,8 +4,7 @@ import {
   FaLightbulb, FaTimes, FaEye, FaTrash, FaPlus, FaCheckCircle,
   FaUser, FaTag, FaImage, FaTh, FaList,
 } from "react-icons/fa";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import {
   useGetBulletinPostsQuery,
   useCreateBulletinPostMutation,
@@ -368,7 +367,6 @@ export default function BulletinBoard() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <ToastContainer position="top-right" theme="dark" autoClose={3000} />
 
       {showPostModal  && <PostModal onClose={() => setShowPostModal(false)} />}
       {tipTarget      && <TipModal post={tipTarget} onClose={() => setTipTarget(null)} />}

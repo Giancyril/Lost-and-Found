@@ -6,8 +6,7 @@ import {
   FaFire, FaEnvelope, FaUser, FaPaperPlane, FaEye,
   FaSpinner, FaStar, FaRegStar,
 } from "react-icons/fa";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { baseApi } from "../../redux/api/baseApi";
 
 // ── RTK Query endpoints ────────────────────────────────────────────────────────
@@ -954,8 +953,6 @@ const CommunicationHub = () => {
       {activeTab === "notifications" && <NotificationCenterTab />}
       {activeTab === "templates"     && <EmailTemplatesTab />}
 
-      <ToastContainer position="top-right" autoClose={3000} theme="dark"
-        toastClassName="!bg-gray-800 !border !border-white/10 !rounded-xl !text-sm !text-white shadow-2xl" />
     </div>
   );
 };

@@ -16,6 +16,7 @@ import { locationStats } from "../utils/locationStats";
 import { getAuditLogs } from "../utils/auditLog";
 import { aiSearchController } from "../modules/aiSearch/aiSearch.controller";
 import { aiSearchValidation } from "../modules/aiSearch/aiSearch.validate";
+import { aiRecognitionController } from "../modules/ai/ai.controller";
 import { sendLostItemEmail, sendClaimApprovedEmail } from "../utils/emailController";
 import { bulletinPostController } from "../modules/bulletinPost/bulletinPost.controller";
 import { createPostSchema, createTipSchema } from "../modules/bulletinPost/bulletinPost.validate";
@@ -122,8 +123,9 @@ router.put("/block/user/:id", auth(), userController.blockUser);
 router.delete("/delete-user/:id", auth(), userController.softDeleteUser);
 router.get("/admin/match-notifications", auth(), getMatchNotifications);
 
-////////////////////////////////////////////////// AI search //////////////////////////////////////////////
+// ////////////////////////////////////////////////// AI search //////////////////////////////////////////////
 router.post("/ai-search", validateRequest(aiSearchValidation.aiSearchSchema), aiSearchController.aiSearch);
+router.post("/ai-recognize", auth(true), uploadImages.single("image"), aiRecognitionController.recognizeImage);
 
 // ── Email / Mailer ──
 router.post("/email/lost-item", auth(), sendLostItemEmail);

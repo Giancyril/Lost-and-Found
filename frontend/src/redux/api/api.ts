@@ -235,6 +235,11 @@ const api = baseApi.injectEndpoints({
       query: (data: { query: string }) => ({ url: "/ai-search", method: "POST", body: data }),
     }),
 
+    // AI Recognition
+    aiRecognize: builder.mutation({
+      query: (data: any) => ({ url: "/ai-recognize", method: "POST", body: data }),
+    }),
+
     // bulletin posts
     getBulletinPosts: builder.query({
       query: (params: { page?: number; limit?: number; searchTerm?: string }) => ({ url: "/bulletin-posts", method: "GET", params }),
@@ -407,6 +412,7 @@ export const {
   useGetFaqsQuery,
   useCreateFaqMutation,
   useAiSearchMutation,
+  useAiRecognizeMutation,
   useSendLostItemEmailMutation,
   useSendClaimApprovedEmailMutation,
   useGetArchivedFoundItemsQuery,

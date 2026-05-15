@@ -12,7 +12,7 @@ const getBaseUrl = () => {
     }
     return `${serverUrl}/api`;
   }
-  return "http://localhost:5001/api";
+  return "http://localhost:5002/api";
 };
 
 export const baseApi = createApi({

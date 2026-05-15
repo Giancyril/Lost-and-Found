@@ -7,8 +7,7 @@ import {
 } from "react-icons/fa";
 import { useGetMyLostItemQuery, useMyClaimsQuery, useLazyGetSingleLostItemQuery } from "../../redux/api/api";
 import { Link } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 import { useUserVerification } from "../../auth/auth";
 
@@ -377,7 +376,6 @@ const ItemStatus = () => {
           </div>
         )}
       </div>
-      <ToastContainer position="top-right" autoClose={3000} theme="dark" style={{ top: "80px" }} />
     </div>
   );
 };

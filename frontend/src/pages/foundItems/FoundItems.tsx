@@ -31,6 +31,7 @@ import {
   useCreateClaimMutation,
   useGetStudentByIdQuery,
   useLazyGetStudentByDetailsQuery,
+  useAiRecognizeMutation,
 } from "../../redux/api/api";
 import { useUserVerification } from "../../auth/auth";
 import type { ScannedStudent } from "../../components/scanner/BarcodeScannerModal";
@@ -674,6 +675,7 @@ const FoundItemsPage = () => {
   const [addSelectedColor, setAddSelectedColor] = useState("");
   const [addSelectedCondition, setAddSelectedCondition] = useState("");
   const addFileInputRef = useRef<HTMLInputElement>(null);
+  const aiFileInputRef = useRef<HTMLInputElement>(null);
   const MAX_SIZE_MB = 5;
 
   // Track previous email value to prevent auto-fill loops
@@ -725,6 +727,7 @@ const FoundItemsPage = () => {
 
   const [createFoundItem, { isLoading: isCreating }] = useCreateFoundItemMutation();
   const [uploadItemImages, { isLoading: isUploading }] = useUploadItemImagesMutation();
+  const [aiRecognize] = useAiRecognizeMutation();
   const isBusy = isCreating || isUploading;
 
   const {
@@ -799,6 +802,59 @@ const FoundItemsPage = () => {
     setAddStartDate(new Date().toISOString().split("T")[0]);
     setScannedStudent(null);
     scannedAtRef.current = "";
+  };
+
+  const handleAiScan = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    const toastId = toast.loading("AI is analyzing your photo...");
+
+    try {
+      // 1. Compress for AI
+      const compressedFile = await imageCompression(file, { maxSizeMB: 0.2, maxWidthOrHeight: 800, useWebWorker: true });
+      
+      // 2. Prepare Preview
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(compressedFile);
+      });
+      const base64Image = await base64Promise;
+
+      // 3. Prepare FormData for API
+      const formData = new FormData();
+      formData.append("image", compressedFile);
+
+      const res = await aiRecognize(formData).unwrap();
+
+      if (res.success && res.data) {
+        const aiData = res.data;
+        addSetValue("foundItemName", aiData.itemName, { shouldDirty: true });
+        addSetValue("description", aiData.description, { shouldDirty: true });
+        
+        if (aiData.categoryId) {
+          handleCategoryChange(aiData.categoryId);
+        }
+        
+        if (aiData.color) {
+          setAddSelectedColor(aiData.color);
+        }
+        if (aiData.condition) {
+          setAddSelectedCondition(aiData.condition);
+        }
+
+        // Set the image preview and file
+        setAddSelectedFile(file);
+        setAddPreview(base64Image);
+
+        toast.update(toastId, { render: "Magic Scan successful! Fields auto-filled.", type: "success", isLoading: false, autoClose: 3000 });
+      } else {
+        toast.update(toastId, { render: "AI could not recognize the item clearly.", type: "warning", isLoading: false, autoClose: 3000 });
+      }
+    } catch (error) {
+      console.error("AI Scan Error:", error);
+      toast.update(toastId, { render: "AI scan failed. Please fill manually.", type: "error", isLoading: false, autoClose: 3000 });
+    }
   };
 
   const handleScan = (student: ScannedStudent) => {
@@ -1255,6 +1311,17 @@ const FoundItemsPage = () => {
                   >
                     {isFetchingByDetails ? <FaSpinner className="animate-spin" size={9} /> : <FaSearch size={9} />}
                     <span className="leading-none">Fetch Info</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => aiFileInputRef.current?.click()}
+                    className="px-2.5 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-[9px] font-black text-indigo-400 hover:text-indigo-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95"
+                    title="Let AI identify the item from a photo"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /><path d="M5 3v4" /><path d="M19 17v4" /><path d="M3 5h4" /><path d="M17 19h4" /></svg>
+                    <span className="leading-none">Magic AI Scan</span>
+                    <input ref={aiFileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleAiScan(e.target.files)} />
                   </button>
 
                   <button 

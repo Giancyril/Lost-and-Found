@@ -16,7 +16,6 @@ import {
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Modals from "../../components/modal/Modal";
-import { ToastContainer } from "react-toastify";
 import {
   FaSearch,
   FaCheckCircle,
@@ -498,18 +497,6 @@ const MyFoundItems = () => {
         </div>
       </Modal>
 
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
     </div>
   );
 };

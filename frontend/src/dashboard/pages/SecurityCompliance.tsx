@@ -10,8 +10,7 @@ import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { baseApi } from "../../redux/api/baseApi";
 import {
   useBlockUserMutation,
@@ -661,8 +660,6 @@ const SecurityCompliance = () => {
       {activeTab === "privacy"    && <DataPrivacyTab />}
       {activeTab === "compliance" && <ComplianceTab />}
 
-      <ToastContainer position="top-right" autoClose={3000} theme="dark"
-        toastClassName="!bg-gray-800 !border !border-white/10 !rounded-xl !text-sm !text-white shadow-2xl" />
     </div>
   );
 };
