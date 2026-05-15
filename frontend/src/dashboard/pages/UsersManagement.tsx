@@ -63,11 +63,10 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
                 key={opt.id}
                 type="button"
                 onClick={() => { onChange(opt.id); setOpen(false); }}
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
-                  value === opt.id
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${value === opt.id
                     ? "bg-white/5 text-white font-semibold"
                     : "text-gray-400 hover:bg-white/[0.03] hover:text-white"
-                }`}
+                  }`}
               >
                 {opt.name}
                 {value === opt.id && (
@@ -83,21 +82,21 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
 };
 
 const UsersManagement = () => {
-  const [searchTerm, setSearchTerm]         = useState("");
-  const [statusFilter, setStatusFilter]     = useState<string>("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deletingUser, setDeletingUser]           = useState<User | null>(null);
-  const [isDeleteLoading, setIsDeleteLoading]     = useState(false);
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isCreating, setIsCreating]               = useState(false);
-  const [showPassword, setShowPassword]           = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
   const { data: allUsersData, isLoading } = useGetAllUsersQuery(undefined);
-  const [blockUser]      = useBlockUserMutation();
+  const [blockUser] = useBlockUserMutation();
   const [softDeleteUser] = useSoftDeleteUserMutation();
-  const [registerUser]   = useRegistersMutation();
+  const [registerUser] = useRegistersMutation();
 
   const transformUser = (apiUser: ApiUser): User => ({
     id: apiUser.id, name: apiUser.username, email: apiUser.email, role: apiUser.role,
@@ -105,7 +104,7 @@ const UsersManagement = () => {
     lastLogin: undefined, itemsReported: 0, claimsMade: 0, profileImage: apiUser.userImg || undefined,
   });
 
-  const allUsers   = allUsersData?.data ? allUsersData.data.map(transformUser) : [];
+  const allUsers = allUsersData?.data ? allUsersData.data.map(transformUser) : [];
   const adminUsers = allUsers.filter((u: User) => u.role === "ADMIN");
 
   const filteredUsers = adminUsers.filter((user: User) => {
@@ -151,11 +150,10 @@ const UsersManagement = () => {
     <div className="relative">
       <button
         onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === user.id ? null : user.id); }}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border cursor-pointer transition-all ${
-          user.status === "ACTIVE"
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border cursor-pointer transition-all ${user.status === "ACTIVE"
             ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
             : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-        }`}
+          }`}
       >
         <span className={`w-1.5 h-1.5 rounded-full ${user.status === "ACTIVE" ? "bg-emerald-400" : "bg-amber-400"}`} />
         {user.status === "ACTIVE" ? "Active" : "Suspended"}
@@ -180,10 +178,10 @@ const UsersManagement = () => {
   if (isLoading) return (
     <div className="space-y-4 animate-pulse">
       <div className="grid grid-cols-3 gap-4">
-        {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-900 border border-white/5 rounded-2xl" />)}
+        {[1, 2, 3].map(i => <div key={i} className="h-24 bg-gray-900 border border-white/5 rounded-2xl" />)}
       </div>
       <div className="h-12 bg-gray-900 border border-white/5 rounded-2xl" />
-      {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-900 border border-white/5 rounded-2xl" />)}
+      {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-900 border border-white/5 rounded-2xl" />)}
     </div>
   );
 
@@ -203,38 +201,64 @@ const UsersManagement = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
-          { label: "Total Admins", value: adminUsers.length,                                               accent: "text-white",        icon: "bg-blue-500/10",   iconEl: <FaShieldAlt size={14} className="text-blue-400" />  },
-          { label: "Active",       value: adminUsers.filter((u: User) => u.status === "ACTIVE").length,    accent: "text-emerald-400",  icon: "bg-emerald-500/10",iconEl: <FaCheck size={14} className="text-emerald-400" />   },
-          { label: "Suspended",    value: adminUsers.filter((u: User) => u.status === "SUSPENDED").length, accent: "text-amber-400",    icon: "bg-amber-500/10",  iconEl: <FaBan size={14} className="text-amber-400" />       },
-        ].map((s) => (
-          <div key={s.label} className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <p className={`text-3xl font-bold tracking-tight ${s.accent}`}>{s.value}</p>
-              <p className="text-gray-500 text-xs mt-1 font-medium">{s.label}</p>
+          { 
+            label: "Total Admins", 
+            value: adminUsers.length, 
+            accent: "bg-blue-500/10", 
+            icon: <FaShieldAlt size={12} className="text-blue-400" />,
+            sub: "System Administrators",
+            subColor: "text-gray-500"
+          },
+          { 
+            label: "Active", 
+            value: adminUsers.filter((u: User) => u.status === "ACTIVE").length, 
+            accent: "bg-emerald-500/10", 
+            icon: <FaCheck size={12} className="text-emerald-400" />,
+            sub: "Active Sessions",
+            subColor: "text-emerald-400"
+          },
+          { 
+            label: "Suspended", 
+            value: adminUsers.filter((u: User) => u.status === "SUSPENDED").length, 
+            accent: "bg-amber-500/10", 
+            icon: <FaBan size={12} className="text-amber-400" />,
+            sub: "Access Revoked",
+            subColor: "text-amber-400"
+          },
+        ].map(({ label, value, accent, icon, sub, subColor }) => (
+          <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-5 flex flex-col items-start gap-4 overflow-hidden min-h-[140px] sm:min-h-[160px]">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${accent} shrink-0`}>
+              {icon}
             </div>
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.icon}`}>{s.iconEl}</div>
+            <div className="flex flex-col gap-1.5 w-full">
+              <p className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-none">{value}</p>
+              <div className="space-y-1">
+                <p className="text-gray-500 text-[10px] sm:text-xs font-semibold leading-tight">{label}</p>
+                <p className={`text-[9px] sm:text-[10px] font-bold ${subColor} leading-tight uppercase tracking-wider`}>{sub}</p>
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row gap-3">
-  <div className="flex-1 relative">
-    <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
-    <input type="text" placeholder="Search by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-      className="w-full pl-9 pr-4 py-2.5 bg-gray-800/80 border border-transparent rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all" />
-  </div>
-    <CustomDropdown
-      value={statusFilter}
-      onChange={setStatusFilter}
-      options={[
-        { id: "ACTIVE",    name: "Active" },
-        { id: "SUSPENDED", name: "Suspended" },
-      ]}
-      allLabel="All Status"
-    />
+        <div className="flex-1 relative">
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
+          <input type="text" placeholder="Search by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 bg-gray-800/80 border border-transparent rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all" />
+        </div>
+        <CustomDropdown
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { id: "ACTIVE", name: "Active" },
+            { id: "SUSPENDED", name: "Suspended" },
+          ]}
+          allLabel="All Status"
+        />
       </div>
 
       {/* Table */}
@@ -338,10 +362,14 @@ const UsersManagement = () => {
             </div>
             <form onSubmit={handleSubmit(handleCreateAdmin)} className="p-5 space-y-4 overflow-y-auto">
               {[
-                { label: "Username", key: "username", type: "text", placeholder: "e.g. sas_admin",
-                  rules: { required: "Required", minLength: { value: 3, message: "Min. 3 characters" }, pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Letters, numbers, underscores only" } } },
-                { label: "Email", key: "email", type: "email", placeholder: "admin@nbsc.edu.ph",
-                  rules: { required: "Required", pattern: { value: /^\S+@\S+$/i, message: "Invalid email" } } },
+                {
+                  label: "Username", key: "username", type: "text", placeholder: "e.g. sas_admin",
+                  rules: { required: "Required", minLength: { value: 3, message: "Min. 3 characters" }, pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Letters, numbers, underscores only" } }
+                },
+                {
+                  label: "Email", key: "email", type: "email", placeholder: "admin@nbsc.edu.ph",
+                  rules: { required: "Required", pattern: { value: /^\S+@\S+$/i, message: "Invalid email" } }
+                },
               ].map(({ label, key, type, placeholder, rules }) => (
                 <div key={key}>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{label}</label>
