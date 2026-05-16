@@ -783,7 +783,7 @@ const EMAIL_TEMPLATES = [
         { label: "Status",        value: "⏳ Under Review", highlight: "text-amber-400" },
       ],
       note: "What happens next? The SAS office will review your report and contact the owner or relevant department to coordinate return of the item.",
-      noteColor: "#1e40af", noteBg: "#eff6ff", noteBorder: "#bfdbfe",
+      noteColor: "#93c5fd", noteBg: "rgba(30, 58, 138, 0.1)", noteBorder: "rgba(59, 130, 246, 0.2)",
     },
   },
   {
@@ -804,7 +804,7 @@ const EMAIL_TEMPLATES = [
         { label: "Status",        value: "✓ Successfully Received", highlight: "text-emerald-400" },
       ],
       note: "If you did NOT claim this item or did not authorize this transaction, please contact the SAS office immediately.",
-      noteColor: "#9a3412", noteBg: "#fff7ed", noteBorder: "#fed7aa",
+      noteColor: "#6ee7b7", noteBg: "rgba(5, 150, 105, 0.1)", noteBorder: "rgba(16, 185, 129, 0.2)",
     },
   },
   {
@@ -825,7 +825,7 @@ const EMAIL_TEMPLATES = [
         { label: "Match Conf.",   value: "🎯 High Confidence Match", highlight: "text-emerald-400" },
       ],
       note: "Is this your item? Please visit the SAS office at your earliest convenience to verify and claim your item. Bring your school ID for identification.",
-      noteColor: "#5b21b6", noteBg: "#f5f3ff", noteBorder: "#ddd6fe",
+      noteColor: "#ddd6fe", noteBg: "rgba(91, 33, 182, 0.1)", noteBorder: "rgba(139, 92, 246, 0.2)",
     },
   },
 ];
