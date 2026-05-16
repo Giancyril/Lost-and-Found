@@ -3,6 +3,7 @@ import { JwtPayload } from "jsonwebtoken";
 import prisma from "../../config/prisma";
 import { uploadBase64ToStorage } from "../../utils/storage";
 import { matchService } from "../matching/match.service";
+import { aiRecognitionService } from "../ai/ai.service";
 
 const toggleFoundStatus = async (id: string) => {
   const currentItem = await prisma.lostItem.findUnique({
@@ -41,6 +42,16 @@ const createLostItem = async (
     reporterName: item.reporterName || "",
     schoolEmail:  item.schoolEmail  || "",
   };
+
+  // ── AI SENTIMENT MODERATION: Determine urgency ──────────────────────────
+  try {
+    const urgency = await aiRecognitionService.analyzeUrgency(item.lostItemName, item.description);
+    createData.urgencyScore = urgency.urgencyScore;
+    createData.urgencyLevel = urgency.urgencyLevel;
+    createData.urgencyReason = urgency.urgencyReason;
+  } catch (aiErr) {
+    console.error("[SentimentMod] Failed to analyze urgency:", aiErr);
+  }
   if (userId) createData.userId = userId;
 
   const result = await prisma.lostItem.create({
@@ -177,6 +188,21 @@ const editMyLostItem = async (data: any, user?: JwtPayload) => {
     updateData.img = await uploadBase64ToStorage(data.img, "lost", data.id);
   } else if (data?.img) {
     updateData.img = data.img;
+  }
+
+  // Update urgency if content changed
+  if (data?.lostItemName || data?.description) {
+    try {
+      const urgency = await aiRecognitionService.analyzeUrgency(
+        data.lostItemName || "", 
+        data.description || ""
+      );
+      updateData.urgencyScore = urgency.urgencyScore;
+      updateData.urgencyLevel = urgency.urgencyLevel;
+      updateData.urgencyReason = urgency.urgencyReason;
+    } catch (aiErr) {
+      console.error("[SentimentMod] Update failed:", aiErr);
+    }
   }
 
   const whereClause: any = { id: data.id };

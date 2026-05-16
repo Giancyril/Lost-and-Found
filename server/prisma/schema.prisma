@@ -72,6 +72,9 @@ model FoundItem {
   archivedAt         DateTime?
   isArchived         Boolean             @default(false)
   schoolEmail        String              @default("")
+  urgencyLevel       UrgencyLevel        @default(NORMAL)
+  urgencyScore       Int                 @default(0)
+  urgencyReason      String?
   claim              Claim[]
   category           ItemCategory        @relation(fields: [categoryId], references: [id])
   user               User?               @relation(fields: [userId], references: [id])
@@ -96,6 +99,9 @@ model LostItem {
   deletedAt          DateTime?
   reporterName       String              @default("")
   schoolEmail        String              @default("")
+  urgencyLevel       UrgencyLevel        @default(NORMAL)
+  urgencyScore       Int                 @default(0)
+  urgencyReason      String?
   category           ItemCategory        @relation(fields: [categoryId], references: [id])
   user               User?               @relation(fields: [userId], references: [id])
   matchNotifications MatchNotification[]
@@ -512,4 +518,10 @@ enum AchievementTier {
   GOLD
   PLATINUM
   LEGEND
+}
+
+enum UrgencyLevel {
+  NORMAL
+  HIGH
+  CRITICAL
 }

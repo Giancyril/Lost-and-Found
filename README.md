@@ -480,6 +480,12 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Smart Patrol Suggestions**: Automated recommendations for campus security, providing specific locations and time blocks to prioritize for patrols.
 - **Trend Analysis**: Monitors whether loss reports in specific zones are increasing, stable, or decreasing over time.
 - **Accuracy Tracking**: Built-in model tracking to monitor the precision of AI predictions against actual reported incidents.
+
+### Sentiment-Based Moderation (AI)
+- **Urgency Detection**: Automatically analyzes the "tone" of reports to detect emotional distress (e.g., "lost my thesis", "extremely worried").
+- **High-Value Item Identification**: AI recognizes keywords for expensive or critical items (laptops, jewelry, passports) and flags them immediately.
+- **Priority Ranking**: Items are assigned an Urgency Score (0-100) and Level (Normal, High, Critical) to help admins prioritize their workload.
+- **AI Reasoning**: Provides administrators with a summary of why an item was flagged for priority (e.g., "Detected high emotional distress and high-value electronics").
 ## Development Roadmap
 
 ###  Phase 1: Foundation (Completed)
@@ -507,6 +513,6 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 ### Phase 5: Advanced Features (Upcoming)
 - **Department Leaderboards**: Gamified campus-wide competition to encourage community helpfulness.
 - **Kiosk Mode**: Specialized interface for physical "Lost & Found" touchscreens in high-traffic campus areas.
-- **Predictive Analytics**: Forecasting high-risk zones and peak times for lost items to optimize campus patrol.
-- **Sentiment-Based Moderation**: AI-driven prioritization of high-value or high-distress reports.
+- **Predictive Analytics (Completed)**: Forecasting high-risk zones and peak times for lost items to optimize campus patrol.
+- **Sentiment-Based Moderation (Completed)**: AI-driven prioritization of high-value or high-distress reports.
 - **Event-Based Focus Zones**: Temporary moderation and tracking modules for major campus events and festivals.

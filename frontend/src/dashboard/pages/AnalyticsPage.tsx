@@ -988,6 +988,16 @@ const PerformanceTab = ({ stats }: { stats: any }) => {
 // ════════════════════════════════════════════════════════════════════════════════
 const PredictiveTab = ({ stats }: { stats: any }) => {
   const data = stats?.predictiveAnalytics;
+  const [isPatrolling, setIsPatrolling] = useState(false);
+  const [patrolGenerated, setPatrolGenerated] = useState(false);
+
+  const handleGeneratePatrol = () => {
+    setIsPatrolling(true);
+    setTimeout(() => {
+      setIsPatrolling(false);
+      setPatrolGenerated(true);
+    }, 2000);
+  };
 
   if (!data) return (
     <div className="flex flex-col items-center justify-center py-20 bg-gray-900/50 rounded-2xl border border-white/5">
@@ -1000,28 +1010,35 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-700">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-violet-600/20 to-cyan-600/20 border border-violet-500/20 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-violet-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
-            <FaBrain size={28} className="text-white" />
+      <div className="bg-gradient-to-br from-violet-600/20 via-slate-900 to-cyan-600/20 border border-violet-500/20 rounded-3xl p-5 sm:p-8 flex flex-col sm:flex-row items-center gap-6 sm:gap-10 shadow-2xl relative overflow-hidden">
+        {/* Decorative glow */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-[80px] -mr-16 -mt-16" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-violet-500/10 blur-[80px] -ml-16 -mb-16" />
+
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left z-10">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-xl shadow-violet-500/20 ring-1 ring-white/20">
+            <FaBrain size={32} className="text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">AI Predictive Engine</h2>
-            <p className="text-violet-300/60 text-xs mt-0.5">Forecasting high-risk zones and peak times based on {stats?.total || 0} historical records</p>
+            <h2 className="text-2xl font-black text-white tracking-tight">AI Predictive Engine</h2>
+            <p className="text-violet-300/60 text-xs sm:text-sm mt-1 max-w-md">
+              Forecasting high-risk zones and peak times based on <span className="text-violet-300 font-bold">{stats?.total || 0}</span> historical records.
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-6">
+
+        <div className="flex items-center gap-8 sm:gap-10 z-10 bg-black/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/5 w-full sm:w-auto justify-center sm:justify-start">
           <div className="text-center">
-            <p className="text-2xl font-black text-white leading-none">{data.accuracyRate}%</p>
-            <p className="text-[10px] text-violet-400 font-bold uppercase tracking-widest mt-1">Accuracy</p>
+            <p className="text-3xl font-black text-white tracking-tighter leading-none">{data.accuracyRate}%</p>
+            <p className="text-[10px] text-violet-400 font-black uppercase tracking-[0.2em] mt-2">Accuracy</p>
           </div>
-          <div className="h-10 w-px bg-white/10 hidden sm:block" />
+          <div className="h-10 w-px bg-white/10" />
           <div className="text-center">
-            <p className="text-xs font-bold text-emerald-400 leading-none flex items-center gap-1 justify-center">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Active
-            </p>
-            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mt-1">Model State</p>
+            <div className="flex items-center gap-2 justify-center mb-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+              <p className="text-xs font-black text-emerald-400 uppercase tracking-widest">Active</p>
+            </div>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mt-2">Model State</p>
           </div>
         </div>
       </div>
@@ -1105,8 +1122,28 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
                   <h4 className="text-white font-bold text-sm">Smart Patrol Mode</h4>
                   <p className="text-gray-500 text-[10px] mt-1 px-4 leading-relaxed">AI suggests optimizing campus security patrol based on forecasted hotspots.</p>
                 </div>
-                <button className="px-6 py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-violet-600/20">
-                  View Patrol Route
+                <button 
+                  onClick={handleGeneratePatrol}
+                  disabled={isPatrolling}
+                  className={`px-6 py-2 text-white text-xs font-bold rounded-xl transition-all shadow-lg w-full max-w-[160px] flex items-center justify-center gap-2
+                    ${patrolGenerated 
+                      ? "bg-emerald-600 shadow-emerald-600/20" 
+                      : "bg-violet-600 hover:bg-violet-500 shadow-violet-600/20"
+                    } ${isPatrolling ? "opacity-70 cursor-not-allowed" : ""}`}
+                >
+                  {isPatrolling ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Optimizing...
+                    </>
+                  ) : patrolGenerated ? (
+                    <>
+                      <FaCheckCircle />
+                      Route Ready
+                    </>
+                  ) : (
+                    "View Patrol Route"
+                  )}
                 </button>
              </div>
           </div>
@@ -1192,14 +1229,14 @@ const AnalyticsPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors whitespace-nowrap justify-center border w-full
+                className={`flex items-center gap-2 px-2 sm:px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap justify-center border
                   ${active
-                    ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+                    ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.1)]"
                     : "border-transparent text-gray-500 hover:text-white hover:bg-white/5"
                   }`}
               >
-                <Icon size={11} className={active ? "text-cyan-400" : "text-gray-600"} />
-                {tab.label}
+                <Icon size={14} className={`${active ? "text-cyan-400" : "text-gray-600"} shrink-0`} />
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
             );
           })}

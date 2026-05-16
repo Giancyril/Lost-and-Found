@@ -4,6 +4,7 @@ import {
   FaCheck, FaTimes,
   FaMapMarkerAlt, FaCalendarAlt,
   FaClipboardList, FaBoxOpen, FaTag, FaChevronDown,
+  FaExclamationTriangle, FaInfoCircle,
 } from "react-icons/fa";
 import { IoMdRadioButtonOn } from "react-icons/io";
 import { MdCheckCircle } from "react-icons/md";
@@ -29,6 +30,9 @@ interface LostItem {
   reporterName?: string;
   schoolEmail?: string;
   user: { username: string };
+  urgencyLevel: "NORMAL" | "HIGH" | "CRITICAL";
+  urgencyScore: number;
+  urgencyReason?: string;
 }
 
 const Spinner = ({ color = "text-white" }: { color?: string }) => (
@@ -260,6 +264,7 @@ const LostItemsManagement = () => {
           <div className="col-span-2">Category</div>
           <div className="col-span-2">Location</div>
           <div className="col-span-1">Date</div>
+          <div className="col-span-1">Priority</div>
           <div className="col-span-1">Status</div>
           <div className="col-span-2">Reporter</div>
           <div className="col-span-1 text-right">Actions</div>
@@ -290,6 +295,25 @@ const LostItemsManagement = () => {
                 </div>
                 <div className="col-span-1">
                   <p className="text-gray-500 text-xs">{new Date(item.date).toLocaleDateString()}</p>
+                </div>
+                <div className="col-span-1">
+                  <div className="flex flex-col gap-1">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black tracking-tighter uppercase border w-fit ${
+                      item.urgencyLevel === "CRITICAL" ? "bg-red-500/10 text-red-400 border-red-500/20" :
+                      item.urgencyLevel === "HIGH" ? "bg-orange-500/10 text-orange-400 border-orange-500/20" :
+                      "bg-gray-500/10 text-gray-500 border-white/5"
+                    }`} title={item.urgencyReason || "Calculated by AI"}>
+                      {item.urgencyLevel}
+                    </span>
+                    {item.urgencyScore > 0 && (
+                       <div className="h-1 w-12 bg-gray-800 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full ${item.urgencyLevel === 'CRITICAL' ? 'bg-red-500' : item.urgencyLevel === 'HIGH' ? 'bg-orange-500' : 'bg-gray-600'}`} 
+                            style={{ width: `${item.urgencyScore}%` }} 
+                          />
+                       </div>
+                    )}
+                  </div>
                 </div>
                 <div className="col-span-1">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${

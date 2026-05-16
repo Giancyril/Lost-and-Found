@@ -2,6 +2,7 @@ import { FoundItem, Prisma } from "@prisma/client";
 import { TFilter } from "../../global/interface";
 import { JwtPayload } from "jsonwebtoken";
 import prisma from "../../config/prisma";
+import { aiRecognitionService } from "../ai/ai.service";
 import { uploadBase64ToStorage } from "../../utils/storage";
 import { matchService } from "../matching/match.service";
 
@@ -25,6 +26,16 @@ const createFoundItem = async (
     reporterName: data.reporterName || "",
     schoolEmail: data.schoolEmail || "",
   };
+
+  // ── AI SENTIMENT MODERATION: Determine urgency ──────────────────────────
+  try {
+    const urgency = await aiRecognitionService.analyzeUrgency(data.foundItemName, data.description);
+    createData.urgencyScore = urgency.urgencyScore;
+    createData.urgencyLevel = urgency.urgencyLevel;
+    createData.urgencyReason = urgency.urgencyReason;
+  } catch (aiErr) {
+    console.error("[SentimentMod] Failed to analyze urgency:", aiErr);
+  }
   if (userId) createData.userId = userId;
 
   const result = await prisma.foundItem.create({
@@ -162,6 +173,21 @@ const editMyFoundItem = async (data: any) => {
   if (data?.reporterName !== undefined) updateData.reporterName = data.reporterName;
   if (data?.img?.startsWith("data:")) {
     updateData.img = await uploadBase64ToStorage(data.img, "found", data.id);
+  }
+
+  // Update urgency if content changed
+  if (data?.foundItemName || data?.description) {
+    try {
+      const urgency = await aiRecognitionService.analyzeUrgency(
+        data.foundItemName || "", 
+        data.description || ""
+      );
+      updateData.urgencyScore = urgency.urgencyScore;
+      updateData.urgencyLevel = urgency.urgencyLevel;
+      updateData.urgencyReason = urgency.urgencyReason;
+    } catch (aiErr) {
+      console.error("[SentimentMod] Update failed:", aiErr);
+    }
   }
 
   return prisma.foundItem.update({ where: { id: data.id }, data: updateData });

@@ -37,7 +37,10 @@ const recognizeImage = async (imageSource: string | Buffer, mimeType = "image/jp
       console.log("[AI] Fetching from URL:", imageSource);
       const response = await axios.get(imageSource, { responseType: "arraybuffer" });
       base64Data = Buffer.from(response.data, "binary").toString("base64");
-      mimeType = response.headers["content-type"] || mimeType;
+      const contentType = response.headers["content-type"];
+      if (typeof contentType === "string") {
+        mimeType = contentType;
+      }
     } else if (typeof imageSource === "string") {
       // Handle Base64
       base64Data = imageSource.includes("base64,") 
@@ -139,6 +142,68 @@ const recognizeImage = async (imageSource: string | Buffer, mimeType = "image/jp
   }
 };
 
+/**
+ * Analyzes the sentiment and material value of an item report to determine priority.
+ */
+const analyzeUrgency = async (name: string, description: string) => {
+  try {
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+
+    const prompt = `
+    You are an AI moderator for a campus Lost and Found system called "Lost & Found NBSC".
+    Analyze the following report and determine its urgency/priority.
+    
+    Item Name: "${name}"
+    Description: "${description}"
+
+    Criteria for HIGH/CRITICAL urgency:
+    1. High-value items: Electronics (laptops, phones, tablets), high-end jewelry (rings, watches), wallets/cash, IDs/Passports/Legal documents.
+    2. Emotional distress: The tone sounds extremely distressed, desperate, or mentions critical importance (e.g., "contains my thesis", "wedding ring", "last gift from family").
+    3. Time-sensitivity: Mentions an immediate deadline or critical need for the item.
+
+    Urgency Levels:
+    - NORMAL: Regular items (water bottles, umbrellas, jackets, stationery).
+    - HIGH: Expensive items (smartphones, average watches) or clearly upset tone.
+    - CRITICAL: Life-changing items (passports, laptops with thesis, expensive medical devices) or extreme emotional breakdown.
+
+    Output format (JSON only):
+    {
+      "urgencyScore": 0-100 (Integer),
+      "urgencyLevel": "NORMAL" | "HIGH" | "CRITICAL",
+      "urgencyReason": "Short explanation of why this priority was assigned"
+    }
+
+    Rules:
+    - Return ONLY valid JSON.
+    - Be objective but sensitive to emotional keywords.
+    `;
+
+    let result;
+    try {
+      result = await model.generateContent(prompt);
+    } catch (genError: any) {
+      console.error("[AI] Gemini Urgency Analysis Error:", genError.message);
+      return { urgencyScore: 0, urgencyLevel: "NORMAL", urgencyReason: "AI Service unavailable" };
+    }
+
+    const response = await result.response;
+    let text = response.text().trim();
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      console.error("[AI] Failed to parse Urgency AI response:", text);
+      return { urgencyScore: 20, urgencyLevel: "NORMAL", urgencyReason: "Format error" };
+    }
+  } catch (error) {
+    console.error("[AI] Urgency Analysis Pipeline Failure:", error);
+    return { urgencyScore: 0, urgencyLevel: "NORMAL", urgencyReason: "System error" };
+  }
+};
+
 export const aiRecognitionService = {
   recognizeImage,
+  analyzeUrgency,
 };

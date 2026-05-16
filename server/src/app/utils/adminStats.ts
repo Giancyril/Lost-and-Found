@@ -8,47 +8,63 @@ import { claimsService } from "../modules/claim/claim.service";
 
 export const adminStats = async (req: Request, res: Response) => {
   const result: any = {};
+  const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  const getTimeBlock = (hour: number): string => {
+    if (hour >= 0 && hour < 6) return "Early Morning";
+    if (hour >= 6 && hour < 12) return "Morning";
+    if (hour >= 12 && hour < 18) return "Afternoon";
+    return "Evening";
+  };
+
   try {
-    const foundItems      = await foundItemService.getFoundItem({});
-    const lostItemsActive = await lostTItemServices.getLostItem();
-    const allLostItems    = await lostTItemServices.getAllLostItems({});
-    const totalUsers      = await userService.allUsers();
-    const claims          = await claimsService.getClaim();
+    console.log("[AdminStats] Fetching found items...");
+    const foundItems = await foundItemService.getFoundItem({ limit: 1000 });
+    console.log("[AdminStats] Fetching lost items (active)...");
+    const lostItemsActive = await lostTItemServices.getLostItem({ limit: 1000 });
+    console.log("[AdminStats] Fetching all lost items...");
+    const allLostItems = await lostTItemServices.getAllLostItems({ limit: 1000 });
+    console.log("[AdminStats] Fetching users...");
+    const totalUsers = await userService.allUsers();
+    console.log("[AdminStats] Fetching claims...");
+    const claims = await claimsService.getClaim();
+    console.log("[AdminStats] All data fetched. Calculating stats...");
 
     // ── Date helpers ──────────────────────────────────────────────
-    const now        = new Date();
-    const weekStart  = new Date(now);
+    const now = new Date();
+    const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - 7);
     weekStart.setHours(0, 0, 0, 0);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const isThisWeek  = (d: string) => new Date(d) >= weekStart;
+    const isThisWeek = (d: string) => new Date(d) >= weekStart;
     const isThisMonth = (d: string) => new Date(d) >= monthStart;
 
     // ── Found items ───────────────────────────────────────────────
-    result.foundItems     = foundItems?.length || 0;
-    result.claimedItems   = foundItems?.filter((i: any) => i.isClaimed).length || 0;
-    result.foundThisWeek  = foundItems?.filter((i: any) => isThisWeek(i.createdAt)).length || 0;
+    result.foundItems = foundItems?.length || 0;
+    result.claimedItems = foundItems?.filter((i: any) => i.isClaimed).length || 0;
+    result.foundThisWeek = foundItems?.filter((i: any) => isThisWeek(i.createdAt)).length || 0;
     result.foundThisMonth = foundItems?.filter((i: any) => isThisMonth(i.createdAt)).length || 0;
 
     // ── Lost items ────────────────────────────────────────────────
-    result.lostItems         = lostItemsActive?.length || 0;
-    result.lostThisWeek      = lostItemsActive?.filter((i: any) => isThisWeek(i.createdAt)).length || 0;
-    result.lostThisMonth     = lostItemsActive?.filter((i: any) => isThisMonth(i.createdAt)).length || 0;
+    result.lostItems = lostItemsActive?.length || 0;
+    result.lostThisWeek = lostItemsActive?.filter((i: any) => isThisWeek(i.createdAt)).length || 0;
+    result.lostThisMonth = lostItemsActive?.filter((i: any) => isThisMonth(i.createdAt)).length || 0;
     result.resolvedLostItems = allLostItems.filter((i: any) => i.isFound).length;
 
     // ── Claims ────────────────────────────────────────────────────
-    result.totalClaims    = claims.length;
-    result.pendingClaims  = claims.filter((c: any) => c.status === "PENDING").length;
+    result.totalClaims = claims.length;
+    result.pendingClaims = claims.filter((c: any) => c.status === "PENDING").length;
     result.approvedClaims = claims.filter((c: any) => c.status === "APPROVED").length;
     result.rejectedClaims = claims.filter((c: any) => c.status === "REJECTED").length;
     result.claimsThisWeek = claims.filter((c: any) => isThisWeek(c.createdAt)).length;
 
     // ── Users ─────────────────────────────────────────────────────
     result.totalUsers = totalUsers.length;
-    result.userData   = totalUsers;
+    result.userData = totalUsers;
 
     // ── Totals ────────────────────────────────────────────────────
-    result.total               = (foundItems?.length || 0) + (lostItemsActive?.length || 0);
+    result.total = (foundItems?.length || 0) + (lostItemsActive?.length || 0);
     result.itemsLoggedThisWeek = result.foundThisWeek + result.lostThisWeek;
 
     // ── Disposal rate ─────────────────────────────────────────────
@@ -60,26 +76,25 @@ export const adminStats = async (req: Request, res: Response) => {
       ? Math.round((result.resolvedLostItems / allLostItems.length) * 100) : 0;
 
     // ── Monthly stats (last 6 months) ─────────────────────────────
-    const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const monthlyMap: Record<string, {
       month: string; found: number; lost: number; claims: number; resolved: number;
     }> = {};
 
     for (let i = 5; i >= 0; i--) {
-      const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       monthlyMap[key] = { month: MONTH_LABELS[d.getMonth()], found: 0, lost: 0, claims: 0, resolved: 0 };
     }
 
     const addToMonth = (dateStr: string, field: "found" | "lost" | "claims" | "resolved") => {
-      const d   = new Date(dateStr);
+      const d = new Date(dateStr);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (monthlyMap[key]) monthlyMap[key][field]++;
     };
 
-    foundItems?.forEach((i: any)   => addToMonth(i.createdAt, "found"));
+    foundItems?.forEach((i: any) => addToMonth(i.createdAt, "found"));
     allLostItems.forEach((i: any) => addToMonth(i.createdAt, "lost"));
-    claims.forEach((c: any)       => addToMonth(c.createdAt, "claims"));
+    claims.forEach((c: any) => addToMonth(c.createdAt, "claims"));
     allLostItems
       .filter((i: any) => i.isFound && i.updatedAt)
       .forEach((i: any) => addToMonth(i.updatedAt, "resolved"));
@@ -135,7 +150,6 @@ export const adminStats = async (req: Request, res: Response) => {
     }
 
     // ── Peak reporting days ───────────────────────────────────────
-    const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const peakDays: Record<number, { day: string; found: number; lost: number; total: number }> = {};
     for (let i = 0; i < 7; i++) peakDays[i] = { day: DAY_LABELS[i], found: 0, lost: 0, total: 0 };
 
@@ -154,16 +168,9 @@ export const adminStats = async (req: Request, res: Response) => {
     // ── Peak reporting hours (grouped into time blocks) ───────────
     const timeBlocks: Record<string, { label: string; found: number; lost: number; total: number }> = {
       "Early Morning": { label: "Early Morning\n12am–6am", found: 0, lost: 0, total: 0 },
-      "Morning":       { label: "Morning\n6am–12pm",       found: 0, lost: 0, total: 0 },
-      "Afternoon":     { label: "Afternoon\n12pm–6pm",     found: 0, lost: 0, total: 0 },
-      "Evening":       { label: "Evening\n6pm–12am",       found: 0, lost: 0, total: 0 },
-    };
-
-    const getTimeBlock = (hour: number): string => {
-      if (hour >= 0  && hour < 6)  return "Early Morning";
-      if (hour >= 6  && hour < 12) return "Morning";
-      if (hour >= 12 && hour < 18) return "Afternoon";
-      return "Evening";
+      "Morning": { label: "Morning\n6am–12pm", found: 0, lost: 0, total: 0 },
+      "Afternoon": { label: "Afternoon\n12pm–6pm", found: 0, lost: 0, total: 0 },
+      "Evening": { label: "Evening\n6pm–12am", found: 0, lost: 0, total: 0 },
     };
 
     foundItems?.forEach((i: any) => {
@@ -180,12 +187,12 @@ export const adminStats = async (req: Request, res: Response) => {
 
     // ── Unclaimed items age ───────────────────────────────────────
     const unclaimedItems = foundItems?.filter((i: any) => !i.isClaimed) || [];
-    const ageMs   = (i: any) => now.getTime() - new Date(i.createdAt).getTime();
+    const ageMs = (i: any) => now.getTime() - new Date(i.createdAt).getTime();
     const ageDays = (i: any) => Math.floor(ageMs(i) / (1000 * 60 * 60 * 24));
 
     result.unclaimedItemsAge = {
-      total:      unclaimedItems.length,
-      over7days:  unclaimedItems.filter((i: any) => ageDays(i) >= 7).length,
+      total: unclaimedItems.length,
+      over7days: unclaimedItems.filter((i: any) => ageDays(i) >= 7).length,
       over30days: unclaimedItems.filter((i: any) => ageDays(i) >= 30).length,
       over90days: unclaimedItems.filter((i: any) => ageDays(i) >= 90).length,
       avgAgeDays: unclaimedItems.length > 0
@@ -195,21 +202,21 @@ export const adminStats = async (req: Request, res: Response) => {
         .sort((a: any, b: any) => ageMs(b) - ageMs(a))
         .slice(0, 5)
         .map((i: any) => ({
-          id:       i.id,
-          name:     i.foundItemName,
-          days:     ageDays(i),
+          id: i.id,
+          name: i.foundItemName,
+          days: ageDays(i),
           location: i.location,
         })),
     };
 
     // ── Lost vs Found match rate ──────────────────────────────────
-    const totalLost     = allLostItems.length;
+    const totalLost = allLostItems.length;
     const totalResolved = allLostItems.filter((i: any) => i.isFound).length;
     result.lostFoundMatchRate = {
       totalLost,
       totalResolved,
       unresolved: totalLost - totalResolved,
-      matchRate:  totalLost > 0 ? Math.round((totalResolved / totalLost) * 100) : 0,
+      matchRate: totalLost > 0 ? Math.round((totalResolved / totalLost) * 100) : 0,
     };
 
     // ════════════════════════════════════════════════════════════════
@@ -221,12 +228,12 @@ export const adminStats = async (req: Request, res: Response) => {
     // Registration trend (last 6 months)
     const userRegMap: Record<string, { month: string; registrations: number; admins: number; users: number }> = {};
     for (let i = 5; i >= 0; i--) {
-      const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       userRegMap[key] = { month: MONTH_LABELS[d.getMonth()], registrations: 0, admins: 0, users: 0 };
     }
     totalUsers.forEach((u: any) => {
-      const d   = new Date(u.createdAt);
+      const d = new Date(u.createdAt);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (userRegMap[key]) {
         userRegMap[key].registrations++;
@@ -238,15 +245,15 @@ export const adminStats = async (req: Request, res: Response) => {
 
     // New users this month
     result.newUsersThisMonth = totalUsers.filter((u: any) => isThisMonth(u.createdAt)).length;
-    result.newUsersThisWeek  = totalUsers.filter((u: any) => isThisWeek(u.createdAt)).length;
+    result.newUsersThisWeek = totalUsers.filter((u: any) => isThisWeek(u.createdAt)).length;
 
     // Role breakdown
     const admins = totalUsers.filter((u: any) => u.role === "ADMIN").length;
-    const users  = totalUsers.filter((u: any) => u.role !== "ADMIN").length;
+    const users = totalUsers.filter((u: any) => u.role !== "ADMIN").length;
     result.userRoleBreakdown = { admins, users, total: totalUsers.length };
 
     // Active vs blocked users
-    const activeUsers  = totalUsers.filter((u: any) => u.activated && !u.isDeleted).length;
+    const activeUsers = totalUsers.filter((u: any) => u.activated && !u.isDeleted).length;
     const blockedUsers = totalUsers.filter((u: any) => !u.activated).length;
     const deletedUsers = totalUsers.filter((u: any) => u.isDeleted).length;
     result.userStatusBreakdown = { active: activeUsers, blocked: blockedUsers, deleted: deletedUsers };
@@ -279,19 +286,19 @@ export const adminStats = async (req: Request, res: Response) => {
 
     // Funnel: Lost reported → Found reported → Claim submitted → Claim approved
     const totalFoundReported = foundItems?.length || 0;
-    const totalLostReported  = allLostItems.length;
+    const totalLostReported = allLostItems.length;
     const totalClaimsSubmitted = claims.length;
-    const totalClaimsApproved  = claims.filter((c: any) => c.status === "APPROVED").length;
+    const totalClaimsApproved = claims.filter((c: any) => c.status === "APPROVED").length;
 
     result.itemFlowFunnel = {
-      lostReported:     totalLostReported,
-      foundReported:    totalFoundReported,
-      claimsSubmitted:  totalClaimsSubmitted,
-      claimsApproved:   totalClaimsApproved,
+      lostReported: totalLostReported,
+      foundReported: totalFoundReported,
+      claimsSubmitted: totalClaimsSubmitted,
+      claimsApproved: totalClaimsApproved,
       // Conversion rates
-      lostToFound:     totalLostReported > 0
+      lostToFound: totalLostReported > 0
         ? parseFloat(((totalFoundReported / Math.max(totalLostReported, totalFoundReported)) * 100).toFixed(1)) : 0,
-      foundToClaim:    totalFoundReported > 0
+      foundToClaim: totalFoundReported > 0
         ? parseFloat(((totalClaimsSubmitted / totalFoundReported) * 100).toFixed(1)) : 0,
       claimToApproval: totalClaimsSubmitted > 0
         ? parseFloat(((totalClaimsApproved / totalClaimsSubmitted) * 100).toFixed(1)) : 0,
@@ -302,7 +309,7 @@ export const adminStats = async (req: Request, res: Response) => {
     // Monthly item flow (found + claims per month side by side)
     const flowMap: Record<string, { month: string; found: number; claimed: number; lost: number; pendingClaims: number }> = {};
     for (let i = 5; i >= 0; i--) {
-      const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       flowMap[key] = { month: MONTH_LABELS[d.getMonth()], found: 0, claimed: 0, lost: 0, pendingClaims: 0 };
     }
@@ -349,8 +356,8 @@ export const adminStats = async (req: Request, res: Response) => {
     });
     result.avgFoundToClaimDays = foundToClaimTimes.length > 0
       ? parseFloat(
-          (foundToClaimTimes.reduce((a, b) => a + b, 0) / foundToClaimTimes.length / (1000 * 60 * 60 * 24)).toFixed(1)
-        )
+        (foundToClaimTimes.reduce((a, b) => a + b, 0) / foundToClaimTimes.length / (1000 * 60 * 60 * 24)).toFixed(1)
+      )
       : null;
 
     // ── PERFORMANCE METRICS ───────────────────────────────────────
@@ -375,8 +382,8 @@ export const adminStats = async (req: Request, res: Response) => {
       .sort((a: any, b: any) => b.ageDays - a.ageDays);
 
     result.pendingClaimsAge = {
-      over3days:  pendingClaimsAge.filter((c: any) => c.ageDays >= 3).length,
-      over7days:  pendingClaimsAge.filter((c: any) => c.ageDays >= 7).length,
+      over3days: pendingClaimsAge.filter((c: any) => c.ageDays >= 3).length,
+      over7days: pendingClaimsAge.filter((c: any) => c.ageDays >= 7).length,
       over14days: pendingClaimsAge.filter((c: any) => c.ageDays >= 14).length,
       oldest: pendingClaimsAge.slice(0, 5),
       avgAgeDays: pendingClaimsAge.length > 0
@@ -401,9 +408,9 @@ export const adminStats = async (req: Request, res: Response) => {
 
       const weekLabel = `W${6 - i}`;
       weeklyThroughput.push({
-        week:   weekLabel,
-        found:  foundItems?.filter((item: any) => inRange(item.createdAt)).length || 0,
-        lost:   allLostItems.filter((item: any) => inRange(item.createdAt)).length,
+        week: weekLabel,
+        found: foundItems?.filter((item: any) => inRange(item.createdAt)).length || 0,
+        lost: allLostItems.filter((item: any) => inRange(item.createdAt)).length,
         claims: claims.filter((c: any) => inRange(c.createdAt)).length,
       });
     }
@@ -479,6 +486,18 @@ export const adminStats = async (req: Request, res: Response) => {
       lastModelUpdate: now.toISOString(),
     };
 
+    // Overall system health score (0–100)
+    const healthFactors = [
+      // Lower pending claim ratio is better
+      result.totalClaims > 0 ? Math.max(0, 100 - Math.round((result.pendingClaims / result.totalClaims) * 100)) : 100,
+      // Higher claim approval rate is better
+      result.claimApprovalRate,
+      // Higher resolution rate is better
+      result.resolutionRate,
+      // Lower unclaimed age average is better (cap at 30 days)
+      Math.max(0, 100 - Math.round((result.unclaimedItemsAge.avgAgeDays / 30) * 100)),
+    ];
+
     result.systemHealthScore = Math.round(
       healthFactors.reduce((a, b) => a + b, 0) / healthFactors.length
     );
@@ -490,10 +509,11 @@ export const adminStats = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
+    console.error("[AdminStats] Error calculating stats:", error);
     sendResponse(res, {
       statusCode: StatusCodes.BAD_REQUEST,
       success: false,
-      message: error?.message,
+      message: error?.message || "Internal server error during stats calculation",
       data: null,
     });
   }

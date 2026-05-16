@@ -27,9 +27,12 @@ interface FoundItem {
   reporterName?: string;  
   schoolEmail?: string;
   user?: { username: string; email?: string };
+  urgencyLevel: "NORMAL" | "HIGH" | "CRITICAL";
+  urgencyScore: number;
+  urgencyReason?: string;
 }
 
-const COL = "2fr 1fr 1.2fr 0.8fr 0.8fr 1fr 120px";
+const COL = "2fr 1fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 120px";
 
 const Spinner = ({ color = "text-white" }: { color?: string }) => (
   <svg className={`animate-spin h-4 w-4 ${color}`} viewBox="0 0 24 24" fill="none">
@@ -262,6 +265,7 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
           <div>Category</div>
           <div>Location</div>
           <div>Date</div>
+          <div>Priority</div>
           <div>Status</div>
           <div>Reported By</div>
           <div className="text-right">Actions</div>
@@ -301,6 +305,27 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
                 {/* Date */}
                 <div>
                   <p className="text-gray-500 text-xs">{new Date(item.date).toLocaleDateString()}</p>
+                </div>
+
+                {/* Priority */}
+                <div>
+                   <div className="flex flex-col gap-1">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black tracking-tighter uppercase border w-fit ${
+                      item.urgencyLevel === "CRITICAL" ? "bg-red-500/10 text-red-400 border-red-500/20" :
+                      item.urgencyLevel === "HIGH" ? "bg-orange-500/10 text-orange-400 border-orange-500/20" :
+                      "bg-gray-500/10 text-gray-500 border-white/5"
+                    }`} title={item.urgencyReason || "Calculated by AI"}>
+                      {item.urgencyLevel}
+                    </span>
+                    {item.urgencyScore > 0 && (
+                       <div className="h-1 w-12 bg-gray-800 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full ${item.urgencyLevel === 'CRITICAL' ? 'bg-red-500' : item.urgencyLevel === 'HIGH' ? 'bg-orange-500' : 'bg-gray-600'}`} 
+                            style={{ width: `${item.urgencyScore}%` }} 
+                          />
+                       </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Status */}
