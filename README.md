@@ -515,7 +515,7 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Sentiment-Based Moderation**: AI urgency detection that prioritizes high-value or high-distress reports for immediate admin attention.
 - **Smart Patrol Mode**: Interactive security route optimization based on real-time risk density.
 
-### Phase 6: Recovery Logistics (Upcoming)
+### Phase 6: Recovery Logistics (Current)
 - **Item Tracking**: Real-time status tracking for items as they move through the recovery lifecycle (Secured → Verified → Ready for Pickup → Returned).
 - **QR Pickup Verification**: Secure hand-over process using generated QR codes to verify owner identity during physical item retrieval.
 - **Logistics History**: Detailed timeline of an item's journey, including staff handling notes and storage location changes.
