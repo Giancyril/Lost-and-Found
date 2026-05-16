@@ -12,6 +12,7 @@ import {
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
+import { useOfflineSync } from "../../hooks/useOfflineSync";
 import {
   FaQrcode, FaUserCheck, FaTimes, FaSearch, FaSpinner,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
@@ -366,6 +367,49 @@ const ReportFoundItem = () => {
   const [selectedColor, setSelectedColor] = useState("");
   const [, setSelectedCondition] = useState("");
 
+  const {
+    isOnline,
+    hasDraft,
+    pendingReports,
+    saveDraft,
+    loadDraft,
+    clearDraft,
+    queueOfflineReport,
+    removePendingReport,
+  } = useOfflineSync("found_item", () => {
+    reset();
+    setSelectedFile(null);
+    setPreview("");
+    setStep(0);
+  });
+
+  // Load draft on mount
+  useEffect(() => {
+    if (hasDraft) {
+      const draft = loadDraft();
+      if (draft && window.confirm("You have an unsaved draft. Would you like to restore it?")) {
+        Object.entries(draft).forEach(([key, value]) => {
+          if (value) setValue(key as any, value);
+        });
+        if (draft.categoryId) {
+          handleMenuChange(draft.categoryName || "", draft.categoryId);
+        }
+        toast.info("Draft restored");
+      } else {
+        clearDraft();
+      }
+    }
+  }, []);
+
+  // Auto-save draft on value change
+  const formValues = watch();
+  useEffect(() => {
+    const isFormDirty = Object.values(formValues).some(v => !!v);
+    if (isFormDirty && step < 2) {
+      saveDraft({ ...formValues, categoryId: selectedMenucategoryId, categoryName: selectedMenu });
+    }
+  }, [formValues, selectedMenucategoryId, selectedMenu, step]);
+
   const closeHelp = () => { setShowHelpModal(false); setHelpPage(0); };
   const openHelp = () => { setHelpPage(0); setShowHelpModal(true); };
 
@@ -559,8 +603,19 @@ const ReportFoundItem = () => {
   };
 
   const onSubmit = async () => {
-    if (!selectedFile) { setUploadError("Please upload a photo of the item."); return; }
     const data = getValues();
+
+    if (!isOnline) {
+      queueOfflineReport({
+        ...data,
+        categoryId: selectedMenucategoryId,
+        categoryName: selectedMenu,
+        img: preview, // Store the base64 preview for offline sync
+        date: new Date(startDate + "T00:00:00").toISOString(),
+      });
+      return;
+    }
+
     try {
       const res: any = await createFoundItem({
         foundItemName: data.foundItemName, description: data.description,
@@ -570,6 +625,7 @@ const ReportFoundItem = () => {
       });
       if (res.error || res?.data?.success === false) { toast.error("Failed to report found item"); return; }
 
+      clearDraft(); // Clear draft on successful submission
       toast.success("Found item reported successfully");
       reset(); setSelectedFile(null); setPreview(""); setUploadError("");
       setselectedMenu(""); setselectedMenucategoryId(""); setCategoryTouched(false);
@@ -599,6 +655,57 @@ const ReportFoundItem = () => {
       >
         <div className="w-full max-w-2xl mx-auto">
           <div className="bg-gray-900 rounded-2xl border border-gray-800">
+            {/* Offline Sync Banner */}
+            {pendingReports.length > 0 && (
+              <div className="bg-blue-600/20 border-b border-blue-500/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                    <FaSpinner className={isOnline ? "animate-spin" : ""} size={20} />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-bold">{pendingReports.length} Pending Reports</p>
+                    <p className="text-blue-400/70 text-[10px] font-medium">
+                      {isOnline ? "Connection restored. Sync your reports now." : "You are offline. Reports will sync when connection returns."}
+                    </p>
+                  </div>
+                </div>
+                {isOnline && (
+                  <button
+                    onClick={async () => {
+                      const toastId = toast.loading("Syncing offline reports...");
+                      let successCount = 0;
+                      for (const report of pendingReports) {
+                        try {
+                          await createFoundItem({
+                            foundItemName: report.foundItemName,
+                            description: report.description,
+                            categoryId: report.categoryId,
+                            img: report.img,
+                            location: report.location,
+                            date: new Date(report.date),
+                            reporterName: report.reporterName,
+                            schoolEmail: report.schoolEmail,
+                          }).unwrap();
+                          removePendingReport(report._offlineId);
+                          successCount++;
+                        } catch (err) {
+                          console.error("Sync failed for report", report._offlineId, err);
+                        }
+                      }
+                      if (successCount === pendingReports.length) {
+                        toast.update(toastId, { render: "All reports synced successfully!", type: "success", isLoading: false, autoClose: 3000 });
+                      } else {
+                        toast.update(toastId, { render: `Synced ${successCount}/${pendingReports.length} reports. Some failed.`, type: "warning", isLoading: false, autoClose: 3000 });
+                      }
+                    }}
+                    className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
+                  >
+                    Sync Now
+                  </button>
+                )}
+              </div>
+            )}
+
             <div className="p-4 sm:p-10">
 
               {/* Header */}

@@ -39,6 +39,7 @@ import BarcodeScannerModal from "../../components/scanner/BarcodeScannerModal";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
+import { useOfflineSync } from "../../hooks/useOfflineSync";
 
 // ── Category configuration with auto-fill data ─────────────────────────────
 const CATEGORY_CONFIG = {
@@ -692,6 +693,22 @@ const FoundItemsPage = () => {
   const scannedAtRef = useRef<string>("");
   const [commentItem, setCommentItem] = useState<any>(null);
 
+  const {
+    isOnline,
+    hasDraft,
+    pendingReports,
+    saveDraft,
+    loadDraft,
+    clearDraft,
+    queueOfflineReport,
+    removePendingReport,
+  } = useOfflineSync("found_item", () => {
+    addReset();
+    setAddSelectedFile(null);
+    setAddPreview("");
+    setIsAddModalOpen(false);
+  });
+
   const useFetchStudent = (id: string) => {
     const trimmed = id?.trim() ?? "";
     const isValidId = Boolean(
@@ -759,6 +776,36 @@ const FoundItemsPage = () => {
 
   const watchedReporterName = watch("reporterName");
   const watchedSchoolEmail = watch("schoolEmail");
+
+  // Load draft when modal opens
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    if (isAddModalOpen && hasDraft && !restored) {
+      const draft = loadDraft();
+      if (draft && window.confirm("You have an unsaved draft. Would you like to restore it?")) {
+        Object.entries(draft).forEach(([key, value]) => {
+          if (value) addSetValue(key as any, value);
+        });
+        if (draft.categoryId) {
+          handleCategoryChange(draft.categoryId);
+        }
+        toast.info("Draft restored");
+      } else {
+        clearDraft();
+      }
+      setRestored(true);
+    }
+    if (!isAddModalOpen) setRestored(false);
+  }, [isAddModalOpen, hasDraft, restored]);
+
+  // Auto-save draft on value change
+  const addFormValues = watch();
+  useEffect(() => {
+    const isFormDirty = Object.values(addFormValues).some(v => !!v);
+    if (isAddModalOpen && isFormDirty) {
+      saveDraft({ ...addFormValues, categoryId: addSelectedMenucategoryId, categoryName: addSelectedMenu });
+    }
+  }, [addFormValues, addSelectedMenucategoryId, addSelectedMenu, isAddModalOpen]);
 
   const handleFuzzyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
@@ -1098,8 +1145,7 @@ const FoundItemsPage = () => {
                           : (lowerMenu.includes("food") || lowerMenu.includes("lunch")) ? "/lunchbox.jpg"
                             : (lowerMenu.includes("sport")) ? "/sport.jpg"
                               : "/phone.png";
-
-      const res: any = await createFoundItem({
+      const payload = {
         img: isAutoFillImage ? autoFillPath : (addPreview || ""),
         categoryId: addSelectedMenucategoryId,
         foundItemName: data.foundItemName,
@@ -1110,8 +1156,21 @@ const FoundItemsPage = () => {
         reporterName: data.reporterName || "OFFICE",
         schoolEmail: data.schoolEmail || "",
         department: data.department || "",
-      });
+      };
+
+      if (!isOnline) {
+        queueOfflineReport({
+          ...payload,
+          img: addPreview, // Cache base64
+          _isOffline: true
+        });
+        return;
+      }
+
+      const res: any = await createFoundItem(payload);
       if (res.error || res?.data?.success === false) { toast.error("Failed to submit found item."); return; }
+      
+      clearDraft();
       const newItemId = res?.data?.data?.id ?? res?.data?.id;
       if (addSelectedFile && newItemId) {
         const formData = new FormData();
@@ -1160,6 +1219,58 @@ const FoundItemsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 pb-16 reveal">
+      {/* Offline Sync Banner */}
+      {pendingReports.length > 0 && (
+        <div className="bg-blue-600/20 border-b border-blue-500/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-0 z-[60] backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+              <FaSpinner className={isOnline ? "animate-spin" : ""} size={20} />
+            </div>
+            <div>
+              <p className="text-white text-sm font-bold">{pendingReports.length} Pending Reports</p>
+              <p className="text-blue-400/70 text-[10px] font-medium">
+                {isOnline ? "Connection restored. Sync your reports now." : "You are offline. Reports will sync when connection returns."}
+              </p>
+            </div>
+          </div>
+          {isOnline && (
+            <button
+              onClick={async () => {
+                const toastId = toast.loading("Syncing offline reports...");
+                let successCount = 0;
+                for (const report of pendingReports) {
+                  try {
+                    await createFoundItem({
+                      foundItemName: report.foundItemName,
+                      description: report.description,
+                      categoryId: report.categoryId,
+                      img: report.img,
+                      location: report.location,
+                      date: new Date(report.date),
+                      claimProcess: report.claimProcess,
+                      reporterName: report.reporterName,
+                      schoolEmail: report.schoolEmail,
+                      department: report.department,
+                    }).unwrap();
+                    removePendingReport(report._offlineId);
+                    successCount++;
+                  } catch (err) {
+                    console.error("Sync failed for report", report._offlineId, err);
+                  }
+                }
+                if (successCount === pendingReports.length) {
+                  toast.update(toastId, { render: "All reports synced successfully!", type: "success", isLoading: false, autoClose: 3000 });
+                } else {
+                  toast.update(toastId, { render: `Synced ${successCount}/${pendingReports.length} reports. Some failed.`, type: "warning", isLoading: false, autoClose: 3000 });
+                }
+              }}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
+            >
+              Sync Now
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ── Page header ── */}
       <div className="border-b border-white/5 bg-gray-900/50">
