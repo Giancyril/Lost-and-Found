@@ -71,7 +71,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/report": { title: "Report", subtitle: "Generate and export weekly or monthly summary reports." },
   "/dashboard/moderation": { title: "Content Moderation", subtitle: "Review flagged content, manage reports, and moderate community posts." },
   "/dashboard/students": { title: "Students", subtitle: "View and manage all registered student accounts." },
-  "/dashboard/users": { title: "Users", subtitle: "View and manage all registered system users." },
+  "/dashboard/users": { title: "Accounts", subtitle: "View and manage all registered system users." },
   "/dashboard/categories": { title: "Categories", subtitle: "Create and organize item categories for better sorting." },
   "/dashboard/settings": { title: "Settings", subtitle: "Configure system preferences and account settings." },
   "/dashboard/security": { title: "Security", subtitle: "Monitor login activity, access control, and compliance reports." },

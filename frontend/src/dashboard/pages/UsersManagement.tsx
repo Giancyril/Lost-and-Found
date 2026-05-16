@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { FaTrash, FaSearch, FaShieldAlt, FaBan, FaPlus, FaTimes, FaEye, FaEyeSlash, FaChevronDown, FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
@@ -56,8 +57,8 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
         <FaChevronDown size={11} className={`text-gray-400 shrink-0 ml-2 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute z-50 top-full mt-2 left-0 w-full bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
-          <div className="max-h-56 overflow-y-auto custom-scrollbar">
+        <div className="absolute z-50 top-full mt-2 left-0 w-full bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="max-h-56 overflow-y-auto">
             {[{ id: "ALL", name: allLabel }, ...options].map(opt => (
               <button
                 key={opt.id}
@@ -69,9 +70,7 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
                   }`}
               >
                 {opt.name}
-                {value === opt.id && (
-                  <FaCheck size={9} className="text-gray-400 shrink-0" />
-                )}
+                {value === opt.id && <FaCheck size={9} className="text-gray-400 shrink-0" />}
               </button>
             ))}
           </div>
@@ -146,34 +145,96 @@ const UsersManagement = () => {
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
-  const StatusDropdown = ({ user }: { user: User }) => (
-    <div className="relative">
-      <button
-        onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === user.id ? null : user.id); }}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border cursor-pointer transition-all ${user.status === "ACTIVE"
-            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-            : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+  // ── StatusDropdown: React Portal — renders into document.body, always on top ──
+  const StatusDropdown = ({ user }: { user: User }) => {
+    const btnRef = useRef<HTMLButtonElement>(null);
+    const [coords, setCoords] = useState({ top: 0, left: 0 });
+    const isOpen = openDropdownId === user.id;
+
+    const updateCoords = () => {
+      if (btnRef.current) {
+        const rect = btnRef.current.getBoundingClientRect();
+        // Only update if the element is actually visible in the DOM
+        if (rect.width === 0 || rect.height === 0) return;
+        
+        setCoords({
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX,
+        });
+      }
+    };
+
+    useEffect(() => {
+      if (isOpen) {
+        updateCoords();
+        window.addEventListener("resize", updateCoords);
+        window.addEventListener("scroll", updateCoords, true);
+      }
+      return () => {
+        window.removeEventListener("resize", updateCoords);
+        window.removeEventListener("scroll", updateCoords, true);
+      };
+    }, [isOpen]);
+
+    const handleOpen = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isOpen) updateCoords();
+      setOpenDropdownId(isOpen ? null : user.id);
+    };
+
+    return (
+      <div className="relative">
+        <button
+          ref={btnRef}
+          type="button"
+          onClick={handleOpen}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border cursor-pointer transition-all whitespace-nowrap ${
+            user.status === "ACTIVE"
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+              : "bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20"
           }`}
-      >
-        <span className={`w-1.5 h-1.5 rounded-full ${user.status === "ACTIVE" ? "bg-emerald-400" : "bg-amber-400"}`} />
-        {user.status === "ACTIVE" ? "Active" : "Suspended"}
-        <FaChevronDown size={7} className="opacity-60" />
-      </button>
-      {openDropdownId === user.id && (
-        <div className="absolute z-30 top-full mt-1.5 left-0 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[130px]">
-          <button onClick={(e) => { e.stopPropagation(); handleStatusChange(user.id, "ACTIVE"); setOpenDropdownId(null); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-emerald-400 hover:bg-emerald-500/10 transition-colors">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Active
-          </button>
-          <div className="h-px bg-white/5" />
-          <button onClick={(e) => { e.stopPropagation(); handleStatusChange(user.id, "SUSPENDED"); setOpenDropdownId(null); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-amber-400 hover:bg-amber-500/10 transition-colors">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Suspended
-          </button>
-        </div>
-      )}
-    </div>
-  );
+        >
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${user.status === "ACTIVE" ? "bg-emerald-400" : "bg-amber-400"}`} />
+          {user.status === "ACTIVE" ? "Active" : "Suspended"}
+          <FaChevronDown size={7} className={`opacity-60 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        </button>
+
+        {/* Only render portal if coordinates have been calculated and button is visible */}
+        {isOpen && coords.top !== 0 && ReactDOM.createPortal(
+          <div 
+            style={{ 
+              position: "absolute", 
+              top: `${coords.top + 6}px`, 
+              left: `${coords.left}px`,
+              zIndex: 9999,
+            }}
+            className="bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[130px] animate-in fade-in zoom-in-95 duration-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleStatusChange(user.id, "ACTIVE"); setOpenDropdownId(null); }}
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-[11px] font-medium text-emerald-400 hover:bg-emerald-500/10 transition-colors text-left"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              Active
+            </button>
+            <div className="h-px bg-white/5" />
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleStatusChange(user.id, "SUSPENDED"); setOpenDropdownId(null); }}
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-[11px] font-medium text-amber-400 hover:bg-amber-500/10 transition-colors text-left"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              Suspended
+            </button>
+          </div>,
+          document.body
+        )}
+      </div>
+    );
+  };
 
   if (isLoading) return (
     <div className="space-y-4 animate-pulse">
@@ -203,35 +264,12 @@ const UsersManagement = () => {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
-          { 
-            label: "Total Admins", 
-            value: adminUsers.length, 
-            accent: "bg-blue-500/10", 
-            icon: <FaShieldAlt size={12} className="text-blue-400" />,
-            sub: "System Administrators",
-            subColor: "text-gray-500"
-          },
-          { 
-            label: "Active", 
-            value: adminUsers.filter((u: User) => u.status === "ACTIVE").length, 
-            accent: "bg-emerald-500/10", 
-            icon: <FaCheck size={12} className="text-emerald-400" />,
-            sub: "Active Sessions",
-            subColor: "text-emerald-400"
-          },
-          { 
-            label: "Suspended", 
-            value: adminUsers.filter((u: User) => u.status === "SUSPENDED").length, 
-            accent: "bg-amber-500/10", 
-            icon: <FaBan size={12} className="text-amber-400" />,
-            sub: "Access Revoked",
-            subColor: "text-amber-400"
-          },
+          { label: "Total Admins", value: adminUsers.length, accent: "bg-blue-500/10", icon: <FaShieldAlt size={12} className="text-blue-400" />, sub: "System Administrators", subColor: "text-gray-500" },
+          { label: "Active", value: adminUsers.filter((u: User) => u.status === "ACTIVE").length, accent: "bg-emerald-500/10", icon: <FaCheck size={12} className="text-emerald-400" />, sub: "Active Sessions", subColor: "text-emerald-400" },
+          { label: "Suspended", value: adminUsers.filter((u: User) => u.status === "SUSPENDED").length, accent: "bg-amber-500/10", icon: <FaBan size={12} className="text-amber-400" />, sub: "Access Revoked", subColor: "text-amber-400" },
         ].map(({ label, value, accent, icon, sub, subColor }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-5 flex flex-col items-start gap-4 overflow-hidden min-h-[140px] sm:min-h-[160px]">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${accent} shrink-0`}>
-              {icon}
-            </div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${accent} shrink-0`}>{icon}</div>
             <div className="flex flex-col gap-1.5 w-full">
               <p className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-none">{value}</p>
               <div className="space-y-1">
@@ -253,54 +291,60 @@ const UsersManagement = () => {
         <CustomDropdown
           value={statusFilter}
           onChange={setStatusFilter}
-          options={[
-            { id: "ACTIVE", name: "Active" },
-            { id: "SUSPENDED", name: "Suspended" },
-          ]}
+          options={[{ id: "ACTIVE", name: "Active" }, { id: "SUSPENDED", name: "Suspended" }]}
           allLabel="All Status"
         />
       </div>
 
-      {/* Table */}
+      {/* ── Fix 2: Table uses table-fixed + explicit column widths so it never overflows ── */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between">
           <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Admins</h2>
           <span className="text-[10px] text-gray-600">{filteredUsers.length} accounts</span>
         </div>
 
-        {/* Desktop */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full">
+        {/* Desktop table — fixed layout, no overflow cut */}
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto custom-scrollbar">
+          <table className="w-full table-fixed min-w-[800px] border-separate border-spacing-0">
             <thead>
-              <tr className="border-b border-white/5 bg-gray-800/30">
-                <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Admin</th>
-                <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
-                <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Joined</th>
-                <th className="px-5 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+              <tr className="border-b border-white/5 bg-gray-800/10">
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest w-[40%]">Admin User</th>
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest w-[20%]">Status</th>
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest w-[30%]">Joined Date</th>
+                <th className="px-6 py-4 text-right text-[10px] font-bold text-gray-500 uppercase tracking-widest w-[10%]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
               {filteredUsers.map((user: User) => (
-                <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                        <span className="text-blue-400 text-xs font-bold">{user.name.charAt(0).toUpperCase()}</span>
+                <tr key={user.id} className="hover:bg-white/[0.01] transition-colors group">
+                  <td className="px-6 py-4 w-[40%]">
+                    <div className="flex items-center gap-4">
+                      <div className="w-9 h-9 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 shadow-sm">
+                        <span className="text-blue-400 text-sm font-bold">{user.name.charAt(0).toUpperCase()}</span>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-white text-sm font-semibold">{user.name}</p>
-                          <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-bold rounded-full uppercase">Admin</span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="text-white text-sm font-semibold truncate">{user.name}</p>
+                          <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-bold rounded-full uppercase tracking-tighter shrink-0">Admin</span>
                         </div>
-                        <p className="text-gray-500 text-xs">{user.email}</p>
+                        <p className="text-gray-500 text-[11px] truncate">{user.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-3.5"><StatusDropdown user={user} /></td>
-                  <td className="px-5 py-3.5 text-gray-400 text-xs">{formatDate(user.createdAt)}</td>
-                  <td className="px-5 py-3.5 text-right">
+                  <td className="px-6 py-4 w-[20%]">
+                    <div className="flex items-center">
+                      <StatusDropdown user={user} />
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 w-[30%]">
+                    <span className="text-gray-400 text-xs font-medium">
+                      {formatDate(user.createdAt)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right w-[10%]">
                     <button onClick={() => handleDelete(user)}
-                      className="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/15 flex items-center justify-center text-red-400 transition-colors ml-auto">
+                      className="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/10 flex items-center justify-center text-red-400 transition-all ml-auto group-hover:border-red-500/30">
                       <FaTrash size={10} />
                     </button>
                   </td>
@@ -362,14 +406,8 @@ const UsersManagement = () => {
             </div>
             <form onSubmit={handleSubmit(handleCreateAdmin)} className="p-5 space-y-4 overflow-y-auto">
               {[
-                {
-                  label: "Username", key: "username", type: "text", placeholder: "e.g. sas_admin",
-                  rules: { required: "Required", minLength: { value: 3, message: "Min. 3 characters" }, pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Letters, numbers, underscores only" } }
-                },
-                {
-                  label: "Email", key: "email", type: "email", placeholder: "admin@nbsc.edu.ph",
-                  rules: { required: "Required", pattern: { value: /^\S+@\S+$/i, message: "Invalid email" } }
-                },
+                { label: "Username", key: "username", type: "text", placeholder: "e.g. sas_admin", rules: { required: "Required", minLength: { value: 3, message: "Min. 3 characters" }, pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Letters, numbers, underscores only" } } },
+                { label: "Email", key: "email", type: "email", placeholder: "admin@nbsc.edu.ph", rules: { required: "Required", pattern: { value: /^\S+@\S+$/i, message: "Invalid email" } } },
               ].map(({ label, key, type, placeholder, rules }) => (
                 <div key={key}>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{label}</label>
@@ -438,7 +476,7 @@ const UsersManagement = () => {
                 </div>
               )}
               <div className="flex items-start gap-2.5 px-3.5 py-2.5 bg-red-500/5 border border-red-500/15 rounded-xl">
-                <p className="text-red-300/80 text-xs leading-relaxed text-justify">
+                <p className="text-red-300/80 text-xs leading-relaxed">
                   Deleting this account will <strong>permanently remove</strong> it and all associated data.
                 </p>
               </div>
