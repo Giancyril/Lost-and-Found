@@ -30,6 +30,7 @@ A comprehensive lost and found management system built with modern web technolog
  - **Live Item Match Suggestions**: While filling out a lost item report, the system queries existing found items and surfaces potential matches in real time before the form is even submitted
 - **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details — participants are identified as "Community Member" to maintain privacy
 - **Web Push Notifications**: Real-time browser alerts for new messages, potential item matches, and claim status updates, using the Web Push API for reliable background delivery
+- **Predictive Analytics**: AI-driven forecasting engine that identifies high-risk campus zones and peak loss times using historical data patterns to optimize security patrols
 
 ### Campus Features
 - **Points System**: Comprehensive gamification system with point rewards for various activities
@@ -472,6 +473,13 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Authentication**: JWT-based authentication with secure password hashing
 - **CORS protection**: Cross-origin request protection
 - **Security honeypot**: Bot protection mechanisms
+
+### Predictive Analytics & AI Forecasting
+- **Risk Zone Mapping**: Analyzes historical data density to calculate a % risk score for campus locations, identifying "hotspots" where items are frequently lost.
+- **Peak Time Forecasting**: Predictive algorithm that correlates days and hours to forecast the most likely windows for future lost/found reports.
+- **Smart Patrol Suggestions**: Automated recommendations for campus security, providing specific locations and time blocks to prioritize for patrols.
+- **Trend Analysis**: Monitors whether loss reports in specific zones are increasing, stable, or decreasing over time.
+- **Accuracy Tracking**: Built-in model tracking to monitor the precision of AI predictions against actual reported incidents.
 ## Development Roadmap
 
 ###  Phase 1: Foundation (Completed)
