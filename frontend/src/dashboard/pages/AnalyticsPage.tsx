@@ -34,9 +34,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const ChartToggle = ({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) => (
   <button
     onClick={onClick}
-    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all focus:outline-none ${
-      active ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"
-    }`}
+    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all focus:outline-none ${active ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"
+      }`}
   >
     {label}
   </button>
@@ -75,19 +74,19 @@ const HealthBar = ({ value, color }: { value: number; color: string }) => (
 
 const medalColor = (i: number) => {
   if (i === 0) return { bg: "bg-yellow-400/10 border-yellow-400/20", text: "text-yellow-400", icon: <FaTrophy size={12} className="text-yellow-400" /> };
-  if (i === 1) return { bg: "bg-gray-400/10 border-gray-400/20",     text: "text-gray-300",   icon: <FaMedal  size={12} className="text-gray-300"   /> };
-  if (i === 2) return { bg: "bg-orange-400/10 border-orange-400/20", text: "text-orange-400", icon: <FaMedal  size={12} className="text-orange-400" /> };
-  return             { bg: "bg-white/5 border-white/5",              text: "text-gray-500",   icon: <span className="text-gray-600 text-xs font-bold w-3 text-center">{i + 1}</span> };
+  if (i === 1) return { bg: "bg-gray-400/10 border-gray-400/20", text: "text-gray-300", icon: <FaMedal size={12} className="text-gray-300" /> };
+  if (i === 2) return { bg: "bg-orange-400/10 border-orange-400/20", text: "text-orange-400", icon: <FaMedal size={12} className="text-orange-400" /> };
+  return { bg: "bg-white/5 border-white/5", text: "text-gray-500", icon: <span className="text-gray-600 text-xs font-bold w-3 text-center">{i + 1}</span> };
 };
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: "overview",     label: "Overview",      icon: FaChartLine     },
-  { id: "users",        label: "User Activity", icon: FaUsers         },
-  { id: "flow",         label: "Item Flow",     icon: FaExchangeAlt   },
-  { id: "performance",  label: "Performance",   icon: FaTachometerAlt },
-  { id: "predictive",   label: "Predictive AI", icon: FaBrain         },
+  { id: "overview", label: "Overview", icon: FaChartLine },
+  { id: "users", label: "User Activity", icon: FaUsers },
+  { id: "flow", label: "Item Flow", icon: FaExchangeAlt },
+  { id: "performance", label: "Performance", icon: FaTachometerAlt },
+  { id: "predictive", label: "Predictive AI", icon: FaBrain },
 ];
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -95,25 +94,25 @@ const TABS = [
 // ════════════════════════════════════════════════════════════════════════════════
 const OverviewTab = ({ stats }: { stats: any }) => {
   const [chartType, setChartType] = useState<"area" | "bar">("area");
-  const [peakView, setPeakView]   = useState<"days" | "hours">("days");
+  const [peakView, setPeakView] = useState<"days" | "hours">("days");
 
-  const monthlyStats = stats?.monthlyStats      || [];
-  const topReporters = stats?.topReporters       || [];
-  const catBreakdown = stats?.categoryBreakdown  || [];
-  const peakDays     = stats?.peakReportingDays  || [];
-  const peakHours    = stats?.peakReportingHours || [];
-  const unclaimedAge = stats?.unclaimedItemsAge  || {};
-  const matchRate    = stats?.lostFoundMatchRate  || {};
+  const monthlyStats = stats?.monthlyStats || [];
+  const topReporters = stats?.topReporters || [];
+  const catBreakdown = stats?.categoryBreakdown || [];
+  const peakDays = stats?.peakReportingDays || [];
+  const peakHours = stats?.peakReportingHours || [];
+  const unclaimedAge = stats?.unclaimedItemsAge || {};
+  const matchRate = stats?.lostFoundMatchRate || {};
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Summary stat pills */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total Found",   value: stats?.foundItems   ?? 0, color: "text-cyan-400",    bg: "bg-cyan-400/10 border-cyan-400/20"      },
-          { label: "Total Lost",    value: stats?.lostItems    ?? 0, color: "text-red-400",     bg: "bg-red-400/10 border-red-400/20"        },
-          { label: "Total Claims",  value: stats?.totalClaims  ?? 0, color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20"  },
-          { label: "Claimed Items", value: stats?.claimedItems ?? 0, color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20"},
+          { label: "Total Found", value: stats?.foundItems ?? 0, color: "text-cyan-400", bg: "bg-cyan-400/10 border-cyan-400/20" },
+          { label: "Total Lost", value: stats?.lostItems ?? 0, color: "text-red-400", bg: "bg-red-400/10 border-red-400/20" },
+          { label: "Total Claims", value: stats?.totalClaims ?? 0, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20" },
+          { label: "Claimed Items", value: stats?.claimedItems ?? 0, color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20" },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-4 flex flex-col gap-1 h-[96px] ${s.bg} bg-gray-900`}>
             <p className={`text-2xl sm:text-3xl font-bold ${s.color}`}>{s.value}</p>
@@ -129,15 +128,15 @@ const OverviewTab = ({ stats }: { stats: any }) => {
         action={
           <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-lg p-1">
             <ChartToggle active={chartType === "area"} label="Area" onClick={() => setChartType("area")} />
-            <ChartToggle active={chartType === "bar"}  label="Bar"  onClick={() => setChartType("bar")}  />
+            <ChartToggle active={chartType === "bar"} label="Bar" onClick={() => setChartType("bar")} />
           </div>
         }
       >
         <div className="flex items-center gap-4 px-5 pt-4">
           {[
-            { color: "#22d3ee", label: "Found Items"  },
+            { color: "#22d3ee", label: "Found Items" },
             { color: "#f87171", label: "Lost Reports" },
-            { color: "#facc15", label: "Claims"       },
+            { color: "#facc15", label: "Claims" },
           ].map(l => (
             <div key={l.label} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: l.color }} />
@@ -152,16 +151,16 @@ const OverviewTab = ({ stats }: { stats: any }) => {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthlyStats} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="gFound"  x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#22d3ee" stopOpacity={0.25} /><stop offset="95%" stopColor="#22d3ee" stopOpacity={0} /></linearGradient>
-                  <linearGradient id="gLost"   x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f87171" stopOpacity={0.25} /><stop offset="95%" stopColor="#f87171" stopOpacity={0} /></linearGradient>
-                  <linearGradient id="gClaims" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#facc15" stopOpacity={0.2}  /><stop offset="95%" stopColor="#facc15" stopOpacity={0} /></linearGradient>
+                  <linearGradient id="gFound" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#22d3ee" stopOpacity={0.25} /><stop offset="95%" stopColor="#22d3ee" stopOpacity={0} /></linearGradient>
+                  <linearGradient id="gLost" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f87171" stopOpacity={0.25} /><stop offset="95%" stopColor="#f87171" stopOpacity={0} /></linearGradient>
+                  <linearGradient id="gClaims" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#facc15" stopOpacity={0.2} /><stop offset="95%" stopColor="#facc15" stopOpacity={0} /></linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                 <XAxis dataKey="month" tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(255,255,255,0.06)", strokeWidth: 1 }} />
-                <Area type="monotone" dataKey="found"  name="Found"  stroke="#22d3ee" strokeWidth={2} fill="url(#gFound)"  dot={{ fill: "#22d3ee", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
-                <Area type="monotone" dataKey="lost"   name="Lost"   stroke="#f87171" strokeWidth={2} fill="url(#gLost)"   dot={{ fill: "#f87171", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="found" name="Found" stroke="#22d3ee" strokeWidth={2} fill="url(#gFound)" dot={{ fill: "#22d3ee", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="lost" name="Lost" stroke="#f87171" strokeWidth={2} fill="url(#gLost)" dot={{ fill: "#f87171", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
                 <Area type="monotone" dataKey="claims" name="Claims" stroke="#facc15" strokeWidth={2} fill="url(#gClaims)" dot={{ fill: "#facc15", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
               </AreaChart>
             </ResponsiveContainer>
@@ -173,9 +172,9 @@ const OverviewTab = ({ stats }: { stats: any }) => {
                 <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
                 <Legend wrapperStyle={{ display: "none" }} />
-                <Bar dataKey="found"  name="Found"  fill="#22d3ee" radius={[4,4,0,0]} maxBarSize={28} />
-                <Bar dataKey="lost"   name="Lost"   fill="#f87171" radius={[4,4,0,0]} maxBarSize={28} />
-                <Bar dataKey="claims" name="Claims" fill="#facc15" radius={[4,4,0,0]} maxBarSize={28} />
+                <Bar dataKey="found" name="Found" fill="#22d3ee" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="lost" name="Lost" fill="#f87171" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="claims" name="Claims" fill="#facc15" radius={[4, 4, 0, 0]} maxBarSize={28} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -192,9 +191,9 @@ const OverviewTab = ({ stats }: { stats: any }) => {
           return (
             <div className="grid grid-cols-3 border-t border-white/5">
               {[
-                { label: "Found this month",  value: last.found,  color: "text-cyan-400",   field: "found"   as const },
-                { label: "Lost this month",   value: last.lost,   color: "text-red-400",    field: "lost"    as const },
-                { label: "Claims this month", value: last.claims, color: "text-yellow-400", field: "claims"  as const },
+                { label: "Found this month", value: last.found, color: "text-cyan-400", field: "found" as const },
+                { label: "Lost this month", value: last.lost, color: "text-red-400", field: "lost" as const },
+                { label: "Claims this month", value: last.claims, color: "text-yellow-400", field: "claims" as const },
               ].map((s, i) => (
                 <div key={i} className={`px-5 py-4 flex flex-col gap-1 ${i > 0 ? "border-l border-white/5" : ""}`}>
                   <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -229,9 +228,9 @@ const OverviewTab = ({ stats }: { stats: any }) => {
         </div>
         <div className="grid grid-cols-3 border-t border-white/5">
           {[
-            { label: "Overall Match Rate", value: `${matchRate.matchRate ?? 0}%`, color: "text-violet-400"  },
-            { label: "Total Resolved",     value: matchRate.totalResolved ?? 0,   color: "text-emerald-400" },
-            { label: "Still Unresolved",   value: matchRate.unresolved ?? 0,      color: "text-red-400"     },
+            { label: "Overall Match Rate", value: `${matchRate.matchRate ?? 0}%`, color: "text-violet-400" },
+            { label: "Total Resolved", value: matchRate.totalResolved ?? 0, color: "text-emerald-400" },
+            { label: "Still Unresolved", value: matchRate.unresolved ?? 0, color: "text-red-400" },
           ].map((s, i) => (
             <div key={i} className={`px-5 py-4 flex flex-col gap-1 ${i > 0 ? "border-l border-white/5" : ""}`}>
               <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -247,7 +246,7 @@ const OverviewTab = ({ stats }: { stats: any }) => {
         subtitle="When items are most commonly reported lost or found"
         action={
           <div className="flex gap-1 bg-gray-800 border border-white/5 rounded-lg p-1">
-            <ChartToggle active={peakView === "days"}  label=" Day"  onClick={() => setPeakView("days")}  />
+            <ChartToggle active={peakView === "days"} label=" Day" onClick={() => setPeakView("days")} />
             <ChartToggle active={peakView === "hours"} label=" Hour" onClick={() => setPeakView("hours")} />
           </div>
         }
@@ -260,31 +259,31 @@ const OverviewTab = ({ stats }: { stats: any }) => {
                 dataKey={peakView === "days" ? "day" : "label"}
                 tick={peakView === "hours"
                   ? ({ x, y, payload }) => {
-                      const lines = (payload.value as string).split("\n");
-                      return (
-                        <g transform={`translate(${x},${y})`}>
-                          {lines.map((line: string, i: number) => (
-                            <text key={i} x={0} y={0} dy={10 + i * 11} textAnchor="middle" fill="#6b7280" fontSize={9}>{line}</text>
-                          ))}
-                        </g>
-                      );
-                    }
+                    const lines = (payload.value as string).split("\n");
+                    return (
+                      <g transform={`translate(${x},${y})`}>
+                        {lines.map((line: string, i: number) => (
+                          <text key={i} x={0} y={0} dy={10 + i * 11} textAnchor="middle" fill="#6b7280" fontSize={9}>{line}</text>
+                        ))}
+                      </g>
+                    );
+                  }
                   : { fill: "#6b7280", fontSize: 10 }
                 }
                 axisLine={false} tickLine={false} interval={0} height={peakView === "hours" ? 40 : 20}
               />
               <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-              <Bar dataKey="found" name="Found" fill="#22d3ee" radius={[3,3,0,0]} maxBarSize={24} stackId="a" />
-              <Bar dataKey="lost"  name="Lost"  fill="#f87171" radius={[3,3,0,0]} maxBarSize={24} stackId="a" />
+              <Bar dataKey="found" name="Found" fill="#22d3ee" radius={[3, 3, 0, 0]} maxBarSize={24} stackId="a" />
+              <Bar dataKey="lost" name="Lost" fill="#f87171" radius={[3, 3, 0, 0]} maxBarSize={24} stackId="a" />
             </BarChart>
           </ResponsiveContainer>
         </div>
         {(() => {
-          const data    = peakView === "days" ? peakDays : peakHours;
+          const data = peakView === "days" ? peakDays : peakHours;
           const busiest = [...data].sort((a: any, b: any) => b.total - a.total)[0];
           if (!busiest || busiest.total === 0) return null;
-          const displayKey  = peakView === "days" ? "day" : "label";
+          const displayKey = peakView === "days" ? "day" : "label";
           const displayName = peakView === "hours"
             ? (busiest[displayKey] as string).split("\n")[0]
             : busiest[displayKey];
@@ -304,9 +303,9 @@ const OverviewTab = ({ stats }: { stats: any }) => {
           <div className="p-5 space-y-4">
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "7+ days",  value: unclaimedAge.over7days  ?? 0, color: "text-yellow-400", bg: "bg-yellow-400/5 border-yellow-400/10" },
+                { label: "7+ days", value: unclaimedAge.over7days ?? 0, color: "text-yellow-400", bg: "bg-yellow-400/5 border-yellow-400/10" },
                 { label: "30+ days", value: unclaimedAge.over30days ?? 0, color: "text-orange-400", bg: "bg-orange-400/5 border-orange-400/10" },
-                { label: "90+ days", value: unclaimedAge.over90days ?? 0, color: "text-red-400",    bg: "bg-red-400/5 border-red-400/10"       },
+                { label: "90+ days", value: unclaimedAge.over90days ?? 0, color: "text-red-400", bg: "bg-red-400/5 border-red-400/10" },
               ].map(s => (
                 <div key={s.label} className={`rounded-xl border p-3 text-center ${s.bg}`}>
                   <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
@@ -328,11 +327,10 @@ const OverviewTab = ({ stats }: { stats: any }) => {
                       <p className="text-gray-300 text-xs truncate">{item.name}</p>
                       <p className="text-gray-600 text-[10px] truncate shrink-0">· {item.location}</p>
                     </div>
-                    <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                      item.days >= 90 ? "bg-red-400/10 text-red-400" :
+                    <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${item.days >= 90 ? "bg-red-400/10 text-red-400" :
                       item.days >= 30 ? "bg-orange-400/10 text-orange-400" :
-                      "bg-yellow-400/10 text-yellow-400"
-                    }`}>{item.days}d</span>
+                        "bg-yellow-400/10 text-yellow-400"
+                      }`}>{item.days}d</span>
                   </div>
                 ))}
               </div>
@@ -369,7 +367,7 @@ const OverviewTab = ({ stats }: { stats: any }) => {
                   <XAxis dataKey="month" tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                  <Bar dataKey="resolved" name="Resolved" fill="#34d399" radius={[3,3,0,0]} maxBarSize={20} />
+                  <Bar dataKey="resolved" name="Resolved" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={20} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -401,7 +399,7 @@ const OverviewTab = ({ stats }: { stats: any }) => {
               <div className="p-5 space-y-3.5">
                 {catBreakdown.map((cat: any) => {
                   const maxTotal = catBreakdown[0]?.total || 1;
-                  const pct      = Math.round((cat.total / maxTotal) * 100);
+                  const pct = Math.round((cat.total / maxTotal) * 100);
                   return (
                     <div key={cat.name} className="space-y-1.5">
                       <div className="flex items-center justify-between">
@@ -415,7 +413,7 @@ const OverviewTab = ({ stats }: { stats: any }) => {
                       <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
                         <div className="h-full flex rounded-full overflow-hidden" style={{ width: `${pct}%` }}>
                           {cat.found > 0 && <div className="bg-cyan-500 h-full" style={{ width: `${Math.round((cat.found / cat.total) * 100)}%` }} />}
-                          {cat.lost  > 0 && <div className="bg-red-500  h-full" style={{ width: `${Math.round((cat.lost  / cat.total) * 100)}%` }} />}
+                          {cat.lost > 0 && <div className="bg-red-500  h-full" style={{ width: `${Math.round((cat.lost / cat.total) * 100)}%` }} />}
                         </div>
                       </div>
                     </div>
@@ -429,8 +427,8 @@ const OverviewTab = ({ stats }: { stats: any }) => {
                     <XAxis dataKey="name" tick={{ fill: "#6b7280", fontSize: 9 }} axisLine={false} tickLine={false} angle={-25} textAnchor="end" interval={0} />
                     <YAxis tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                    <Bar dataKey="found" name="Found" fill="#22d3ee" radius={[3,3,0,0]} maxBarSize={22} stackId="a" />
-                    <Bar dataKey="lost"  name="Lost"  fill="#f87171" radius={[3,3,0,0]} maxBarSize={22} stackId="a" />
+                    <Bar dataKey="found" name="Found" fill="#22d3ee" radius={[3, 3, 0, 0]} maxBarSize={22} stackId="a" />
+                    <Bar dataKey="lost" name="Lost" fill="#f87171" radius={[3, 3, 0, 0]} maxBarSize={22} stackId="a" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -507,21 +505,21 @@ const OverviewTab = ({ stats }: { stats: any }) => {
 // TAB: USER ACTIVITY
 // ════════════════════════════════════════════════════════════════════════════════
 const UserActivityTab = ({ stats }: { stats: any }) => {
-  const regTrend        = stats?.userRegistrationTrend || [];
-  const roleBreakdown   = stats?.userRoleBreakdown     || {};
-  const statusBreakdown = stats?.userStatusBreakdown   || {};
-  const engagement      = stats?.userEngagement        || {};
-  const topClaimants    = stats?.topClaimants          || [];
+  const regTrend = stats?.userRegistrationTrend || [];
+  const roleBreakdown = stats?.userRoleBreakdown || {};
+  const statusBreakdown = stats?.userStatusBreakdown || {};
+  const engagement = stats?.userEngagement || {};
+  const topClaimants = stats?.topClaimants || [];
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Summary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Total Users"      value={stats?.totalUsers ?? 0}              color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"    />
-        <StatCard label="New This Month"   value={stats?.newUsersThisMonth ?? 0}       color="text-emerald-400" bg="bg-emerald-400/10 border-emerald-400/20"
+        <StatCard label="Total Users" value={stats?.totalUsers ?? 0} color="text-cyan-400" bg="bg-cyan-400/10 border-cyan-400/20" />
+        <StatCard label="New This Month" value={stats?.newUsersThisMonth ?? 0} color="text-emerald-400" bg="bg-emerald-400/10 border-emerald-400/20"
           sub={`+${stats?.newUsersThisWeek ?? 0} this week`} />
-        <StatCard label="Active Users"     value={statusBreakdown.active ?? 0}         color="text-violet-400"  bg="bg-violet-400/10 border-violet-400/20"  />
-        <StatCard label="Engagement Rate"  value={`${engagement.engagementRate ?? 0}%`} color="text-yellow-400" bg="bg-yellow-400/10 border-yellow-400/20"
+        <StatCard label="Active Users" value={statusBreakdown.active ?? 0} color="text-violet-400" bg="bg-violet-400/10 border-violet-400/20" />
+        <StatCard label="Engagement Rate" value={`${engagement.engagementRate ?? 0}%`} color="text-yellow-400" bg="bg-yellow-400/10 border-yellow-400/20"
           sub={`${engagement.engagedUsers ?? 0} active submitters`} />
       </div>
 
@@ -547,9 +545,9 @@ const UserActivityTab = ({ stats }: { stats: any }) => {
                 <XAxis dataKey="month" tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(255,255,255,0.06)", strokeWidth: 1 }} />
-                <Area type="monotone" dataKey="registrations" name="Total"  stroke="#22d3ee" strokeWidth={2} fill="url(#gReg)"   dot={{ fill: "#22d3ee", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
-                <Area type="monotone" dataKey="users"         name="Users"  stroke="#34d399" strokeWidth={1.5} fill="none" dot={false} strokeDasharray="4 2" />
-                <Area type="monotone" dataKey="admins"        name="Admins" stroke="#a78bfa" strokeWidth={1.5} fill="url(#gAdmin)" dot={{ fill: "#a78bfa", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="registrations" name="Total" stroke="#22d3ee" strokeWidth={2} fill="url(#gReg)" dot={{ fill: "#22d3ee", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="users" name="Users" stroke="#34d399" strokeWidth={1.5} fill="none" dot={false} strokeDasharray="4 2" />
+                <Area type="monotone" dataKey="admins" name="Admins" stroke="#a78bfa" strokeWidth={1.5} fill="url(#gAdmin)" dot={{ fill: "#a78bfa", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -562,8 +560,8 @@ const UserActivityTab = ({ stats }: { stats: any }) => {
         <SectionCard title="Role Breakdown" subtitle="Admin vs regular users">
           <div className="p-5 space-y-4">
             {[
-              { label: "Regular Users", value: roleBreakdown.users ?? 0,  color: "text-cyan-400",   bar: "bg-cyan-500",   pct: roleBreakdown.total > 0 ? Math.round(((roleBreakdown.users  ?? 0) / roleBreakdown.total) * 100) : 0 },
-              { label: "Admins",        value: roleBreakdown.admins ?? 0, color: "text-violet-400", bar: "bg-violet-500", pct: roleBreakdown.total > 0 ? Math.round(((roleBreakdown.admins ?? 0) / roleBreakdown.total) * 100) : 0 },
+              { label: "Regular Users", value: roleBreakdown.users ?? 0, color: "text-cyan-400", bar: "bg-cyan-500", pct: roleBreakdown.total > 0 ? Math.round(((roleBreakdown.users ?? 0) / roleBreakdown.total) * 100) : 0 },
+              { label: "Admins", value: roleBreakdown.admins ?? 0, color: "text-violet-400", bar: "bg-violet-500", pct: roleBreakdown.total > 0 ? Math.round(((roleBreakdown.admins ?? 0) / roleBreakdown.total) * 100) : 0 },
             ].map(r => (
               <div key={r.label} className="space-y-2">
                 <div className="flex justify-between items-center">
@@ -585,9 +583,9 @@ const UserActivityTab = ({ stats }: { stats: any }) => {
             {(() => {
               const total = (statusBreakdown.active ?? 0) + (statusBreakdown.blocked ?? 0) + (statusBreakdown.deleted ?? 0);
               return [
-                { label: "Active",  value: statusBreakdown.active  ?? 0, icon: <FaUserCheck size={12} className="text-emerald-400" />, color: "text-emerald-400", bar: "bg-emerald-500", pct: total > 0 ? Math.round(((statusBreakdown.active  ?? 0) / total) * 100) : 0 },
-                { label: "Blocked", value: statusBreakdown.blocked ?? 0, icon: <FaUserSlash size={12} className="text-orange-400"  />, color: "text-orange-400",  bar: "bg-orange-500",  pct: total > 0 ? Math.round(((statusBreakdown.blocked ?? 0) / total) * 100) : 0 },
-                { label: "Deleted", value: statusBreakdown.deleted ?? 0, icon: <FaUserSlash size={12} className="text-red-400"     />, color: "text-red-400",     bar: "bg-red-500",     pct: total > 0 ? Math.round(((statusBreakdown.deleted ?? 0) / total) * 100) : 0 },
+                { label: "Active", value: statusBreakdown.active ?? 0, icon: <FaUserCheck size={12} className="text-emerald-400" />, color: "text-emerald-400", bar: "bg-emerald-500", pct: total > 0 ? Math.round(((statusBreakdown.active ?? 0) / total) * 100) : 0 },
+                { label: "Blocked", value: statusBreakdown.blocked ?? 0, icon: <FaUserSlash size={12} className="text-orange-400" />, color: "text-orange-400", bar: "bg-orange-500", pct: total > 0 ? Math.round(((statusBreakdown.blocked ?? 0) / total) * 100) : 0 },
+                { label: "Deleted", value: statusBreakdown.deleted ?? 0, icon: <FaUserSlash size={12} className="text-red-400" />, color: "text-red-400", bar: "bg-red-500", pct: total > 0 ? Math.round(((statusBreakdown.deleted ?? 0) / total) * 100) : 0 },
               ].map(s => (
                 <div key={s.label} className="space-y-2">
                   <div className="flex justify-between items-center">
@@ -670,15 +668,15 @@ const UserActivityTab = ({ stats }: { stats: any }) => {
 // TAB: ITEM FLOW
 // ════════════════════════════════════════════════════════════════════════════════
 const ItemFlowTab = ({ stats }: { stats: any }) => {
-  const funnel   = stats?.itemFlowFunnel     || {};
-  const monthly  = stats?.itemFlowMonthly    || [];
+  const funnel = stats?.itemFlowFunnel || {};
+  const monthly = stats?.itemFlowMonthly || [];
   const catRates = stats?.categoryClaimRates || [];
 
   const funnelSteps = [
-    { label: "Lost Reported",    value: funnel.lostReported    ?? 0, color: "bg-red-500/20 border-red-500/30",          text: "text-red-400",     next: `${funnel.lostToFound ?? 0}% became found reports`  },
-    { label: "Found Reported",   value: funnel.foundReported   ?? 0, color: "bg-cyan-500/20 border-cyan-500/30",         text: "text-cyan-400",    next: `${funnel.foundToClaim ?? 0}% received a claim`      },
-    { label: "Claims Submitted", value: funnel.claimsSubmitted ?? 0, color: "bg-yellow-500/20 border-yellow-500/30",     text: "text-yellow-400",  next: `${funnel.claimToApproval ?? 0}% were approved`      },
-    { label: "Claims Approved",  value: funnel.claimsApproved  ?? 0, color: "bg-emerald-500/20 border-emerald-500/30",   text: "text-emerald-400", next: null                                                 },
+    { label: "Lost Reported", value: funnel.lostReported ?? 0, color: "bg-red-500/20 border-red-500/30", text: "text-red-400", next: `${funnel.lostToFound ?? 0}% became found reports` },
+    { label: "Found Reported", value: funnel.foundReported ?? 0, color: "bg-cyan-500/20 border-cyan-500/30", text: "text-cyan-400", next: `${funnel.foundToClaim ?? 0}% received a claim` },
+    { label: "Claims Submitted", value: funnel.claimsSubmitted ?? 0, color: "bg-yellow-500/20 border-yellow-500/30", text: "text-yellow-400", next: `${funnel.claimToApproval ?? 0}% were approved` },
+    { label: "Claims Approved", value: funnel.claimsApproved ?? 0, color: "bg-emerald-500/20 border-emerald-500/30", text: "text-emerald-400", next: null },
   ];
 
   const maxVal = Math.max(...funnelSteps.map(s => s.value), 1);
@@ -687,10 +685,10 @@ const ItemFlowTab = ({ stats }: { stats: any }) => {
     <div className="space-y-4 sm:space-y-6">
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Lost → Found Rate"   value={`${funnel.lostToFound     ?? 0}%`} color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"    />
-        <StatCard label="Found → Claim Rate"  value={`${funnel.foundToClaim    ?? 0}%`} color="text-yellow-400"  bg="bg-yellow-400/10 border-yellow-400/20" />
+        <StatCard label="Lost → Found Rate" value={`${funnel.lostToFound ?? 0}%`} color="text-cyan-400" bg="bg-cyan-400/10 border-cyan-400/20" />
+        <StatCard label="Found → Claim Rate" value={`${funnel.foundToClaim ?? 0}%`} color="text-yellow-400" bg="bg-yellow-400/10 border-yellow-400/20" />
         <StatCard label="Claim Approval Rate" value={`${funnel.claimToApproval ?? 0}%`} color="text-emerald-400" bg="bg-emerald-400/10 border-emerald-400/20" />
-        <StatCard label="Overall Recovery"    value={`${funnel.overallRecovery  ?? 0}%`} color="text-violet-400"  bg="bg-violet-400/10 border-violet-400/20"
+        <StatCard label="Overall Recovery" value={`${funnel.overallRecovery ?? 0}%`} color="text-violet-400" bg="bg-violet-400/10 border-violet-400/20"
           sub="Lost → Approved claim" />
       </div>
 
@@ -752,9 +750,9 @@ const ItemFlowTab = ({ stats }: { stats: any }) => {
                 <XAxis dataKey="month" tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                <Bar dataKey="found"   name="Found"   fill="#22d3ee" radius={[4,4,0,0]} maxBarSize={22} />
-                <Bar dataKey="claimed" name="Claimed" fill="#34d399" radius={[4,4,0,0]} maxBarSize={22} />
-                <Bar dataKey="lost"    name="Lost"    fill="#f87171" radius={[4,4,0,0]} maxBarSize={22} />
+                <Bar dataKey="found" name="Found" fill="#22d3ee" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                <Bar dataKey="claimed" name="Claimed" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                <Bar dataKey="lost" name="Lost" fill="#f87171" radius={[4, 4, 0, 0]} maxBarSize={22} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -801,23 +799,23 @@ const ItemFlowTab = ({ stats }: { stats: any }) => {
 // TAB: PERFORMANCE
 // ════════════════════════════════════════════════════════════════════════════════
 const PerformanceTab = ({ stats }: { stats: any }) => {
-  const pendingAge  = stats?.pendingClaimsAge  || {};
-  const weeklyTP    = stats?.weeklyThroughput  || [];
+  const pendingAge = stats?.pendingClaimsAge || {};
+  const weeklyTP = stats?.weeklyThroughput || [];
   const healthScore = stats?.systemHealthScore ?? 0;
 
-  const healthColor    = healthScore >= 75 ? "text-emerald-400"  : healthScore >= 50 ? "text-yellow-400"  : "text-red-400";
-  const healthBarColor = healthScore >= 75 ? "bg-emerald-500"    : healthScore >= 50 ? "bg-yellow-500"    : "bg-red-500";
-  const healthBg       = healthScore >= 75 ? "bg-emerald-400/10 border-emerald-400/20" : healthScore >= 50 ? "bg-yellow-400/10 border-yellow-400/20" : "bg-red-400/10 border-red-400/20";
-  const healthLabel    = healthScore >= 75 ? "Healthy"           : healthScore >= 50 ? "Needs Attention"  : "Critical";
+  const healthColor = healthScore >= 75 ? "text-emerald-400" : healthScore >= 50 ? "text-yellow-400" : "text-red-400";
+  const healthBarColor = healthScore >= 75 ? "bg-emerald-500" : healthScore >= 50 ? "bg-yellow-500" : "bg-red-500";
+  const healthBg = healthScore >= 75 ? "bg-emerald-400/10 border-emerald-400/20" : healthScore >= 50 ? "bg-yellow-400/10 border-yellow-400/20" : "bg-red-400/10 border-red-400/20";
+  const healthLabel = healthScore >= 75 ? "Healthy" : healthScore >= 50 ? "Needs Attention" : "Critical";
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="System Health"   value={`${healthScore}/100`}                                               color={healthColor}      bg={healthBg}                                      sub={healthLabel} />
-        <StatCard label="Avg Resolution"  value={stats?.avgClaimResolutionDays != null ? `${stats.avgClaimResolutionDays}d` : "—"} color="text-violet-400"  bg="bg-violet-400/10 border-violet-400/20"  sub="Claim approval time" />
-        <StatCard label="Approval Rate"   value={`${stats?.claimApprovalRate   ?? 0}%`}                              color="text-emerald-400" bg="bg-emerald-400/10 border-emerald-400/20" sub={`${stats?.approvedClaims ?? 0} approved`} />
-        <StatCard label="Pending Backlog" value={stats?.pendingClaims ?? 0}                                          color="text-orange-400"  bg="bg-orange-400/10 border-orange-400/20"  sub={`${pendingAge.over7days ?? 0} older than 7 days`} />
+        <StatCard label="System Health" value={`${healthScore}/100`} color={healthColor} bg={healthBg} sub={healthLabel} />
+        <StatCard label="Avg Resolution" value={stats?.avgClaimResolutionDays != null ? `${stats.avgClaimResolutionDays}d` : "—"} color="text-violet-400" bg="bg-violet-400/10 border-violet-400/20" sub="Claim approval time" />
+        <StatCard label="Approval Rate" value={`${stats?.claimApprovalRate ?? 0}%`} color="text-emerald-400" bg="bg-emerald-400/10 border-emerald-400/20" sub={`${stats?.approvedClaims ?? 0} approved`} />
+        <StatCard label="Pending Backlog" value={stats?.pendingClaims ?? 0} color="text-orange-400" bg="bg-orange-400/10 border-orange-400/20" sub={`${pendingAge.over7days ?? 0} older than 7 days`} />
       </div>
 
       {/* System Health Score */}
@@ -830,10 +828,10 @@ const PerformanceTab = ({ stats }: { stats: any }) => {
             </div>
             <div className="flex-1 space-y-3">
               {[
-                { label: "Claim Backlog",   value: stats?.totalClaims > 0 ? Math.max(0, 100 - Math.round((stats?.pendingClaims / stats?.totalClaims) * 100)) : 100, hint: "Low pending claims = high score" },
-                { label: "Approval Rate",   value: stats?.claimApprovalRate ?? 0,   hint: "Higher approval = better"           },
-                { label: "Resolution Rate", value: stats?.resolutionRate ?? 0,       hint: "More lost items found = better"     },
-                { label: "Item Freshness",  value: Math.max(0, 100 - Math.round(((stats?.unclaimedItemsAge?.avgAgeDays ?? 0) / 30) * 100)), hint: "Lower avg unclaimed age = better" },
+                { label: "Claim Backlog", value: stats?.totalClaims > 0 ? Math.max(0, 100 - Math.round((stats?.pendingClaims / stats?.totalClaims) * 100)) : 100, hint: "Low pending claims = high score" },
+                { label: "Approval Rate", value: stats?.claimApprovalRate ?? 0, hint: "Higher approval = better" },
+                { label: "Resolution Rate", value: stats?.resolutionRate ?? 0, hint: "More lost items found = better" },
+                { label: "Item Freshness", value: Math.max(0, 100 - Math.round(((stats?.unclaimedItemsAge?.avgAgeDays ?? 0) / 30) * 100)), hint: "Lower avg unclaimed age = better" },
               ].map(f => (
                 <div key={f.label} className="space-y-1">
                   <div className="flex justify-between text-xs">
@@ -861,18 +859,18 @@ const PerformanceTab = ({ stats }: { stats: any }) => {
                 <XAxis dataKey="week" tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                <Bar dataKey="found"  name="Found"  fill="#22d3ee" radius={[4,4,0,0]} maxBarSize={22} />
-                <Bar dataKey="lost"   name="Lost"   fill="#f87171" radius={[4,4,0,0]} maxBarSize={22} />
-                <Bar dataKey="claims" name="Claims" fill="#facc15" radius={[4,4,0,0]} maxBarSize={22} />
+                <Bar dataKey="found" name="Found" fill="#22d3ee" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                <Bar dataKey="lost" name="Lost" fill="#f87171" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                <Bar dataKey="claims" name="Claims" fill="#facc15" radius={[4, 4, 0, 0]} maxBarSize={22} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
         <div className="grid grid-cols-3 border-t border-white/5">
           {[
-            { label: "Items / User",    value: stats?.itemsPerUser      ?? 0,   color: "text-cyan-400"   },
-            { label: "Claims / Item",   value: stats?.claimRatePerItem  ?? 0,   color: "text-yellow-400" },
-            { label: "Rejection Rate",  value: `${stats?.claimRejectionRate ?? 0}%`, color: "text-red-400"    },
+            { label: "Items / User", value: stats?.itemsPerUser ?? 0, color: "text-cyan-400" },
+            { label: "Claims / Item", value: stats?.claimRatePerItem ?? 0, color: "text-yellow-400" },
+            { label: "Rejection Rate", value: `${stats?.claimRejectionRate ?? 0}%`, color: "text-red-400" },
           ].map((s, i) => (
             <div key={i} className={`px-5 py-4 flex flex-col gap-1 ${i > 0 ? "border-l border-white/5" : ""}`}>
               <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -888,9 +886,9 @@ const PerformanceTab = ({ stats }: { stats: any }) => {
           <div className="p-5 space-y-4">
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "3+ days",  value: pendingAge.over3days  ?? 0, color: "text-yellow-400", bg: "bg-yellow-400/5 border-yellow-400/10" },
-                { label: "7+ days",  value: pendingAge.over7days  ?? 0, color: "text-orange-400", bg: "bg-orange-400/5 border-orange-400/10" },
-                { label: "14+ days", value: pendingAge.over14days ?? 0, color: "text-red-400",    bg: "bg-red-400/5 border-red-400/10"       },
+                { label: "3+ days", value: pendingAge.over3days ?? 0, color: "text-yellow-400", bg: "bg-yellow-400/5 border-yellow-400/10" },
+                { label: "7+ days", value: pendingAge.over7days ?? 0, color: "text-orange-400", bg: "bg-orange-400/5 border-orange-400/10" },
+                { label: "14+ days", value: pendingAge.over14days ?? 0, color: "text-red-400", bg: "bg-red-400/5 border-red-400/10" },
               ].map(s => (
                 <div key={s.label} className={`rounded-xl border p-3 text-center ${s.bg}`}>
                   <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
@@ -914,11 +912,10 @@ const PerformanceTab = ({ stats }: { stats: any }) => {
                         <p className="text-gray-600 text-[10px] truncate">→ {c.itemName}</p>
                       </div>
                     </div>
-                    <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                      c.ageDays >= 14 ? "bg-red-400/10 text-red-400" :
-                      c.ageDays >= 7  ? "bg-orange-400/10 text-orange-400" :
-                      "bg-yellow-400/10 text-yellow-400"
-                    }`}>{c.ageDays}d</span>
+                    <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${c.ageDays >= 14 ? "bg-red-400/10 text-red-400" :
+                      c.ageDays >= 7 ? "bg-orange-400/10 text-orange-400" :
+                        "bg-yellow-400/10 text-yellow-400"
+                      }`}>{c.ageDays}d</span>
                   </div>
                 ))}
               </div>
@@ -948,8 +945,8 @@ const PerformanceTab = ({ stats }: { stats: any }) => {
             </div>
             <div className="space-y-3">
               {[
-                { label: "Approval Rate",  value: stats?.claimApprovalRate  ?? 0, color: "text-emerald-400", bar: "bg-emerald-500" },
-                { label: "Rejection Rate", value: stats?.claimRejectionRate ?? 0, color: "text-red-400",     bar: "bg-red-500"     },
+                { label: "Approval Rate", value: stats?.claimApprovalRate ?? 0, color: "text-emerald-400", bar: "bg-emerald-500" },
+                { label: "Rejection Rate", value: stats?.claimRejectionRate ?? 0, color: "text-red-400", bar: "bg-red-500" },
               ].map(r => (
                 <div key={r.label} className="space-y-1.5">
                   <div className="flex justify-between text-xs">
@@ -986,16 +983,91 @@ const PerformanceTab = ({ stats }: { stats: any }) => {
 // ════════════════════════════════════════════════════════════════════════════════
 // TAB: PREDICTIVE AI
 // ════════════════════════════════════════════════════════════════════════════════
+const PatrolRouteModal = ({ isOpen, onClose, zones }: { isOpen: boolean; onClose: () => void; zones: any[] }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-gray-900 border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+        <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <FaBolt className="text-white animate-pulse" size={14} />
+            <h3 className="text-white font-black uppercase tracking-widest text-[11px]">Optimized Patrol Route</h3>
+          </div>
+          <button onClick={onClose} className="text-white/60 hover:text-white transition-colors">
+            <FaExclamationCircle className="rotate-45" size={16} />
+          </button>
+        </div>
+
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto custom-scrollbar">
+          <div className="bg-violet-500/5 border border-violet-500/10 rounded-xl p-3 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center shrink-0">
+              <FaBrain size={14} className="text-violet-400" />
+            </div>
+            <div>
+              <p className="text-white text-[10px] font-bold">AI Strategy</p>
+              <p className="text-gray-400 text-[9px] leading-relaxed mt-0.5">
+                Route optimized to cover <span className="text-violet-300">{zones.length} hotspots</span>.
+              </p>
+            </div>
+          </div>
+
+          <div className="relative space-y-4 before:absolute before:inset-0 before:ml-4 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-violet-500 before:via-indigo-500 before:to-transparent">
+            {zones.map((zone, i) => (
+              <div key={zone.name} className="relative flex items-center gap-4 group">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 shrink-0 transition-transform group-hover:scale-110 ${i === 0 ? "bg-violet-500 shadow-lg shadow-violet-500/50" : "bg-gray-800 border border-white/10"
+                  }`}>
+                  <span className="text-white text-[10px] font-black">{i + 1}</span>
+                </div>
+                <div className="flex-1 bg-white/5 border border-white/5 rounded-xl p-3 hover:bg-white/[0.08] transition-all">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <h4 className="text-white text-[11px] font-bold">{zone.name}</h4>
+                    <span className="text-violet-400 text-[9px] font-black uppercase tracking-widest">
+                      {60 + (i * 15)}m
+                    </span>
+                  </div>
+                  <p className="text-gray-500 text-[8px] mb-1.5 uppercase font-bold tracking-tighter">
+                    {zone.riskScore}% Probability
+                  </p>
+                  <div className="flex items-center gap-1.5 text-[9px] text-emerald-400 font-medium">
+                    <FaCheckCircle size={7} />
+                    <span>Focus: Unattended items check</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4 bg-gray-900 border-t border-white/5 shrink-0">
+          <button
+            onClick={onClose}
+            className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all border border-white/5 shadow-lg"
+          >
+            Acknowledge Route
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PredictiveTab = ({ stats }: { stats: any }) => {
   const data = stats?.predictiveAnalytics;
   const [isPatrolling, setIsPatrolling] = useState(false);
   const [patrolGenerated, setPatrolGenerated] = useState(false);
+  const [showRouteModal, setShowRouteModal] = useState(false);
 
   const handleGeneratePatrol = () => {
+    if (patrolGenerated) {
+      setShowRouteModal(true);
+      return;
+    }
     setIsPatrolling(true);
     setTimeout(() => {
       setIsPatrolling(false);
       setPatrolGenerated(true);
+      setShowRouteModal(true);
     }, 2000);
   };
 
@@ -1009,6 +1081,11 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-700">
+      <PatrolRouteModal
+        isOpen={showRouteModal}
+        onClose={() => setShowRouteModal(false)}
+        zones={data.riskZones}
+      />
       {/* Top Banner */}
       <div className="bg-gradient-to-br from-violet-600/20 via-slate-900 to-cyan-600/20 border border-violet-500/20 rounded-3xl p-5 sm:p-8 flex flex-col sm:flex-row items-center gap-6 sm:gap-10 shadow-2xl relative overflow-hidden">
         {/* Decorative glow */}
@@ -1016,7 +1093,7 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-violet-500/10 blur-[80px] -ml-16 -mb-16" />
 
         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left z-10">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-xl shadow-violet-500/20 ring-1 ring-white/20">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center">
             <FaBrain size={32} className="text-white" />
           </div>
           <div>
@@ -1027,7 +1104,7 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-8 sm:gap-10 z-10 bg-black/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/5 w-full sm:w-auto justify-center sm:justify-start">
+        <div className="flex items-center gap-8 sm:gap-10 z-10 bg-black/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/5 w-full sm:w-auto justify-center sm:justify-start sm:ml-auto">
           <div className="text-center">
             <p className="text-3xl font-black text-white tracking-tighter leading-none">{data.accuracyRate}%</p>
             <p className="text-[10px] text-violet-400 font-black uppercase tracking-[0.2em] mt-2">Accuracy</p>
@@ -1046,8 +1123,8 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Risk Zones */}
         <div className="lg:col-span-2 space-y-6">
-          <SectionCard 
-            title="High-Risk Zone Forecast" 
+          <SectionCard
+            title="High-Risk Zone Forecast"
             subtitle="Locations with highest probability of lost items in the next 72 hours"
             action={<span className="text-[10px] text-gray-500 font-mono">Last updated: {new Date(data.lastModelUpdate).toLocaleTimeString()}</span>}
           >
@@ -1056,9 +1133,8 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
                 <div key={zone.name} className="group relative bg-gray-800/30 hover:bg-gray-800/60 rounded-xl p-4 border border-white/5 transition-all">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        zone.riskScore > 80 ? "bg-red-500/10 text-red-400" : "bg-orange-500/10 text-orange-400"
-                      }`}>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${zone.riskScore > 80 ? "bg-red-500/10 text-red-400" : "bg-orange-500/10 text-orange-400"
+                        }`}>
                         <FaMapMarkerAlt size={14} />
                       </div>
                       <div>
@@ -1067,9 +1143,8 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-xl font-black ${
-                        zone.riskScore > 80 ? "text-red-400" : "text-orange-400"
-                      }`}>{zone.riskScore}%</p>
+                      <p className={`text-xl font-black ${zone.riskScore > 80 ? "text-red-400" : "text-orange-400"
+                        }`}>{zone.riskScore}%</p>
                       <p className="text-[10px] text-gray-600 font-bold uppercase">Risk Score</p>
                     </div>
                   </div>
@@ -1079,10 +1154,9 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
                       <span>{zone.count} cases</span>
                     </div>
                     <div className="h-2 w-full bg-gray-900 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full transition-all duration-1000 ${
-                          zone.riskScore > 80 ? "bg-red-500" : "bg-orange-500"
-                        }`}
+                      <div
+                        className={`h-full rounded-full transition-all duration-1000 ${zone.riskScore > 80 ? "bg-red-500" : "bg-orange-500"
+                          }`}
                         style={{ width: `${zone.riskScore}%` }}
                       />
                     </div>
@@ -1093,101 +1167,100 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
           </SectionCard>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <SectionCard title="Peak Time Predictions" subtitle="Forecasted reporting windows">
-                <div className="p-5 space-y-4">
-                  {data.timeForecasts.map((t: any) => (
-                    <div key={`${t.day}-${t.timeBlock}`} className="flex items-center gap-4 bg-white/5 rounded-xl p-3 border border-white/5">
-                      <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex flex-col items-center justify-center text-cyan-400">
-                         <span className="text-[10px] font-bold leading-none">{t.day}</span>
-                         <FaClock size={12} className="mt-1" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-xs font-bold truncate">{t.timeBlock.split('\n')[0]}</p>
-                        <p className="text-[10px] text-gray-500 font-medium">{t.confidence} Confidence</p>
-                      </div>
-                      <div className="text-right">
-                         <p className="text-cyan-400 text-sm font-black">{t.probability}%</p>
-                         <p className="text-[9px] text-gray-600 font-bold uppercase">Prob.</p>
-                      </div>
+            <SectionCard title="Peak Time Predictions" subtitle="Forecasted reporting windows">
+              <div className="p-5 space-y-4">
+                {data.timeForecasts.map((t: any) => (
+                  <div key={`${t.day}-${t.timeBlock}`} className="flex items-center gap-4 bg-white/5 rounded-xl p-3 border border-white/5">
+                    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex flex-col items-center justify-center text-cyan-400">
+                      <span className="text-[10px] font-bold leading-none">{t.day}</span>
+                      <FaClock size={12} className="mt-1" />
                     </div>
-                  ))}
-                </div>
-             </SectionCard>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-xs font-bold truncate">{t.timeBlock.split('\n')[0]}</p>
+                      <p className="text-[10px] text-gray-500 font-medium">{t.confidence} Confidence</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-cyan-400 text-sm font-black">{t.probability}%</p>
+                      <p className="text-[9px] text-gray-600 font-bold uppercase">Prob.</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
 
-             <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 border border-violet-500/20">
-                  <FaBolt size={24} className="animate-pulse" />
-                </div>
-                <div>
-                  <h4 className="text-white font-bold text-sm">Smart Patrol Mode</h4>
-                  <p className="text-gray-500 text-[10px] mt-1 px-4 leading-relaxed">AI suggests optimizing campus security patrol based on forecasted hotspots.</p>
-                </div>
-                <button 
-                  onClick={handleGeneratePatrol}
-                  disabled={isPatrolling}
-                  className={`px-6 py-2 text-white text-xs font-bold rounded-xl transition-all shadow-lg w-full max-w-[160px] flex items-center justify-center gap-2
-                    ${patrolGenerated 
-                      ? "bg-emerald-600 shadow-emerald-600/20" 
-                      : "bg-violet-600 hover:bg-violet-500 shadow-violet-600/20"
-                    } ${isPatrolling ? "opacity-70 cursor-not-allowed" : ""}`}
-                >
-                  {isPatrolling ? (
-                    <>
-                      <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Optimizing...
-                    </>
-                  ) : patrolGenerated ? (
-                    <>
-                      <FaCheckCircle />
-                      Route Ready
-                    </>
-                  ) : (
-                    "View Patrol Route"
-                  )}
-                </button>
-             </div>
+            <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex flex-col items-center justify-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 border border-violet-500/20">
+                <FaBolt size={24} className="animate-pulse" />
+              </div>
+              <div>
+                <h4 className="text-white font-bold text-sm">Smart Patrol Mode</h4>
+                <p className="text-gray-500 text-[10px] mt-1 px-4 leading-relaxed">AI suggests optimizing campus security patrol based on forecasted hotspots.</p>
+              </div>
+              <button
+                onClick={handleGeneratePatrol}
+                disabled={isPatrolling}
+                className={`px-6 py-2 text-white text-xs font-bold rounded-xl transition-all shadow-lg w-full max-w-[160px] flex items-center justify-center gap-2
+                    ${patrolGenerated
+                    ? "bg-emerald-600 shadow-emerald-600/20"
+                    : "bg-violet-600 hover:bg-violet-500 "
+                  } ${isPatrolling ? "opacity-70 cursor-not-allowed" : ""}`}
+              >
+                {isPatrolling ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Optimizing...
+                  </>
+                ) : patrolGenerated ? (
+                  <>
+                    <FaCheckCircle />
+                    Route Ready
+                  </>
+                ) : (
+                  "View Patrol Route"
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Patrol Suggestions Sidebar */}
         <div className="space-y-6">
           <SectionCard title="Automated Suggestions" subtitle="Immediate actions for security teams">
-             <div className="p-5 space-y-4">
-                {data.patrolSuggestions.map((s: any, i: number) => (
-                  <div key={i} className="relative pl-4 border-l-2 border-violet-500/30 py-1">
-                    <div className="flex items-start justify-between mb-1">
-                      <span className={`text-[10px] font-black uppercase tracking-widest ${
-                        s.priority === 'Critical' ? 'text-red-400' : 'text-cyan-400'
+            <div className="p-5 space-y-4">
+              {data.patrolSuggestions.map((s: any, i: number) => (
+                <div key={i} className="relative pl-4 border-l-2 border-violet-500/30 py-1">
+                  <div className="flex items-start justify-between mb-1">
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${s.priority === 'Critical' ? 'text-red-400' : 'text-cyan-400'
                       }`}>{s.priority} Priority</span>
-                      <FaExclamationCircle size={10} className={s.priority === 'Critical' ? 'text-red-400' : 'text-cyan-400'} />
-                    </div>
-                    <p className="text-white text-xs font-bold leading-tight mb-1">{s.location}</p>
-                    <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                      <FaClock size={8} />
-                      <span>Optimize patrol: {s.suggestedTime.split('\n')[0]}</span>
-                    </div>
-                    <p className="text-[10px] text-gray-600 mt-2 italic">"{s.reason}"</p>
+                    <FaExclamationCircle size={10} className={s.priority === 'Critical' ? 'text-red-400' : 'text-cyan-400'} />
                   </div>
-                ))}
-             </div>
+                  <p className="text-white text-xs font-bold leading-tight mb-1">{s.location}</p>
+                  <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                    <FaClock size={8} />
+                    <span>Optimize patrol: {s.suggestedTime.split('\n')[0]}</span>
+                  </div>
+                  <p className="text-[10px] text-gray-600 mt-2 italic">"{s.reason}"</p>
+                </div>
+              ))}
+            </div>
           </SectionCard>
 
           <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-5 space-y-4">
-             <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center text-white">
-                  <FaChartLine size={14} />
-                </div>
-                <p className="text-white text-sm font-bold">Trend Analysis</p>
-             </div>
-             <p className="text-gray-500 text-[11px] leading-relaxed">
-               Current data indicates an **{data.riskZones[0]?.trend || 'stable'}** in item loss reports at **{data.riskZones[0]?.name || 'campus'}**.
-             </p>
-             <div className="pt-2">
-                <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest mb-2">Recommendation</p>
-                <div className="bg-gray-900 rounded-lg p-3 text-[10px] text-gray-400 border border-white/5">
-                  Deploy temporary "Lost & Found" signage or mobile kiosks in {data.riskZones[0]?.name} during peak hours ({data.timeForecasts[0]?.timeBlock.split('\n')[0]}).
-                </div>
-             </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center text-white">
+                <FaChartLine size={14} />
+              </div>
+              <p className="text-white text-sm font-bold">Trend Analysis</p>
+            </div>
+            <p className="text-gray-500 text-[11px] leading-relaxed">
+              Current data indicates an **{data.riskZones[0]?.trend || 'stable'}** in item loss reports at **{data.riskZones[0]?.name || 'campus'}**.
+            </p>
+            <div className="pt-2">
+              <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest mb-2">Recommendation</p>
+              <div className="bg-gray-900 rounded-lg p-3 text-[10px] text-gray-400 border border-white/5 text-justify">
+                Deploy temporary "Lost & Found" signage or mobile kiosks in {data.riskZones[0]?.name} during peak hours ({data.timeForecasts[0]?.timeBlock.split('\n')[0]}).
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1267,11 +1340,11 @@ const AnalyticsPage = () => {
       </div>
 
       {/* Tab content */}
-      {activeTab === "overview"    && <OverviewTab     stats={stats} />}
-      {activeTab === "users"       && <UserActivityTab stats={stats} />}
-      {activeTab === "flow"        && <ItemFlowTab     stats={stats} />}
-      {activeTab === "performance" && <PerformanceTab  stats={stats} />}
-      {activeTab === "predictive"  && <PredictiveTab   stats={stats} />}
+      {activeTab === "overview" && <OverviewTab stats={stats} />}
+      {activeTab === "users" && <UserActivityTab stats={stats} />}
+      {activeTab === "flow" && <ItemFlowTab stats={stats} />}
+      {activeTab === "performance" && <PerformanceTab stats={stats} />}
+      {activeTab === "predictive" && <PredictiveTab stats={stats} />}
     </div>
   );
 };

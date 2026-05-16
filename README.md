@@ -510,9 +510,12 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Institutional Resilience**: Hardened Masterlist connectivity with network-level timeouts and Axios integration.
 - **Verified "Hero" Badges**: Achievement system recognizing students with multiple successful item returns.
 
-### Phase 5: Advanced Features (Upcoming)
-- **Department Leaderboards**: Gamified campus-wide competition to encourage community helpfulness.
-- **Kiosk Mode**: Specialized interface for physical "Lost & Found" touchscreens in high-traffic campus areas.
-- **Predictive Analytics (Completed)**: Forecasting high-risk zones and peak times for lost items to optimize campus patrol.
-- **Sentiment-Based Moderation (Completed)**: AI-driven prioritization of high-value or high-distress reports.
-- **Event-Based Focus Zones**: Temporary moderation and tracking modules for major campus events and festivals.
+### Phase 5: Predictive & Intelligent Analytics (Completed)
+- **Predictive Analytics**: AI-driven forecasting engine that identifies high-risk campus zones and peak loss times.
+- **Sentiment-Based Moderation**: AI urgency detection that prioritizes high-value or high-distress reports for immediate admin attention.
+- **Smart Patrol Mode**: Interactive security route optimization based on real-time risk density.
+
+### Phase 6: Recovery Logistics (Upcoming)
+- **Item Tracking**: Real-time status tracking for items as they move through the recovery lifecycle (Secured → Verified → Ready for Pickup → Returned).
+- **QR Pickup Verification**: Secure hand-over process using generated QR codes to verify owner identity during physical item retrieval.
+- **Logistics History**: Detailed timeline of an item's journey, including staff handling notes and storage location changes.
