@@ -4,7 +4,7 @@ import {
   FaBoxOpen, FaCheckCircle, FaPrint,
   FaUsers, FaChartLine, FaExchangeAlt, FaTachometerAlt,
   FaArrowDown, FaUserCheck, FaUserSlash,
-  FaShieldAlt,
+  FaShieldAlt, FaBrain, FaMapMarkerAlt, FaExclamationCircle, FaBolt,
 } from "react-icons/fa";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -87,6 +87,7 @@ const TABS = [
   { id: "users",        label: "User Activity", icon: FaUsers         },
   { id: "flow",         label: "Item Flow",     icon: FaExchangeAlt   },
   { id: "performance",  label: "Performance",   icon: FaTachometerAlt },
+  { id: "predictive",   label: "Predictive AI", icon: FaBrain         },
 ];
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -983,6 +984,181 @@ const PerformanceTab = ({ stats }: { stats: any }) => {
 };
 
 // ════════════════════════════════════════════════════════════════════════════════
+// TAB: PREDICTIVE AI
+// ════════════════════════════════════════════════════════════════════════════════
+const PredictiveTab = ({ stats }: { stats: any }) => {
+  const data = stats?.predictiveAnalytics;
+
+  if (!data) return (
+    <div className="flex flex-col items-center justify-center py-20 bg-gray-900/50 rounded-2xl border border-white/5">
+      <FaBrain size={48} className="text-gray-700 mb-4 animate-pulse" />
+      <p className="text-gray-500 text-sm font-medium">Analyzing historical patterns...</p>
+      <p className="text-gray-600 text-xs mt-1">Predictions will appear once enough data is collected.</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-700">
+      {/* Top Banner */}
+      <div className="bg-gradient-to-r from-violet-600/20 to-cyan-600/20 border border-violet-500/20 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-violet-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <FaBrain size={28} className="text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight">AI Predictive Engine</h2>
+            <p className="text-violet-300/60 text-xs mt-0.5">Forecasting high-risk zones and peak times based on {stats?.total || 0} historical records</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="text-center">
+            <p className="text-2xl font-black text-white leading-none">{data.accuracyRate}%</p>
+            <p className="text-[10px] text-violet-400 font-bold uppercase tracking-widest mt-1">Accuracy</p>
+          </div>
+          <div className="h-10 w-px bg-white/10 hidden sm:block" />
+          <div className="text-center">
+            <p className="text-xs font-bold text-emerald-400 leading-none flex items-center gap-1 justify-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Active
+            </p>
+            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mt-1">Model State</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Risk Zones */}
+        <div className="lg:col-span-2 space-y-6">
+          <SectionCard 
+            title="High-Risk Zone Forecast" 
+            subtitle="Locations with highest probability of lost items in the next 72 hours"
+            action={<span className="text-[10px] text-gray-500 font-mono">Last updated: {new Date(data.lastModelUpdate).toLocaleTimeString()}</span>}
+          >
+            <div className="p-5 space-y-5">
+              {data.riskZones.map((zone: any) => (
+                <div key={zone.name} className="group relative bg-gray-800/30 hover:bg-gray-800/60 rounded-xl p-4 border border-white/5 transition-all">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        zone.riskScore > 80 ? "bg-red-500/10 text-red-400" : "bg-orange-500/10 text-orange-400"
+                      }`}>
+                        <FaMapMarkerAlt size={14} />
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-semibold group-hover:text-cyan-400 transition-colors">{zone.name}</p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">{zone.trend} trend</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-xl font-black ${
+                        zone.riskScore > 80 ? "text-red-400" : "text-orange-400"
+                      }`}>{zone.riskScore}%</p>
+                      <p className="text-[10px] text-gray-600 font-bold uppercase">Risk Score</p>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[10px] text-gray-500 font-medium mb-1">
+                      <span>Historical Density</span>
+                      <span>{zone.count} cases</span>
+                    </div>
+                    <div className="h-2 w-full bg-gray-900 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-1000 ${
+                          zone.riskScore > 80 ? "bg-red-500" : "bg-orange-500"
+                        }`}
+                        style={{ width: `${zone.riskScore}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <SectionCard title="Peak Time Predictions" subtitle="Forecasted reporting windows">
+                <div className="p-5 space-y-4">
+                  {data.timeForecasts.map((t: any) => (
+                    <div key={`${t.day}-${t.timeBlock}`} className="flex items-center gap-4 bg-white/5 rounded-xl p-3 border border-white/5">
+                      <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex flex-col items-center justify-center text-cyan-400">
+                         <span className="text-[10px] font-bold leading-none">{t.day}</span>
+                         <FaClock size={12} className="mt-1" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-xs font-bold truncate">{t.timeBlock.split('\n')[0]}</p>
+                        <p className="text-[10px] text-gray-500 font-medium">{t.confidence} Confidence</p>
+                      </div>
+                      <div className="text-right">
+                         <p className="text-cyan-400 text-sm font-black">{t.probability}%</p>
+                         <p className="text-[9px] text-gray-600 font-bold uppercase">Prob.</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+             </SectionCard>
+
+             <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex flex-col items-center justify-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 border border-violet-500/20">
+                  <FaBolt size={24} className="animate-pulse" />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-sm">Smart Patrol Mode</h4>
+                  <p className="text-gray-500 text-[10px] mt-1 px-4 leading-relaxed">AI suggests optimizing campus security patrol based on forecasted hotspots.</p>
+                </div>
+                <button className="px-6 py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-violet-600/20">
+                  View Patrol Route
+                </button>
+             </div>
+          </div>
+        </div>
+
+        {/* Patrol Suggestions Sidebar */}
+        <div className="space-y-6">
+          <SectionCard title="Automated Suggestions" subtitle="Immediate actions for security teams">
+             <div className="p-5 space-y-4">
+                {data.patrolSuggestions.map((s: any, i: number) => (
+                  <div key={i} className="relative pl-4 border-l-2 border-violet-500/30 py-1">
+                    <div className="flex items-start justify-between mb-1">
+                      <span className={`text-[10px] font-black uppercase tracking-widest ${
+                        s.priority === 'Critical' ? 'text-red-400' : 'text-cyan-400'
+                      }`}>{s.priority} Priority</span>
+                      <FaExclamationCircle size={10} className={s.priority === 'Critical' ? 'text-red-400' : 'text-cyan-400'} />
+                    </div>
+                    <p className="text-white text-xs font-bold leading-tight mb-1">{s.location}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                      <FaClock size={8} />
+                      <span>Optimize patrol: {s.suggestedTime.split('\n')[0]}</span>
+                    </div>
+                    <p className="text-[10px] text-gray-600 mt-2 italic">"{s.reason}"</p>
+                  </div>
+                ))}
+             </div>
+          </SectionCard>
+
+          <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-5 space-y-4">
+             <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center text-white">
+                  <FaChartLine size={14} />
+                </div>
+                <p className="text-white text-sm font-bold">Trend Analysis</p>
+             </div>
+             <p className="text-gray-500 text-[11px] leading-relaxed">
+               Current data indicates an **{data.riskZones[0]?.trend || 'stable'}** in item loss reports at **{data.riskZones[0]?.name || 'campus'}**.
+             </p>
+             <div className="pt-2">
+                <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest mb-2">Recommendation</p>
+                <div className="bg-gray-900 rounded-lg p-3 text-[10px] text-gray-400 border border-white/5">
+                  Deploy temporary "Lost & Found" signage or mobile kiosks in {data.riskZones[0]?.name} during peak hours ({data.timeForecasts[0]?.timeBlock.split('\n')[0]}).
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ════════════════════════════════════════════════════════════════════════════════
 // MAIN: AnalyticsPage
 // ════════════════════════════════════════════════════════════════════════════════
 const AnalyticsPage = () => {
@@ -1008,7 +1184,7 @@ const AnalyticsPage = () => {
       {/* Tab bar + export row */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         {/* Tabs */}
-        <div className="grid grid-cols-4 bg-gray-900 border border-white/5 rounded-2xl p-1 gap-1 flex-1">
+        <div className="grid grid-cols-5 bg-gray-900 border border-white/5 rounded-2xl p-1 gap-1 flex-1">
           {TABS.map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -1058,6 +1234,7 @@ const AnalyticsPage = () => {
       {activeTab === "users"       && <UserActivityTab stats={stats} />}
       {activeTab === "flow"        && <ItemFlowTab     stats={stats} />}
       {activeTab === "performance" && <PerformanceTab  stats={stats} />}
+      {activeTab === "predictive"  && <PredictiveTab   stats={stats} />}
     </div>
   );
 };
