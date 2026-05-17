@@ -693,6 +693,15 @@ const FoundItemsPage = () => {
   const scannedAtRef = useRef<string>("");
   const [commentItem, setCommentItem] = useState<any>(null);
 
+  // Auto open report modal if ?report=true in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("report") === "true") {
+      setIsAddModalOpen(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   const {
     isOnline,
     hasDraft,

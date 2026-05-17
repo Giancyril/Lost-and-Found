@@ -207,7 +207,7 @@ export default function StudentDashboard() {
                 <span className="text-white font-bold text-sm">{myAchievements.length}</span>
                 <span className="text-gray-500 text-xs">badges</span>
               </Link>
-              <Link to="/reportFoundItem"
+              <Link to="/foundItems?report=true"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-400 text-xs font-semibold hover:bg-blue-500/10 transition-colors">
                 <FaBolt size={9} /> Report items to earn more points
               </Link>
@@ -256,7 +256,7 @@ export default function StudentDashboard() {
               <span className="text-white font-bold text-sm">{myAchievements.length}</span>
               <span className="text-gray-500 text-xs">badges</span>
             </Link>
-            <Link to="/reportFoundItem"
+            <Link to="/foundItems?report=true"
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-400/5 text-emerald-400 text-[10px] font-semibold">
               <FaBolt size={8} /> Report items to earn more points
             </Link>
@@ -488,10 +488,10 @@ export default function StudentDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             {
-              label: "Report Found Item",
-              desc:  "Earn +50 points for reporting",
-              href:  "/reportFoundItem",
-              icon:  <FaBoxOpen size={16} />,
+              label: "Track Status",
+              desc:  "View real-time item & claim progress",
+              href:  "/itemStatus",
+              icon:  <FaClipboardList size={16} />,
               color: "text-emerald-400 bg-emerald-400/5 hover:bg-emerald-400/10 border-emerald-400/10",
             },
             {

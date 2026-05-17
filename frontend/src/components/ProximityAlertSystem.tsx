@@ -386,13 +386,10 @@ export default function ProximityAlertSystem() {
       {/* ── 2. Real-time Proximity Warning Alert Banner ── */}
       {activeAlert && theme && (
         <div className="fixed top-24 sm:top-20 left-1/2 -translate-x-1/2 z-[90] w-[calc(100%-1.5rem)] xs:w-[calc(100%-2rem)] max-w-md pointer-events-none animate-slideDown">
-          <div className={`pointer-events-auto bg-gray-950/95 backdrop-blur-md border ${theme.border} p-4 sm:p-5 rounded-2xl ${theme.shadow} flex flex-col gap-4 relative overflow-hidden`}>
+          <div className={`pointer-events-auto bg-gray-950/95 backdrop-blur-md border ${theme.border} p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col gap-4 relative overflow-hidden`}>
 
             {/* Top Linear Gradient Accenting the Danger Level */}
             <div className={`absolute top-0 left-0 right-0 h-[3.5px] bg-gradient-to-r ${theme.topBar}`} />
-
-            {/* Pulsing Hazard background glow */}
-            <div className={`absolute top-0 right-0 w-32 h-32 ${theme.glowBg} blur-3xl -mr-12 -mt-12 animate-pulse`} />
 
             <div className="flex gap-4 items-start">
 
