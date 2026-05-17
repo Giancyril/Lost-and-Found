@@ -433,25 +433,32 @@ const ReportLostItem = () => {
     setStep(0);
   });
 
-  // Load draft on mount
-  const [restored, setRestored] = useState(false);
+  const [dismissedDraft, setDismissedDraft] = useState(false);
+  const [hasExistingDraftOnMount, setHasExistingDraftOnMount] = useState(false);
+
   useEffect(() => {
-    if (hasDraft && !restored) {
-      const draft = loadDraft();
-      if (draft && window.confirm("You have an unsaved draft. Would you like to restore it?")) {
-        Object.entries(draft).forEach(([key, value]) => {
-          if (value) setValue(key as any, value);
-        });
-        if (draft.categoryId) {
-          handleMenuChange(draft.categoryName || "", draft.categoryId);
-        }
-        toast.info("Draft restored");
-      } else {
-        clearDraft();
+    const draftExists = !!localStorage.getItem("form_draft_lost_item");
+    setHasExistingDraftOnMount(draftExists);
+  }, []);
+
+  const handleRestoreDraft = () => {
+    const draft = loadDraft();
+    if (draft) {
+      Object.entries(draft).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) setValue(key as any, value);
+      });
+      if (draft.categoryId) {
+        handleMenuChange(draft.categoryName || "", draft.categoryId);
       }
-      setRestored(true);
+      toast.success("Draft restored successfully!");
     }
-  }, [hasDraft, restored]);
+    setDismissedDraft(true);
+  };
+
+  const handleDismissDraft = () => {
+    clearDraft();
+    setDismissedDraft(true);
+  };
 
   // Auto-save draft on value change
   const formValues = watch();
@@ -730,7 +737,38 @@ const ReportLostItem = () => {
         style={{ backgroundImage: "radial-gradient(ellipse at 60% 0%, rgba(59,130,246,0.07) 0%, transparent 60%)" }}
       >
         <div className="w-full max-w-2xl mx-auto">
-          <div className="bg-gray-900 rounded-2xl border border-gray-800">
+          <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
+            {/* Draft Restoration Banner */}
+            {hasExistingDraftOnMount && !dismissedDraft && (
+              <div className="bg-amber-500/10 border-b border-amber-500/20 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                    <FaCopy size={18} />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-bold">Unsaved Draft Found</p>
+                    <p className="text-amber-400/70 text-[10px] font-medium leading-relaxed">
+                      We found a draft from your last session. Would you like to restore it?
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 shrink-0 w-full sm:w-auto">
+                  <button
+                    onClick={handleRestoreDraft}
+                    className="flex-1 sm:flex-none px-4 py-2 bg-amber-500 hover:bg-amber-400 text-gray-950 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-md"
+                  >
+                    Restore
+                  </button>
+                  <button
+                    onClick={handleDismissDraft}
+                    className="flex-1 sm:flex-none px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all active:scale-95"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Offline Sync Banner */}
             {pendingReports.length > 0 && (
               <div className="bg-blue-600/20 border-b border-blue-500/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -967,7 +1005,7 @@ const ReportLostItem = () => {
                     {/* Magic AI Scan Button */}
                     <div className="flex justify-between items-center bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 sm:p-4 mb-2 animate-fadeIn">
                       <div className="flex items-center gap-2 sm:gap-3">
-                        
+
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">AI Scan</p>
@@ -1427,7 +1465,7 @@ const ReportLostItem = () => {
             <div className="h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
               <div className="flex items-center gap-2">
-                
+
                 <h3 className="text-sm font-bold text-white tracking-tight uppercase"> AI Scan</h3>
               </div>
               <button onClick={() => setShowAiHelp(false)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
@@ -1448,7 +1486,7 @@ const ReportLostItem = () => {
                   </div>
                 </div>
               ))}
-              
+
             </div>
             <div className="px-5 py-4 border-t border-gray-800 shrink-0 flex items-center justify-center">
               <button onClick={() => setShowAiHelp(false)} className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-indigo-900/20 active:scale-95">Got it</button>

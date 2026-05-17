@@ -11,7 +11,7 @@ import {
   FaClipboardList, FaUser, FaEnvelope, FaCheck, FaChevronDown,
   FaQrcode, FaSpinner, FaUserCheck, FaMoneyBillWave, FaCalculator,
   FaComments, FaEye, FaPaintBrush, FaPlug, FaUsb, FaGem, FaUtensils,
-  FaMusic, FaFootballBall,
+  FaMusic, FaFootballBall, FaCopy
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
@@ -777,26 +777,37 @@ const FoundItemsPage = () => {
   const watchedReporterName = watch("reporterName");
   const watchedSchoolEmail = watch("schoolEmail");
 
-  // Load draft when modal opens
-  const [restored, setRestored] = useState(false);
-  useEffect(() => {
-    if (isAddModalOpen && hasDraft && !restored) {
-      const draft = loadDraft();
-      if (draft && window.confirm("You have an unsaved draft. Would you like to restore it?")) {
-        Object.entries(draft).forEach(([key, value]) => {
-          if (value) addSetValue(key as any, value);
-        });
-        if (draft.categoryId) {
-          handleCategoryChange(draft.categoryId);
-        }
-        toast.info("Draft restored");
-      } else {
-        clearDraft();
+  const [dismissedDraft, setDismissedDraft] = useState(false);
+  const [hasExistingDraftOnOpen, setHasExistingDraftOnOpen] = useState(false);
+
+  const handleRestoreDraft = () => {
+    const draft = loadDraft();
+    if (draft) {
+      Object.entries(draft).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) addSetValue(key as any, value);
+      });
+      if (draft.categoryId) {
+        handleCategoryChange(draft.categoryId);
       }
-      setRestored(true);
+      toast.success("Draft restored successfully!");
     }
-    if (!isAddModalOpen) setRestored(false);
-  }, [isAddModalOpen, hasDraft, restored]);
+    setDismissedDraft(true);
+  };
+
+  const handleDismissDraft = () => {
+    clearDraft();
+    setDismissedDraft(true);
+  };
+
+  useEffect(() => {
+    if (isAddModalOpen) {
+      const draftExists = !!localStorage.getItem("form_draft_found_item");
+      setHasExistingDraftOnOpen(draftExists);
+      setDismissedDraft(false);
+    } else {
+      setHasExistingDraftOnOpen(false);
+    }
+  }, [isAddModalOpen]);
 
   // Auto-save draft on value change
   const addFormValues = watch();
@@ -1169,7 +1180,7 @@ const FoundItemsPage = () => {
 
       const res: any = await createFoundItem(payload);
       if (res.error || res?.data?.success === false) { toast.error("Failed to submit found item."); return; }
-      
+
       clearDraft();
       const newItemId = res?.data?.data?.id ?? res?.data?.id;
       if (addSelectedFile && newItemId) {
@@ -1471,6 +1482,37 @@ const FoundItemsPage = () => {
                 scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
               }}
             >
+              {/* Draft Restoration Banner */}
+              {hasExistingDraftOnOpen && !dismissedDraft && (
+                <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    
+                    <div>
+                      <p className="text-white text-sm font-bold">Unsaved Draft Found</p>
+                      <p className="text-blue-400/70 text-[10px] font-medium leading-relaxed">
+                        We found a draft from your last session. Would you like to restore it?
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 shrink-0 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={handleRestoreDraft}
+                      className="flex-1 sm:flex-none px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-md"
+                    >
+                      Restore
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDismissDraft}
+                      className="flex-1 sm:flex-none px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all active:scale-95"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {scannedStudent && (
                 <div className="group relative overflow-hidden bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6 transition-all duration-300">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl -mr-12 -mt-12 group-hover:bg-blue-500/10 transition-all duration-500" />
