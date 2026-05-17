@@ -1486,7 +1486,7 @@ const FoundItemsPage = () => {
               {hasExistingDraftOnOpen && !dismissedDraft && (
                 <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                   <div className="flex items-center gap-3">
-                    
+
                     <div>
                       <p className="text-white text-sm font-bold">Unsaved Draft Found</p>
                       <p className="text-blue-400/70 text-[10px] font-medium leading-relaxed">

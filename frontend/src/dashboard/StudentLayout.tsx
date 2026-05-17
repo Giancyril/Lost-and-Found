@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../redux/api/api";
 import ChatDropdown from "./components/ChatDropdown";
+import ProximityAlertSystem from "../components/ProximityAlertSystem";
 
 const NAV_ITEMS = [
   {
@@ -486,6 +487,9 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
           <p className="text-gray-700 text-[10px] font-medium">Student Affairs & Services · Lost and Found</p>
           <p className="text-gray-700 text-[10px]">© {new Date().getFullYear()}</p>
         </footer>
+
+        {/* Proximity Hotspot Alert System */}
+        <ProximityAlertSystem />
       </div>
     </div>
   );
