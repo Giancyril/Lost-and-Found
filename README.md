@@ -31,6 +31,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Anonymized Community Chat**: Secure, private messaging between reporters and claimants to facilitate item recovery without exposing personal contact details — participants are identified as "Community Member" to maintain privacy
 - **Web Push Notifications**: Real-time browser alerts for new messages, potential item matches, and claim status updates, using the Web Push API for reliable background delivery
 - **Predictive Analytics**: AI-driven forecasting engine that identifies high-risk campus zones and peak loss times using historical data patterns to optimize security patrols
+- **Proximity Hotspot Alerts**: Mobile-specific geofencing warning widget integrated within the Student Dashboard. Using live coordinates and database item reports, the system computes real-time proximity (Haversine formula) to high-risk zones. It triggers haptic micro-vibrations (`navigator.vibrate`) and slides down custom glassmorphic warning banners accented with gradients matching the specific risk rating (Critical, High, Medium, Low), displaying live statistics and safety pro-tips. Includes an interactive GPS telemetry simulator panel for easy developer testing.
 
 ### Campus Features
 - **Points System**: Comprehensive gamification system with point rewards for various activities
@@ -480,6 +481,14 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Smart Patrol Suggestions**: Automated recommendations for campus security, providing specific locations and time blocks to prioritize for patrols.
 - **Trend Analysis**: Monitors whether loss reports in specific zones are increasing, stable, or decreasing over time.
 - **Accuracy Tracking**: Built-in model tracking to monitor the precision of AI predictions against actual reported incidents.
+
+### Proximity Hotspot Alerts
+- **Haversine Distance Engine**: Computes distance in real-time (threshold: 40 meters) from the user's active geographic coordinates to known campus hotspots.
+- **Pure Live Database Telemetry**: Risk levels and reports are generated dynamically by aggregating all active lost and found items in the database (e.g., Canteen, Library, Gym).
+- **Physical Mobile Haptic Feedback**: Integrates with the device vibration API (`navigator.vibrate([200, 100, 200])`) to vibrate the user's mobile device when they enter a warning zone.
+- **Micro-Animations & Premium Themes**: Employs custom CSS transitions and custom gradient border accents tailored to the threat severity (Critical, High, Medium, Low).
+- **AI Crime & Loss Stats Callout**: Renders a glowing stats box displaying recent report ratios, recommendations, and campus safety pro-tips.
+- **Developer Teleport Simulator**: Features a collapsible floating control dashboard permitting developers to teleport to different hotspots, toggle GPS modes, and observe active distance feeds in real time.
 
 ### Sentiment-Based Moderation (AI)
 - **Urgency Detection**: Automatically analyzes the "tone" of reports to detect emotional distress (e.g., "lost my thesis", "extremely worried").
