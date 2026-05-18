@@ -13,6 +13,8 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [showSidebar, setShowSidebar] = useState(!activeRoomId);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const token = getUserLocalStorage();
   const { socket, isConnected } = useSocket({ autoConnect: true, token: token || "" });
@@ -39,6 +41,19 @@ const ChatPage = () => {
 
   useEffect(() => {
     if (!socket) return;
+    socket.on("chat-user-typing", (data: { userId: string; isTyping: boolean }) => {
+      console.warn("[WS Client] Received chat-user-typing:", data);
+      if (data.userId !== currentUser.id) {
+        setIsOtherUserTyping(data.isTyping);
+      }
+    });
+    return () => {
+      socket.off("chat-user-typing");
+    };
+  }, [socket, currentUser.id]);
+
+  useEffect(() => {
+    if (!socket) return;
     socket.on("message-received", (newMessage: any) => {
       if (newMessage.chatRoomId === activeRoomId) {
         setMessages((prev) => [...prev, newMessage]);
@@ -57,9 +72,18 @@ const ChatPage = () => {
     };
   }, [socket, activeRoomId, isConnected]);
 
+  // Synchronize messages with initial query data and handle room changes safely without race conditions
   useEffect(() => {
-    if (initialMessages?.data) setMessages(initialMessages.data);
-  }, [initialMessages]);
+    if (activeRoomId) {
+      if (initialMessages?.data) {
+        setMessages(initialMessages.data);
+      } else if (messagesLoading) {
+        setMessages([]);
+      }
+    } else {
+      setMessages([]);
+    }
+  }, [activeRoomId, initialMessages, messagesLoading]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -78,8 +102,32 @@ const ChatPage = () => {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !activeRoomId || !socket) return;
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    socket.emit("chat-typing-stop", { chatRoomId: activeRoomId });
+
     socket.emit("send-message", { chatRoomId: activeRoomId, content: message });
     setMessage("");
+  };
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(e.target.value);
+
+    if (!socket || !activeRoomId) return;
+
+    console.warn("[WS Client] Emitting chat-typing-start for room:", activeRoomId);
+    socket.emit("chat-typing-start", { chatRoomId: activeRoomId });
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      console.warn("[WS Client] Emitting chat-typing-stop for room:", activeRoomId);
+      socket.emit("chat-typing-stop", { chatRoomId: activeRoomId });
+    }, 2000);
   };
 
   const getInitials = (name: string) =>
@@ -199,6 +247,33 @@ const ChatPage = () => {
               </div>
             </div>
 
+            {/* Sticky Claim Header */}
+            {currentRoom?.claim?.foundItem && (
+              <div className="px-4 py-2 bg-gray-900/60 border-b border-white/5 flex items-center justify-between gap-3 shrink-0 backdrop-blur-md">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <img
+                    src={currentRoom?.claim?.foundItem?.images?.[0] || currentRoom?.claim?.foundItem?.img || "/bgimg.png"}
+                    alt={currentRoom?.claim?.foundItem?.foundItemName}
+                    onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                    className="w-10 h-10 rounded-lg object-cover border border-white/5 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-white text-xs font-bold truncate">{currentRoom?.claim?.foundItem?.foundItemName}</p>
+                    <p className="text-gray-500 text-[10px] truncate mt-0.5">📍 {currentRoom?.claim?.foundItem?.location}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full border ${
+                    currentRoom?.claim?.status === "APPROVED"
+                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                      : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
+                  }`}>
+                    {currentRoom?.claim?.status || "PENDING"}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-3 custom-scrollbar">
               {messagesLoading ? (
@@ -241,33 +316,67 @@ const ChatPage = () => {
                   );
                 })
               )}
+              {isOtherUserTyping && (
+                <div className="flex justify-start items-end gap-2 mt-2 animate-pulse">
+                  <div className="w-6 h-6 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center mr-2 shrink-0">
+                    <FaUserCircle className="text-gray-500" size={14} />
+                  </div>
+                  <div className="bg-gray-800 text-gray-400 border border-white/5 rounded-2xl rounded-bl-sm px-4 py-2 flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-2.5 h-2.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-2.5 h-2.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
+                </div>
+              )}
               <div ref={scrollRef} />
             </div>
 
-            {/* Admin Quick Replies */}
-            {currentUser?.role === "ADMIN" && (
-              <div className="px-3 sm:px-4 py-2 border-t border-white/5 bg-gray-950/20 overflow-x-auto flex items-center gap-2 custom-scrollbar whitespace-nowrap">
-                <span className="text-[10px] text-gray-600 font-bold uppercase tracking-wider mr-1">Quick Templates:</span>
-                {[
-                  { label: "Verify", text: "Hello! To verify ownership, could you please provide more details about this item (e.g., brand, specific marks, or content inside)?" },
-                  { label: "Pickup Ready", text: "Good news! Your item is now ready for pickup at the SAS Office. Please bring your school ID for verification." },
-                  { label: "Claim Approved", text: "Your ownership claim has been successfully verified and approved. You may now coordinate the pickup at your earliest convenience." },
-                  { label: "Found Report", text: "Thank you for reporting this found item! It has been logged into the system. You can surrender it to the SAS Office." },
-                ].map((tpl) => (
-                  <button
-                    key={tpl.label}
-                    type="button"
-                    onClick={() => {
-                      if (!activeRoomId || !socket) return;
-                      socket.emit("send-message", { chatRoomId: activeRoomId, content: tpl.text });
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold hover:bg-blue-500 hover:text-white transition-all whitespace-nowrap active:scale-95"
-                  >
-                    {tpl.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Coordination & Admin Templates */}
+            <div className="px-3 sm:px-4 py-2 border-t border-white/5 bg-gray-950/20 overflow-x-auto flex items-center gap-2 custom-scrollbar whitespace-nowrap">
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mr-1 shrink-0">Meetup Templates:</span>
+              {[
+                { label: "📍 SAS Office Lobby", text: "Hi! Can we meet at the SAS Office Lobby to coordinate the handoff?" },
+                { label: "📚 Library Lobby", text: "Hello! I am near the Campus Library Lobby. Can we meet there to return the item?" },
+                { label: "☕ Student Canteen", text: "Hey! Let's meet up at the Student Canteen for the item exchange." },
+                { label: "🕒 Meet Tomorrow", text: "Hi! Are you free to meet tomorrow at 10:00 AM at the SAS Office?" },
+              ].map((tpl) => (
+                <button
+                  key={tpl.label}
+                  type="button"
+                  onClick={() => {
+                    if (!activeRoomId || !socket) return;
+                    socket.emit("send-message", { chatRoomId: activeRoomId, content: tpl.text });
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-[10px] font-semibold transition-all whitespace-nowrap active:scale-95"
+                >
+                  {tpl.label}
+                </button>
+              ))}
+
+              {currentUser?.role === "ADMIN" && (
+                <>
+                  <div className="h-4 w-px bg-white/10 mx-1 shrink-0" />
+                  <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider mr-1 shrink-0">Admin:</span>
+                  {[
+                    { label: "Verify", text: "Hello! To verify ownership, could you please provide more details about this item (e.g., brand, specific marks, or content inside)?" },
+                    { label: "Pickup Ready", text: "Good news! Your item is now ready for pickup at the SAS Office. Please bring your school ID for verification." },
+                    { label: "Claim Approved", text: "Your ownership claim has been successfully verified and approved. You may now coordinate the pickup at your earliest convenience." },
+                  ].map((tpl) => (
+                    <button
+                      key={tpl.label}
+                      type="button"
+                      onClick={() => {
+                        if (!activeRoomId || !socket) return;
+                        socket.emit("send-message", { chatRoomId: activeRoomId, content: tpl.text });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold hover:bg-blue-500 hover:text-white transition-all whitespace-nowrap active:scale-95"
+                    >
+                      {tpl.label}
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
 
             {/* Input */}
             <form onSubmit={handleSendMessage}
@@ -276,7 +385,7 @@ const ChatPage = () => {
                 <input
                   type="text"
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={handleMessageChange}
                   placeholder="Type a message..."
                   className="flex-1 min-w-0 bg-gray-800 border border-white/10 text-white text-xs sm:text-sm rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-blue-500/50 transition-all placeholder-gray-600"
                 />

@@ -135,6 +135,24 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
     console.log(`User ${socket.userId} left chat room: ${roomName}`);
   });
 
+  socket.on('chat-typing-start', (data: { chatRoomId: string }) => {
+    console.log(`[WS] chat-typing-start received for room: ${data.chatRoomId} from user ${socket.userId}`);
+    const roomName = `chat-${data.chatRoomId}`;
+    socket.to(roomName).emit('chat-user-typing', {
+      userId: socket.userId,
+      isTyping: true
+    });
+  });
+
+  socket.on('chat-typing-stop', (data: { chatRoomId: string }) => {
+    console.log(`[WS] chat-typing-stop received for room: ${data.chatRoomId} from user ${socket.userId}`);
+    const roomName = `chat-${data.chatRoomId}`;
+    socket.to(roomName).emit('chat-user-typing', {
+      userId: socket.userId,
+      isTyping: false
+    });
+  });
+
   socket.on('send-message', async (data: { chatRoomId: string, content: string }) => {
     try {
       if (!socket.userId) throw new Error('Unauthorized');
