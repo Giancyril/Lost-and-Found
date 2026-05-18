@@ -14,7 +14,7 @@ const ChatDropdown = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<any>(null);
 
   const token = getUserLocalStorage();
   const currentUser = useUserVerification() as any;
@@ -29,7 +29,7 @@ const ChatDropdown = () => {
 
   const rooms = roomsData?.data || [];
   const currentRoom = rooms.find((r: any) => r.id === activeRoomId);
-  
+
   const unreadCount = rooms.filter((room: any) => {
     const lastMsg = room.messages?.[0];
     const lastReadAt = room.readStatuses?.[0]?.lastReadAt;
@@ -146,11 +146,10 @@ const ChatDropdown = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-all border ${
-          open 
-            ? "bg-blue-500/10 border-blue-500/30 text-blue-400" 
+        className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-all border ${open
+            ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
             : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-        }`}
+          }`}
       >
         <FaComments size={14} />
         {unreadCount > 0 && (
@@ -163,7 +162,7 @@ const ChatDropdown = () => {
       {open && (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 sm:hidden" onClick={() => setOpen(false)} />
-          
+
           <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-[68px] sm:top-11 w-auto sm:w-[380px] bg-gray-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col h-[500px] max-h-[80vh]">
             <div className="px-4 py-3 border-b border-white/5 bg-gray-800/40 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
@@ -173,7 +172,7 @@ const ChatDropdown = () => {
                   </button>
                 )}
                 <h2 className="text-white font-bold text-sm">
-                  {activeRoomId 
+                  {activeRoomId
                     ? (currentRoom?.participantUsers?.find((u: any) => u.id !== currentUser?.id)?.role === "ADMIN" ? "Staff Chat" : "Messaging")
                     : "Conversations"}
                 </h2>
@@ -195,15 +194,14 @@ const ChatDropdown = () => {
                   />
                   <div className="min-w-0">
                     <p className="text-white text-[11px] font-bold truncate">{currentRoom?.claim?.foundItem?.foundItemName}</p>
-                    <p className="text-gray-550 text-[9px] truncate">📍 {currentRoom?.claim?.foundItem?.location}</p>
+                    <p className="text-gray-550 text-[9px] truncate"> {currentRoom?.claim?.foundItem?.location}</p>
                   </div>
                 </div>
                 <div className="shrink-0">
-                  <span className={`px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-full border ${
-                    currentRoom?.claim?.status === "APPROVED"
+                  <span className={`px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-full border ${currentRoom?.claim?.status === "APPROVED"
                       ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                       : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
-                  }`}>
+                    }`}>
                     {currentRoom?.claim?.status || "PENDING"}
                   </span>
                 </div>
@@ -226,10 +224,10 @@ const ChatDropdown = () => {
                     rooms.map((room: any) => {
                       const lastMsg = room.messages?.[0];
                       const otherUser = room.participantUsers?.find((u: any) => u.id !== currentUser?.id);
-                      const displayName = otherUser 
+                      const displayName = otherUser
                         ? (otherUser.role === "ADMIN" ? "Admin" : (otherUser.name || otherUser.username))
                         : (room.claim?.foundItem?.foundItemName || "Lost Item");
-                      
+
                       const lastReadAt = room.readStatuses?.[0]?.lastReadAt;
                       const hasUnread = lastMsg && (!lastReadAt || new Date(lastMsg.createdAt) > new Date(lastReadAt)) && lastMsg.senderId !== currentUser?.id;
 
@@ -265,9 +263,8 @@ const ChatDropdown = () => {
                         return (
                           <div key={msg.id || idx} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                             <div className={`max-w-[80%] flex flex-col gap-0.5 ${isMe ? "items-end" : "items-start"}`}>
-                              <div className={`rounded-2xl px-3 py-2 text-xs leading-relaxed ${
-                                isMe ? "bg-blue-600 text-white rounded-br-sm" : "bg-gray-800 text-gray-100 border border-white/5 rounded-bl-sm"
-                              }`}>
+                              <div className={`rounded-2xl px-3 py-2 text-xs leading-relaxed ${isMe ? "bg-blue-600 text-white rounded-br-sm" : "bg-gray-800 text-gray-100 border border-white/5 rounded-bl-sm"
+                                }`}>
                                 {msg.content}
                               </div>
                               <p className="text-[9px] text-gray-600 px-1">{format(new Date(msg.createdAt), "p")}</p>
@@ -294,8 +291,8 @@ const ChatDropdown = () => {
                   <div className="px-3 py-1.5 border-t border-white/5 bg-black/20 overflow-x-auto flex items-center gap-1.5 custom-scrollbar whitespace-nowrap shrink-0">
                     <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider shrink-0">Meetup:</span>
                     {[
-                      { label: "📍 SAS Lobby", text: "Can we meet at the SAS Office Lobby to coordinate the handoff?" },
-                      { label: "📚 Library Lobby", text: "I am near the Campus Library Lobby. Can we meet there?" },
+                      { label: " SAS Lobby", text: "Can we meet at the SAS Office Lobby to coordinate the handoff?" },
+                      { label: " Library Lobby", text: "I am near the Campus Library Lobby. Can we meet there?" },
                     ].map((tpl) => (
                       <button key={tpl.label} onClick={() => socket?.emit("send-message", { chatRoomId: activeRoomId, content: tpl.text })}
                         className="px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-[8px] font-semibold transition-all whitespace-nowrap">
@@ -333,18 +330,18 @@ const ChatDropdown = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="px-4 py-2 border-t border-white/5 bg-gray-900 flex justify-center">
-               <button 
-                 onClick={() => { 
-                   setOpen(false); 
-                   const chatPath = currentUser?.role === "ADMIN" ? "/dashboard/chat" : "/dashboard/student/chat";
-                   navigate(activeRoomId ? `${chatPath}?roomId=${activeRoomId}` : chatPath); 
-                 }} 
-                 className="text-blue-400 hover:text-blue-300 text-[10px] font-bold uppercase tracking-widest"
-               >
-                 Open Full Messenger
-               </button>
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  const chatPath = currentUser?.role === "ADMIN" ? "/dashboard/chat" : "/dashboard/student/chat";
+                  navigate(activeRoomId ? `${chatPath}?roomId=${activeRoomId}` : chatPath);
+                }}
+                className="text-blue-400 hover:text-blue-300 text-[10px] font-bold uppercase tracking-widest"
+              >
+                Open Full Messenger
+              </button>
             </div>
           </div>
         </>

@@ -14,7 +14,7 @@ const ChatPage = () => {
   const [showSidebar, setShowSidebar] = useState(!activeRoomId);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<any>(null);
 
   const token = getUserLocalStorage();
   const { socket, isConnected } = useSocket({ autoConnect: true, token: token || "" });

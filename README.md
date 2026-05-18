@@ -86,6 +86,9 @@ A comprehensive lost and found management system built with modern web technolog
   - **Anonymized Identity**: To maintain privacy, participants are identified as "Community Member" or "Reporter" until they choose to share personal details.
   - **Real-Time Synchronization**: Powered by Socket.io for instant message delivery, typing indicators, and online status tracking.
   - **Integrated with Claims**: Chat access is strictly controlled based on claim status and user roles.
+  - **Sticky Claim Header**: Keeps the claimed item’s vital details (thumbnail, status badge, location) persistently pinned at the top of the chat pane for context-aware messaging.
+  - **Typing Indicators & "Online" Pings**: Dynamic, real-time bouncing-dot indicators that signal when the other participant is actively drafting a message, backed by network status synchronization.
+  - **Quick Meetup Coordinator**: Instant clickable templates (e.g. *SAS Office Lobby*, *Library Lobby*, *Student Canteen*) to quickly coordinate safe handoffs without tedious typing.
 
 - **Web Push Notifications**: Cross-platform background alerts that keep users informed even when the application is closed.
   - **Instant Alerts**: Get notified immediately for new chat messages, claim status changes (Approvals/Rejections), and smart item matches.
