@@ -70,6 +70,89 @@ interface Achievement {
   };
 }
 
+const playTierSound = (tier: string) => {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+
+    const playNote = (freq: number, start: number, duration: number, volume: number, type: 'sine' | 'triangle' | 'sawtooth' | 'square' = 'triangle') => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, start);
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(volume, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + duration);
+    };
+
+    if (tier === "BRONZE") {
+      const vol = 0.05;
+      playNote(880, now, 0.4, vol, 'sine');       // A5
+      playNote(1318.51, now + 0.08, 0.5, vol, 'sine'); // E6
+    } else if (tier === "SILVER") {
+      const vol = 0.06;
+      playNote(783.99, now, 0.5, vol, 'triangle');     // G5
+      playNote(987.77, now + 0.08, 0.5, vol, 'triangle');  // B5
+      playNote(1174.66, now + 0.16, 0.6, vol, 'triangle'); // D6
+    } else if (tier === "GOLD") {
+      const vol = 0.07;
+      playNote(523.25, now, 0.6, vol, 'triangle');     // C5
+      playNote(659.25, now + 0.06, 0.6, vol, 'triangle');  // E5
+      playNote(783.99, now + 0.12, 0.7, vol, 'triangle');  // G5
+      playNote(1046.50, now + 0.18, 0.8, vol + 0.02, 'triangle'); // C6
+    } else if (tier === "PLATINUM") {
+      const vol = 0.07;
+      playNote(587.33, now, 0.6, vol, 'triangle');     // D5
+      playNote(739.99, now + 0.06, 0.6, vol, 'triangle');  // F#5
+      playNote(880.00, now + 0.12, 0.6, vol, 'triangle');  // A5
+      playNote(1174.66, now + 0.18, 0.7, vol, 'triangle'); // D6
+      playNote(1479.98, now + 0.24, 0.9, vol + 0.03, 'sine'); // F#6
+    } else {
+      // LEGEND / Other: Cosmic scale
+      const thudOsc = ctx.createOscillator();
+      const thudGain = ctx.createGain();
+      thudOsc.type = 'sine';
+      thudOsc.frequency.setValueAtTime(55, now);
+      thudOsc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
+      thudGain.gain.setValueAtTime(0, now);
+      thudGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+      thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      thudOsc.connect(thudGain);
+      thudGain.connect(ctx.destination);
+      thudOsc.start(now);
+      thudOsc.stop(now + 0.6);
+
+      const shimVol = 0.08;
+      playNote(1174.66, now + 0.05, 0.8, shimVol, 'triangle');
+      playNote(1479.98, now + 0.10, 0.8, shimVol, 'triangle');
+      playNote(1760.00, now + 0.15, 0.8, shimVol, 'triangle');
+      playNote(2349.32, now + 0.20, 1.0, shimVol + 0.02, 'triangle');
+
+      const airOsc = ctx.createOscillator();
+      const airGain = ctx.createGain();
+      airOsc.type = 'sine';
+      airOsc.frequency.setValueAtTime(2349.32, now + 0.20);
+      airGain.gain.setValueAtTime(0, now + 0.20);
+      airGain.gain.linearRampToValueAtTime(0.04, now + 0.25);
+      airGain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+      airOsc.connect(airGain);
+      airGain.connect(ctx.destination);
+      airOsc.start(now + 0.20);
+      airOsc.stop(now + 2.0);
+    }
+
+    setTimeout(() => { if (ctx.state !== 'closed') ctx.close(); }, 3000);
+  } catch (e) {
+    console.warn("Audio Context sound failed to play", e);
+  }
+};
+
 export const AchievementPopup = ({
   achievement,
   onClose,
@@ -82,11 +165,12 @@ export const AchievementPopup = ({
   const t = TIER_CONFIG[achievement.achievement.tier] ?? TIER_CONFIG.BRONZE;
 
   useEffect(() => {
+    playTierSound(achievement.achievement.tier);
     const t1 = setTimeout(() => setPhase("show"), 600);
     const t2 = setTimeout(() => setPhase("fly"),  4000);
     const t3 = setTimeout(() => onClose(),         5200);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [onClose]);
+  }, [onClose, achievement.achievement.tier]);
 
   return (
     <>
