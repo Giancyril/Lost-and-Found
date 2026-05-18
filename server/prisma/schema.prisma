@@ -38,8 +38,6 @@ model User {
   pushSubscriptions PushSubscription[]
   chatReadStatuses  ChatReadStatus[]
   userAchievements  UserAchievement[]
-  sentGratitudeNotes     GratitudeNote[] @relation("SentNotes")
-  receivedGratitudeNotes GratitudeNote[] @relation("ReceivedNotes")
 
   @@map("users")
 }
@@ -526,18 +524,4 @@ enum UrgencyLevel {
   NORMAL
   HIGH
   CRITICAL
-}
-
-model GratitudeNote {
-  id          String   @id @default(uuid())
-  senderId    String
-  receiverId  String
-  itemId      String?  // Optional linked item
-  message     String
-  badgeType   String   // e.g. "HEART", "STAR", "HERO", "KINDNESS"
-  createdAt   DateTime @default(now())
-  sender      User     @relation("SentNotes", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver    User     @relation("ReceivedNotes", fields: [receiverId], references: [id], onDelete: Cascade)
-
-  @@map("gratitudeNotes")
 }

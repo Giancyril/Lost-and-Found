@@ -28,7 +28,6 @@ import { studentRoutes } from "../modules/student/student.routes";
 import { pushRoutes } from "../modules/push/push.routes";
 import { uploadImages } from "../midddlewares/upload";
 import { commentsRouter } from "../comments/commentsRouter";
-import { gratitudeRoutes } from "../modules/gratitude/gratitude.routes";
 import { pointsController } from "../modules/points/points.controller";
 import {
   createAnnouncement, getAnnouncements, deleteAnnouncement,
@@ -145,7 +144,6 @@ router.put("/bulletin-posts/:id/resolve", auth(), bulletinPostController.resolve
 router.use("/sheets", sheetsRoutes);
  router.use("/chat", chatRoutes);
 router.use("/notifications", pushRoutes);
-router.use("/gratitude", gratitudeRoutes);
 router.use("/", commentsRouter);
 
 ////////////////////////////////////////////////// points //////////////////////////////////////////////
