@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FaPaperPlane, FaUserCircle, FaInbox, FaCircle, FaArrowLeft } from "react-icons/fa";
+import { FaPaperPlane, FaUserCircle, FaInbox, FaCircle, FaArrowLeft, FaTimes, FaHeart, FaStar, FaAward, FaSun } from "react-icons/fa";
 import { useGetMyChatRoomsQuery, useGetChatMessagesQuery, useMarkAsReadMutation } from "../../redux/api/chatApi";
+import { useSendGratitudeNoteMutation } from "../../redux/api/gratitudeApi";
 import { useSocket } from "../../hooks/useSocket";
 import { getUserLocalStorage } from "../../auth/auth";
 import { format } from "date-fns";
+import { toast } from "react-toastify";
 
 const ChatPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -16,6 +18,11 @@ const ChatPage = () => {
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
   const typingTimeoutRef = useRef<any>(null);
 
+  const [showThankYouModal, setShowThankYouModal] = useState(false);
+  const [thankYouMessage, setThankYouMessage] = useState("");
+  const [selectedBadge, setSelectedBadge] = useState("HEART");
+  const [sendGratitudeNote, { isLoading: isSendingGratitude }] = useSendGratitudeNoteMutation();
+
   const token = getUserLocalStorage();
   const { socket, isConnected } = useSocket({ autoConnect: true, token: token || "" });
   const { data: roomsData, isLoading: roomsLoading } = useGetMyChatRoomsQuery(undefined);
@@ -23,6 +30,34 @@ const ChatPage = () => {
     skip: !activeRoomId,
   });
   const [markAsRead] = useMarkAsReadMutation();
+
+  const handleSendThankYou = async () => {
+    if (!thankYouMessage.trim()) {
+      toast.error("Please enter a thank-you message");
+      return;
+    }
+    const finderId = currentRoom?.claim?.foundItem?.userId;
+    if (!finderId) return;
+
+    try {
+      const res = await sendGratitudeNote({
+        receiverId: finderId,
+        itemId: currentRoom?.claim?.foundItemId,
+        message: thankYouMessage,
+        badgeType: selectedBadge,
+      }).unwrap();
+
+      if (res?.success) {
+        toast.success("Thank-you note and 50 points sent successfully! 🎉");
+        setShowThankYouModal(false);
+        setThankYouMessage("");
+      } else {
+        toast.error(res?.message || "Failed to send thank-you note");
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to send thank-you note");
+    }
+  };
 
   const rooms = roomsData?.data || [];
   const currentRoom = rooms.find((r: any) => r.id === activeRoomId);
@@ -263,6 +298,17 @@ const ChatPage = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {currentRoom?.claim?.status === "APPROVED" &&
+                   currentRoom?.claim?.foundItem?.userId &&
+                   currentRoom?.claim?.foundItem?.userId !== currentUser.id &&
+                   currentUser.id === currentRoom?.claim?.userId && (
+                    <button
+                      onClick={() => setShowThankYouModal(true)}
+                      className="px-2.5 py-1 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 hover:from-pink-600 hover:via-rose-600 hover:to-red-600 text-white rounded-lg text-[10px] font-bold shadow-md shadow-pink-500/10 flex items-center gap-1 transition-all duration-200"
+                    >
+                      💖 Say Thank You
+                    </button>
+                  )}
                   <span className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full border ${
                     currentRoom?.claim?.status === "APPROVED"
                       ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
@@ -335,10 +381,10 @@ const ChatPage = () => {
             <div className="px-3 sm:px-4 py-2 border-t border-white/5 bg-gray-950/20 overflow-x-auto flex items-center gap-2 custom-scrollbar whitespace-nowrap">
               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mr-1 shrink-0">Meetup Templates:</span>
               {[
-                { label: "📍 SAS Office Lobby", text: "Hi! Can we meet at the SAS Office Lobby to coordinate the handoff?" },
-                { label: "📚 Library Lobby", text: "Hello! I am near the Campus Library Lobby. Can we meet there to return the item?" },
-                { label: "☕ Student Canteen", text: "Hey! Let's meet up at the Student Canteen for the item exchange." },
-                { label: "🕒 Meet Tomorrow", text: "Hi! Are you free to meet tomorrow at 10:00 AM at the SAS Office?" },
+                { label: " SAS Office Lobby", text: "Hi! Can we meet at the SAS Office Lobby to coordinate the handoff?" },
+                { label: " Library Lobby", text: "Hello! I am near the Campus Library Lobby. Can we meet there to return the item?" },
+                { label: " Student Canteen", text: "Hey! Let's meet up at the Student Canteen for the item exchange." },
+                { label: " Meet Tomorrow", text: "Hi! Are you free to meet tomorrow at 10:00 AM at the SAS Office?" },
               ].map((tpl) => (
                 <button
                   key={tpl.label}
@@ -472,6 +518,81 @@ const ChatPage = () => {
             </div>
           </div>
         )}
+      {/* Gratitude & Community Rewards - Thank You Modal */}
+      {showThankYouModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md bg-gray-900 border border-white/10 rounded-3xl p-6 shadow-2xl shadow-pink-500/5 flex flex-col gap-4 animate-scale-in">
+            <div className="flex items-center justify-between">
+              <h3 className="text-white text-base font-black flex items-center gap-2">
+                <span className="text-pink-500 text-lg">💖</span> Gratitude & Rewards
+              </h3>
+              <button
+                onClick={() => setShowThankYouModal(false)}
+                className="w-8 h-8 rounded-full bg-gray-800 border border-white/5 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+              >
+                <FaTimes size={12} />
+              </button>
+            </div>
+
+            <p className="text-gray-400 text-xs leading-relaxed">
+              Show your appreciation to the hero student who found your item! Sending a thank-you note will award them <span className="text-pink-400 font-bold">50 Community Points</span> and pin this badge to their public profile.
+            </p>
+
+            {/* Badge Selection */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Choose a Badge:</span>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "HEART", label: "Heart of Gold", icon: <FaHeart className="text-rose-500" />, desc: "Kindness & Integrity" },
+                  { id: "STAR", label: "Superstar Finder", icon: <FaStar className="text-yellow-400" />, desc: "Fast & Trustworthy" },
+                  { id: "HERO", label: "Community Hero", icon: <FaAward className="text-blue-400" />, desc: "Goes above and beyond" },
+                  { id: "KINDNESS", label: "Kindness Envoy", icon: <FaSun className="text-orange-400" />, desc: "Friendly & helpful" },
+                ].map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => setSelectedBadge(b.id)}
+                    className={`p-3 rounded-2xl border text-left flex items-start gap-2.5 transition-all duration-200 ${
+                      selectedBadge === b.id
+                        ? "bg-pink-500/10 border-pink-500/40 shadow-lg shadow-pink-500/5"
+                        : "bg-gray-800/40 border-white/5 hover:bg-gray-800/80"
+                    }`}
+                  >
+                    <div className="text-base mt-0.5 shrink-0">{b.icon}</div>
+                    <div className="min-w-0">
+                      <p className="text-white text-xs font-bold truncate">{b.label}</p>
+                      <p className="text-gray-500 text-[9px] truncate">{b.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Message */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Your Custom Note:</span>
+              <textarea
+                value={thankYouMessage}
+                onChange={(e) => setThankYouMessage(e.target.value)}
+                placeholder="Hi! Thank you so much for finding my lost item. You really saved the day! 😊"
+                className="w-full h-24 bg-gray-800 border border-white/5 focus:border-pink-500/40 rounded-2xl p-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-pink-500/20 resize-none transition-all"
+              />
+            </div>
+
+            {/* Send Button */}
+            <button
+              onClick={handleSendThankYou}
+              disabled={isSendingGratitude || !thankYouMessage.trim()}
+              className="w-full py-3 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 hover:from-pink-600 hover:via-rose-600 hover:to-red-600 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded-2xl text-xs font-black shadow-lg shadow-pink-500/15 flex items-center justify-center gap-1.5 transition-all duration-200"
+            >
+              {isSendingGratitude ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                "💖 Send Thank-You Note & +50 Points"
+              )}
+            </button>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

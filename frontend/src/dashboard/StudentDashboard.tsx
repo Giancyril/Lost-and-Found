@@ -5,7 +5,7 @@ import {
   FaTrophy, FaStar, FaBoxOpen, FaClipboardList, FaCheckCircle,
   FaTimesCircle, FaClock, FaMedal, FaSearch, FaArrowRight,
   FaChartLine, FaHistory, FaMapMarkerAlt, FaCalendarAlt,
-  FaBolt, FaChevronRight, FaUser,
+  FaBolt, FaChevronRight, FaUser, FaHeart, FaSun, FaAward,
 } from "react-icons/fa";
  import { MdVerified } from "react-icons/md";
 import { usePushNotifications } from "../hooks/usePushNotifications";
@@ -17,6 +17,7 @@ import {
   useMyClaimsQuery,
   useGetLeaderboardQuery,
 } from "../redux/api/api";
+import { useGetReceivedNotesQuery } from "../redux/api/gratitudeApi";
 import { baseApi } from "../redux/api/baseApi";
 
 const achievementApi = baseApi.injectEndpoints({
@@ -43,12 +44,13 @@ const medalColor = (i: number) =>
   : "text-amber-600 border-amber-700/40 bg-amber-700/10";
 
 // ── Tab definition ────────────────────────────────────────────────────────────
-type TabKey = "claims" | "found" | "lost" | "points";
+type TabKey = "claims" | "found" | "lost" | "points" | "gratitude";
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: "claims", label: "Claims",        icon: <FaClipboardList size={11} /> },
   { key: "found",  label: "Found Reports", icon: <FaBoxOpen size={11} /> },
   { key: "lost",   label: "Lost Reports",  icon: <FaSearch size={11} /> },
   { key: "points", label: "Points",        icon: <FaStar size={11} /> },
+  { key: "gratitude", label: "Gratitude",   icon: <FaHeart size={11} className="text-rose-400" /> },
 ];
 
 // ── Podium ────────────────────────────────────────────────────────────────────
@@ -104,8 +106,9 @@ export default function StudentDashboard() {
   const { data: claimsData, isLoading: p4 } = useMyClaimsQuery(undefined);
   const { data: boardData,  isLoading: p5 } = useGetLeaderboardQuery(undefined);
   const { data: achievementData, isLoading: p6 } = (achievementApi as any).useGetMyAchievementsQuery();
+  const { data: notesData, isLoading: p7 } = useGetReceivedNotesQuery(user?.id, { skip: !user?.id });
 
-  const loading       = p1 || p2 || p3 || p4 || p5 || p6;
+  const loading       = p1 || p2 || p3 || p4 || p5 || p6 || p7;
   const totalPoints   = pointsData?.data?.totalPoints ?? 0;
   const pointsHistory = pointsData?.data?.history ?? [];
   const foundItems    = foundData?.data  ?? [];
@@ -113,6 +116,7 @@ export default function StudentDashboard() {
   const claims        = claimsData?.data ?? [];
   const board         = boardData?.data  ?? [];
   const myAchievements = achievementData?.data ?? [];
+  const receivedNotes  = notesData?.data ?? [];
   const { permission, subscribe, isSupported } = usePushNotifications();
 
   const myRank         = board.findIndex((u: any) => u.id === user?.id) + 1;
@@ -124,6 +128,7 @@ export default function StudentDashboard() {
     found:  foundItems.length,
     lost:   lostItems.length,
     points: pointsHistory.length,
+    gratitude: receivedNotes.length,
   };
 
   if (loading) return (
@@ -415,6 +420,71 @@ export default function StudentDashboard() {
                     </p>
                   </div>
                 ))
+            )}
+
+            {tab === "gratitude" && (
+              receivedNotes.length === 0
+                ? <Empty label="No thank-you notes yet — return a found item to get your first note!" />
+                : (
+                  <div className="space-y-4 px-3 py-3">
+                    {/* Badge Showcase */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { type: "HEART", label: "Heart of Gold", icon: <FaHeart className="text-rose-500" />, count: receivedNotes.filter((n: any) => n.badgeType === "HEART").length, bg: "bg-rose-500/5 border-rose-500/10 text-rose-400" },
+                        { type: "STAR", label: "Superstar Finder", icon: <FaStar className="text-yellow-400" />, count: receivedNotes.filter((n: any) => n.badgeType === "STAR").length, bg: "bg-yellow-500/5 border-yellow-500/10 text-yellow-400" },
+                        { type: "HERO", label: "Community Hero", icon: <FaAward className="text-blue-400" />, count: receivedNotes.filter((n: any) => n.badgeType === "HERO").length, bg: "bg-blue-500/5 border-blue-500/10 text-blue-400" },
+                        { type: "KINDNESS", label: "Kindness Envoy", icon: <FaSun className="text-orange-400" />, count: receivedNotes.filter((n: any) => n.badgeType === "KINDNESS").length, bg: "bg-orange-500/5 border-orange-500/10 text-orange-400" },
+                      ].map((b) => (
+                        <div key={b.type} className={`p-2.5 rounded-2xl border flex items-center justify-between gap-2 ${b.bg}`}>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-base shrink-0">{b.icon}</span>
+                            <span className="text-[10px] font-bold truncate">{b.label}</span>
+                          </div>
+                          <span className="text-xs font-black shrink-0 px-2 py-0.5 rounded-full bg-white/5 border border-white/5">{b.count}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Thank-You Notes List */}
+                    <div className="space-y-2">
+                      <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Received Messages:</p>
+                      {receivedNotes.map((note: any) => {
+                        const badgeObj = [
+                          { type: "HEART", label: "Heart of Gold", icon: <FaHeart className="text-rose-500" /> },
+                          { type: "STAR", label: "Superstar Finder", icon: <FaStar className="text-yellow-400" /> },
+                          { type: "HERO", label: "Community Hero", icon: <FaAward className="text-blue-400" /> },
+                          { type: "KINDNESS", label: "Kindness Envoy", icon: <FaSun className="text-orange-400" /> },
+                        ].find((b) => b.type === note.badgeType);
+
+                        return (
+                          <div key={note.id} className="p-3.5 rounded-2xl bg-gray-800/40 border border-white/5 flex flex-col gap-2 hover:bg-gray-800/60 transition-all">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 min-w-0">
+                                {note.sender?.userImg ? (
+                                  <img src={note.sender.userImg} alt="" className="w-6 h-6 rounded-full object-cover shrink-0 border border-white/10" />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center shrink-0"><FaUser size={10} className="text-gray-400" /></div>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="text-white text-xs font-semibold truncate">{note.sender?.name || note.sender?.username || "Student"}</p>
+                                  <p className="text-gray-600 text-[8px] mt-0.5">{fmt(note.createdAt)}</p>
+                                </div>
+                              </div>
+                              {badgeObj && (
+                                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-[9px] font-bold text-gray-300">
+                                  {badgeObj.icon} <span className="hidden sm:inline">{badgeObj.label}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="relative pl-3 border-l-2 border-pink-500/30">
+                              <p className="text-gray-300 text-xs italic leading-relaxed">"{note.message}"</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
             )}
           </div>
         </div>
