@@ -718,6 +718,49 @@ const FoundItemsPage = () => {
     setIsAddModalOpen(false);
   });
 
+  const isSyncingRef = useRef(false);
+  const triggerSync = async () => {
+    if (isSyncingRef.current || pendingReports.length === 0) return;
+    isSyncingRef.current = true;
+    const toastId = toast.loading(`Syncing ${pendingReports.length} offline report(s)...`);
+    let successCount = 0;
+    const reportsToSync = [...pendingReports];
+    for (const report of reportsToSync) {
+      try {
+        await createFoundItem({
+          foundItemName: report.foundItemName,
+          description: report.description,
+          categoryId: report.categoryId,
+          img: report.img,
+          location: report.location,
+          date: new Date(report.date),
+          claimProcess: report.claimProcess,
+          reporterName: report.reporterName,
+          schoolEmail: report.schoolEmail,
+          department: report.department,
+        }).unwrap();
+        removePendingReport(report._offlineId);
+        successCount++;
+      } catch (err) {
+        console.error("Sync failed for report", report._offlineId, err);
+      }
+    }
+    if (successCount === reportsToSync.length) {
+      toast.update(toastId, { render: "All offline reports synced successfully! 🎉", type: "success", isLoading: false, autoClose: 4000 });
+    } else if (successCount > 0) {
+      toast.update(toastId, { render: `Synced ${successCount}/${reportsToSync.length} reports. Some failed.`, type: "warning", isLoading: false, autoClose: 4000 });
+    } else {
+      toast.update(toastId, { render: "Sync failed. Connection may be unstable. Will retry later.", type: "error", isLoading: false, autoClose: 4000 });
+    }
+    isSyncingRef.current = false;
+  };
+
+  useEffect(() => {
+    if (isOnline && pendingReports.length > 0) {
+      triggerSync();
+    }
+  }, [isOnline, pendingReports.length]);
+
   const useFetchStudent = (id: string) => {
     const trimmed = id?.trim() ?? "";
     const isValidId = Boolean(
@@ -1249,46 +1292,18 @@ const FoundItemsPage = () => {
             <div>
               <p className="text-white text-sm font-bold">{pendingReports.length} Pending Reports</p>
               <p className="text-blue-400/70 text-[10px] font-medium">
-                {isOnline ? "Connection restored. Sync your reports now." : "You are offline. Reports will sync when connection returns."}
-              </p>
-            </div>
+              {isOnline ? "Connection restored. Syncing your reports automatically..." : "You are offline. Reports will sync when connection returns."}
+            </p>
           </div>
-          {isOnline && (
-            <button
-              onClick={async () => {
-                const toastId = toast.loading("Syncing offline reports...");
-                let successCount = 0;
-                for (const report of pendingReports) {
-                  try {
-                    await createFoundItem({
-                      foundItemName: report.foundItemName,
-                      description: report.description,
-                      categoryId: report.categoryId,
-                      img: report.img,
-                      location: report.location,
-                      date: new Date(report.date),
-                      claimProcess: report.claimProcess,
-                      reporterName: report.reporterName,
-                      schoolEmail: report.schoolEmail,
-                      department: report.department,
-                    }).unwrap();
-                    removePendingReport(report._offlineId);
-                    successCount++;
-                  } catch (err) {
-                    console.error("Sync failed for report", report._offlineId, err);
-                  }
-                }
-                if (successCount === pendingReports.length) {
-                  toast.update(toastId, { render: "All reports synced successfully!", type: "success", isLoading: false, autoClose: 3000 });
-                } else {
-                  toast.update(toastId, { render: `Synced ${successCount}/${pendingReports.length} reports. Some failed.`, type: "warning", isLoading: false, autoClose: 3000 });
-                }
-              }}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
-            >
-              Sync Now
-            </button>
-          )}
+        </div>
+        {isOnline && (
+          <button
+            onClick={triggerSync}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
+          >
+            Sync Now
+          </button>
+        )}
         </div>
       )}
 

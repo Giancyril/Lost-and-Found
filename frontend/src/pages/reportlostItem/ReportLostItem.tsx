@@ -417,6 +417,15 @@ const ReportLostItem = () => {
   const [selectedColor, setSelectedColor] = useState("");
   const [, setSelectedCondition] = useState("");
 
+  const hasItemDetailsInput = Boolean(
+    lostItemName?.trim() ||
+    location?.trim() ||
+    description?.trim() ||
+    color?.trim() ||
+    condition?.trim() ||
+    selectedMenucategoryId
+  );
+
   const {
     isOnline,
     hasDraft,
@@ -435,6 +444,47 @@ const ReportLostItem = () => {
 
   const [dismissedDraft, setDismissedDraft] = useState(false);
   const [hasExistingDraftOnMount, setHasExistingDraftOnMount] = useState(false);
+
+  const isSyncingRef = useRef(false);
+  const triggerSync = async () => {
+    if (isSyncingRef.current || pendingReports.length === 0) return;
+    isSyncingRef.current = true;
+    const toastId = toast.loading(`Syncing ${pendingReports.length} offline report(s)...`);
+    let successCount = 0;
+    const reportsToSync = [...pendingReports];
+    for (const report of reportsToSync) {
+      try {
+        await createLostItem({
+          lostItemName: report.lostItemName,
+          description: report.description,
+          categoryId: report.categoryId,
+          img: report.img,
+          location: report.location,
+          date: new Date(report.date),
+          reporterName: report.reporterName,
+          schoolEmail: report.schoolEmail,
+        }).unwrap();
+        removePendingReport(report._offlineId);
+        successCount++;
+      } catch (err) {
+        console.error("Sync failed for report", report._offlineId, err);
+      }
+    }
+    if (successCount === reportsToSync.length) {
+      toast.update(toastId, { render: "All offline reports synced successfully! 🎉", type: "success", isLoading: false, autoClose: 4000 });
+    } else if (successCount > 0) {
+      toast.update(toastId, { render: `Synced ${successCount}/${reportsToSync.length} reports. Some failed.`, type: "warning", isLoading: false, autoClose: 4000 });
+    } else {
+      toast.update(toastId, { render: "Sync failed. Connection may be unstable. Will retry later.", type: "error", isLoading: false, autoClose: 4000 });
+    }
+    isSyncingRef.current = false;
+  };
+
+  useEffect(() => {
+    if (isOnline && pendingReports.length > 0) {
+      triggerSync();
+    }
+  }, [isOnline, pendingReports.length]);
 
   useEffect(() => {
     const draftExists = !!localStorage.getItem("form_draft_lost_item");
@@ -536,6 +586,22 @@ const ReportLostItem = () => {
     setValue("reporterName", "");
     setValue("schoolEmail", "");
     setValue("department", "");
+  };
+
+  const handleClearDetails = () => {
+    setValue("lostItemName", "");
+    setValue("location", "");
+    setValue("description", "");
+    setValue("color", "");
+    setValue("condition", "");
+    setSelectedColor("");
+    setSelectedCondition("");
+    setselectedMenu("");
+    setselectedMenucategoryId("");
+    setStartDate(new Date().toISOString().split("T")[0]);
+    setCategoryTouched(false);
+    clearDraft();
+    toast.info("Item details cleared!");
   };
 
   const [getStudentByDetails, { isFetching: isFetchingByDetails }] = useLazyGetStudentByDetailsQuery();
@@ -777,39 +843,13 @@ const ReportLostItem = () => {
                   <div>
                     <p className="text-white text-sm font-bold">{pendingReports.length} Pending Reports</p>
                     <p className="text-blue-400/70 text-[10px] font-medium">
-                      {isOnline ? "Connection restored. Sync your reports now." : "You are offline. Reports will sync when connection returns."}
+                      {isOnline ? "Connection restored. Syncing your reports automatically..." : "You are offline. Reports will sync when connection returns."}
                     </p>
                   </div>
                 </div>
                 {isOnline && (
                   <button
-                    onClick={async () => {
-                      const toastId = toast.loading("Syncing offline reports...");
-                      let successCount = 0;
-                      for (const report of pendingReports) {
-                        try {
-                          await createLostItem({
-                            lostItemName: report.lostItemName,
-                            description: report.description,
-                            categoryId: report.categoryId,
-                            img: report.img,
-                            location: report.location,
-                            date: new Date(report.date),
-                            reporterName: report.reporterName,
-                            schoolEmail: report.schoolEmail,
-                          }).unwrap();
-                          removePendingReport(report._offlineId);
-                          successCount++;
-                        } catch (err) {
-                          console.error("Sync failed for report", report._offlineId, err);
-                        }
-                      }
-                      if (successCount === pendingReports.length) {
-                        toast.update(toastId, { render: "All reports synced successfully!", type: "success", isLoading: false, autoClose: 3000 });
-                      } else {
-                        toast.update(toastId, { render: `Synced ${successCount}/${pendingReports.length} reports. Some failed.`, type: "warning", isLoading: false, autoClose: 3000 });
-                      }
-                    }}
+                    onClick={triggerSync}
                     className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
                   >
                     Sync Now
@@ -1321,36 +1361,44 @@ const ReportLostItem = () => {
                 )}
 
                 {/* Navigation */}
-                <div className={`flex mt-8 gap-3 ${step > 0 ? "justify-between" : "justify-end"}`}>
+                <div className={`flex mt-8 gap-3 items-center ${step > 0 ? "justify-between" : "justify-end"}`}>
                   {step > 0 && (
                     <button type="button" onClick={() => setStep((s) => s - 1)}
                       className="px-6 py-2.5 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white text-sm font-medium transition-all duration-200">
                       Back
                     </button>
                   )}
-                  {step < 2 ? (
-                    <button type="button" onClick={nextStep}
-                      disabled={
-                        step === 0
-                          ? Boolean(!reporterName || !schoolEmail || !!errors.reporterName || !!errors.schoolEmail)
-                          : Boolean(!lostItemName || !location || !description || !selectedMenucategoryId || !!errors.lostItemName || !!errors.location || !!errors.description ||
-                            (selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.colors?.length > 0 && (!color || !!errors.color)) ||
-                            (selectedColor && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 && (!condition || !!errors.condition)))
-                      }
-                      className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all duration-200 shadow-lg">
-                      Continue
-                    </button>
-                  ) : isLoading ? (
-                    <div className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600/50 text-white text-sm font-semibold">
-                      <Spinner size="sm" /> Submitting...
-                    </div>
-                  ) : (
-                    <button type="button" onClick={onSubmit}
-                      disabled={!selectedFile}
-                      className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all duration-200 shadow-lg">
-                      Submit Report
-                    </button>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {step === 1 && hasItemDetailsInput && (
+                      <button type="button" onClick={handleClearDetails}
+                        className="px-6 py-2.5 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white text-sm font-medium transition-all duration-200">
+                        Clear Details
+                      </button>
+                    )}
+                    {step < 2 ? (
+                      <button type="button" onClick={nextStep}
+                        disabled={
+                          step === 0
+                            ? Boolean(!reporterName || !schoolEmail || !!errors.reporterName || !!errors.schoolEmail)
+                            : Boolean(!lostItemName || !location || !description || !selectedMenucategoryId || !!errors.lostItemName || !!errors.location || !!errors.description ||
+                              (selectedMenu && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.colors?.length > 0 && (!color || !!errors.color)) ||
+                              (selectedColor && CATEGORY_CONFIG[selectedMenu.toLowerCase() as keyof typeof CATEGORY_CONFIG]?.conditions?.length > 0 && (!condition || !!errors.condition)))
+                        }
+                        className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all duration-200 shadow-lg">
+                        Continue
+                      </button>
+                    ) : isLoading ? (
+                      <div className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600/50 text-white text-sm font-semibold">
+                        <Spinner size="sm" /> Submitting...
+                      </div>
+                    ) : (
+                      <button type="button" onClick={onSubmit}
+                        disabled={!selectedFile}
+                        className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all duration-200 shadow-lg">
+                        Submit Report
+                      </button>
+                    )}
+                  </div>
                 </div>
 
               </form>
