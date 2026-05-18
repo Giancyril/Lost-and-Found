@@ -16,11 +16,13 @@ const itemCategory_validate_1 = require("../modules/itemCategory/itemCategory.va
 const foundItems_validate_1 = require("../modules/foundItems/foundItems.validate");
 const claim_validate_1 = require("../modules/claim/claim.validate");
 const lost_controller_1 = require("../modules/lostItem/lost.controller");
+const sighting_controller_1 = require("../modules/sighting/sighting.controller");
 const adminStats_1 = require("../utils/adminStats");
 const locationStats_1 = require("../utils/locationStats");
 const auditLog_1 = require("../utils/auditLog");
 const aiSearch_controller_1 = require("../modules/aiSearch/aiSearch.controller");
 const aiSearch_validate_1 = require("../modules/aiSearch/aiSearch.validate");
+const ai_controller_1 = require("../modules/ai/ai.controller");
 const emailController_1 = require("../utils/emailController");
 const bulletinPost_controller_1 = require("../modules/bulletinPost/bulletinPost.controller");
 const bulletinPost_validate_1 = require("../modules/bulletinPost/bulletinPost.validate");
@@ -73,6 +75,11 @@ router.put("/found-lost", (0, auth_1.default)(), lost_controller_1.lostItemContr
 router.get("/my/lostItem", (0, auth_1.default)(), lost_controller_1.lostItemController.getMyLostItem);
 router.put("/my/lostItem", (0, auth_1.default)(), lost_controller_1.lostItemController.editMyLostItem);
 router.delete("/my/lostItem/:id", (0, auth_1.default)(), lost_controller_1.lostItemController.deleteMyLostItem);
+////////////////////////////////////////////////// sightings //////////////////////////////////////////////
+router.post("/sightings", (0, auth_1.default)(true), sighting_controller_1.sightingController.createSighting);
+router.get("/sightings/lost-item/:lostItemId", sighting_controller_1.sightingController.getSightingsForLostItem);
+router.put("/sightings/:sightingId/verify", (0, auth_1.default)(), sighting_controller_1.sightingController.verifySighting);
+router.delete("/sightings/:sightingId", (0, auth_1.default)(), sighting_controller_1.sightingController.deleteSighting);
 router.get("/my/foundItem", (0, auth_1.default)(), foundItem_controller_1.foundItemController.getMyFoundItem);
 router.put("/my/foundItem", (0, auth_1.default)(), foundItem_controller_1.foundItemController.editMyFoundItem);
 router.delete("/my/foundItem/:id", (0, auth_1.default)(), foundItem_controller_1.foundItemController.deleteMyFoundItem);
@@ -90,8 +97,9 @@ router.get("/admin/audit-logs", (0, auth_1.default)(), auditLog_1.getAuditLogs);
 router.put("/block/user/:id", (0, auth_1.default)(), user_controllers_1.userController.blockUser);
 router.delete("/delete-user/:id", (0, auth_1.default)(), user_controllers_1.userController.softDeleteUser);
 router.get("/admin/match-notifications", (0, auth_1.default)(), getMatchNotifications_1.getMatchNotifications);
-////////////////////////////////////////////////// AI search //////////////////////////////////////////////
+// ////////////////////////////////////////////////// AI search //////////////////////////////////////////////
 router.post("/ai-search", (0, validate_1.default)(aiSearch_validate_1.aiSearchValidation.aiSearchSchema), aiSearch_controller_1.aiSearchController.aiSearch);
+router.post("/ai-recognize", (0, auth_1.default)(true), upload_1.uploadImages.single("image"), ai_controller_1.aiRecognitionController.recognizeImage);
 // ── Email / Mailer ──
 router.post("/email/lost-item", (0, auth_1.default)(), emailController_1.sendLostItemEmail);
 router.post("/email/claim-approved", (0, auth_1.default)(), emailController_1.sendClaimApprovedEmail);

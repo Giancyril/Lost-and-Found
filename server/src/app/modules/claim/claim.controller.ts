@@ -21,7 +21,7 @@ const createClaim = async (req: Request, res: Response) => {
     // ── Achievement triggers ────────────────────────────────────────────────
     const userId = (result as any).userId || (req.user as any)?.id;
     if (userId) {
-      checkClaimAchievements(userId).catch(err => 
+      checkClaimAchievements(userId).catch(err =>
         console.error("[Achievement] Error checking claim badges:", err)
       );
     }
@@ -90,11 +90,11 @@ const updateClaimStatus = async (req: Request, res: Response, next: NextFunction
 
     // ── Achievement triggers ────────────────────────────────────────────────
     if (result && (result as any).userId) {
-      checkClaimAchievements((result as any).userId).catch(err => 
+      checkClaimAchievements((result as any).userId).catch(err =>
         console.error("[Achievement] Error checking claim badges:", err)
       );
       if (req.body.status === "APPROVED") {
-        checkPointAchievements((result as any).userId).catch(err => 
+        checkPointAchievements((result as any).userId).catch(err =>
           console.error("[Achievement] Error checking point badges:", err)
         );
       }

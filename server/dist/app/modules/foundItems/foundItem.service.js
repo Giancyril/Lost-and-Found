@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.foundItemService = void 0;
 const prisma_1 = __importDefault(require("../../config/prisma"));
+const ai_service_1 = require("../ai/ai.service");
 const storage_1 = require("../../utils/storage");
 const match_service_1 = require("../matching/match.service");
 const createFoundItem = (data, userId) => __awaiter(void 0, void 0, void 0, function* () {
@@ -33,6 +34,16 @@ const createFoundItem = (data, userId) => __awaiter(void 0, void 0, void 0, func
         reporterName: data.reporterName || "",
         schoolEmail: data.schoolEmail || "",
     };
+    // ── AI SENTIMENT MODERATION: Determine urgency ──────────────────────────
+    try {
+        const urgency = yield ai_service_1.aiRecognitionService.analyzeUrgency(data.foundItemName, data.description);
+        createData.urgencyScore = urgency.urgencyScore;
+        createData.urgencyLevel = urgency.urgencyLevel;
+        createData.urgencyReason = urgency.urgencyReason;
+    }
+    catch (aiErr) {
+        console.error("[SentimentMod] Failed to analyze urgency:", aiErr);
+    }
     if (userId)
         createData.userId = userId;
     const result = yield prisma_1.default.foundItem.create({
@@ -156,6 +167,18 @@ const editMyFoundItem = (data) => __awaiter(void 0, void 0, void 0, function* ()
         updateData.reporterName = data.reporterName;
     if ((_b = data === null || data === void 0 ? void 0 : data.img) === null || _b === void 0 ? void 0 : _b.startsWith("data:")) {
         updateData.img = yield (0, storage_1.uploadBase64ToStorage)(data.img, "found", data.id);
+    }
+    // Update urgency if content changed
+    if ((data === null || data === void 0 ? void 0 : data.foundItemName) || (data === null || data === void 0 ? void 0 : data.description)) {
+        try {
+            const urgency = yield ai_service_1.aiRecognitionService.analyzeUrgency(data.foundItemName || "", data.description || "");
+            updateData.urgencyScore = urgency.urgencyScore;
+            updateData.urgencyLevel = urgency.urgencyLevel;
+            updateData.urgencyReason = urgency.urgencyReason;
+        }
+        catch (aiErr) {
+            console.error("[SentimentMod] Update failed:", aiErr);
+        }
     }
     return prisma_1.default.foundItem.update({ where: { id: data.id }, data: updateData });
 });

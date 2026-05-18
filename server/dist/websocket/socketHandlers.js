@@ -114,6 +114,22 @@ const socketHandlers = (io, socket) => {
         socket.leave(roomName);
         console.log(`User ${socket.userId} left chat room: ${roomName}`);
     });
+    socket.on('chat-typing-start', (data) => {
+        console.log(`[WS] chat-typing-start received for room: ${data.chatRoomId} from user ${socket.userId}`);
+        const roomName = `chat-${data.chatRoomId}`;
+        socket.to(roomName).emit('chat-user-typing', {
+            userId: socket.userId,
+            isTyping: true
+        });
+    });
+    socket.on('chat-typing-stop', (data) => {
+        console.log(`[WS] chat-typing-stop received for room: ${data.chatRoomId} from user ${socket.userId}`);
+        const roomName = `chat-${data.chatRoomId}`;
+        socket.to(roomName).emit('chat-user-typing', {
+            userId: socket.userId,
+            isTyping: false
+        });
+    });
     socket.on('send-message', (data) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             if (!socket.userId)

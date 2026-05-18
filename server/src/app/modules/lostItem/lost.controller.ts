@@ -42,7 +42,7 @@ const createLostItem = async (req: Request, res: Response) => {
       // Log to Google Sheets
       try {
         const reportTimestamp = new Date().toISOString();
-        const studentId = req.body.studentId || 
+        const studentId = req.body.studentId ||
           (req.body.schoolEmail ? req.body.schoolEmail.split("@")[0] : "N/A");
 
         await logToSheet({
@@ -68,7 +68,7 @@ const createLostItem = async (req: Request, res: Response) => {
       try {
         const fromName = process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
         const fromEmail = process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
-        
+
         const template = lostItemReportedTemplate({
           reporterName: req.body.reporterName || "Unknown",
           itemName: req.body.lostItemName,
@@ -84,7 +84,7 @@ const createLostItem = async (req: Request, res: Response) => {
           subject: template.subject,
           html: template.html,
         });
-        
+
         console.log("[Email] Lost item confirmation sent to:", req.body.schoolEmail);
       } catch (emailError) {
         console.error("[Email] Failed to send lost item confirmation:", emailError);
@@ -96,10 +96,10 @@ const createLostItem = async (req: Request, res: Response) => {
 
       // ── Achievement triggers ────────────────────────────────────────────────
       if (userId) {
-        checkLostItemAchievements(userId).catch(err => 
+        checkLostItemAchievements(userId).catch(err =>
           console.error("[Achievement] Error checking lost item badges:", err)
         );
-        checkPointAchievements(userId).catch(err => 
+        checkPointAchievements(userId).catch(err =>
           console.error("[Achievement] Error checking point badges:", err)
         );
       }

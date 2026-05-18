@@ -49,6 +49,9 @@ const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function
             }
         }
         const result = yield foundItem_service_1.foundItemService.createFoundItem(req.body, reporterUserId);
+        const io = req.app.get("io");
+        if (io)
+            io.emit("stats-updated");
         if (result === null || result === void 0 ? void 0 : result.id) {
             // Award 50pts to the student if their User account was found
             if (reporterUserId) {
@@ -212,6 +215,9 @@ const deleteMyFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, functi
     try {
         const id = req.params.id;
         yield foundItem_service_1.foundItemService.deleteMyFoundItem(id);
+        const io = req.app.get("io");
+        if (io)
+            io.emit("stats-updated");
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,
@@ -232,6 +238,9 @@ const archiveFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, functio
     try {
         const { id } = req.params;
         const result = yield foundItem_service_1.foundItemService.archiveFoundItem(id);
+        const io = req.app.get("io");
+        if (io)
+            io.emit("stats-updated");
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,
@@ -252,6 +261,9 @@ const restoreFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, functio
     try {
         const { id } = req.params;
         const result = yield foundItem_service_1.foundItemService.restoreFoundItem(id);
+        const io = req.app.get("io");
+        if (io)
+            io.emit("stats-updated");
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,

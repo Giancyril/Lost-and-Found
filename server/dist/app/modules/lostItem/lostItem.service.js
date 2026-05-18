@@ -16,6 +16,7 @@ exports.lostTItemServices = void 0;
 const prisma_1 = __importDefault(require("../../config/prisma"));
 const storage_1 = require("../../utils/storage");
 const match_service_1 = require("../matching/match.service");
+const ai_service_1 = require("../ai/ai.service");
 const toggleFoundStatus = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const currentItem = yield prisma_1.default.lostItem.findUnique({
         where: { id },
@@ -49,6 +50,16 @@ const createLostItem = (userId, item) => __awaiter(void 0, void 0, void 0, funct
         reporterName: item.reporterName || "",
         schoolEmail: item.schoolEmail || "",
     };
+    // ── AI SENTIMENT MODERATION: Determine urgency ──────────────────────────
+    try {
+        const urgency = yield ai_service_1.aiRecognitionService.analyzeUrgency(item.lostItemName, item.description);
+        createData.urgencyScore = urgency.urgencyScore;
+        createData.urgencyLevel = urgency.urgencyLevel;
+        createData.urgencyReason = urgency.urgencyReason;
+    }
+    catch (aiErr) {
+        console.error("[SentimentMod] Failed to analyze urgency:", aiErr);
+    }
     if (userId)
         createData.userId = userId;
     const result = yield prisma_1.default.lostItem.create({
@@ -163,6 +174,18 @@ const editMyLostItem = (data, user) => __awaiter(void 0, void 0, void 0, functio
     }
     else if (data === null || data === void 0 ? void 0 : data.img) {
         updateData.img = data.img;
+    }
+    // Update urgency if content changed
+    if ((data === null || data === void 0 ? void 0 : data.lostItemName) || (data === null || data === void 0 ? void 0 : data.description)) {
+        try {
+            const urgency = yield ai_service_1.aiRecognitionService.analyzeUrgency(data.lostItemName || "", data.description || "");
+            updateData.urgencyScore = urgency.urgencyScore;
+            updateData.urgencyLevel = urgency.urgencyLevel;
+            updateData.urgencyReason = urgency.urgencyReason;
+        }
+        catch (aiErr) {
+            console.error("[SentimentMod] Update failed:", aiErr);
+        }
     }
     const whereClause = { id: data.id };
     if (user)

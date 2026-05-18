@@ -57,18 +57,18 @@ const createFoundItem = async (req: Request, res: Response) => {
           (req.body.schoolEmail ? req.body.schoolEmail.split("@")[0] : "N/A");
 
         await logToSheet({
-          sheetName:    "Found Items",
-          timestamp:    reportTimestamp,
+          sheetName: "Found Items",
+          timestamp: reportTimestamp,
           studentId,
           reporterName: req.body.reporterName || "SAS Office",
-          email:        req.body.schoolEmail || "N/A",
-          itemName:     req.body.foundItemName,
-          description:  req.body.description || "",
-          location:     req.body.location,
-          date:         req.body.date,
-          type:         "FOUND",
-          reportId:     result.id.toString(),
-          scannedAt:    reportTimestamp,
+          email: req.body.schoolEmail || "N/A",
+          itemName: req.body.foundItemName,
+          description: req.body.description || "",
+          location: req.body.location,
+          date: req.body.date,
+          type: "FOUND",
+          reportId: result.id.toString(),
+          scannedAt: reportTimestamp,
         });
         console.log("[Sheets] Found item logged to Google Sheets:", result.id);
       } catch (sheetsError) {
@@ -77,15 +77,15 @@ const createFoundItem = async (req: Request, res: Response) => {
 
       // ── Send confirmation email ──────────────────────────────────────────────
       try {
-        const fromName  = process.env.SMTP_FROM_NAME  || "NBSC SAS Lost & Found";
+        const fromName = process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
         const fromEmail = process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
 
         const template = foundItemReportedTemplate({
           reporterName: req.body.reporterName || "Unknown",
-          itemName:     req.body.foundItemName,
-          location:     req.body.location,
-          date:         new Date(req.body.date).toLocaleDateString(),
-          description:  req.body.description,
+          itemName: req.body.foundItemName,
+          location: req.body.location,
+          date: new Date(req.body.date).toLocaleDateString(),
+          description: req.body.description,
         });
 
         await sendEmail({
@@ -93,7 +93,7 @@ const createFoundItem = async (req: Request, res: Response) => {
           fromEmail,
           toEmail: req.body.schoolEmail,
           subject: template.subject,
-          html:    template.html,
+          html: template.html,
         });
         console.log("[Email] Found item confirmation sent to:", req.body.schoolEmail);
       } catch (emailError) {
@@ -107,10 +107,10 @@ const createFoundItem = async (req: Request, res: Response) => {
 
       // ── Achievement triggers ────────────────────────────────────────────────
       if (reporterUserId) {
-        checkFoundItemAchievements(reporterUserId).catch(err => 
+        checkFoundItemAchievements(reporterUserId).catch(err =>
           console.error("[Achievement] Error checking found item badges:", err)
         );
-        checkPointAchievements(reporterUserId).catch(err => 
+        checkPointAchievements(reporterUserId).catch(err =>
           console.error("[Achievement] Error checking point badges:", err)
         );
       }

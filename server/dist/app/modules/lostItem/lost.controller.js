@@ -26,6 +26,9 @@ const toggleFoundStatus = (req, res) => __awaiter(void 0, void 0, void 0, functi
     try {
         const { id } = req.body;
         const result = yield lostItem_service_1.lostTItemServices.toggleFoundStatus(id);
+        const io = req.app.get("io");
+        if (io)
+            io.emit("stats-updated");
         const message = result.isFound
             ? "Item marked as found successfully"
             : "Item marked as not found successfully";
@@ -51,6 +54,9 @@ const createLostItem = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const item = req.body;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         const result = yield lostItem_service_1.lostTItemServices.createLostItem(userId, item);
+        const io = req.app.get("io");
+        if (io)
+            io.emit("stats-updated");
         if (result === null || result === void 0 ? void 0 : result.id) {
             // Log to Google Sheets
             try {
@@ -230,6 +236,9 @@ const deleteMyLostItem = (req, res) => __awaiter(void 0, void 0, void 0, functio
     try {
         const id = req.params.id;
         yield lostItem_service_1.lostTItemServices.deleteMyLostItem(id);
+        const io = req.app.get("io");
+        if (io)
+            io.emit("stats-updated");
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,

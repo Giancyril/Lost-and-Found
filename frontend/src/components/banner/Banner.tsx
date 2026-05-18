@@ -7,39 +7,70 @@ const Banner = () => {
   useScrollReveal();
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const { data: lostItems }  = useGetLostItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
+  const { data: lostItems } = useGetLostItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
   const { data: foundItems } = useGetFoundItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
-  const { data: stats }      = useAdminStatsQuery("");
+  const { data: stats } = useAdminStatsQuery("");
 
   const slides = [
-    {
-      badge: "SAS Lost & Found System",
-      title: "SAS Lost & Found",
-      subtitle: "Management System",
-      description: "The official lost and found platform for SAS students, staff, and faculty. Report missing belongings or help return found items quickly and securely within our school community.",
-      descShort:   "Report missing belongings or help return found items quickly and securely.",
-      primaryButton:   { text: "Report a Lost Item",    href: "/reportlostItem" },
-      secondaryButton: { text: "Check Recovered items", href: "/FoundItems"     },
+  {
+    badge: "Lost something?",
+    title: "Report a lost item in",
+    subtitle: "under 60 seconds",
+    description:
+      "Snap a photo, describe what was lost, and drop a pin. Your report goes live instantly and our AI matches it against found items in the database.",
+    descShort:
+      "Snap a photo, describe what was lost, and drop a pin. Matches found items instantly.",
+    primaryButton: {
+      text: "Report a Lost Item",
+      href: "/reportlostItem",
     },
-    {
-      badge: "Found something on campus?",
-      title: "Help a Fellow",
-      subtitle: "Student?",
-      description: "If you've found something on school grounds, please report it here. Your act of honesty helps reunite students and staff with their belongings and strengthens our school community.",
-      descShort:   "Report found items to help reunite students with their belongings and strengthen our school community.",
-      primaryButton:   { text: "Report a Lost Item",    href: "/reportlostItem" },
-      secondaryButton: { text: "Check Recovered items", href: "/FoundItems"     },
+    secondaryButton: {
+      text: "How AI matching works",
+      href: "/ai-search",
     },
-    {
-      badge: "Track your reports anytime",
-      title: "Stay Updated on",
-      subtitle: "Your Reports",
-      description: "Monitor the status of your lost item reports and claim requests in real time. Our lost and found system ensures you're notified the moment your item is located.",
-      descShort:   "Monitor your lost item reports and claims in real time. Get notified the moment your item is located.",
-      primaryButton:   { text: "Report a Lost Item",    href: "/reportlostItem" },
-      secondaryButton: { text: "Check Recovered items", href: "/FoundItems"     },
+  },
+  {
+    badge: "Found something on campus?",
+    title: "Please Return It to",
+    subtitle: "the SAS Office",
+    description:
+      "If you've found something on school grounds, please bring it to the Student Affairs Office. Our staff will log it securely and notify the owner right away your act of honesty strengthens our school community.",
+    descShort:
+      "Bring found items to the Student Affairs Office. Staff will log it and notify the owner.",
+    // Office info shown instead of a form action
+    officeInfo: {
+      name: "Student Affairs Office — SWDC",
+      location: "Ground floor, main building",
+      hours: "Mon – Fri, 8:00 AM – 5:00 PM",
+      note: "Bring the item in person. No drop-off boxes.",
     },
-  ];
+    primaryButton: {
+      text: "View Recovered Items",
+      href: "/FoundItems",
+    },
+    secondaryButton: {
+      text: "Where is the office?",
+      href: "/about#office-location",
+    },
+  },
+  {
+    badge: "Track your reports anytime",
+    title: "Stay Updated on",
+    subtitle: "Your Reports",
+    description:
+      "Monitor the status of your lost item reports and claim requests in real time. Our lost and found system ensures you're notified the moment your item is located.",
+    descShort:
+      "Monitor your lost item reports and claims in real time. Get notified the moment your item is located.",
+    primaryButton: {
+      text: "My Lost Reports",
+      href: "/my-reports",
+    },
+    secondaryButton: {
+      text: "Check Recovered Items",
+      href: "/FoundItems",
+    },
+  },
+];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -109,9 +140,9 @@ const Banner = () => {
   const StatsRow = () => (
     <div className="grid grid-cols-3 gap-2 sm:gap-3">
       {[
-        [stats?.data?.lostItems    ?? lostItems?.data?.length  ?? 0, "Lost Reports"  ],
-        [stats?.data?.foundItems   ?? foundItems?.data?.length ?? 0, "Found Reports" ],
-        [stats?.data?.claimedItems ?? "—",                           "Claimed Items" ],
+        [stats?.data?.lostItems ?? lostItems?.data?.length ?? 0, "Lost Reports"],
+        [stats?.data?.foundItems ?? foundItems?.data?.length ?? 0, "Found Reports"],
+        [stats?.data?.claimedItems ?? "—", "Claimed Items"],
       ].map(([num, label]) => (
         <div key={label as string} className="bg-white/5 border border-white/10 rounded-xl p-2 sm:p-3 text-center backdrop-blur-sm">
           <p className="text-blue-400 font-black text-lg sm:text-xl">{num as React.ReactNode}</p>
@@ -190,9 +221,8 @@ const Banner = () => {
               <div className="flex items-center gap-2.5 mb-2">
                 {slides.map((_, i) => (
                   <button key={i} onClick={() => setCurrentSlide(i)}
-                    className={`transition-all duration-300 rounded-full ${
-                      i === currentSlide ? "w-7 h-1.5 bg-blue-400" : "w-1.5 h-1.5 bg-gray-600 hover:bg-gray-400"
-                    }`}
+                    className={`transition-all duration-300 rounded-full ${i === currentSlide ? "w-7 h-1.5 bg-blue-400" : "w-1.5 h-1.5 bg-gray-600 hover:bg-gray-400"
+                      }`}
                   />
                 ))}
               </div>
