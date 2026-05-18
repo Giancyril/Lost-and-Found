@@ -740,14 +740,12 @@ const ReportLostItem = () => {
           <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
             {/* Draft Restoration Banner */}
             {hasExistingDraftOnMount && !dismissedDraft && (
-              <div className="bg-amber-500/10 border-b border-amber-500/20 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="bg-blue-500/10 border-b border-blue-500/20 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
-                    <FaCopy size={18} />
-                  </div>
+                  
                   <div>
                     <p className="text-white text-sm font-bold">Unsaved Draft Found</p>
-                    <p className="text-amber-400/70 text-[10px] font-medium leading-relaxed">
+                    <p className="text-blue-400/70 text-[10px] font-medium leading-relaxed">
                       We found a draft from your last session. Would you like to restore it?
                     </p>
                   </div>
@@ -755,7 +753,7 @@ const ReportLostItem = () => {
                 <div className="flex gap-2 shrink-0 w-full sm:w-auto">
                   <button
                     onClick={handleRestoreDraft}
-                    className="flex-1 sm:flex-none px-4 py-2 bg-amber-500 hover:bg-amber-400 text-gray-950 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-md"
+                    className="flex-1 sm:flex-none px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-md"
                   >
                     Restore
                   </button>
@@ -1090,7 +1088,7 @@ const ReportLostItem = () => {
 
                     <Field label="Description" required error={errors.description?.message as string} icon={<IconText />}>
                       <textarea {...register("description", { required: "Description is required" })}
-                        rows={2} className={`${inputCls} resize-none`}
+                        rows={4} className={`${inputCls} resize-none custom-scrollbar`}
                         placeholder=" " />
                     </Field>
 

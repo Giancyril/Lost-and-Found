@@ -1707,7 +1707,7 @@ const FoundItemsPage = () => {
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                     Description <span className="text-red-400">*</span>
                   </label>
-                  <textarea {...addRegister("description", { required: "Description is required" })} rows={2} placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none" />
+                  <textarea {...addRegister("description", { required: "Description is required" })} rows={2} placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none custom-scrollbar" />
                   {addErrors.description && <p className="text-red-400 text-xs">{addErrors.description?.message as string}</p>}
                 </div>
 
