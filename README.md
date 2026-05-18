@@ -533,4 +533,5 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 
 ### Phase 7: Student Support & Community Empowerment (Current)
 - **Peer-to-Peer Reunification**: Secure and private chat rooms between the finder and owner, enabling seamless handoff arrangements without exposing personal emails or phone numbers.
+- **Crowdsourced "Sighting Pins" (Community Hotspots) (Completed)**: Enables students in a rush to report sightings, drop real-time search radiuses, and extend pin expiration via student verifications.
 

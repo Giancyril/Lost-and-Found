@@ -187,12 +187,12 @@ const NotificationBell = () => {
           <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-[68px] sm:top-11 w-auto sm:w-96 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
               <div className="flex items-center gap-2">
-                <FaBell size={13} className="text-cyan-400" />
+                <FaBell size={13} className="text-blue-400" />
                 <p className="text-white text-sm font-semibold">Notifications</p>
                 {unreadCount > 0 && <span className="bg-red-500/20 text-red-400 border border-red-500/20 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount} new</span>}
               </div>
               <div className="flex items-center gap-2">
-                {unreadCount > 0 && <button onClick={markAllRead} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors">Mark all read</button>}
+                {unreadCount > 0 && <button onClick={markAllRead} className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors">Mark all read</button>}
                 {notifications.length > 0 && <button onClick={clearAll} className="text-gray-600 hover:text-gray-400 text-xs transition-colors">Clear</button>}
                 <button onClick={() => setOpen(false)} className="sm:hidden text-gray-500 hover:text-white ml-1"><FaTimes size={13} /></button>
               </div>
@@ -223,7 +223,7 @@ const NotificationBell = () => {
             </div>
             {notifications.length > 0 && (
               <div className="px-4 py-2.5 border-t border-white/5">
-                <Link to="/dashboard" onClick={() => setOpen(false)} className="text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors block text-center">View all activity</Link>
+                <Link to="/dashboard" onClick={() => setOpen(false)} className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors block text-center">View all activity</Link>
               </div>
             )}
           </div>

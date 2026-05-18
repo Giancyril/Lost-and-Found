@@ -608,7 +608,7 @@ const SingleFoundItem = () => {
                   const approvedClaim = claimArr.find((c: any) => c.status === "APPROVED");
                   const claimedAt = approvedClaim?.auditLogs?.find((l: any) => l.toStatus === "APPROVED")?.createdAt ?? approvedClaim?.createdAt ?? foundItemData?.updatedAt ?? null;
                   return (
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3 flex items-center gap-3">
+                    <div className="bg-gray-900 rounded-2xl p-3.5 border border-white/5 shadow-xl flex items-center gap-3">
                       
                       <div className="flex-1 min-w-0">
                         <p className="text-white text-xs font-black leading-tight">Successfully Returned</p>

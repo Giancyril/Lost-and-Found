@@ -1209,7 +1209,7 @@ const FoundItemsPage = () => {
                             : (lowerMenu.includes("sport")) ? "/sport.jpg"
                               : "/phone.png";
       const payload = {
-        img: isAutoFillImage ? autoFillPath : (addPreview || ""),
+        img: (isAutoFillImage && !addPreview) ? autoFillPath : (addPreview || ""),
         categoryId: addSelectedMenucategoryId,
         foundItemName: data.foundItemName,
         description: data.description,
@@ -1767,6 +1767,7 @@ const FoundItemsPage = () => {
                         <img
                           src={
                             (() => {
+                              if (addPreview) return addPreview;
                               const lower = addSelectedMenu?.toLowerCase() || "";
                               if (lower.includes("money") || lower.includes("cash") || lower.includes("bill") || lower.includes("currency")) return "/money.jpg";
                               if (lower === "id" || lower === "identification") return "/id.jpg";
@@ -1777,7 +1778,7 @@ const FoundItemsPage = () => {
                               if (lower.includes("key")) return "/keys.jpg";
                               if (lower.includes("usb") || lower.includes("storage") || lower.includes("flash drive")) return "/usb.jpg";
                               if (lower.includes("document")) return "/id.jpg";
-                              return addPreview;
+                              return "";
                             })()
                           }
                           alt="Preview"
@@ -1789,8 +1790,8 @@ const FoundItemsPage = () => {
                         </div>
                       </div>
                       <div className="px-4 py-2.5 border-t border-gray-700 flex items-center justify-between">
-                        <span className="text-xs text-gray-400 truncate">{(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? "money.jpg (Default)" : (addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification") ? "id.jpg (Default)" : (addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) ? "phone.png (Default)" : (addSelectedFile?.name || "")}</span>
-                        <span className="text-xs text-gray-500 ml-3 shrink-0">{(addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency") || addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification" || addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) ? "Default image" : (addSelectedFile ? (addSelectedFile.size < 1024 * 1024 ? (addSelectedFile.size / 1024).toFixed(1) + " KB" : (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB") : "")}</span>
+                        <span className="text-xs text-gray-400 truncate">{addSelectedFile ? addSelectedFile.name : ((addSelectedMenu?.toLowerCase().includes("money") || addSelectedMenu?.toLowerCase().includes("cash") || addSelectedMenu?.toLowerCase().includes("bill") || addSelectedMenu?.toLowerCase().includes("currency")) ? "money.jpg (Default)" : (addSelectedMenu?.toLowerCase() === "id" || addSelectedMenu?.toLowerCase() === "identification") ? "id.jpg (Default)" : (addSelectedMenu?.toLowerCase().includes("device") || addSelectedMenu?.toLowerCase().includes("electronic") || addSelectedMenu?.toLowerCase().includes("gadget")) ? "phone.png (Default)" : "No file chosen")}</span>
+                        <span className="text-xs text-gray-500 ml-3 shrink-0">{addSelectedFile ? (addSelectedFile.size < 1024 * 1024 ? (addSelectedFile.size / 1024).toFixed(1) + " KB" : (addSelectedFile.size / 1024 / 1024).toFixed(1) + " MB") : "Default image"}</span>
                       </div>
                       <input ref={addFileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleAddFileChange(e.target.files)} />
                     </div>

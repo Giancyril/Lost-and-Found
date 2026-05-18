@@ -38,6 +38,7 @@ model User {
   pushSubscriptions PushSubscription[]
   chatReadStatuses  ChatReadStatus[]
   userAchievements  UserAchievement[]
+  sightings         Sighting[]
 
   @@map("users")
 }
@@ -105,6 +106,7 @@ model LostItem {
   category           ItemCategory        @relation(fields: [categoryId], references: [id])
   user               User?               @relation(fields: [userId], references: [id])
   matchNotifications MatchNotification[]
+  sightings          Sighting[]
 
   @@map("lostItems")
 }
@@ -524,4 +526,23 @@ enum UrgencyLevel {
   NORMAL
   HIGH
   CRITICAL
+}
+
+model Sighting {
+  id              String   @id @default(uuid())
+  lostItemId      String
+  userId          String?
+  reporterName    String   @default("Anonymous")
+  img             String   @default("")
+  location        String
+  coordinates     String   @default("") // "lat,lng" format
+  details         String   @default("")
+  verifiedUserIds String[] @default([]) // Tracks user IDs who verified it
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  lostItem        LostItem @relation(fields: [lostItemId], references: [id], onDelete: Cascade)
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("sightings")
 }

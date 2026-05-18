@@ -11,6 +11,7 @@ import { FoundItemCategorySchema } from "../modules/itemCategory/itemCategory.va
 import { FoundItemSchema } from "../modules/foundItems/foundItems.validate";
 import { ItemClaimSchema } from "../modules/claim/claim.validate";
 import { lostItemController } from "../modules/lostItem/lost.controller";
+import { sightingController } from "../modules/sighting/sighting.controller";
 import { adminStats } from "../utils/adminStats";
 import { locationStats } from "../utils/locationStats";
 import { getAuditLogs } from "../utils/auditLog";
@@ -102,6 +103,12 @@ router.put("/found-lost", auth(), lostItemController.toggleFoundStatus);
 router.get("/my/lostItem", auth(), lostItemController.getMyLostItem);
 router.put("/my/lostItem", auth(), lostItemController.editMyLostItem);
 router.delete("/my/lostItem/:id", auth(), lostItemController.deleteMyLostItem);
+
+////////////////////////////////////////////////// sightings //////////////////////////////////////////////
+router.post("/sightings", auth(true), sightingController.createSighting);
+router.get("/sightings/lost-item/:lostItemId", sightingController.getSightingsForLostItem);
+router.put("/sightings/:sightingId/verify", auth(), sightingController.verifySighting);
+router.delete("/sightings/:sightingId", auth(), sightingController.deleteSighting);
 
 router.get("/my/foundItem", auth(), foundItemController.getMyFoundItem);
 router.put("/my/foundItem", auth(), foundItemController.editMyFoundItem);

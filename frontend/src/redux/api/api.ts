@@ -306,6 +306,24 @@ const api = baseApi.injectEndpoints({
       invalidatesTags: ["comments"],
     }),
 
+    // sightings
+    getSightings: builder.query({
+      query: (lostItemId: string) => ({ url: `/sightings/lost-item/${lostItemId}`, method: "GET" }),
+      providesTags: ["comments"],
+    }),
+    createSighting: builder.mutation({
+      query: (data: any) => ({ url: `/sightings`, method: "POST", body: data }),
+      invalidatesTags: ["comments"],
+    }),
+    verifySighting: builder.mutation({
+      query: (sightingId: string) => ({ url: `/sightings/${sightingId}/verify`, method: "PUT" }),
+      invalidatesTags: ["comments"],
+    }),
+    deleteSighting: builder.mutation({
+      query: (sightingId: string) => ({ url: `/sightings/${sightingId}`, method: "DELETE" }),
+      invalidatesTags: ["comments"],
+    }),
+
     // points
     getMyPoints: builder.query({
       query: () => ({ url: "/points/my", method: "GET" }),
@@ -434,6 +452,11 @@ export const {
   useDeleteCommentMutation,
   useGetMyPointsQuery,
   useGetLeaderboardQuery,
+  // sightings
+  useGetSightingsQuery,
+  useCreateSightingMutation,
+  useVerifySightingMutation,
+  useDeleteSightingMutation,
   // ── student masterlist ──
   useGetStudentByIdQuery,
   useLazyGetStudentByIdQuery,
