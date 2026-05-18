@@ -198,11 +198,16 @@ const ChatDropdown = () => {
                   </div>
                 </div>
                 <div className="shrink-0">
-                  <span className={`px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-full border ${currentRoom?.claim?.status === "APPROVED"
-                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                  <span className={`px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-full border ${
+                    currentRoom?.claim?.foundItem?.isClaimed || currentRoom?.claim?.status === "APPROVED"
+                      ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                      : currentRoom?.claim?.status === "REJECTED"
+                      ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
                       : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
                     }`}>
-                    {currentRoom?.claim?.status || "PENDING"}
+                    {currentRoom?.claim?.foundItem?.isClaimed || currentRoom?.claim?.status === "APPROVED"
+                      ? "CLAIMED"
+                      : currentRoom?.claim?.status || "PENDING"}
                   </span>
                 </div>
               </div>

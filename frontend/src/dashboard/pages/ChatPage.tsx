@@ -267,11 +267,15 @@ const ChatPage = () => {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full border ${
-                    currentRoom?.claim?.status === "APPROVED"
-                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                    currentRoom?.claim?.foundItem?.isClaimed || currentRoom?.claim?.status === "APPROVED"
+                      ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                      : currentRoom?.claim?.status === "REJECTED"
+                      ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
                       : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
                   }`}>
-                    {currentRoom?.claim?.status || "PENDING"}
+                    {currentRoom?.claim?.foundItem?.isClaimed || currentRoom?.claim?.status === "APPROVED"
+                      ? "CLAIMED"
+                      : currentRoom?.claim?.status || "PENDING"}
                   </span>
                 </div>
               </div>

@@ -533,6 +533,4 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 
 ### Phase 7: Student Support & Community Empowerment (Current)
 - **Peer-to-Peer Reunification**: Secure and private chat rooms between the finder and owner, enabling seamless handoff arrangements without exposing personal emails or phone numbers.
-- **Gratitude & Community Rewards**: Digital thank-you notes and gratitude badges that display on hero student profiles to foster mutual respect and high-trust peer culture.
-- **Urgent Exam-Week Broadcast**: Real-time high-visibility notification channels for critical student items (e.g., calculators, notebooks, health devices) to mobilize fast community recovery right when it matters most.
 
