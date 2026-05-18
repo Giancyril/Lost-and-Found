@@ -21,6 +21,7 @@ export function CustomDatePicker({
   const [open,      setOpen]      = useState(false);
   const [viewYear,  setViewYear]  = useState(() => value ? parseInt(value.split("-")[0]) : new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(() => value ? parseInt(value.split("-")[1]) - 1 : new Date().getMonth());
+  const [shouldOpenUp, setShouldOpenUp] = useState(openUp);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,6 +32,43 @@ export function CustomDatePicker({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
+
+  useEffect(() => {
+    if (open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      const spaceAbove = rect.top;
+      
+      let parent = ref.current.parentElement;
+      let insideScrollContainer = false;
+      let parentTopSpace = 0;
+      
+      while (parent) {
+        const style = window.getComputedStyle(parent);
+        const overflowY = style.overflowY;
+        if (overflowY === "auto" || overflowY === "scroll" || overflowY === "hidden") {
+          insideScrollContainer = true;
+          const parentRect = parent.getBoundingClientRect();
+          parentTopSpace = rect.top - parentRect.top;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+
+      if (insideScrollContainer) {
+        if (openUp && parentTopSpace >= 360) {
+          setShouldOpenUp(true);
+        } else {
+          setShouldOpenUp(false);
+        }
+      } else {
+        if (openUp && spaceAbove >= 360) {
+          setShouldOpenUp(true);
+        } else {
+          setShouldOpenUp(false);
+        }
+      }
+    }
+  }, [open, openUp]);
 
   const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const DAYS   = ["Su","Mo","Tu","We","Th","Fr","Sa"];
@@ -109,7 +147,7 @@ export function CustomDatePicker({
       </div>
 
       {open && (
-        <div className={`absolute z-[999] ${openUp ? "bottom-full mb-2" : "top-full mt-2"} bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 w-72 overflow-hidden
+        <div className={`absolute z-[999] ${shouldOpenUp ? "bottom-full mb-2" : "top-full mt-2"} bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 w-72 overflow-hidden
           /* mobile: center on screen, desktop: align left */
           left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0
         `}>

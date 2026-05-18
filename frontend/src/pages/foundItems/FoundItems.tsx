@@ -746,7 +746,7 @@ const FoundItemsPage = () => {
       }
     }
     if (successCount === reportsToSync.length) {
-      toast.update(toastId, { render: "All offline reports synced successfully! 🎉", type: "success", isLoading: false, autoClose: 4000 });
+      toast.update(toastId, { render: "All offline reports synced successfully! ", type: "success", isLoading: false, autoClose: 4000 });
     } else if (successCount > 0) {
       toast.update(toastId, { render: `Synced ${successCount}/${reportsToSync.length} reports. Some failed.`, type: "warning", isLoading: false, autoClose: 4000 });
     } else {

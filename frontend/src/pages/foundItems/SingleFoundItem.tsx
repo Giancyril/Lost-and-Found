@@ -608,13 +608,11 @@ const SingleFoundItem = () => {
                   const approvedClaim = claimArr.find((c: any) => c.status === "APPROVED");
                   const claimedAt = approvedClaim?.auditLogs?.find((l: any) => l.toStatus === "APPROVED")?.createdAt ?? approvedClaim?.createdAt ?? foundItemData?.updatedAt ?? null;
                   return (
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3 flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                        <FaHandshake className="text-emerald-400" size={14} />
-                      </div>
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3 flex items-center gap-3">
+                      
                       <div className="flex-1 min-w-0">
                         <p className="text-white text-xs font-black leading-tight">Successfully Returned</p>
-                        <p className="text-emerald-400/80 text-[10px] mt-0.5 font-bold uppercase tracking-wide">
+                        <p className="text-blue-400/80 text-[10px] mt-0.5 font-bold uppercase tracking-wide">
                           {claimedAt ? `Processed ${timeAgo(claimedAt)}` : "Verified & Returned"}
                         </p>
                       </div>

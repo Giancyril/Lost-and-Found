@@ -173,23 +173,22 @@ const ChatPage = () => {
           ) : (
             rooms.map((room: any) => {
               const isActive = room.id === activeRoomId;
-              const lastMsg  = room.messages?.[0];
+              const lastMsg = room.messages?.[0];
               const otherUser = room.participantUsers?.find((u: any) => u.id !== currentUser.id);
-              const displayName = otherUser 
+              const displayName = otherUser
                 ? (otherUser.role === "ADMIN" ? "Admin" : (otherUser.name || otherUser.username))
                 : (room.claim?.foundItem?.foundItemName || "Lost Item");
-              
+
               // Unread logic
               const lastReadAt = room.readStatuses?.[0]?.lastReadAt;
               const hasUnread = lastMsg && (!lastReadAt || new Date(lastMsg.createdAt) > new Date(lastReadAt)) && lastMsg.senderId !== currentUser.id;
 
               return (
                 <button key={room.id} onClick={() => handleSelectRoom(room.id)}
-                  className={`w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 ${
-                    isActive
+                  className={`w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 ${isActive
                       ? "bg-blue-500/10 border border-blue-500/20"
                       : "hover:bg-white/5 border border-transparent hover:border-white/5"
-                  }`}>
+                    }`}>
                   <div className="w-9 h-9 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0 relative">
                     <FaUserCircle className="text-gray-500" size={20} />
                     {hasUnread && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 border-2 border-gray-900 rounded-full" />}
@@ -236,7 +235,7 @@ const ChatPage = () => {
                 <p className="text-white text-xs font-bold truncate">
                   {(() => {
                     const otherUser = currentRoom?.participantUsers?.find((u: any) => u.id !== currentUser.id);
-                    return otherUser 
+                    return otherUser
                       ? (otherUser.role === "ADMIN" ? "Admin" : (otherUser.name || otherUser.username))
                       : "Direct Chat";
                   })()}
@@ -266,13 +265,12 @@ const ChatPage = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full border ${
-                    currentRoom?.claim?.foundItem?.isClaimed || currentRoom?.claim?.status === "APPROVED"
+                  <span className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full border ${currentRoom?.claim?.foundItem?.isClaimed || currentRoom?.claim?.status === "APPROVED"
                       ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
                       : currentRoom?.claim?.status === "REJECTED"
-                      ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
-                      : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
-                  }`}>
+                        ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                        : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
+                    }`}>
                     {currentRoom?.claim?.foundItem?.isClaimed || currentRoom?.claim?.status === "APPROVED"
                       ? "CLAIMED"
                       : currentRoom?.claim?.status || "PENDING"}
@@ -305,14 +303,12 @@ const ChatPage = () => {
                           <FaUserCircle className="text-gray-500" size={14} />
                         </div>
                       )}
-                      <div className={`max-w-[75%] sm:max-w-[65%] ${
-                        isMe ? "items-end" : "items-start"
-                      } flex flex-col gap-0.5`}>
-                        <div className={`rounded-2xl px-3 py-2 ${
-                          isMe
+                      <div className={`max-w-[75%] sm:max-w-[65%] ${isMe ? "items-end" : "items-start"
+                        } flex flex-col gap-0.5`}>
+                        <div className={`rounded-2xl px-3 py-2 ${isMe
                             ? "bg-blue-600 text-white rounded-br-sm"
                             : "bg-gray-800 text-gray-100 border border-white/5 rounded-bl-sm"
-                        }`}>
+                          }`}>
                           <p className="text-xs sm:text-sm leading-relaxed">{msg.content}</p>
                         </div>
                         <p className="text-[10px] text-gray-600 px-1">
@@ -408,17 +404,17 @@ const ChatPage = () => {
           <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 bg-gray-950/40 overflow-y-auto custom-scrollbar">
             <div className="max-w-2xl w-full flex flex-col items-center">
               <div className="text-center mb-10">
-               
+
                 <h2 className="text-white text-xl font-black tracking-tight">
                   {currentUser?.role === "ADMIN" ? "Admin Communication Hub" : "Student Support Center"}
                 </h2>
                 <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto leading-relaxed">
-                  {currentUser?.role === "ADMIN" 
+                  {currentUser?.role === "ADMIN"
                     ? "Select a conversation from the sidebar to manage claims and coordinate pickups with students."
                     : "Select a conversation to chat with our staff about your claims or reported items."}
                 </p>
               </div>
- 
+
               {/* Suggestions Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 {(currentUser?.role === "ADMIN" ? [
@@ -473,9 +469,9 @@ const ChatPage = () => {
                   </div>
                 ))}
               </div>
- 
-             
-             
+
+
+
             </div>
           </div>
         )}

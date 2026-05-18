@@ -37,20 +37,20 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
   socket.on('update-comment', async (data) => {
     try {
       const updatedComment = await commentService.updateComment(
-        data.commentId, 
-        data.updateData, 
+        data.commentId,
+        data.updateData,
         socket.userId || '',
         socket.userRole
       );
-      
+
       const roomName = `item-${data.itemId}`;
       io.to(roomName).emit('comment-updated', updatedComment);
-      
+
       console.log(`Comment ${data.commentId} updated by ${socket.userId}`);
-      
+
     } catch (error) {
       console.error('Error updating comment:', error);
-      socket.emit('error', { 
+      socket.emit('error', {
         message: 'Failed to update comment',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -61,19 +61,19 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
   socket.on('delete-comment', async (data) => {
     try {
       await commentService.deleteComment(
-        data.commentId, 
+        data.commentId,
         socket.userId || '',
         socket.userRole
       );
-      
+
       const roomName = `item-${data.itemId}`;
       io.to(roomName).emit('comment-deleted', { commentId: data.commentId });
-      
+
       console.log(`Comment ${data.commentId} deleted by ${socket.userId}`);
-      
+
     } catch (error) {
       console.error('Error deleting comment:', error);
-      socket.emit('error', { 
+      socket.emit('error', {
         message: 'Failed to delete comment',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -87,15 +87,15 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
         data.commentId,
         socket.userId || ''
       );
-      
+
       const roomName = `item-${data.itemId}`;
       io.to(roomName).emit('comment-updated', updatedComment);
-      
+
       console.log(`Helpful vote on comment ${data.commentId} by ${socket.userId}`);
-      
+
     } catch (error) {
       console.error('Error voting helpful:', error);
-      socket.emit('error', { 
+      socket.emit('error', {
         message: 'Failed to vote',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -114,7 +114,7 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
 
   socket.on('typing-stop', (data) => {
     const roomName = `item-${data.itemId}`;
-     socket.to(roomName).emit('user-typing', {
+    socket.to(roomName).emit('user-typing', {
       userId: socket.userId,
       userName: socket.userName,
       isTyping: false
@@ -163,14 +163,14 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
         data.content
       );
 
-       const roomName = `chat-${data.chatRoomId}`;
+      const roomName = `chat-${data.chatRoomId}`;
       // Emit to everyone in the room INCLUDING the sender (for confirmation)
       io.to(roomName).emit('message-received', message);
 
       // Trigger Push Notification to other participants
       const room = await chatService.getChatRoomById(data.chatRoomId);
 
-       if (room) {
+      if (room) {
         const recipients = (room.participants as string[]).filter((id: string) => id !== socket.userId);
         for (const recipientId of recipients) {
           await pushService.sendNotificationToUser(recipientId, {
