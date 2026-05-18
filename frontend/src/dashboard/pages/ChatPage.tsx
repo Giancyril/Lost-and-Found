@@ -186,8 +186,8 @@ const ChatPage = () => {
               return (
                 <button key={room.id} onClick={() => handleSelectRoom(room.id)}
                   className={`w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 ${isActive
-                      ? "bg-blue-500/10 border border-blue-500/20"
-                      : "hover:bg-white/5 border border-transparent hover:border-white/5"
+                    ? "bg-blue-500/10 border border-blue-500/20"
+                    : "hover:bg-white/5 border border-transparent hover:border-white/5"
                     }`}>
                   <div className="w-9 h-9 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0 relative">
                     <FaUserCircle className="text-gray-500" size={20} />
@@ -266,10 +266,10 @@ const ChatPage = () => {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full border ${currentRoom?.claim?.foundItem?.isClaimed || currentRoom?.claim?.status === "APPROVED"
-                      ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                      : currentRoom?.claim?.status === "REJECTED"
-                        ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
-                        : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
+                    ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                    : currentRoom?.claim?.status === "REJECTED"
+                      ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                      : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
                     }`}>
                     {currentRoom?.claim?.foundItem?.isClaimed || currentRoom?.claim?.status === "APPROVED"
                       ? "CLAIMED"
@@ -306,8 +306,8 @@ const ChatPage = () => {
                       <div className={`max-w-[75%] sm:max-w-[65%] ${isMe ? "items-end" : "items-start"
                         } flex flex-col gap-0.5`}>
                         <div className={`rounded-2xl px-3 py-2 ${isMe
-                            ? "bg-blue-600 text-white rounded-br-sm"
-                            : "bg-gray-800 text-gray-100 border border-white/5 rounded-bl-sm"
+                          ? "bg-blue-600 text-white rounded-br-sm"
+                          : "bg-gray-800 text-gray-100 border border-white/5 rounded-bl-sm"
                           }`}>
                           <p className="text-xs sm:text-sm leading-relaxed">{msg.content}</p>
                         </div>

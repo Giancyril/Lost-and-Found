@@ -425,7 +425,7 @@ const SingleLostItem = () => {
                   className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 border border-white/5 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-xs"
                 >
                   <FaComments size={13} className="text-blue-400" />
-                  View Discussion & Sightings
+                  View Comments
                 </button>
               </div>
 
@@ -445,7 +445,7 @@ const SingleLostItem = () => {
                 </div>
                 <button
                   onClick={() => openModal(setIsSightingModalOpen)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-[10px] transition-all uppercase tracking-wider shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[10px] transition-all uppercase tracking-wider shrink-0"
                 >
                   <FaPlus size={8} /> Sighting
                 </button>
@@ -584,7 +584,7 @@ const SingleLostItem = () => {
               className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 border border-white/5 rounded-xl text-gray-300 hover:text-white transition-all font-semibold text-xs"
             >
               <FaComments size={13} className="text-blue-400" />
-              View Discussion & Sightings
+              View Comments
             </button>
           </div>
 

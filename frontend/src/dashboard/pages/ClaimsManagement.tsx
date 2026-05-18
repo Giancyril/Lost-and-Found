@@ -13,10 +13,14 @@ import {
   useGetAuditLogsQuery,
   useSendClaimApprovedEmailMutation,
   useGetMatchNotificationsQuery,
+  useGetAllLostItemsQuery,
+  useGetFoundItemsQuery,
+  useSendLostItemEmailMutation,
 } from "../../redux/api/api";
 import ExportButton from "../../components/export/ExportButton";
+import { getCoordinates } from "../../utils/campusLocations";
 
-type Tab       = "claims" | "audit" | "matches";
+type Tab       = "claims" | "audit" | "matches" | "recommender";
 type ModalTab  = "details" | "history";
 const AUDIT_PAGE_SIZE = 10;
 
@@ -153,13 +157,182 @@ const ClaimsManagement = () => {
   const { data: allClaims, isLoading }               = useGetAllClaimsQuery(undefined);
   const { data: auditData, isLoading: auditLoading } = useGetAuditLogsQuery({});
   const { data: matchData, isLoading: matchLoading } = useGetMatchNotificationsQuery({});
+  const { data: allLostItemsData, isLoading: lostLoading } = useGetAllLostItemsQuery({});
+  const { data: allFoundItemsData, isLoading: foundLoading } = useGetFoundItemsQuery({});
+
   const [updateClaimStatus]                          = useUpdateClaimStatusMutation();
   const [sendClaimApprovedEmail]                     = useSendClaimApprovedEmailMutation();
   const [deleteClaim]                               = useDeleteClaimMutation();
+  const [sendLostItemEmail]                          = useSendLostItemEmailMutation();
+
+  const [recommenderThreshold, setRecommenderThreshold] = useState<number>(50);
+  const [recommenderSearch, setRecommenderSearch]       = useState("");
+  const [recommenderPage, setRecommenderPage]           = useState(1);
+  const [emailSendingStatus, setEmailSendingStatus]     = useState<Record<string, boolean>>({});
 
   const claims    = allClaims?.data  || [];
   const auditLogs = auditData?.data  || [];
   const matches   = matchData?.data  || [];
+  const lostItems = allLostItemsData?.data || [];
+  const foundItems = allFoundItemsData?.data || [];
+
+  const deg2rad = (deg: number) => deg * (Math.PI / 180);
+  const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371;
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const calculateMatchScore = (lost: any, found: any) => {
+    let score = 0;
+    const breakdown: string[] = [];
+
+    // 1. Category Match (40%)
+    if (lost.categoryId === found.categoryId || (lost.category?.name && lost.category?.name === found.category?.name)) {
+      score += 40;
+      breakdown.push("🎯 Category matches perfectly (+40%)");
+    }
+
+    // 2. Location Proximity (25%)
+    const lostCoords = getCoordinates(lost.location);
+    const foundCoords = getCoordinates(found.location);
+
+    if (lost.location?.toLowerCase().trim() === found.location?.toLowerCase().trim()) {
+      score += 25;
+      breakdown.push("📍 Exact same location string (+25%)");
+    } else if (lostCoords && foundCoords) {
+      const distKm = getDistance(lostCoords[0], lostCoords[1], foundCoords[0], foundCoords[1]);
+      const distM = distKm * 1000;
+      if (distM <= 50) {
+        score += 22;
+        breakdown.push(`📍 Within 50m (${Math.round(distM)}m) (+22%)`);
+      } else if (distM <= 120) {
+        score += 18;
+        breakdown.push(`📍 Within 120m (${Math.round(distM)}m) (+18%)`);
+      } else if (distM <= 350) {
+        score += 12;
+        breakdown.push(`📍 Close Proximity (${Math.round(distM)}m) (+12%)`);
+      } else if (distM <= 800) {
+        score += 6;
+        breakdown.push(`📍 General Vicinity (${Math.round(distM)}m) (+6%)`);
+      }
+    }
+
+    // 3. Temporal Alignment (15%)
+    if (lost.date && found.date) {
+      const lostTime = new Date(lost.date).getTime();
+      const foundTime = new Date(found.date).getTime();
+      const diffMs = Math.abs(foundTime - lostTime);
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+      if (diffDays <= 1) {
+        score += 15;
+        breakdown.push("📆 Reported within 24 hours of each other (+15%)");
+      } else if (diffDays <= 3) {
+        score += 10;
+        breakdown.push("📆 Reported within 3 days (+10%)");
+      } else if (diffDays <= 7) {
+        score += 5;
+        breakdown.push("📆 Reported within 1 week (+5%)");
+      }
+    }
+
+    // 4. Description similarity (20%)
+    if (lost.description && found.description) {
+      const stopWords = new Set(["a", "an", "the", "and", "or", "but", "is", "are", "was", "were", "in", "on", "at", "to", "for", "with", "my", "it", "of"]);
+      const tokenize = (text: string) =>
+        text.toLowerCase()
+          .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+          .split(/\s+/)
+          .filter(w => w.length > 2 && !stopWords.has(w));
+
+      const lostTokens = new Set(tokenize(lost.description));
+      const foundTokens = tokenize(found.description);
+
+      let overlap = 0;
+      const matchingWords: string[] = [];
+      foundTokens.forEach(t => {
+        if (lostTokens.has(t)) {
+          overlap++;
+          matchingWords.push(t);
+        }
+      });
+
+      if (overlap > 0) {
+        const percentage = Math.min(20, overlap * 7);
+        score += percentage;
+        breakdown.push(`📝 Keyword match: "${matchingWords.slice(0, 3).join(", ")}" (+${percentage}%)`);
+      }
+    }
+
+    return { score, breakdown };
+  };
+
+  const handleSendRecommenderEmail = async (pairId: string, lostItem: any, foundItem: any) => {
+    if (!lostItem.schoolEmail) {
+      toast.error("Lost item owner has no school email registered!");
+      return;
+    }
+    setEmailSendingStatus(prev => ({ ...prev, [pairId]: true }));
+    try {
+      await sendLostItemEmail({
+        smtp: {},
+        recipient: {
+          toEmail: lostItem.schoolEmail,
+          reporterName: lostItem.reporterName || "Student",
+          itemName: foundItem.foundItemName,
+          location: foundItem.location,
+          date: new Date(foundItem.date).toLocaleDateString("en-PH"),
+          description: foundItem.description,
+        }
+      }).unwrap();
+      toast.success(`Direct Match Alert email sent to ${lostItem.schoolEmail}!`);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to send email");
+    } finally {
+      setEmailSendingStatus(prev => ({ ...prev, [pairId]: false }));
+    }
+  };
+
+  // Generate All Recommendations
+  const getAiRecommendations = () => {
+    const unresolvedLost = lostItems.filter((item: any) => !item.isFound && !item.isDeleted);
+    const unclaimedFound = foundItems.filter((item: any) => !item.isClaimed && !item.isDeleted && !item.isArchived);
+
+    const recs: any[] = [];
+    unresolvedLost.forEach((lost: any) => {
+      unclaimedFound.forEach((found: any) => {
+        const { score, breakdown } = calculateMatchScore(lost, found);
+        if (score >= recommenderThreshold) {
+          const matchesQuery =
+            lost.lostItemName?.toLowerCase().includes(recommenderSearch.toLowerCase()) ||
+            found.foundItemName?.toLowerCase().includes(recommenderSearch.toLowerCase()) ||
+            lost.location?.toLowerCase().includes(recommenderSearch.toLowerCase()) ||
+            found.location?.toLowerCase().includes(recommenderSearch.toLowerCase());
+
+          if (matchesQuery) {
+            recs.push({
+              id: `${lost.id}-${found.id}`,
+              lost,
+              found,
+              score,
+              breakdown,
+            });
+          }
+        }
+      });
+    });
+
+    // Sort by highest match score first
+    return recs.sort((a, b) => b.score - a.score);
+  };
 
   const getClaimHistory = (claimId: string) =>
     auditLogs.filter((log: any) => log.claimId === claimId)
@@ -277,39 +450,50 @@ const ClaimsManagement = () => {
     <div className="space-y-5">
 
       {/* ── Tabs ── */}
-      <div className="flex gap-1 p-1 bg-gray-900 border border-white/5 rounded-xl w-fit">
+      <div className="flex w-full sm:w-fit gap-0.5 sm:gap-1 p-1 bg-gray-900 border border-white/5 rounded-xl max-w-full overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("claims")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold ${
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
             activeTab === "claims"
               ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
               : "text-gray-400 hover:text-white"
           }`}
         >
-          <FaClipboardList size={11} /> Claims
-          <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{claims.length}</span>
+          <FaClipboardList size={11} className="hidden sm:inline-block" /> Claims
+          <span className="text-[8px] xs:text-[9px] sm:text-[10px] bg-white/10 px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full">{claims.length}</span>
         </button>
         <button
           onClick={() => { setActiveTab("audit"); setAuditPage(1); }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold ${
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
             activeTab === "audit"
               ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
               : "text-gray-400 hover:text-white"
           }`}
         >
-          <FaHistory size={11} /> Audit Log
-          <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{auditLogs.length}</span>
+          <FaHistory size={11} className="hidden sm:inline-block" /> Audit Log
+          <span className="text-[8px] xs:text-[9px] sm:text-[10px] bg-white/10 px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full">{auditLogs.length}</span>
         </button>
         <button
           onClick={() => { setActiveTab("matches"); setMatchPage(1); }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold ${
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
             activeTab === "matches"
               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
               : "text-gray-400 hover:text-white"
           }`}
         >
-          <FaBolt size={11} /> Match Log
-          <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{matches.length}</span>
+          <FaBolt size={11} className="hidden sm:inline-block" /> Match Log
+          <span className="text-[8px] xs:text-[9px] sm:text-[10px] bg-white/10 px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full">{matches.length}</span>
+        </button>
+        <button
+          onClick={() => { setActiveTab("recommender"); setRecommenderPage(1); }}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
+            activeTab === "recommender"
+              ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <FaBolt size={11} className="hidden sm:inline-block text-cyan-400 shrink-0" /> AI Recommender
+          <span className="text-[8px] xs:text-[9px] sm:text-[10px] bg-white/10 px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full">{getAiRecommendations().length}</span>
         </button>
       </div>
 
@@ -826,6 +1010,385 @@ const ClaimsManagement = () => {
           )}
         </div>
       )}
+
+      {/* ── AI SMART RECOMMENDER TAB ── */}
+      {activeTab === "recommender" && (() => {
+        const recs = getAiRecommendations();
+        const REC_PAGE_SIZE = 5;
+        const totalRecPages = Math.ceil(recs.length / REC_PAGE_SIZE);
+        const paginatedRecs = recs.slice((recommenderPage - 1) * REC_PAGE_SIZE, recommenderPage * REC_PAGE_SIZE);
+
+        const getScoreDetails = (score: number) => {
+          if (score >= 80) return {
+            border: "border-emerald-500/30 hover:border-emerald-500/50 shadow-emerald-500/5",
+            badge: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+            label: "🔥 Excellent Match",
+            glow: "bg-emerald-500/20 shadow-[0_0_20px_rgba(52,211,153,0.3)]",
+            text: "text-emerald-400"
+          };
+          if (score >= 60) return {
+            border: "border-cyan-500/30 hover:border-cyan-500/50 shadow-cyan-500/5",
+            badge: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
+            label: "⚡ Strong Match",
+            glow: "bg-cyan-500/20 shadow-[0_0_20px_rgba(34,211,238,0.25)]",
+            text: "text-cyan-400"
+          };
+          return {
+            border: "border-amber-500/30 hover:border-amber-500/50 shadow-amber-500/5",
+            badge: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+            label: "📈 Probable Match",
+            glow: "bg-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.2)]",
+            text: "text-amber-400"
+          };
+        };
+
+        const renderItemImage = (img: string, name: string) => {
+          if (img) {
+            return (
+              <img
+                src={img}
+                alt={name}
+                className="w-16 h-16 rounded-xl object-cover shrink-0 border border-white/10 hover:scale-105 transition-transform"
+                onError={(e: any) => { e.target.onerror = null; e.target.src = "/default-item.png"; }}
+              />
+            );
+          }
+          return (
+            <div className="w-16 h-16 rounded-xl bg-gray-800 border border-white/5 flex items-center justify-center text-gray-500 shrink-0">
+              <FaBoxOpen size={20} className="opacity-40" />
+            </div>
+          );
+        };
+
+        return (
+          <div className="space-y-5">
+            {/* Header / Stats Panel */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-lg">
+                <div>
+                  <p className="text-3xl font-extrabold tracking-tight text-cyan-400">{recs.length}</p>
+                  <p className="text-gray-500 text-xs mt-1 font-semibold">Total Dynamic Pairs Detected</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                  <FaBolt size={14} className="text-cyan-400 animate-pulse" />
+                </div>
+              </div>
+              <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-lg">
+                <div>
+                  <p className="text-3xl font-extrabold tracking-tight text-emerald-400">
+                    {recs.filter(r => r.score >= 80).length}
+                  </p>
+                  <p className="text-gray-500 text-xs mt-1 font-semibold">Excellent Matches (≥80%)</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                  <FaCheckCircle size={14} className="text-emerald-400" />
+                </div>
+              </div>
+              <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between shadow-lg">
+                <div>
+                  <p className="text-3xl font-extrabold tracking-tight text-amber-400">
+                    {recs.filter(r => r.score >= 60 && r.score < 80).length}
+                  </p>
+                  <p className="text-gray-500 text-xs mt-1 font-semibold">Strong Matches (60%–79%)</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                  <FaHistory size={14} className="text-amber-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Panel */}
+            <div className="space-y-4">
+              <div className="relative">
+                <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
+                <input
+                  value={recommenderSearch}
+                  onChange={e => { setRecommenderSearch(e.target.value); setRecommenderPage(1); }}
+                  placeholder="Search by item name, location, or email..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-gray-900 border border-white/5 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/40 transition-colors"
+                />
+              </div>
+
+              {/* Score threshold slider panel */}
+              <div className="flex items-center gap-3 bg-gray-900 border border-white/5 px-4 py-2.5 rounded-xl w-full sm:w-72 shadow-lg">
+                <div className="flex-1">
+                  <div className="flex justify-between text-[10px] font-bold text-gray-500 mb-1">
+                    <span>MATCH SCORE THRESHOLD</span>
+                    <span className="text-cyan-400 font-extrabold">{recommenderThreshold}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="30"
+                    max="90"
+                    step="5"
+                    value={recommenderThreshold}
+                    onChange={e => { setRecommenderThreshold(Number(e.target.value)); setRecommenderPage(1); }}
+                    className="w-full accent-cyan-400 cursor-pointer h-1 rounded-lg bg-gray-800"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Recommended List Grid */}
+            {lostLoading || foundLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-64 bg-gray-955 border border-white/5 rounded-2xl animate-pulse" />
+                ))}
+              </div>
+            ) : recs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 bg-gray-900 border border-white/5 rounded-2xl shadow-inner text-gray-500">
+                <div className="w-16 h-16 rounded-2xl bg-gray-800/80 border border-white/5 flex items-center justify-center mb-4">
+                  <FaBolt size={24} className="text-gray-600 opacity-40 animate-bounce" />
+                </div>
+                <p className="text-sm font-semibold text-gray-400">No Potential Pairs Match Your Filters</p>
+                <p className="text-xs text-gray-500 mt-1 max-w-sm text-center">
+                  Try lowering the match score threshold or clearing search terms to discover lower similarity pairs.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {paginatedRecs.map((r: any, index: number) => {
+                  const details = getScoreDetails(r.score);
+                  const isSending = !!emailSendingStatus[r.id];
+                  const rank = (recommenderPage - 1) * REC_PAGE_SIZE + index + 1;
+
+                  return (
+                    <div
+                      key={r.id}
+                      className={`group bg-gray-900 border ${details.border} rounded-2xl p-5 shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden`}
+                    >
+                      {/* Top Action Header bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${details.badge}`}>
+                            Rank #{rank} • {details.label}
+                          </span>
+                        </div>
+
+                        {/* Circular Score Gauge & Connection Button */}
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <div className={`relative w-12 h-12 flex items-center justify-center rounded-full border-2 border-white/5 ${details.glow}`}>
+                              <span className={`text-xs font-black ${details.text}`}>{r.score}%</span>
+                            </div>
+                            <div className="hidden sm:block text-left">
+                              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Similarity</p>
+                              <p className={`text-xs font-extrabold ${details.text}`}>AI Score Match</p>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleSendRecommenderEmail(r.id, r.lost, r.found)}
+                            disabled={isSending}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                              isSending
+                                ? "bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5"
+                                : "bg-cyan-500 text-black hover:bg-cyan-400 font-black shadow-lg shadow-cyan-500/10 active:scale-95"
+                            }`}
+                          >
+                            {isSending ? (
+                              <>
+                                <Spinner />
+                                <span>Sending Match Alert...</span>
+                              </>
+                            ) : (
+                              <>
+                                <FaEnvelope size={12} />
+                                <span>Connect Parties & Send Alert</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Side-by-Side Comparison Container */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-2">
+                        {/* Lost Item Column (Left) */}
+                        <div className="bg-gray-955 border border-white/5 rounded-xl p-4 space-y-3 relative hover:bg-gray-955 transition-colors">
+                          <div className="absolute top-3 right-3 text-[9px] px-2 py-0.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full font-extrabold uppercase tracking-wide">
+                            Reported Lost
+                          </div>
+
+                          <div className="flex gap-4">
+                            {renderItemImage(r.lost.img, r.lost.lostItemName)}
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <h3 className="text-white text-sm font-bold truncate group-hover:text-cyan-400 transition-colors">
+                                {r.lost.lostItemName}
+                              </h3>
+                              <p className="text-xs text-gray-400 line-clamp-2 italic">
+                                "{r.lost.description || "No description provided."}"
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Attributes Table */}
+                          <div className="grid grid-cols-2 gap-3 text-[10px] pt-2 border-t border-white/[0.03]">
+                            <div>
+                              <p className="text-gray-500 font-bold uppercase tracking-wider mb-0.5">Category</p>
+                              <div className="flex items-center gap-1.5 text-gray-300">
+                                <FaTag size={9} className="text-cyan-400 shrink-0" />
+                                <span className="truncate">{r.lost.category?.name || "Uncategorized"}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 font-bold uppercase tracking-wider mb-0.5">Location Lost</p>
+                              <div className="flex items-center gap-1.5 text-gray-300">
+                                <FaMapMarkerAlt size={9} className="text-red-400 shrink-0" />
+                                <span className="truncate">{r.lost.location}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 font-bold uppercase tracking-wider mb-0.5">Date Lost</p>
+                              <div className="flex items-center gap-1.5 text-gray-300">
+                                <FaCalendarAlt size={9} className="text-cyan-400 shrink-0" />
+                                <span>{formatDate(r.lost.date)}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 font-bold uppercase tracking-wider mb-0.5">Reporter & Owner</p>
+                              <div className="flex items-center gap-1.5 text-blue-300">
+                                <FaUser size={9} className="text-blue-400 shrink-0" />
+                                <span className="truncate font-semibold">{r.lost.reporterName || "Anonymous"}</span>
+                              </div>
+                            </div>
+                          </div>
+                          {r.lost.schoolEmail && (
+                            <div className="flex items-center gap-1.5 text-[9px] bg-blue-500/5 border border-blue-500/10 px-2 py-1 rounded-md text-blue-300 mt-2">
+                              <FaEnvelope size={8} className="text-blue-400 shrink-0" />
+                              <span className="truncate">Contact Email: {r.lost.schoolEmail}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Found Item Column (Right) */}
+                        <div className="bg-gray-955 border border-white/5 rounded-xl p-4 space-y-3 relative hover:bg-gray-955 transition-colors">
+                          <div className="absolute top-3 right-3 text-[9px] px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-extrabold uppercase tracking-wide">
+                            Reported Found
+                          </div>
+
+                          <div className="flex gap-4">
+                            {renderItemImage(r.found.img, r.found.foundItemName)}
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <h3 className="text-white text-sm font-bold truncate group-hover:text-cyan-400 transition-colors">
+                                {r.found.foundItemName}
+                              </h3>
+                              <p className="text-xs text-gray-400 line-clamp-2 italic">
+                                "{r.found.description || "No description provided."}"
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Attributes Table */}
+                          <div className="grid grid-cols-2 gap-3 text-[10px] pt-2 border-t border-white/[0.03]">
+                            <div>
+                              <p className="text-gray-500 font-bold uppercase tracking-wider mb-0.5">Category</p>
+                              <div className="flex items-center gap-1.5 text-gray-300">
+                                <FaTag size={9} className="text-cyan-400 shrink-0" />
+                                <span className="truncate">{r.found.category?.name || "Uncategorized"}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 font-bold uppercase tracking-wider mb-0.5">Location Found</p>
+                              <div className="flex items-center gap-1.5 text-gray-300">
+                                <FaMapMarkerAlt size={9} className="text-emerald-400 shrink-0" />
+                                <span className="truncate">{r.found.location}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 font-bold uppercase tracking-wider mb-0.5">Date Found</p>
+                              <div className="flex items-center gap-1.5 text-gray-300">
+                                <FaCalendarAlt size={9} className="text-cyan-400 shrink-0" />
+                                <span>{formatDate(r.found.date)}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 font-bold uppercase tracking-wider mb-0.5">Reporter / Finder</p>
+                              <div className="flex items-center gap-1.5 text-blue-300">
+                                <FaUser size={9} className="text-blue-400 shrink-0" />
+                                <span className="truncate font-semibold">{r.found.reporterName || "Anonymous Finder"}</span>
+                              </div>
+                            </div>
+                          </div>
+                          {r.found.schoolEmail && (
+                            <div className="flex items-center gap-1.5 text-[9px] bg-blue-500/5 border border-blue-500/10 px-2 py-1 rounded-md text-blue-300 mt-2">
+                              <FaEnvelope size={8} className="text-blue-400 shrink-0" />
+                              <span className="truncate">Finder Email: {r.found.schoolEmail}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card Footer: Proximity Breakdown & Insights */}
+                      <div className="mt-4 pt-3.5 border-t border-white/5">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
+                          AI Proximity Match Breakdown
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {r.breakdown.map((reason: string, idx: number) => {
+                            let tagStyle = "bg-white/5 border-white/5 text-gray-300";
+                            if (reason.includes("Category")) tagStyle = "bg-cyan-500/10 border-cyan-500/10 text-cyan-400";
+                            else if (reason.includes("Location") || reason.includes("within")) tagStyle = "bg-emerald-500/10 border-emerald-500/10 text-emerald-400";
+                            else if (reason.includes("Dates")) tagStyle = "bg-amber-500/10 border-amber-500/10 text-amber-400";
+                            else if (reason.includes("Keyword") || reason.includes("overlap")) tagStyle = "bg-violet-500/10 border-violet-500/10 text-violet-400";
+
+                            return (
+                              <span
+                                key={idx}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${tagStyle}`}
+                              >
+                                {reason}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Recommender Pagination */}
+                {recs.length > REC_PAGE_SIZE && (
+                  <div className="flex items-center justify-between mt-6">
+                    <p className="text-gray-600 text-xs">
+                      {(recommenderPage - 1) * REC_PAGE_SIZE + 1}–{Math.min(recommenderPage * REC_PAGE_SIZE, recs.length)} of {recs.length} matches
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setRecommenderPage(p => Math.max(1, p - 1))}
+                        disabled={recommenderPage === 1}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all"
+                      >
+                        <FaChevronLeft size={9} /> Prev
+                      </button>
+                      {Array.from({ length: totalRecPages }, (_, i) => i + 1).map(page => (
+                        <button
+                          key={page}
+                          onClick={() => setRecommenderPage(page)}
+                          className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${
+                            page === recommenderPage
+                              ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                              : "text-gray-500 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setRecommenderPage(p => Math.min(totalRecPages, p + 1))}
+                        disabled={recommenderPage === totalRecPages}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all"
+                      >
+                        Next <FaChevronRight size={9} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ── Detail Modal ── */}
       {isDetailModalOpen && selectedClaim && (
