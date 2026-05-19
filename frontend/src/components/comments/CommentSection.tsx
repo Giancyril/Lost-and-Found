@@ -376,23 +376,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-          <div
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(147,197,253,0.1) 100%)',
-              border: '1px solid rgba(59,130,246,0.25)',
-              backdropFilter: 'blur(10px)',
-            }}
-          >
-            <FaComments size={18} className="text-blue-400 sm:hidden" />
-            <FaComments size={22} className="text-blue-400 hidden sm:block" />
-          </div>
+         
           <div className="min-w-0 flex-1">
-            <h4 className="text-sm sm:text-base font-bold text-white mb-1">Community Discussion</h4>
+            
             <div className="flex items-center gap-3 sm:gap-4">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
-                {comments.length} {comments.length === 1 ? 'Interaction' : 'Interactions'}
-              </p>
+              
               {comments.length > 0 && (
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <div className="w-2 h-2 bg-blue-500 rounded-full" />

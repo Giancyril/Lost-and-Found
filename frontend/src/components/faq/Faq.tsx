@@ -73,7 +73,7 @@ const Faq = () => {
               </span>
             </h2>
             <p className="text-gray-400 text-sm lg:text-lg leading-relaxed text-justify">
-              Everything you need to know about the SAS Lost & Found system.
+              Everything you need to know about the SAS Lost & Found.
             </p>
           </div>
 
