@@ -6,6 +6,7 @@ import {
   FaChartBar, FaComments, FaTrophy, FaSearch, FaUserCheck,
   FaShieldAlt, FaMapMarkerAlt, FaBolt, FaLifeRing,
 } from "react-icons/fa";
+import { useUserVerification } from "../auth/auth";
 
 const STORAGE_KEY = "nbsc_onboarding_done_v3";
 
@@ -144,15 +145,28 @@ const OnboardingTour = () => {
   const [animating, setAnimating] = useState(false);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const location = useLocation();
+  const user = useUserVerification();
+  const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
-    if (location.pathname !== "/") return;
+    // If the path is not the homepage, hide the onboarding tour immediately
+    if (location.pathname !== "/") {
+      setVisible(false);
+      return;
+    }
+    
+    // Admins don't need the student onboarding tour
+    if (isAdmin) {
+      setVisible(false);
+      return;
+    }
+
     const done = localStorage.getItem(STORAGE_KEY);
     if (!done) {
       const t = setTimeout(() => setVisible(true), 800);
       return () => clearTimeout(t);
     }
-  }, [location.pathname]);
+  }, [location.pathname, isAdmin]);
 
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, "1");
