@@ -157,6 +157,7 @@ const SingleLostItem = () => {
   const [sightingImage, setSightingImage] = useState("");
   const [sightingCoords, setSightingCoords] = useState<[number, number] | null>(null);
   const [isSightingSubmitting, setIsSightingSubmitting] = useState(false);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors }, reset, control } = useForm();
 
@@ -323,6 +324,22 @@ const SingleLostItem = () => {
 
   return (
     <>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 200ms ease-out forwards;
+        }
+        .animate-scaleIn {
+          animation: scaleIn 250ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+      `}</style>
       <div className="min-h-screen bg-gray-950">
 
         {/* Header */}
@@ -480,7 +497,12 @@ const SingleLostItem = () => {
                               <p className="font-bold text-xs text-gray-800">Sighted at: {sig.location}</p>
                               <p className="text-[10px] text-gray-500 mt-0.5 leading-relaxed">{sig.details || "No details provided"}</p>
                               {sig.img && (
-                                <img src={sig.img} alt="Sighting proof" className="w-full h-20 object-cover rounded-lg mt-2 border border-gray-200" />
+                                <img 
+                                  src={sig.img} 
+                                  alt="Sighting proof" 
+                                  className="w-full h-20 object-cover rounded-lg mt-2 border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity" 
+                                  onClick={() => setExpandedImage(sig.img)}
+                                />
                               )}
                               <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">
                                 <span className="text-[9px] font-bold text-blue-500 uppercase">
@@ -540,7 +562,10 @@ const SingleLostItem = () => {
                           </div>
                         </div>
                         {sig.img && (
-                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/5 shrink-0 bg-gray-800">
+                          <div 
+                            className="w-12 h-12 rounded-lg overflow-hidden border border-white/5 shrink-0 bg-gray-800 cursor-zoom-in hover:border-blue-500/50 hover:scale-105 transition-all duration-300"
+                            onClick={() => setExpandedImage(sig.img)}
+                          >
                             <img src={sig.img} alt="Sighting snippet" className="w-full h-full object-cover" />
                           </div>
                         )}
@@ -809,6 +834,34 @@ const SingleLostItem = () => {
         itemType="lost"
         itemName={lostItemName || "Item"}
       />
+
+      {/* Lightbox / Sighting Image Zoom Modal */}
+      {expandedImage && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-zoom-out animate-fadeIn"
+          onClick={() => setExpandedImage(null)}
+        >
+          {/* Close button in top-right */}
+          <button 
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all cursor-pointer"
+            onClick={() => setExpandedImage(null)}
+            aria-label="Close image"
+          >
+            <FaTimes size={16} />
+          </button>
+          
+          {/* Main Image */}
+          <div className="relative max-w-4xl max-h-[80vh] w-full flex items-center justify-center">
+            <img 
+              src={expandedImage} 
+              alt="Sighting expanded view" 
+              className="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl border border-white/10 select-none animate-scaleIn"
+            />
+          </div>
+          
+          <p className="text-gray-400/80 text-xs mt-4 select-none font-medium tracking-wide">Tap anywhere to close</p>
+        </div>
+      )}
     </>
   );
 };
