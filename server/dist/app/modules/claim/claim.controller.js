@@ -23,9 +23,6 @@ const createClaim = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const item = req.body;
         // req.user is undefined for students (no auth) — service handles this gracefully
         const result = yield claim_service_1.claimsService.createClaim(item, req.user);
-        const io = req.app.get("io");
-        if (io)
-            io.emit("stats-updated");
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.CREATED,
             success: true,
@@ -90,9 +87,6 @@ const updateClaimStatus = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     var _b, _c, _d;
     try {
         const result = yield claim_service_1.claimsService.updateClaimStatus(req.params.claimId, req.body, { id: (_b = req.user) === null || _b === void 0 ? void 0 : _b.id, name: ((_c = req.user) === null || _c === void 0 ? void 0 : _c.name) || ((_d = req.user) === null || _d === void 0 ? void 0 : _d.username) });
-        const io = req.app.get("io");
-        if (io)
-            io.emit("stats-updated");
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,
@@ -114,9 +108,6 @@ const updateClaimStatus = (req, res, next) => __awaiter(void 0, void 0, void 0, 
 const deleteClaim = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield claim_service_1.claimsService.deleteClaim(req.params.claimId);
-        const io = req.app.get("io");
-        if (io)
-            io.emit("stats-updated");
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,
