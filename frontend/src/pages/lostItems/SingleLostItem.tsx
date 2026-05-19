@@ -509,13 +509,15 @@ const SingleLostItem = () => {
                                   ⏱ Fades in {sig.remainingMinutes}m
                                 </span>
                                 <div className="flex items-center gap-1">
-                                  <button
-                                    onClick={() => handleVerifySighting(sig.id)}
-                                    disabled={sig.verifiedUserIds.includes(users?.id)}
-                                    className="px-2 py-1 bg-blue-50 hover:bg-blue-100 disabled:bg-gray-100 text-blue-600 disabled:text-gray-400 font-bold rounded text-[9px] uppercase tracking-wider transition-all"
-                                  >
-                                    {sig.verifiedUserIds.includes(users?.id) ? "✓ Verified" : "Verify"}
-                                  </button>
+                                  {isAdmin && (
+                                    <button
+                                      onClick={() => handleVerifySighting(sig.id)}
+                                      disabled={sig.verifiedUserIds.includes(users?.id)}
+                                      className="px-2 py-1 bg-blue-50 hover:bg-blue-100 disabled:bg-gray-100 text-blue-600 disabled:text-gray-400 font-bold rounded text-[9px] uppercase tracking-wider transition-all"
+                                    >
+                                      {sig.verifiedUserIds.includes(users?.id) ? "✓ Verified" : "Verify"}
+                                    </button>
+                                  )}
                                   {isAdmin && (
                                     <button
                                       onClick={() => handleDeleteSighting(sig.id)}
@@ -572,7 +574,7 @@ const SingleLostItem = () => {
                       </div>
 
                       {/* Actions footer */}
-                      {(sig.isActive || isAdmin) && (
+                      {isAdmin && (
                         <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-white/5">
                           {sig.isActive && (
                             <button
@@ -584,15 +586,13 @@ const SingleLostItem = () => {
                               {sig.verifiedUserIds.includes(users?.id) ? "Verified by You" : "Verify Sighting"}
                             </button>
                           )}
-                          {isAdmin && (
-                            <button
-                              onClick={() => handleDeleteSighting(sig.id)}
-                              className="flex items-center gap-1 px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/30 text-[9px] font-bold rounded-lg transition-all uppercase tracking-wider"
-                            >
-                              <FaTrash size={7} />
-                              Delete
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleDeleteSighting(sig.id)}
+                            className="flex items-center gap-1 px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/30 text-[9px] font-bold rounded-lg transition-all uppercase tracking-wider"
+                          >
+                            <FaTrash size={7} />
+                            Delete
+                          </button>
                         </div>
                       )}
                     </div>
