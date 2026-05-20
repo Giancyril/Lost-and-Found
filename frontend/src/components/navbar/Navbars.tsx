@@ -221,7 +221,7 @@ const NavDropdown = ({ label, items }: {
       <button
         type="button"
         onClick={() => setOpen(p => !p)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all duration-200 font-semibold text-sm whitespace-nowrap
+        className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-all duration-200 font-semibold text-sm whitespace-nowrap
           ${isActive ? "text-blue-400 bg-blue-500/10" : "text-gray-200 hover:text-white hover:bg-gray-800"}`}
       >
         {label}
@@ -626,7 +626,7 @@ export function Navbars() {
 
         {/* Desktop links — unchanged */}
         <NavbarCollapse className="hidden md:flex">
-          <div className="hidden md:flex md:items-center md:gap-6 lg:gap-8 py-2 md:py-0">
+          <div className="hidden md:flex md:items-center md:gap-8 lg:gap-12 py-2 md:py-0">
             {[
               { label: "Home", href: "/" },
               { label: "Report Item", href: "/reportlostItem" },
@@ -636,7 +636,7 @@ export function Navbars() {
                 <Link
                   key={href}
                   to={href}
-                  className={`px-3 py-1.5 rounded-lg transition-all duration-200 font-semibold text-sm whitespace-nowrap
+                  className={`px-4 py-2 rounded-lg transition-all duration-200 font-semibold text-sm whitespace-nowrap
                     ${isActive ? "text-blue-400 bg-blue-500/10" : "text-gray-200 hover:text-white hover:bg-gray-800"}`}
                 >
                   {label}
@@ -668,7 +668,7 @@ export function Navbars() {
                 <Link
                   key={href}
                   to={href}
-                  className={`px-3 py-1.5 rounded-lg transition-all duration-200 font-semibold text-sm whitespace-nowrap
+                  className={`px-4 py-2 rounded-lg transition-all duration-200 font-semibold text-sm whitespace-nowrap
                     ${isActive ? "text-blue-400 bg-blue-500/10" : "text-gray-200 hover:text-white hover:bg-gray-800"}`}
                 >
                   {label}
