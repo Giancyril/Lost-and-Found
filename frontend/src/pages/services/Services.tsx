@@ -219,9 +219,7 @@ const Services = () => {
           {/* ── Bottom CTA strip ── */}
           <div className="mt-10 flex flex-row items-center justify-between gap-2 bg-gray-900/60 border border-white/5 rounded-2xl px-3 py-3 sm:px-4 sm:py-4">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                <BiSupport className="text-blue-400 w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
+              
               <div>
                 <p className="text-white text-[11px] sm:text-xs font-semibold">Need Assistance?</p>
                 <p className="text-gray-500 text-[9px] sm:text-[10px]">Visit our office or message us for support.</p>

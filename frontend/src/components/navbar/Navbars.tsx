@@ -315,7 +315,9 @@ export function Navbars() {
     clickTimerRef.current = setTimeout(() => { clickCountRef.current = 0; }, 600);
     if (clickCountRef.current >= 3) {
       clickCountRef.current = 0;
-      navigate("/admin");
+      const rawAdminPath = import.meta.env.VITE_ADMIN_PATH || "/nbsc-secure-portal";
+      const adminPath = rawAdminPath.startsWith("/") ? rawAdminPath : `/${rawAdminPath}`;
+      navigate(adminPath);
     }
   };
 

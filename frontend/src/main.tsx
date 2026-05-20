@@ -49,6 +49,9 @@ import ItemStatus from "./pages/itemStatus/ItemStatus.tsx";
 import ChatPage from "./dashboard/pages/ChatPage.tsx";
 import IndoorMapPage from "./pages/IndoorMapPage.tsx";
 
+const rawAdminPath = import.meta.env.VITE_ADMIN_PATH || "/nbsc-secure-portal";
+const ADMIN_PATH = rawAdminPath.startsWith("/") ? rawAdminPath : `/${rawAdminPath}`;
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -58,7 +61,8 @@ const router = createBrowserRouter([
       { path: "/about", element: <AboutUs /> },
       { path: "/login", element: <StudentAuth key="student-auth" /> },
       { path: "/register", element: <StudentAuth key="student-auth" /> },
-      { path: "/admin", element: <Login /> },
+      { path: ADMIN_PATH, element: <Login /> },
+      { path: "/admin", element: <Navigate to="/" replace /> },
       { path: "/foundItems", element: <FoundItemsPage /> },
       { path: "/lostItems", element: <LostItemsPage /> },
       { path: "/foundItems/:foundItem", element: <SingleFoundItem /> },
