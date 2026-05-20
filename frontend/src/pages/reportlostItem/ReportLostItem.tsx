@@ -339,7 +339,7 @@ const HELP_PAGES = [
   {
     tag: <><FaSearch size={8} /> Fetch Student Info</>,
     steps: [
-      { n: "1", title: "Enter a Name or Email", desc: "Type the student's full name or institutional email in the fields above." },
+      { n: "1", title: "Enter a Name or Email", desc: "Type your full name or institutional email in the fields below." },
       { n: "2", title: "Click Fetch Student Info", desc: "The system will search the student masterlist and auto-fill the fields if a match is found." },
       { n: "3", title: "Verify the Details", desc: "Check that the name, email, and department are correct before proceeding." },
     ],
