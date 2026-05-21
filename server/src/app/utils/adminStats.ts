@@ -502,12 +502,22 @@ export const adminStats = async (req: Request, res: Response) => {
       healthFactors.reduce((a, b) => a + b, 0) / healthFactors.length
     );
 
+    // ── Sanitize response for unauthenticated (public/guest) requests ─────────
+    if (!req.user) {
+      delete result.userData;           // full user list
+      delete result.topReporters;       // reporter names
+      delete result.topClaimants;       // claimant names
+      if (result.unclaimedItemsAge) delete result.unclaimedItemsAge.oldest;  // item details
+      if (result.pendingClaimsAge)  delete result.pendingClaimsAge.oldest;   // claimant + item details
+    }
+
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
       message: "Admin stats retrieved successfully",
       data: result,
     });
+
   } catch (error: any) {
     console.error("[AdminStats] Error calculating stats:", error);
     sendResponse(res, {

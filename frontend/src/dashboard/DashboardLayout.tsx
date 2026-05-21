@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
@@ -292,16 +292,51 @@ const ProfileDropdown = ({ initials, user, handleSignOut }: { initials: string; 
   );
 };
 
+// ─── Helpers for SAS Portal public bypass ────────────────────────────────────
+const checkPublicBypass = (pathname: string, search: string): boolean => {
+  if (pathname !== "/dashboard/analytics") return false;
+  const params = new URLSearchParams(search);
+  if (params.get("source") === "sas-portal-public") return true;
+  try {
+    const ref = document.referrer;
+    if (ref && (ref.includes(".github.io") || ref.includes("localhost"))) return true;
+  } catch { /* no referrer access */ }
+  return false;
+};
+
 // ─── Main Layout ──────────────────────────────────────────────────────────────
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const user = useUserVerification() as any;
+  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
-  // Close sidebar on route change (mobile)
+  // ── Public bypass check ───────────────────────────────────────────
+  const isPublicBypass = checkPublicBypass(location.pathname, location.search);
+
+  // ── Auth guard: if no token and no bypass, redirect to login ──────
+  useEffect(() => {
+    if (!token && !isPublicBypass) {
+      navigate("/login", { replace: true });
+    }
+  }, [token, isPublicBypass, navigate]);
+
+  // Close sidebar on route change (mobile) — must be before any early return
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
+
+  // ── Public bypass render: clean iframe-friendly layout ────────────
+  if (isPublicBypass && !token) {
+    return (
+      <div className="min-h-screen bg-gray-950 overflow-x-hidden">
+        <main className="p-4 sm:p-5 lg:p-7 bg-gray-950 min-h-screen custom-scrollbar overflow-auto">
+          {children}
+        </main>
+      </div>
+    );
+  }
 
   const isActive = (path: string, exact?: boolean) =>
     exact ? location.pathname === path : (location.pathname === path || location.pathname.startsWith(path + "/"));

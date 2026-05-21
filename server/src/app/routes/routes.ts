@@ -123,8 +123,8 @@ router.delete("/claims/:claimId", auth(), claimsController.deleteClaim);
 
 ////////////////////////////////////////////////// admin //////////////////////////////////////////////
 router.get("/admin/lostItems", auth(), lostItemController.getAllLostItems);
-router.get("/admin/stats", adminStats);
-router.get("/admin/location-stats", locationStats);
+router.get("/admin/stats", auth(true), adminStats);
+router.get("/admin/location-stats", auth(true), locationStats);
 router.get("/admin/audit-logs", auth(), getAuditLogs);
 router.put("/block/user/:id", auth(), userController.blockUser);
 router.delete("/delete-user/:id", auth(), userController.softDeleteUser);
