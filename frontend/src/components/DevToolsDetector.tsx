@@ -4,12 +4,12 @@ import { FaShieldAlt, FaExclamationTriangle } from "react-icons/fa";
 export default function DevToolsDetector() {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Disable detection entirely during local development
-  if (import.meta.env.DEV) {
-    return null;
-  }
-
   useEffect(() => {
+    // Completely disable detection during local development
+    if (import.meta.env.DEV) {
+      return;
+    }
+
     let devtoolsOpen = false;
 
     // Advanced: Debugger Trap (detects undocked DevTools by measuring pause time)
@@ -66,7 +66,7 @@ export default function DevToolsDetector() {
       <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 max-w-md w-full mb-6 text-left shadow-lg">
         <div className="flex gap-3">
           <FaExclamationTriangle className="text-red-400 shrink-0 mt-0.5" size={16} />
-          <p className="text-red-400 text-sm font-semibold leading-relaxed">
+          <p className="text-red-400 text-sm font-semibold leading-relaxed text-justify">
             Advanced Developer Tools detection triggered. Reverse engineering and debugging tools are not allowed on this secure platform.
           </p>
         </div>
