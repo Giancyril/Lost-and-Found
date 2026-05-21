@@ -3,7 +3,7 @@ import { Spinner } from "flowbite-react";
 import {
   FaClipboardList, FaSearch, FaCheckCircle, FaClock,
   FaExclamationCircle, FaBoxOpen, FaChevronRight, FaHistory,
-  FaMapMarkerAlt, FaChevronLeft, FaTimes,
+  FaMapMarkerAlt, FaTimes,
 } from "react-icons/fa";
 import { useGetMyLostItemQuery, useMyClaimsQuery, useLazyGetSingleLostItemQuery } from "../../redux/api/api";
 import { Link } from "react-router-dom";
@@ -78,7 +78,7 @@ const TrackingCard = ({ img, title, subtitle, statusLabel, statusColor, steps, a
   delay?: number;
 }) => (
   <div className={`reveal reveal-delay-${delay} group bg-gray-900 border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-black/20 flex flex-col`}>
-    
+
     {/* Top row — image + info + status */}
     <div className="flex items-start gap-3 p-4 border-b border-white/[0.05]">
       <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-gray-800 shrink-0 border border-white/5">
@@ -134,7 +134,7 @@ const ItemStatus = () => {
     try {
       await triggerSearch(searchId.trim()).unwrap();
       setIsSearched(true);
-      setActiveTab(0); // Switch to Lost Reports tab as it's a lost item ID
+      setActiveTab(0);
     } catch (err: any) {
       toast.error("Invalid Tracking Code or Item not found");
       setIsSearched(false);
@@ -161,7 +161,7 @@ const ItemStatus = () => {
   return (
     <div className="min-h-screen bg-gray-950 pb-16 reveal max-w-full overflow-x-hidden">
 
-      {/* ── Page Header — matches LostItems style ── */}
+      {/* ── Page Header ── */}
       <div className="border-b border-white/5 bg-gray-900/50 reveal">
         <div className="px-4 sm:px-10 lg:px-16 py-6 sm:py-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
@@ -179,22 +179,22 @@ const ItemStatus = () => {
         </div>
       </div>
 
-      {/* ── Search Bar — matches LostItems style ── */}
+      {/* ── Search Bar ── */}
       <div className="px-4 sm:px-10 lg:px-16 py-5 reveal reveal-delay-1">
         <form onSubmit={handleSearch} className="relative flex items-center">
           <div className="relative flex-1">
             <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
-            <input 
-              type="text" 
-              value={searchId} 
+            <input
+              type="text"
+              value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
               placeholder="Enter Tracking Code..."
-              className="w-full pl-11 pr-32 sm:pr-44 py-3.5 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" 
+              className="w-full pl-11 pr-32 sm:pr-44 py-3.5 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all"
             />
           </div>
           <div className="absolute right-2 flex items-center gap-1.5 sm:gap-2">
             {searchId && (
-              <button 
+              <button
                 type="button"
                 onClick={clearSearch}
                 className="flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white rounded-lg transition-all"
@@ -203,7 +203,7 @@ const ItemStatus = () => {
                 <FaTimes size={10} />
               </button>
             )}
-            <button 
+            <button
               type="submit"
               disabled={searchLoading}
               className="px-4 sm:px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-[10px] sm:text-xs font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95 whitespace-nowrap"
@@ -219,29 +219,8 @@ const ItemStatus = () => {
         )}
       </div>
 
-      {/* ── Stats Row ── */}
-      <div className="px-4 sm:px-10 lg:px-16 py-5 reveal reveal-delay-2">
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: "Reports",  value: isLoggedIn ? (myLostItems?.data?.length || 0) : 0,  color: "text-blue-400",    bg: "bg-blue-500/5",    border: "border-blue-500/10",    icon: <FaSearch size={13} className="text-blue-400" /> },
-            { label: "Claims",   value: isLoggedIn ? (myClaims?.data?.length || 0) : 0,     color: "text-cyan-400",    bg: "bg-cyan-500/5",    border: "border-cyan-500/10",    icon: <FaHistory size={13} className="text-cyan-400" /> },
-            { label: "Recovered",value: isLoggedIn ? (myLostItems?.data?.filter((i: any) => i.isFound).length || 0) : 0, color: "text-emerald-400", bg: "bg-emerald-500/5", border: "border-emerald-500/10", icon: <FaCheckCircle size={13} className="text-emerald-400" />, className: "" },
-          ].map((s, i) => (
-            <div key={i} className={`bg-gray-900 border ${s.border} rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col gap-2 sm:gap-3 ${s.className || ""}`}>
-              <div className="flex items-start justify-between gap-2">
-                <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${s.bg} border ${s.border} shrink-0`}>
-                  {s.icon}
-                </div>
-                <span className={`text-2xl sm:text-3xl font-black leading-none tabular-nums ${s.color}`}>{s.value}</span>
-              </div>
-              <p className="text-xs sm:text-sm font-semibold text-white leading-tight uppercase tracking-wider">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* ── Tabs ── */}
-      <div className="px-4 sm:px-10 lg:px-16 mb-5 reveal reveal-delay-3 overflow-x-auto no-scrollbar">
+      <div className="px-4 sm:px-10 lg:px-16 mb-5 reveal reveal-delay-2 overflow-x-auto no-scrollbar">
         <div className="flex items-center gap-2 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit min-w-max">
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
@@ -273,7 +252,6 @@ const ItemStatus = () => {
         {activeTab === 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {isSearched && searchResult?.data ? (
-              // Show search result first if exists
               (() => {
                 const item = searchResult.data;
                 const steps = [
@@ -341,10 +319,10 @@ const ItemStatus = () => {
                 const isApproved = claim.status === "APPROVED";
                 const isRejected = claim.status === "REJECTED";
                 const steps = [
-                  { label: "Claim Submitted",                   date: claim.createdAt, status: "completed" as const, icon: <FaClipboardList size={12} /> },
-                  { label: "Review Process",                    status: claim.status === "PENDING" ? "active" as const : "completed" as const, icon: <FaClock size={12} /> },
-                  { label: isRejected ? "Rejected" : "Approved", status: claim.status === "PENDING" ? "pending" as const : "completed" as const, icon: isRejected ? <FaExclamationCircle size={12} /> : <FaCheckCircle size={12} /> },
-                  { label: "Item Returned",                     status: isApproved ? "active" as const : "pending" as const, icon: <FaBoxOpen size={12} /> },
+                  { label: "Claim Submitted",                     date: claim.createdAt, status: "completed" as const, icon: <FaClipboardList size={12} /> },
+                  { label: "Review Process",                      status: claim.status === "PENDING" ? "active" as const : "completed" as const, icon: <FaClock size={12} /> },
+                  { label: isRejected ? "Rejected" : "Approved",  status: claim.status === "PENDING" ? "pending" as const : "completed" as const, icon: isRejected ? <FaExclamationCircle size={12} /> : <FaCheckCircle size={12} /> },
+                  { label: "Item Returned",                       status: isApproved ? "active" as const : "pending" as const, icon: <FaBoxOpen size={12} /> },
                 ];
                 return (
                   <TrackingCard key={claim.id}

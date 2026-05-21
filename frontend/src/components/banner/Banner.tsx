@@ -58,12 +58,12 @@ const Banner = () => {
     title: "Stay Updated on",
     subtitle: "Your Reports",
     description:
-      "Monitor the status of your lost item reports and claim requests in real time. Our lost and found system ensures you're notified the moment your item is located.",
+      "Monitor the status of your lost item reports and claim requests in real time. Our system ensures you're notified the moment your item is located.",
     descShort:
       "Monitor your lost item reports and claims in real time. Get notified the moment your item is located.",
     primaryButton: {
       text: "My Lost Reports",
-      href: "/my-reports",
+      href: "/itemStatus",
     },
     secondaryButton: {
       text: "Check Recovered Items",
