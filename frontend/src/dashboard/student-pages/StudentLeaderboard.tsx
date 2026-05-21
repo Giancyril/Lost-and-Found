@@ -38,7 +38,7 @@ export default function StudentLeaderboard() {
   );
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="space-y-5 max-w-7xl mx-auto overflow-x-hidden">
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3">

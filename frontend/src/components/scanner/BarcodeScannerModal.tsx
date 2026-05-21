@@ -504,10 +504,16 @@ export default function BarcodeScannerModal({ onScan, onClose, useFetchStudent }
                   <p className="text-gray-500 text-xs max-w-xs leading-relaxed">{errorMsg}</p>
                 </div>
                 <button
-                  onClick={() => { setPhase("scanning"); setErrorMsg(""); startDecoding(); }}
+                  onClick={() => {
+                    if (errorMsg.includes("Permission") || errorMsg.includes("permission")) {
+                      window.location.reload();
+                    } else {
+                      setPhase("scanning"); setErrorMsg(""); startDecoding();
+                    }
+                  }}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/8 text-gray-300 text-xs font-semibold rounded-xl transition-all"
                 >
-                  <FaSync size={10} /> Try Again
+                  <FaSync size={10} /> {(errorMsg.includes("Permission") || errorMsg.includes("permission")) ? "Refresh Page" : "Try Again"}
                 </button>
               </div>
             )}

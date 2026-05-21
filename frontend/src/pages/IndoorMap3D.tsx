@@ -1161,7 +1161,7 @@ const IndoorMap3D = ({
       data-testid="indoor-map-3d"
     >
       <ThemeContext.Provider value={{ palette, isNight }}>
-        <Canvas shadows dpr={[1, 2]}>
+        <Canvas shadows dpr={[1, 1.5]} performance={{ min: 0.5 }}>
           <color attach="background" args={[sceneBg]} />
           <fog attach="fog" args={[sceneBg, 30, isNight ? 60 : 80]} />
           <PerspectiveCamera makeDefault position={[18, 14, 18]} fov={32} />

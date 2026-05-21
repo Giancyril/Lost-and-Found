@@ -303,7 +303,7 @@ export const adminStats = async (req: Request, res: Response) => {
       claimToApproval: totalClaimsSubmitted > 0
         ? parseFloat(((totalClaimsApproved / totalClaimsSubmitted) * 100).toFixed(1)) : 0,
       overallRecovery: totalLostReported > 0
-        ? parseFloat(((totalClaimsApproved / totalLostReported) * 100).toFixed(1)) : 0,
+        ? Math.min(100, parseFloat(((totalClaimsApproved / totalLostReported) * 100).toFixed(1))) : 0,
     };
 
     // Monthly item flow (found + claims per month side by side)
