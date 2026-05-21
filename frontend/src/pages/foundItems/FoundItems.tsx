@@ -475,7 +475,7 @@ const QuickClaimModal = ({ item, onClose, onInitiateChat }: { item: any; onClose
       <div id="claim-modal"
         className="relative bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl shadow-black/50 flex flex-col"
         style={{ borderTop: "2px solid #3b82f6", maxHeight: "88vh" }}>
-        <div className="flex flex-col gap-3 px-5 py-4 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
+        <div className="flex flex-col gap-3 px-5 py-4 border-b border-white/5 sticky top-0 bg-gray-900 z-10 rounded-t-2xl">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
 
