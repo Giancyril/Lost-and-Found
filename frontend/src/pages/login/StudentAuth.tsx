@@ -238,7 +238,7 @@ const StudentAuth: React.FC = () => {
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => setRegStep(1)} className="flex-1 py-2.5 rounded-xl border border-white/[0.07] text-[10px] font-bold text-gray-500 hover:bg-white/[0.03]">Back</button>
-                      <button onClick={() => setRegStep(3)} className="flex-[2] py-2.5 rounded-xl bg-blue-500/10 text-blue-300 border border-blue-500/25 font-bold text-[10px]">Proceed</button>
+                      <button onClick={() => setRegStep(3)} className="flex-1 py-2.5 rounded-xl bg-blue-500/10 text-blue-300 border border-blue-500/25 font-bold text-[10px]">Proceed</button>
                     </div>
                   </div>
                 )}
@@ -262,7 +262,7 @@ const StudentAuth: React.FC = () => {
                     {regError && <div className="bg-red-500/5 border border-red-500/15 rounded-xl px-3 py-2.5 text-red-300/80 text-xs">{regError}</div>}
                     <div className="flex gap-2">
                       <button type="button" onClick={() => setRegStep(2)} className="flex-1 py-2.5 rounded-xl border border-white/[0.07] text-[10px] font-bold text-gray-500 hover:bg-white/[0.03]">Back</button>
-                      <button type="submit" disabled={isRegistering || !regPassword || regPassword !== regConfirmPass} className="flex-[2] py-2.5 rounded-xl bg-blue-500/10 text-blue-300 border border-blue-500/25 font-bold text-[10px] flex items-center justify-center">
+                      <button type="submit" disabled={isRegistering || !regPassword || regPassword !== regConfirmPass} className="flex-1 py-2.5 rounded-xl bg-blue-500/10 text-blue-300 border border-blue-500/25 font-bold text-[10px] flex items-center justify-center">
                         {isRegistering ? <Spinner size="sm" /> : 'Create Account'}
                       </button>
                     </div>
