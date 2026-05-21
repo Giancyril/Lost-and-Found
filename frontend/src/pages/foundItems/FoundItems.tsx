@@ -1281,7 +1281,8 @@ const FoundItemsPage = () => {
   const sortValue = `${sortBy}-${sortOrder}`;
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-16 reveal">
+    <>
+      <div className="min-h-screen bg-gray-950 pb-16 reveal">
       {/* Offline Sync Banner */}
       {pendingReports.length > 0 && (
         <div className="bg-blue-600/20 border-b border-blue-500/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-0 z-[60] backdrop-blur-md">
@@ -1439,6 +1440,7 @@ const FoundItemsPage = () => {
           </nav>
         </div>
       )}
+      </div>
 
       {/* ── Add Found Item Modal ── */}
       {isAddModalOpen && (
@@ -1892,8 +1894,7 @@ const FoundItemsPage = () => {
         itemName={commentItem?.foundItemName || "Item"}
       />
 
-
-    </div>
+    </>
   );
 };
 

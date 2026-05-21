@@ -115,7 +115,7 @@ router.put("/my/foundItem", auth(), foundItemController.editMyFoundItem);
 router.delete("/my/foundItem/:id", auth(), foundItemController.deleteMyFoundItem);
 
 ////////////////////////////////////////////////// claims //////////////////////////////////////////////
-router.post("/claims", auth(), validateRequest(ItemClaimSchema.createClaim), claimsController.createClaim);
+router.post("/claims", auth(true), validateRequest(ItemClaimSchema.createClaim), claimsController.createClaim);
 router.get("/claims", auth(), claimsController.getClaim);
 router.get("/my/claims", auth(), claimsController.getMyClaim);
 router.put("/claims/:claimId", validateRequest(ItemClaimSchema.updateClaim), auth(), claimsController.updateClaimStatus);
