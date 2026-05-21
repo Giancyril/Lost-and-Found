@@ -99,12 +99,12 @@ export default function AuditLogsPage() {
       {/* ── Desktop Table ── */}
       <div className="hidden md:block bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         <div className="grid px-5 py-3 border-b border-white/5 text-[10px] uppercase tracking-widest text-gray-600 font-semibold gap-4"
-             style={{ gridTemplateColumns: "1.2fr 1fr 1fr 1fr 2fr" }}>
+             style={{ gridTemplateColumns: "2fr 2fr 1fr 1.5fr 1.5fr" }}>
           <div>Timestamp</div>
           <div>Admin / User</div>
           <div>Action</div>
           <div>Entity Type</div>
-          <div>Changes</div>
+          <div className="text-right">Changes</div>
         </div>
 
         {isLoading ? (
@@ -121,7 +121,7 @@ export default function AuditLogsPage() {
           <div className="divide-y divide-white/[0.04]">
             {filteredLogs.map((log: any) => (
               <div key={log.id} className="grid items-center px-5 py-3.5 gap-4 hover:bg-white/[0.02] transition-colors"
-                   style={{ gridTemplateColumns: "1.2fr 1fr 1fr 1fr 2fr" }}>
+                   style={{ gridTemplateColumns: "2fr 2fr 1fr 1.5fr 1.5fr" }}>
                 <div className="text-[11px] text-gray-400">
                   {format(new Date(log.createdAt), "MMM d, yyyy HH:mm:ss")}
                 </div>
@@ -140,9 +140,9 @@ export default function AuditLogsPage() {
                   <span className="text-xs text-gray-300 truncate">{log.entityType}</span>
                   <span className="font-mono text-[9px] text-gray-500 mt-0.5 truncate">{log.entityId || "N/A"}</span>
                 </div>
-                <div className="text-xs min-w-0">
+                <div className="text-xs min-w-0 flex justify-end">
                   {log.newData ? (
-                    <div className="max-w-md truncate text-gray-400 font-mono text-[10px] bg-black/20 p-1.5 rounded" title={log.newData}>
+                    <div className="max-w-xs truncate text-gray-400 font-mono text-[10px] bg-black/20 p-1.5 rounded text-left" title={log.newData}>
                       {log.newData}
                     </div>
                   ) : (
