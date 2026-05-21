@@ -80,29 +80,7 @@ const SecurityHoneypot = () => {
       }, 2400);
     };
 
-    // ── 3. Honeypot: detect DevTools open via timing trick ───────────────────
-    let devtoolsOpen = false;
-    const threshold = 160;
-    const check = () => {
-      if (
-        window.outerWidth - window.innerWidth > threshold ||
-        window.outerHeight - window.innerHeight > threshold
-      ) {
-        if (!devtoolsOpen) {
-          devtoolsOpen = true;
-          // Log silently — don't alert, just record
-          const log = JSON.parse(sessionStorage.getItem("__hp_devtools") || "[]");
-          log.push({ time: new Date().toISOString(), path: window.location.pathname });
-          sessionStorage.setItem("__hp_devtools", JSON.stringify(log));
-        }
-      } else {
-        devtoolsOpen = false;
-      }
-    };
-    const interval = setInterval(check, 1000);
-
     return () => {
-      clearInterval(interval);
       delete (window as any).__nbsc;
       delete (window as any).adminHacker;
     };

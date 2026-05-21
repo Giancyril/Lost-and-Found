@@ -59,7 +59,7 @@ export default function DevToolsDetector() {
 
   return (
     <div className="fixed inset-0 z-[999999] bg-gray-950 flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-      <div className="w-24 h-24 rounded-full bg-red-500/10 border-2 border-red-500/20 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(239,68,68,0.3)]">
+      <div className="w-24 h-24 rounded-full bg-red-500/10 border-2 border-red-500/20 flex items-center justify-center mb-6">
         <FaShieldAlt size={40} className="text-red-500" />
       </div>
       <h1 className="text-3xl font-black text-white mb-3 tracking-tight">Security Violation Detected</h1>
@@ -67,7 +67,7 @@ export default function DevToolsDetector() {
         <div className="flex gap-3">
           <FaExclamationTriangle className="text-red-400 shrink-0 mt-0.5" size={16} />
           <p className="text-red-400 text-sm font-semibold leading-relaxed text-justify">
-            Advanced Developer Tools detection triggered. Reverse engineering and debugging tools are not allowed on this secure platform.
+            Advanced Developer Tools detection triggered. Reverse engineering and debugging tools are not allowed on this website.
           </p>
         </div>
       </div>
