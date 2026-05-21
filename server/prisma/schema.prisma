@@ -39,6 +39,7 @@ model User {
   chatReadStatuses  ChatReadStatus[]
   userAchievements  UserAchievement[]
   sightings         Sighting[]
+  systemAuditLogs   SystemAuditLog[]
 
   @@map("users")
 }
@@ -147,6 +148,23 @@ model ClaimAuditLog {
   performedByUser User?    @relation(fields: [performedById], references: [id])
 
   @@map("claimAuditLogs")
+}
+
+model SystemAuditLog {
+  id              String   @id @default(uuid())
+  entityType      String
+  entityId        String?
+  action          String
+  oldData         String?
+  newData         String?
+  performedBy     String   @default("System")
+  performedById   String?
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+  user            User?    @relation(fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@map("systemAuditLogs")
 }
 
 model BulletinPost {

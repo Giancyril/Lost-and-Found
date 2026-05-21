@@ -137,6 +137,12 @@ const api = baseApi.injectEndpoints({
       providesTags: ["auditLogs"],
     }),
 
+    // phase 9 system audit logs
+    getSystemAuditLogs: builder.query({
+      query: () => ({ url: "/admin/system-audit-logs", method: "GET" }),
+      providesTags: ["auditLogs"],
+    }),
+
     getMatchNotifications: builder.query({
       query: () => ({ url: "/admin/match-notifications", method: "GET" }),
       providesTags: ["matchNotifications"],
@@ -414,6 +420,7 @@ export const {
   useAdminStatsQuery,
   useGetLocationStatsQuery,
   useGetAuditLogsQuery,
+  useGetSystemAuditLogsQuery,
   useBlockUserMutation,
   useSoftDeleteUserMutation,
   useGetAllUsersQuery,

@@ -48,6 +48,7 @@ import ContentModeration from "./dashboard/pages/ContentModeration.tsx";
 import ItemStatus from "./pages/itemStatus/ItemStatus.tsx";
 import ChatPage from "./dashboard/pages/ChatPage.tsx";
 import IndoorMapPage from "./pages/IndoorMapPage.tsx";
+import AuditLogsPage from "./dashboard/pages/AuditLogsPage.tsx";
 
 const rawAdminPath = import.meta.env.VITE_ADMIN_PATH || "/nbsc-secure-portal";
 const ADMIN_PATH = rawAdminPath.startsWith("/") ? rawAdminPath : `/${rawAdminPath}`;
@@ -103,6 +104,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/myFoundItems", element: <DashboardLayout><MyFoundItems /></DashboardLayout> },
   { path: "/dashboard/myLostItems", element: <DashboardLayout><MyLostItems /></DashboardLayout> },
   { path: "/dashboard/security", element: <DashboardLayout><SecurityPage /></DashboardLayout> },
+  { path: "/dashboard/audit-logs", element: <DashboardLayout><AuditLogsPage /></DashboardLayout> },
   { path: "/dashboard/moderation", element: <DashboardLayout><ContentModeration /></DashboardLayout> },
   { path: "/dashboard/chat", element: <DashboardLayout><ChatPage /></DashboardLayout> },
 

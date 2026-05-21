@@ -91,6 +91,18 @@ const updateClaimStatus = async (
       },
     });
 
+    // Also log to the new unified SystemAuditLog for Phase 9
+    const { logSystemAudit } = await import("../../utils/auditLog");
+    await logSystemAudit({
+      entityType: "CLAIM",
+      entityId: claimId,
+      action: `STATUS_${data.status}`,
+      oldData: { status: fromStatus },
+      newData: { status: data.status, note: (data as any).note },
+      performedBy: performer?.name,
+      performedById: performer?.id,
+    });
+
     // Trigger Push Notification to claimant
     if (result.userId) {
       await pushService.sendNotificationToUser(result.userId, {
