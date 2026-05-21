@@ -75,98 +75,136 @@ export default function AuditLogsPage() {
         <StatCard label="Active Admins" value={stats.activeAdmins} color="text-violet-400" bg="bg-violet-400/10 border-violet-400/20" icon={<FaUserTag size={14} className="text-violet-400"/>} />
       </div>
 
-      <SectionCard 
-        title="Audit Event History" 
-        subtitle="Chronological record of system-wide operations"
-        action={
-          <div className="flex items-center gap-2">
-            <button onClick={() => refetch()} disabled={isFetching} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-xs rounded-lg transition-all">
-              <FaSync size={9} className={isFetching ? "animate-spin" : ""} /> Refresh
-            </button>
-            <button onClick={downloadCSV} className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs rounded-lg transition-all font-bold">
-              <FaDownload size={9} /> Export
-            </button>
-          </div>
-        }
-      >
-        <div className="p-4 border-b border-white/5 bg-gray-900/50">
-          <div className="relative max-w-md">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
-            <input
-              type="text"
-              placeholder="Search logs by action, admin, or entity..."
-              className="w-full bg-gray-800 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-white focus:outline-none focus:border-cyan-500 transition-colors text-xs"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+      <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative flex-1 group w-full">
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyan-400 transition-colors" size={12} />
+          <input
+            type="text"
+            placeholder="Search audit logs..."
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-800/80 border border-white/10 rounded-2xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+          <button onClick={() => refetch()} disabled={isFetching} className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-xs sm:text-sm rounded-xl transition-all">
+            <FaSync size={11} className={isFetching ? "animate-spin" : ""} /> Refresh
+          </button>
+          <button onClick={downloadCSV} className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs sm:text-sm rounded-xl transition-all font-bold">
+            <FaDownload size={11} /> Export
+          </button>
+        </div>
+      </div>
+
+      {/* ── Desktop Table ── */}
+      <div className="hidden md:block bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+        <div className="grid px-5 py-3 border-b border-white/5 text-[10px] uppercase tracking-widest text-gray-600 font-semibold gap-4"
+             style={{ gridTemplateColumns: "1.2fr 1fr 1fr 1fr 2fr" }}>
+          <div>Timestamp</div>
+          <div>Admin / User</div>
+          <div>Action</div>
+          <div>Entity Type</div>
+          <div>Changes</div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-gray-800/50 text-gray-400 border-b border-white/5 text-xs">
-              <tr>
-                <th className="px-5 py-3 font-semibold">Timestamp</th>
-                <th className="px-5 py-3 font-semibold">Admin / User</th>
-                <th className="px-5 py-3 font-semibold">Action</th>
-                <th className="px-5 py-3 font-semibold">Entity Type</th>
-                <th className="px-5 py-3 font-semibold">Changes</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5 text-gray-300">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center text-gray-500">
-                    <FaClock className="animate-spin mx-auto mb-3 opacity-30" size={20} />
-                    <span className="text-xs">Loading audit trail...</span>
-                  </td>
-                </tr>
-              ) : filteredLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center text-gray-500 text-xs">
-                    <FaShieldAlt className="mx-auto mb-3 opacity-20" size={24} />
-                    No audit logs found.
-                  </td>
-                </tr>
-              ) : (
-                filteredLogs.map((log: any) => (
-                  <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-5 py-3.5 text-[11px] text-gray-400">
-                      {format(new Date(log.createdAt), "MMM d, yyyy HH:mm:ss")}
-                    </td>
-                    <td className="px-5 py-3.5 font-medium text-white flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-600 to-blue-500 flex items-center justify-center text-[10px] font-bold">
-                        {log.performedBy ? log.performedBy.charAt(0).toUpperCase() : "S"}
-                      </div>
-                      <span className="text-xs">{log.performedBy || "System"}</span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded text-[10px] font-bold">
-                        {log.action}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-gray-300">{log.entityType}</span>
-                        <span className="font-mono text-[9px] text-gray-500 mt-0.5">{log.entityId || "N/A"}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5 text-xs">
-                      {log.newData ? (
-                        <div className="max-w-xs truncate text-gray-400 font-mono text-[10px] bg-black/20 p-1.5 rounded" title={log.newData}>
-                          {log.newData}
-                        </div>
-                      ) : (
-                        <span className="text-gray-600 text-[10px]">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </SectionCard>
+        {isLoading ? (
+          <div className="py-12 text-center text-gray-500 flex flex-col items-center">
+            <FaClock className="animate-spin mb-3 opacity-30" size={20} />
+            <span className="text-xs">Loading audit trail...</span>
+          </div>
+        ) : filteredLogs.length === 0 ? (
+          <div className="py-20 text-center text-gray-500">
+            <FaShieldAlt className="mx-auto mb-3 opacity-20" size={28} />
+            <p className="text-sm">No audit logs found.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-white/[0.04]">
+            {filteredLogs.map((log: any) => (
+              <div key={log.id} className="grid items-center px-5 py-3.5 gap-4 hover:bg-white/[0.02] transition-colors"
+                   style={{ gridTemplateColumns: "1.2fr 1fr 1fr 1fr 2fr" }}>
+                <div className="text-[11px] text-gray-400">
+                  {format(new Date(log.createdAt), "MMM d, yyyy HH:mm:ss")}
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-600 to-blue-500 flex items-center justify-center text-[10px] font-bold text-white">
+                    {log.performedBy ? log.performedBy.charAt(0).toUpperCase() : "S"}
+                  </div>
+                  <span className="text-xs text-white font-medium">{log.performedBy || "System"}</span>
+                </div>
+                <div>
+                  <span className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                    {log.action}
+                  </span>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs text-gray-300 truncate">{log.entityType}</span>
+                  <span className="font-mono text-[9px] text-gray-500 mt-0.5 truncate">{log.entityId || "N/A"}</span>
+                </div>
+                <div className="text-xs min-w-0">
+                  {log.newData ? (
+                    <div className="max-w-md truncate text-gray-400 font-mono text-[10px] bg-black/20 p-1.5 rounded" title={log.newData}>
+                      {log.newData}
+                    </div>
+                  ) : (
+                    <span className="text-gray-600 text-[10px]">—</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Mobile Cards ── */}
+      <div className="md:hidden space-y-3">
+        {isLoading ? (
+          <div className="py-12 text-center text-gray-500 bg-gray-900 border border-white/5 rounded-2xl">
+            <FaClock className="animate-spin mb-3 opacity-30 mx-auto" size={20} />
+            <span className="text-xs">Loading...</span>
+          </div>
+        ) : filteredLogs.length === 0 ? (
+          <div className="py-16 text-center bg-gray-900 border border-white/5 rounded-2xl">
+            <FaShieldAlt size={24} className="text-gray-700 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">No audit logs found.</p>
+          </div>
+        ) : filteredLogs.map((log: any) => (
+          <div key={log.id} className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-600 to-blue-500 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                  {log.performedBy ? log.performedBy.charAt(0).toUpperCase() : "S"}
+                </div>
+                <span className="text-sm text-white font-medium truncate">{log.performedBy || "System"}</span>
+              </div>
+              <span className="shrink-0 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                {log.action}
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-white/5">
+              <div>
+                <p className="text-gray-600 text-[10px] uppercase tracking-widest">Entity</p>
+                <p className="text-gray-300 mt-0.5">{log.entityType}</p>
+                {log.entityId && <p className="font-mono text-[9px] text-gray-500 mt-0.5 truncate">{log.entityId}</p>}
+              </div>
+              <div>
+                <p className="text-gray-600 text-[10px] uppercase tracking-widest">Date</p>
+                <p className="text-gray-300 mt-0.5">{format(new Date(log.createdAt), "MMM d, yyyy")}</p>
+                <p className="text-gray-500 text-[10px] mt-0.5">{format(new Date(log.createdAt), "HH:mm:ss")}</p>
+              </div>
+            </div>
+
+            {log.newData && (
+              <div className="pt-2 border-t border-white/5">
+                <p className="text-gray-600 text-[10px] uppercase tracking-widest mb-1">Changes</p>
+                <div className="text-gray-400 font-mono text-[10px] bg-black/30 p-2 rounded-lg break-words overflow-x-auto max-h-24 custom-scrollbar">
+                  {log.newData}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
