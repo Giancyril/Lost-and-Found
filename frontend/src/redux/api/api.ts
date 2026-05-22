@@ -241,6 +241,11 @@ const api = baseApi.injectEndpoints({
       query: (data: { query: string }) => ({ url: "/ai-search", method: "POST", body: data }),
     }),
 
+    // AI Chat
+    aiChat: builder.mutation({
+      query: (data: { messages: { role: string; content: string }[] }) => ({ url: "/ai-chat", method: "POST", body: data }),
+    }),
+
     // AI Recognition
     aiRecognize: builder.mutation({
       query: (data: any) => ({ url: "/ai-recognize", method: "POST", body: data }),
@@ -437,6 +442,7 @@ export const {
   useGetFaqsQuery,
   useCreateFaqMutation,
   useAiSearchMutation,
+  useAiChatMutation,
   useAiRecognizeMutation,
   useSendLostItemEmailMutation,
   useSendClaimApprovedEmailMutation,

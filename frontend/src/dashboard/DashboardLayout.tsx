@@ -17,6 +17,8 @@ import {
   useGetLostItemsQuery,
   useGetSecurityStatsQuery,
 } from "../redux/api/api";
+import { baseApi } from "../redux/api/baseApi";
+import ChatbotConcierge from "../components/chatbot/ChatbotConcierge";
 import ChatDropdown from "./components/ChatDropdown";
 
 interface DashboardLayoutProps { children: React.ReactNode; }
@@ -468,6 +470,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <p className="text-gray-500 text-xs truncate hidden sm:block">{pageMeta.subtitle}</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            <ChatbotConcierge />
             <ChatDropdown />
             <NotificationBell />
             <ProfileDropdown initials={initials} user={user} handleSignOut={handleSignOut} />

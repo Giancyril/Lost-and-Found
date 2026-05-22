@@ -15,6 +15,7 @@ import {
 } from "react-icons/fa";
 import { useState, useRef, useEffect } from "react";
 import NotificationBell from "../notifications/NotificationBell";
+import ChatbotConcierge from "../chatbot/ChatbotConcierge";
 import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../../redux/api/api";
 
 const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -362,6 +363,7 @@ export function Navbars() {
 
         {/* Right side */}
         <div className="flex md:order-2 items-center gap-2 !overflow-visible">
+          <ChatbotConcierge />
           <NotificationBell />
 
           {/* Not logged in */}

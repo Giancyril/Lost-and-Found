@@ -42,7 +42,9 @@ const getClaim = async () => {
   return result;
 };
 
-const getMyClaim = async (user: JwtPayload) => {
+const getMyClaim = async (user: JwtPayload | undefined) => {
+  if (!user || !user.id) return [];
+
   const result = await prisma.claim.findMany({
     where: {
       userId: user.id,

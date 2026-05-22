@@ -8,6 +8,8 @@ import { useAchievementWatcher } from "./hooks/useAchievementWatcher";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+
+
 import { useScrollReveal } from "./hooks/useScrollReveal";
 
 function App() {

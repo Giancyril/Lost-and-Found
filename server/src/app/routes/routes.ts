@@ -17,6 +17,7 @@ import { locationStats } from "../utils/locationStats";
 import { getAuditLogs, getSystemAuditLogs } from "../utils/auditLog";
 import { aiSearchController } from "../modules/aiSearch/aiSearch.controller";
 import { aiSearchValidation } from "../modules/aiSearch/aiSearch.validate";
+import { aiChatRoutes } from "../modules/aiChat/aiChat.routes";
 import { aiRecognitionController } from "../modules/ai/ai.controller";
 import { sendLostItemEmail, sendClaimApprovedEmail } from "../utils/emailController";
 import { bulletinPostController } from "../modules/bulletinPost/bulletinPost.controller";
@@ -64,7 +65,6 @@ const router = express.Router();
 router.post("/register", userController.registerUser);
 router.get("/users", userController.allUsers);
 router.post("/login", validateRequest(UserSchema.userLoginSchema), authController.login);
-
 ////////////////////////////////////////////////// profile //////////////////////////////////////////////
 router.post("/change-password", auth(), validateRequest(UserSchema.changePasswordSchema), authController.newPasswords);
 router.post("/change-email", auth(), validateRequest(UserSchema.changeEmailSchema), authController.changeEmail);
@@ -134,6 +134,7 @@ router.get("/admin/match-notifications", auth(), getMatchNotifications);
 // ////////////////////////////////////////////////// AI search //////////////////////////////////////////////
 router.post("/ai-search", validateRequest(aiSearchValidation.aiSearchSchema), aiSearchController.aiSearch);
 router.post("/ai-recognize", auth(true), uploadImages.single("image"), aiRecognitionController.recognizeImage);
+router.use("/ai-chat", aiChatRoutes);
 
 // ── Email / Mailer ──
 router.post("/email/lost-item", auth(), sendLostItemEmail);
