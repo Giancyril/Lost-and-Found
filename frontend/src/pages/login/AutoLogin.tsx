@@ -26,10 +26,11 @@ const AutoLogin = () => {
           // Get role to navigate appropriately
           const role = res.data.data.role;
           if (role === "admin") {
-            window.location.href = "/dashboard";
+            navigate("/dashboard");
           } else {
-            window.location.href = "/dashboard/student";
+            navigate("/dashboard/student");
           }
+          window.location.reload();
         } else {
           navigate("/login");
         }
