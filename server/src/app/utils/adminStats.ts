@@ -78,8 +78,8 @@ export const adminStats = async (req: Request, res: Response) => {
     const queryYear = req.query.year ? parseInt(req.query.year as string) : now.getFullYear();
 
     const allDates = [
-      ...(foundItems?.map((i: any) => new Date(i.createdAt).getFullYear()) || []),
-      ...allLostItems.map((i: any) => new Date(i.createdAt).getFullYear())
+      ...(foundItems?.map((i: any) => new Date(i.date || i.createdAt).getFullYear()) || []),
+      ...allLostItems.map((i: any) => new Date(i.date || i.createdAt).getFullYear())
     ];
     const availableYears = Array.from(new Set(allDates)).sort((a, b) => b - a);
     if (!availableYears.includes(now.getFullYear())) availableYears.unshift(now.getFullYear());
@@ -96,13 +96,14 @@ export const adminStats = async (req: Request, res: Response) => {
     }
 
     const addToMonth = (dateStr: string, field: "found" | "lost" | "claims" | "resolved") => {
+      if (!dateStr) return;
       const d = new Date(dateStr);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (monthlyMap[key]) monthlyMap[key][field]++;
     };
 
-    foundItems?.forEach((i: any) => addToMonth(i.createdAt, "found"));
-    allLostItems.forEach((i: any) => addToMonth(i.createdAt, "lost"));
+    foundItems?.forEach((i: any) => addToMonth(i.date || i.createdAt, "found"));
+    allLostItems.forEach((i: any) => addToMonth(i.date || i.createdAt, "lost"));
     claims.forEach((c: any) => addToMonth(c.createdAt, "claims"));
     allLostItems
       .filter((i: any) => i.isFound && i.updatedAt)
@@ -321,14 +322,14 @@ export const adminStats = async (req: Request, res: Response) => {
       flowMap[key] = { month: MONTH_LABELS[i], found: 0, claimed: 0, lost: 0, pendingClaims: 0 };
     }
     foundItems?.forEach((i: any) => {
-      const d = new Date(i.createdAt); const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const d = new Date(i.date || i.createdAt); const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (flowMap[key]) {
         flowMap[key].found++;
         if (i.isClaimed) flowMap[key].claimed++;
       }
     });
     allLostItems.forEach((i: any) => {
-      const d = new Date(i.createdAt); const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const d = new Date(i.date || i.createdAt); const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (flowMap[key]) flowMap[key].lost++;
     });
     claims.forEach((c: any) => {
