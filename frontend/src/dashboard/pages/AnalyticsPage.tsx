@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   FaTrophy, FaMedal, FaClock,
   FaBoxOpen, FaCheckCircle, FaPrint,
