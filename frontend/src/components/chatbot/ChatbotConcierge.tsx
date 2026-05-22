@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaRobot, FaTimes, FaPaperPlane, FaSearch, FaBoxOpen } from 'react-icons/fa';
+import { FaRobot, FaTimes, FaPaperPlane, FaSearch, FaBoxOpen, FaTrash } from 'react-icons/fa';
 import { useAiChatMutation } from '../../redux/api/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { IoCloseOutline } from 'react-icons/io5';
@@ -39,24 +39,28 @@ export default function ChatbotConcierge() {
     ];
   });
 
-  // Load from session storage when user changes
-  useEffect(() => {
-    const saved = sessionStorage.getItem(storageKey);
-    if (saved) {
-      try {
-        setMessages(JSON.parse(saved));
-        return;
-      } catch (e) {}
-    }
-    setMessages([{
-      id: 'welcome',
-      role: 'model',
-      content: 'Hi there! I am Aura AI. Have you lost or found something? Tell me about it!'
-    }]);
-  }, [storageKey]);
+  const lastStorageKey = useRef(storageKey);
 
   useEffect(() => {
-    sessionStorage.setItem(storageKey, JSON.stringify(messages));
+    if (lastStorageKey.current !== storageKey) {
+      // Storage key changed (e.g. user logged in or out). Load new messages, do NOT save old ones.
+      const saved = sessionStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          setMessages(JSON.parse(saved));
+        } catch (e) {}
+      } else {
+        setMessages([{
+          id: 'welcome',
+          role: 'model',
+          content: 'Hi there! I am Aura AI. Have you lost or found something? Tell me about it!'
+        }]);
+      }
+      lastStorageKey.current = storageKey;
+    } else {
+      // Normal state update, save to storage
+      sessionStorage.setItem(storageKey, JSON.stringify(messages));
+    }
   }, [messages, storageKey]);
 
   const [inputValue, setInputValue] = useState('');
@@ -130,22 +134,31 @@ export default function ChatbotConcierge() {
             style={{ borderTop: "2px solid #3b82f6" }}
           >
             {/* Header */}
-            <div className="bg-gray-900 border-b border-white/5 p-4 flex items-center justify-between z-10">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <FaRobot className="text-blue-400 text-lg" />
-                </div>
+            <div className="bg-[#0f1523] border-b border-white/5 p-4 flex items-center justify-between z-10 relative overflow-hidden">
+              {/* Subtle background glow */}
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-blue-500/5 to-violet-500/5 pointer-events-none" />
+              
+              <div className="flex items-center gap-3 relative z-10">
+                
                 <div>
-                  <h3 className="text-white font-bold text-sm">Aura AI</h3>
-                  <p className="text-white/70 text-[10px]">Powered by Gemini</p>
+                  <h3 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400 text-[15px] tracking-wide">
+                    Aura AI
+                  </h3>
+                  <p className="text-white/50 text-[11px] font-medium flex items-center gap-1.5 mt-0.5">
+                    
+                    Ready to assist you
+                  </p>
                 </div>
               </div>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="text-white/80 hover:text-white transition-colors p-1"
-              >
-                <IoCloseOutline size={24} />
-              </button>
+
+              <div className="flex items-center gap-3 relative z-10">
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all border border-white/5 shadow-sm"
+                >
+                  <IoCloseOutline size={20} />
+                </button>
+              </div>
             </div>
 
             {/* Chat Area */}
@@ -222,21 +235,31 @@ export default function ChatbotConcierge() {
 
             {/* Input Area */}
             <div className="p-3 border-t border-white/10 bg-gray-900">
-              <form onSubmit={handleSend} className="relative flex items-center">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Ask me anything..."
-                  className="w-full bg-black/30 border border-white/10 rounded-full pl-4 pr-12 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
+              <form onSubmit={handleSend} className="relative flex items-center gap-2">
                 <button 
-                  type="submit"
-                  disabled={!inputValue.trim() || isLoading}
-                  className="absolute right-2 p-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full text-white disabled:opacity-50 hover:shadow-lg transition-all"
+                  type="button"
+                  onClick={() => setMessages([{ id: 'welcome', role: 'model', content: 'Hi there! I am Aura AI. Have you lost or found something? Tell me about it!' }])}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all shrink-0 border border-transparent hover:border-red-500/20"
+                  title="Clear Chat"
                 >
-                  <FaPaperPlane size={12} />
+                  <FaTrash size={12} />
                 </button>
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="Ask me anything..."
+                    className="w-full bg-black/30 border border-white/10 rounded-full pl-4 pr-12 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={!inputValue.trim() || isLoading}
+                    className="absolute right-1.5 top-1.5 p-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full text-white disabled:opacity-50 hover:shadow-lg transition-all"
+                  >
+                    <FaPaperPlane size={12} />
+                  </button>
+                </div>
               </form>
             </div>
           </div>
