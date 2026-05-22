@@ -258,7 +258,7 @@ const CustomSelect = ({ options, value, onChange }: {
 // ── Found Item Card ─────────────────────────────────────────────────────────
 const FoundItemCard = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser, onInitiateChat }: { item: any; setClaimItem: (item: any) => void; onOpenComments: () => void; isAdmin: boolean; currentUser: any; onInitiateChat: (item: any) => void }) => {
   const isClaimed = item?.isClaimed;
-  const daysAgo = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
+  const daysAgo = Math.floor((Date.now() - new Date(item.date || item.createdAt).getTime()) / 86400000);
   const hideImg = shouldHideImage(item?.category?.name, isAdmin);
   const dateStr = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
 

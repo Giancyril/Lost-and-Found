@@ -144,7 +144,7 @@ function LifecycleModal({ foundItem, onClose }: { foundItem: any; onClose: () =>
     [...claimArr].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ?? null;
 
   const auditLogs: any[] = claim?.auditLogs ?? [];
-  const reportedAt = foundItem?.createdAt ?? null;
+  const reportedAt = foundItem?.date ?? foundItem?.createdAt ?? null;
   const claimedAt = claim?.createdAt ?? null;
   const approvedLog = auditLogs.find((l: any) => l.toStatus === "APPROVED");
   const rejectedLog = auditLogs.find((l: any) => l.toStatus === "REJECTED");

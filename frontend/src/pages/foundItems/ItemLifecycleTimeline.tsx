@@ -89,7 +89,7 @@ const ItemLifecycleTimeline = ({ foundItem, currentUserId }: Props) => {
   const isClaimed         = foundItem.isClaimed;
 
   // ── Key timestamps ────────────────────────────────────────────────────────
-  const reportedAt  = foundItem.createdAt ?? null;
+  const reportedAt  = foundItem.date ?? foundItem.createdAt ?? null;
   const claimedAt   = claim?.createdAt    ?? null;
 
   const approvedLog = auditLogs.find((l: any) => l.toStatus === "APPROVED");
