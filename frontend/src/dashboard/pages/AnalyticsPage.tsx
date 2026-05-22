@@ -92,7 +92,7 @@ const TABS = [
 // ════════════════════════════════════════════════════════════════════════════════
 // TAB: OVERVIEW
 // ════════════════════════════════════════════════════════════════════════════════
-const OverviewTab = ({ stats }: { stats: any }) => {
+const OverviewTab = ({ stats, selectedYear }: { stats: any; selectedYear: number }) => {
   const [chartType, setChartType] = useState<"area" | "bar">("area");
   const [peakView, setPeakView] = useState<"days" | "hours">("days");
 
@@ -180,30 +180,48 @@ const OverviewTab = ({ stats }: { stats: any }) => {
           )}
         </div>
         {monthlyStats.length > 0 && (() => {
-          const last = monthlyStats[monthlyStats.length - 1];
-          const prev = monthlyStats[monthlyStats.length - 2];
-          const delta = (field: "found" | "lost" | "claims") => {
-            if (!prev) return null;
-            const diff = last[field] - prev[field];
-            if (diff === 0) return null;
-            return <span className={`text-[10px] font-medium ${diff > 0 ? "text-emerald-400" : "text-red-400"}`}>{diff > 0 ? "+" : ""}{diff} vs last month</span>;
-          };
+          const totalFound = monthlyStats.reduce((sum: number, m: any) => sum + m.found, 0);
+          const totalLost = monthlyStats.reduce((sum: number, m: any) => sum + m.lost, 0);
+          const totalClaims = monthlyStats.reduce((sum: number, m: any) => sum + m.claims, 0);
+          
           return (
             <div className="grid grid-cols-3 border-t border-white/5">
               {[
-                { label: "Found this month", value: last.found, color: "text-cyan-400", field: "found" as const },
-                { label: "Lost this month", value: last.lost, color: "text-red-400", field: "lost" as const },
-                { label: "Claims this month", value: last.claims, color: "text-yellow-400", field: "claims" as const },
+                { label: `Total Found in ${selectedYear}`, value: totalFound, color: "text-cyan-400" },
+                { label: `Total Lost in ${selectedYear}`, value: totalLost, color: "text-red-400" },
+                { label: `Total Claims in ${selectedYear}`, value: totalClaims, color: "text-yellow-400" },
               ].map((s, i) => (
                 <div key={i} className={`px-5 py-4 flex flex-col gap-1 ${i > 0 ? "border-l border-white/5" : ""}`}>
                   <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
                   <p className="text-gray-600 text-[10px]">{s.label}</p>
-                  {delta(s.field)}
                 </div>
               ))}
             </div>
           );
         })()}
+      </SectionCard>
+
+      {/* Monthly Breakdown Grid */}
+      <SectionCard title={`Monthly Breakdown (${selectedYear})`} subtitle="Detailed item counts for each month">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 p-4 bg-gray-900/30">
+          {monthlyStats.map((m: any, i: number) => (
+            <div key={i} className="bg-gray-800 border border-white/5 rounded-xl p-3 flex flex-col gap-1.5 hover:border-cyan-500/30 transition-colors">
+              <p className="text-xs font-bold text-white mb-2">{m.month}</p>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-gray-500">Found</span>
+                <span className="text-xs font-bold text-cyan-400">{m.found}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-gray-500">Lost</span>
+                <span className="text-xs font-bold text-red-400">{m.lost}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-gray-500">Claims</span>
+                <span className="text-[10px] font-bold text-yellow-400">{m.claims}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </SectionCard>
 
       {/* Resolution Rate Trend */}
@@ -1351,7 +1369,7 @@ const AnalyticsPage = () => {
       </div>
 
       {/* Tab content */}
-      {activeTab === "overview" && <OverviewTab stats={stats} />}
+      {activeTab === "overview" && <OverviewTab stats={stats} selectedYear={selectedYear} />}
       {activeTab === "users" && <UserActivityTab stats={stats} />}
       {activeTab === "flow" && <ItemFlowTab stats={stats} />}
       {activeTab === "performance" && <PerformanceTab stats={stats} />}
