@@ -666,7 +666,7 @@ const FoundItemsPage = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [viewMode, setViewMode] = useState<"grid" | "list">(typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "grid");
   const [claimItem, setClaimItem] = useState<any>(null);
-  const [limit] = useState(12);
+  const [limit] = useState(50);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

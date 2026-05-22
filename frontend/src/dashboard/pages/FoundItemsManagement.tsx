@@ -115,7 +115,7 @@ const FoundItemsManagement = () => {
   const [isArchiveLoading, setIsArchiveLoading]     = useState(false);
   const [editForm, setEditForm] = useState({ foundItemName: "", description: "", location: "", date: "" });
 
-  const { data: foundItemsData, isLoading, error } = useGetFoundItemsQuery({ searchTerm, sortBy: "foundItemName", sortOrder: "asc" });
+  const { data: foundItemsData, isLoading, error } = useGetFoundItemsQuery({ searchTerm, sortBy: "date", sortOrder: "desc", limit: 1000 });
   const { data: categoriesData } = useCategoryQuery({});
   const [deleteFoundItem]  = useDeleteMyFoundItemMutation();
   const [editMyFoundItem]  = useEditMyFoundItemMutation();

@@ -114,7 +114,7 @@ const LostItemsManagement = () => {
   const [isDeleteLoading, setIsDeleteLoading]     = useState(false);
   const [editFormData, setEditFormData] = useState({ lostItemName: "", description: "", location: "", date: "", categoryId: "" });
 
-  const { data: lostItemsData, isLoading, error } = useGetAllLostItemsQuery({ searchTerm, sortBy: "lostItemName", sortOrder: "asc" });
+  const { data: lostItemsData, isLoading, error } = useGetAllLostItemsQuery({ searchTerm, sortBy: "date", sortOrder: "desc", limit: 1000 });
   const { data: categoriesData } = useCategoryQuery({});
   const [deleteMyLostItem] = useDeleteMyLostItemMutation();
   const [markAsFound]      = useMarkLostItemAsFoundMutation();

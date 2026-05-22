@@ -509,7 +509,7 @@ const LostItemsPage = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">(
     typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "grid"
   );
-  const [limit] = useState(12);
+  const [limit] = useState(50);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: lostItems, isLoading } = useGetLostItemsQuery({
