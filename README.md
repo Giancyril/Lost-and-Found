@@ -36,7 +36,9 @@ A comprehensive lost and found management system built with modern web technolog
 - **Dynamic Interactive Hero Carousel**: A multi-slide auto-playing hero banner highlighting major entry points (Lost reporting, Found logs, Recovery tracing) featuring responsive buttons and smooth slider telemetry.
 - **Live Telemetry & Activity Stats Board**: Live campus lost-and-found status counter displaying real-time aggregates of total reported lost, recovered found, and successfully claimed items synced directly with server database mutations.
 - **Double Live Feed Recent Panels**: Real-time recent Lost and Found item displays containing active status badge trackers (`✓ Found`, `Claimed`, `Available`, `Pending`), scrollable custom layouts, and fast direct routing.
-
+- **Offline Sync**: Staff members can scan barcodes or submit "Found Items" while offline. The app saves the data securely in the browser and automatically uploads it in the background as soon as they walk back into a WiFi zone.
+- **Strict Audit Trail**: A dedicated, un-deletable "Audit Log" page for Administrators that shows exactly who performed which action and when. This ensures complete accountability and makes the system virtually bulletproof for school audits.
+- **AI Chatbot Concierge ("Smart Assistant")**: A floating AI chat widget integrated into the Student Dashboard. Users can interact naturally (e.g., "I lost my blue Nike backpack near the library yesterday"), and the AI uses Gemini to parse the sentence, instantly search the database, and reply with potential matches in the chat.
 ### Campus Features
 - **Points System**: Comprehensive gamification system with point rewards for various activities
   - **Points for Actions**: Earn points for reporting items, successful claims, helpful comments, and community contributions
