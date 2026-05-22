@@ -5,6 +5,7 @@ import {
   FaUsers, FaChartLine, FaExchangeAlt, FaTachometerAlt,
   FaArrowDown, FaUserCheck, FaUserSlash,
   FaShieldAlt, FaBrain, FaMapMarkerAlt, FaExclamationCircle, FaBolt,
+  FaCalendarAlt, FaChevronDown, FaCheck,
 } from "react-icons/fa";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
