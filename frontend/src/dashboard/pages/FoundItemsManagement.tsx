@@ -304,7 +304,7 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
 
                 {/* Date */}
                 <div>
-                  <p className="text-gray-500 text-xs">{new Date(item.date).toLocaleDateString()}</p>
+                  <p className="text-gray-500 text-xs">{new Date(item.date || item.createdAt).toLocaleDateString()}</p>
                 </div>
 
                 {/* Priority */}
@@ -396,7 +396,7 @@ console.warn("First item:", JSON.stringify(items[0], null, 2));
             <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-white/5">
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Category</p><p className="text-gray-300 mt-0.5">{item.category?.name || "—"}</p></div>
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Location</p><p className="text-gray-300 mt-0.5">{item.location}</p></div>
-              <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Date Found</p><p className="text-gray-300 mt-0.5">{new Date(item.date).toLocaleDateString()}</p></div>
+              <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Date Found</p><p className="text-gray-300 mt-0.5">{new Date(item.date || item.createdAt).toLocaleDateString()}</p></div>
               <div>
                 <p className="text-gray-600 text-[10px] uppercase tracking-widest">Reporter</p>
                 <p className="text-blue-400 text-xs font-medium mt-0.5">

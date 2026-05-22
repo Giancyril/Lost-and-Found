@@ -294,7 +294,7 @@ const LostItemsManagement = () => {
                   </div>
                 </div>
                 <div className="col-span-1">
-                  <p className="text-gray-500 text-xs">{new Date(item.date).toLocaleDateString()}</p>
+                  <p className="text-gray-500 text-xs">{new Date(item.date || item.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="col-span-1">
                   <div className="flex flex-col gap-1">
@@ -376,7 +376,7 @@ const LostItemsManagement = () => {
             <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-white/5">
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Category</p><p className="text-gray-300 mt-0.5">{item.category?.name || "—"}</p></div>
               <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Location</p><p className="text-gray-300 mt-0.5">{item.location}</p></div>
-              <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Date Lost</p><p className="text-gray-300 mt-0.5">{new Date(item.date).toLocaleDateString()}</p></div>
+              <div><p className="text-gray-600 text-[10px] uppercase tracking-widest">Date Lost</p><p className="text-gray-300 mt-0.5">{new Date(item.date || item.createdAt).toLocaleDateString()}</p></div>
               <div>
                 <p className="text-gray-600 text-[10px] uppercase tracking-widest">Reporter</p>
                 <p className="text-gray-300 mt-0.5 text-[11px] font-medium truncate">{item.user?.username || item.reporterName || "—"}</p>

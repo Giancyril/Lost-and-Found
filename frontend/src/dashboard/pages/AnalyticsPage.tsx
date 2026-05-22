@@ -1292,6 +1292,19 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
 const AnalyticsPage = () => {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
+  const yearDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(event.target as Node)) {
+        setIsYearDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const { data: statsData, isLoading } = useAdminStatsQuery({ year: selectedYear });
   const stats = statsData?.data;
 
@@ -1336,16 +1349,40 @@ const AnalyticsPage = () => {
 
         {/* Export buttons & Year Dropdown */}
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="px-3 py-2 bg-gray-800 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-all duration-200 focus:outline-none focus:border-cyan-500/50 appearance-none pr-8 cursor-pointer relative"
-            style={{ backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%239ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>')`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
-          >
-            {Array.from(new Set(stats?.availableYears?.map((y: any) => Number(y))) || []).sort((a: any, b: any) => b - a).map((year: any) => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
+          <div className="relative" ref={yearDropdownRef}>
+            <button
+              onClick={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-all duration-200 focus:outline-none focus:border-cyan-500/50 hover:bg-gray-700"
+            >
+              <FaCalendarAlt size={10} className="text-cyan-400" />
+              <span>{selectedYear}</span>
+              <FaChevronDown size={8} className={`transition-transform duration-200 ${isYearDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
+            
+            {isYearDropdownOpen && (
+              <div className="absolute top-full mt-2 right-0 w-32 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                <div className="max-h-48 overflow-y-auto">
+                  {Array.from(new Set(stats?.availableYears?.map((y: any) => Number(y))) || []).sort((a: any, b: any) => b - a).map((year: any) => (
+                    <button
+                      key={year}
+                      onClick={() => {
+                        setSelectedYear(year);
+                        setIsYearDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between ${
+                        selectedYear === year
+                          ? "bg-cyan-500/10 text-cyan-400 font-bold"
+                          : "text-gray-400 hover:bg-white/5 hover:text-white"
+                      }`}
+                    >
+                      {year}
+                      {selectedYear === year && <FaCheck size={10} className="text-cyan-400" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={() => printAnalyticsReport(stats)}
             className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-300 hover:text-white text-xs font-medium rounded-xl transition-all duration-200"

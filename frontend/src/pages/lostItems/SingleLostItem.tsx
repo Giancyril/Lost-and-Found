@@ -290,7 +290,7 @@ const SingleLostItem = () => {
     </div>
   );
 
-  const { lostItemName, date, isFound, img, description, location, user, category } = lostItem;
+  const { lostItemName, date, createdAt, isFound, img, description, location, user, category } = lostItem;
   const alreadyFound = isFound || reportedFound;
   const hideImage = shouldHideImage(category?.name, isAdmin);
 
@@ -388,7 +388,7 @@ const SingleLostItem = () => {
 
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: "Date Lost", value: date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Not specified" },
+                    { label: "Date Lost", value: (date || createdAt) ? new Date(date || createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Not specified" },
                     { label: "Location", value: location || "Not specified" },
                     { label: "Category", value: category?.name || "Uncategorized" },
                     { label: "Reported By", value: lostItem?.reporterName || user?.username || "Anonymous" },
@@ -646,7 +646,7 @@ const SingleLostItem = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold truncate">{lostItemName}</p>
                   <p className="text-gray-400 text-xs mt-0.5 truncate">{location}</p>
-                  <p className="text-gray-400 text-xs">Lost: {date?.split("T")[0]}</p>
+                  <p className="text-gray-400 text-xs">Lost: {(date || createdAt)?.split("T")[0]}</p>
                 </div>
                 <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">Missing</span>
               </div>

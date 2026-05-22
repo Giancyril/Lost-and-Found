@@ -49,7 +49,7 @@ const getCategoryIcon = (name: string) => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getItemGroup = (item: any): "today" | "week" | "older" => {
-  const date = new Date(item.createdAt ?? item.date);
+  const date = new Date(item.date || item.createdAt);
   const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
   if (diffDays < 1) return "today";
   if (diffDays < 7) return "week";
@@ -253,7 +253,7 @@ const ItemCard = ({
 }: {
   item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void;
 }) => {
-  const daysAgo = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
+  const daysAgo = Math.floor((Date.now() - new Date(item.date || item.createdAt).getTime()) / 86400000);
   const hideImg = shouldHideImage(item?.category?.name, isAdmin);
 
   const ageBadgeClass =
@@ -354,7 +354,7 @@ const ItemRow = ({
 }: {
   item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void;
 }) => {
-  const daysAgo = Math.floor((Date.now() - new Date(item.createdAt ?? item.date).getTime()) / 86400000);
+  const daysAgo = Math.floor((Date.now() - new Date(item.date || item.createdAt).getTime()) / 86400000);
   const lostDateStr = item?.date?.split("T")[0] ?? "—";
   const hideImg = shouldHideImage(item?.category?.name, isAdmin);
 
