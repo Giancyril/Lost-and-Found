@@ -25,12 +25,12 @@ const AutoLogin = () => {
           setUserLocalStorage(res.data.data.token);
           // Get role to navigate appropriately
           const role = res.data.data.role;
-          if (role === "admin") {
-            navigate("/dashboard");
+          // Backend returns "ADMIN" (uppercase) — compare case-insensitively
+          if (role?.toLowerCase() === "admin") {
+            window.location.href = "/dashboard";
           } else {
-            navigate("/dashboard/student");
+            window.location.href = "/dashboard/student";
           }
-          window.location.reload();
         } else {
           navigate("/login");
         }
