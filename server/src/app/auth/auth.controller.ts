@@ -50,6 +50,61 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+
+const portalLogin = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { portalUser, portalToken } = req.body;
+    
+    if (!portalUser || !portalToken) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.BAD_REQUEST,
+        success: false,
+        message: "Missing portal credentials",
+        data: null,
+      });
+    }
+
+    const user = await authServices.portalLoginUser({
+      portalUser,
+      portalToken,
+    });
+
+    try {
+      await logLoginAttempt({
+        userId:    user.id,
+        username:  user.username,
+        email:     user.email,
+        ipAddress: getClientIp(req),
+        userAgent: req.headers["user-agent"] || "",
+        success:   true,
+      });
+    } catch (logErr) {
+      console.error("[LoginLog] Failed to log success for portal login:", logErr);
+    }
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success:    true,
+      message:    "Portal login successful",
+      data:       user,
+    });
+  } catch (error: any) {
+    try {
+      await logLoginAttempt({
+        email:     req.body?.portalUser || "",
+        ipAddress: getClientIp(req),
+        userAgent: req.headers["user-agent"] || "",
+        success:   false,
+        reason:    error.message,
+      });
+    } catch (logErr) {
+      console.error("[LoginLog] Failed to log failure for portal login:", logErr);
+    }
+
+    next(error);
+  }
+};
+
 const newPasswords = async (req: Request, res: Response) => {
   try {
     const passwordData = req.body;
@@ -114,6 +169,7 @@ const changeUsername = async (req: Request, res: Response) => {
 
 export const authController={
     login,
+    portalLogin,
     newPasswords,
     changeEmail,
     changeUsername

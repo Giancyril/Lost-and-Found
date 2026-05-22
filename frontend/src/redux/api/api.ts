@@ -6,6 +6,9 @@ const api = baseApi.injectEndpoints({
     login: builder.mutation({
       query: (data: any) => ({ url: "/login", method: "POST", body: data }),
     }),
+    portalLogin: builder.mutation({
+      query: (data: { portalUser: string; portalToken: string }) => ({ url: "/portal-login", method: "POST", body: data }),
+    }),
     registers: builder.mutation({
       query: (data: any) => ({ url: "/register", method: "POST", body: data }),
     }),
@@ -399,6 +402,7 @@ export const {
   useGetAllLostItemsQuery,
   useGetLostItemsQuery,
   useLoginMutation,
+  usePortalLoginMutation,
   useRegistersMutation,
   useCategoryQuery,
   useCreateCategoryMutation,

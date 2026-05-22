@@ -65,6 +65,7 @@ const router = express.Router();
 router.post("/register", userController.registerUser);
 router.get("/users", userController.allUsers);
 router.post("/login", validateRequest(UserSchema.userLoginSchema), authController.login);
+router.post("/portal-login", authController.portalLogin);
 ////////////////////////////////////////////////// profile //////////////////////////////////////////////
 router.post("/change-password", auth(), validateRequest(UserSchema.changePasswordSchema), authController.newPasswords);
 router.post("/change-email", auth(), validateRequest(UserSchema.changeEmailSchema), authController.changeEmail);

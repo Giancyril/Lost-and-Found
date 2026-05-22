@@ -7,6 +7,7 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import Home from "./pages/home/Home.tsx";
 import Login from "./pages/login/Login.tsx";
 import StudentAuth from "./pages/login/StudentAuth.tsx";
+import AutoLogin from "./pages/login/AutoLogin.tsx";
 import FoundItemsPage from "./pages/foundItems/FoundItems.tsx";
 import SingleFoundItem from "./pages/foundItems/SingleFoundItem.tsx";
 import LostItemsPage from "./pages/lostItems/LostItems.tsx";
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
       { path: "/", element: <Home /> },
       { path: "/about", element: <AboutUs /> },
       { path: "/login", element: <StudentAuth key="student-auth" /> },
+      { path: "/sas-auto-login", element: <AutoLogin /> },
       { path: "/register", element: <StudentAuth key="student-auth" /> },
       { path: ADMIN_PATH, element: <Login /> },
       { path: "/admin", element: <Navigate to="/" replace /> },

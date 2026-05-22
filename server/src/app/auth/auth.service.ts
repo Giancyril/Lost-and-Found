@@ -50,6 +50,80 @@ const loginUser = async (data: any) => {
   };
 };
 
+const portalLoginUser = async (data: any) => {
+  const { portalUser, portalToken } = data;
+
+  // Ideally, validate portalToken against SAS portal here.
+  // Assuming token validation passes, look up user by portalUser.
+  
+  let user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { username: portalUser },
+        { email:    portalUser },
+        { schoolId: portalUser },
+      ],
+    },
+  });
+
+  // Auto-provision if user doesn't exist
+  if (!user) {
+    // Try to fetch student details from masterlist to get correct info
+    try {
+      const { studentService } = await import("../modules/student/student.service");
+      const masterlistData = await studentService.getStudentById(portalUser).catch(() => null);
+      
+      const email = masterlistData?.email || `${portalUser}@student.nbsc.edu.ph`;
+      const name = masterlistData?.name || portalUser;
+      
+      // Check if email already exists
+      const existingEmail = await prisma.user.findFirst({ where: { email } });
+      if (existingEmail) {
+         user = existingEmail;
+      } else {
+         const hashedPassword = await utils.passwordHash("DefaultPortalPass123!"); // Or a random secure password
+         user = await prisma.user.create({
+           data: {
+             username: portalUser,
+             email,
+             name,
+             schoolId: portalUser,
+             password: hashedPassword,
+             role: "student",
+             course: masterlistData?.course || null,
+             yearLevel: masterlistData?.yearLevel || null,
+           }
+         });
+      }
+    } catch (e) {
+       console.error("Auto-provisioning failed for portal login", e);
+       throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Failed to auto-provision user from portal");
+    }
+  }
+
+  const { id, name, email, role, userImg, username, schoolId } = user;
+
+  const accessToken = utils.createToken({
+    id,
+    name,
+    email,
+    username,
+    role,
+    userImg,
+    schoolId,
+  });
+
+  return {
+    id:       user.id,
+    name:     name || "User",
+    username: user.username,
+    email:    user.email,
+    role,
+    schoolId,
+    token:    accessToken,
+  };
+};
+
 const newPasswords = async (data: any, user: JwtPayload) => {
   if (data.currentPassword === data.newPassword) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Password is same");
@@ -96,6 +170,7 @@ const changeUsername = async (username: object, user: JwtPayload) => {
 
 export const authServices = {
   loginUser,
+  portalLoginUser,
   newPasswords,
   changeEmail,
   changeUsername,
