@@ -299,6 +299,7 @@ lost-and-found-main/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── modules/    # Feature-based logic (Items, Claims, Points, Chat, Push, Student)
+│   │   │   │   ├── aiChat/   # AI Chatbot Concierge ("Smart Assistant") logic
 │   │   │   │   ├── matching/ # Smart matching algorithm logic
 │   │   │   │   ├── student/  # Institutional masterlist resolution service
 │   │   │   │   └── chat/     # Real-time messaging service & logic
@@ -312,8 +313,11 @@ lost-and-found-main/
 ├── frontend/               # Frontend application (React/Vite/Tailwind)
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── chatbot/      # AI Chatbot Concierge floating widget interface
 │   │   │   ├── scanner/      # WebScannerModal — hybrid QR/Barcode scanning engine
 │   │   │   ├── itemMatch/    # Real-time found item suggestions for report forms
+│   │   │   ├── recentItem/   # Live Double Feed Recent Panels
+│   │   │   ├── notifications/# Push Notifications and Notification Bell dropdown
 │   │   │   ├── comments/     # Nested real-time comment and interaction system
 │   │   │   └── ui/           # Shared design system (Autocomplete, DatePickers, etc.)
 │   │   ├── dashboard/      # Management dashboards for Admins and Students
