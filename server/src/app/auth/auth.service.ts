@@ -89,7 +89,7 @@ const portalLoginUser = async (data: any) => {
              name,
              schoolId: portalUser,
              password: hashedPassword,
-             role: "student",
+             role: "USER",
              course: masterlistData?.course || null,
              yearLevel: masterlistData?.yearLevel || null,
            }
