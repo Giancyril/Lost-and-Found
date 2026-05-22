@@ -73,15 +73,24 @@ const portalLoginUser = async (data: any) => {
       const { studentService } = await import("../modules/student/student.service");
       const masterlistData = await studentService.getStudentById(portalUser).catch(() => null);
       
-      const email = masterlistData?.email || `${portalUser}@student.nbsc.edu.ph`;
+      const email = masterlistData?.email || `${portalUser}@nbsc.edu.ph`;
       const name = masterlistData?.name || portalUser;
       
       // Check if email already exists
       const existingEmail = await prisma.user.findFirst({ where: { email } });
       if (existingEmail) {
-         user = existingEmail;
+         // Upgrade to ADMIN if they came in via portal and are not already ADMIN
+         if (existingEmail.role !== "ADMIN") {
+           user = await prisma.user.update({
+             where: { id: existingEmail.id },
+             data: { role: "ADMIN" },
+           });
+         } else {
+           user = existingEmail;
+         }
       } else {
          const hashedPassword = await utils.passwordHash("DefaultPortalPass123!"); // Or a random secure password
+         // SAS Portal is exclusively for staff — always provision as ADMIN
          user = await prisma.user.create({
            data: {
              username: portalUser,
@@ -89,7 +98,7 @@ const portalLoginUser = async (data: any) => {
              name,
              schoolId: portalUser,
              password: hashedPassword,
-             role: "USER",
+             role: "ADMIN",
              course: masterlistData?.course || null,
              yearLevel: masterlistData?.yearLevel || null,
            }
@@ -98,6 +107,14 @@ const portalLoginUser = async (data: any) => {
     } catch (e) {
        console.error("Auto-provisioning failed for portal login", e);
        throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Failed to auto-provision user from portal");
+    }
+  } else {
+    // Existing user found — upgrade to ADMIN if not already (SAS Portal is admin-only)
+    if (user.role !== "ADMIN") {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { role: "ADMIN" },
+      });
     }
   }
 
