@@ -10,6 +10,7 @@ import {
 import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../redux/api/api";
 import ChatDropdown from "./components/ChatDropdown";
 import ProximityAlertSystem from "../components/ProximityAlertSystem";
+import { usePortalInterceptor } from "../hooks/usePortalInterceptor";
 
 const NAV_ITEMS = [
   {
@@ -320,6 +321,7 @@ const NavItem = ({ label, href, icon, collapsed, active }: {
 
 // ── Main Layout ───────────────────────────────────────────────────────────────
 export default function StudentLayout({ children }: StudentLayoutProps) {
+  usePortalInterceptor();
   const location = useLocation();
   const navigate = useNavigate();
   const user: any = useUserVerification();

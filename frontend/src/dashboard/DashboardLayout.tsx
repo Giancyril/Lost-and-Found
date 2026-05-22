@@ -20,6 +20,7 @@ import {
 import { baseApi } from "../redux/api/baseApi";
 import ChatbotConcierge from "../components/chatbot/ChatbotConcierge";
 import ChatDropdown from "./components/ChatDropdown";
+import { usePortalInterceptor } from "../hooks/usePortalInterceptor";
 
 interface DashboardLayoutProps { children: React.ReactNode; }
 
@@ -310,6 +311,7 @@ const checkPublicBypass = (pathname: string, search: string): boolean => {
 
 // ─── Main Layout ──────────────────────────────────────────────────────────────
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  usePortalInterceptor();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();

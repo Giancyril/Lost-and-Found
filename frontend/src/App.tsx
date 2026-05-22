@@ -7,14 +7,15 @@ import { AchievementPopup } from "./components/achievements/AchievementPopup";
 import { useAchievementWatcher } from "./hooks/useAchievementWatcher";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-
+import { usePortalInterceptor } from "./hooks/usePortalInterceptor";
 
 import { useScrollReveal } from "./hooks/useScrollReveal";
 
 function App() {
   useScrollReveal();
+  usePortalInterceptor();
   const { current, dismiss } = useAchievementWatcher();
+
   return (
     <>
       <OnboardingTour />
