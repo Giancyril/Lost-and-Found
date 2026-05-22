@@ -75,15 +75,24 @@ export const adminStats = async (req: Request, res: Response) => {
     result.resolutionRate = allLostItems.length > 0
       ? Math.round((result.resolvedLostItems / allLostItems.length) * 100) : 0;
 
-    // ── Monthly stats (last 6 months) ─────────────────────────────
+    const queryYear = req.query.year ? parseInt(req.query.year as string) : now.getFullYear();
+
+    const allDates = [
+      ...(foundItems?.map((i: any) => new Date(i.createdAt).getFullYear()) || []),
+      ...allLostItems.map((i: any) => new Date(i.createdAt).getFullYear())
+    ];
+    const availableYears = Array.from(new Set(allDates)).sort((a, b) => b - a);
+    if (!availableYears.includes(now.getFullYear())) availableYears.unshift(now.getFullYear());
+    result.availableYears = Array.from(new Set(availableYears)).sort((a, b) => b - a);
+
+    // ── Monthly stats (selected year) ─────────────────────────────
     const monthlyMap: Record<string, {
       month: string; found: number; lost: number; claims: number; resolved: number;
     }> = {};
 
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      monthlyMap[key] = { month: MONTH_LABELS[d.getMonth()], found: 0, lost: 0, claims: 0, resolved: 0 };
+    for (let i = 0; i < 12; i++) {
+      const key = `${queryYear}-${i}`;
+      monthlyMap[key] = { month: MONTH_LABELS[i], found: 0, lost: 0, claims: 0, resolved: 0 };
     }
 
     const addToMonth = (dateStr: string, field: "found" | "lost" | "claims" | "resolved") => {
@@ -225,12 +234,11 @@ export const adminStats = async (req: Request, res: Response) => {
 
     // ── USER ACTIVITY ─────────────────────────────────────────────
 
-    // Registration trend (last 6 months)
+    // Registration trend (selected year)
     const userRegMap: Record<string, { month: string; registrations: number; admins: number; users: number }> = {};
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      userRegMap[key] = { month: MONTH_LABELS[d.getMonth()], registrations: 0, admins: 0, users: 0 };
+    for (let i = 0; i < 12; i++) {
+      const key = `${queryYear}-${i}`;
+      userRegMap[key] = { month: MONTH_LABELS[i], registrations: 0, admins: 0, users: 0 };
     }
     totalUsers.forEach((u: any) => {
       const d = new Date(u.createdAt);
@@ -306,12 +314,11 @@ export const adminStats = async (req: Request, res: Response) => {
         ? Math.min(100, parseFloat(((totalClaimsApproved / totalLostReported) * 100).toFixed(1))) : 0,
     };
 
-    // Monthly item flow (found + claims per month side by side)
+    // Monthly item flow (found + claims per month side by side for selected year)
     const flowMap: Record<string, { month: string; found: number; claimed: number; lost: number; pendingClaims: number }> = {};
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      flowMap[key] = { month: MONTH_LABELS[d.getMonth()], found: 0, claimed: 0, lost: 0, pendingClaims: 0 };
+    for (let i = 0; i < 12; i++) {
+      const key = `${queryYear}-${i}`;
+      flowMap[key] = { month: MONTH_LABELS[i], found: 0, claimed: 0, lost: 0, pendingClaims: 0 };
     }
     foundItems?.forEach((i: any) => {
       const d = new Date(i.createdAt); const key = `${d.getFullYear()}-${d.getMonth()}`;

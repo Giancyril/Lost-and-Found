@@ -1273,7 +1273,8 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
 // ════════════════════════════════════════════════════════════════════════════════
 const AnalyticsPage = () => {
   const [activeTab, setActiveTab] = useState<string>("overview");
-  const { data: statsData, isLoading } = useAdminStatsQuery({});
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const { data: statsData, isLoading } = useAdminStatsQuery({ year: selectedYear });
   const stats = statsData?.data;
 
   if (isLoading) return (
@@ -1315,8 +1316,18 @@ const AnalyticsPage = () => {
           })}
         </div>
 
-        {/* Export buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Export buttons & Year Dropdown */}
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            className="px-3 py-2 bg-gray-800 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-all duration-200 focus:outline-none focus:border-cyan-500/50 appearance-none pr-8 cursor-pointer relative"
+            style={{ backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%239ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>')`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
+          >
+            {stats?.availableYears?.map((year: number) => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
           <button
             onClick={() => printAnalyticsReport(stats)}
             className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-300 hover:text-white text-xs font-medium rounded-xl transition-all duration-200"

@@ -126,7 +126,7 @@ const api = baseApi.injectEndpoints({
 
     // admin stats
     adminStats: builder.query({
-      query: () => ({ url: `/admin/stats`, method: "GET" }),
+      query: (params?: { year?: string | number }) => ({ url: `/admin/stats`, method: "GET", params }),
     }),
 
     // location stats (heatmap)
