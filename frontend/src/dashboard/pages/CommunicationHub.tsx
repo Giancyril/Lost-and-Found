@@ -325,8 +325,9 @@ const AnnouncementsTab = () => {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => handleDelete(a.id)} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/15 text-red-400 flex items-center justify-center transition-all shrink-0">
+                  <button onClick={() => handleDelete(a.id)} className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/15 text-red-400 flex items-center justify-center gap-1.5 transition-all shrink-0">
                     <FaTrash size={10} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Delete</span>
                   </button>
                 </div>
               </div>
