@@ -1355,7 +1355,7 @@ const AnalyticsPage = () => {
               onClick={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
               className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-all duration-200 focus:outline-none focus:border-cyan-500/50 hover:bg-gray-700"
             >
-              <FaCalendarAlt size={10} className="text-cyan-400" />
+              <FaCalendarAlt size={10} />
               <span>{selectedYear}</span>
               <FaChevronDown size={8} className={`transition-transform duration-200 ${isYearDropdownOpen ? "rotate-180" : ""}`} />
             </button>
