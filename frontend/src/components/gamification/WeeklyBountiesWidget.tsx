@@ -34,21 +34,21 @@ export default function WeeklyBountiesWidget() {
   if (bounties.length === 0) return null;
 
   return (
-    <div className="relative bg-gray-900 border border-white/5 rounded-2xl p-6 text-white mb-6 overflow-hidden">
+    <div className="relative bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-6 text-white mb-6 overflow-hidden">
       {/* Decorative background gradient matching profile card */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-transparent pointer-events-none" />
       <div className="absolute -top-10 -right-10 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
       
-      <div className="flex justify-between items-center mb-6 relative z-10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6 relative z-10">
         <div>
-          <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
             Weekly Bounties
           </h2>
-          <p className="text-white/80 text-sm mt-1">Complete these tasks before Sunday midnight for massive XP!</p>
+          <p className="text-white/80 text-xs sm:text-sm mt-1">Complete these tasks before Sunday midnight for massive XP!</p>
         </div>
-        <div className="flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-full text-sm font-semibold backdrop-blur-md">
+        <div className="flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-md border border-white/5">
           <FaClock className="text-yellow-300" />
-          <span>{timeLeft} left</span>
+          <span className="whitespace-nowrap">{timeLeft} left</span>
         </div>
       </div>
 
@@ -57,22 +57,22 @@ export default function WeeklyBountiesWidget() {
           const progressPercentage = Math.min(100, (bounty.currentCount / bounty.targetCount) * 100);
           
           return (
-            <div key={bounty.id} className="relative bg-gray-800/40 hover:bg-gray-800/60 transition-colors rounded-xl p-4 border border-white/5 flex flex-col justify-between group">
+            <div key={bounty.id} className="relative bg-gray-800/40 hover:bg-gray-800/60 transition-colors rounded-xl p-3 sm:p-4 border border-white/5 flex flex-col justify-between group">
               <div>
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-2xl">{bounty.icon}</span>
+                <div className="flex justify-between items-start mb-1.5 sm:mb-2">
+                  <span className="text-xl sm:text-2xl">{bounty.icon}</span>
                   {bounty.isCompleted ? (
-                    <span className="text-emerald-400 flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-emerald-400/10 px-2 py-1 rounded-md">
-                      <FaCheckCircle /> Done
+                    <span className="text-emerald-400 flex items-center gap-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-emerald-400/10 px-2 py-0.5 sm:py-1 rounded-md">
+                      <FaCheckCircle size={10} /> Done
                     </span>
                   ) : (
-                    <span className="text-yellow-300 flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-yellow-300/10 px-2 py-1 rounded-md">
-                      <FaStar /> {bounty.xpReward} XP
+                    <span className="text-yellow-300 flex items-center gap-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-yellow-300/10 px-2 py-0.5 sm:py-1 rounded-md">
+                      <FaStar size={10} /> {bounty.xpReward} XP
                     </span>
                   )}
                 </div>
-                <h3 className="font-bold text-lg leading-tight mb-1">{bounty.title}</h3>
-                <p className="text-white/70 text-xs mb-4 line-clamp-2">{bounty.description}</p>
+                <h3 className="font-bold text-base sm:text-lg leading-tight mb-0.5 sm:mb-1">{bounty.title}</h3>
+                <p className="text-white/70 text-[10px] sm:text-xs mb-3 sm:mb-4 line-clamp-2 leading-relaxed">{bounty.description}</p>
               </div>
 
               <div>
