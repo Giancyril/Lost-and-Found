@@ -235,28 +235,37 @@ graph TD
         UI["UI Components (Tailwind/Flowbite)"]
         State["State Management (Redux/RTK Query)"]
         Hooks["Custom Hooks (Verification/Scanner)"]
+        Offline["Offline Sync & PWA Workers"]
+        Maps["3D Maps & Data Visualization"]
     end
 
     subgraph Server ["Backend (Node.js/Express)"]
         Routes["Express Routes"]
         Middle["Middlewares (Auth/Moderation)"]
+        Sockets["Socket.io / Real-Time Events"]
         Modules["Feature Modules (Items/Claims/Points)"]
         Prisma["Prisma ORM"]
     end
 
     subgraph Storage ["External & Storage"]
-        DB[(PostgreSQL/Supabase)]
+        DB[(PostgreSQL)]
+        Redis[(Redis Cache)]
         Sheets[(Google Sheets Masterlist)]
         AI[Google Gemini AI]
         Mail[SendGrid/SMTP]
     end
 
     UI <--> State
+    State <--> Offline
+    UI <--> Maps
     State <--> Routes
+    State <--> Sockets
     Routes --> Middle
     Middle --> Modules
+    Sockets <--> Modules
     Modules <--> Prisma
     Prisma <--> DB
+    Modules <--> Redis
     Modules <--> Sheets
     Modules <--> AI
     Modules <--> Mail
@@ -275,14 +284,19 @@ graph LR
         Items --> Sheets[Sheets Logger]
         Claims --> Points[Points Module]
         Comments[Comment Module] --> Mod[Moderation Module]
+        Items --> Predictive[Predictive AI Engine]
+        Items --> AIChat[AI Chatbot Concierge]
     end
 
     subgraph FE_Deps ["Frontend Module Flow"]
         Store[Redux Store] --> API[RTK Query API]
         API --> Pages[Feature Pages]
         Scanner[Scanner Module] --> Report[Report Found Item]
-        Dashboard[Dashboard] --> SubMods[Security/Analytics/Comm]
+        Dashboard[Dashboard] --> SubMods[Security/Analytics/Predictive AI]
         Chat[Chat Module] --> Push[Push Notification Module]
+        Pages --> 3DMap[3D Building Heatmaps]
+        Pages --> OfflineSync[Offline Background Sync]
+        Dashboard --> AIWidget[Smart AI Assistant]
     end
 ```
 
