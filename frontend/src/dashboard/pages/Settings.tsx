@@ -13,6 +13,7 @@ import {
 } from "../../redux/api/api";
 import { removeUserLocalStorage, useUserVerification } from "../../auth/auth";
 import { useNavigate } from "react-router-dom";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
 
 type Tab = "account" | "general" | "security" | "system";
 
@@ -86,6 +87,7 @@ const NotificationRow = ({ label, description, checked, onChange }: {
 const Settings = () => {
   const navigate = useNavigate();
   const user = useUserVerification();
+  const { permission, subscribe, isSupported } = usePushNotifications();
   const [activeTab, setActiveTab] = useState<Tab>("account");
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -338,6 +340,20 @@ const Settings = () => {
                     className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700/50 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all resize-none" />
                 </div>
               </div>
+
+              {isSupported && (
+                <div className="border-t border-gray-700/50 pt-4 mt-5">
+                  <NotificationRow 
+                    label="Push Notifications" 
+                    description={permission === "granted" ? "Notifications are enabled on this device" : "Receive background alerts for system events"} 
+                    checked={permission === "granted"} 
+                    onChange={(v) => { 
+                      if (v && permission !== "granted") subscribe(); 
+                      else if (!v) toast.info("To disable notifications, change your browser site settings."); 
+                    }} 
+                  />
+                </div>
+              )}
             </SectionCard>
           )}
 

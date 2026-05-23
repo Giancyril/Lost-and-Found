@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { FaMapMarkerAlt, FaTimes, FaSlidersH, FaExclamationTriangle, FaSatellite, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { FaMapMarkerAlt, FaTimes, FaSlidersH, FaExclamationTriangle, FaSatellite, FaCheckCircle, FaExclamationCircle, FaChevronDown, FaCheck } from "react-icons/fa";
 import { useGetFoundItemsQuery, useGetLostItemsQuery } from "../redux/api/api";
 import { getCoordinates } from "../utils/campusLocations";
 
@@ -48,6 +48,60 @@ const getDynamicAdvice = (name: string, riskLevel: string): string => {
   return "Stay mindful of your personal belongings. Do a quick sweep of your surroundings when moving.";
 };
 
+const CustomSimulateDropdown = ({ options, value, onChange }: {
+  options: { id: string, name: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selectedName = options.find(o => o.id === value)?.name ?? value;
+
+  return (
+    <div ref={ref} className="relative w-full">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+        className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-800/80 border border-gray-700 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
+      >
+        <span className="truncate text-left">{selectedName}</span>
+        <FaChevronDown size={10} className={`text-gray-500 shrink-0 ml-2 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      
+      {open && (
+        <div className="absolute z-[110] top-full mt-1.5 left-0 w-full bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-fadeIn">
+          <div className="max-h-48 overflow-y-auto custom-scrollbar py-1">
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => { onChange(opt.id); setOpen(false); }}
+                className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center justify-between ${
+                  value === opt.id
+                    ? "bg-cyan-500/10 text-cyan-400 font-semibold"
+                    : "text-gray-400 hover:bg-white/[0.03] hover:text-white"
+                }`}
+              >
+                <span className="truncate pr-2">{opt.name}</span>
+                {value === opt.id && <FaCheck size={9} className="text-cyan-400 shrink-0" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function ProximityAlertSystem() {
   const [gpsEnabled, setGpsEnabled] = useState(false);
   const [realLocation, setRealLocation] = useState<[number, number] | null>(null);
@@ -57,8 +111,15 @@ export default function ProximityAlertSystem() {
   const [isSimulatorExpanded, setIsSimulatorExpanded] = useState(false);
   const [simulatedZoneName, setSimulatedZoneName] = useState<string>("Outside Campus");
   const [currentDistances, setCurrentDistances] = useState<Record<string, number>>({});
+  const ref = useRef<HTMLDivElement>(null);
 
   const activeCoords = simulatedLocation || realLocation;
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setIsSimulatorExpanded(false); };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
 
   // Real Database Queries for dynamic AI Hotspot analysis
   const { data: foundData } = useGetFoundItemsQuery({});
@@ -263,16 +324,30 @@ export default function ProximityAlertSystem() {
 
   return (
     <>
-      {/* ── 1. Floating GPS Simulator Control Panel ── */}
-      <div className="fixed bottom-20 right-6 z-[100] flex flex-col items-end gap-3 pointer-events-none">
+      {/* ── 1. GPS Simulator Navbar Control ── */}
+      <div ref={ref} className="relative z-[100]">
+
+        {/* Navbar Trigger */}
+        <button
+          type="button"
+          onClick={() => setIsSimulatorExpanded(!isSimulatorExpanded)}
+          className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-all border ${
+            isSimulatorExpanded || activeAlert || gpsEnabled
+              ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-400" 
+              : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+          }`}
+          title="Toggle Proximity Alert Simulator"
+        >
+          <FaSatellite size={14} className={gpsEnabled || activeAlert ? "animate-pulse" : ""} />
+        </button>
 
         {/* Expanded Simulator Panel */}
         {isSimulatorExpanded && (
-          <div className="pointer-events-auto w-72 sm:w-80 bg-gray-900/90 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl shadow-black/80 flex flex-col gap-4 animate-fadeIn">
+          <div className="absolute right-0 top-11 w-72 sm:w-80 bg-gray-900/95 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl shadow-black/80 flex flex-col gap-4 animate-fadeIn">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div className="flex items-center gap-2">
                 <FaSatellite className="text-cyan-400 animate-pulse" size={15} />
-                <h4 className="text-white text-xs font-black uppercase tracking-wider">GPS Hotspot Simulator</h4>
+                <h4 className="text-white text-xs font-black uppercase tracking-wider">GPS Hotspot</h4>
               </div>
               <button
                 onClick={() => setIsSimulatorExpanded(false)}
@@ -283,22 +358,18 @@ export default function ProximityAlertSystem() {
             </div>
 
             {/* Simulated Locations Select */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 relative">
               <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">
                 Select Simulated Position
               </label>
-              <select
+              <CustomSimulateDropdown
+                options={[
+                  { id: "Outside Campus", name: "Outside NBSC Campus (No Alert)" },
+                  ...HOTSPOTS.map((h) => ({ id: h.name, name: `Teleport into ${h.name}` }))
+                ]}
                 value={simulatedZoneName}
-                onChange={(e) => handleSimulateLocation(e.target.value)}
-                className="w-full bg-gray-800/80 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-              >
-                <option value="Outside Campus">Outside NBSC Campus (No Alert)</option>
-                {HOTSPOTS.map((h) => (
-                  <option key={h.name} value={h.name}>
-                    Teleport into {h.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => handleSimulateLocation(val)}
+              />
             </div>
 
             {/* Real GPS Toggle */}
@@ -370,17 +441,6 @@ export default function ProximityAlertSystem() {
             </div>
           </div>
         )}
-
-        {/* Floating Bubble Trigger */}
-        <button
-          type="button"
-          onClick={() => setIsSimulatorExpanded(!isSimulatorExpanded)}
-          className={`pointer-events-auto p-3.5 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center border-2 border-white/20
-            ${isSimulatorExpanded ? "rotate-90 bg-gray-800 border-cyan-500" : "animate-bounce"}`}
-          title="Toggle Proximity Alert Simulator"
-        >
-          <FaSatellite size={16} />
-        </button>
       </div>
 
       {/* ── 2. Real-time Proximity Warning Alert Banner ── */}

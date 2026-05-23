@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { FaKey, FaCheck, FaEye, FaEyeSlash, FaStar } from "react-icons/fa";
+import { FaKey, FaCheck, FaEye, FaEyeSlash, FaStar, FaBell } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useUserVerification } from "../../auth/auth";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
 
 const API = "/api";
 const authHeaders = () => ({
@@ -17,6 +18,7 @@ const UserIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 
 export default function StudentSettings() {
   const user: any = useUserVerification();
+  const { permission, subscribe, isSupported } = usePushNotifications();
 
   const [pwForm, setPwForm]       = useState({ currentPassword: "", newPassword: "", confirm: "" });
   const [showPw, setShowPw]       = useState<Record<string, boolean>>({});
@@ -66,11 +68,44 @@ export default function StudentSettings() {
   return (
     <div className="space-y-4 w-full max-w-2xl mx-auto px-1">
 
-      {/* ── Profile Card ── */}
-      <div className="bg-gray-900 border border-white/[0.06] rounded-2xl overflow-hidden">
-        <div className="h-0.5 w-full bg-gradient-to-r from-blue-600 via-cyan-400 to-transparent" />
+      {/* ── Push Notifications ── */}
+      {isSupported && (
+        <div className="bg-gray-900 border border-white/[0.06] rounded-2xl overflow-hidden">
+          <div className="h-0.5 w-full bg-gradient-to-r from-blue-600 via-cyan-400 to-transparent" />
+          <div className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <FaBell size={11} className="text-blue-400" />
+            <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">
+              Push Notifications
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-white">Receive Alerts</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {permission === "granted" 
+                  ? "Notifications are enabled on this device." 
+                  : "Enable real-time background alerts for item matches and messages."}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                if (permission !== "granted") {
+                  subscribe();
+                } else {
+                  alert("To disable notifications, please adjust your browser's site settings.");
+                }
+              }}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none shrink-0 ${permission === "granted" ? "bg-blue-600" : "bg-gray-700"}`}>
+              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${permission === "granted" ? "translate-x-4" : "translate-x-0.5"}`} />
+            </button>
+          </div>
+          </div>
+        </div>
+      )}
 
-        <div className="p-4 space-y-3">
+      {/* ── Profile Card ── */}
+      <div className="bg-gray-900 border border-white/[0.06] rounded-2xl p-4 space-y-3">
           <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Profile</p>
 
           {/* Avatar row */}
@@ -121,8 +156,9 @@ export default function StudentSettings() {
               </div>
             ))}
           </div>
-        </div>
       </div>
+
+
 
       {/* ── Change Password ── */}
       <div className="bg-gray-900 border border-white/[0.06] rounded-2xl p-4 space-y-3">
@@ -186,6 +222,8 @@ export default function StudentSettings() {
           </div>
         </form>
       </div>
+
+
 
     </div>
   );

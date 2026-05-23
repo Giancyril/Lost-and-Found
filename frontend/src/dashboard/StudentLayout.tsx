@@ -471,6 +471,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
 
           {/* Right section */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {location.pathname === "/dashboard/student" && <ProximityAlertSystem />}
             <ChatDropdown />
             <PointsDropdown points={points} history={history} rank={rank} />
             <ProfileDropdown user={user} onSignOut={handleSignOut} />
@@ -487,9 +488,6 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
           <p className="text-gray-700 text-[10px] font-medium">Student Affairs & Services · Lost and Found</p>
           <p className="text-gray-700 text-[10px]">© {new Date().getFullYear()}</p>
         </footer>
-
-        {/* Proximity Hotspot Alert System */}
-        <ProximityAlertSystem />
       </div>
     </div>
   );

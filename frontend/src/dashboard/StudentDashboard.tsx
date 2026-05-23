@@ -8,7 +8,7 @@ import {
   FaBolt, FaChevronRight, FaUser, FaHeart, FaSun, FaAward,
 } from "react-icons/fa";
  import { MdVerified } from "react-icons/md";
-import { usePushNotifications } from "../hooks/usePushNotifications";
+
 import { FaBell } from "react-icons/fa";
 import {
   useGetMyPointsQuery,
@@ -113,7 +113,7 @@ export default function StudentDashboard() {
   const claims        = claimsData?.data ?? [];
   const board         = boardData?.data  ?? [];
   const myAchievements = achievementData?.data ?? [];
-  const { permission, subscribe, isSupported } = usePushNotifications();
+
 
   const myRank         = board.findIndex((u: any) => u.id === user?.id) + 1;
   const approvedClaims = claims.filter((c: any) => c.status === "APPROVED").length;
@@ -141,26 +141,7 @@ export default function StudentDashboard() {
    return (
     <div className="space-y-4 sm:space-y-6 text-white max-w-7xl mx-auto">
       
-      {/* ── Push Notification Banner ── */}
-      {isSupported && permission === "default" && (
-        <div className="bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-5 flex items-center gap-3 sm:gap-4">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-            <FaBell size={13} className="text-blue-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-xs sm:text-sm font-bold leading-tight">Stay Updated!</p>
-            <p className="text-gray-500 text-[11px] sm:text-xs mt-0.5 leading-relaxed line-clamp-1 sm:line-clamp-none">
-              Enable notifications for real-time alerts on item matches and messages.
-            </p>
-          </div>
-          <button
-            onClick={subscribe}
-            className="shrink-0 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs sm:text-sm font-medium rounded-xl transition-all">
-            <span className="sm:hidden">Enable</span>
-            <span className="hidden sm:inline">Enable Notifications</span>
-          </button>
-        </div>
-      )}
+
 
       {/* ── Profile Card ──────────────────────────────────────────────── */}
       <div className="relative bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
