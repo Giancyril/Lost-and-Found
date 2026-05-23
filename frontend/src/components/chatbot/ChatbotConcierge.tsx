@@ -114,12 +114,23 @@ export default function ChatbotConcierge() {
     }
   };
 
+  const isDashboard = location.pathname.startsWith("/dashboard");
+
   return (
     <div className="relative font-sans z-50">
       {/* Header Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 border border-gray-700 hover:border-blue-500/50 hover:bg-gray-700 transition-all duration-200 text-gray-400 hover:text-blue-400"
+        className={isDashboard
+          ? `relative w-9 h-9 flex items-center justify-center rounded-full transition-all border duration-200 ${isOpen
+              ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
+              : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+            }`
+          : `relative w-9 h-9 flex items-center justify-center rounded-full bg-gray-800 border border-gray-700 hover:border-blue-500/50 hover:bg-gray-700 transition-all duration-200 text-gray-400 hover:text-blue-400 ${isOpen
+              ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
+              : ""
+            }`
+        }
       >
         <FaRobot size={14} />
       </button>

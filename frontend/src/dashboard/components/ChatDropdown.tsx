@@ -146,7 +146,7 @@ const ChatDropdown = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-all border ${open
+        className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-all border ${open
             ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
             : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
           }`}
