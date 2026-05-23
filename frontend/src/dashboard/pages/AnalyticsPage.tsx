@@ -1034,7 +1034,7 @@ const PatrolRouteModal = ({ isOpen, onClose, zones }: { isOpen: boolean; onClose
           <div className="relative space-y-4 before:absolute before:inset-0 before:ml-4 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-violet-500 before:via-indigo-500 before:to-transparent">
             {zones.map((zone, i) => (
               <div key={zone.name} className="relative flex items-center gap-4 group">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 shrink-0 transition-transform group-hover:scale-110 ${i === 0 ? "bg-violet-500 shadow-lg shadow-violet-500/50" : "bg-gray-800 border border-white/10"
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 shrink-0 transition-transform group-hover:scale-110 ${i === 0 ? "bg-violet-500" : "bg-gray-800 border border-white/10"
                   }`}>
                   <span className="text-white text-[10px] font-black">{i + 1}</span>
                 </div>
@@ -1117,7 +1117,7 @@ const PredictiveTab = ({ stats }: { stats: any }) => {
           </div>
           <div>
             <h2 className="text-2xl font-black text-white tracking-tight">AI Predictive Engine</h2>
-            <p className="text-violet-300/60 text-xs sm:text-sm mt-1 max-w-md">
+            <p className="text-violet-300/60 text-xs sm:text-sm mt-1 max-w-xl">
               Forecasting high-risk zones and peak times based on <span className="text-violet-300 font-bold">{stats?.total || 0}</span> historical records.
             </p>
           </div>
