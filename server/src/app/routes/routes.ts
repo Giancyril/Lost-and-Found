@@ -32,7 +32,7 @@ import { uploadImages } from "../midddlewares/upload";
 import { commentsRouter } from "../comments/commentsRouter";
 import { pointsController } from "../modules/points/points.controller";
 import {
-  createAnnouncement, getAnnouncements, deleteAnnouncement,
+  createAnnouncement, getAnnouncements, deleteAnnouncement, sendMassReminder,
   createTicket, getTickets, replyToTicket, updateTicketStatus, deleteTicket,
   submitFeedback, getFeedbacks, updateFeedbackStatus, deleteFeedback,
   getCommHubStats,
@@ -179,8 +179,9 @@ router.use("/bounties", bountyRoutes);
 router.get("/admin/comm-hub/stats", auth(), getCommHubStats);
 
 // Announcements
-router.post("/admin/announcements", auth(), createAnnouncement);
 router.get("/admin/announcements", auth(), getAnnouncements);
+router.post("/admin/announcements", auth(), createAnnouncement);
+router.post("/admin/send-reminder", auth(), sendMassReminder);
 router.delete("/admin/announcements/:id", auth(), deleteAnnouncement);
 
 // Support Tickets (public submit, admin manage)

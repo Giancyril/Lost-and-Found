@@ -16,7 +16,6 @@ const NAV_ITEMS = [
     section: "MENU",
     items: [
       { label: "Overview",       href: "/dashboard/student",              icon: <FaTachometerAlt size={14} /> },
-      { label: "Indoor Map",     href: "/indoor-map",                     icon: <FaMapMarkerAlt size={14} /> },
     ],
   },
   {

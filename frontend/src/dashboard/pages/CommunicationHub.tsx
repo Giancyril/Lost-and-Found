@@ -24,6 +24,10 @@ const commApi = baseApi.injectEndpoints({
       query: (data: any) => ({ url: "/admin/announcements", method: "POST", body: data }),
       invalidatesTags: ["commHub"],
     }),
+    sendMassReminder: builder.mutation({
+      query: () => ({ url: "/admin/send-reminder", method: "POST" }),
+      invalidatesTags: ["commHub"],
+    }),
     deleteAnnouncement: builder.mutation({
       query: (id: string) => ({ url: `/admin/announcements/${id}`, method: "DELETE" }),
       invalidatesTags: ["commHub"],
@@ -64,6 +68,7 @@ const {
   useGetCommStatsQuery,
   useGetAnnouncementsQuery,
   useCreateAnnouncementMutation,
+  useSendMassReminderMutation,
   useDeleteAnnouncementMutation,
   useGetTicketsQuery,
   useReplyTicketMutation,
@@ -672,9 +677,24 @@ const FeedbackTab = () => {
 // ════════════════════════════════════════════════════════════════════════════════
 const NotificationCenterTab = () => {
   const [createAnnouncement, { isLoading: isBroadcasting }] = useCreateAnnouncementMutation();
+  const [sendMassReminder, { isLoading: isReminding }] = useSendMassReminderMutation();
   const [form, setForm] = useState({ title: "", message: "", type: "INFO", target: "ALL" });
   const [sent, setSent] = useState(false);
   const [lastResult, setLastResult] = useState<{ count: number; target: string } | null>(null);
+
+  const handleSendReminder = async () => {
+    if (!confirm("This will send an email reminder to all active student accounts. Continue?")) return;
+    try {
+      const res: any = await sendMassReminder({});
+      if (res?.data?.success) {
+        toast.success(res.data.message);
+      } else {
+        toast.error("Failed to send reminder");
+      }
+    } catch {
+      toast.error("Something went wrong");
+    }
+  };
 
   const handleBroadcast = async () => {
     if (!form.title.trim() || !form.message.trim()) { toast.error("Title and message are required"); return; }

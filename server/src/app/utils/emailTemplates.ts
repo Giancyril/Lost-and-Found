@@ -523,3 +523,93 @@ export const smartMatchNotificationTemplate = (data: {
     </html>
   `,
 });
+
+export const reminderEmailTemplate = (data: {
+  recipientName: string;
+}) => ({
+  subject: `Friendly Reminder: Have you lost anything at school recently?`,
+  html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>Lost & Found Reminder</title>
+    </head>
+    <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+
+              <!-- TOP ACCENT BAR -->
+              <tr>
+                <td style="height:4px;background:linear-gradient(90deg,#3b82f6,#8b5cf6);"></td>
+              </tr>
+
+              <!-- HEADER -->
+              <tr>
+                <td style="padding:36px 40px 28px;border-bottom:1px solid #e2e8f0;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td>
+                        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">NBSC SAS Lost &amp; Found</p>
+                        <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;">A Quick Reminder!</h1>
+                      </td>
+                      <td align="right" valign="top">
+                        <span style="display:inline-block;background:#eff6ff;color:#3b82f6;font-size:11px;font-weight:700;padding:6px 14px;border-radius:16px;border:1px solid #bfdbfe;white-space:nowrap;"> NOTIFICATION</span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- BODY -->
+              <tr>
+                <td style="padding:32px 40px;">
+
+                  <p style="margin:0 0 8px;font-size:16px;font-weight:600;color:#0f172a;">Hello, ${data.recipientName}</p>
+                  <p style="margin:0 0 28px;font-size:14px;color:#64748b;line-height:1.7;">
+                    This is a quick reminder from the NBSC SAS Office. We have several unclaimed items in our Lost & Found inventory. 
+                    If you've misplaced your IDs, notebooks, umbrellas, or any personal belongings on campus, please check our system to see if your item has been found.
+                  </p>
+
+                  <!-- ACTION BOX -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;margin-bottom:8px;">
+                    <tr>
+                      <td style="padding:16px 20px;">
+                        <p style="margin:0;font-size:13px;color:#5b21b6;line-height:1.6;">
+                          <strong>Check the Dashboard!</strong> Log in to your Student Dashboard to view all recently found items. You might just find what you're looking for!
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+
+                </td>
+              </tr>
+
+              <!-- FOOTER -->
+              <tr>
+                <td style="padding:24px 40px;background:#f8fafc;border-top:1px solid #e2e8f0;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td>
+                        <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:#334155;">NBSC SAS Lost &amp; Found System</p>
+                        <p style="margin:0;font-size:12px;color:#94a3b8;">Northern Bukidnon State College · Student Affairs Services</p>
+                      </td>
+                      <td align="right">
+                        <p style="margin:0;font-size:11px;color:#cbd5e1;">Do not reply to this email</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `,
+});

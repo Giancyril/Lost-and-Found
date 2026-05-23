@@ -60,6 +60,50 @@ export const createAnnouncement = async (req: Request, res: Response) => {
   }
 };
 
+export const sendMassReminder = async (req: Request, res: Response) => {
+  try {
+    const allUsers = await userService.allUsers();
+    
+    // Target active students with emails
+    const targets = allUsers.filter((u: any) => !u.isDeleted && u.activated && u.email && u.role !== "ADMIN");
+
+    const emailPromises = targets.map((u: any) =>
+      sendEmail({
+        fromName: process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found",
+        fromEmail: process.env.SMTP_FROM_EMAIL || "noreply@nbsc.edu.ph",
+        toEmail: u.email,
+        subject: `Friendly Reminder: Have you lost anything at school recently?`,
+        html: reminderEmailTemplate({ recipientName: u.username || u.name || "Student" }),
+      }).catch(() => null)
+    );
+
+    const results = await Promise.allSettled(emailPromises);
+    const emailCount = results.filter(r => r.status === "fulfilled" && r.value !== null).length;
+
+    // We can also create a silent announcement so it shows up in their dashboard notification center
+    await prisma.announcement.create({
+      data: {
+        title: "Lost & Found Check",
+        message: "Friendly reminder to check the Lost & Found dashboard for any missing items you may have lost on campus recently.",
+        type: "INFO",
+        target: "STUDENTS",
+        sentByName: (req as any).user?.username || "Admin",
+        sentById: (req as any).user?.id,
+        emailSent: true,
+        emailCount
+      },
+    });
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK, success: true,
+      message: `Reminder sent to ${emailCount} students successfully`,
+      data: { emailCount },
+    });
+  } catch (error: any) {
+    sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: error?.message, data: null });
+  }
+};
+
 export const getAnnouncements = async (req: Request, res: Response) => {
   try {
     const announcements = await prisma.announcement.findMany({
@@ -236,6 +280,7 @@ export const getCommHubStats = async (req: Request, res: Response) => {
 };
 
 // ── EMAIL TEMPLATES ───────────────────────────────────────────────────────────
+import { reminderEmailTemplate } from "./emailTemplates";
 
 const announcementEmailTemplate = (data: { title: string; message: string; type: string; recipientName: string }) => {
   const accentColor = data.type === "URGENT" ? "#ef4444" : data.type === "WARNING" ? "#f59e0b" : data.type === "SUCCESS" ? "#10b981" : "#0891b2";
