@@ -7,6 +7,11 @@ import { userService } from "../modules/user/user.service";
 import { claimsService } from "../modules/claim/claim.service";
 import prisma from "../config/prisma";
 
+// Global cache for heavy database queries
+let _cachedDbData: any = null;
+let _cachedDbTime = 0;
+const DB_CACHE_TTL = 60 * 1000; // 1 minute
+
 export const adminStats = async (req: Request, res: Response) => {
   const result: any = {};
   const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -20,85 +25,94 @@ export const adminStats = async (req: Request, res: Response) => {
   };
 
   try {
-    console.log("[AdminStats] Fetching lightweight data concurrently...");
-    const [foundItems, lostItemsActive, allLostItems, totalUsers, claims] = await Promise.all([
-      prisma.foundItem.findMany({
-        where: { isDeleted: false, isArchived: false },
-        select: {
-          id: true,
-          date: true,
-          createdAt: true,
-          updatedAt: true,
-          isClaimed: true,
-          categoryId: true,
-          reporterName: true,
-          foundItemName: true,
-          location: true,
-          userId: true,
-          category: { select: { name: true } },
-          user: { select: { id: true, username: true } },
-        }
-      }),
-      prisma.lostItem.findMany({
-        where: { isDeleted: false, isFound: false },
-        select: {
-          id: true,
-          date: true,
-          createdAt: true,
-          updatedAt: true,
-          categoryId: true,
-          category: { select: { name: true } },
-          userId: true,
-        }
-      }),
-      prisma.lostItem.findMany({
-        where: { isDeleted: false },
-        select: {
-          id: true,
-          date: true,
-          createdAt: true,
-          updatedAt: true,
-          isFound: true,
-          categoryId: true,
-          location: true,
-          category: { select: { name: true } },
-          userId: true,
-        }
-      }),
-      prisma.user.findMany({
-        where: { isDeleted: false },
-        select: {
-          id: true,
-          createdAt: true,
-          role: true,
-          activated: true,
-          isDeleted: true,
-          username: true,
-          email: true,
-        }
-      }),
-      prisma.claim.findMany({
-        where: {
-          isDeleted: false,
-          foundItem: { isDeleted: false }
-        },
-        select: {
-          id: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
-          foundItemId: true,
-          claimantName: true,
-          user: { select: { username: true } },
-          foundItem: {
-            select: {
-              createdAt: true,
-              foundItemName: true,
+    let dbData;
+    if (_cachedDbData && Date.now() - _cachedDbTime < DB_CACHE_TTL) {
+      console.log("[AdminStats] Using cached DB data for extremely fast load...");
+      dbData = _cachedDbData;
+    } else {
+      console.log("[AdminStats] Fetching lightweight data concurrently...");
+      dbData = await Promise.all([
+        prisma.foundItem.findMany({
+          where: { isDeleted: false, isArchived: false },
+          select: {
+            id: true,
+            date: true,
+            createdAt: true,
+            updatedAt: true,
+            isClaimed: true,
+            categoryId: true,
+            reporterName: true,
+            foundItemName: true,
+            location: true,
+            userId: true,
+            category: { select: { name: true } },
+            user: { select: { id: true, username: true } },
+          }
+        }),
+        prisma.lostItem.findMany({
+          where: { isDeleted: false, isFound: false },
+          select: {
+            id: true,
+            date: true,
+            createdAt: true,
+            updatedAt: true,
+            categoryId: true,
+            category: { select: { name: true } },
+            userId: true,
+          }
+        }),
+        prisma.lostItem.findMany({
+          where: { isDeleted: false },
+          select: {
+            id: true,
+            date: true,
+            createdAt: true,
+            updatedAt: true,
+            isFound: true,
+            categoryId: true,
+            location: true,
+            category: { select: { name: true } },
+            userId: true,
+          }
+        }),
+        prisma.user.findMany({
+          where: { isDeleted: false },
+          select: {
+            id: true,
+            createdAt: true,
+            role: true,
+            activated: true,
+            isDeleted: true,
+            username: true,
+            email: true,
+          }
+        }),
+        prisma.claim.findMany({
+          where: {
+            isDeleted: false,
+            foundItem: { isDeleted: false }
+          },
+          select: {
+            id: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            foundItemId: true,
+            claimantName: true,
+            user: { select: { username: true } },
+            foundItem: {
+              select: {
+                createdAt: true,
+                foundItemName: true,
+              }
             }
           }
-        }
-      })
-    ]);
+        })
+      ]);
+      _cachedDbData = dbData;
+      _cachedDbTime = Date.now();
+    }
+    const [foundItems, lostItemsActive, allLostItems, totalUsers, claims] = dbData;
     console.log("[AdminStats] All data fetched. Calculating stats...");
 
     // To ensure we capture both formal claim requests and direct/historical claimed found items (e.g. from Sheets/bulk import):
