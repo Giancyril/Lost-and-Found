@@ -113,6 +113,12 @@ const ANN_TARGETS: DropdownOption[] = [
   { value: "ADMINS",   icon: "🛡️", label: "Admins Only",   sub: "Target admin accounts only",   bg: "#fef3c7", color: "#78350f" },
 ];
 
+const TICKET_STATUS_OPTIONS: DropdownOption[] = [
+  { value: "RESOLVED",    icon: "✅", label: "Resolved",    sub: "Mark the issue as successfully resolved", bg: "#f0fdf4", color: "#14532d" },
+  { value: "IN_PROGRESS", icon: "⏳", label: "In Progress", sub: "Currently investigating or working on it", bg: "#fffbeb", color: "#92400e" },
+  { value: "CLOSED",      icon: "🔒", label: "Closed",      sub: "Close this ticket without resolution", bg: "#f3f4f6", color: "#374151" },
+];
+
 // ── Custom Dropdown ───────────────────────────────────────────────────────────
 const CustomDropdown = ({
   options, value, onChange, accentColor = "cyan",
@@ -508,24 +514,24 @@ const SupportTicketsTab = () => {
             </div>
             <div className="space-y-1.5">
               <FieldLabel>Set Status After Reply</FieldLabel>
-              <select value={replyStatus} onChange={e => setReplyStatus(e.target.value)}
-                className="w-full px-3 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30">
-                <option value="RESOLVED">Resolved</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="CLOSED">Closed</option>
-              </select>
+              <CustomDropdown
+                options={TICKET_STATUS_OPTIONS}
+                value={replyStatus}
+                onChange={setReplyStatus}
+                accentColor="blue"
+              />
             </div>
             {selectedTicket.senderEmail && (
-              <div className="flex items-center gap-2 p-3 bg-cyan-500/5 border border-cyan-500/15 rounded-xl">
-                <FaEnvelope size={10} className="text-cyan-400 shrink-0" />
-                <p className="text-cyan-300/70 text-xs">Reply will be emailed to <strong className="text-cyan-300">{selectedTicket.senderEmail}</strong></p>
+              <div className="flex items-center gap-2 p-3 bg-blue-500/5 border border-blue-500/15 rounded-xl">
+                <FaEnvelope size={10} className="text-blue-400 shrink-0" />
+                <p className="text-blue-300/70 text-xs">Reply will be emailed to <strong className="text-blue-300">{selectedTicket.senderEmail}</strong></p>
               </div>
             )}
           </div>
           <div className="px-5 py-4 border-t border-white/5 flex gap-3 shrink-0">
             <button onClick={() => setSelectedTicket(null)} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
             <button onClick={handleReply} disabled={isReplying}
-              className="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
               {isReplying ? <><FaSpinner className="animate-spin" size={12} /> Sending…</> : <><FaPaperPlane size={10} /> Send Reply</>}
             </button>
           </div>
