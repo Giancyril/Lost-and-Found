@@ -509,7 +509,7 @@ const SingleFoundItem = () => {
               {foundItemData?.claim?.some((c: any) => c.userId === users?.id) && (
                 <button
                   onClick={handleInitiateChat}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 xs:px-3 xs:py-1.5 rounded-xl xs:rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 xs:px-3 xs:py-1.5 rounded-xl xs:rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all"
                 >
                   <FaComments size={12} className="xs:size-[10px]" /> Chat with Reporter
                 </button>
@@ -620,10 +620,8 @@ const SingleFoundItem = () => {
                   );
                 })()
               ) : foundItemData?.claim?.some((c: any) => c.userId === users?.id) ? (
-                <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl p-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/20 flex items-center justify-center shrink-0">
-                    <FaCheckCircle className="text-cyan-400" size={13} />
-                  </div>
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3 flex items-center gap-3">
+                  
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-xs font-black leading-tight">Claim Submitted</p>
                     <p className="text-gray-500 text-[10px] mt-0.5 leading-relaxed">
@@ -631,8 +629,7 @@ const SingleFoundItem = () => {
                     </p>
                   </div>
                   <button onClick={handleInitiateChat}
-                    className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-xl transition-all">
-                    <FaComments size={10} />
+                    className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-medium rounded-xl transition-all">
                     <span className="hidden sm:inline">Chat</span>
                     <span className="sm:hidden">Chat</span>
                   </button>

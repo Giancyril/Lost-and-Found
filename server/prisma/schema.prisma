@@ -132,6 +132,10 @@ model Claim {
   user                   User?           @relation(fields: [userId], references: [id])
   chatRoom               ChatRoom?
 
+  fraudScore             Int             @default(0)
+  fraudReason            String?         @db.Text
+  isHighRisk             Boolean         @default(false)
+
   @@map("claims")
 }
 

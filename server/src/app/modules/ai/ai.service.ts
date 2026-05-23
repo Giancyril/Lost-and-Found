@@ -203,7 +203,67 @@ const analyzeUrgency = async (name: string, description: string) => {
   }
 };
 
+/**
+ * Analyzes a claim against the actual item description to detect fraud/guessing.
+ */
+const analyzeClaimFraud = async (claimantFeatures: string, itemDescription: string, itemName: string) => {
+  try {
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const prompt = `
+    You are a Fraud Detection AI for a campus Lost and Found system called "Lost & Found NBSC".
+    A student is trying to claim a found item. They must provide "distinguishing features" to prove ownership.
+    Compare their provided features against the actual item details recorded by the finder/admin.
+    
+    Actual Item Name: "${itemName}"
+    Actual Item Description: "${itemDescription}"
+    
+    Claimant's Provided Features: "${claimantFeatures}"
+
+    Criteria for Fraud/Guessing:
+    1. Vague/Generic: "It's a blue bottle", "It has a screen". (High risk if the actual item has very distinct marks they missed).
+    2. Contradictory: Claimant says it's red, actual item is blue.
+    3. Spot On: Claimant mentions specific scratches, stickers, or serial numbers that match the description perfectly.
+
+    Output format (JSON only):
+    {
+      "fraudScore": 0-100 (Integer, where 100 means obvious fraud/guessing and 0 means verified owner),
+      "isHighRisk": true/false (Set true if fraudScore >= 70),
+      "fraudReason": "A brief, 1-2 sentence explanation of why this score was assigned."
+    }
+
+    Rules:
+    - Return ONLY valid JSON.
+    - Be strict against generic guessing (e.g. someone just saying "iphone" for a phone).
+    `;
+
+    let result;
+    try {
+      result = await model.generateContent(prompt);
+    } catch (genError: any) {
+      console.error("[AI] Gemini Claim Fraud Analysis Error:", genError.message);
+      return { fraudScore: 0, isHighRisk: false, fraudReason: "AI Service unavailable" };
+    }
+
+    const response = await result.response;
+    let text = response.text().trim();
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      console.error("[AI] Failed to parse Fraud AI response:", text);
+      return { fraudScore: 0, isHighRisk: false, fraudReason: "AI format error" };
+    }
+  } catch (error) {
+    console.error("[AI] Fraud Analysis Pipeline Failure:", error);
+    return { fraudScore: 0, isHighRisk: false, fraudReason: "System error" };
+  }
+};
+
 export const aiRecognitionService = {
   recognizeImage,
   analyzeUrgency,
+  analyzeClaimFraud,
 };

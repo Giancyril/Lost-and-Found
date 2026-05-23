@@ -2,11 +2,52 @@ import { Claim, status } from "@prisma/client";
 import { JwtPayload } from "jsonwebtoken";
  import prisma from "../../config/prisma";
 import { pushService } from "../push/push.service";
+import { aiRecognitionService } from "../ai/ai.service";
 
 const createClaim = async (
   item: Claim & { claimantName?: string; contactNumber?: string; schoolEmail?: string },
   user?: JwtPayload
 ) => {
+  let isHighRisk = false;
+  let fraudScore = 0;
+  let fraudReason = "";
+
+  // 1. Serial Claimant Check
+  if (user?.id) {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentClaimsCount = await prisma.claim.count({
+      where: {
+        userId: user.id,
+        createdAt: { gte: thirtyDaysAgo }
+      }
+    });
+
+    if (recentClaimsCount >= 3) {
+      isHighRisk = true;
+      fraudReason = `[SERIAL CLAIMANT WARNING] User has submitted ${recentClaimsCount} claims in the last 30 days. `;
+    }
+  }
+
+  // 2. AI Fraud Detection
+  if (item.distinguishingFeatures && item.foundItemId) {
+    const foundItem = await prisma.foundItem.findUnique({ where: { id: item.foundItemId } });
+    if (foundItem) {
+      const aiResult = await aiRecognitionService.analyzeClaimFraud(
+        item.distinguishingFeatures,
+        foundItem.description,
+        foundItem.foundItemName
+      );
+      
+      fraudScore = aiResult.fraudScore;
+      if (aiResult.isHighRisk) isHighRisk = true;
+      if (aiResult.fraudReason) {
+        fraudReason += (fraudReason ? " | " : "") + `[AI Assessment] ${aiResult.fraudReason}`;
+      }
+    }
+  }
+
   const result = await prisma.claim.create({
     data: {
       foundItemId:            item.foundItemId,
@@ -16,6 +57,9 @@ const createClaim = async (
       contactNumber:          item.contactNumber || "",   
       schoolEmail:            item.schoolEmail   || "",   
       ...(user?.id ? { userId: user.id } : {}),
+      fraudScore,
+      fraudReason,
+      isHighRisk,
     },
   });
   return result;

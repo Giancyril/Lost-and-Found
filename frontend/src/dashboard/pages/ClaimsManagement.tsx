@@ -3,7 +3,7 @@ import {
   FaEye, FaSearch, FaCheck, FaTimes, FaUser, FaBoxOpen,
   FaHistory, FaClipboardList, FaChevronLeft, FaChevronRight,
   FaEnvelope, FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt,
-  FaTag, FaBolt, FaTrash, FaChevronDown,
+  FaTag, FaBolt, FaTrash, FaChevronDown, FaExclamationTriangle,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -569,6 +569,11 @@ const ClaimsManagement = () => {
                             <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full mt-0.5 inline-block">
                               {claim.foundItem?.category?.name}
                             </span>
+                            {claim.isHighRisk && (
+                              <span className="ml-2 text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full mt-0.5 inline-block">
+                                <FaExclamationTriangle className="inline mr-1 mb-0.5" size={8} /> FRAUD ALERT
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -641,6 +646,11 @@ const ClaimsManagement = () => {
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-white text-sm font-semibold leading-tight truncate">
                           {claim.foundItem?.foundItemName}
+                          {claim.isHighRisk && (
+                            <span className="ml-2 inline-flex items-center text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full align-middle">
+                              <FaExclamationTriangle className="mr-1" size={8} /> FRAUD ALERT
+                            </span>
+                          )}
                         </p>
                         <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(claim.status)}`}>
                           {claim.status}
@@ -1479,6 +1489,34 @@ const ClaimsManagement = () => {
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Proof of Ownership</p>
                     <p className="text-gray-200 text-sm leading-relaxed">{selectedClaim.distinguishingFeatures || <span className="text-gray-500 italic text-xs">No details provided</span>}</p>
                   </div>
+                  
+                  {/* Security Assessment */}
+                  <div className={`border rounded-xl p-3 ${selectedClaim.isHighRisk ? "bg-red-500/10 border-red-500/20" : "bg-gray-800/60 border-white/5"}`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <FaBolt size={10} className={selectedClaim.isHighRisk ? "text-red-400" : "text-cyan-400"} />
+                      <p className={`text-[10px] font-bold uppercase tracking-widest ${selectedClaim.isHighRisk ? "text-red-400" : "text-cyan-400"}`}>AI Security Assessment</p>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-semibold text-gray-300">Fraud Risk Score</span>
+                        <span className={`text-xs font-bold ${selectedClaim.fraudScore >= 70 ? 'text-red-400' : selectedClaim.fraudScore >= 40 ? 'text-amber-400' : 'text-emerald-400'}`}>{selectedClaim.fraudScore || 0}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-gray-900 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full transition-all duration-1000 ${selectedClaim.fraudScore >= 70 ? 'bg-red-500' : selectedClaim.fraudScore >= 40 ? 'bg-amber-500' : 'bg-emerald-500'}`} 
+                          style={{ width: `${selectedClaim.fraudScore || 0}%` }} 
+                        />
+                      </div>
+                    </div>
+                    
+                    {selectedClaim.fraudReason && (
+                      <p className={`text-xs leading-relaxed italic border-l-2 pl-2 ${selectedClaim.isHighRisk ? "text-red-300 border-red-500/30" : "text-gray-300 border-white/10"}`}>
+                        {selectedClaim.fraudReason}
+                      </p>
+                    )}
+                  </div>
+
                   {selectedClaim.status === "PENDING" && (
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => { handleStatusChange(selectedClaim.id, "REJECTED"); setIsDetailModalOpen(false); }}
