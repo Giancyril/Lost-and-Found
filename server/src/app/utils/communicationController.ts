@@ -36,8 +36,8 @@ export const createAnnouncement = async (req: Request, res: Response) => {
           fromName: process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found",
           fromEmail: process.env.SMTP_FROM_EMAIL || "noreply@nbsc.edu.ph",
           toEmail: u.email,
-          subject: `[NBSC SAS] ${title}`,
-          html: announcementEmailTemplate({ title, message, type, recipientName: u.username || u.name || "User" }),
+          subject: title,
+          html: announcementEmailTemplate({ title, message, type, recipientName: u.name || u.username || "Student" }),
         }).catch(() => null)
       );
 
