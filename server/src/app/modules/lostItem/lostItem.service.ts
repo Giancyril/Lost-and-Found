@@ -168,8 +168,23 @@ const getSingleLostItem = async (singleId: string) => {
 };
 
 const getMyLostItem = async (user: JwtPayload) => {
+  if (!user?.id) return [];
+
+  const whereConditions: any = { isDeleted: false };
+  
+  // Safely match by userId, OR by schoolEmail if the user's JWT includes an email.
+  // This allows items reported while logged out (as guests) to be claimed by the user.
+  if (user.email) {
+    whereConditions.OR = [
+      { userId: user.id },
+      { schoolEmail: user.email }
+    ];
+  } else {
+    whereConditions.userId = user.id;
+  }
+
   return prisma.lostItem.findMany({
-    where:   { userId: user.id, isDeleted: false },
+    where:   whereConditions,
     include: { user: true, category: true, sightings: { orderBy: { createdAt: "desc" } } },
   });
 };

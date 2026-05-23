@@ -89,11 +89,21 @@ const getClaim = async () => {
 const getMyClaim = async (user: JwtPayload | undefined) => {
   if (!user || !user.id) return [];
 
+  const whereConditions: any = { foundItem: { isDeleted: false } };
+  
+  // Safely match by userId, OR by schoolEmail if the user's JWT includes an email.
+  // This allows items claimed while logged out (as guests) to be seen by the user.
+  if (user.email) {
+    whereConditions.OR = [
+      { userId: user.id },
+      { schoolEmail: user.email }
+    ];
+  } else {
+    whereConditions.userId = user.id;
+  }
+
   const result = await prisma.claim.findMany({
-    where: {
-      userId: user.id,
-      foundItem: { isDeleted: false },
-    },
+    where: whereConditions,
     include: {
       foundItem: {
         include: {
