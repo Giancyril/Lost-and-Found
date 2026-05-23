@@ -343,7 +343,7 @@ export default function ProximityAlertSystem() {
 
         {/* Expanded Simulator Panel */}
         {isSimulatorExpanded && (
-          <div className="absolute right-0 top-11 w-72 sm:w-80 bg-gray-900/95 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl shadow-black/80 flex flex-col gap-4 animate-fadeIn">
+          <div className="fixed top-20 left-4 right-4 sm:absolute sm:top-12 sm:left-auto sm:right-0 sm:w-80 bg-gray-900/95 backdrop-blur-xl border border-white/10 p-4 sm:p-5 rounded-2xl shadow-2xl shadow-black/80 flex flex-col gap-4 animate-fadeIn z-[120]">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div className="flex items-center gap-2">
                 <FaSatellite className="text-cyan-400 animate-pulse" size={15} />
