@@ -69,10 +69,9 @@ const TrackClaim = () => {
         </div>
       </div>
 
-      {/* ── Search Bar ── */}
       <div className="px-4 sm:px-10 lg:px-16 py-5">
-        <form onSubmit={handleTrack} className="flex flex-col md:flex-row items-center gap-3 bg-gray-900 border border-white/5 p-2 rounded-2xl">
-          <div className="relative flex-1 w-full">
+        <form onSubmit={handleTrack} className="relative flex flex-col md:flex-row items-center w-full">
+          <div className="relative flex items-center w-full bg-gray-900 border border-white/5 rounded-xl focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500/40 transition-all">
             <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
             <input
               type="text"
@@ -81,36 +80,33 @@ const TrackClaim = () => {
               placeholder="Tracking ID (e.g. 123e4567-...)"
               className="w-full pl-11 pr-4 py-3.5 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0"
             />
-          </div>
-          <div className="hidden md:block w-px h-8 bg-white/10" />
-          <div className="relative flex-1 w-full border-t border-white/5 md:border-none pt-2 md:pt-0">
+            <div className="hidden md:block w-px h-6 bg-white/10 shrink-0" />
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your Email Address"
-              className="w-full px-4 py-3.5 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0"
+              placeholder="Email Address"
+              className="w-full px-4 pr-[140px] sm:pr-[180px] py-3.5 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0 border-t border-white/5 md:border-none"
             />
-          </div>
-          
-          <div className="w-full md:w-auto flex items-center gap-2 pt-2 md:pt-0">
-            {(claimId || email) && (
+            <div className="absolute right-2 flex items-center gap-1.5 sm:gap-2">
+              {(claimId || email) && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="hidden sm:flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white rounded-lg transition-all"
+                  title="Clear Search"
+                >
+                  ✕
+                </button>
+              )}
               <button
-                type="button"
-                onClick={clearSearch}
-                className="hidden md:flex items-center justify-center w-10 h-10 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white rounded-xl transition-all shrink-0"
-                title="Clear Search"
+                type="submit"
+                disabled={isLoading}
+                className="px-4 sm:px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-[10px] sm:text-xs font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95 whitespace-nowrap"
               >
-                ✕
+                {isLoading ? "..." : "Track Claim"}
               </button>
-            )}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full md:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20 active:scale-95 whitespace-nowrap"
-            >
-              {isLoading ? "Searching..." : "Track Claim"}
-            </button>
+            </div>
           </div>
         </form>
         
