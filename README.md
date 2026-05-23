@@ -8,6 +8,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Item Reporting**: Users can report lost and found items with detailed descriptions, images, and location information
 - **Smart Matching**: Automatic matching algorithm that connects lost items with found items based on location, category, and timeline
 - **Claim Management**: Streamlined claim process with status tracking (Pending, Approved, Rejected)
+- **Interactive Journey Tracking**: Visual, data-driven timeline tracing the complete lifecycle of a claim or lost report, dynamically aggregating sightings and verification milestones
 - **User Authentication**: Secure user registration and login with JWT tokens
 - **Role-Based Access**: Admin and user roles with different permission levels
 
@@ -41,6 +42,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **AI Chatbot Concierge ("Smart Assistant")**: A floating AI chat widget integrated into the Student Dashboard. Users can interact naturally (e.g., "I lost my blue Nike backpack near the library yesterday"), and the AI uses Gemini to parse the sentence, instantly search the database, and reply with potential matches in the chat.
 ### Campus Features
 - **Points System**: Comprehensive gamification system with point rewards for various activities
+  - **Weekly Bounties & Time-Limited Events**: Dynamic rotating missions (e.g., "Report 3 Found Items") to drive student engagement and boost item recovery rates
   - **Points for Actions**: Earn points for reporting items, successful claims, helpful comments, and community contributions
   - **Leaderboard**: Real-time leaderboard showing top contributors and point rankings
   - **Points Badge**: Visual point display in navigation and user profiles
@@ -128,6 +130,7 @@ A dedicated security and governance layer for administrators.
   - IP-based flagging and blocking
   - Session management and forced logout
   - Audit trail of all security events
+- **AI Fraud & 'Serial Claimant' Prevention Engine**: Dual-layer security mechanism that heuristic flags users with multiple rapid claims and uses Gemini AI to cross-reference proof of ownership against hidden item details to detect fraud, emitting instant Risk Scores and alerts.
 - **Data Privacy**: Built-in tools to support GDPR and local data-privacy compliance
   - User data export on request
   - Account and data deletion workflows
