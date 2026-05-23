@@ -64,18 +64,22 @@ export const sendMassReminder = async (req: Request, res: Response) => {
   try {
     const allUsers = await userService.allUsers();
     
-    // Target active users with emails (including admins so they can test/verify)
-    const targets = allUsers.filter((u: any) => !u.isDeleted && u.activated && u.email);
+    // Target active students with emails
+    const targets = allUsers.filter((u: any) => !u.isDeleted && u.activated && u.email && u.role !== "ADMIN");
 
-    const emailPromises = targets.map((u: any) =>
-      sendEmail({
+    const emailPromises = targets.map((u: any) => {
+      const template = reminderEmailTemplate({ recipientName: u.username || u.name || "Student" });
+      return sendEmail({
         fromName: process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found",
         fromEmail: process.env.SMTP_FROM_EMAIL || "noreply@nbsc.edu.ph",
         toEmail: u.email,
-        subject: `Friendly Reminder: Have you lost anything at school recently?`,
-        html: reminderEmailTemplate({ recipientName: u.username || u.name || "Student" }),
-      }).catch(() => null)
-    );
+        subject: template.subject,
+        html: template.html,
+      }).catch((e) => {
+        console.error("Failed to send email to", u.email, ":", e.response?.body || e.message);
+        return null;
+      });
+    });
 
     const results = await Promise.allSettled(emailPromises);
     const emailCount = results.filter(r => r.status === "fulfilled" && r.value !== null).length;
