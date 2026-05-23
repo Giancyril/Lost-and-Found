@@ -163,14 +163,14 @@ const getAllLostItems = async (query: any = {}) => {
 const getSingleLostItem = async (singleId: string) => {
   return prisma.lostItem.findFirst({
     where:   { id: singleId, isDeleted: false },
-    include: { user: true, category: true },
+    include: { user: true, category: true, sightings: { orderBy: { createdAt: "desc" } } },
   });
 };
 
 const getMyLostItem = async (user: JwtPayload) => {
   return prisma.lostItem.findMany({
     where:   { userId: user.id, isDeleted: false },
-    include: { user: true, category: true },
+    include: { user: true, category: true, sightings: { orderBy: { createdAt: "desc" } } },
   });
 };
 

@@ -114,6 +114,55 @@ const TrackingCard = ({ img, title, subtitle, statusLabel, statusColor, steps, a
   </div>
 );
 
+// ── Timeline Step Helpers ───────────────────────────────────────────────────────
+const getLostItemSteps = (item: any) => {
+  const steps: any[] = [];
+  steps.push({ label: "Report Submitted", date: item.createdAt, status: "completed" as const, icon: <FaClipboardList size={12} /> });
+
+  if (item.sightings && item.sightings.length > 0) {
+    steps.push({ label: "Community Sighting Reported", date: item.sightings[0].createdAt, status: "completed" as const, icon: <FaMapMarkerAlt size={12} /> });
+  }
+
+  if (item.isFound) {
+    steps.push({ label: "Actively Searching", status: "completed" as const, icon: <FaSearch size={12} /> });
+    steps.push({ label: "Secured by SAS Office", date: item.updatedAt, status: "completed" as const, icon: <FaCheckCircle size={12} /> });
+  } else {
+    steps.push({ label: "Actively Searching", status: "active" as const, icon: <FaSearch size={12} /> });
+    steps.push({ label: "Awaiting Recovery", status: "pending" as const, icon: <FaBoxOpen size={12} /> });
+  }
+  return steps;
+};
+
+const getClaimSteps = (claim: any) => {
+  const steps: any[] = [];
+  steps.push({ label: "Claim Submitted", date: claim.createdAt, status: "completed" as const, icon: <FaClipboardList size={12} /> });
+
+  let hasReviewLog = false;
+  if (claim.auditLogs && claim.auditLogs.length > 0) {
+    claim.auditLogs.forEach((log: any) => {
+      if (log.action === "APPROVED") {
+        steps.push({ label: "Verification Passed. Ready for Pickup!", date: log.createdAt, status: "completed" as const, icon: <FaCheckCircle size={12} /> });
+        hasReviewLog = true;
+      } else if (log.action === "REJECTED") {
+        steps.push({ label: "Claim Rejected", date: log.createdAt, status: "completed" as const, icon: <FaExclamationCircle size={12} /> });
+        hasReviewLog = true;
+      } else {
+        steps.push({ label: `Status Update: ${log.action}`, date: log.createdAt, status: "completed" as const, icon: <FaHistory size={12} /> });
+        hasReviewLog = true;
+      }
+    });
+  }
+
+  if (!hasReviewLog && claim.status === "PENDING") {
+    steps.push({ label: "Under Staff Review", status: "active" as const, icon: <FaClock size={12} /> });
+    steps.push({ label: "Awaiting Verification", status: "pending" as const, icon: <FaCheckCircle size={12} /> });
+  } else if (claim.status === "APPROVED") {
+    steps.push({ label: "Awaiting Pickup", status: "active" as const, icon: <FaBoxOpen size={12} /> });
+  }
+
+  return steps;
+};
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const ItemStatus = () => {
   useScrollReveal();
@@ -254,12 +303,7 @@ const ItemStatus = () => {
             {isSearched && searchResult?.data ? (
               (() => {
                 const item = searchResult.data;
-                const steps = [
-                  { label: "Report Submitted",   date: item.createdAt, status: "completed" as const, icon: <FaClipboardList size={12} /> },
-                  { label: "Under Staff Review", date: item.createdAt, status: item.isFound ? "completed" as const : "active" as const, icon: <FaClock size={12} /> },
-                  { label: "Actively Searching", status: item.isFound ? "completed" as const : "pending" as const, icon: <FaSearch size={12} /> },
-                  { label: "Item Recovered",     status: item.isFound ? "completed" as const : "pending" as const, icon: <FaCheckCircle size={12} /> },
-                ];
+                const steps = getLostItemSteps(item);
                 return (
                   <TrackingCard key={item.id}
                     img={item.img}
@@ -278,12 +322,7 @@ const ItemStatus = () => {
               })()
             ) : myLostItems?.data?.length > 0 ? (
               myLostItems.data.map((item: any, idx: number) => {
-                const steps = [
-                  { label: "Report Submitted",   date: item.createdAt, status: "completed" as const, icon: <FaClipboardList size={12} /> },
-                  { label: "Under Staff Review", date: item.createdAt, status: item.isFound ? "completed" as const : "active" as const, icon: <FaClock size={12} /> },
-                  { label: "Actively Searching", status: item.isFound ? "completed" as const : "pending" as const, icon: <FaSearch size={12} /> },
-                  { label: "Item Recovered",     status: item.isFound ? "completed" as const : "pending" as const, icon: <FaCheckCircle size={12} /> },
-                ];
+                const steps = getLostItemSteps(item);
                 return (
                   <TrackingCard key={item.id}
                     img={item.img}
@@ -318,12 +357,7 @@ const ItemStatus = () => {
               myClaims.data.map((claim: any, idx: number) => {
                 const isApproved = claim.status === "APPROVED";
                 const isRejected = claim.status === "REJECTED";
-                const steps = [
-                  { label: "Claim Submitted",                     date: claim.createdAt, status: "completed" as const, icon: <FaClipboardList size={12} /> },
-                  { label: "Review Process",                      status: claim.status === "PENDING" ? "active" as const : "completed" as const, icon: <FaClock size={12} /> },
-                  { label: isRejected ? "Rejected" : "Approved",  status: claim.status === "PENDING" ? "pending" as const : "completed" as const, icon: isRejected ? <FaExclamationCircle size={12} /> : <FaCheckCircle size={12} /> },
-                  { label: "Item Returned",                       status: isApproved ? "active" as const : "pending" as const, icon: <FaBoxOpen size={12} /> },
-                ];
+                const steps = getClaimSteps(claim);
                 return (
                   <TrackingCard key={claim.id}
                     img={claim.foundItem?.img}

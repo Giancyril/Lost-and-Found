@@ -62,6 +62,9 @@ const getMyClaim = async (user: JwtPayload | undefined) => {
       user: {
         select: { id: true, username: true, email: true },
       },
+      auditLogs: {
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
   return result;
