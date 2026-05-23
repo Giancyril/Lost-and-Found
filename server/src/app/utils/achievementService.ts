@@ -1,4 +1,5 @@
 import prisma from "../config/prisma";
+import { incrementBountyProgress } from "../modules/bounty/bounty.service";
 
 export const ACHIEVEMENTS = {
   // 🟦 Found Item Badges (Turned in to Office)
@@ -162,6 +163,7 @@ export const awardAchievement = async (userId: string, achievementKey: string) =
 // ── Achievement Checkers ──────────────────────────────────────────────────
 
 export const checkFoundItemAchievements = async (userId: string) => {
+  await incrementBountyProgress(userId, "REPORT_FOUND_ITEM");
   const count = await prisma.foundItem.count({ where: { userId } });
   if (count >= 1) await awardAchievement(userId, "FIRST_FOUND_ITEM");
   if (count >= 5) await awardAchievement(userId, "FOUND_5_ITEMS");
@@ -184,6 +186,10 @@ export const checkClaimAchievements = async (userId: string) => {
   const totalClaims = await prisma.claim.count({ where: { userId } });
   const approvedClaims = await prisma.claim.count({ where: { userId, status: "APPROVED" } });
   
+  if (approvedClaims > 0) {
+    await incrementBountyProgress(userId, "CLAIM_APPROVED");
+  }
+  
   if (totalClaims >= 1) await awardAchievement(userId, "FIRST_CLAIM");
   if (approvedClaims >= 1) await awardAchievement(userId, "FIRST_CLAIM_APPROVED");
   if (approvedClaims >= 5) await awardAchievement(userId, "CLAIMS_5_APPROVED");
@@ -204,6 +210,7 @@ export const checkPointAchievements = async (userId: string) => {
 };
 
 export const checkCommunityAchievements = async (userId: string) => {
+  await incrementBountyProgress(userId, "LEAVE_COMMENT");
   const count = await prisma.comment.count({ where: { userId } });
   if (count >= 1) await awardAchievement(userId, "CONVERSATIONALIST");
   if (count >= 10) await awardAchievement(userId, "HELPER");

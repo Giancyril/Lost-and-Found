@@ -18,6 +18,7 @@ import {
   useGetLeaderboardQuery,
 } from "../redux/api/api";
 import { baseApi } from "../redux/api/baseApi";
+import WeeklyBountiesWidget from "../components/gamification/WeeklyBountiesWidget";
 
 const achievementApi = baseApi.injectEndpoints({
   endpoints: (b) => ({
@@ -283,6 +284,9 @@ export default function StudentDashboard() {
           </div>
         ))}
       </div>
+
+      {/* ── Weekly Bounties Widget ── */}
+      <WeeklyBountiesWidget />
 
       {/* ── Activity + Leaderboard ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4">

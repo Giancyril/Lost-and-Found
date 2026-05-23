@@ -2,6 +2,7 @@ import app from "./app";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { initializeSocket } from "./websocket/socketServer";
+import { startBountyCron } from "./app/modules/bounty/bounty.service";
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ const io = initializeSocket(httpServer);
 app.set("io", io);
 
 async function main() {
+  startBountyCron();
   httpServer.listen(Number(PORT), "0.0.0.0", () => {
     console.log(`Server running on port ${PORT} with WebSockets enabled`);
   });

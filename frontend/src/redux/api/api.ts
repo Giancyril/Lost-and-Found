@@ -395,6 +395,12 @@ const api = baseApi.injectEndpoints({
         params: { schoolId },
       }),
     }),
+
+    // bounties
+    getActiveBounties: builder.query({
+      query: () => ({ url: "/bounties/active", method: "GET" }),
+      providesTags: ["bounties"] as any,
+    }),
   }),
 });
 
@@ -485,4 +491,5 @@ export const {
   useGetComplianceReportQuery,
   useClearOldLogsMutation,
   useLazyExportUsersQuery,
+  useGetActiveBountiesQuery,
 } = api;

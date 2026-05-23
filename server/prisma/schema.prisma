@@ -9,22 +9,22 @@ datasource db {
 }
 
 model User {
-  name              String              @default("")
-  id                String              @id @default(uuid())
-  username          String              @unique
-  email             String              @unique
-  activated         Boolean             @default(true)
+  name              String               @default("")
+  id                String               @id @default(uuid())
+  username          String               @unique
+  email             String               @unique
+  activated         Boolean              @default(true)
   password          String
-  role              userRole            @default(USER)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  userImg           String              @default("")
-  isDeleted         Boolean             @default(false)
+  role              userRole             @default(USER)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  userImg           String               @default("")
+  isDeleted         Boolean              @default(false)
   deletedAt         DateTime?
-  schoolId          String?             @unique
+  schoolId          String?              @unique
   course            String?
   yearLevel         String?
-  totalPoints       Int                 @default(0)
+  totalPoints       Int                  @default(0)
   ClaimAuditLog     ClaimAuditLog[]
   claim             Claim[]
   foundItem         FoundItem[]
@@ -40,6 +40,7 @@ model User {
   userAchievements  UserAchievement[]
   sightings         Sighting[]
   systemAuditLogs   SystemAuditLog[]
+  bountyProgress    UserBountyProgress[]
 
   @@map("users")
 }
@@ -151,18 +152,18 @@ model ClaimAuditLog {
 }
 
 model SystemAuditLog {
-  id              String   @id @default(uuid())
-  entityType      String
-  entityId        String?
-  action          String
-  oldData         String?
-  newData         String?
-  performedBy     String   @default("System")
-  performedById   String?
-  ipAddress       String?
-  userAgent       String?
-  createdAt       DateTime @default(now())
-  user            User?    @relation(fields: [performedById], references: [id], onDelete: SetNull)
+  id            String   @id @default(uuid())
+  entityType    String
+  entityId      String?
+  action        String
+  oldData       String?
+  newData       String?
+  performedBy   String   @default("System")
+  performedById String?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+  user          User?    @relation(fields: [performedById], references: [id], onDelete: SetNull)
 
   @@map("systemAuditLogs")
 }
@@ -210,22 +211,22 @@ model MatchNotification {
 }
 
 model Comment {
-  id              String            @id @default(uuid())
+  id              String             @id @default(uuid())
   itemId          String
   itemType        ItemType
   userId          String?
   content         String
-  isAnonymous     Boolean           @default(false)
-  helpfulCount    Int               @default(0)
-  status          CommentStatus     @default(PENDING)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  isAnonymous     Boolean            @default(false)
+  helpfulCount    Int                @default(0)
+  status          CommentStatus      @default(PENDING)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   location        String?
   rejectionReason String?
   parentCommentId String?
-  parent          Comment?          @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
-  replies         Comment[]         @relation("CommentReplies")
-  user            User?             @relation(fields: [userId], references: [id])
+  parent          Comment?           @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies         Comment[]          @relation("CommentReplies")
+  user            User?              @relation(fields: [userId], references: [id])
   contentReports  ContentReport[]
   appeals         ModerationAppeal[]
 
@@ -313,17 +314,17 @@ model LoginLog {
 // ── Moderation models ─────────────────────────────────────────────────────────
 
 model ContentReport {
-  id         String              @id @default(uuid())
+  id         String       @id @default(uuid())
   commentId  String
-  reason     ReportReason        @default(OTHER)
-  details    String              @default("")
-  reportedBy String              @default("Anonymous")
-  status     ReportStatus        @default(PENDING)
-  resolvedBy String              @default("")
+  reason     ReportReason @default(OTHER)
+  details    String       @default("")
+  reportedBy String       @default("Anonymous")
+  status     ReportStatus @default(PENDING)
+  resolvedBy String       @default("")
   resolvedAt DateTime?
-  createdAt  DateTime            @default(now())
-  updatedAt  DateTime            @updatedAt
-  comment    Comment             @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  comment    Comment      @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@map("contentReports")
 }
@@ -343,31 +344,31 @@ model UserWarning {
 }
 
 model ModerationAppeal {
-  id          String       @id @default(uuid())
-  commentId   String
-  userId      String?
-  reason      String
-  status      AppealStatus @default(PENDING)
-  adminNote   String       @default("")
-  resolvedBy  String       @default("")
-  resolvedAt  DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  comment     Comment      @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id         String       @id @default(uuid())
+  commentId  String
+  userId     String?
+  reason     String
+  status     AppealStatus @default(PENDING)
+  adminNote  String       @default("")
+  resolvedBy String       @default("")
+  resolvedAt DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  comment    Comment      @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user       User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("moderationAppeals")
 }
 
 model ChatRoom {
-  id          String        @id @default(uuid())
-  claimId     String?       @unique
-  foundItemId String?
-  participants String[]     // Array of user IDs
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  messages    ChatMessage[]
-  claim       Claim?        @relation(fields: [claimId], references: [id])
+  id           String           @id @default(uuid())
+  claimId      String?          @unique
+  foundItemId  String?
+  participants String[] // Array of user IDs
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  messages     ChatMessage[]
+  claim        Claim?           @relation(fields: [claimId], references: [id])
   readStatuses ChatReadStatus[]
 
   @@map("chatRooms")
@@ -501,16 +502,16 @@ enum AppealStatus {
 }
 
 model Achievement {
-  id          String   @id @default(cuid())
-  key         String   @unique // e.g. "FIRST_FOUND_ITEM"
+  id          String          @id @default(cuid())
+  key         String          @unique // e.g. "FIRST_FOUND_ITEM"
   name        String // e.g. "First Responder"
   description String
   icon        String // emoji or icon name
   tier        AchievementTier
   category    String
-  xp          Int      @default(0) // bonus XP on unlock
-  secret      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  xp          Int             @default(0) // bonus XP on unlock
+  secret      Boolean         @default(false)
+  createdAt   DateTime        @default(now())
 
   userAchievements UserAchievement[]
 
@@ -530,6 +531,40 @@ model UserAchievement {
 
   @@unique([userId, achievementId])
   @@map("userAchievements")
+}
+
+model Bounty {
+  id           String               @id @default(uuid())
+  title        String
+  description  String
+  targetCount  Int
+  actionType   String
+  xpReward     Int
+  icon         String               @default("🎯")
+  isActive     Boolean              @default(true)
+  startDate    DateTime             @default(now())
+  endDate      DateTime
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  userProgress UserBountyProgress[]
+
+  @@map("bounties")
+}
+
+model UserBountyProgress {
+  id           String    @id @default(uuid())
+  userId       String
+  bountyId     String
+  currentCount Int       @default(0)
+  isCompleted  Boolean   @default(false)
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bounty       Bounty    @relation(fields: [bountyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bountyId])
+  @@map("userBountyProgress")
 }
 
 enum AchievementTier {
@@ -559,8 +594,8 @@ model Sighting {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  lostItem        LostItem @relation(fields: [lostItemId], references: [id], onDelete: Cascade)
-  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lostItem LostItem @relation(fields: [lostItemId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("sightings")
 }

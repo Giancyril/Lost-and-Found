@@ -38,6 +38,7 @@ import {
   getCommHubStats,
 } from "../utils/communicationController";
 import { achievementController } from "../modules/achievement/achievement.controller";
+import { bountyRoutes } from "../modules/bounty/bounty.routes";
 
 import {
   getSecurityStats,
@@ -170,6 +171,9 @@ router.post("/achievements/unlock-secret", auth(), achievementController.unlockS
 router.get("/admin/achievements", auth(), achievementController.getAllUserAchievements);
 
 router.post("/admin/backfill-students", auth(), userController.backfillStudentData);
+
+//////////////////////////////////////////////// bounties //////////////////////////////////////////////
+router.use("/bounties", bountyRoutes);
 
 // Communication Hub stats
 router.get("/admin/comm-hub/stats", auth(), getCommHubStats);
