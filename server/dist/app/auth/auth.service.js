@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -56,6 +79,92 @@ const loginUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
         token: accessToken,
     };
 });
+const portalLoginUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    const { portalUser, portalToken } = data;
+    // Ideally, validate portalToken against SAS portal here.
+    // Assuming token validation passes, look up user by portalUser.
+    let user = yield prisma_1.default.user.findFirst({
+        where: {
+            OR: [
+                { username: portalUser },
+                { email: portalUser },
+                { schoolId: portalUser },
+            ],
+        },
+    });
+    // Auto-provision if user doesn't exist
+    if (!user) {
+        // Try to fetch student details from masterlist to get correct info
+        try {
+            const { studentService } = yield Promise.resolve().then(() => __importStar(require("../modules/student/student.service")));
+            const masterlistData = yield studentService.getStudentById(portalUser).catch(() => null);
+            const email = (masterlistData === null || masterlistData === void 0 ? void 0 : masterlistData.email) || `${portalUser}@nbsc.edu.ph`;
+            const name = (masterlistData === null || masterlistData === void 0 ? void 0 : masterlistData.name) || portalUser;
+            // Check if email already exists
+            const existingEmail = yield prisma_1.default.user.findFirst({ where: { email } });
+            if (existingEmail) {
+                // Upgrade to ADMIN if they came in via portal and are not already ADMIN
+                if (existingEmail.role !== "ADMIN") {
+                    user = yield prisma_1.default.user.update({
+                        where: { id: existingEmail.id },
+                        data: { role: "ADMIN" },
+                    });
+                }
+                else {
+                    user = existingEmail;
+                }
+            }
+            else {
+                const hashedPassword = yield utils_1.utils.passwordHash("DefaultPortalPass123!"); // Or a random secure password
+                // SAS Portal is exclusively for staff — always provision as ADMIN
+                user = yield prisma_1.default.user.create({
+                    data: {
+                        username: portalUser,
+                        email,
+                        name,
+                        schoolId: portalUser,
+                        password: hashedPassword,
+                        role: "ADMIN",
+                        course: (masterlistData === null || masterlistData === void 0 ? void 0 : masterlistData.course) || null,
+                        yearLevel: (masterlistData === null || masterlistData === void 0 ? void 0 : masterlistData.yearLevel) || null,
+                    }
+                });
+            }
+        }
+        catch (e) {
+            console.error("Auto-provisioning failed for portal login", e);
+            throw new error_1.default(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR, "Failed to auto-provision user from portal");
+        }
+    }
+    else {
+        // Existing user found — upgrade to ADMIN if not already (SAS Portal is admin-only)
+        if (user.role !== "ADMIN") {
+            user = yield prisma_1.default.user.update({
+                where: { id: user.id },
+                data: { role: "ADMIN" },
+            });
+        }
+    }
+    const { id, name, email, role, userImg, username, schoolId } = user;
+    const accessToken = utils_1.utils.createToken({
+        id,
+        name,
+        email,
+        username,
+        role,
+        userImg,
+        schoolId,
+    });
+    return {
+        id: user.id,
+        name: name || "User",
+        username: user.username,
+        email: user.email,
+        role,
+        schoolId,
+        token: accessToken,
+    };
+});
 const newPasswords = (data, user) => __awaiter(void 0, void 0, void 0, function* () {
     if (data.currentPassword === data.newPassword) {
         throw new error_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Password is same");
@@ -96,6 +205,7 @@ const changeUsername = (username, user) => __awaiter(void 0, void 0, void 0, fun
 });
 exports.authServices = {
     loginUser,
+    portalLoginUser,
     newPasswords,
     changeEmail,
     changeUsername,

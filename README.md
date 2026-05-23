@@ -468,6 +468,20 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Category matching**: Matches items within the same category
 - **Deduplication**: Prevents duplicate notifications for the same item pair
 
+#### Smart Match Notifications vs. AI Recommender
+
+Here is the difference between the two:
+
+**1. Smart Match Notifications (Automated & User-Facing)**
+- **What it is**: A fully automated background process that runs on the server whenever a new item is reported.
+- **How it works**: If someone reports a Found Item, the system instantly scans all active Lost Item reports. If it finds a very strict, high-confidence match (e.g., exact category, very close location, similar timeframe), it automatically sends an email alert to the student who lost the item, telling them their item might have been found.
+- **Purpose**: To provide instant, zero-touch resolutions for obvious matches without requiring an admin to intervene.
+
+**2. AI Recommender (Manual & Admin-Facing)**
+- **What it is**: An advanced administrative tool located in your Claims Management dashboard.
+- **How it works**: It continuously compares all unresolved lost items against unclaimed found items and assigns them an AI Match Score (e.g., 63%, 85%) based on text similarity, location proximity, and timeline.
+- **Purpose**: Because the automated "Smart Match" requires strict exactness to avoid spamming users with false alarms, the AI Recommender surfaces the nuanced or lower-confidence matches. It allows you (the Admin) to manually review these probable matches and use your human judgment to click "Connect Parties & Send Alert" if you think they are actually the same item.
+
 ### AI-Powered Search
 - **Natural language processing**: Understands complex search queries
 - **Semantic matching**: Goes beyond keyword matching to understand context

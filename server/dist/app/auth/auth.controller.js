@@ -62,6 +62,58 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
         next(error);
     }
 });
+const portalLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _c;
+    try {
+        const { portalUser, portalToken } = req.body;
+        if (!portalUser || !portalToken) {
+            return (0, response_1.default)(res, {
+                statusCode: http_status_codes_1.StatusCodes.BAD_REQUEST,
+                success: false,
+                message: "Missing portal credentials",
+                data: null,
+            });
+        }
+        const user = yield auth_service_1.authServices.portalLoginUser({
+            portalUser,
+            portalToken,
+        });
+        try {
+            yield (0, securityController_1.logLoginAttempt)({
+                userId: user.id,
+                username: user.username,
+                email: user.email,
+                ipAddress: (0, securityController_1.getClientIp)(req),
+                userAgent: req.headers["user-agent"] || "",
+                success: true,
+            });
+        }
+        catch (logErr) {
+            console.error("[LoginLog] Failed to log success for portal login:", logErr);
+        }
+        (0, response_1.default)(res, {
+            statusCode: http_status_codes_1.StatusCodes.OK,
+            success: true,
+            message: "Portal login successful",
+            data: user,
+        });
+    }
+    catch (error) {
+        try {
+            yield (0, securityController_1.logLoginAttempt)({
+                email: ((_c = req.body) === null || _c === void 0 ? void 0 : _c.portalUser) || "",
+                ipAddress: (0, securityController_1.getClientIp)(req),
+                userAgent: req.headers["user-agent"] || "",
+                success: false,
+                reason: error.message,
+            });
+        }
+        catch (logErr) {
+            console.error("[LoginLog] Failed to log failure for portal login:", logErr);
+        }
+        next(error);
+    }
+});
 const newPasswords = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const passwordData = req.body;
@@ -125,6 +177,7 @@ const changeUsername = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.authController = {
     login,
+    portalLogin,
     newPasswords,
     changeEmail,
     changeUsername

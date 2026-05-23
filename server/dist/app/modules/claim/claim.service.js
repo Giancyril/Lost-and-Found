@@ -65,6 +65,8 @@ const getClaim = () => __awaiter(void 0, void 0, void 0, function* () {
     return result;
 });
 const getMyClaim = (user) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!user || !user.id)
+        return [];
     const result = yield prisma_1.default.claim.findMany({
         where: {
             userId: user.id,
@@ -97,6 +99,17 @@ const updateClaimStatus = (claimId, data, performer) => __awaiter(void 0, void 0
     if (data.status && data.status !== fromStatus) {
         yield prisma_1.default.claimAuditLog.create({
             data: Object.assign(Object.assign({ claimId, action: data.status, fromStatus: fromStatus, toStatus: data.status, performedBy: (performer === null || performer === void 0 ? void 0 : performer.name) || "Admin" }, ((performer === null || performer === void 0 ? void 0 : performer.id) ? { performedById: performer.id } : {})), { note: data.note || "" }),
+        });
+        // Also log to the new unified SystemAuditLog for Phase 9
+        const { logSystemAudit } = yield Promise.resolve().then(() => __importStar(require("../../utils/auditLog")));
+        yield logSystemAudit({
+            entityType: "CLAIM",
+            entityId: claimId,
+            action: `STATUS_${data.status}`,
+            oldData: { status: fromStatus },
+            newData: { status: data.status, note: data.note },
+            performedBy: performer === null || performer === void 0 ? void 0 : performer.name,
+            performedById: performer === null || performer === void 0 ? void 0 : performer.id,
         });
         // Trigger Push Notification to claimant
         if (result.userId) {

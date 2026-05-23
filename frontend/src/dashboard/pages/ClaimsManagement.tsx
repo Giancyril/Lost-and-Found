@@ -157,8 +157,8 @@ const ClaimsManagement = () => {
   const { data: allClaims, isLoading }               = useGetAllClaimsQuery(undefined);
   const { data: auditData, isLoading: auditLoading } = useGetAuditLogsQuery({});
   const { data: matchData, isLoading: matchLoading } = useGetMatchNotificationsQuery({});
-  const { data: allLostItemsData, isLoading: lostLoading } = useGetAllLostItemsQuery({});
-  const { data: allFoundItemsData, isLoading: foundLoading } = useGetFoundItemsQuery({});
+  const { data: allLostItemsData, isLoading: lostLoading } = useGetAllLostItemsQuery({ limit: 1000 });
+  const { data: allFoundItemsData, isLoading: foundLoading } = useGetFoundItemsQuery({ limit: 1000 });
 
   const [updateClaimStatus]                          = useUpdateClaimStatusMutation();
   const [sendClaimApprovedEmail]                     = useSendClaimApprovedEmailMutation();
@@ -197,7 +197,7 @@ const ClaimsManagement = () => {
     // 1. Category Match (40%)
     if (lost.categoryId === found.categoryId || (lost.category?.name && lost.category?.name === found.category?.name)) {
       score += 40;
-      breakdown.push("🎯 Category matches perfectly (+40%)");
+      breakdown.push(" Category matches perfectly (+40%)");
     }
 
     // 2. Location Proximity (25%)
@@ -206,22 +206,22 @@ const ClaimsManagement = () => {
 
     if (lost.location?.toLowerCase().trim() === found.location?.toLowerCase().trim()) {
       score += 25;
-      breakdown.push("📍 Exact same location string (+25%)");
+      breakdown.push(" Exact same location string (+25%)");
     } else if (lostCoords && foundCoords) {
       const distKm = getDistance(lostCoords[0], lostCoords[1], foundCoords[0], foundCoords[1]);
       const distM = distKm * 1000;
       if (distM <= 50) {
         score += 22;
-        breakdown.push(`📍 Within 50m (${Math.round(distM)}m) (+22%)`);
+        breakdown.push(` Within 50m (${Math.round(distM)}m) (+22%)`);
       } else if (distM <= 120) {
         score += 18;
-        breakdown.push(`📍 Within 120m (${Math.round(distM)}m) (+18%)`);
+        breakdown.push(` Within 120m (${Math.round(distM)}m) (+18%)`);
       } else if (distM <= 350) {
         score += 12;
-        breakdown.push(`📍 Close Proximity (${Math.round(distM)}m) (+12%)`);
+        breakdown.push(` Close Proximity (${Math.round(distM)}m) (+12%)`);
       } else if (distM <= 800) {
         score += 6;
-        breakdown.push(`📍 General Vicinity (${Math.round(distM)}m) (+6%)`);
+        breakdown.push(` General Vicinity (${Math.round(distM)}m) (+6%)`);
       }
     }
 
@@ -234,13 +234,13 @@ const ClaimsManagement = () => {
 
       if (diffDays <= 1) {
         score += 15;
-        breakdown.push("📆 Reported within 24 hours of each other (+15%)");
+        breakdown.push(" Reported within 24 hours of each other (+15%)");
       } else if (diffDays <= 3) {
         score += 10;
-        breakdown.push("📆 Reported within 3 days (+10%)");
+        breakdown.push(" Reported within 3 days (+10%)");
       } else if (diffDays <= 7) {
         score += 5;
-        breakdown.push("📆 Reported within 1 week (+5%)");
+        breakdown.push(" Reported within 1 week (+5%)");
       }
     }
 
@@ -1022,22 +1022,22 @@ const ClaimsManagement = () => {
           if (score >= 80) return {
             border: "border-emerald-500/30 hover:border-emerald-500/50 shadow-emerald-500/5",
             badge: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-            label: "🔥 Excellent Match",
-            glow: "bg-emerald-500/20 shadow-[0_0_20px_rgba(52,211,153,0.3)]",
+            label: " Excellent Match",
+            glow: "bg-emerald-500/20",
             text: "text-emerald-400"
           };
           if (score >= 60) return {
             border: "border-cyan-500/30 hover:border-cyan-500/50 shadow-cyan-500/5",
             badge: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
-            label: "⚡ Strong Match",
-            glow: "bg-cyan-500/20 shadow-[0_0_20px_rgba(34,211,238,0.25)]",
+            label: " Strong Match",
+            glow: "bg-cyan-500/20",
             text: "text-cyan-400"
           };
           return {
             border: "border-amber-500/30 hover:border-amber-500/50 shadow-amber-500/5",
             badge: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-            label: "📈 Probable Match",
-            glow: "bg-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.2)]",
+            label: " Probable Match",
+            glow: "bg-amber-500/20",
             text: "text-amber-400"
           };
         };

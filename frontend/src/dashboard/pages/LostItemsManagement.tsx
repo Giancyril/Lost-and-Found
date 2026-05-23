@@ -101,6 +101,8 @@ const CategoryDropdown = ({
   );
 };
 
+const COL = "2.5fr 1.5fr 1.5fr 1fr 1fr 1fr 1.5fr 120px";
+
 const LostItemsManagement = () => {
   const [searchTerm, setSearchTerm]         = useState("");
   const [statusFilter, setStatusFilter]     = useState<string>("ALL");
@@ -259,15 +261,16 @@ const LostItemsManagement = () => {
 
       {/* Table — desktop */}
       <div className="hidden md:block bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-        <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-white/5 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">
-          <div className="col-span-3">Item</div>
-          <div className="col-span-2">Category</div>
-          <div className="col-span-2">Location</div>
-          <div className="col-span-1">Date</div>
-          <div className="col-span-1">Priority</div>
-          <div className="col-span-1">Status</div>
-          <div className="col-span-2">Reporter</div>
-          <div className="col-span-1 text-right">Actions</div>
+        <div className="grid gap-4 px-5 py-3 border-b border-white/5 text-[10px] uppercase tracking-widest text-gray-600 font-semibold"
+          style={{ gridTemplateColumns: COL }}>
+          <div>Item</div>
+          <div>Category</div>
+          <div>Location</div>
+          <div>Date</div>
+          <div>Priority</div>
+          <div>Status</div>
+          <div>Reporter</div>
+          <div className="text-right">Actions</div>
         </div>
 
         {filteredItems.length === 0 ? (
@@ -279,24 +282,25 @@ const LostItemsManagement = () => {
         ) : (
           <div className="divide-y divide-white/[0.04]">
             {filteredItems.map((item: LostItem) => (
-              <div key={item.id} className="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors group">
-                <div className="col-span-3 min-w-0">
+              <div key={item.id} className="grid gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors group"
+                style={{ gridTemplateColumns: COL }}>
+                <div className="min-w-0">
                   <p className="text-white text-sm font-medium truncate">{item.lostItemName}</p>
                   <p className="text-gray-500 text-xs truncate mt-0.5">{item.description}</p>
                 </div>
-                <div className="col-span-2">
-                  <span className="text-xs px-2 py-0.5 bg-white/5 border border-white/5 text-gray-300 rounded-lg">{item.category?.name || "—"}</span>
+                <div className="min-w-0">
+                  <span className="text-xs px-2 py-0.5 bg-white/5 border border-white/5 text-gray-300 rounded-lg truncate block w-fit max-w-full">{item.category?.name || "—"}</span>
                 </div>
-                <div className="col-span-2">
+                <div className="min-w-0">
                   <div className="flex items-center gap-1 text-gray-400 text-xs">
                     <FaMapMarkerAlt size={9} className="text-blue-400 shrink-0" />
                     <span className="truncate">{item.location}</span>
                   </div>
                 </div>
-                <div className="col-span-1">
+                <div>
                   <p className="text-gray-500 text-xs">{new Date(item.date || item.createdAt).toLocaleDateString()}</p>
                 </div>
-                <div className="col-span-1">
+                <div>
                   <div className="flex flex-col gap-1">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black tracking-tighter uppercase border w-fit ${
                       item.urgencyLevel === "CRITICAL" ? "bg-red-500/10 text-red-400 border-red-500/20" :
@@ -315,7 +319,7 @@ const LostItemsManagement = () => {
                     )}
                   </div>
                 </div>
-                <div className="col-span-1">
+                <div>
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                     item.isFound
                       ? "bg-blue-400/10 text-blue-400 border-blue-400/20"
@@ -324,11 +328,11 @@ const LostItemsManagement = () => {
                     {item.isFound ? "Resolved" : "Active"}
                   </span>
                 </div>
-                <div className="col-span-2 min-w-0">
+                <div className="min-w-0">
                   <p className="text-gray-300 text-xs truncate">{item.user?.username || item.reporterName || "—"}</p>
                   {item.schoolEmail && <p className="text-blue-300/70 text-[10px] truncate">{item.schoolEmail}</p>}
                 </div>
-                <div className="col-span-1 flex items-center justify-end gap-1">
+                <div className="flex items-center justify-end gap-1">
                   <button onClick={() => handleEdit(item)} title="Edit"
                     className="w-7 h-7 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 flex items-center justify-center text-yellow-400 transition-colors">
                     <FaEdit size={11} />

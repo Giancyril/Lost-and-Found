@@ -13,12 +13,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.adminStats = void 0;
-const foundItem_service_1 = require("../modules/foundItems/foundItem.service");
 const response_1 = __importDefault(require("../global/response"));
 const http_status_codes_1 = require("http-status-codes");
-const lostItem_service_1 = require("../modules/lostItem/lostItem.service");
-const user_service_1 = require("../modules/user/user.service");
-const claim_service_1 = require("../modules/claim/claim.service");
+const prisma_1 = __importDefault(require("../config/prisma"));
 const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = {};
     const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -33,17 +30,105 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         return "Evening";
     };
     try {
-        console.log("[AdminStats] Fetching found items...");
-        const foundItems = yield foundItem_service_1.foundItemService.getFoundItem({ limit: 1000 });
-        console.log("[AdminStats] Fetching lost items (active)...");
-        const lostItemsActive = yield lostItem_service_1.lostTItemServices.getLostItem({ limit: 1000 });
-        console.log("[AdminStats] Fetching all lost items...");
-        const allLostItems = yield lostItem_service_1.lostTItemServices.getAllLostItems({ limit: 1000 });
-        console.log("[AdminStats] Fetching users...");
-        const totalUsers = yield user_service_1.userService.allUsers();
-        console.log("[AdminStats] Fetching claims...");
-        const claims = yield claim_service_1.claimsService.getClaim();
+        console.log("[AdminStats] Fetching lightweight data concurrently...");
+        const [foundItems, lostItemsActive, allLostItems, totalUsers, claims] = yield Promise.all([
+            prisma_1.default.foundItem.findMany({
+                where: { isDeleted: false, isArchived: false },
+                select: {
+                    id: true,
+                    date: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    isClaimed: true,
+                    categoryId: true,
+                    reporterName: true,
+                    foundItemName: true,
+                    location: true,
+                    userId: true,
+                    category: { select: { name: true } },
+                    user: { select: { id: true, username: true } },
+                }
+            }),
+            prisma_1.default.lostItem.findMany({
+                where: { isDeleted: false, isFound: false },
+                select: {
+                    id: true,
+                    date: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    categoryId: true,
+                    category: { select: { name: true } },
+                    userId: true,
+                }
+            }),
+            prisma_1.default.lostItem.findMany({
+                where: { isDeleted: false },
+                select: {
+                    id: true,
+                    date: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    isFound: true,
+                    categoryId: true,
+                    location: true,
+                    category: { select: { name: true } },
+                    userId: true,
+                }
+            }),
+            prisma_1.default.user.findMany({
+                where: { isDeleted: false },
+                select: {
+                    id: true,
+                    createdAt: true,
+                    role: true,
+                    activated: true,
+                    isDeleted: true,
+                    username: true,
+                    email: true,
+                }
+            }),
+            prisma_1.default.claim.findMany({
+                where: {
+                    isDeleted: false,
+                    foundItem: { isDeleted: false }
+                },
+                select: {
+                    id: true,
+                    status: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    foundItemId: true,
+                    claimantName: true,
+                    user: { select: { username: true } },
+                    foundItem: {
+                        select: {
+                            createdAt: true,
+                            foundItemName: true,
+                        }
+                    }
+                }
+            })
+        ]);
         console.log("[AdminStats] All data fetched. Calculating stats...");
+        // To ensure we capture both formal claim requests and direct/historical claimed found items (e.g. from Sheets/bulk import):
+        const claimedItemIdsWithClaimRecord = new Set(claims.filter((c) => c.status === "APPROVED").map((c) => c.foundItemId));
+        const directClaims = (foundItems === null || foundItems === void 0 ? void 0 : foundItems.filter((i) => i.isClaimed && !claimedItemIdsWithClaimRecord.has(i.id)).map((i) => ({
+            id: `direct-${i.id}`,
+            foundItemId: i.id,
+            status: "APPROVED",
+            createdAt: i.date || i.createdAt, // Use actual claim/found date
+            updatedAt: i.updatedAt || i.createdAt,
+            claimantName: i.reporterName || "Direct Claim",
+            foundItem: {
+                createdAt: i.createdAt,
+                foundItemName: i.foundItemName,
+            },
+            user: null,
+        }))) || [];
+        const allClaims = [
+            ...claims,
+            ...directClaims
+        ];
         // ── Date helpers ──────────────────────────────────────────────
         const now = new Date();
         const weekStart = new Date(now);
@@ -63,11 +148,11 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         result.lostThisMonth = (lostItemsActive === null || lostItemsActive === void 0 ? void 0 : lostItemsActive.filter((i) => isThisMonth(i.createdAt)).length) || 0;
         result.resolvedLostItems = allLostItems.filter((i) => i.isFound).length;
         // ── Claims ────────────────────────────────────────────────────
-        result.totalClaims = claims.length;
-        result.pendingClaims = claims.filter((c) => c.status === "PENDING").length;
-        result.approvedClaims = claims.filter((c) => c.status === "APPROVED").length;
-        result.rejectedClaims = claims.filter((c) => c.status === "REJECTED").length;
-        result.claimsThisWeek = claims.filter((c) => isThisWeek(c.createdAt)).length;
+        result.totalClaims = allClaims.length;
+        result.pendingClaims = allClaims.filter((c) => c.status === "PENDING").length;
+        result.approvedClaims = allClaims.filter((c) => c.status === "APPROVED").length;
+        result.rejectedClaims = allClaims.filter((c) => c.status === "REJECTED").length;
+        result.claimsThisWeek = allClaims.filter((c) => isThisWeek(c.createdAt)).length;
         // ── Users ─────────────────────────────────────────────────────
         result.totalUsers = totalUsers.length;
         result.userData = totalUsers;
@@ -80,22 +165,32 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         // ── Resolution rate ───────────────────────────────────────────
         result.resolutionRate = allLostItems.length > 0
             ? Math.round((result.resolvedLostItems / allLostItems.length) * 100) : 0;
-        // ── Monthly stats (last 6 months) ─────────────────────────────
+        const queryYear = req.query.year ? parseInt(req.query.year) : now.getFullYear();
+        const allDates = [
+            ...((foundItems === null || foundItems === void 0 ? void 0 : foundItems.map((i) => new Date(i.date || i.createdAt).getFullYear())) || []),
+            ...allLostItems.map((i) => new Date(i.date || i.createdAt).getFullYear())
+        ];
+        const availableYears = Array.from(new Set(allDates)).sort((a, b) => b - a);
+        if (!availableYears.includes(now.getFullYear()))
+            availableYears.unshift(now.getFullYear());
+        result.availableYears = Array.from(new Set(availableYears)).sort((a, b) => b - a);
+        // ── Monthly stats (selected year) ─────────────────────────────
         const monthlyMap = {};
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const key = `${d.getFullYear()}-${d.getMonth()}`;
-            monthlyMap[key] = { month: MONTH_LABELS[d.getMonth()], found: 0, lost: 0, claims: 0, resolved: 0 };
+        for (let i = 0; i < 12; i++) {
+            const key = `${queryYear}-${i}`;
+            monthlyMap[key] = { month: MONTH_LABELS[i], found: 0, lost: 0, claims: 0, resolved: 0 };
         }
         const addToMonth = (dateStr, field) => {
+            if (!dateStr)
+                return;
             const d = new Date(dateStr);
             const key = `${d.getFullYear()}-${d.getMonth()}`;
             if (monthlyMap[key])
                 monthlyMap[key][field]++;
         };
-        foundItems === null || foundItems === void 0 ? void 0 : foundItems.forEach((i) => addToMonth(i.createdAt, "found"));
-        allLostItems.forEach((i) => addToMonth(i.createdAt, "lost"));
-        claims.forEach((c) => addToMonth(c.createdAt, "claims"));
+        foundItems === null || foundItems === void 0 ? void 0 : foundItems.forEach((i) => addToMonth(i.date || i.createdAt, "found"));
+        allLostItems.forEach((i) => addToMonth(i.date || i.createdAt, "lost"));
+        allClaims.forEach((c) => addToMonth(c.createdAt, "claims"));
         allLostItems
             .filter((i) => i.isFound && i.updatedAt)
             .forEach((i) => addToMonth(i.updatedAt, "resolved"));
@@ -134,7 +229,7 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             .sort((a, b) => b.count - a.count)
             .slice(0, 5);
         // ── Avg claim resolution time ─────────────────────────────────
-        const resolvedClaims = claims.filter((c) => (c.status === "APPROVED" || c.status === "REJECTED") && c.updatedAt && c.createdAt);
+        const resolvedClaims = allClaims.filter((c) => (c.status === "APPROVED" || c.status === "REJECTED") && c.updatedAt && c.createdAt);
         if (resolvedClaims.length > 0) {
             const totalMs = resolvedClaims.reduce((sum, c) => sum + (new Date(c.updatedAt).getTime() - new Date(c.createdAt).getTime()), 0);
             result.avgClaimResolutionDays = parseFloat((totalMs / resolvedClaims.length / (1000 * 60 * 60 * 24)).toFixed(1));
@@ -210,12 +305,11 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         // ── ADVANCED ANALYTICS ──────────────────────────────────────────
         // ════════════════════════════════════════════════════════════════
         // ── USER ACTIVITY ─────────────────────────────────────────────
-        // Registration trend (last 6 months)
+        // Registration trend (selected year)
         const userRegMap = {};
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const key = `${d.getFullYear()}-${d.getMonth()}`;
-            userRegMap[key] = { month: MONTH_LABELS[d.getMonth()], registrations: 0, admins: 0, users: 0 };
+        for (let i = 0; i < 12; i++) {
+            const key = `${queryYear}-${i}`;
+            userRegMap[key] = { month: MONTH_LABELS[i], registrations: 0, admins: 0, users: 0 };
         }
         totalUsers.forEach((u) => {
             const d = new Date(u.createdAt);
@@ -256,7 +350,7 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         };
         // Top claimants (users who submitted most claims)
         const claimantCount = {};
-        claims.forEach((c) => {
+        allClaims.forEach((c) => {
             var _a;
             const name = c.claimantName || ((_a = c.user) === null || _a === void 0 ? void 0 : _a.username) || "Anonymous";
             if (!claimantCount[name])
@@ -272,8 +366,8 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         // Funnel: Lost reported → Found reported → Claim submitted → Claim approved
         const totalFoundReported = (foundItems === null || foundItems === void 0 ? void 0 : foundItems.length) || 0;
         const totalLostReported = allLostItems.length;
-        const totalClaimsSubmitted = claims.length;
-        const totalClaimsApproved = claims.filter((c) => c.status === "APPROVED").length;
+        const totalClaimsSubmitted = allClaims.length;
+        const totalClaimsApproved = allClaims.filter((c) => c.status === "APPROVED").length;
         result.itemFlowFunnel = {
             lostReported: totalLostReported,
             foundReported: totalFoundReported,
@@ -287,17 +381,16 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             claimToApproval: totalClaimsSubmitted > 0
                 ? parseFloat(((totalClaimsApproved / totalClaimsSubmitted) * 100).toFixed(1)) : 0,
             overallRecovery: totalLostReported > 0
-                ? parseFloat(((totalClaimsApproved / totalLostReported) * 100).toFixed(1)) : 0,
+                ? Math.min(100, parseFloat(((totalClaimsApproved / totalLostReported) * 100).toFixed(1))) : 0,
         };
-        // Monthly item flow (found + claims per month side by side)
+        // Monthly item flow (found + claims per month side by side for selected year)
         const flowMap = {};
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const key = `${d.getFullYear()}-${d.getMonth()}`;
-            flowMap[key] = { month: MONTH_LABELS[d.getMonth()], found: 0, claimed: 0, lost: 0, pendingClaims: 0 };
+        for (let i = 0; i < 12; i++) {
+            const key = `${queryYear}-${i}`;
+            flowMap[key] = { month: MONTH_LABELS[i], found: 0, claimed: 0, lost: 0, pendingClaims: 0 };
         }
         foundItems === null || foundItems === void 0 ? void 0 : foundItems.forEach((i) => {
-            const d = new Date(i.createdAt);
+            const d = new Date(i.date || i.createdAt);
             const key = `${d.getFullYear()}-${d.getMonth()}`;
             if (flowMap[key]) {
                 flowMap[key].found++;
@@ -306,12 +399,12 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             }
         });
         allLostItems.forEach((i) => {
-            const d = new Date(i.createdAt);
+            const d = new Date(i.date || i.createdAt);
             const key = `${d.getFullYear()}-${d.getMonth()}`;
             if (flowMap[key])
                 flowMap[key].lost++;
         });
-        claims.forEach((c) => {
+        allClaims.forEach((c) => {
             const d = new Date(c.createdAt);
             const key = `${d.getFullYear()}-${d.getMonth()}`;
             if (flowMap[key] && c.status === "PENDING")
@@ -338,7 +431,7 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             .slice(0, 8);
         // Average time from found → claimed (for approved claims)
         const foundToClaimTimes = [];
-        claims.forEach((c) => {
+        allClaims.forEach((c) => {
             var _a;
             if (c.status === "APPROVED" && ((_a = c.foundItem) === null || _a === void 0 ? void 0 : _a.createdAt) && c.createdAt) {
                 const diff = new Date(c.createdAt).getTime() - new Date(c.foundItem.createdAt).getTime();
@@ -357,7 +450,7 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         result.claimRejectionRate = totalResolved2 > 0
             ? Math.round((result.rejectedClaims / totalResolved2) * 100) : 0;
         // Pending claims older than N days
-        const pendingClaimsAge = claims
+        const pendingClaimsAge = allClaims
             .filter((c) => c.status === "PENDING")
             .map((c) => {
             var _a;
@@ -397,7 +490,7 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 week: weekLabel,
                 found: (foundItems === null || foundItems === void 0 ? void 0 : foundItems.filter((item) => inRange(item.createdAt)).length) || 0,
                 lost: allLostItems.filter((item) => inRange(item.createdAt)).length,
-                claims: claims.filter((c) => inRange(c.createdAt)).length,
+                claims: allClaims.filter((c) => inRange(c.createdAt)).length,
             });
         }
         result.weeklyThroughput = weeklyThroughput;
@@ -470,6 +563,16 @@ const adminStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             Math.max(0, 100 - Math.round((result.unclaimedItemsAge.avgAgeDays / 30) * 100)),
         ];
         result.systemHealthScore = Math.round(healthFactors.reduce((a, b) => a + b, 0) / healthFactors.length);
+        // ── Sanitize response for unauthenticated (public/guest) requests ─────────
+        if (!req.user) {
+            delete result.userData; // full user list
+            delete result.topReporters; // reporter names
+            delete result.topClaimants; // claimant names
+            if (result.unclaimedItemsAge)
+                delete result.unclaimedItemsAge.oldest; // item details
+            if (result.pendingClaimsAge)
+                delete result.pendingClaimsAge.oldest; // claimant + item details
+        }
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,

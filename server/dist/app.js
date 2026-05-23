@@ -14,12 +14,25 @@ const app = (0, express_1.default)();
 app.use((0, helmet_1.default)());
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
+const ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://lost-and-found-liart-seven.vercel.app",
+];
 const corsOptions = {
-    origin: [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "https://lost-and-found-liart-seven.vercel.app",
-    ],
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. curl, server-to-server, or mobile apps)
+        if (!origin)
+            return callback(null, true);
+        // Allow exact-match origins
+        if (ALLOWED_ORIGINS.includes(origin))
+            return callback(null, true);
+        // Dynamically allow any *.github.io subdomain (for SAS Portal embedded iframe)
+        if (origin.endsWith(".github.io"))
+            return callback(null, true);
+        // Reject everything else
+        callback(new Error(`CORS policy: origin '${origin}' is not allowed`));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [

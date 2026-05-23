@@ -22,6 +22,7 @@ const locationStats_1 = require("../utils/locationStats");
 const auditLog_1 = require("../utils/auditLog");
 const aiSearch_controller_1 = require("../modules/aiSearch/aiSearch.controller");
 const aiSearch_validate_1 = require("../modules/aiSearch/aiSearch.validate");
+const aiChat_routes_1 = require("../modules/aiChat/aiChat.routes");
 const ai_controller_1 = require("../modules/ai/ai.controller");
 const emailController_1 = require("../utils/emailController");
 const bulletinPost_controller_1 = require("../modules/bulletinPost/bulletinPost.controller");
@@ -44,6 +45,7 @@ const router = express_1.default.Router();
 router.post("/register", user_controllers_1.userController.registerUser);
 router.get("/users", user_controllers_1.userController.allUsers);
 router.post("/login", (0, validate_1.default)(user_validate_1.UserSchema.userLoginSchema), auth_controller_1.authController.login);
+router.post("/portal-login", auth_controller_1.authController.portalLogin);
 ////////////////////////////////////////////////// profile //////////////////////////////////////////////
 router.post("/change-password", (0, auth_1.default)(), (0, validate_1.default)(user_validate_1.UserSchema.changePasswordSchema), auth_controller_1.authController.newPasswords);
 router.post("/change-email", (0, auth_1.default)(), (0, validate_1.default)(user_validate_1.UserSchema.changeEmailSchema), auth_controller_1.authController.changeEmail);
@@ -84,22 +86,24 @@ router.get("/my/foundItem", (0, auth_1.default)(), foundItem_controller_1.foundI
 router.put("/my/foundItem", (0, auth_1.default)(), foundItem_controller_1.foundItemController.editMyFoundItem);
 router.delete("/my/foundItem/:id", (0, auth_1.default)(), foundItem_controller_1.foundItemController.deleteMyFoundItem);
 ////////////////////////////////////////////////// claims //////////////////////////////////////////////
-router.post("/claims", (0, auth_1.default)(), (0, validate_1.default)(claim_validate_1.ItemClaimSchema.createClaim), claim_controller_1.claimsController.createClaim);
+router.post("/claims", (0, auth_1.default)(true), (0, validate_1.default)(claim_validate_1.ItemClaimSchema.createClaim), claim_controller_1.claimsController.createClaim);
 router.get("/claims", (0, auth_1.default)(), claim_controller_1.claimsController.getClaim);
 router.get("/my/claims", (0, auth_1.default)(), claim_controller_1.claimsController.getMyClaim);
 router.put("/claims/:claimId", (0, validate_1.default)(claim_validate_1.ItemClaimSchema.updateClaim), (0, auth_1.default)(), claim_controller_1.claimsController.updateClaimStatus);
 router.delete("/claims/:claimId", (0, auth_1.default)(), claim_controller_1.claimsController.deleteClaim);
 ////////////////////////////////////////////////// admin //////////////////////////////////////////////
 router.get("/admin/lostItems", (0, auth_1.default)(), lost_controller_1.lostItemController.getAllLostItems);
-router.get("/admin/stats", adminStats_1.adminStats);
-router.get("/admin/location-stats", locationStats_1.locationStats);
+router.get("/admin/stats", (0, auth_1.default)(true), adminStats_1.adminStats);
+router.get("/admin/location-stats", (0, auth_1.default)(true), locationStats_1.locationStats);
 router.get("/admin/audit-logs", (0, auth_1.default)(), auditLog_1.getAuditLogs);
+router.get("/admin/system-audit-logs", (0, auth_1.default)(), auditLog_1.getSystemAuditLogs);
 router.put("/block/user/:id", (0, auth_1.default)(), user_controllers_1.userController.blockUser);
 router.delete("/delete-user/:id", (0, auth_1.default)(), user_controllers_1.userController.softDeleteUser);
 router.get("/admin/match-notifications", (0, auth_1.default)(), getMatchNotifications_1.getMatchNotifications);
 // ////////////////////////////////////////////////// AI search //////////////////////////////////////////////
 router.post("/ai-search", (0, validate_1.default)(aiSearch_validate_1.aiSearchValidation.aiSearchSchema), aiSearch_controller_1.aiSearchController.aiSearch);
 router.post("/ai-recognize", (0, auth_1.default)(true), upload_1.uploadImages.single("image"), ai_controller_1.aiRecognitionController.recognizeImage);
+router.use("/ai-chat", aiChat_routes_1.aiChatRoutes);
 // ── Email / Mailer ──
 router.post("/email/lost-item", (0, auth_1.default)(), emailController_1.sendLostItemEmail);
 router.post("/email/claim-approved", (0, auth_1.default)(), emailController_1.sendClaimApprovedEmail);
