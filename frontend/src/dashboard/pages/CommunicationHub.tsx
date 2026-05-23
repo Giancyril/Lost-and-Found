@@ -311,7 +311,6 @@ const AnnouncementsTab = () => {
               <div key={a.id} className="bg-gray-900 border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-all">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${tc.bg} ${tc.color}`}>{tc.icon}</div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-white text-sm font-semibold">{a.title}</p>
