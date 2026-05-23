@@ -5,6 +5,7 @@ import { StatusCodes } from "http-status-codes";
 import { lostTItemServices } from "../modules/lostItem/lostItem.service";
 import { userService } from "../modules/user/user.service";
 import { claimsService } from "../modules/claim/claim.service";
+import prisma from "../config/prisma";
 
 export const adminStats = async (req: Request, res: Response) => {
   const result: any = {};
@@ -19,17 +20,112 @@ export const adminStats = async (req: Request, res: Response) => {
   };
 
   try {
-    console.log("[AdminStats] Fetching found items...");
-    const foundItems = await foundItemService.getFoundItem({ limit: 1000 });
-    console.log("[AdminStats] Fetching lost items (active)...");
-    const lostItemsActive = await lostTItemServices.getLostItem({ limit: 1000 });
-    console.log("[AdminStats] Fetching all lost items...");
-    const allLostItems = await lostTItemServices.getAllLostItems({ limit: 1000 });
-    console.log("[AdminStats] Fetching users...");
-    const totalUsers = await userService.allUsers();
-    console.log("[AdminStats] Fetching claims...");
-    const claims = await claimsService.getClaim();
+    console.log("[AdminStats] Fetching lightweight data concurrently...");
+    const [foundItems, lostItemsActive, allLostItems, totalUsers, claims] = await Promise.all([
+      prisma.foundItem.findMany({
+        where: { isDeleted: false, isArchived: false },
+        select: {
+          id: true,
+          date: true,
+          createdAt: true,
+          updatedAt: true,
+          isClaimed: true,
+          categoryId: true,
+          reporterName: true,
+          foundItemName: true,
+          location: true,
+          userId: true,
+          category: { select: { name: true } },
+          user: { select: { id: true, username: true } },
+        }
+      }),
+      prisma.lostItem.findMany({
+        where: { isDeleted: false, isFound: false },
+        select: {
+          id: true,
+          date: true,
+          createdAt: true,
+          updatedAt: true,
+          categoryId: true,
+          category: { select: { name: true } },
+          userId: true,
+        }
+      }),
+      prisma.lostItem.findMany({
+        where: { isDeleted: false },
+        select: {
+          id: true,
+          date: true,
+          createdAt: true,
+          updatedAt: true,
+          isFound: true,
+          categoryId: true,
+          location: true,
+          category: { select: { name: true } },
+          userId: true,
+        }
+      }),
+      prisma.user.findMany({
+        where: { isDeleted: false },
+        select: {
+          id: true,
+          createdAt: true,
+          role: true,
+          activated: true,
+          isDeleted: true,
+          username: true,
+          email: true,
+        }
+      }),
+      prisma.claim.findMany({
+        where: {
+          isDeleted: false,
+          foundItem: { isDeleted: false }
+        },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          foundItemId: true,
+          claimantName: true,
+          user: { select: { username: true } },
+          foundItem: {
+            select: {
+              createdAt: true,
+              foundItemName: true,
+            }
+          }
+        }
+      })
+    ]);
     console.log("[AdminStats] All data fetched. Calculating stats...");
+
+    // To ensure we capture both formal claim requests and direct/historical claimed found items (e.g. from Sheets/bulk import):
+    const claimedItemIdsWithClaimRecord = new Set(
+      claims.filter((c: any) => c.status === "APPROVED").map((c: any) => c.foundItemId)
+    );
+
+    const directClaims = foundItems
+      ?.filter((i: any) => i.isClaimed && !claimedItemIdsWithClaimRecord.has(i.id))
+      .map((i: any) => ({
+        id: `direct-${i.id}`,
+        foundItemId: i.id,
+        status: "APPROVED" as const,
+        createdAt: i.date || i.createdAt, // Use actual claim/found date
+        updatedAt: i.updatedAt || i.createdAt,
+        claimantName: i.reporterName || "Direct Claim",
+        foundItem: {
+          createdAt: i.createdAt,
+          foundItemName: i.foundItemName,
+        },
+        user: null,
+      })) || [];
+
+    const allClaims = [
+      ...claims,
+      ...directClaims
+    ];
 
     // ── Date helpers ──────────────────────────────────────────────
     const now = new Date();
@@ -53,11 +149,11 @@ export const adminStats = async (req: Request, res: Response) => {
     result.resolvedLostItems = allLostItems.filter((i: any) => i.isFound).length;
 
     // ── Claims ────────────────────────────────────────────────────
-    result.totalClaims = claims.length;
-    result.pendingClaims = claims.filter((c: any) => c.status === "PENDING").length;
-    result.approvedClaims = claims.filter((c: any) => c.status === "APPROVED").length;
-    result.rejectedClaims = claims.filter((c: any) => c.status === "REJECTED").length;
-    result.claimsThisWeek = claims.filter((c: any) => isThisWeek(c.createdAt)).length;
+    result.totalClaims = allClaims.length;
+    result.pendingClaims = allClaims.filter((c: any) => c.status === "PENDING").length;
+    result.approvedClaims = allClaims.filter((c: any) => c.status === "APPROVED").length;
+    result.rejectedClaims = allClaims.filter((c: any) => c.status === "REJECTED").length;
+    result.claimsThisWeek = allClaims.filter((c: any) => isThisWeek(c.createdAt)).length;
 
     // ── Users ─────────────────────────────────────────────────────
     result.totalUsers = totalUsers.length;
@@ -104,7 +200,7 @@ export const adminStats = async (req: Request, res: Response) => {
 
     foundItems?.forEach((i: any) => addToMonth(i.date || i.createdAt, "found"));
     allLostItems.forEach((i: any) => addToMonth(i.date || i.createdAt, "lost"));
-    claims.forEach((c: any) => addToMonth(c.createdAt, "claims"));
+    allClaims.forEach((c: any) => addToMonth(c.createdAt, "claims"));
     allLostItems
       .filter((i: any) => i.isFound && i.updatedAt)
       .forEach((i: any) => addToMonth(i.updatedAt, "resolved"));
@@ -146,7 +242,7 @@ export const adminStats = async (req: Request, res: Response) => {
       .slice(0, 5);
 
     // ── Avg claim resolution time ─────────────────────────────────
-    const resolvedClaims = claims.filter(
+    const resolvedClaims = allClaims.filter(
       (c: any) => (c.status === "APPROVED" || c.status === "REJECTED") && c.updatedAt && c.createdAt
     );
     if (resolvedClaims.length > 0) {
@@ -281,7 +377,7 @@ export const adminStats = async (req: Request, res: Response) => {
 
     // Top claimants (users who submitted most claims)
     const claimantCount: Record<string, { name: string; count: number; approved: number }> = {};
-    claims.forEach((c: any) => {
+    allClaims.forEach((c: any) => {
       const name = c.claimantName || c.user?.username || "Anonymous";
       if (!claimantCount[name]) claimantCount[name] = { name, count: 0, approved: 0 };
       claimantCount[name].count++;
@@ -296,8 +392,8 @@ export const adminStats = async (req: Request, res: Response) => {
     // Funnel: Lost reported → Found reported → Claim submitted → Claim approved
     const totalFoundReported = foundItems?.length || 0;
     const totalLostReported = allLostItems.length;
-    const totalClaimsSubmitted = claims.length;
-    const totalClaimsApproved = claims.filter((c: any) => c.status === "APPROVED").length;
+    const totalClaimsSubmitted = allClaims.length;
+    const totalClaimsApproved = allClaims.filter((c: any) => c.status === "APPROVED").length;
 
     result.itemFlowFunnel = {
       lostReported: totalLostReported,
@@ -332,7 +428,7 @@ export const adminStats = async (req: Request, res: Response) => {
       const d = new Date(i.date || i.createdAt); const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (flowMap[key]) flowMap[key].lost++;
     });
-    claims.forEach((c: any) => {
+    allClaims.forEach((c: any) => {
       const d = new Date(c.createdAt); const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (flowMap[key] && c.status === "PENDING") flowMap[key].pendingClaims++;
     });
@@ -356,7 +452,7 @@ export const adminStats = async (req: Request, res: Response) => {
 
     // Average time from found → claimed (for approved claims)
     const foundToClaimTimes: number[] = [];
-    claims.forEach((c: any) => {
+    allClaims.forEach((c: any) => {
       if (c.status === "APPROVED" && c.foundItem?.createdAt && c.createdAt) {
         const diff = new Date(c.createdAt).getTime() - new Date(c.foundItem.createdAt).getTime();
         if (diff > 0) foundToClaimTimes.push(diff);
@@ -378,7 +474,7 @@ export const adminStats = async (req: Request, res: Response) => {
       ? Math.round((result.rejectedClaims / totalResolved2) * 100) : 0;
 
     // Pending claims older than N days
-    const pendingClaimsAge = claims
+    const pendingClaimsAge = allClaims
       .filter((c: any) => c.status === "PENDING")
       .map((c: any) => ({
         id: c.id,
@@ -419,7 +515,7 @@ export const adminStats = async (req: Request, res: Response) => {
         week: weekLabel,
         found: foundItems?.filter((item: any) => inRange(item.createdAt)).length || 0,
         lost: allLostItems.filter((item: any) => inRange(item.createdAt)).length,
-        claims: claims.filter((c: any) => inRange(c.createdAt)).length,
+        claims: allClaims.filter((c: any) => inRange(c.createdAt)).length,
       });
     }
     result.weeklyThroughput = weeklyThroughput;
