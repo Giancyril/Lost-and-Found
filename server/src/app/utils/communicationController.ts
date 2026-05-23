@@ -64,8 +64,8 @@ export const sendMassReminder = async (req: Request, res: Response) => {
   try {
     const allUsers = await userService.allUsers();
     
-    // Target active students with emails
-    const targets = allUsers.filter((u: any) => !u.isDeleted && u.activated && u.email && u.role !== "ADMIN");
+    // Target active users with emails (including admins so they can test/verify)
+    const targets = allUsers.filter((u: any) => !u.isDeleted && u.activated && u.email);
 
     const emailPromises = targets.map((u: any) =>
       sendEmail({

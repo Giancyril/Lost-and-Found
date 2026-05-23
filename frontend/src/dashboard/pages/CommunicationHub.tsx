@@ -787,9 +787,7 @@ const NotificationCenterTab = () => {
         <div className="p-5">
           <div className="p-4 bg-gray-800/50 border border-white/5 rounded-xl flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
-                <FaBullhorn className="text-violet-400" size={16} />
-              </div>
+             
               <div>
                 <h4 className="text-white text-sm font-semibold">Mass Item Reminder</h4>
                 <p className="text-gray-400 text-xs mt-0.5">Email all active students reminding them to check for their lost items.</p>
@@ -798,7 +796,7 @@ const NotificationCenterTab = () => {
             <button 
               onClick={handleSendReminder} 
               disabled={isReminding}
-              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 shrink-0">
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 shrink-0">
               {isReminding ? <><FaSpinner className="animate-spin" size={12} /> Sending…</> : <><FaEnvelope size={10} /> Send Reminder</>}
             </button>
           </div>
