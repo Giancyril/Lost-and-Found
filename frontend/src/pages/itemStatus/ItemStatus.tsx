@@ -266,6 +266,14 @@ const ItemStatus = () => {
             Showing result for code: {searchId}
           </p>
         )}
+        <div className="mt-4 flex items-center justify-center sm:justify-start">
+          <p className="text-xs text-gray-500">
+            Trying to track a Claim for a Found Item instead? 
+            <Link to="/track" className="text-blue-400 font-bold ml-1 hover:text-blue-300 hover:underline">
+              Use Track Claim
+            </Link>
+          </p>
+        </div>
       </div>
 
       {/* ── Tabs ── */}
