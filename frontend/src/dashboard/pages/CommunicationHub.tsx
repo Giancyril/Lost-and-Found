@@ -889,7 +889,7 @@ const EMAIL_TEMPLATES = [
       fields: [
         { label: "Recipient", value: "Student" },
         { label: "Notification", value: "Lost & Found Check" },
-        { label: "Purpose", value: "Encourage students to check dashboard for lost items." },
+        { label: "Purpose", value: "Reminder to not lose your item." },
       ],
       note: "Check the Dashboard! Log in to your Student Dashboard to view all recently found items. You might just find what you're looking for!",
       noteColor: "#bfdbfe", noteBg: "rgba(59, 130, 246, 0.1)", noteBorder: "rgba(59, 130, 246, 0.2)",
