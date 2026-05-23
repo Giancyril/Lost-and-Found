@@ -68,7 +68,7 @@ export const sendMassReminder = async (req: Request, res: Response) => {
     const targets = allUsers.filter((u: any) => !u.isDeleted && u.activated && u.email && u.role !== "ADMIN");
 
     const emailPromises = targets.map((u: any) => {
-      const template = reminderEmailTemplate({ recipientName: u.username || u.name || "Student" });
+      const template = reminderEmailTemplate({ recipientName: u.name || u.username || "Student" });
       return sendEmail({
         fromName: process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found",
         fromEmail: process.env.SMTP_FROM_EMAIL || "noreply@nbsc.edu.ph",

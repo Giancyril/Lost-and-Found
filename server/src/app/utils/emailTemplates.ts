@@ -544,7 +544,7 @@ export const reminderEmailTemplate = (data: {
 
               <!-- TOP ACCENT BAR -->
               <tr>
-                <td style="height:4px;background:linear-gradient(90deg,#3b82f6,#8b5cf6);"></td>
+                <td style="height:4px;background:linear-gradient(90deg,#2563eb,#3b82f6);"></td>
               </tr>
 
               <!-- HEADER -->
@@ -575,10 +575,10 @@ export const reminderEmailTemplate = (data: {
                   </p>
 
                   <!-- ACTION BOX -->
-                  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;margin-bottom:8px;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:8px;">
                     <tr>
                       <td style="padding:16px 20px;">
-                        <p style="margin:0;font-size:13px;color:#5b21b6;line-height:1.6;">
+                        <p style="margin:0;font-size:13px;color:#1e40af;line-height:1.6;">
                           <strong>Check the Dashboard!</strong> Log in to your Student Dashboard to view all recently found items. You might just find what you're looking for!
                         </p>
                       </td>
