@@ -5,10 +5,63 @@ export default function DevToolsDetector() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // Disabled DevTools detection as requested
+    // Completely disable detection during local development or in SAS Portal (/dashboard)
+    if (import.meta.env.DEV || window.location.pathname.startsWith('/dashboard')) {
+      return;
+    }
+
+    let devtoolsOpen = false;
+
+    // Advanced: Debugger Trap (detects undocked DevTools by measuring pause time)
+    const checkDebugger = () => {
+      const start = performance.now();
+      debugger; 
+      const end = performance.now();
+      if (end - start > 100) {
+        devtoolsOpen = true;
+        setIsOpen(true);
+      }
+    };
+
+    // Standard: Window dimension differential (detects docked DevTools)
+    const checkWindowSize = () => {
+      const threshold = 160;
+      const widthDiff = window.outerWidth - window.innerWidth > threshold;
+      const heightDiff = window.outerHeight - window.innerHeight > threshold;
+      
+      if (widthDiff || heightDiff) {
+        devtoolsOpen = true;
+        setIsOpen(true);
+      }
+    };
+
+    const interval = setInterval(() => {
+      // Check again if path changed to dashboard, clear interval
+      if (window.location.pathname.startsWith('/dashboard')) {
+        clearInterval(interval);
+        return;
+      }
+
+      if (!devtoolsOpen) {
+        checkWindowSize();
+        // Fire debugger trap to detect undocked devtools
+        try { checkDebugger(); } catch (e) {}
+      }
+    }, 1000);
+
+    // Run once on mount
+    if (!window.location.pathname.startsWith('/dashboard')) {
+      checkWindowSize();
+      window.addEventListener("resize", checkWindowSize);
+    }
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("resize", checkWindowSize);
+    };
   }, []);
 
-  return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[999999] bg-gray-950 flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
