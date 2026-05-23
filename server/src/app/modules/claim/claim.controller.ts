@@ -118,10 +118,34 @@ const deleteClaim = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const trackClaim = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { claimId, email } = req.body;
+    const result = await claimsService.trackClaim(claimId, email);
+    if (!result) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.NOT_FOUND,
+        success: false,
+        message: "Claim not found. Please check your Tracking ID and Email.",
+        data: null,
+      });
+    }
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Claim tracked successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const claimsController = {
   createClaim,
   getClaim,
   updateClaimStatus,
   deleteClaim,
   getMyClaim,
+  trackClaim,
 };

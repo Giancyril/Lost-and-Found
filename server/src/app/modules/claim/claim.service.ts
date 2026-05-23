@@ -3,6 +3,8 @@ import { JwtPayload } from "jsonwebtoken";
  import prisma from "../../config/prisma";
 import { pushService } from "../push/push.service";
 import { aiRecognitionService } from "../ai/ai.service";
+import { sendEmail } from "../../utils/mailer";
+import { claimSubmittedTemplate } from "../../utils/emailTemplates";
 
 const createClaim = async (
   item: Claim & { claimantName?: string; contactNumber?: string; schoolEmail?: string },
@@ -62,6 +64,21 @@ const createClaim = async (
       isHighRisk,
     },
   });
+
+  if (result.schoolEmail) {
+    const template = claimSubmittedTemplate({
+      claimantName: result.claimantName,
+      trackingId: result.id,
+    });
+    sendEmail({
+      fromName: process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found",
+      fromEmail: process.env.SMTP_FROM_EMAIL || "noreply@nbsc.edu.ph",
+      toEmail: result.schoolEmail,
+      subject: template.subject,
+      html: template.html,
+    }).catch((e) => console.error("Failed to send claim submitted email:", e));
+  }
+
   return result;
 };
 
@@ -263,6 +280,23 @@ const getAuditLogs = async () => {
   return result.filter((log: any) => log.claim !== null); // cast to any
 };
 
+const trackClaim = async (claimId: string, email: string) => {
+  const claim = await prisma.claim.findFirst({
+    where: {
+      id: claimId,
+      schoolEmail: email,
+      isDeleted: false,
+    },
+    include: {
+      foundItem: {
+        select: { foundItemName: true, img: true, location: true, category: true },
+      },
+    },
+  });
+
+  return claim;
+};
+
 export const claimsService = {
   createClaim,
   getClaim,
@@ -270,4 +304,5 @@ export const claimsService = {
   getMyClaim,
   deleteClaim,
   getAuditLogs,
+  trackClaim,
 };

@@ -122,6 +122,7 @@ router.get("/claims", auth(), claimsController.getClaim);
 router.get("/my/claims", auth(), claimsController.getMyClaim);
 router.put("/claims/:claimId", validateRequest(ItemClaimSchema.updateClaim), auth(), claimsController.updateClaimStatus);
 router.delete("/claims/:claimId", auth(), claimsController.deleteClaim);
+router.post("/claims/track", claimsController.trackClaim);
 
 ////////////////////////////////////////////////// admin //////////////////////////////////////////////
 router.get("/admin/lostItems", auth(), lostItemController.getAllLostItems);

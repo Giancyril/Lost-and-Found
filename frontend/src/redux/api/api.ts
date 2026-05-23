@@ -97,6 +97,9 @@ const api = baseApi.injectEndpoints({
       query: (data: any) => ({ url: `/claims`, method: "POST", body: data }),
       invalidatesTags: ["adminData"],
     }),
+    trackClaim: builder.mutation({
+      query: (data: { claimId: string; email: string }) => ({ url: `/claims/track`, method: "POST", body: data }),
+    }),
     myClaims: builder.query({
       query: () => ({ url: `/my/claims`, method: "GET" }),
       providesTags: ["claims"],
@@ -424,6 +427,7 @@ export const {
   useChangeEmailMutation,
   useChangeUsernameMutation,
   useCreateClaimMutation,
+  useTrackClaimMutation,
   useMyClaimsQuery,
   useGetClaimByIdQuery,
   useGetMyLostItemQuery,

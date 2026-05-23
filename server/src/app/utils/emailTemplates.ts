@@ -613,3 +613,83 @@ export const reminderEmailTemplate = (data: {
     </html>
   `,
 });
+
+export const claimSubmittedTemplate = (data: {
+  claimantName: string;
+  trackingId: string;
+}) => ({
+  subject: `Claim Submitted Successfully! (Tracking ID: ${data.trackingId})`,
+  html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>Claim Submitted</title>
+    </head>
+    <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+
+              <!-- TOP ACCENT BAR -->
+              <tr>
+                <td style="height:4px;background:linear-gradient(90deg,#0ea5e9,#0284c7);"></td>
+              </tr>
+
+              <!-- HEADER -->
+              <tr>
+                <td style="padding:36px 40px 28px;border-bottom:1px solid #e2e8f0;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td>
+                        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;">NBSC SAS Lost &amp; Found</p>
+                        <h1 style="margin:0;font-size:22px;font-weight:700;color:#0f172a;">Claim Submitted!</h1>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- BODY -->
+              <tr>
+                <td style="padding:32px 40px;">
+                  <p style="margin:0 0 8px;font-size:16px;font-weight:600;color:#0f172a;">Hello, ${data.claimantName || "Student"}</p>
+                  <p style="margin:0 0 24px;font-size:14px;color:#64748b;line-height:1.7;">
+                    Your claim has been successfully submitted to the SAS Office. Our administrators will review it shortly. 
+                    You can track the status of your claim at any time using your unique Tracking ID.
+                  </p>
+
+                  <div style="background:#f0f9ff;border:1px dashed #bae6fd;border-radius:8px;padding:16px;margin-bottom:24px;text-align:center;">
+                    <p style="margin:0 0 4px;font-size:12px;color:#0284c7;text-transform:uppercase;font-weight:700;letter-spacing:1px;">Your Tracking ID</p>
+                    <p style="margin:0;font-size:20px;font-family:monospace;font-weight:bold;color:#0369a1;">${data.trackingId}</p>
+                  </div>
+
+                  <p style="margin:0;font-size:14px;color:#64748b;line-height:1.7;">
+                    Please keep this email for your records. If you are a registered user, this claim has already been added to your Dashboard.
+                  </p>
+                </td>
+              </tr>
+
+              <!-- FOOTER -->
+              <tr>
+                <td style="padding:24px 40px;background:#f8fafc;border-top:1px solid #e2e8f0;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td>
+                        <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:#334155;">NBSC SAS Lost &amp; Found System</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `,
+});

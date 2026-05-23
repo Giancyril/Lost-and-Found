@@ -38,6 +38,23 @@ const registerUser = async (user: any) => {
  
       },
     });
+    // Auto-Sync Option A: Link any past anonymous records that used this email to the new user
+    await transactions.claim.updateMany({
+      where: { schoolEmail: email, userId: null },
+      data: { userId: createdUser.id },
+    });
+    await transactions.lostItem.updateMany({
+      where: { schoolEmail: email, userId: null },
+      data: { userId: createdUser.id },
+    });
+    await transactions.foundItem.updateMany({
+      where: { schoolEmail: email, userId: null },
+      data: { userId: createdUser.id },
+    });
+    await transactions.supportTicket.updateMany({
+      where: { senderEmail: email },
+      data: { senderName: createdUser.name || createdUser.username },
+    });
 
     return {
       id:        createdUser.id,
