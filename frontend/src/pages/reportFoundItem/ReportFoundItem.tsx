@@ -12,6 +12,7 @@ import {
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
+import { sanitizeObject } from "../../utils/sanitize";
 import { useOfflineSync } from "../../hooks/useOfflineSync";
 import {
   FaQrcode, FaUserCheck, FaTimes, FaSearch, FaSpinner,
@@ -669,7 +670,8 @@ const ReportFoundItem = () => {
   };
 
   const onSubmit = async () => {
-    const data = getValues();
+    const rawData = getValues();
+    const data = sanitizeObject(rawData);
 
     if (!isOnline) {
       queueOfflineReport({

@@ -11,9 +11,11 @@ import "react-toastify/dist/ReactToastify.css";
 
 
 import { useScrollReveal } from "./hooks/useScrollReveal";
+import { useSessionTimeout } from "./hooks/useSessionTimeout";
 
 function App() {
   useScrollReveal();
+  useSessionTimeout();
   const { current, dismiss } = useAchievementWatcher();
   return (
     <>
