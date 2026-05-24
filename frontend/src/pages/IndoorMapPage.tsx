@@ -366,7 +366,12 @@ const DesktopRoomDetails = ({ selectedRoom, roomItems, navigate }: any) => (
       <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-3">Active Reports</p>
       {roomItems.map((item: any) => (
         <button key={item.id} onClick={() => navigate(`/${item.type}Items/${item.id}`)} className="w-full bg-gray-800/40 border border-white/5 hover:border-white/20 rounded-xl p-3 text-left">
-          <p className="text-white font-bold text-[13px] truncate">{item.foundItemName || item.lostItemName}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-white font-bold text-[13px] truncate">{item.foundItemName || item.lostItemName}</p>
+            <span className={`shrink-0 px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-widest ${item.type === 'found' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+              {item.type}
+            </span>
+          </div>
         </button>
       ))}
     </div>
