@@ -580,7 +580,6 @@ Here is the difference between the two:
 - **AI-Powered "Match-Score" Recommender Dashboard & Coordination Scheduler**: An intelligent visual panel that automatically scans all newly reported "Lost" and "Found" items across campus and highlights likely pairs. Computes percentage-based similarity metrics (based on categories, campus locations, timeline, description similarity) and renders a side-by-side card comparison layout with interactive threshold selectors and 1-click private chat triggers with instant SMTP-notified email alerts.
 
 ### Phase 8: Advanced Security, Honeypots & Compliance Monitoring (Completed)
-- **Advanced DevTools Open Detection**: Integrates a timing-interval loop to monitor if DevTools is active, logging access fingerprints silently inside sessionStorage traps.
 - **Double-Agent Honeypot Fields**: Trap-door features including hidden administrative input fields (`username` bot catchers) and interactive console trap commands (`adminHacker`) designed to catch bad-actors and fingerprint their sessions.
 - **Input Sanitization & Auto-Timeout**: Hardened security protocols featuring DOMPurify to strip XSS vectors across all forms, alongside a strict 30-minute inactivity auto-logout protocol for standard users.
 
