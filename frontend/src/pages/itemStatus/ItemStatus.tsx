@@ -296,14 +296,14 @@ const ItemStatus = () => {
             <div className="relative flex flex-col md:flex-row w-full bg-gray-900 border border-white/10 rounded-xl focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500/50 transition-all duration-300">
               
               {/* Tracking ID Field */}
-              <div className="relative flex items-center w-full md:flex-1 transition-all duration-300">
+              <div className="relative flex items-center w-full md:flex-1">
                 <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={14} />
                 <input
                   type="text"
                   value={searchId}
                   onChange={(e) => setSearchId(e.target.value)}
                   placeholder="Enter Tracking ID..."
-                  className={`w-full pl-11 py-4 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0 transition-all duration-500 ${trackingType === "lost" ? "pr-[80px] sm:pr-40" : "pr-4 md:pr-4"}`}
+                  className={`w-full pl-11 py-4 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0 ${trackingType === "lost" ? "pr-[80px] sm:pr-40" : "pr-4 md:pr-4"}`}
                 />
 
                 {/* Mobile Button (Track Lost) */}
@@ -320,16 +320,16 @@ const ItemStatus = () => {
               
               {/* Expanding Email Field & Mobile Claim Button */}
               <div 
-                className={`flex flex-col md:flex-row items-center overflow-hidden transition-all duration-500 ease-in-out ${
+                className={`flex flex-col md:flex-row items-center overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out ${
                   trackingType === "claim" 
-                    ? "max-h-[200px] md:max-h-[100px] w-full md:flex-1 md:max-w-full opacity-100" 
-                    : "max-h-0 md:max-h-[100px] w-full md:w-0 md:max-w-0 opacity-0 md:flex-none"
+                    ? "max-h-[200px] md:max-h-[100px] w-full md:flex-1 opacity-100" 
+                    : "max-h-0 md:max-h-[100px] w-full md:w-0 opacity-0 md:flex-none"
                 }`}
               >
                 <div className="hidden md:block w-px h-8 bg-white/10 shrink-0 self-center" />
                 <div className="w-full md:hidden h-px bg-white/5" />
                 
-                <div className="relative flex items-center w-full md:min-w-[300px] lg:min-w-[350px]">
+                <div className="relative flex items-center w-full">
                   <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={14} />
                   <input
                     type="email"
@@ -355,7 +355,7 @@ const ItemStatus = () => {
               </div>
 
               {/* Desktop Button (Always absolute right) */}
-              <div className={`hidden md:flex items-center gap-2 absolute right-2 top-1/2 -translate-y-1/2 transition-all duration-500`}>
+              <div className={`hidden md:flex items-center gap-2 absolute right-2 top-1/2 -translate-y-1/2 transition-opacity duration-500`}>
                 {(searchId || email) && (
                   <button
                     type="button"
