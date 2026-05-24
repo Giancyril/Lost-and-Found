@@ -316,7 +316,7 @@ const ItemStatus = () => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Email Address"
+                      placeholder="Institutional Email"
                       className="w-full pl-11 py-4 md:pr-[180px] bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0"
                     />
                   </div>
