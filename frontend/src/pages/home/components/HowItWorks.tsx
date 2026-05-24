@@ -93,53 +93,45 @@ const HowItWorks = () => {
                   {step.description}
                 </p>
 
-                {/* Simulated UI Mockup inside the card */}
-                <div className="mt-6 pt-6 border-t border-slate-700/50 overflow-hidden relative h-32 rounded-lg bg-black/20">
+                {/* Video Player */}
+                <div className="mt-6 pt-6 border-t border-slate-700/50 overflow-hidden relative h-48 rounded-lg bg-black group-hover:border-t-brand-neon-indigo/50 transition-colors">
+                  <div className="absolute inset-0 bg-gradient-to-t from-brand-darker to-transparent z-10 pointer-events-none opacity-60"></div>
+                  
                   {index === 0 && (
-                    <motion.div 
-                      initial={{ y: 20, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ delay: step.delay + 0.3 }}
-                      className="absolute inset-x-4 bottom-[-10px] bg-slate-800 border border-slate-600 rounded-t-xl p-3 flex flex-col items-center justify-start gap-2"
-                    >
-                      <div className="w-full h-24 bg-slate-700 rounded-md border-2 border-dashed border-slate-500 flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full border-2 border-brand-neon-cyan flex items-center justify-center">
-                          <div className="w-10 h-10 rounded-full bg-brand-neon-cyan"></div>
-                        </div>
-                      </div>
-                    </motion.div>
+                    <video 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline
+                      className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105"
+                      src="https://assets.mixkit.co/videos/preview/mixkit-taking-photos-of-a-beautiful-landscape-with-a-smartphone-34538-large.mp4"
+                    />
                   )}
                   {index === 1 && (
-                    <motion.div 
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      whileInView={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: step.delay + 0.3 }}
-                      className="absolute inset-0 flex flex-col justify-center gap-2 p-4"
-                    >
-                      <div className="h-6 w-3/4 bg-brand-neon-pink/20 rounded border border-brand-neon-pink/30 flex items-center px-2">
-                        <Sparkles className="w-3 h-3 text-brand-neon-pink mr-2" />
-                        <div className="h-2 w-16 bg-brand-neon-pink/50 rounded"></div>
-                      </div>
-                      <div className="h-6 w-1/2 bg-brand-neon-cyan/20 rounded border border-brand-neon-cyan/30 flex items-center px-2">
-                        <Sparkles className="w-3 h-3 text-brand-neon-cyan mr-2" />
-                        <div className="h-2 w-12 bg-brand-neon-cyan/50 rounded"></div>
-                      </div>
-                    </motion.div>
+                    <video 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline
+                      className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105"
+                      src="https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-in-dark-mode-43405-large.mp4"
+                    />
                   )}
                   {index === 2 && (
-                    <motion.div 
-                      initial={{ x: 50, opacity: 0 }}
-                      whileInView={{ x: 0, opacity: 1 }}
-                      transition={{ type: "spring", delay: step.delay + 0.3 }}
-                      className="absolute top-4 right-4 left-4 bg-slate-800 border-l-4 border-l-brand-neon-indigo p-3 rounded shadow-lg flex gap-3"
-                    >
-                      <BellRing className="w-5 h-5 text-brand-neon-indigo shrink-0" />
-                      <div className="space-y-2 w-full">
-                        <div className="h-2 w-20 bg-slate-500 rounded"></div>
-                        <div className="h-2 w-full bg-slate-600 rounded"></div>
-                      </div>
-                    </motion.div>
+                    <video 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline
+                      className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105"
+                      src="https://assets.mixkit.co/videos/preview/mixkit-person-using-a-mobile-phone-at-night-4972-large.mp4"
+                    />
                   )}
+                  
+                  {/* Overlay text for the placeholder */}
+                  <div className="absolute bottom-2 right-2 z-20">
+                    <span className="text-[10px] text-white/40 uppercase tracking-widest bg-black/50 px-2 py-1 rounded">Replace with your app video</span>
+                  </div>
                 </div>
               </div>
             </motion.div>
