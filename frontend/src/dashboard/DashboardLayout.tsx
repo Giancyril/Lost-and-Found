@@ -332,7 +332,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   // ── Public bypass render: clean iframe-friendly layout ────────────
-  if (isPublicBypass && !token) {
+  if (isPublicBypass) {
     return (
       <div className="min-h-screen bg-gray-950 overflow-x-hidden">
         <main className="p-4 sm:p-5 lg:p-7 bg-gray-950 min-h-screen custom-scrollbar overflow-auto">
