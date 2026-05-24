@@ -80,9 +80,9 @@ const CampusHeroes = () => {
                   <User className="w-10 h-10 text-slate-400" />
                 </div>
                 <Medal className="w-8 h-8 text-slate-400 mb-2" />
-                <h3 className="text-xl font-bold text-white mb-1">{heroes[1].student.firstName}</h3>
+                <h3 className="text-xl font-bold text-white mb-1">{heroes[1]?.student?.firstName || "Student"}</h3>
                 <div className="text-sm text-brand-neon-cyan font-semibold px-3 py-1 bg-brand-neon-cyan/10 rounded-full mb-3">
-                  {heroes[1].points} pts
+                  {heroes[1]?.points || 0} pts
                 </div>
                 <div className="mt-auto pt-4 w-full border-t border-slate-700/50">
                   <span className="text-6xl font-black text-slate-700/50">2</span>
@@ -108,10 +108,10 @@ const CampusHeroes = () => {
                   </div>
                 </div>
 
-                <h3 className="text-2xl font-bold text-white mb-1">{heroes[0].student.firstName}</h3>
+                <h3 className="text-2xl font-bold text-white mb-1">{heroes[0]?.student?.firstName || "Student"}</h3>
                 <p className="text-slate-400 text-sm mb-3">Verified Hero</p>
                 <div className="text-md text-brand-neon-indigo font-bold px-4 py-1.5 bg-brand-neon-indigo/10 border border-brand-neon-indigo/20 rounded-full mb-4 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
-                  {heroes[0].points} pts
+                  {heroes[0]?.points || 0} pts
                 </div>
                 
                 <div className="mt-auto pt-6 w-full border-t border-brand-neon-indigo/20">
@@ -130,9 +130,9 @@ const CampusHeroes = () => {
                   <User className="w-10 h-10 text-amber-700" />
                 </div>
                 <Award className="w-8 h-8 text-amber-700 mb-2" />
-                <h3 className="text-xl font-bold text-white mb-1">{heroes[2].student.firstName}</h3>
+                <h3 className="text-xl font-bold text-white mb-1">{heroes[2]?.student?.firstName || "Student"}</h3>
                 <div className="text-sm text-brand-neon-pink font-semibold px-3 py-1 bg-brand-neon-pink/10 rounded-full mb-3">
-                  {heroes[2].points} pts
+                  {heroes[2]?.points || 0} pts
                 </div>
                 <div className="mt-auto pt-4 w-full border-t border-slate-700/50">
                   <span className="text-6xl font-black text-slate-700/50">3</span>
