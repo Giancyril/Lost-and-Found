@@ -287,13 +287,6 @@ const IndoorMapPage = () => {
                   }`}
                 >
                   {b.name}
-                  {b.isComingSoon && (
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest ${
-                      selectedBuilding.id === b.id ? "bg-white/20 text-blue-100" : "bg-white/10 text-gray-400"
-                    }`}>
-                      Coming Soon
-                    </span>
-                  )}
                 </button>
               ))}
             </div>
