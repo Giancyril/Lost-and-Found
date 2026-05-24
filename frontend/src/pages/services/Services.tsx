@@ -4,6 +4,7 @@ import { FaSearch } from "react-icons/fa";
 import { IoLocationSharp, IoShieldCheckmark } from "react-icons/io5";
 import { FaGift } from "react-icons/fa6";
 import React from "react";
+import { Link } from "react-router-dom";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 interface Service {
@@ -159,61 +160,76 @@ const Services = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-            {services.map((service, index) => (
-              <a
-                key={index}
-                href={service.tag === "Soon" ? undefined : service.link}
-                className={`svc-card reveal reveal-delay-${(index % 3) + 1} group relative bg-gray-900 border border-gray-800 rounded-2xl p-3 xs:p-4 sm:p-6 flex flex-col gap-4 xs:gap-4 sm:gap-5 transition-all duration-300
-                  ${service.tag === "Soon"
-                    ? "cursor-default opacity-75"
-                    : "cursor-pointer hover:bg-gray-800 hover:border-blue-700/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20"}`}
-              >
-                {/* Top row: icon + tag */}
-                <div className="flex items-start justify-between">
-                  <div className={`relative w-9 xs:w-11 h-9 xs:h-11 rounded-2xl bg-gradient-to-br ${service.accent} flex items-center justify-center text-white shadow-lg`}>
-                    {/* inner shine */}
-                    <div className="absolute inset-0 rounded-2xl bg-white/10" />
-                    <span className="relative z-10">{getServiceIcon(service.title)}</span>
+            {services.map((service, index) => {
+              const Content = (
+                <>
+                  {/* Top row: icon + tag */}
+                  <div className="flex items-start justify-between">
+                    <div className={`relative w-9 xs:w-11 h-9 xs:h-11 rounded-2xl bg-gradient-to-br ${service.accent} flex items-center justify-center text-white shadow-lg`}>
+                      {/* inner shine */}
+                      <div className="absolute inset-0 rounded-2xl bg-white/10" />
+                      <span className="relative z-10">{getServiceIcon(service.title)}</span>
+                    </div>
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${tagStyles[service.tag] ?? tagStyles.Core}`}>
+                      {service.tag}
+                    </span>
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${tagStyles[service.tag] ?? tagStyles.Core}`}>
-                    {service.tag}
+
+                  {/* Text */}
+                  <div className="flex-1 mt-4">
+                    <h3 className="text-white font-bold text-sm xs:text-base mb-2 group-hover:text-blue-200 transition-colors duration-200 leading-snug">
+                      {service.title}
+                    </h3>
+                    <p className="text-gray-500 text-xs xs:text-sm leading-relaxed text-justify group-hover:text-gray-400 transition-colors duration-200">
+                      {service.description}
+                    </p>
+                  </div>
+
+                  {/* Bottom link */}
+                  <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/[0.05]">
+                    {service.tag === "Soon" ? (
+                      <span className="text-gray-600 text-xs font-semibold">Coming soon</span>
+                    ) : (
+                      <span className="text-blue-400 text-xs font-semibold group-hover:text-blue-300 transition-colors">
+                        Access service
+                      </span>
+                    )}
+                    {service.tag !== "Soon" && (
+                      <span className="svc-arrow text-blue-400">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Index number — decorative */}
+                  <span className="absolute bottom-5 right-6 text-[64px] font-black text-white/[0.025] leading-none select-none pointer-events-none svc-number">
+                    {String(index + 1).padStart(2, "0")}
                   </span>
-                </div>
+                </>
+              );
 
-                {/* Text */}
-                <div className="flex-1">
-                  <h3 className="text-white font-bold text-sm xs:text-base mb-2 group-hover:text-blue-200 transition-colors duration-200 leading-snug">
-                    {service.title}
-                  </h3>
-                  <p className="text-gray-500 text-xs xs:text-sm leading-relaxed text-justify group-hover:text-gray-400 transition-colors duration-200">
-                    {service.description}
-                  </p>
-                </div>
+              const className = `svc-card reveal reveal-delay-${(index % 3) + 1} group relative bg-gray-900 border border-gray-800 rounded-2xl p-3 xs:p-4 sm:p-6 flex flex-col transition-all duration-300 ${
+                service.tag === "Soon"
+                  ? "cursor-default opacity-75"
+                  : "cursor-pointer hover:bg-gray-800 hover:border-blue-700/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/20"
+              }`;
 
-                {/* Bottom link */}
-                <div className="flex items-center justify-between pt-4 border-t border-white/[0.05]">
-                  {service.tag === "Soon" ? (
-                    <span className="text-gray-600 text-xs font-semibold">Coming soon</span>
-                  ) : (
-                    <span className="text-blue-400 text-xs font-semibold group-hover:text-blue-300 transition-colors">
-                      Access service
-                    </span>
-                  )}
-                  {service.tag !== "Soon" && (
-                    <span className="svc-arrow text-blue-400">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </span>
-                  )}
-                </div>
+              if (service.tag === "Soon") {
+                return (
+                  <div key={index} className={className}>
+                    {Content}
+                  </div>
+                );
+              }
 
-                {/* Index number — decorative */}
-                <span className="absolute bottom-5 right-6 text-[64px] font-black text-white/[0.025] leading-none select-none pointer-events-none svc-number">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-              </a>
-            ))}
+              return (
+                <Link key={index} to={service.link} className={className}>
+                  {Content}
+                </Link>
+              );
+            })}
           </div>
 
           {/* ── Bottom CTA strip ── */}
@@ -225,13 +241,13 @@ const Services = () => {
                 <p className="text-gray-500 text-[9px] sm:text-[10px]">Visit our office or message us for support.</p>
               </div>
             </div>
-            <a href="/support"
+            <Link to="/support"
               className="shrink-0 inline-flex items-center gap-1 px-2.5 py-2 sm:px-3 sm:py-2 bg-blue-600 hover:bg-blue-500 text-white text-[10px] sm:text-xs font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-blue-900/40">
               Contact Support
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
-            </a>
+            </Link>
           </div>
 
         </div>

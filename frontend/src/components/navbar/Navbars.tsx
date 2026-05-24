@@ -663,7 +663,7 @@ export function Navbars() {
             />
 
             {[
-              { label: "Tracking Center", href: "/track" },
+              { label: "Item Status", href: "/track" },
             ].map(({ label, href }) => {
               const isActive = location.pathname === href;
               return (
