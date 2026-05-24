@@ -250,13 +250,6 @@ const ItemStatus = () => {
   return (
     <div className="min-h-screen bg-gray-950 relative overflow-x-hidden reveal pb-16">
 
-      {/* Ambient background */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -left-20 w-64 h-64 bg-cyan-600/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -right-20 w-64 h-64 bg-indigo-600/5 rounded-full blur-3xl" />
-      </div>
-
       <div className="relative z-10 max-w-5xl mx-auto px-4 py-8 sm:py-16">
 
         {/* ── Hero Header ── */}
@@ -299,36 +292,42 @@ const ItemStatus = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSearch} className="relative flex flex-col md:flex-row items-center w-full shadow-2xl shadow-black/40 rounded-xl">
-            <div className="relative flex items-center w-full bg-gray-900 border border-white/10 rounded-xl focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500/50 transition-all duration-300">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={14} />
-              <input
-                type="text"
-                value={searchId}
-                onChange={(e) => setSearchId(e.target.value)}
-                placeholder="Enter Tracking ID..."
-                className={`w-full pl-11 py-4 sm:py-4 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0 ${trackingType === "lost" ? "pr-32 sm:pr-44" : "pr-4"}`}
-              />
+          <form onSubmit={handleSearch} className="relative w-full shadow-2xl shadow-black/40 rounded-xl">
+            <div className="relative flex flex-col md:flex-row w-full bg-gray-900 border border-white/10 rounded-xl focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500/50 transition-all duration-300">
+              
+              <div className="relative flex items-center w-full">
+                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={14} />
+                <input
+                  type="text"
+                  value={searchId}
+                  onChange={(e) => setSearchId(e.target.value)}
+                  placeholder="Enter Tracking ID..."
+                  className={`w-full pl-11 py-4 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0 ${trackingType === "lost" ? "pr-24 sm:pr-44" : "pr-4"}`}
+                />
+              </div>
               
               {trackingType === "claim" && (
                 <>
-                  <div className="hidden md:block w-px h-8 bg-white/10 shrink-0" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email Address"
-                    className="w-full px-4 pr-[140px] sm:pr-[180px] py-4 sm:py-4 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0 border-t border-white/5 md:border-none"
-                  />
+                  <div className="hidden md:block w-px h-8 bg-white/10 shrink-0 self-center" />
+                  <div className="w-full md:hidden h-px bg-white/5" />
+                  <div className="relative flex items-center w-full">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Email Address"
+                      className="w-full px-4 py-4 md:pr-[180px] bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0"
+                    />
+                  </div>
                 </>
               )}
 
-              <div className="absolute right-2 flex items-center gap-1.5 sm:gap-2">
+              <div className={`flex items-center gap-2 ${trackingType === "claim" ? "w-full md:w-auto p-2 md:p-0 md:absolute md:right-2" : "absolute right-2 top-1/2 -translate-y-1/2"}`}>
                 {(searchId || email) && (
                   <button
                     type="button"
                     onClick={clearSearch}
-                    className="hidden sm:flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white rounded-lg transition-all"
+                    className="hidden sm:flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white rounded-lg transition-all shrink-0"
                     title="Clear Search"
                   >
                     <FaTimes size={10} />
@@ -337,11 +336,12 @@ const ItemStatus = () => {
                 <button
                   type="submit"
                   disabled={searchLoading || trackClaimLoading}
-                  className="px-5 sm:px-8 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs sm:text-sm font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95 whitespace-nowrap"
+                  className={`px-5 sm:px-8 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs sm:text-sm font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95 whitespace-nowrap ${trackingType === "claim" ? "w-full md:w-auto" : ""}`}
                 >
                   {(searchLoading || trackClaimLoading) ? <FaSpinner className="animate-spin inline" size={12} /> : "Track"}
                 </button>
               </div>
+
             </div>
           </form>
 
