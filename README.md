@@ -514,6 +514,8 @@ Here is the difference between the two:
 ### Security Features
 - **Input validation & Sanitization**: Comprehensive validation using Zod schemas and aggressive client-side input sanitization using DOMPurify to prevent XSS vulnerabilities.
 - **Auto-Session Timeout**: Security timeout mechanism that automatically logs out non-admin users after 30 minutes of keyboard/mouse inactivity to prevent unauthorized access.
+- **Refresh Token Rotation**: Enhanced JWT security by replacing single long-lived tokens with short-lived access tokens (15 minutes) and long-lived, HTTP-only refresh tokens (7 days) for secure, seamless session continuation.
+- **CSRF Protection**: Mitigates Cross-Site Request Forgery (CSRF) via the robust `csrf-csrf` middleware, which protects all mutating endpoints with strictly-enforced `x-csrf-token` headers and cookies.
 - **Rate limiting**: API rate limiting to prevent abuse
 - **Authentication**: JWT-based authentication with secure password hashing
 - **CORS protection**: Cross-origin request protection
@@ -582,6 +584,7 @@ Here is the difference between the two:
 ### Phase 8: Advanced Security, Honeypots & Compliance Monitoring (Completed)
 - **Double-Agent Honeypot Fields**: Trap-door features including hidden administrative input fields (`username` bot catchers) and interactive console trap commands (`adminHacker`) designed to catch bad-actors and fingerprint their sessions.
 - **Input Sanitization & Auto-Timeout**: Hardened security protocols featuring DOMPurify to strip XSS vectors across all forms, alongside a strict 30-minute inactivity auto-logout protocol for standard users.
+- **Refresh Token Rotation & CSRF Protection**: Secured user sessions by separating access logic into short-lived 15-minute access tokens and long-lived 7-day `httpOnly` refresh tokens, while adding full Cross-Site Request Forgery (CSRF) protection on all form submissions via the modern `csrf-csrf` middleware.
 
 ### Phase 9: Offline Mode, Enterprise-Grade Audit Logs & AI Chatbot Concierge (Completed)
 - **Offline Sync**: Staff members can scan barcodes or submit "Found Items" while offline. The app saves the data securely in the browser and automatically uploads it in the background as soon as they walk back into a WiFi zone.
