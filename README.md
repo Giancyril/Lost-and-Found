@@ -512,7 +512,8 @@ Here is the difference between the two:
 - **Rate limiting**: Prevents email spam
 
 ### Security Features
-- **Input validation**: Comprehensive validation using Zod schemas
+- **Input validation & Sanitization**: Comprehensive validation using Zod schemas and aggressive client-side input sanitization using DOMPurify to prevent XSS vulnerabilities.
+- **Auto-Session Timeout**: Security timeout mechanism that automatically logs out non-admin users after 30 minutes of keyboard/mouse inactivity to prevent unauthorized access.
 - **Rate limiting**: API rate limiting to prevent abuse
 - **Authentication**: JWT-based authentication with secure password hashing
 - **CORS protection**: Cross-origin request protection
@@ -581,6 +582,7 @@ Here is the difference between the two:
 ### Phase 8: Advanced Security, Honeypots & Compliance Monitoring (Completed)
 - **Advanced DevTools Open Detection**: Integrates a timing-interval loop to monitor if DevTools is active, logging access fingerprints silently inside sessionStorage traps.
 - **Double-Agent Honeypot Fields**: Trap-door features including hidden administrative input fields (`username` bot catchers) and interactive console trap commands (`adminHacker`) designed to catch bad-actors and fingerprint their sessions.
+- **Input Sanitization & Auto-Timeout**: Hardened security protocols featuring DOMPurify to strip XSS vectors across all forms, alongside a strict 30-minute inactivity auto-logout protocol for standard users.
 
 ### Phase 9: Offline Mode, Enterprise-Grade Audit Logs & AI Chatbot Concierge (Completed)
 - **Offline Sync**: Staff members can scan barcodes or submit "Found Items" while offline. The app saves the data securely in the browser and automatically uploads it in the background as soon as they walk back into a WiFi zone.
