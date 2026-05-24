@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { useEffect } from "react";
 
 // Prevents double-fire in React StrictMode dev
