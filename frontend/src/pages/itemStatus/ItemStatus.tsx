@@ -295,33 +295,34 @@ const ItemStatus = () => {
           <form onSubmit={handleSearch} className="relative w-full shadow-2xl shadow-black/40 rounded-xl">
             <div className="relative flex flex-col md:flex-row w-full bg-gray-900 border border-white/10 rounded-xl focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500/50 transition-all duration-300">
               
-              <div className="relative flex items-center w-full transition-all duration-300">
+              <div className="relative flex items-center w-full md:flex-1 transition-all duration-300">
                 <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={14} />
                 <input
                   type="text"
                   value={searchId}
                   onChange={(e) => setSearchId(e.target.value)}
                   placeholder="Enter Tracking ID..."
-                  className={`w-full pl-11 py-4 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0 transition-all duration-500 ${trackingType === "lost" ? "pr-24 sm:pr-44" : "pr-4"}`}
+                  className={`w-full pl-11 py-4 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0 transition-all duration-500 ${trackingType === "lost" ? "pr-24 sm:pr-40" : "pr-4 md:pr-4"}`}
                 />
               </div>
+              
               <div 
                 className={`flex flex-col md:flex-row items-center overflow-hidden transition-all duration-500 ease-in-out ${
                   trackingType === "claim" 
-                    ? "max-h-[100px] md:max-h-[100px] max-w-full md:max-w-[500px] opacity-100" 
-                    : "max-h-0 md:max-h-[100px] max-w-full md:max-w-0 opacity-0"
+                    ? "max-h-[100px] md:max-h-[100px] w-full md:flex-1 md:max-w-full opacity-100" 
+                    : "max-h-0 md:max-h-[100px] w-full md:w-0 md:max-w-0 opacity-0 md:flex-none"
                 }`}
               >
                 <div className="hidden md:block w-px h-8 bg-white/10 shrink-0 self-center" />
                 <div className="w-full md:hidden h-px bg-white/5" />
-                <div className="relative flex items-center w-full min-w-[250px] lg:min-w-[350px]">
+                <div className="relative flex items-center w-full">
                   <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={14} />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Institutional Email"
-                    className="w-full pl-11 py-4 md:pr-[180px] bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0"
+                    className="w-full pl-11 py-4 md:pr-[130px] bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0"
                     tabIndex={trackingType === "claim" ? 0 : -1}
                   />
                 </div>
@@ -341,7 +342,7 @@ const ItemStatus = () => {
                 <button
                   type="submit"
                   disabled={searchLoading || trackClaimLoading}
-                  className={`px-5 sm:px-8 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs sm:text-sm font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95 whitespace-nowrap ${trackingType === "claim" ? "w-full md:w-auto" : ""}`}
+                  className={`px-6 sm:px-8 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs sm:text-sm font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95 whitespace-nowrap ${trackingType === "claim" ? "w-full md:w-auto" : ""}`}
                 >
                   {(searchLoading || trackClaimLoading) ? <FaSpinner className="animate-spin inline" size={12} /> : "Search"}
                 </button>
