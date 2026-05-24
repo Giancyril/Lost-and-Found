@@ -180,8 +180,8 @@ const IndoorMapPage = () => {
   const { data: lostData } = useGetLostItemsQuery({});
 
   const allItems = useMemo(() => {
-    const found = ((foundData as any)?.data || []).filter((i: any) => !i.isClaimed && i.status !== "Claimed");
-    const lost = (lostData as any)?.data || [];
+    const found = ((foundData as any)?.data || []).filter((i: any) => !i.isClaimed && !i.isDeleted && !i.isArchived);
+    const lost = ((lostData as any)?.data || []).filter((i: any) => !i.isFound && !i.isDeleted);
     return [
       ...found.map((i: any) => ({ ...i, type: "found" })),
       ...lost.map((i: any) => ({ ...i, type: "lost" })),
