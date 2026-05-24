@@ -36,7 +36,17 @@ const loginUser = async (data: any) => {
     username,
     role,
     userImg,
-    schoolId, // ← ADDED
+    schoolId,
+  });
+
+  const refreshToken = utils.createRefreshToken({
+    id,
+    name,
+    email,
+    username,
+    role,
+    userImg,
+    schoolId,
   });
 
   return {
@@ -47,6 +57,7 @@ const loginUser = async (data: any) => {
     role,
     schoolId, // ← ADDED so frontend also gets it on login
     token:    accessToken,
+    refreshToken,
   };
 };
 
@@ -130,6 +141,16 @@ const portalLoginUser = async (data: any) => {
     schoolId,
   });
 
+  const refreshToken = utils.createRefreshToken({
+    id,
+    name,
+    email,
+    username,
+    role,
+    userImg,
+    schoolId,
+  });
+
   return {
     id:       user.id,
     name:     name || "User",
@@ -138,6 +159,7 @@ const portalLoginUser = async (data: any) => {
     role,
     schoolId,
     token:    accessToken,
+    refreshToken,
   };
 };
 

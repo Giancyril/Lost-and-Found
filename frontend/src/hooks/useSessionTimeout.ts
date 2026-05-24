@@ -1,19 +1,16 @@
 import { useEffect, useRef } from 'react';
-import { useStudentContext } from '../components/context/StudentContext';
+import { useUserVerification, signOut } from '../auth/auth';
 import { useNavigate } from 'react-router-dom';
 
 const TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 export const useSessionTimeout = () => {
-  const { student, setStudent } = useStudentContext();
+  const user: any = useUserVerification();
   const navigate = useNavigate();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const logout = () => {
-    localStorage.removeItem("accessToken");
-    setStudent(null);
-    navigate("/");
-    window.location.reload();
+    signOut(navigate);
   };
 
   const resetTimer = () => {
@@ -22,7 +19,7 @@ export const useSessionTimeout = () => {
     }
     
     // Only apply timeout if user is logged in AND they are not an admin
-    if (student && student.role !== 'admin') {
+    if (user && user.role !== 'ADMIN') {
       timeoutRef.current = setTimeout(() => {
         logout();
       }, TIMEOUT_MS);
@@ -47,7 +44,7 @@ export const useSessionTimeout = () => {
       resetTimer();
     };
 
-    if (student && student.role !== 'admin') {
+    if (user && user.role !== 'ADMIN') {
       events.forEach((event) => {
         window.addEventListener(event, handleActivity, { passive: true });
       });
@@ -61,5 +58,5 @@ export const useSessionTimeout = () => {
         window.removeEventListener(event, handleActivity);
       });
     };
-  }, [student]); // Re-run setup if student login state or role changes
+  }, [user]); // Re-run setup if student login state or role changes
 };

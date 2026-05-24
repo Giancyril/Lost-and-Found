@@ -4,6 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import { authServices } from "./auth.service";
 import { logLoginAttempt, getClientIp } from "../utils/securityController"; 
 import { TLogin } from "../global/interface";
+import { utils } from "../utils/utils";
 
 const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -28,11 +29,20 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       console.error("[LoginLog] Failed to log success:", logErr);
     }
 
+    const { refreshToken, ...userData } = user;
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success:    true,
       message:    "Login successful",
-      data:       user,
+      data:       userData,
     });
   } catch (error: any) {
     try {
@@ -82,11 +92,20 @@ const portalLogin = async (req: Request, res: Response, next: NextFunction) => {
       console.error("[LoginLog] Failed to log success for portal login:", logErr);
     }
 
+    const { refreshToken, ...userData } = user;
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success:    true,
       message:    "Portal login successful",
-      data:       user,
+      data:       userData,
     });
   } catch (error: any) {
     try {
@@ -167,10 +186,63 @@ const changeUsername = async (req: Request, res: Response) => {
 };
 
 
+const refresh = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    if (!refreshToken) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: "No refresh token" });
+    }
+
+    try {
+      const decoded: any = utils.verifyToken(refreshToken);
+      const accessToken = utils.createToken({
+        id: decoded.id,
+        name: decoded.name,
+        email: decoded.email,
+        username: decoded.username,
+        role: decoded.role,
+        userImg: decoded.userImg,
+        schoolId: decoded.schoolId,
+      });
+
+      sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Token refreshed",
+        data: { token: accessToken },
+      });
+    } catch (e) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: "Invalid refresh token" });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const logout = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Logged out successfully",
+      data: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const authController={
     login,
     portalLogin,
     newPasswords,
     changeEmail,
-    changeUsername
+    changeUsername,
+    refresh,
+    logout
 }

@@ -23,7 +23,14 @@ const comparePasswords = async (
 const createToken = (data: Record<string, unknown>): string => {
   return jwt.sign(data, config.jwt_secrets as Secret, {
     algorithm: "HS256",
-    expiresIn: config.jwt_expires_in,
+    expiresIn: "15m",
+  });
+};
+
+const createRefreshToken = (data: Record<string, unknown>): string => {
+  return jwt.sign(data, config.jwt_secrets as Secret, {
+    algorithm: "HS256",
+    expiresIn: "7d",
   });
 };
 
@@ -77,6 +84,7 @@ export const utils = {
   passwordHash,
   comparePasswords,
   createToken,
+  createRefreshToken,
   verifyToken,
   calculateMeta,
 };

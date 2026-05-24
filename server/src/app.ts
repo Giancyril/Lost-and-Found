@@ -48,9 +48,34 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-// Increase body size limit to 10mb to support base64 image uploads
+import cookieParser from "cookie-parser";
+import { doubleCsrf } from "csrf-csrf";
+import config from "./app/config/config";
+
+const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
+  getSecret: () => config.jwt_secrets as string || "default_csrf_secret",
+  getSessionIdentifier: (req) => req.cookies?.refreshToken || "anonymous",
+  cookieName: "x-csrf-token",
+  cookieOptions: {
+    sameSite: "strict",
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+  },
+  size: 64,
+  ignoredMethods: ["GET", "HEAD", "OPTIONS"],
+});
+
+app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+app.get("/api/csrf-token", (req: Request, res: Response) => {
+  const token = generateCsrfToken(req, res);
+  res.json({ token });
+});
+
+// Exclude certain webhook or public paths if necessary. We'll protect all other mutating routes.
+app.use(doubleCsrfProtection);
 
 app.get("/", (req: Request, res: Response) => {
   res.send({ message: "Welcome to Lost and found services!" });

@@ -122,6 +122,11 @@ const router = createBrowserRouter([
   { path: "/dashboard/student/chat", element: <StudentLayout><ChatPage /></StudentLayout> },
 ]);
 
+import { fetchCsrfToken } from "./redux/api/baseApi";
+
+// Initialize CSRF token before rendering
+fetchCsrfToken();
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Providers>

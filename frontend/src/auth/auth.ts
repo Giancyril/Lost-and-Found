@@ -69,8 +69,16 @@ export const useUserVerification = () => {
   return user;
 };
 
-export const signOut = (navigate?: (path: string) => void) => {
+export const signOut = async (navigate?: (path: string) => void) => {
   if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      const serverUrl = import.meta.env.PROD 
+        ? (import.meta.env.VITE_SERVER_URL || "http://localhost:5001")
+        : "http://localhost:5002";
+      await fetch(`${serverUrl}/api/logout`, { method: "POST", credentials: "include" });
+    } catch (e) {
+      console.error("Logout request failed", e);
+    }
     localStorage.removeItem("accessToken");
     window.dispatchEvent(new Event("authchange"));
     if (navigate) navigate("/");
