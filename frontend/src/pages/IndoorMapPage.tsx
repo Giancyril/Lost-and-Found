@@ -309,7 +309,8 @@ const IndoorMapPage = () => {
                 <div className="flex-1 bg-[#0f1522] border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center flex-col p-12">
                    <FaBuilding className="text-gray-800/50 text-6xl mb-6" />
                    <h2 className="text-2xl font-bold text-white mb-2">{selectedBuilding.name}</h2>
-                   <p className="text-gray-500 text-center max-w-md">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
+                   <p className="text-gray-500 text-center max-w-md mb-6">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
+                   <span className="px-4 py-1.5 bg-white/5 border border-white/10 text-gray-400 text-xs font-black rounded-lg uppercase tracking-widest">Coming Soon</span>
                 </div>
               ) : (
                 <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
@@ -387,7 +388,8 @@ const IndoorMapPage = () => {
                 <div className="w-full h-full bg-[#0f1522] border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center flex-col p-6 text-center">
                    <FaBuilding className="text-gray-800/50 text-4xl mb-4" />
                    <h2 className="text-xl font-bold text-white mb-2">{selectedBuilding.name}</h2>
-                   <p className="text-gray-500 text-xs">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
+                   <p className="text-gray-500 text-xs mb-5">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
+                   <span className="px-3 py-1 bg-white/5 border border-white/10 text-gray-400 text-[10px] font-black rounded-md uppercase tracking-widest">Coming Soon</span>
                 </div>
               ) : (
                 <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
