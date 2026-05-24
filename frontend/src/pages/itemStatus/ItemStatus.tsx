@@ -329,7 +329,7 @@ const ItemStatus = () => {
                 <div className="hidden md:block w-px h-8 bg-white/10 shrink-0 self-center" />
                 <div className="w-full md:hidden h-px bg-white/5" />
                 
-                <div className="relative flex items-center w-full">
+                <div className="relative flex items-center w-full md:min-w-[300px] lg:min-w-[350px]">
                   <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={14} />
                   <input
                     type="email"
