@@ -17,15 +17,7 @@ export default {
           accent: '#22c55e',     // Green-500
           dark: '#1e293b',       // Slate-800
           darker: '#0f172a',     // Slate-900
-          neon: {
-            cyan: '#00f0ff',
-            indigo: '#6366f1',
-            pink: '#f472b6',
-          }
         }
-      },
-      fontFamily: {
-        sans: ['Outfit', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
