@@ -41,6 +41,7 @@ const corsOptions = {
     "authorization",
     "Cache-Control",
     "Pragma",
+    "x-csrf-token"
   ],
 };
 
