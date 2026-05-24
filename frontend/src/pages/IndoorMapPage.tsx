@@ -312,22 +312,20 @@ const IndoorMapPage = () => {
                    <p className="text-gray-500 text-center max-w-md">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
                 </div>
               ) : (
-                <>
-                  <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-                    <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
-                  </div>
-                  <div className="w-80 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col">
-                    <div className="p-4 border-b border-white/5 flex items-center gap-2">
-                      <h3 className="text-white text-[11px] font-bold uppercase tracking-widest">Room Details</h3>
-                    </div>
-                    {!selectedRoom ? (
-                      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-500"><FaInfoCircle size={22} className="mb-3" /><p className="text-sm">Select a room</p></div>
-                    ) : (
-                      <DesktopRoomDetails selectedRoom={selectedRoom} roomItems={roomItems} navigate={navigate} />
-                    )}
-                  </div>
-                </>
+                <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+                  <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
+                </div>
               )}
+              <div className="w-80 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col shrink-0">
+                <div className="p-4 border-b border-white/5 flex items-center gap-2">
+                  <h3 className="text-white text-[11px] font-bold uppercase tracking-widest">Room Details</h3>
+                </div>
+                {!selectedRoom || (selectedBuilding as any).isComingSoon ? (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-500"><FaInfoCircle size={22} className="mb-3" /><p className="text-sm">Select a room</p></div>
+                ) : (
+                  <DesktopRoomDetails selectedRoom={selectedRoom} roomItems={roomItems} navigate={navigate} />
+                )}
+              </div>
             </>
           ) : (
             <div className="flex-1 flex flex-col gap-6 overflow-hidden">
