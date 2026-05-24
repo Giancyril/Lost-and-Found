@@ -3,7 +3,7 @@ import { Spinner } from "flowbite-react";
 import {
   FaClipboardList, FaSearch, FaCheckCircle, FaClock,
   FaExclamationCircle, FaBoxOpen, FaChevronRight, FaHistory,
-  FaMapMarkerAlt, FaTimes,
+  FaMapMarkerAlt, FaTimes, FaSpinner
 } from "react-icons/fa";
 import { useGetMyLostItemQuery, useMyClaimsQuery, useLazyGetSingleLostItemQuery, useTrackClaimMutation } from "../../redux/api/api";
 import { Link } from "react-router-dom";
@@ -263,7 +263,7 @@ const ItemStatus = () => {
             Track Status
           </h1>
           <p className="text-gray-400 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            Monitor the real-time status of your lost item reports and claim requests securely.
+            Monitor the status of your lost item reports and claim requests.
           </p>
         </div>
 
