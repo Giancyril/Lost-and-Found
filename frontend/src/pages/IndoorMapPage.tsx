@@ -258,11 +258,23 @@ const IndoorMapPage = () => {
             <p className="text-gray-500 text-sm max-w-lg">
               {mapMode === "indoor" ? "Tap a room to view active reports." : "View campus activity hotspots."}
             </p>
-            <div className="flex p-1 bg-gray-900 border border-white/5 rounded-xl self-start sm:self-auto">
+            <div className="flex p-1 bg-gray-900 border border-white/5 rounded-xl self-start sm:self-auto shrink-0">
               <button onClick={() => setMapMode("indoor")} className={`px-4 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 ${mapMode === "indoor" ? "bg-blue-500/10 text-blue-400" : "text-gray-500"}`}><FaBuilding size={10} /> Indoor</button>
               <button onClick={() => setMapMode("heatmap")} className={`px-4 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 ${mapMode === "heatmap" ? "bg-blue-500/10 text-blue-400" : "text-gray-500"}`}><FaMap size={10} /> Heatmap</button>
             </div>
           </div>
+
+          {mapMode === "indoor" && (
+            <div className="mt-6 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+              <button className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-lg shadow-blue-900/20 whitespace-nowrap border border-blue-500">
+                SWDC Building
+              </button>
+              <button disabled className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-gray-900 border border-white/5 text-gray-500 opacity-60 cursor-not-allowed whitespace-nowrap flex items-center gap-2">
+                Business Administration Building
+                <span className="bg-white/10 text-gray-400 text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest">Coming Soon</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
