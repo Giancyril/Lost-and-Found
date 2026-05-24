@@ -176,8 +176,8 @@ const IndoorMapPage = () => {
   const [bottomSheetHeight, setBottomSheetHeight] = useState<"peek" | "half" | "full">("peek");
   const [mapMode, setMapMode] = useState<"indoor" | "heatmap">("indoor");
   const [heatmapFilter, setHeatmapFilter] = useState<Filter>("all");
-  const { data: foundData } = useGetFoundItemsQuery({});
-  const { data: lostData } = useGetLostItemsQuery({});
+  const { data: foundData } = useGetFoundItemsQuery({ limit: 1000 });
+  const { data: lostData } = useGetLostItemsQuery({ limit: 1000 });
 
   const allItems = useMemo(() => {
     const found = ((foundData as any)?.data || []).filter((i: any) => !i.isClaimed && !i.isDeleted && !i.isArchived);
