@@ -3,7 +3,7 @@ import { Spinner } from "flowbite-react";
 import {
   FaClipboardList, FaSearch, FaCheckCircle, FaClock,
   FaExclamationCircle, FaBoxOpen, FaChevronRight, FaHistory,
-  FaMapMarkerAlt, FaTimes, FaSpinner
+  FaMapMarkerAlt, FaTimes, FaSpinner, FaEnvelope
 } from "react-icons/fa";
 import { useGetMyLostItemQuery, useMyClaimsQuery, useLazyGetSingleLostItemQuery, useTrackClaimMutation } from "../../redux/api/api";
 import { Link } from "react-router-dom";
@@ -263,7 +263,7 @@ const ItemStatus = () => {
             Track Status
           </h1>
           <p className="text-gray-400 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            Monitor the status of your lost item reports and claim requests.
+            Monitor the status of your lost item and claim requests.
           </p>
         </div>
 
@@ -311,12 +311,13 @@ const ItemStatus = () => {
                   <div className="hidden md:block w-px h-8 bg-white/10 shrink-0 self-center" />
                   <div className="w-full md:hidden h-px bg-white/5" />
                   <div className="relative flex items-center w-full">
+                    <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={14} />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Email Address"
-                      className="w-full px-4 py-4 md:pr-[180px] bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0"
+                      className="w-full pl-11 py-4 md:pr-[180px] bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0"
                     />
                   </div>
                 </>
