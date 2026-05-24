@@ -588,8 +588,7 @@ export function Navbars() {
               { label: "Lost Items", href: "/lostItems", icon: "ti-alert-triangle", iconColor: "text-red-400", iconBg: "bg-red-500/10" },
               { label: "Report Lost Item", href: "/reportLostItem", icon: "ti-file-description", iconColor: "text-orange-400", iconBg: "bg-orange-500/10" },
               { label: "Smart Search", href: "/ai-search", icon: "ti-sparkles", iconColor: "text-violet-400", iconBg: "bg-violet-500/10" },
-              { label: "Item Status", href: "/itemStatus", icon: "ti-radar", iconColor: "text-cyan-400", iconBg: "bg-cyan-500/10" },
-              { label: "Track Claim", href: "/track", icon: "ti-search", iconColor: "text-blue-400", iconBg: "bg-blue-500/10" },
+              { label: "Tracking Center", href: "/track", icon: "ti-radar", iconColor: "text-blue-400", iconBg: "bg-blue-500/10" },
             ].map(({ label, href, icon, iconColor, iconBg }) => (
               <Link
                 key={href}
@@ -664,8 +663,7 @@ export function Navbars() {
             />
 
             {[
-              { label: "Item Status", href: "/itemStatus" },
-              { label: "Track Claim", href: "/track" },
+              { label: "Tracking Center", href: "/track" },
             ].map(({ label, href }) => {
               const isActive = location.pathname === href;
               return (

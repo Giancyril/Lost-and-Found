@@ -5,7 +5,7 @@ import {
   FaExclamationCircle, FaBoxOpen, FaChevronRight, FaHistory,
   FaMapMarkerAlt, FaTimes,
 } from "react-icons/fa";
-import { useGetMyLostItemQuery, useMyClaimsQuery, useLazyGetSingleLostItemQuery } from "../../redux/api/api";
+import { useGetMyLostItemQuery, useMyClaimsQuery, useLazyGetSingleLostItemQuery, useTrackClaimMutation } from "../../redux/api/api";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
@@ -172,27 +172,67 @@ const ItemStatus = () => {
   const { data: myLostItems, isLoading: lostLoading } = useGetMyLostItemQuery({}, { skip: !isLoggedIn });
   const { data: myClaims,    isLoading: claimsLoading } = useMyClaimsQuery({}, { skip: !isLoggedIn });
   const [triggerSearch, { data: searchResult, isFetching: searchLoading }] = useLazyGetSingleLostItemQuery();
+  const [trackClaim, { isLoading: trackClaimLoading }] = useTrackClaimMutation();
 
+  const [trackingType, setTrackingType] = useState<"lost" | "claim">("lost");
   const [activeTab, setActiveTab] = useState(0);
+  
   const [searchId, setSearchId] = useState("");
+  const [email, setEmail] = useState("");
+  
   const [isSearched, setIsSearched] = useState(false);
+  const [claimResult, setClaimResult] = useState<any>(null);
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!searchId.trim()) return;
-    try {
-      await triggerSearch(searchId.trim()).unwrap();
-      setIsSearched(true);
-      setActiveTab(0);
-    } catch (err: any) {
-      toast.error("Invalid Tracking Code or Item not found");
-      setIsSearched(false);
+
+    if (trackingType === "lost") {
+      try {
+        await triggerSearch(searchId.trim()).unwrap();
+        setIsSearched(true);
+        setActiveTab(0);
+      } catch (err: any) {
+        toast.error("Invalid Tracking Code or Item not found");
+        setIsSearched(false);
+      }
+    } else {
+      if (!email.trim()) {
+        toast.error("Please provide both Tracking ID and Email");
+        return;
+      }
+      try {
+        const res = await trackClaim({ claimId: searchId.trim(), email: email.trim() }).unwrap();
+        if (res.success) {
+          setClaimResult(res.data);
+          setIsSearched(true);
+        }
+      } catch (error: any) {
+        toast.error(error.data?.message || "Failed to track claim");
+        setClaimResult(null);
+        setIsSearched(true);
+      }
     }
   };
 
   const clearSearch = () => {
     setSearchId("");
+    setEmail("");
     setIsSearched(false);
+    setClaimResult(null);
+  };
+
+  const handleTypeChange = (type: "lost" | "claim") => {
+    setTrackingType(type);
+    clearSearch();
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "APPROVED": return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+      case "REJECTED": return "text-red-400 bg-red-500/10 border-red-500/20";
+      default: return "text-blue-400 bg-blue-500/10 border-blue-500/20";
+    }
   };
 
   if (lostLoading || claimsLoading) return (
@@ -203,8 +243,8 @@ const ItemStatus = () => {
   );
 
   const tabs = [
-    { id: 0, label: "Lost Reports", icon: <FaSearch size={11} />, count: myLostItems?.data?.length || 0 },
-    { id: 1, label: "My Claims",    icon: <FaHistory size={11} />, count: myClaims?.data?.length || 0 },
+    { id: 0, label: "My Lost Reports", icon: <FaSearch size={11} />, count: myLostItems?.data?.length || 0 },
+    { id: 1, label: "My Claims",       icon: <FaHistory size={11} />, count: myClaims?.data?.length || 0 },
   ];
 
   return (
@@ -217,9 +257,9 @@ const ItemStatus = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-1.5 h-5 bg-blue-500 rounded-full" />
-                <p className="text-blue-400 text-[11px] font-bold uppercase tracking-widest">Status Tracking</p>
+                <p className="text-blue-400 text-[11px] font-bold uppercase tracking-widest">Tracking Center</p>
               </div>
-              <h1 className="text-white text-2xl sm:text-3xl font-bold tracking-tight">Item Status</h1>
+              <h1 className="text-white text-2xl sm:text-3xl font-bold tracking-tight">Track Status</h1>
               <p className="text-gray-500 text-sm mt-1 max-w-lg">
                 Track your lost item reports and claim requests in real time.
               </p>
@@ -228,174 +268,300 @@ const ItemStatus = () => {
         </div>
       </div>
 
-      {/* ── Search Bar ── */}
-      <div className="px-4 sm:px-10 lg:px-16 py-5 reveal reveal-delay-1">
-        <form onSubmit={handleSearch} className="relative flex items-center">
-          <div className="relative flex-1">
+      {/* ── Search Bar Area ── */}
+      <div className="px-4 sm:px-10 lg:px-16 py-5 reveal reveal-delay-1 max-w-3xl">
+        
+        {/* Toggle Type */}
+        <div className="flex items-center gap-2 mb-4 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit">
+          <button
+            onClick={() => handleTypeChange("lost")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${
+              trackingType === "lost" ? "bg-blue-600 text-white shadow-lg shadow-blue-900/30" : "text-gray-400 hover:text-white"
+            }`}
+          >
+            Track Lost Report
+          </button>
+          <button
+            onClick={() => handleTypeChange("claim")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${
+              trackingType === "claim" ? "bg-blue-600 text-white shadow-lg shadow-blue-900/30" : "text-gray-400 hover:text-white"
+            }`}
+          >
+            Track Claim
+          </button>
+        </div>
+
+        <form onSubmit={handleSearch} className="relative flex flex-col md:flex-row items-center w-full">
+          <div className="relative flex items-center w-full bg-gray-900 border border-white/5 rounded-xl focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500/40 transition-all">
             <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
             <input
               type="text"
               value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
-              placeholder="Enter Tracking Code..."
-              className="w-full pl-11 pr-32 sm:pr-44 py-3.5 bg-gray-900 border border-white/5 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all"
+              placeholder="Enter Tracking ID..."
+              className={`w-full pl-11 py-3.5 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0 ${trackingType === "lost" ? "pr-32 sm:pr-44" : "pr-4"}`}
             />
-          </div>
-          <div className="absolute right-2 flex items-center gap-1.5 sm:gap-2">
-            {searchId && (
-              <button
-                type="button"
-                onClick={clearSearch}
-                className="flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white rounded-lg transition-all"
-                title="Clear Search"
-              >
-                <FaTimes size={10} />
-              </button>
+            
+            {trackingType === "claim" && (
+              <>
+                <div className="hidden md:block w-px h-6 bg-white/10 shrink-0" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email Address"
+                  className="w-full px-4 pr-[140px] sm:pr-[180px] py-3.5 bg-transparent border-none text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-0 border-t border-white/5 md:border-none"
+                />
+              </>
             )}
-            <button
-              type="submit"
-              disabled={searchLoading}
-              className="px-4 sm:px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-[10px] sm:text-xs font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95 whitespace-nowrap"
-            >
-              {searchLoading ? "..." : "Track"}
-            </button>
+
+            <div className="absolute right-2 flex items-center gap-1.5 sm:gap-2">
+              {(searchId || email) && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="hidden sm:flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white rounded-lg transition-all"
+                  title="Clear Search"
+                >
+                  <FaTimes size={10} />
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={searchLoading || trackClaimLoading}
+                className="px-4 sm:px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-[10px] sm:text-xs font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95 whitespace-nowrap"
+              >
+                {(searchLoading || trackClaimLoading) ? "..." : "Track"}
+              </button>
+            </div>
           </div>
         </form>
-        {isSearched && (
+
+        {isSearched && trackingType === "lost" && (
           <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-3 px-1 animate-pulse break-all">
             Showing result for code: {searchId}
           </p>
         )}
-        <div className="mt-4 flex items-center justify-center sm:justify-start">
-          <p className="text-xs text-gray-500">
-            Trying to track a Claim for a Found Item instead? 
-            <Link to="/track" className="text-blue-400 font-bold ml-1 hover:text-blue-300 hover:underline">
-              Use Track Claim
-            </Link>
-          </p>
-        </div>
       </div>
 
-      {/* ── Tabs ── */}
-      <div className="px-4 sm:px-10 lg:px-16 mb-5 reveal reveal-delay-2 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-2 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit min-w-max">
-          {tabs.map(tab => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-900/30"
-                    : "text-gray-400 hover:text-white"
-                }`}>
-                {tab.icon}
-                <span>{tab.label}</span>
-                {tab.count > 0 && (
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
-                    isActive ? "bg-white/20 text-white" : "bg-white/5 text-gray-500"
-                  }`}>
-                    {tab.count}
+      {/* ── Search Results ── */}
+      <div className="px-4 sm:px-10 lg:px-16 mb-8 max-w-3xl">
+        {trackingType === "claim" && isSearched && claimResult && (
+          <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden animate-fade-in-up shadow-xl shadow-black/20">
+            <div className="p-6 border-b border-white/5">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div>
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">Status</p>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-lg border text-xs font-bold ${getStatusColor(claimResult.status)}`}>
+                    {claimResult.status}
                   </span>
+                </div>
+                <div className="text-right">
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">Date Submitted</p>
+                  <p className="text-white font-medium text-sm">
+                    {new Date(claimResult.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 p-4 bg-black/20 rounded-xl border border-white/5">
+                {claimResult.foundItem?.img ? (
+                  <img 
+                    src={claimResult.foundItem.img} 
+                    alt="Item" 
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-white/5 shrink-0"
+                  />
+                ) : (
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-800 rounded-xl flex items-center justify-center shrink-0 border border-white/5">
+                    <span className="text-gray-500 text-xs">No Image</span>
+                  </div>
                 )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                <div>
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">Claimed Item</p>
+                  <h3 className="text-white font-bold text-lg leading-tight mb-1">
+                    {claimResult.foundItem?.foundItemName || "Unknown Item"}
+                  </h3>
+                  <p className="text-gray-400 text-xs flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                    {claimResult.foundItem?.location || "Location N/A"}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-      {/* ── Content ── */}
-      <div className="px-4 sm:px-10 lg:px-16">
+            {claimResult.status === "APPROVED" && (
+              <div className="p-5 bg-emerald-500/5 border-t border-emerald-500/10 flex items-start gap-3">
+                <FaCheckCircle className="text-emerald-400 text-lg shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-emerald-400 font-bold text-sm">Claim Approved!</p>
+                  <p className="text-emerald-400/70 text-xs mt-1">
+                    Your claim has been verified. Please visit the SAS Office with a valid ID to pick up your item.
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {claimResult.status === "REJECTED" && (
+              <div className="p-5 bg-red-500/5 border-t border-red-500/10 flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 mt-0.5">✕</div>
+                <div>
+                  <p className="text-red-400 font-bold text-sm">Claim Rejected</p>
+                  <p className="text-red-400/70 text-xs mt-1">
+                    Unfortunately, this claim could not be verified. If you believe this is a mistake, please contact the SAS Office.
+                  </p>
+                </div>
+              </div>
+            )}
 
-        {activeTab === 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {isSearched && searchResult?.data ? (
-              (() => {
-                const item = searchResult.data;
-                const steps = getLostItemSteps(item);
-                return (
-                  <TrackingCard key={item.id}
-                    img={item.img}
-                    title={item.lostItemName}
-                    subtitle={item.location}
-                    statusLabel={item.isFound ? "Recovered" : "Active"}
-                    statusColor={item.isFound
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-blue-500/10 text-blue-400 border-blue-500/20"}
-                    steps={steps}
-                    actionLink={`/lostItems/${item.id}`}
-                    actionText="View Details"
-                    delay={1}
-                  />
-                );
-              })()
-            ) : myLostItems?.data?.length > 0 ? (
-              myLostItems.data.map((item: any, idx: number) => {
-                const steps = getLostItemSteps(item);
-                return (
-                  <TrackingCard key={item.id}
-                    img={item.img}
-                    title={item.lostItemName}
-                    subtitle={item.location}
-                    statusLabel={item.isFound ? "Recovered" : "Active"}
-                    statusColor={item.isFound
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-blue-500/10 text-blue-400 border-blue-500/20"}
-                    steps={steps}
-                    actionLink={`/lostItems/${item.id}`}
-                    actionText="View Details"
-                    delay={(idx % 4) + 1}
-                  />
-                );
-              })
-            ) : (
-              <EmptyState
-                icon={<FaExclamationCircle size={24} />}
-                title={isSearched ? "No Item Found" : "No Active Reports"}
-                description={isSearched ? "We couldn't find any report with that tracking code." : "You don't have any lost item reports being tracked."}
-                actionLink="/reportLostItem"
-                actionText="Report Lost Item"
-              />
+            {claimResult.status === "PENDING" && (
+              <div className="p-5 bg-blue-500/5 border-t border-blue-500/10 flex items-start gap-3">
+                <Spinner className="text-blue-400 text-lg shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-blue-400 font-bold text-sm">Under Review</p>
+                  <p className="text-blue-400/70 text-xs mt-1">
+                    Your claim is currently being reviewed by the SAS Office. You will receive an update once it is verified.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         )}
 
-        {activeTab === 1 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {myClaims?.data?.length > 0 ? (
-              myClaims.data.map((claim: any, idx: number) => {
-                const isApproved = claim.status === "APPROVED";
-                const isRejected = claim.status === "REJECTED";
-                const steps = getClaimSteps(claim);
-                return (
-                  <TrackingCard key={claim.id}
-                    img={claim.foundItem?.img}
-                    title={claim.foundItem?.foundItemName || "Unknown Item"}
-                    subtitle={`ID: ${claim.id.slice(0, 8)}`}
-                    statusLabel={claim.status}
-                    statusColor={
-                      isApproved ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : isRejected ? "bg-red-500/10 text-red-400 border-red-500/20"
-                      : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                    }
-                    steps={steps}
-                    actionLink={`/foundItems/${claim.foundItemId}`}
-                    actionText="View Item"
-                    delay={(idx % 4) + 1}
-                  />
-                );
-              })
-            ) : (
-              <EmptyState
-                icon={<FaHistory size={24} />}
-                title="No Claims Found"
-                description="You haven't submitted any claims for found items yet."
-                actionLink="/foundItems"
-                actionText="Browse Found Items"
-              />
-            )}
+        {trackingType === "claim" && isSearched && !claimResult && (
+          <div className="py-12 bg-gray-900/30 rounded-2xl border border-dashed border-red-500/20 flex flex-col items-center text-center px-4">
+            <FaExclamationCircle className="text-red-400 text-3xl mb-3" />
+            <h3 className="text-base font-black text-white mb-1">No Claim Found</h3>
+            <p className="text-gray-500 text-xs max-w-sm">We couldn't verify a claim with that ID and Email combination.</p>
+          </div>
+        )}
+
+        {trackingType === "lost" && isSearched && searchResult?.data && (
+          <div className="max-w-md animate-fade-in-up">
+            {(() => {
+              const item = searchResult.data;
+              const steps = getLostItemSteps(item);
+              return (
+                <TrackingCard key={item.id}
+                  img={item.img}
+                  title={item.lostItemName}
+                  subtitle={item.location}
+                  statusLabel={item.isFound ? "Recovered" : "Active"}
+                  statusColor={item.isFound
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                    : "bg-blue-500/10 text-blue-400 border-blue-500/20"}
+                  steps={steps}
+                  actionLink={`/lostItems/${item.id}`}
+                  actionText="View Details"
+                />
+              );
+            })()}
           </div>
         )}
       </div>
+
+      {/* ── Student Dashboard (Only if logged in) ── */}
+      {isLoggedIn && (
+        <>
+          <div className="px-4 sm:px-10 lg:px-16 mb-5 border-t border-white/5 pt-8 reveal">
+            <h2 className="text-white text-lg font-bold mb-4">Your Tracking Dashboard</h2>
+            <div className="flex items-center gap-2 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit min-w-max overflow-x-auto no-scrollbar">
+              {tabs.map(tab => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${
+                      isActive
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-900/30"
+                        : "text-gray-400 hover:text-white"
+                    }`}>
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                    {tab.count > 0 && (
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                        isActive ? "bg-white/20 text-white" : "bg-white/5 text-gray-500"
+                      }`}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="px-4 sm:px-10 lg:px-16 pb-12 reveal">
+            {activeTab === 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {myLostItems?.data?.length > 0 ? (
+                  myLostItems.data.map((item: any, idx: number) => {
+                    const steps = getLostItemSteps(item);
+                    return (
+                      <TrackingCard key={item.id}
+                        img={item.img}
+                        title={item.lostItemName}
+                        subtitle={item.location}
+                        statusLabel={item.isFound ? "Recovered" : "Active"}
+                        statusColor={item.isFound
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : "bg-blue-500/10 text-blue-400 border-blue-500/20"}
+                        steps={steps}
+                        actionLink={`/lostItems/${item.id}`}
+                        actionText="View Details"
+                        delay={(idx % 4) + 1}
+                      />
+                    );
+                  })
+                ) : (
+                  <EmptyState
+                    icon={<FaExclamationCircle size={24} />}
+                    title={"No Active Reports"}
+                    description={"You don't have any lost item reports being tracked."}
+                    actionLink="/reportLostItem"
+                    actionText="Report Lost Item"
+                  />
+                )}
+              </div>
+            )}
+
+            {activeTab === 1 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {myClaims?.data?.length > 0 ? (
+                  myClaims.data.map((claim: any, idx: number) => {
+                    const isApproved = claim.status === "APPROVED";
+                    const isRejected = claim.status === "REJECTED";
+                    const steps = getClaimSteps(claim);
+                    return (
+                      <TrackingCard key={claim.id}
+                        img={claim.foundItem?.img}
+                        title={claim.foundItem?.foundItemName || "Unknown Item"}
+                        subtitle={`ID: ${claim.id.slice(0, 8)}`}
+                        statusLabel={claim.status}
+                        statusColor={
+                          isApproved ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : isRejected ? "bg-red-500/10 text-red-400 border-red-500/20"
+                          : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                        }
+                        steps={steps}
+                        actionLink={`/foundItems/${claim.foundItemId}`}
+                        actionText="View Item"
+                        delay={(idx % 4) + 1}
+                      />
+                    );
+                  })
+                ) : (
+                  <EmptyState
+                    icon={<FaHistory size={24} />}
+                    title="No Claims Found"
+                    description="You haven't submitted any claims for found items yet."
+                    actionLink="/foundItems"
+                    actionText="Browse Found Items"
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
