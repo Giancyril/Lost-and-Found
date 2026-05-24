@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 const Modals = (data: modals) => {
   if (data.status == true) {
     return toast.success(data.message, {
-      position: "top-center",
+      position: "top-right",
       autoClose: 3000,
       hideProgressBar: false,
       closeOnClick: true,
@@ -16,7 +16,7 @@ const Modals = (data: modals) => {
     });
   } else if (data.status == false) {
     return toast.error(data.message, {
-      position: "top-center",
+      position: "top-right",
       autoClose: 3000,
       hideProgressBar: false,
       closeOnClick: true,
