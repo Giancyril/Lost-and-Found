@@ -166,11 +166,18 @@ const BUILDINGS = [
       ...Array.from({ length: 10 }, (_, i) => ({ id: `SC-30${i + 1}`, name: `Room SC-30${i + 1}`, type: "classroom" as any, floor: 3 })),
     ]
   },
+  {
+    id: "BAB",
+    name: "Business Administration Building",
+    floors: [],
+    rooms: [],
+    isComingSoon: true
+  }
 ];
 
 const IndoorMapPage = () => {
   const navigate = useNavigate();
-  const [selectedBuilding] = useState(BUILDINGS[0]);
+  const [selectedBuilding, setSelectedBuilding] = useState(BUILDINGS[0]);
   const [currentFloor, setCurrentFloor] = useState(2);
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
   const [bottomSheetHeight, setBottomSheetHeight] = useState<"peek" | "half" | "full">("peek");
@@ -266,13 +273,29 @@ const IndoorMapPage = () => {
 
           {mapMode === "indoor" && (
             <div className="mt-6 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-              <button className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-lg shadow-blue-900/20 whitespace-nowrap border border-blue-500">
-                SWDC Building
-              </button>
-              <button disabled className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-gray-900 border border-white/5 text-gray-500 opacity-60 cursor-not-allowed whitespace-nowrap flex items-center gap-2">
-                Business Administration Building
-                <span className="bg-white/10 text-gray-400 text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest">Coming Soon</span>
-              </button>
+              {BUILDINGS.map((b: any) => (
+                <button
+                  key={b.id}
+                  onClick={() => {
+                    setSelectedBuilding(b);
+                    setSelectedRoom(null);
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+                    selectedBuilding.id === b.id
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20 border border-blue-500"
+                      : "bg-gray-900 border border-white/5 text-gray-500 hover:text-white hover:bg-gray-800"
+                  }`}
+                >
+                  {b.name}
+                  {b.isComingSoon && (
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest ${
+                      selectedBuilding.id === b.id ? "bg-white/20 text-blue-100" : "bg-white/10 text-gray-400"
+                    }`}>
+                      Coming Soon
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -282,19 +305,29 @@ const IndoorMapPage = () => {
         <div className="hidden lg:flex flex-1 gap-6 p-6 overflow-hidden">
           {mapMode === "indoor" ? (
             <>
-              <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-                <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
-              </div>
-              <div className="w-80 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col">
-                <div className="p-4 border-b border-white/5 flex items-center gap-2">
-                  <h3 className="text-white text-[11px] font-bold uppercase tracking-widest">Room Details</h3>
+              {(selectedBuilding as any).isComingSoon ? (
+                <div className="flex-1 bg-[#0f1522] border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center flex-col p-12">
+                   <FaBuilding className="text-gray-800/50 text-6xl mb-6" />
+                   <h2 className="text-2xl font-bold text-white mb-2">{selectedBuilding.name}</h2>
+                   <p className="text-gray-500 text-center max-w-md">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
                 </div>
-                {!selectedRoom ? (
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-500"><FaInfoCircle size={22} className="mb-3" /><p className="text-sm">Select a room</p></div>
-                ) : (
-                  <DesktopRoomDetails selectedRoom={selectedRoom} roomItems={roomItems} navigate={navigate} />
-                )}
-              </div>
+              ) : (
+                <>
+                  <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+                    <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
+                  </div>
+                  <div className="w-80 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col">
+                    <div className="p-4 border-b border-white/5 flex items-center gap-2">
+                      <h3 className="text-white text-[11px] font-bold uppercase tracking-widest">Room Details</h3>
+                    </div>
+                    {!selectedRoom ? (
+                      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-500"><FaInfoCircle size={22} className="mb-3" /><p className="text-sm">Select a room</p></div>
+                    ) : (
+                      <DesktopRoomDetails selectedRoom={selectedRoom} roomItems={roomItems} navigate={navigate} />
+                    )}
+                  </div>
+                </>
+              )}
             </>
           ) : (
             <div className="flex-1 flex flex-col gap-6 overflow-hidden">
@@ -352,7 +385,15 @@ const IndoorMapPage = () => {
         <div className="lg:hidden flex-1 flex flex-col p-4 overflow-hidden">
           {mapMode === "indoor" ? (
             <div className="flex-1 relative transition-all duration-500" style={mapStyle}>
-              <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
+              {(selectedBuilding as any).isComingSoon ? (
+                <div className="w-full h-full bg-[#0f1522] border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center flex-col p-6 text-center">
+                   <FaBuilding className="text-gray-800/50 text-4xl mb-4" />
+                   <h2 className="text-xl font-bold text-white mb-2">{selectedBuilding.name}</h2>
+                   <p className="text-gray-500 text-xs">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
+                </div>
+              ) : (
+                <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
+              )}
             </div>
           ) : (
             <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden relative">
