@@ -21,6 +21,7 @@ interface FoundItem {
   category: { name: string };
   location: string;
   date: string;
+  createdAt: string;
   isClaimed: boolean;
   isArchived?: boolean;
   img?: string;

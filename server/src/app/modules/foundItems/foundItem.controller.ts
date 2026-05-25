@@ -12,6 +12,7 @@ import { logToSheet } from "../sheets/sheets.service";
 import { pointsService } from "../points/points.service";
 import prisma from "../../config/prisma";
 import { checkFoundItemAchievements, checkPointAchievements } from "../../utils/achievementService";
+import { sendFacebookNotification } from "../../../utils/facebookPoster";
 
 
 const createFoundItem = async (req: Request, res: Response) => {
@@ -114,6 +115,11 @@ const createFoundItem = async (req: Request, res: Response) => {
           console.error("[Achievement] Error checking point badges:", err)
         );
       }
+
+      // ── Facebook Auto-Poster ─────────────────────────────────────────────────────
+      sendFacebookNotification(result).catch((err) =>
+        console.error("[Facebook] Error sending notification:", err)
+      );
     }
 
     sendResponse(res, {

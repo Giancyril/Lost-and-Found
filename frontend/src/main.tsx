@@ -20,6 +20,7 @@ import AboutUs from "./components/aboutUs/aboutUs.tsx";
 import PortalDisplay from "./pages/portal/PortalDisplay.tsx";
 import DashboardLayout from "./dashboard/DashboardLayout.tsx";
 import Dashboard from "./dashboard/Dashboard.tsx";
+import BulkScanner from "./dashboard/pages/BulkScanner.tsx";
 import FoundItemsManagement from "./dashboard/pages/FoundItemsManagement.tsx";
 import LostItemsManagement from "./dashboard/pages/LostItemsManagement.tsx";
 import ClaimsManagement from "./dashboard/pages/ClaimsManagement.tsx";
@@ -91,6 +92,7 @@ const router = createBrowserRouter([
 
   // ── Admin Dashboard routes ────────────────────────────────────────────────
   { path: "/dashboard", element: <DashboardLayout><Dashboard /></DashboardLayout> },
+  { path: "/dashboard/bulk-scanner", element: <DashboardLayout><BulkScanner /></DashboardLayout> },
   { path: "/dashboard/found-items", element: <DashboardLayout><FoundItemsManagement /></DashboardLayout> },
   { path: "/dashboard/lost-items", element: <DashboardLayout><LostItemsManagement /></DashboardLayout> },
   { path: "/dashboard/claims", element: <DashboardLayout><ClaimsManagement /></DashboardLayout> },

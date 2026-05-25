@@ -6,7 +6,7 @@ import {
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt, FaMapMarkerAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate,
-  FaUserShield, FaFlag, FaComments, FaMedal
+  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 
@@ -37,6 +37,7 @@ const menuItems = [
   { title: "Overview", icon: FaTachometerAlt, path: "/dashboard", exact: true },
 
   // Item Management
+  { title: "Batch Entry", icon: FaQrcode, path: "/dashboard/bulk-scanner" },
   { title: "Lost Items", icon: FaExclamationTriangle, path: "/dashboard/lost-items" },
   { title: "Found Items", icon: FaSearch, path: "/dashboard/found-items" },
   { title: "Claims", icon: FaClipboardList, path: "/dashboard/claims" },
@@ -63,6 +64,7 @@ const menuItems = [
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard": { title: "Overview", subtitle: "Welcome back! Here's an overview of today's activity." },
+  "/dashboard/bulk-scanner": { title: "AI Item Entry", subtitle: "Process multiple found items at once using AI-powered recognition." },
   "/dashboard/lost-items": { title: "Lost Items", subtitle: "Track and manage items reported as lost on campus." },
   "/dashboard/found-items": { title: "Found Items", subtitle: "Review and manage all recovered items awaiting claim." },
   "/dashboard/claims": { title: "Claims", subtitle: "Review, verify and process submitted ownership claims." },
