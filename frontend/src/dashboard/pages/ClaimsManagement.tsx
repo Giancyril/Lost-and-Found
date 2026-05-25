@@ -834,18 +834,32 @@ const ClaimsManagement = () => {
                 {(auditPage - 1) * AUDIT_PAGE_SIZE + 1}–{Math.min(auditPage * AUDIT_PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length}
               </p>
               <div className="flex items-center gap-2">
-                <button onClick={() => setAuditPage(p => Math.max(1, p - 1))} disabled={auditPage === 1}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all">
+                <button
+                  type="button"
+                  onClick={() => setAuditPage(p => Math.max(1, p - 1))}
+                  disabled={auditPage === 1}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 disabled:opacity-30 outline-none"
+                >
                   <FaChevronLeft size={9} /> Prev
                 </button>
                 {Array.from({ length: totalAuditPages }, (_, i) => i + 1).map(page => (
-                  <button key={page} onClick={() => setAuditPage(page)}
-                    className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${page === auditPage ? "bg-violet-500/10 text-violet-400 border border-violet-500/20" : "text-gray-500 hover:text-white hover:bg-white/5"}`}>
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setAuditPage(page)}
+                    className={`w-7 h-7 rounded-lg text-xs font-semibold outline-none ${
+                      page === auditPage ? "text-gray-200 bg-gray-800" : "text-gray-500"
+                    }`}
+                  >
                     {page}
                   </button>
                 ))}
-                <button onClick={() => setAuditPage(p => Math.min(totalAuditPages, p + 1))} disabled={auditPage === totalAuditPages}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all">
+                <button
+                  type="button"
+                  onClick={() => setAuditPage(p => Math.min(totalAuditPages, p + 1))}
+                  disabled={auditPage === totalAuditPages}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 disabled:opacity-30 outline-none"
+                >
                   Next <FaChevronRight size={9} />
                 </button>
               </div>
