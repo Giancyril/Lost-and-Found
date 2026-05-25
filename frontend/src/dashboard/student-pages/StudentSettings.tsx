@@ -3,6 +3,7 @@ import { FaKey, FaCheck, FaEye, FaEyeSlash, FaStar, FaBell } from "react-icons/f
 import { Link } from "react-router-dom";
 import { useUserVerification } from "../../auth/auth";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
+import { notify } from "../../utils/notify";
 
 const API = "/api";
 const authHeaders = () => ({
@@ -47,13 +48,19 @@ export default function StudentSettings() {
       });
       const data = await res.json();
       if (data.success) {
-        setPwMsg({ ok: true, text: "Password changed successfully." });
+        const msg = "Password changed successfully.";
+        setPwMsg({ ok: true, text: msg });
+        notify.success(msg);
         setPwForm({ currentPassword: "", newPassword: "", confirm: "" });
       } else {
-        setPwMsg({ ok: false, text: data.message ?? "Failed to change password." });
+        const msg = data.message ?? "Failed to change password.";
+        setPwMsg({ ok: false, text: msg });
+        notify.error(msg);
       }
     } catch {
-      setPwMsg({ ok: false, text: "Could not reach the server." });
+      const msg = "Could not reach the server.";
+      setPwMsg({ ok: false, text: msg });
+      notify.error(msg);
     } finally {
       setPwLoading(false);
     }

@@ -1,30 +1,13 @@
 import type { modals } from "../../types/types";
-
-import { toast } from "react-toastify";
+import { notify } from "../../utils/notify";
 
 const Modals = (data: modals) => {
-  if (data.status == true) {
-    return toast.success(data.message, {
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "dark",
-    });
-  } else if (data.status == false) {
-    return toast.error(data.message, {
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "dark",
-    });
+  if (data.status === true) {
+    return notify.success(data.message);
+  }
+  if (data.status === false) {
+    return notify.error(data.message);
   }
 };
+
 export default Modals;

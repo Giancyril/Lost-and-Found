@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { baseApi } from "../../redux/api/baseApi";
 import { useUserVerification } from "../../auth/auth";
+import { notify } from "../../utils/notify";
 import {
   FaTrophy, FaSearch, FaBullseye, FaCheckCircle,
   FaStar, FaComments, FaBolt, FaClock, FaLock, FaFilter,
@@ -263,9 +264,12 @@ const StudentAchievements: React.FC = () => {
       if (res.success) {
         setUnlockedAchievement(res.data.achievement);
         localStorage.removeItem("easter_egg_clicks");
+        notify.success("Secret achievement unlocked!");
+      } else {
+        notify.error("Could not unlock achievement.");
       }
     } catch (err: any) {
-      console.error("Unlock failed", err);
+      notify.error(err?.data?.message || "Invalid secret key.");
     } finally {
       setIsUnlocking(false);
     }
