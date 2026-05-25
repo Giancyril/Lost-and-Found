@@ -16,9 +16,6 @@ interface Message {
   };
 }
 
-// ── Aura AI Fluid Wave Logo ─────────────────────────────────────────────────
-// size="sm"  → 18×18  navbar trigger button
-// size="md"  → 36×36  chat panel header
 function AuraLogo({ size = 'sm' }: { size?: 'sm' | 'md' }) {
   const sm = size === 'sm';
 
@@ -76,7 +73,7 @@ export default function ChatbotConcierge() {
       {
         id: 'welcome',
         role: 'model',
-        content: 'Hi there! I am Aura AI. Have you lost or found something? Tell me about it!'
+        content: 'Hi! I\'m Nereid, your campus lost & found assistant. Describe what you\'re looking for and I\'ll search for it.'
       }
     ];
   });
@@ -94,7 +91,7 @@ export default function ChatbotConcierge() {
         setMessages([{
           id: 'welcome',
           role: 'model',
-          content: 'Hi there! I am Aura AI. Have you lost or found something? Tell me about it!'
+          content: 'Hi! I\'m Nereid, your campus lost & found assistant. Describe what you\'re looking for and I\'ll search for it.'
         }]);
       }
       lastStorageKey.current = storageKey;
@@ -185,8 +182,9 @@ export default function ChatbotConcierge() {
               <div className="flex items-center gap-3 relative z-10">
                 <AuraLogo size="md" />
                 <div>
-                  <h3 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400 text-[15px] tracking-wide">
-                    Aura AI
+                  <h3 style={{ fontWeight: 500, letterSpacing: '0.04em', fontSize: 16 }}
+                    className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">
+                    Nereid
                   </h3>
                   <p className="text-white/40 text-[11px] font-medium mt-0.5">
                     Ready to assist you
@@ -286,7 +284,7 @@ export default function ChatbotConcierge() {
                   onClick={() => setMessages([{
                     id: 'welcome',
                     role: 'model',
-                    content: 'Hi there! I am Aura AI. Have you lost or found something? Tell me about it!'
+                    content: 'Hi! I\'m Nereid, your campus lost & found assistant. Describe what you\'re looking for and I\'ll search for it.'
                   }])}
                   className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all shrink-0 border border-transparent hover:border-red-500/20"
                   title="Clear Chat"
