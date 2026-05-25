@@ -102,14 +102,16 @@ export default function ChatbotConcierge() {
 
   const [inputValue, setInputValue] = useState('');
   const [aiChat, { isLoading }] = useAiChatMutation();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => { setIsOpen(false); }, [location.pathname]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
   }, [messages, isLoading]);
 
   const handleSend = async (e?: React.FormEvent) => {
@@ -175,7 +177,7 @@ export default function ChatbotConcierge() {
           >
 
             {/* Header */}
-            <div className="bg-[#0a1628] border-b border-white/5 p-4 flex items-center justify-between z-10 relative overflow-hidden">
+            <div className="shrink-0 bg-[#0a1628] border-b border-white/5 p-4 flex items-center justify-between z-10 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 to-indigo-500/5 pointer-events-none" />
 
               {/* Logo + name */}
@@ -203,8 +205,11 @@ export default function ChatbotConcierge() {
               </div>
             </div>
 
-            {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-900 custom-scrollbar">
+            {/* Chat Area — min-h-0 keeps footer pinned; scroll stays inside this box */}
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4 bg-gray-900 custom-scrollbar"
+            >
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                   <div
@@ -273,36 +278,41 @@ export default function ChatbotConcierge() {
                   </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
-            <div className="p-3 border-t border-white/10 bg-gray-900">
-              <form onSubmit={handleSend} className="relative flex items-center gap-2">
+            <div className="shrink-0 p-3 border-t border-white/10 bg-gray-900">
+              <form onSubmit={handleSend} className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setMessages([{
-                    id: 'welcome',
-                    role: 'model',
-                    content: 'Hi! I\'m Nereid, your campus lost & found assistant. Describe what you\'re looking for and I\'ll search for it.'
-                  }])}
+                  onClick={() => {
+                    setMessages([{
+                      id: 'welcome',
+                      role: 'model',
+                      content: 'Hi! I\'m Nereid, your campus lost & found assistant. Describe what you\'re looking for and I\'ll search for it.'
+                    }]);
+                    requestAnimationFrame(() => {
+                      const container = messagesContainerRef.current;
+                      if (container) container.scrollTop = 0;
+                    });
+                  }}
                   className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all shrink-0 border border-transparent hover:border-red-500/20"
                   title="Clear Chat"
                 >
                   <FaTrash size={12} />
                 </button>
-                <div className="relative flex-1">
+                <div className="relative flex-1 min-w-0">
                   <input
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Ask me anything..."
-                    className="w-full bg-black/30 border border-white/10 rounded-full pl-4 pr-12 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                    className="w-full bg-black/30 border border-white/10 rounded-full pl-4 pr-12 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
                   />
                   <button
                     type="submit"
                     disabled={!inputValue.trim() || isLoading}
-                    className="absolute right-1.5 top-1.5 p-2 bg-gradient-to-r from-sky-600 to-indigo-500 rounded-full text-white disabled:opacity-50 hover:shadow-lg transition-all"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-gradient-to-r from-sky-600 to-indigo-500 rounded-full text-white disabled:opacity-50 hover:shadow-lg transition-all"
                   >
                     <FaPaperPlane size={12} />
                   </button>
