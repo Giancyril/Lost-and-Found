@@ -54,6 +54,9 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {
+    if (!getUserLocalStorage()) {
+      return result;
+    }
     // Try to refresh token
     const refreshResult = await baseQuery({ url: "/refresh", method: "POST" }, api, extraOptions);
     if (refreshResult.data) {

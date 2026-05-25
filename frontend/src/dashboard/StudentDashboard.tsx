@@ -97,13 +97,14 @@ const Podium = ({ top3, currentUserId }: { top3: any[]; currentUserId: string })
 export default function StudentDashboard() {
   const user: any = useUserVerification();
   const [tab, setTab] = useState<TabKey>("claims");
+  const isLoggedIn = !!user?.id;
 
-  const { data: pointsData, isLoading: p1 } = useGetMyPointsQuery(undefined);
-  const { data: foundData,  isLoading: p2 } = useGetMyFoundItemQuery(undefined);
-  const { data: lostData,   isLoading: p3 } = useGetMyLostItemQuery(undefined);
-  const { data: claimsData, isLoading: p4 } = useMyClaimsQuery(undefined);
+  const { data: pointsData, isLoading: p1 } = useGetMyPointsQuery(undefined, { skip: !isLoggedIn });
+  const { data: foundData,  isLoading: p2 } = useGetMyFoundItemQuery(undefined, { skip: !isLoggedIn });
+  const { data: lostData,   isLoading: p3 } = useGetMyLostItemQuery(undefined, { skip: !isLoggedIn });
+  const { data: claimsData, isLoading: p4 } = useMyClaimsQuery(undefined, { skip: !isLoggedIn });
   const { data: boardData,  isLoading: p5 } = useGetLeaderboardQuery(undefined);
-  const { data: achievementData, isLoading: p6 } = (achievementApi as any).useGetMyAchievementsQuery();
+  const { data: achievementData, isLoading: p6 } = (achievementApi as any).useGetMyAchievementsQuery(undefined, { skip: !isLoggedIn });
 
   const loading       = p1 || p2 || p3 || p4 || p5 || p6;
   const totalPoints   = pointsData?.data?.totalPoints ?? 0;

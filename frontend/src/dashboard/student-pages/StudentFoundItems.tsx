@@ -4,6 +4,7 @@ import {
   FaCheckCircle, FaClock, FaSearch,
 } from "react-icons/fa";
 import { useGetMyFoundItemQuery } from "../../redux/api/api";
+import { useUserVerification } from "../../auth/auth";
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
@@ -11,9 +12,11 @@ const fmt = (d: string) =>
 export default function StudentFoundItems() {
   console.log("[DEBUG] StudentFoundItems component is rendering!");
   
+  const user = useUserVerification();
+  const isLoggedIn = !!user?.id;
   const [search, setSearch] = useState("");
 
-  const { data, isLoading: loading, error, isError } = useGetMyFoundItemQuery(undefined);
+  const { data, isLoading: loading, error, isError } = useGetMyFoundItemQuery(undefined, { skip: !isLoggedIn });
   console.log("[DEBUG] useGetMyFoundItemQuery state:", { loading, error, isError });
 
   // Debug: Log the actual data structure

@@ -1,4 +1,17 @@
+import { useAdminStatsQuery } from "../../redux/api/api";
+
 const AboutUs = () => {
+  const { data: statsData } = useAdminStatsQuery({});
+  const stats = statsData?.data;
+
+  const totalItems = (stats?.foundItems ?? 0) + (stats?.lostItems ?? 0);
+  const avgResolution = stats?.avgClaimResolutionDays != null
+    ? `${stats.avgClaimResolutionDays}d`
+    : "—";
+  const recoveryRate = stats?.lostFoundMatchRate?.matchRate != null
+    ? `${stats.lostFoundMatchRate.matchRate}%`
+    : "—";
+
   return (
     <>
       <style>{`
@@ -60,17 +73,15 @@ const AboutUs = () => {
 
               <div className="flex flex-col gap-3 text-justify">
                 {[
-                  { emoji: "🎒", title: "For Students", desc: "Easily report or claim lost items from classrooms, hallways, or school grounds." },
-                  { emoji: "👨‍🏫", title: "For Teachers & Staff", desc: "Manage found items and coordinate with the admin office through one central system." },
-                  { emoji: "🏫", title: "School-Wide Coverage", desc: "Covers all campus areas including classrooms, field, cafeteria, and library." },
+                  {  title: "For Students", desc: "Easily report or claim lost items from classrooms or school grounds." },
+                  {  title: "For Teachers & Staff", desc: "Manage found items and coordinate with the admin office through the system." },
+                  {  title: "School-Wide Coverage", desc: "Covers all campus areas including classrooms, cafeteria, and library." },
                 ].map((item) => (
                   <div
                     key={item.title}
                     className="au-audience-card au-animate flex items-start gap-3 bg-gray-900/70 border border-gray-800 rounded-xl p-4 transition-all duration-300"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 text-base">
-                      {item.emoji}
-                    </div>
+                   
                     <div>
                       <p className="text-white font-semibold text-sm mb-0.5">{item.title}</p>
                       <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
@@ -89,7 +100,6 @@ const AboutUs = () => {
                 <div className="absolute -top-8 -right-8 w-40 h-40 bg-blue-600/8 rounded-full blur-2xl pointer-events-none" />
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-600/30 flex items-center justify-center text-base shrink-0">🎯</div>
                     <h3 className="text-white font-bold text-base sm:text-lg">Our Mission</h3>
                   </div>
                   <p className="text-gray-400 text-sm leading-relaxed text-justify">
@@ -120,9 +130,9 @@ const AboutUs = () => {
               {/* Stats strip */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { value: "500+", label: "Items Tracked" },
-                  { value: "24h", label: "Avg. Resolution" },
-                  { value: "98%", label: "Recovery Rate" },
+                  { value: totalItems > 0 ? `${totalItems}+` : "—", label: "Items Tracked" },
+                  { value: avgResolution,                            label: "Avg. Resolution" },
+                  { value: recoveryRate,                             label: "Recovery Rate" },
                 ].map((stat) => (
                   <div key={stat.label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 sm:p-4 text-center">
                     <p className="text-blue-400 font-black text-lg sm:text-2xl leading-none mb-1">{stat.value}</p>

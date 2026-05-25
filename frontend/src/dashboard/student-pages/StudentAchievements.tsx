@@ -228,8 +228,9 @@ const StudentAchievements: React.FC = () => {
   const [unlockedAchievement, setUnlockedAchievement] = useState<any>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
 
-  const { data: allData, isLoading: loadingAll } = (achievementApi as any).useGetAllAchievementsQuery();
-  const { data: myData, isLoading: loadingMy } = (achievementApi as any).useGetMyAchievementsQuery();
+  const isLoggedIn = !!user?.id;
+  const { data: allData, isLoading: loadingAll } = (achievementApi as any).useGetAllAchievementsQuery(undefined, { skip: !isLoggedIn });
+  const { data: myData, isLoading: loadingMy } = (achievementApi as any).useGetMyAchievementsQuery(undefined, { skip: !isLoggedIn });
   const [togglePin] = (achievementApi as any).useTogglePinAchievementMutation();
   const [unlockSecret] = (achievementApi as any).useUnlockSecretAchievementMutation();
 

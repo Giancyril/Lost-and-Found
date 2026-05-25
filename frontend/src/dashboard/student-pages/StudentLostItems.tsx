@@ -5,12 +5,15 @@ import {
 } from "react-icons/fa";
 import { IoMdRadioButtonOn } from "react-icons/io";
 import { useGetMyLostItemQuery } from "../../redux/api/api";
+import { useUserVerification } from "../../auth/auth";
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
 export default function StudentLostItems() {
-  const { data, isLoading: loading } = useGetMyLostItemQuery(undefined);
+  const user = useUserVerification();
+  const isLoggedIn = !!user?.id;
+  const { data, isLoading: loading } = useGetMyLostItemQuery(undefined, { skip: !isLoggedIn });
 
   // Backend getMyLostItem returns a plain array wrapped in sendResponse as data.data
   // ❌ was: data?.data?.data ?? data?.data ?? []  (double-unwrap, always empty)

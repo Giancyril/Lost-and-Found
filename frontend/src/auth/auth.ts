@@ -10,6 +10,7 @@ export const setUserLocalStorage = (token: string, navigate?: (path: string) => 
       else window.location.href = "/";
     } else {
       localStorage.setItem("accessToken", token);
+      window.dispatchEvent(new Event("authchange"));
     }
   }
 };

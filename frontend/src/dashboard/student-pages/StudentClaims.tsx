@@ -5,6 +5,7 @@ import {
   FaTimes, FaUser,
 } from "react-icons/fa";
 import { useMyClaimsQuery } from "../../redux/api/api";
+import { useUserVerification } from "../../auth/auth";
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
@@ -22,7 +23,9 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
 };
 
 export default function StudentClaims() {
-  const { data, isLoading: loading } = useMyClaimsQuery(undefined);
+  const user = useUserVerification();
+  const isLoggedIn = !!user?.id;
+  const { data, isLoading: loading } = useMyClaimsQuery(undefined, { skip: !isLoggedIn });
 
   // Backend getMyClaim returns a plain array wrapped in sendResponse as data.data
   // ❌ was: data?.data?.data ?? data?.data ?? []  (double-unwrap, always empty)

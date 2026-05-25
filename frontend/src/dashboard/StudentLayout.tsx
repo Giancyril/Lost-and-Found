@@ -322,10 +322,20 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const user: any = useUserVerification();
+  const isLoggedIn = !!user?.id;
   const [collapsed,  setCollapsed]  = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const { data: pointsData } = useGetMyPointsQuery(undefined, { pollingInterval: 120_000 });
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate("/login", { replace: true, state: { from: location.pathname } });
+    }
+  }, [isLoggedIn, navigate, location.pathname]);
+
+  const { data: pointsData } = useGetMyPointsQuery(undefined, {
+    skip: !isLoggedIn,
+    pollingInterval: 120_000,
+  });
   const { data: boardData  } = useGetLeaderboardQuery(undefined);
 
   const points  = pointsData?.data?.totalPoints ?? 0;

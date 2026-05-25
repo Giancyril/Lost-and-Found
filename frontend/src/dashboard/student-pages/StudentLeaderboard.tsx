@@ -21,8 +21,9 @@ export default function StudentLeaderboard() {
   const user: any = useUserVerification();
   const [search, setSearch] = useState("");
 
+  const isLoggedIn = !!user?.id;
   const { data: boardData, isLoading: lbLoading } = useGetLeaderboardQuery(undefined);
-  const { data: pointsData, isLoading: ptsLoading } = useGetMyPointsQuery(undefined);
+  const { data: pointsData, isLoading: ptsLoading } = useGetMyPointsQuery(undefined, { skip: !isLoggedIn });
 
   const loading = lbLoading || ptsLoading;
 
