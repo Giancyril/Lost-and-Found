@@ -1,9 +1,10 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { aiSearchService } from "../aiSearch/aiSearch.service";
 import prisma from "../../config/prisma";
 import { JwtPayload } from "jsonwebtoken";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const MODEL_NAME = "gemini-flash-latest";
 
 // ── Stats Cache (5 min TTL) ───────────────────────────────────────────────────
 let statsCache: { found: number; lost: number; claims: number } | null = null;
@@ -25,79 +26,6 @@ const getSystemStats = async () => {
     console.error("[Nereid] Stats fetch error:", e);
     return statsCache ?? { found: 0, lost: 0, claims: 0 };
   }
-};
-
-// ── Intent detection ──────────────────────────────────────────────────────────
-type Intent =
-  | "SEARCH_ITEM"
-  | "HOW_TO"
-  | "STATUS_CHECK"
-  | "CLAIM_QUESTION"
-  | "URGENT"
-  | "GREETING"
-  | "SMALLTALK"
-  | "UNCLEAR";
-
-const detectIntents = (text: string): Set<Intent> => {
-  const t = text.toLowerCase();
-  const intents = new Set<Intent>();
-
-  // Broader search detection — catches more item descriptions
-  const actionWords = /\b(lost|missing|found|looking for|seen|left behind|dropped|forgot|left my|lose|find|search|where is|where are|any|have you|did anyone|does anyone)\b/;
-  const itemWords = /\b(bag|wallet|phone|id|card|umbrella|laptop|keys|key|book|notebook|charger|glasses|watch|airpods|headphones|backpack|jacket|sweater|tumbler|bottle|item|thing|stuff|ring|necklace|earrings|shoes|cap|hat|folder|flash drive|usb|tablet|ipad|calculator|pen|pencil|case|pouch|lanyard|uniform|jersey)\b/;
-
-  if (actionWords.test(t) && itemWords.test(t)) intents.add("SEARCH_ITEM");
-  // Also catch bare item mentions without explicit action words
-  if (!intents.has("SEARCH_ITEM") && itemWords.test(t) && t.split(" ").length < 12) intents.add("SEARCH_ITEM");
-
-  if (/\b(how|what (do|should|can) i|steps|process|guide|where do i|how to|how do|what is the procedure|what are the steps)\b/.test(t)) intents.add("HOW_TO");
-  if (/\b(status|update|check|tracking|report id|what happened|approved|pending|rejected|my claim|my report|any news|any update)\b/.test(t)) intents.add("STATUS_CHECK");
-  if (/\b(claim|retrieve|get back|pick up|collect|proof|ownership|handoff|meeting|arrange|schedule)\b/.test(t)) intents.add("CLAIM_QUESTION");
-  if (/\b(urgent|emergency|asap|immediately|right now|right away|very important|need it now|passport|medication|medicine|please help|i really need)\b/.test(t)) intents.add("URGENT");
-  if (/^(hi|hello|hey|good morning|good afternoon|good evening|sup|yo|howdy|what's up|wassup)[^a-z]*$/i.test(t.trim())) intents.add("GREETING");
-  if (/\b(who are you|what are you|your name|tell me about yourself|what can you do|thank|awesome|great|okay|cool|nice|got it|i see|understood|makes sense)\b/.test(t)) intents.add("SMALLTALK");
-
-  if (intents.size === 0) intents.add("UNCLEAR");
-  return intents;
-};
-
-// ── Extract clean search query ────────────────────────────────────────────────
-const extractSearchQuery = (text: string): string => {
-  return text
-    .replace(/\b(can you|please|help me|find|search for|looking for|i lost|i found|have you seen|do you have|is there a|i left my|i dropped my|i forgot my|check if|any sign of|did anyone find|does anyone have|where is my|where are my)\b/gi, "")
-    .replace(/[?!.,]/g, "")
-    .trim()
-    .slice(0, 150);
-};
-
-// ── Expand query with synonyms for better matching ────────────────────────────
-const expandQuery = (query: string): string => {
-  const synonyms: Record<string, string> = {
-    "cellphone": "phone mobile cellphone smartphone",
-    "mobile": "phone mobile cellphone smartphone",
-    "specs": "glasses eyeglasses spectacles",
-    "eyeglasses": "glasses eyeglasses spectacles specs",
-    "purse": "wallet purse coin purse pouch",
-    "bag": "bag backpack satchel tote",
-    "earphones": "earphones earbuds headphones airpods",
-    "usb": "usb flash drive thumb drive",
-    "id card": "id card identification student id",
-    "calculator": "calculator scientific calculator",
-  };
-
-  let expanded = query.toLowerCase();
-  for (const [key, value] of Object.entries(synonyms)) {
-    if (expanded.includes(key)) {
-      expanded = `${expanded} ${value}`;
-    }
-  }
-  return expanded.slice(0, 200);
-};
-
-// ── Detect follow-up questions ────────────────────────────────────────────────
-const isFollowUp = (text: string, history: { role: string; content: string }[]): boolean => {
-  const phrases = /\b(that one|the first|the second|the last|which one|tell me more|more details|more info|about it|about that|this item|the one|can i claim|how do i claim that|is it mine|where exactly|what does it look like|who found it|when was it found)\b/i;
-  return phrases.test(text) && history.length > 2;
 };
 
 // ── Compress long histories ───────────────────────────────────────────────────
@@ -145,6 +73,28 @@ const formatLostItems = (items: any[]): string => {
   }).join("\n\n");
 };
 
+// ── Tool Definitions ──────────────────────────────────────────────────────────
+const tools: any = [
+  {
+    functionDeclarations: [
+      {
+        name: "searchDatabase",
+        description: "Search the lost and found database for items matching a description. Call this whenever the user is asking about a lost or found item, looking for something, or asking if someone found their item.",
+        parameters: {
+          type: SchemaType ? SchemaType.OBJECT : "OBJECT",
+          properties: {
+            query: {
+              type: SchemaType ? SchemaType.STRING : "STRING",
+              description: "The item description to search for (e.g., 'blue backpack', 'iphone 12'). Keep it concise and keyword-focused.",
+            },
+          },
+          required: ["query"],
+        },
+      },
+    ],
+  },
+];
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 const handleChat = async (
   messages: { role: string; content: string }[],
@@ -157,55 +107,12 @@ const handleChat = async (
 
   console.log("[Nereid] Message:", latestMessage.slice(0, 80));
 
-  const intents = detectIntents(latestMessage);
-  const shouldSearch = intents.has("SEARCH_ITEM") && !isFollowUp(latestMessage, history);
-  const isUrgent = intents.has("URGENT");
-
-  console.log("[Nereid] Intents:", [...intents].join(", "), "| Search:", shouldSearch);
-
-  // ── Parallel: stats + search ──────────────────────────────────────────────
-  let searchResults: { foundItems: any[]; lostItems: any[] } | null = null;
-  let searchContext = "";
-
-  const [stats] = await Promise.all([
-    getSystemStats(),
-    (async () => {
-      if (!shouldSearch) return;
-      try {
-        const rawQuery = extractSearchQuery(latestMessage);
-        const query = expandQuery(rawQuery);
-        if (query.length < 2) return;
-
-        console.log("[Nereid] Searching:", query.slice(0, 60));
-        searchResults = await aiSearchService.aiSearchItems(query);
-        console.log("[Nereid] Results — found:", searchResults.foundItems.length, "lost:", searchResults.lostItems.length);
-
-        searchContext = `
-FOUND ITEMS matching the search:
-${formatFoundItems(searchResults.foundItems)}
-
-LOST ITEM REPORTS matching the search:
-${formatLostItems(searchResults.lostItems)}
-        `.trim();
-      } catch (e) {
-        console.error("[Nereid] Search error:", e);
-        searchContext = "Search failed due to a system error. Advise the user to browse the Found Items page manually or visit the SAS Office.";
-      }
-    })(),
-  ]);
+  const stats = await getSystemStats();
 
   // ── Build context ─────────────────────────────────────────────────────────
   const userContext = user?.id
     ? `Authenticated user: "${user.name || user.username || "Student"}". Address them by first name naturally. They have full platform access.`
     : `Guest user (not logged in). Remind them to register or log in if they want to report or claim items.`;
-
-  const urgencyNote = isUrgent
-    ? `\nPRIORITY — URGENT: Skip pleasantries. Give the fastest resolution path immediately. Mention the SAS Office is available for walk-in help right now.`
-    : "";
-
-  const followUpNote = isFollowUp(latestMessage, history)
-    ? `\nCONTINUITY: The user is following up on something from earlier. Reference the conversation history to maintain context and don't repeat yourself.`
-    : "";
 
   const statsNote = `
 Live system snapshot:
@@ -222,11 +129,23 @@ Live system snapshot:
       parts: [{ text: msg.content }],
     }));
 
-  // ── Model ─────────────────────────────────────────────────────────────────
-  const MODEL_NAME = "gemini-flash-latest";
-
+  // ── Model Initialization ──────────────────────────────────────────────────
   const chatModel = genAI.getGenerativeModel({
     model: MODEL_NAME,
+    tools: tools,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType ? SchemaType.OBJECT : "OBJECT" as any,
+        properties: {
+          reply: {
+            type: SchemaType ? SchemaType.STRING : "STRING" as any,
+            description: "Your conversational response to the user. Do NOT include any lists of items here.",
+          },
+        },
+        required: ["reply"],
+      },
+    },
     systemInstruction: `
 You are Nereid, the official AI concierge for the NBSC SAS Lost & Found Management System.
 You are exceptionally intelligent, empathetic, and helpful — like the most knowledgeable and caring student affairs officer imaginable, powered by AI.
@@ -234,7 +153,7 @@ You are exceptionally intelligent, empathetic, and helpful — like the most kno
 ━━━ REASONING PROTOCOL (do this silently before every reply) ━━━
 
 Step 1 — UNDERSTAND: What is the user actually asking or feeling? What is their real underlying need?
-Step 2 — ANALYZE: What data do I have? Are there matching items? Are they asking how to do something? Are they stressed?
+Step 2 — ANALYZE: What data do I have? Are they asking how to do something? Are they stressed? Do I need to search the database?
 Step 3 — PLAN: What is the single most helpful thing I can tell them right now? What's the fastest path to resolve their situation?
 Step 4 — RESPOND: Write a clear, warm, structured response. No fluff. No repetition.
 
@@ -247,27 +166,17 @@ ACCURACY
 - Never invent item names, locations, dates, IDs, or claim statuses.
 - If no data exists, say so clearly and offer the best next action.
 
-SEMANTIC INTELLIGENCE
-- Think beyond exact matches. "Blue pouch" could match "small blue coin purse". "Nokia" could match "old phone". Use common sense.
-- If an item description is vague, acknowledge it and still try to match the closest result.
-- For multiple matches, rank them by likelihood and explain why each might be relevant.
-
 CONTEXTUAL MEMORY
 - Remember everything said in this conversation. If the user references "that item" or "the second one", refer back correctly.
-- Never ask the user to repeat information they already gave.
-- If something was already answered, don't repeat it — build on it.
 
 EMPATHY
 - Losing something important is stressful. Acknowledge that briefly when appropriate.
 - Be encouraging: even if no match is found now, remind them new items are logged throughout the day.
-- Match the user's energy — if they're casual, be casual. If they're detailed, be thorough.
 
 ━━━ RESPONSE STYLE ━━━
 - Warm, smart, conversational — like a brilliant helpful classmate.
 - No emojis ever.
-- Use **bold** for item names and key terms.
-- Bullet points for options, numbered lists for steps.
-- Short paragraphs with line breaks — never a wall of text.
+- NEVER output bulleted or numbered lists of items you found. The frontend UI will automatically display rich visual cards for the items. You should only provide a short conversational introduction like "I found a few items that match your description!"
 - Be concise but never incomplete. Every response should fully resolve the question or clearly state what's needed next.
 
 ━━━ PLATFORM KNOWLEDGE ━━━
@@ -295,18 +204,9 @@ Tracking your report:
 - Go to Item Status page → enter your Report ID
 - Shows current status: active, matched, pending claim, resolved
 
-AI Search page:
-- Accepts natural language: "blue backpack near the gym", "wallet with student ID inside"
-- Finds semantically similar matches even without exact word matches
-
 Points and Leaderboard:
 - Earn points for returning found items and having claims approved
 - Points unlock achievement badges on the Leaderboard
-
-When search finds nothing:
-- Say clearly that no matches are currently in the system
-- Encourage them to file a lost item report — the system will automatically alert them when a matching found item is logged
-- Remind them new items are added throughout the day so checking back helps
 
 When user is distressed:
 - One sentence of empathy, then immediately the most helpful action
@@ -315,38 +215,125 @@ When user is distressed:
 When the question is unclear:
 - Make the most reasonable assumption, state it briefly, then answer based on that
 - Don't ask multiple clarifying questions — pick the most likely interpretation
+
+━━━ FEW-SHOT EXAMPLES ━━━
+
+Example 1: Distressed User (Lost Wallet)
+User: "I lost my wallet, it has my ID and keys. I have an exam in 15 minutes, please help me!"
+Nereid's Reasoning (internal):
+1. Understand: User is highly anxious, in a time-sensitive situation.
+2. Analyze: They lost a critical item (wallet containing ID and keys).
+3. Plan: Search the database immediately, provide swift comfort, and point them to physical help at the SAS Office if needed.
+Tool Call: searchDatabase({ query: "wallet keys ID" })
+[Tool Output: No matching items found]
+Nereid's Reply: "I am so sorry to hear you lost your wallet, especially right before your exam. Take a deep breath — I just checked our database and don't see any wallets matching yours logged yet, but we will keep a close eye out. Please focus on your exam first, and as soon as you finish, stop by the SAS Office physically to see if someone brought it in directly, or log in to submit a formal Lost Item Report so we can instantly alert you if it turns up."
+
+Example 2: User asking how to report a found item online
+User: "I found a blue thermos in the library, how do I report it on this website?"
+Nereid's Reasoning (internal):
+1. Understand: User wants to log a found item on the site.
+2. Analyze: NBSC rules state students cannot log found items online to ensure security and prevent fraud.
+3. Plan: Explain the rule politely and instruct them to bring it to the SAS Office.
+Nereid's Reply: "Thank you so much for your honesty and for looking out for your fellow classmates! To ensure a secure chain of custody and prevent any fraudulent claims, we do not allow students to log found items online. Please bring the blue thermos physically to the SAS Office when you can. Our staff will photograph and log it into the system safely so its owner can claim it."
+
+Example 3: Guest user asking to claim an item
+User: "I saw my water bottle on the found board. Can I claim it?"
+Nereid's Reasoning (internal):
+1. Understand: Guest user spotted their item and wants to claim it.
+2. Analyze: Guest context is active. Rules require logging in or registering to claim.
+3. Plan: Remind them to log in or register first, then guide them through the claim procedure.
+Nereid's Reply: "It is great that you spotted your water bottle! Since you are currently visiting as a guest, you will need to log in or register for an account first. Once you are logged in, simply find the item on the Found Items board, click 'Claim', and describe unique proof of ownership (like its brand, color, or specific scratches) so our administrator can approve it and arrange a safe handoff."
+
+Example 4: Database Search (Successful)
+User: "Hey, did anyone find a black Adidas backpack? I think I left it in the canteen yesterday."
+Nereid's Reasoning (internal):
+1. Understand: User is asking about a lost backpack.
+2. Analyze: Standard item search.
+3. Plan: Call searchDatabase tool to find matching backpacks.
+Tool Call: searchDatabase({ query: "black Adidas backpack canteen" })
+[Tool Output: Found 1 item: "Adidas Backpack" (Category: Bags, Color: Black, Location found: Canteen yesterday)]
+Nereid's Reply: "Good news! I found an item in our database that looks like a great match for your backpack. I cannot display the details in text, but I have displayed a clickable card for it below. Please review it, and if it is yours, click 'Claim' to submit your proof of ownership so we can get it back to you!"
     `.trim(),
   });
 
-  // ── Final prompt ──────────────────────────────────────────────────────────
+  // ── Final User Prompt ─────────────────────────────────────────────────────
   const finalPrompt = `
 ${userContext}
-${urgencyNote}
-${followUpNote}
-
-Active intents: ${[...intents].join(", ")}
 
 ${statsNote}
-
-${searchContext
-    ? `--- DATABASE SEARCH RESULTS ---\n${searchContext}\n\nIMPORTANT: Present these results naturally and conversationally. Do NOT show raw IDs, JSON, or technical formatting to the user. Reference item names and locations in a helpful, human way. If multiple items match, compare them and highlight the most likely match based on the user's description.`
-    : "No database search was performed for this message."
-  }
 
 --- USER MESSAGE ---
 "${latestMessage}"
 
-Reason through this carefully before responding. Be genuinely helpful.
+Reason through this carefully before responding. If the user is looking for an item, USE the searchDatabase tool.
   `.trim();
 
   // ── Call Gemini ───────────────────────────────────────────────────────────
   try {
     console.log("[Nereid] Sending to Gemini:", MODEL_NAME);
     const chat = chatModel.startChat({ history: formattedHistory });
+    
+    // First interaction
     const result = await chat.sendMessage(finalPrompt);
-    const reply = result.response.text();
+    const response = result.response;
+    let searchResults: { foundItems: any[]; lostItems: any[] } | null = null;
+    
+    // Check if the model called the tool
+    const functionCalls = typeof response.functionCalls === "function" ? response.functionCalls() : response.functionCalls;
+    
+    if (functionCalls && functionCalls.length > 0) {
+      const call = functionCalls[0];
+      if (call.name === "searchDatabase") {
+        const query = (call.args as any).query;
+        console.log(`[Nereid] Gemini called searchDatabase tool with query: "${query}"`);
+        
+        // Execute the actual search
+        searchResults = await aiSearchService.aiSearchItems(query);
+        console.log("[Nereid] Tool Results — found:", searchResults.foundItems.length, "lost:", searchResults.lostItems.length);
+        
+        // Format results
+        const formattedFound = formatFoundItems(searchResults.foundItems);
+        const formattedLost = formatLostItems(searchResults.lostItems);
+        
+        // Send the tool response back to Gemini
+        const functionResponseParts: any = [{
+          functionResponse: {
+            name: "searchDatabase",
+            response: {
+              foundItemsSummary: formattedFound,
+              lostItemsSummary: formattedLost,
+              totalFound: searchResults.foundItems.length,
+              totalLost: searchResults.lostItems.length
+            }
+          }
+        }];
+        
+        console.log("[Nereid] Sending tool response back to Gemini...");
+        const finalResult = await chat.sendMessage(functionResponseParts);
+        let reply = finalResult.response.text();
+        try {
+          const parsed = JSON.parse(reply);
+          if (parsed.reply) reply = parsed.reply;
+        } catch (e) {
+          // ignore parsing error
+        }
+        console.log("[Nereid] Final Reply:", reply.length, "chars");
+        
+        return { reply, searchResults };
+      }
+    }
+    
+    // If no tool was called, just return the standard text response
+    let reply = response.text();
+    try {
+      const parsed = JSON.parse(reply);
+      if (parsed.reply) reply = parsed.reply;
+    } catch (e) {
+      // ignore
+    }
     console.log("[Nereid] Reply:", reply.length, "chars");
-    return { reply, searchResults };
+    return { reply, searchResults: null };
+    
   } catch (e: any) {
     console.error("[Nereid] Gemini API error:", e?.message || e);
     return {

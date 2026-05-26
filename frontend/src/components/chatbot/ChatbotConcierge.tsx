@@ -226,19 +226,38 @@ export default function ChatbotConcierge() {
 
                   {/* Found item cards */}
                   {msg.searchResults && msg.searchResults.foundItems?.length > 0 && (
-                    <div className="mt-2 w-full max-w-[90%] space-y-2">
+                    <div className="mt-2 w-full max-w-[95%] space-y-2">
                       {msg.searchResults.foundItems.map((item: any) => (
                         <div
                           key={`found-${item.id}`}
                           onClick={() => { setIsOpen(false); navigate(`/foundItems/${item.id}`); }}
-                          className="bg-cyan-900/30 border border-cyan-500/30 p-2 rounded-lg cursor-pointer hover:bg-cyan-900/50 transition-colors flex items-center gap-3"
+                          className="flex h-28 bg-gray-800 rounded-xl overflow-hidden border border-white/5 hover:border-cyan-500/40 cursor-pointer shadow-lg shadow-black/20 group transition-all"
                         >
-                          <div className="w-8 h-8 rounded bg-cyan-500/20 flex items-center justify-center text-cyan-400">
-                            <FaBoxOpen size={14} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-white truncate">Found: {item.foundItemName}</p>
-                            <p className="text-[10px] text-cyan-200 truncate">{item.location}</p>
+                          {/* Image */}
+                          {item.img ? (
+                            <div className="w-24 shrink-0 overflow-hidden bg-gray-900">
+                              <img src={item.img} alt={item.foundItemName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            </div>
+                          ) : (
+                            <div className="w-24 shrink-0 bg-gradient-to-br from-cyan-900/30 to-gray-900 flex flex-col items-center justify-center text-cyan-500/40">
+                              <FaBoxOpen size={20} className="mb-1" />
+                              <span className="text-[8px] tracking-widest uppercase">No Image</span>
+                            </div>
+                          )}
+                          {/* Content */}
+                          <div className="p-2.5 flex-1 min-w-0 flex flex-col justify-center">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[9px] uppercase font-bold tracking-wider text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded-sm">Found Item</span>
+                              <span className="text-[9px] text-gray-500">{new Date(item.date).toLocaleDateString()}</span>
+                            </div>
+                            <h4 className="text-xs font-bold text-white mb-0.5 truncate">{item.foundItemName}</h4>
+                            <p className="text-[10px] text-gray-400 truncate mb-1.5">{item.description}</p>
+                            <div className="flex items-center justify-between">
+                              <p className="text-[9px] text-gray-500 truncate flex-1 pr-2">📍 {item.location}</p>
+                              <button className="bg-cyan-500/10 text-cyan-400 text-[10px] px-2 py-1 rounded-md font-medium group-hover:bg-cyan-500 group-hover:text-white transition-all duration-300 whitespace-nowrap">
+                                View
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -247,19 +266,38 @@ export default function ChatbotConcierge() {
 
                   {/* Lost item cards */}
                   {msg.searchResults && msg.searchResults.lostItems?.length > 0 && (
-                    <div className="mt-2 w-full max-w-[90%] space-y-2">
+                    <div className="mt-2 w-full max-w-[95%] space-y-2">
                       {msg.searchResults.lostItems.map((item: any) => (
                         <div
                           key={`lost-${item.id}`}
                           onClick={() => { setIsOpen(false); navigate(`/lostItems/${item.id}`); }}
-                          className="bg-red-900/30 border border-red-500/30 p-2 rounded-lg cursor-pointer hover:bg-red-900/50 transition-colors flex items-center gap-3"
+                          className="flex h-28 bg-gray-800 rounded-xl overflow-hidden border border-white/5 hover:border-red-500/40 cursor-pointer shadow-lg shadow-black/20 group transition-all"
                         >
-                          <div className="w-8 h-8 rounded bg-red-500/20 flex items-center justify-center text-red-400">
-                            <FaSearch size={14} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-white truncate">Lost: {item.lostItemName}</p>
-                            <p className="text-[10px] text-red-200 truncate">{item.location}</p>
+                          {/* Image */}
+                          {item.img ? (
+                            <div className="w-24 shrink-0 overflow-hidden bg-gray-900">
+                              <img src={item.img} alt={item.lostItemName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            </div>
+                          ) : (
+                            <div className="w-24 shrink-0 bg-gradient-to-br from-red-900/30 to-gray-900 flex flex-col items-center justify-center text-red-500/40">
+                              <FaSearch size={20} className="mb-1" />
+                              <span className="text-[8px] tracking-widest uppercase">No Image</span>
+                            </div>
+                          )}
+                          {/* Content */}
+                          <div className="p-2.5 flex-1 min-w-0 flex flex-col justify-center">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[9px] uppercase font-bold tracking-wider text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded-sm">Lost Report</span>
+                              <span className="text-[9px] text-gray-500">{new Date(item.date).toLocaleDateString()}</span>
+                            </div>
+                            <h4 className="text-xs font-bold text-white mb-0.5 truncate">{item.lostItemName}</h4>
+                            <p className="text-[10px] text-gray-400 truncate mb-1.5">{item.description}</p>
+                            <div className="flex items-center justify-between">
+                              <p className="text-[9px] text-gray-500 truncate flex-1 pr-2">📍 {item.location}</p>
+                              <button className="bg-red-500/10 text-red-400 text-[10px] px-2 py-1 rounded-md font-medium group-hover:bg-red-500 group-hover:text-white transition-all duration-300 whitespace-nowrap">
+                                View
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
