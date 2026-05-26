@@ -69,6 +69,12 @@ const errorHandler = (
         issues: err,
       },
     });
+  } else if (err.code === "EBADCSRFTOKEN") {
+    res.status(StatusCodes.FORBIDDEN).json({
+      success: false,
+      message: "invalid csrf token",
+      errorDetails: err,
+    });
   } else {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,

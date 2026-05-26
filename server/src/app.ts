@@ -70,16 +70,21 @@ app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-app.get("/api/csrf-token", (req: Request, res: Response) => {
+// Public — no CSRF needed
+app.get("/", (req, res) => res.send({ message: "Welcome!" }));
+app.get("/api/csrf-token", (req, res) => {
   const token = generateCsrfToken(req, res);
   res.json({ token });
 });
 
-// Exclude certain webhook or public paths if necessary. We'll protect all other mutating routes.
-app.use(doubleCsrfProtection);
+// Selective CSRF — exempt login, register, refresh
+const CSRF_EXEMPT = ["/api/login", "/api/register", "/api/refresh", "/api/auth"];
 
-app.get("/", (req: Request, res: Response) => {
-  res.send({ message: "Welcome to Lost and found services!" });
+app.use((req, res, next) => {
+  if (CSRF_EXEMPT.some(path => req.path.startsWith(path))) {
+    return next();
+  }
+  return doubleCsrfProtection(req, res, next);
 });
 
 app.use("/api", router);

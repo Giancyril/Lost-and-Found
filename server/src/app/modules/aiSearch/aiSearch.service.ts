@@ -61,7 +61,7 @@ const aiSearchItems = async (searchQuery: string) => {
     }));
 
     // Gemini model
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = `
     You are an AI assistant helping people find lost and found items.

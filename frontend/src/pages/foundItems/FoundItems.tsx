@@ -668,6 +668,7 @@ const FoundItemsPage = () => {
   const [claimItem, setClaimItem] = useState<any>(null);
   const [limit] = useState(50);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSubmittingRef = useRef(false);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showCategoryHelp, setShowCategoryHelp] = useState(false);
@@ -865,7 +866,7 @@ const FoundItemsPage = () => {
   const addFormValues = watch();
   useEffect(() => {
     const isFormDirty = Object.values(addFormValues).some(v => !!v);
-    if (isAddModalOpen && isFormDirty) {
+    if (isAddModalOpen && isFormDirty && !isSubmittingRef.current) {
       saveDraft({ ...addFormValues, categoryId: addSelectedMenucategoryId, categoryName: addSelectedMenu });
     }
   }, [addFormValues, addSelectedMenucategoryId, addSelectedMenu, isAddModalOpen]);
@@ -1171,6 +1172,7 @@ const FoundItemsPage = () => {
   const onAddSubmit = async (data: any) => {
     if (!addSelectedMenucategoryId) return;
     try {
+      isSubmittingRef.current = true;
       const lowerMenu = addSelectedMenu?.toLowerCase() || "";
       const isAutoFillImage =
         lowerMenu.includes("money") ||
@@ -1251,6 +1253,8 @@ const FoundItemsPage = () => {
       closeAddModal();
     } catch {
       toast.error("Something went wrong. Please try again.");
+    } finally {
+      setTimeout(() => { isSubmittingRef.current = false; }, 500);
     }
   };
 

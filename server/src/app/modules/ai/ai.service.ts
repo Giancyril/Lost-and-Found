@@ -63,7 +63,7 @@ const recognizeImage = async (imageSource: string | Buffer, mimeType = "image/jp
     console.log("[AI] Categories found:", categories.length);
 
     // 3. Initialize Gemini model (Updated to latest flash alias)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     // 4. Construct the prompt
     const prompt = `
@@ -148,7 +148,7 @@ const recognizeImage = async (imageSource: string | Buffer, mimeType = "image/jp
 const analyzeUrgency = async (name: string, description: string) => {
   try {
     const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = `
     You are an AI moderator for a campus Lost and Found system called "Lost & Found NBSC".
@@ -209,7 +209,7 @@ const analyzeUrgency = async (name: string, description: string) => {
 const analyzeClaimFraud = async (claimantFeatures: string, itemDescription: string, itemName: string) => {
   try {
     const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = `
     You are a Fraud Detection AI for a campus Lost and Found system called "Lost & Found NBSC".
