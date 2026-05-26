@@ -43,7 +43,7 @@ const scannerStore = {
   listeners: new Set<() => void>(),
   subscribe(listener: () => void) {
     this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+    return () => { this.listeners.delete(listener); };
   },
   setItems(action: React.SetStateAction<ProcessedItem[]>) {
     this.items = typeof action === "function" ? action(this.items) : action;
@@ -207,6 +207,7 @@ const BulkScanner = () => {
             : <><FaBolt size={12} /> Start Processing</>
           }
         </button>
+      </div>
       </div>
 
       {/* ── Stats Row ── */}
