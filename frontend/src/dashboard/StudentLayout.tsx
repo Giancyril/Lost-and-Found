@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useUserVerification, signOut } from "../auth/auth";
-import {
-  FaTachometerAlt, FaBoxOpen, FaSearch, FaClipboardList,
+import { FaTachometerAlt, FaBoxOpen, FaSearch, FaClipboardList,
   FaTrophy, FaCog, FaBars, FaTimes, FaHome, FaSignOutAlt,
   FaChevronLeft, FaChevronRight, FaChevronDown, FaStar,
   FaChartLine, FaArrowRight, FaMedal, FaBullhorn, FaMapMarkerAlt, FaUser
@@ -10,6 +9,7 @@ import {
 import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../redux/api/api";
 import ChatDropdown from "./components/ChatDropdown";
 import ProximityAlertSystem from "../components/ProximityAlertSystem";
+import { calculateLevel } from "../utils/leveling";
 
 const NAV_ITEMS = [
   {
@@ -91,13 +91,7 @@ const PointsDropdown = ({ points, history, rank }: { points: number; history: an
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const location = useLocation();
-  const tier = getTier(points);
-
-  const nextThreshold = points < 50 ? 50 : points < 200 ? 200 : points < 500 ? 500 : null;
-  const prevThreshold = points < 50 ? 0 : points < 200 ? 50 : points < 500 ? 200 : 500;
-  const progress = nextThreshold
-    ? Math.round(((points - prevThreshold) / (nextThreshold - prevThreshold)) * 100)
-    : 100;
+  const { level, rankTitle, currentLevelTotalXp, nextLevelTotalXp, progressPercent } = calculateLevel(points);
 
   useEffect(() => { setOpen(false); }, [location.pathname]);
   useEffect(() => {
@@ -108,56 +102,55 @@ const PointsDropdown = ({ points, history, rank }: { points: number; history: an
 
   return (
     <div ref={ref} className="relative">
+      {/* ── Header Trigger Button ── */}
       <button
         type="button"
         onClick={() => setOpen(p => !p)}
-        className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-all border ${
+        className={`relative w-9 h-9 flex flex-col items-center justify-center rounded-full transition-all border group ${
           open 
             ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400" 
-            : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+            : "bg-transparent border-white/5 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/10"
         }`}
       >
-        <FaStar size={14} className="text-yellow-400" />
-        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-yellow-500 text-gray-950 text-[9px] font-black rounded-full flex items-center justify-center px-1 border-2 border-gray-900 shadow-sm">
-          {points >= 1000 ? `${(points / 1000).toFixed(1)}k` : points}
-        </span>
+        <span className="text-[7px] font-bold text-yellow-500 leading-none mb-[1px] uppercase group-hover:text-yellow-400 transition-colors">LVL</span>
+        <span className="text-[13px] font-black leading-none">{level}</span>
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-10 w-72 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/70 overflow-hidden z-50">
+          <div className="absolute right-0 top-11 w-72 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/70 overflow-hidden z-50">
             {/* Header */}
             <div className="px-4 pt-4 pb-3 border-b border-white/5"
               style={{ background: "linear-gradient(135deg, rgba(234,179,8,0.05) 0%, transparent 60%)" }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-yellow-500/15 border border-yellow-500/20 flex items-center justify-center shadow-lg shadow-yellow-500/10">
-                    <FaStar size={15} className="text-yellow-400" />
+                  <div className="w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/20 flex flex-col items-center justify-center">
+                    <span className="text-[9px] font-bold text-yellow-500 leading-none">LVL</span>
+                    <span className="text-yellow-400 text-sm font-black leading-none mt-0.5">{level}</span>
                   </div>
                   <div>
-                    <p className="text-white text-sm font-black leading-none">{points.toLocaleString()}</p>
-                    <p className="text-gray-500 text-[10px] mt-0.5 font-medium">Total points</p>
+                    <p className="text-white text-sm font-black leading-none">{points.toLocaleString()} XP</p>
+                    <p className="text-yellow-500 text-[10px] mt-0.5 font-bold uppercase tracking-wider">{rankTitle}</p>
                   </div>
                 </div>
-                <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg border ${tier.color} ${tier.bg} uppercase tracking-wider shadow-sm ${tier.glow}`}>
-                  {tier.label}
-                </span>
               </div>
-              {nextThreshold ? (
-                <div>
-                  <div className="flex justify-between text-[10px] text-gray-600 mb-1.5">
-                    <span className="text-gray-500 font-medium">{points} pts</span>
-                    <span>{nextThreshold - points} pts to next tier</span>
+              
+              {level < 100 ? (
+                <div className="mt-2">
+                  <div className="flex justify-between text-[10px] text-gray-400 mb-1.5 font-medium">
+                    <span>{currentLevelTotalXp} XP</span>
+                    <span>{nextLevelTotalXp} XP</span>
                   </div>
-                  <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${progress}%`, background: "linear-gradient(90deg, #eab308, #f59e0b)" }} />
+                  <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden relative">
+                    <div className="absolute top-0 left-0 h-full rounded-full transition-all duration-700"
+                      style={{ width: `${progressPercent}%`, background: "linear-gradient(90deg, #eab308, #f59e0b)" }} />
                   </div>
+                  <p className="text-[9px] text-gray-500 mt-1.5 text-right">{nextLevelTotalXp - points} XP to Level {level + 1}</p>
                 </div>
               ) : (
-                <p className="text-[11px] text-yellow-400 font-semibold flex items-center gap-1.5">
-                  <FaTrophy size={9} /> Maximum tier reached!
+                <p className="text-[11px] text-yellow-400 font-semibold flex items-center gap-1.5 mt-2">
+                  <FaTrophy size={9} /> Maximum Level Reached!
                 </p>
               )}
             </div>

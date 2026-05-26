@@ -16,6 +16,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Magic AI Scan**: Instantly identify items from a single photo — automatically populates item name, detailed description, color, and condition using computer vision
 - **AI-Powered Search**: Integration with Google Gemini AI for intelligent item search and matching
 - **High-Performance Web Scanner**: Next-generation hybrid barcode scanner using jsQR + QuaggaJS + native fallback for 1-2 second scan performance — 3-5x faster than previous implementation
+- **Continuous Bulk Scanner**: Seamlessly scan multiple IDs or items in rapid succession without closing the scanner interface. Maintains persistent state and automatically fills location data, supercharging mass-processing workflows for security and admin staff.
 - **Student Masterlist Integration**: Google Sheets-backed masterlist that resolves student name, email, and department from a scanned or entered ID — with fuzzy name matching and ID normalization
 - **Real-Time Notifications**: Email notifications for potential matches and claim status updates
 - **Interactive Maps**: Location-based visualization using Leaflet maps with heat mapping
@@ -42,6 +43,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **AI Chatbot Concierge ("Smart Assistant")**: A floating AI chat widget integrated into the Student Dashboard. Users can interact naturally (e.g., "I lost my blue Nike backpack near the library yesterday"), and the AI uses Gemini to parse the sentence, instantly search the database, and reply with potential matches in the chat.
 ### Campus Features
 - **Points System**: Comprehensive gamification system with point rewards for various activities
+  - **Leveling & Rank System**: An RPG-style progression system that automatically translates earned points into Account Levels (1-100). Students unlock prestigious Rank Titles (e.g., Novice Finder -> Grandmaster of Lost Items) as they level up, displayed proudly on their profile.
   - **Weekly Bounties & Time-Limited Events**: Dynamic rotating missions (e.g., "Report 3 Found Items") to drive student engagement and boost item recovery rates
   - **Points for Actions**: Earn points for reporting items, successful claims, helpful comments, and community contributions
   - **Leaderboard**: Real-time leaderboard showing top contributors and point rankings
@@ -593,5 +595,7 @@ Here is the difference between the two:
 
 ### Phase 10: Gamification, Journey Tracking & Fraud Prevention (Completed)
 - **Weekly Bounties & Time-Limited Events**: Dynamic gamification engine powered by Prisma models and cron-jobs. Features rotating weekly missions (e.g., "Report 3 Found Items") to drive student engagement and boost item recovery rates.
+- **Leveling & Rank System**: RPG-style progression system capping at Level 100 with dynamic rank titles and progress bars based on community points.
+- **Continuous Bulk Scanner**: Uninterrupted mass-scanning utility that retains persistent state across navigation, enabling rapid continuous entry of multiple items.
 - **Interactive "Journey Tracking"**: A visual, data-driven timeline tracing the complete lifecycle of a claim or lost report, dynamically aggregating sightings and exact `ClaimAuditLog` milestones (like "Verification Passed" or "Claim Rejected").
 - **AI Fraud & 'Serial Claimant' Prevention Engine**: A dual-layer security mechanism. A heuristic layer flags users submitting 3+ claims in 30 days. Then, Gemini AI cross-references the claimant's "Proof of Ownership" against hidden item details to detect vague guesses or blatant lies, emitting a 0-100% Risk Score and instant red FRAUD ALERTS on the Admin claims dashboard.

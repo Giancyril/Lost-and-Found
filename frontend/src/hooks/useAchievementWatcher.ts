@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useUserVerification } from "../auth/auth";
 import { baseApi } from "../redux/api/baseApi";
 
@@ -58,7 +58,7 @@ export const useAchievementWatcher = () => {
     }
   }, [queue, current]);
 
-  const dismiss = () => setCurrent(null);
+  const dismiss = useCallback(() => setCurrent(null), []);
 
   return { current, dismiss };
 };

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useInitiateChatMutation } from "../../redux/api/chatApi";
 import {
-  FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight,
+  FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight, FaChevronUp,
   FaTimes, FaTh, FaList, FaTag, FaPlus,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
@@ -669,6 +669,13 @@ const FoundItemsPage = () => {
   const [limit] = useState(50);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSubmittingRef = useRef(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showCategoryHelp, setShowCategoryHelp] = useState(false);
@@ -1325,9 +1332,7 @@ const FoundItemsPage = () => {
               <p className="text-gray-500 text-sm mt-1 max-w-lg">Browse items recovered and logged by the SAS office. If you recognize something, submit a claim to verify ownership.</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-300">
-                <FaClipboardList size={10} className="text-blue-400" /> Submit a claim to retrieve
-              </div>
+              
               {isAdmin && (
                 <button onClick={() => setIsAddModalOpen(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all">
@@ -1897,6 +1902,17 @@ const FoundItemsPage = () => {
         itemType="found"
         itemName={commentItem?.foundItemName || "Item"}
       />
+
+      {/* ── Scroll to Top Button ── */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 p-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg shadow-black/50 transition-all duration-300 z-40 hover:scale-110 ${
+          showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
+        }`}
+        title="Back to top"
+      >
+        <FaChevronUp size={16} />
+      </button>
 
     </>
   );

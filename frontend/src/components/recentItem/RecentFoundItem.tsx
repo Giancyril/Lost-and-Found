@@ -24,10 +24,10 @@ const RecentFoundItem = () => {
   const isAdmin = users?.role === "ADMIN";
   const { data: foundItems, isLoading } = useGetFoundItemsQuery({ limit: 50, sortBy: "date", sortOrder: "desc" });
 
-  const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+  const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
   const items = (foundItems?.data ?? []).filter((item: any) => {
     const created = new Date(item.createdAt ?? item.date).getTime();
-    return Date.now() - created <= THREE_HOURS_MS;
+    return Date.now() - created <= TWENTY_FOUR_HOURS_MS;
   }).slice(0, 10);
 
   const ITEMS_PER_PAGE = 5;
@@ -53,7 +53,7 @@ const RecentFoundItem = () => {
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Recent Found Items</h2>
         <div className="flex items-center justify-center gap-1.5 mt-1.5">
           <FaClock size={10} className="text-blue-400" />
-          <p className="text-gray-500 text-xs">Reported within the last 3 hours</p>
+          <p className="text-gray-500 text-xs">Reported within the last 24 hours</p>
         </div>
       </div>
 

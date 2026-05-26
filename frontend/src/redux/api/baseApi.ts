@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
-import { getUserLocalStorage, setUserLocalStorage, signOut } from "../../auth/auth";
+import { getUserLocalStorage, setUserLocalStorage, signOut, verifyToken } from "../../auth/auth";
 
 const isProduction = import.meta.env.PROD;
 
@@ -51,6 +51,33 @@ const baseQuery = fetchBaseQuery({
 });
 
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
+  // 1. Preemptively check if the access token is already expired to avoid 401 console errors
+  const token = getUserLocalStorage();
+  if (token) {
+    try {
+      const decoded: any = verifyToken(token);
+      if (decoded && decoded.exp && (decoded.exp * 1000) < Date.now()) {
+        // Token is expired, try to refresh before making the actual request
+        const refreshResult = await baseQuery({ url: "/refresh", method: "POST" }, api, extraOptions);
+        if (refreshResult.data) {
+          const newToken = (refreshResult.data as any).data?.token;
+          if (newToken) {
+            setUserLocalStorage(newToken);
+          } else {
+            signOut();
+            return { error: { status: 401, data: "Unauthorized" } } as any;
+          }
+        } else {
+          signOut();
+          return { error: { status: 401, data: "Unauthorized" } } as any;
+        }
+      }
+    } catch {
+      // Ignore decode errors, let the server handle invalid tokens
+    }
+  }
+
+  // 2. Proceed with the actual request
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {

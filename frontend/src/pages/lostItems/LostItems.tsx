@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
-  FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight,
+  FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight, FaChevronUp,
   FaTimes, FaTag,
   FaWallet, FaMobileAlt, FaLaptop, FaKey, FaBriefcase,
   FaHeadphones, FaGlasses, FaBook, FaIdCard, FaUmbrella,
@@ -511,6 +511,13 @@ const LostItemsPage = () => {
   );
   const [limit] = useState(50);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const { data: lostItems, isLoading } = useGetLostItemsQuery({
     searchTerm, page: currentPage, limit, sortBy, sortOrder,
@@ -766,6 +773,16 @@ const LostItemsPage = () => {
         itemName={commentItem?.lostItemName || "Item"}
       />
 
+      {/* ── Scroll to Top Button ── */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 p-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg shadow-black/50 transition-all duration-300 z-40 hover:scale-110 ${
+          showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
+        }`}
+        title="Back to top"
+      >
+        <FaChevronUp size={16} />
+      </button>
 
     </div>
   );

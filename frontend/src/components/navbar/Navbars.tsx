@@ -17,6 +17,7 @@ import { useState, useRef, useEffect } from "react";
 import NotificationBell from "../notifications/NotificationBell";
 import ChatbotConcierge from "../chatbot/ChatbotConcierge";
 import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../../redux/api/api";
+import { calculateLevel } from "../../utils/leveling";
 
 const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className={`${className} opacity-90`}>
@@ -45,44 +46,33 @@ const getTier = (pts: number) => {
 };
 
 // ── Points Dropdown ───────────────────────────────────────────────────────────
-const PointsDropdown = ({ points, history, rank }: {
-  points: number;
-  history: any[];
-  rank: number;
-}) => {
+const PointsDropdown = ({ points, history, rank }: { points: number; history: any[]; rank: number }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const tier = getTier(points);
+  const location = useLocation();
+  const { level, rankTitle, currentLevelTotalXp, nextLevelTotalXp, progressPercent } = calculateLevel(points);
 
-  // Next tier threshold
-  const nextThreshold = points < 50 ? 50 : points < 200 ? 200 : points < 500 ? 500 : null;
-  const prevThreshold = points < 50 ? 0 : points < 200 ? 50 : points < 500 ? 200 : 500;
-  const progress = nextThreshold
-    ? Math.round(((points - prevThreshold) / (nextThreshold - prevThreshold)) * 100)
-    : 100;
-
+  useEffect(() => { setOpen(false); }, [location.pathname]);
   useEffect(() => {
-    const fn = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("mousedown", fn);
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
   return (
     <div ref={ref} className="relative">
-      {/* Trigger button */}
+      {/* ── Header Trigger Button ── */}
       <button
         type="button"
         onClick={() => setOpen(p => !p)}
-        className="relative w-9 h-9 flex items-center justify-center rounded-full
-          bg-yellow-400/10 text-yellow-300 border border-yellow-400/20 
-          hover:border-yellow-400/50 hover:bg-yellow-400/20 transition-all duration-200"
+        className={`relative w-9 h-9 flex flex-col items-center justify-center rounded-full transition-all border group ${
+          open 
+            ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400" 
+            : "bg-transparent border-white/5 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/10"
+        }`}
       >
-        <FaStar size={14} className="text-yellow-400" />
-        <span className="absolute -top-1 -right-1 min-w-[18px] h-4 px-1 bg-yellow-500 text-gray-950 text-[9px] font-black rounded-full flex items-center justify-center border border-gray-950 shadow-sm">
-          {points >= 1000 ? `${(points / 1000).toFixed(1)}k` : points}
-        </span>
+        <span className="text-[7px] font-bold text-yellow-500 leading-none mb-[1px] uppercase group-hover:text-yellow-400 transition-colors">LVL</span>
+        <span className="text-[13px] font-black leading-none">{level}</span>
       </button>
 
       {open && (
@@ -92,50 +82,45 @@ const PointsDropdown = ({ points, history, rank }: {
             rounded-2xl shadow-2xl shadow-black/80 overflow-hidden z-50">
 
             {/* Header */}
-            <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-yellow-500/5 to-transparent border-b border-white/[0.05]">
+            <div className="px-4 pt-4 pb-3 border-b border-white/5"
+              style={{ background: "linear-gradient(135deg, rgba(234,179,8,0.05) 0%, transparent 60%)" }}>
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-yellow-500/15 border border-yellow-500/20 flex items-center justify-center">
-                    <FaStar size={14} className="text-yellow-400" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-yellow-500/15 border border-yellow-500/20 flex flex-col items-center justify-center">
+                    <span className="text-[9px] font-bold text-yellow-500 leading-none">LVL</span>
+                    <span className="text-yellow-400 text-sm font-black leading-none mt-0.5">{level}</span>
                   </div>
                   <div>
-                    <p className="text-white text-sm font-black leading-none">{points.toLocaleString()} pts</p>
-                    <p className="text-gray-500 text-[10px] mt-0.5">Total earned</p>
+                    <p className="text-white text-sm font-black leading-none">{points.toLocaleString()} XP</p>
+                    <p className="text-yellow-500 text-[10px] mt-0.5 font-bold uppercase tracking-wider">{rankTitle}</p>
                   </div>
                 </div>
-                {/* Tier badge */}
-                <span className={`text-[10px] font-black px-2 py-1 rounded-lg border ${tier.color} ${tier.bg} uppercase tracking-wider`}>
-                  {tier.label}
-                </span>
               </div>
-
-              {/* Progress bar */}
-              {nextThreshold && (
-                <div>
-                  <div className="flex justify-between text-[10px] text-gray-600 mb-1">
-                    <span>{points} pts</span>
-                    <span>{nextThreshold} pts for next tier</span>
+              
+              {level < 100 ? (
+                <div className="mt-2">
+                  <div className="flex justify-between text-[10px] text-gray-400 mb-1.5 font-medium">
+                    <span>{currentLevelTotalXp} XP</span>
+                    <span>{nextLevelTotalXp} XP</span>
                   </div>
-                  <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full transition-all duration-500"
-                      style={{ width: `${progress}%` }}
-                    />
+                  <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden relative">
+                    <div className="absolute top-0 left-0 h-full rounded-full transition-all duration-700"
+                      style={{ width: `${progressPercent}%`, background: "linear-gradient(90deg, #eab308, #f59e0b)" }} />
                   </div>
+                  <p className="text-[9px] text-gray-500 mt-1.5 text-right">{nextLevelTotalXp - points} XP to Level {level + 1}</p>
                 </div>
-              )}
-              {!nextThreshold && (
-                <div className="text-[10px] text-yellow-400 font-semibold flex items-center gap-1">
-                  <FaTrophy size={9} /> Max tier reached!
-                </div>
+              ) : (
+                <p className="text-[11px] text-yellow-400 font-semibold flex items-center gap-1.5 mt-2">
+                  <FaTrophy size={9} /> Maximum Level Reached!
+                </p>
               )}
             </div>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-2 gap-px bg-white/[0.04] border-b border-white/[0.05]">
+            {/* Rank + Transactions */}
+            <div className="grid grid-cols-2 gap-px bg-white/[0.04] border-b border-white/5">
               <div className="bg-gray-900 px-4 py-3">
                 <p className="text-white text-sm font-black">{rank > 0 ? `#${rank}` : "—"}</p>
-                <p className="text-gray-600 text-[10px] font-medium mt-0.5">Your Rank</p>
+                <p className="text-gray-600 text-[10px] font-medium mt-0.5">Campus Rank</p>
               </div>
               <div className="bg-gray-900 px-4 py-3">
                 <p className="text-white text-sm font-black">{history.length}</p>
@@ -588,7 +573,7 @@ export function Navbars() {
               { label: "Lost Items", href: "/lostItems", icon: "ti-alert-triangle", iconColor: "text-red-400", iconBg: "bg-red-500/10" },
               { label: "Report Lost Item", href: "/reportLostItem", icon: "ti-file-description", iconColor: "text-orange-400", iconBg: "bg-orange-500/10" },
               { label: "Smart Search", href: "/ai-search", icon: "ti-sparkles", iconColor: "text-violet-400", iconBg: "bg-violet-500/10" },
-              { label: "Tracking Center", href: "/track", icon: "ti-radar", iconColor: "text-blue-400", iconBg: "bg-blue-500/10" },
+              { label: "Item Status", href: "/track", icon: "ti-radar", iconColor: "text-blue-400", iconBg: "bg-blue-500/10" },
             ].map(({ label, href, icon, iconColor, iconBg }) => (
               <Link
                 key={href}

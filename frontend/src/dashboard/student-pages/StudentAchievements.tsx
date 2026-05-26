@@ -166,7 +166,14 @@ const AchievementModal = ({ ach, onClose, onViewAll }: { ach: any, onClose: () =
     if (ach?.tier) {
       playTierSound(ach.tier);
     }
-  }, [ach]);
+    
+    // Auto-dismiss after 5 seconds
+    const timer = setTimeout(() => {
+      onClose();
+    }, 5000);
+    
+    return () => clearTimeout(timer);
+  }, [ach, onClose]);
 
   if (!ach) return null;
   const style = TIER_STYLES[ach.tier as keyof typeof TIER_STYLES] || TIER_STYLES.BRONZE;

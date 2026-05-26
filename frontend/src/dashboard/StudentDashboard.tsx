@@ -189,10 +189,6 @@ export default function StudentDashboard() {
                 <span className="text-white font-bold text-sm">{myAchievements.length}</span>
                 <span className="text-gray-500 text-xs">badges</span>
               </Link>
-              <Link to="/foundItems?report=true"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-400 text-xs font-semibold hover:bg-blue-500/10 transition-colors">
-                <FaBolt size={9} /> Report items to earn more points
-              </Link>
             </div>
           </div>
         </div>
@@ -237,10 +233,6 @@ export default function StudentDashboard() {
               <FaMedal size={10} className="text-purple-400" />
               <span className="text-white font-bold text-sm">{myAchievements.length}</span>
               <span className="text-gray-500 text-xs">badges</span>
-            </Link>
-            <Link to="/foundItems?report=true"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-400/5 text-emerald-400 text-[10px] font-semibold">
-              <FaBolt size={8} /> Report items to earn more points
             </Link>
           </div>
         </div>

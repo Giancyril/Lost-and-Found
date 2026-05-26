@@ -98,7 +98,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
         {/* Time */}
         <button type="button" onClick={handleTimeClick}
           className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
-          style={{ color: time ? '#34d399' : 'rgba(156,163,175,0.7)' }}
+          style={{ color: location ? '#60a5fa' : 'rgba(156,163,175,0.7)' }}
           title="Add time">
           <FaClock size={13} />
         </button>
@@ -176,8 +176,8 @@ export const CommentInput: React.FC<CommentInputProps> = ({
         </span>
       )}
       {time && (
-        <span className="inline-flex items-center gap-1.5 text-emerald-400 rounded-full px-3 py-1"
-          style={{ fontSize: 11, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', fontWeight: 600 }}>
+        <span className="inline-flex items-center gap-1.5 text-blue-400 rounded-full px-3 py-1"
+          style={{ fontSize: 11, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', fontWeight: 600 }}>
           <FaClock size={10} /> {time}
           <button onClick={() => setTime('')} className="ml-1 opacity-70 hover:opacity-100">×</button>
         </span>
