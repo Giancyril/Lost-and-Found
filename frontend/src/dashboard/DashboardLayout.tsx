@@ -6,7 +6,7 @@ import {
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt, FaMapMarkerAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate,
-  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode
+  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy
 } from "react-icons/fa";
 import { useUserVerification, signOut } from "../auth/auth";
 
@@ -52,6 +52,7 @@ const menuItems = [
 
   // Student Management
   { title: "Students", icon: FaUserGraduate, path: "/dashboard/students" },
+  { title: "Leaderboard", icon: FaTrophy, path: "/dashboard/leaderboard" },
 
   // Administration - Ordered for Professional Workflow
   { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
@@ -82,6 +83,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/security": { title: "Security", subtitle: "Monitor login activity, access control, and compliance reports." },
   "/dashboard/audit-logs": { title: "Audit Logs", subtitle: "Strict, un-deletable record of all administrative and system actions." },
   "/dashboard/chat": { title: "Messenger", subtitle: "Real-time communication hub for claims and support." },
+  "/dashboard/leaderboard": { title: "Leaderboard", subtitle: "View top community contributors ranked by points." },
 };
 
 const timeAgo = (dateStr: string) => {

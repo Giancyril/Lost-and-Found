@@ -43,6 +43,7 @@ import StudentSettings from "./dashboard/student-pages/StudentSettings.tsx";
 import StudentAchievements from "./dashboard/student-pages/StudentAchievements.tsx";
 import AchievementsManagement from "./dashboard/pages/AchievementsManagement.tsx";
 import StudentRegistry from "./dashboard/pages/StudentRegistry.tsx";
+import LeaderboardPage from "./dashboard/pages/LeaderboardPage.tsx";
 import CommunicationHub from "./dashboard/pages/CommunicationHub.tsx";
 import SupportPage from "./pages/support/SupportPage.tsx";
 import SecurityPage from "./dashboard/pages/SecurityCompliance.tsx";
@@ -101,6 +102,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/comm-hub", element: <DashboardLayout><CommunicationHub /></DashboardLayout> },
   { path: "/dashboard/users", element: <DashboardLayout><UsersManagement /></DashboardLayout> },
   { path: "/dashboard/students", element: <DashboardLayout><StudentRegistry /></DashboardLayout> },
+  { path: "/dashboard/leaderboard", element: <DashboardLayout><LeaderboardPage /></DashboardLayout> },
   { path: "/dashboard/categories", element: <DashboardLayout><CategoriesManagement /></DashboardLayout> },
   { path: "/dashboard/report", element: <DashboardLayout><ReportPage /></DashboardLayout> },
   { path: "/dashboard/settings", element: <DashboardLayout><Settings /></DashboardLayout> },
