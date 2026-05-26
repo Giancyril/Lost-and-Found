@@ -36,11 +36,43 @@ const StatusBadge = ({ status }: { status: ProcessedItem["status"] }) => {
   );
 };
 
+const scannerStore = {
+  items: [] as ProcessedItem[],
+  isProcessing: false,
+  listeners: new Set<() => void>(),
+  subscribe(listener: () => void) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  },
+  setItems(action: React.SetStateAction<ProcessedItem[]>) {
+    this.items = typeof action === "function" ? action(this.items) : action;
+    this.notify();
+  },
+  setIsProcessing(action: React.SetStateAction<boolean>) {
+    this.isProcessing = typeof action === "function" ? action(this.isProcessing) : action;
+    this.notify();
+  },
+  notify() {
+    this.listeners.forEach(l => l());
+  }
+};
+
 const BulkScanner = () => {
-  const [items, setItems] = useState<ProcessedItem[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [items, _setItems] = useState<ProcessedItem[]>(scannerStore.items);
+  const [isProcessing, _setIsProcessing] = useState(scannerStore.isProcessing);
+
+  React.useEffect(() => {
+    return scannerStore.subscribe(() => {
+      _setItems(scannerStore.items);
+      _setIsProcessing(scannerStore.isProcessing);
+    });
+  }, []);
+
+  const setItems = (action: React.SetStateAction<ProcessedItem[]>) => scannerStore.setItems(action);
+  const setIsProcessing = (action: React.SetStateAction<boolean>) => scannerStore.setIsProcessing(action);
 
   const [aiRecognize]     = useAiRecognizeMutation();
+
   const [createFoundItem] = useCreateFoundItemMutation();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
