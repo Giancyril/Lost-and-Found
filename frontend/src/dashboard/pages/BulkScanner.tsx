@@ -39,6 +39,7 @@ const StatusBadge = ({ status }: { status: ProcessedItem["status"] }) => {
 const scannerStore = {
   items: [] as ProcessedItem[],
   isProcessing: false,
+  globalLocation: "SAS Office / Security",
   listeners: new Set<() => void>(),
   subscribe(listener: () => void) {
     this.listeners.add(listener);
@@ -52,6 +53,10 @@ const scannerStore = {
     this.isProcessing = typeof action === "function" ? action(this.isProcessing) : action;
     this.notify();
   },
+  setGlobalLocation(val: string) {
+    this.globalLocation = val;
+    this.notify();
+  },
   notify() {
     this.listeners.forEach(l => l());
   }
@@ -60,16 +65,19 @@ const scannerStore = {
 const BulkScanner = () => {
   const [items, _setItems] = useState<ProcessedItem[]>(scannerStore.items);
   const [isProcessing, _setIsProcessing] = useState(scannerStore.isProcessing);
+  const [globalLocation, _setGlobalLocation] = useState(scannerStore.globalLocation);
 
   React.useEffect(() => {
     return scannerStore.subscribe(() => {
       _setItems(scannerStore.items);
       _setIsProcessing(scannerStore.isProcessing);
+      _setGlobalLocation(scannerStore.globalLocation);
     });
   }, []);
 
   const setItems = (action: React.SetStateAction<ProcessedItem[]>) => scannerStore.setItems(action);
   const setIsProcessing = (action: React.SetStateAction<boolean>) => scannerStore.setIsProcessing(action);
+  const setGlobalLocation = (val: string) => scannerStore.setGlobalLocation(val);
 
   const [aiRecognize]     = useAiRecognizeMutation();
 
@@ -130,7 +138,7 @@ const BulkScanner = () => {
           description:   aiData.description || "Found via Bulk Scanner.",
           categoryId:    aiData.categoryId || null,
           img:           base64,
-          location:      "SAS Office / Security",
+          location:      scannerStore.globalLocation || "Unknown Location",
           date:          new Date().toISOString(),
           reporterName:  "Admin Scanner",
           schoolEmail:   "",
@@ -160,7 +168,19 @@ const BulkScanner = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* ── Page Header ── */}
-      <div className="border-b border-white/5 pb-4 flex justify-end flex-wrap gap-2">
+      <div className="border-b border-white/5 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div className="flex-1 w-full sm:max-w-xs">
+          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Batch Location</label>
+          <input 
+            type="text" 
+            value={globalLocation}
+            onChange={(e) => setGlobalLocation(e.target.value)}
+            disabled={isProcessing}
+            placeholder="e.g. Library, SAS Office..."
+            className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-xl text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-50"
+          />
+        </div>
+        <div className="flex justify-end flex-wrap gap-2 w-full sm:w-auto">
         {items.some(i => i.status === "success") && (
           <button
             onClick={clearCompleted}
