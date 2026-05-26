@@ -1,6 +1,6 @@
 import { BiSupport } from "react-icons/bi";
 import { TbReport } from "react-icons/tb";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaRobot, FaTrophy, FaComments, FaMapMarkedAlt, FaTasks } from "react-icons/fa";
 import { IoLocationSharp, IoShieldCheckmark } from "react-icons/io5";
 import { FaGift } from "react-icons/fa6";
 import React from "react";
@@ -17,68 +17,66 @@ interface Service {
 
 const getServiceIcon = (title: string): React.ReactElement => {
   const iconMapping: { [key: string]: React.ReactElement } = {
-    "Lost Item Reporting": <TbReport size="20" />,
-    "Search for Lost Items": <FaSearch size="18" />,
-    "Location-Based Services": <IoLocationSharp size="20" />,
-    "Help Desk Support": <BiSupport size="20" />,
-    "Item Claiming": <FaGift size="18" />,
-    "Data Encryption & Privacy": <IoShieldCheckmark size="20" />,
-
+    "AI-Powered Search & Recognition": <FaRobot size="20" />,
+    "Secure Item Claiming": <FaGift size="18" />,
+    "Gamified Rewards System": <FaTrophy size="18" />,
+    "Real-time Status Tracking": <FaTasks size="18" />,
+    "Lost & Found Reporting": <TbReport size="20" />,
+    "Interactive Campus Map": <FaMapMarkedAlt size="18" />,
   };
   return iconMapping[title] || <FaSearch size="22" />;
 };
 
 const services: Service[] = [
   {
-    title: "Lost Item Reporting",
-    description: "Submit descriptions, locations, and photos directly through the school portal. Fast, simple, and tracked from day one.",
-    accent: "from-blue-500 to-blue-700",
+    title: "AI-Powered Search & Recognition",
+    description: "Describe a missing item or upload a photo of a found one. Our Gemini AI instantly analyzes details to find perfect matches in seconds.",
+    accent: "from-blue-500 to-indigo-600",
+    tag: "Smart",
+    link: "/ai-search",
+  },
+  {
+    title: "Secure Item Claiming",
+    description: "Submit claims with proof of ownership. Communicate securely with finders or admins using our built-in real-time messaging system.",
+    accent: "from-emerald-500 to-teal-600",
+    tag: "Core",
+    link: "/foundItems",
+  },
+  {
+    title: "Gamified Rewards System",
+    description: "Be a campus hero! Earn points, unlock exclusive achievements, and climb the global leaderboard for returning found belongings.",
+    accent: "from-yellow-400 to-orange-500",
+    tag: "Engaging",
+    link: "/dashboard/student",
+  },
+  {
+    title: "Real-time Status Tracking",
+    description: "Receive live notifications on your reports. Track exactly where your item is—from initial report and verification to final recovery.",
+    accent: "from-violet-500 to-purple-600",
+    tag: "Core",
+    link: "/itemStatus",
+  },
+  {
+    title: "Lost & Found Reporting",
+    description: "Quickly log missing or recovered items with precise descriptions and categories in a centralized, easily accessible database.",
+    accent: "from-cyan-500 to-blue-500",
     tag: "Core",
     link: "/reportLostItem",
   },
   {
-    title: "Search for Lost Items",
-    description: "Search the campus lost-and-found database by keyword, category, or location to find a match for your missing item.",
-    accent: "from-blue-500 to-blue-700",
-    tag: "Core",
-    link: "/lostItems",
+    title: "Interactive Campus Map",
+    description: "Visualize where items are frequently lost or found using our indoor map. Pinpoint exact locations to narrow down your search.",
+    accent: "from-pink-500 to-rose-600",
+    tag: "Explore",
+    link: "/indoor-map",
   },
-  {
-    title: "Location-Based Services",
-    description: "Browse items by campus area classrooms, cafeteria, library to narrow down where your belongings were found.",
-    accent: "from-blue-500 to-blue-700",
-    tag: "Browse",
-    link: "/foundItems",
-  },
-  {
-    title: "Item Claiming",
-    description: "Submit claims for found items with verification. Browse available items and claim yours through the secure verification process.",
-    accent: "from-blue-500 to-blue-700",
-    tag: "Core",
-    link: "/foundItems",
-  },
-  {
-    title: "Smart AI Search",
-    description: "Describe your lost item in plain words. The system finds the closest matches from the database instantly.",
-    accent: "from-blue-500 to-blue-700",
-    tag: "Beta",
-    link: "/ai-search",
-  },
-  {
-    title: "Item Status Tracking",
-    description: "Monitor your lost item report in real time from submission and review to recovery and return.",
-    accent: "from-blue-500 to-blue-700",
-    tag: "Core",
-    link: "/itemStatus",
-  },
-
 ];
 
 const tagStyles: Record<string, string> = {
-  Core: "bg-blue-500/15 text-blue-300 border-blue-500/25",
-  Beta: "bg-blue-500/15 text-blue-300 border-blue-500/25",
-  Soon: "bg-blue-500/15 text-blue-300 border-blue-500/25",
-  Browse: "bg-blue-500/15 text-blue-300 border-blue-500/25",
+  Core: "bg-gray-800 text-gray-300 border-gray-700",
+  Smart: "bg-indigo-500/15 text-indigo-300 border-indigo-500/25",
+  Engaging: "bg-yellow-500/15 text-yellow-400 border-yellow-500/25",
+  Explore: "bg-pink-500/15 text-pink-300 border-pink-500/25",
 };
 
 const Services = () => {
