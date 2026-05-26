@@ -117,11 +117,6 @@ const StudentRegistry = () => {
   const totalBlocked = allStudents.filter((s) => !s.activated).length;
   const totalPoints = allStudents.reduce((sum, s) => sum + (s.totalPoints || 0), 0);
 
-  const topStudents = [...allStudents]
-    .filter(s => (s.totalPoints || 0) > 0)
-    .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))
-    .slice(0, 10);
-
   const handleBlockConfirm = async () => {
     if (!blockTarget) return;
     setIsBlockLoading(true);
@@ -424,61 +419,6 @@ const StudentRegistry = () => {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* ── Leaderboard ── */}
-      <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden mt-6">
-        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
-              <FaStar className="text-yellow-400" size={16} />
-            </div>
-            <div>
-              <h2 className="text-white font-bold text-sm tracking-wide">Top Contributors</h2>
-              <p className="text-gray-500 text-[11px] mt-0.5">Students with the highest community points</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="divide-y divide-white/[0.04]">
-          {topStudents.length === 0 ? (
-            <div className="py-12 text-center text-gray-500 text-xs">
-              <FaStar size={20} className="mx-auto mb-2 text-gray-700" />
-              No points awarded yet
-            </div>
-          ) : topStudents.map((s, idx) => {
-            const isTop3 = idx < 3;
-            const medalColors = ["text-yellow-400", "text-gray-300", "text-amber-500"];
-            const bgColors = ["bg-yellow-500/10", "bg-gray-400/10", "bg-amber-500/10"];
-            const borderColors = ["border-yellow-500/20", "border-gray-400/20", "border-amber-500/20"];
-
-            return (
-              <div key={s.id} className="flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors">
-                <div className="flex items-center gap-4 sm:gap-5 min-w-0">
-                  <div className={`w-8 h-8 flex items-center justify-center font-black text-sm rounded-xl shrink-0 ${isTop3 ? `${bgColors[idx]} ${borderColors[idx]} ${medalColors[idx]} border` : "text-gray-600 bg-gray-800/50"}`}>
-                    #{idx + 1}
-                  </div>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-white text-[11px] font-bold shrink-0 shadow-lg">
-                      {getInitials(s.name, s.email)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-white text-sm font-semibold truncate">{s.name ?? s.username}</p>
-                      <p className="text-gray-500 text-[11px] truncate flex items-center gap-1.5 mt-0.5">
-                        <FaGraduationCap size={9} />
-                        {s.course ?? "Unknown Course"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 text-yellow-400 bg-yellow-500/10 px-3.5 py-1.5 rounded-xl border border-yellow-500/20 shrink-0 shadow-[0_0_15px_rgba(234,179,8,0.1)]">
-                  <FaStar size={11} />
-                  <span className="text-sm font-black tabular-nums">{s.totalPoints}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {/* ── Block / Unblock Modal ── */}
