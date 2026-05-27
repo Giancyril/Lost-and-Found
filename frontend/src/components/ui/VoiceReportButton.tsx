@@ -24,7 +24,7 @@ const VoiceReportButton = ({ isLostPage = false, noContainer = false, onParsed }
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timerIntervalRef = useRef<any | null>(null);
   
   // Web Audio Visualizer refs
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -278,7 +278,6 @@ const VoiceReportButton = ({ isLostPage = false, noContainer = false, onParsed }
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h4 className="font-bold text-sm text-gray-200 select-none">Voice report</h4>
-            <span className="bg-purple-500/20 text-purple-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider select-none">Beta</span>
           </div>
           
           {isRecording ? (
@@ -302,7 +301,7 @@ const VoiceReportButton = ({ isLostPage = false, noContainer = false, onParsed }
             </p>
           ) : (
             <p className="text-xs text-gray-400 mt-1 select-none leading-relaxed">
-              Hold to narrate — "{isLostPage ? 'I lost a blue thermos near the library.' : 'I found a blue thermos near the library.'}"
+              Hold to narrate "{isLostPage ? 'I lost my ID near the library.' : 'I found an ID near the library.'}"
             </p>
           )}
         </div>

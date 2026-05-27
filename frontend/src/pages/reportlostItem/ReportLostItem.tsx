@@ -1085,7 +1085,6 @@ const ReportLostItem = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h4 className="font-bold text-sm text-gray-200 select-none">Photo scan</h4>
-                            <span className="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider select-none">AI</span>
                             <button
                               type="button"
                               onClick={() => setShowAiHelp(true)}
