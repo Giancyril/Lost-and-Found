@@ -268,7 +268,12 @@ const analyzeClaimFraud = async (claimantFeatures: string, itemDescription: stri
 const parseVoice = async (audioBuffer: Buffer, mimeType = "audio/webm") => {
   try {
     const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-flash-latest",
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
+    });
 
     // Fetch categories for context matching
     const categories = await prisma.itemCategory.findMany({

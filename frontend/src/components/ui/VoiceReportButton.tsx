@@ -98,7 +98,7 @@ const VoiceReportButton = ({ isLostPage = false, onParsed }: VoiceReportButtonPr
         await handleAudioUpload(audioBlob, actualMimeType);
       };
 
-      mediaRecorder.start(250); // Slice chunks every 250ms
+      mediaRecorder.start(); // Start recording as a single solid stream to prevent container chunk corruption
       setIsRecording(true);
 
       // Start timer
