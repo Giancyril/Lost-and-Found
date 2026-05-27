@@ -1078,33 +1078,28 @@ const ReportLostItem = () => {
                 {step === 1 && (
                   <div className="space-y-5">
                     {/* Magic AI Scan Card */}
+                    {/* Unified AI Assist Card */}
                     <div className="w-full bg-[#1e1e24]/40 border border-white/5 rounded-2xl p-5 mb-4 animate-fadeIn transition-all duration-300 shadow-md backdrop-blur-sm">
+                      {/* Photo scan row */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
-                        <div className="flex items-start gap-4">
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${
-                            isAiRecognizing ? "bg-blue-500/20 text-blue-400 animate-pulse" : "bg-[#f0f7ff] text-[#1e6fd9]"
-                          }`}>
-                            <FaCamera size={20} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-bold text-sm text-gray-200 select-none">Photo scan</h4>
+                            <span className="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider select-none">AI</span>
+                            <button
+                              type="button"
+                              onClick={() => setShowAiHelp(true)}
+                              className="w-3.5 h-3.5 rounded-full bg-gray-700/50 hover:bg-gray-600 border border-gray-600/50 text-gray-400 hover:text-white flex items-center justify-center transition-all inline-flex align-middle"
+                              title="How it works"
+                            >
+                              <span className="text-[8px] font-black leading-none">i</span>
+                            </button>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-bold text-sm text-gray-200 select-none">Photo scan</h4>
-                              <span className="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider select-none">AI</span>
-                              <button
-                                type="button"
-                                onClick={() => setShowAiHelp(true)}
-                                className="w-3.5 h-3.5 rounded-full bg-gray-700/50 hover:bg-gray-600 border border-gray-600/50 text-gray-400 hover:text-white flex items-center justify-center transition-all inline-flex align-middle"
-                                title="How it works"
-                              >
-                                <span className="text-[8px] font-black leading-none">i</span>
-                              </button>
-                            </div>
-                            {isAiRecognizing ? (
-                              <p className="text-xs text-blue-400 font-semibold mt-1 animate-pulse">Analyzing image details...</p>
-                            ) : (
-                              <p className="text-xs text-gray-400 mt-1 select-none">Snap a photo to auto-fill item name, category, and description.</p>
-                            )}
-                          </div>
+                          {isAiRecognizing ? (
+                            <p className="text-xs text-blue-400 font-semibold mt-1 animate-pulse">Analyzing image details...</p>
+                          ) : (
+                            <p className="text-xs text-gray-400 mt-1 select-none">Snap a photo to auto-fill item name, category, and description.</p>
+                          )}
                         </div>
                         <label className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 self-start sm:self-center whitespace-nowrap cursor-pointer ${
                           isAiRecognizing 
@@ -1119,12 +1114,13 @@ const ReportLostItem = () => {
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
                         </label>
                       </div>
-                      <hr className="border-white/5 my-4" />
-                      <p className="text-xs text-gray-500 select-none">Best for items with visible features — bags, electronics, clothing, IDs.</p>
-                    </div>
 
-                    {/* AI Voice-Report Assist Button */}
-                    <VoiceReportButton isLostPage={true} onParsed={handleVoiceParsed} />
+                      {/* Divider */}
+                      <hr className="border-white/5 my-4" />
+
+                      {/* Voice report row */}
+                      <VoiceReportButton isLostPage={true} noContainer={true} onParsed={handleVoiceParsed} />
+                    </div>
 
                     <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
                       <Field label="Item Name" required error={errors.lostItemName?.message as string} icon={<IconTag />}>
