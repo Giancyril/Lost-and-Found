@@ -261,67 +261,7 @@ const VoiceReportButton = ({ isLostPage = false, noContainer = false, onParsed }
     return `${m}:${s}`;
   };
 
-  const innerRow = noContainer ? (
-    <div className="flex flex-col justify-between h-full w-full animate-fadeIn transition-all duration-300 gap-3.5">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Voice report</h4>
-          <span className="bg-purple-500/20 text-purple-300 text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider select-none">Beta</span>
-        </div>
-        
-        {isRecording ? (
-          <div className="mt-1.5 space-y-1">
-            <p className="text-[10px] sm:text-xs text-red-400 font-mono flex items-center gap-1.5 select-none">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping inline-block"></span>
-              Recording: {formatTime(recordingSeconds)} / {formatTime(MAX_SECONDS)}
-            </p>
-            <div className="relative h-5 mt-1 flex items-center max-w-[140px] sm:max-w-[200px]">
-              <canvas 
-                ref={canvasRef} 
-                width={140} 
-                height={20} 
-                className="w-full h-full rounded opacity-90"
-              />
-            </div>
-          </div>
-        ) : isParsing ? (
-          <p className="text-[10px] sm:text-xs text-indigo-400 font-semibold mt-1.5 animate-pulse select-none flex items-center gap-1">
-            <FaSpinner className="animate-spin" size={10} /> Analyzing...
-          </p>
-        ) : (
-          <p className="text-[10px] sm:text-xs text-gray-400 mt-1.5 select-none leading-relaxed">
-            Hold to narrate naturally.
-          </p>
-        )}
-      </div>
-
-      {isRecording ? (
-        <button
-          type="button"
-          onClick={stopRecording}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all animate-pulse active:scale-95 whitespace-nowrap shadow-lg shadow-red-900/10"
-        >
-          <FaStop size={10} /> Done
-        </button>
-      ) : isParsing ? (
-        <button
-          type="button"
-          disabled
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600/30 text-indigo-300 border border-indigo-500/20 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold whitespace-nowrap"
-        >
-          <FaSpinner size={10} className="animate-spin" /> Analyzing
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={startRecording}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap"
-        >
-          <FaMicrophone size={10} className="text-purple-400" /> Hold to talk
-        </button>
-      )}
-    </div>
-  ) : (
+  const innerRow = (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 w-full animate-fadeIn transition-all duration-300">
       <div className="flex items-start gap-4 flex-1 min-w-0">
         {!noContainer && (

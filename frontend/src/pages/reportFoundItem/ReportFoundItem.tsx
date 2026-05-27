@@ -956,41 +956,39 @@ const ReportFoundItem = () => {
                   <div className="space-y-5">
                     {/* Magic AI Scan Card */}
                     {/* Unified AI Assist Card */}
-                    {/* Unified AI Assist Card */}
-                    <div className="w-full bg-[#1e1e24]/40 border border-white/5 rounded-2xl p-4 sm:p-5 mb-4 animate-fadeIn transition-all duration-300 shadow-md backdrop-blur-sm">
-                      <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
-                        {/* Photo scan column */}
-                        <div className="flex flex-col justify-between h-full bg-white/5 border border-white/5 rounded-xl p-3.5 sm:p-4 hover:bg-white/10 transition-all duration-200">
-                          <div className="mb-3.5">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Photo scan</h4>
-                              <span className="bg-blue-500/20 text-blue-300 text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider select-none">AI</span>
-                            </div>
-                            {isAiRecognizing ? (
-                              <p className="text-[10px] sm:text-xs text-blue-400 font-semibold mt-1 animate-pulse">Analyzing image...</p>
-                            ) : (
-                              <p className="text-[10px] sm:text-xs text-gray-400 mt-1 select-none leading-relaxed">Snap a photo to auto-fill details.</p>
-                            )}
+                    <div className="w-full bg-[#1e1e24]/40 border border-white/5 rounded-2xl p-5 mb-4 animate-fadeIn transition-all duration-300 shadow-md backdrop-blur-sm">
+                      {/* Photo scan row */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 w-full">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Photo scan</h4>
+                            <span className="bg-blue-500/20 text-blue-300 text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider select-none">AI</span>
                           </div>
-                          <label className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer ${
-                            isAiRecognizing 
-                              ? "bg-blue-600/30 text-blue-300 border border-blue-500/20" 
-                              : "border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white"
-                          }`}>
-                            {isAiRecognizing ? (
-                              <><FaSpinner className="animate-spin" size={10} /> Analyzing</>
-                            ) : (
-                              <><FaCamera size={10} className="text-blue-400" /> Scan photo</>
-                            )}
-                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
-                          </label>
+                          {isAiRecognizing ? (
+                            <p className="text-[10px] sm:text-xs text-blue-400 font-semibold mt-0.5 animate-pulse">Analyzing image details...</p>
+                          ) : (
+                            <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 select-none leading-relaxed">Snap a photo to auto-fill item name, category, and description.</p>
+                          )}
                         </div>
-
-                        {/* Voice report column */}
-                        <div className="flex flex-col justify-between h-full bg-white/5 border border-white/5 rounded-xl p-3.5 sm:p-4 hover:bg-white/10 transition-all duration-200">
-                          <VoiceReportButton isLostPage={false} noContainer={true} onParsed={handleVoiceParsed} />
-                        </div>
+                        <label className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 self-start sm:self-center whitespace-nowrap cursor-pointer ${
+                          isAiRecognizing 
+                            ? "bg-blue-600/30 text-blue-300 border border-blue-500/20" 
+                            : "border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white"
+                        }`}>
+                          {isAiRecognizing ? (
+                            <><FaSpinner className="animate-spin" size={10} /> Analyzing</>
+                          ) : (
+                            <><FaCamera size={10} className="text-blue-400" /> Scan photo</>
+                          )}
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
+                        </label>
                       </div>
+
+                      {/* Divider */}
+                      <hr className="border-white/5 my-4" />
+
+                      {/* Voice report row */}
+                      <VoiceReportButton isLostPage={false} noContainer={true} onParsed={handleVoiceParsed} />
                     </div>
 
                     <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
