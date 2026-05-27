@@ -512,9 +512,9 @@ const ReportFoundItem = () => {
   const handleScan = (student: ScannedStudent) => {
     scannedAtRef.current = new Date().toISOString();
     setScannedStudent(student);
-    setValue("reporterName", student.name);
-    setValue("schoolEmail", student.email);
-    setValue("department", student.department || "");
+    setValue("reporterName", student.name, { shouldValidate: true, shouldDirty: true });
+    setValue("schoolEmail", student.email, { shouldValidate: true, shouldDirty: true });
+    setValue("department", student.department || "", { shouldValidate: true, shouldDirty: true });
     setShowScanner(false);
     if (student.name && student.name !== "Unknown Student") {
       toast.success(`Student identified: ${student.name}`);
@@ -569,10 +569,10 @@ const ReportFoundItem = () => {
       const student = res?.data ?? res;
 
       if (student?.name) {
-        setValue("reporterName", student.name);
-        setValue("schoolEmail", student.email);
+        setValue("reporterName", student.name, { shouldValidate: true, shouldDirty: true });
+        setValue("schoolEmail", student.email, { shouldValidate: true, shouldDirty: true });
         // department is now returned by the service (alias for course)
-        setValue("department", student.department || student.course || "");
+        setValue("department", student.department || student.course || "", { shouldValidate: true, shouldDirty: true });
         setScannedStudent({
           id: student.id,
           name: student.name,
