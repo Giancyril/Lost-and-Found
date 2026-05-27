@@ -1098,7 +1098,7 @@ const ReportLostItem = () => {
                             )}
                           </div>
                           
-                          <label className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer ${
+                          <label className={`self-center flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer ${
                             isAiRecognizing 
                               ? "bg-blue-600/30 text-blue-300 border border-blue-500/20" 
                               : "border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white"
