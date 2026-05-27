@@ -4,6 +4,7 @@ import { useAiVoiceParseMutation } from "../../redux/api/api";
 import { toast } from "react-toastify";
 
 interface VoiceReportButtonProps {
+  isLostPage?: boolean;
   onParsed: (data: {
     itemName?: string;
     categoryId?: string;
@@ -15,7 +16,7 @@ interface VoiceReportButtonProps {
   }) => void;
 }
 
-const VoiceReportButton = ({ onParsed }: VoiceReportButtonProps) => {
+const VoiceReportButton = ({ isLostPage = false, onParsed }: VoiceReportButtonProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [aiVoiceParse, { isLoading: isParsing }] = useAiVoiceParseMutation();
@@ -260,76 +261,79 @@ const VoiceReportButton = ({ onParsed }: VoiceReportButtonProps) => {
   };
 
   return (
-    <div className="flex items-center gap-4 bg-gray-900 border border-white/5 rounded-2xl p-4.5 mb-2 w-full animate-fadeIn transition-all duration-300">
-      <div className="flex items-center gap-3.5 flex-1 min-w-0">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
-          isRecording 
-            ? "bg-red-500/10 border border-red-500/30 text-red-500 shadow-lg shadow-red-900/30 animate-pulse" 
-            : isParsing
-              ? "bg-indigo-500/10 border border-indigo-500/20 text-indigo-400"
-              : "bg-blue-500/10 border border-blue-500/20 text-blue-400"
-        }`}>
-          {isRecording ? (
-            <FaStop size={14} className="cursor-pointer" onClick={stopRecording} />
-          ) : isParsing ? (
-            <FaSpinner size={16} className="animate-spin" />
-          ) : (
-            <FaMicrophone size={16} className="cursor-pointer" onClick={startRecording} />
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-bold text-white uppercase tracking-wider select-none">
-              {isRecording ? "Voice Assist (Active)" : "AI Voice-Report Assist"}
-            </p>
-            {isRecording && (
-              <span className="text-[10px] font-bold text-red-500 font-mono select-none">
-                {formatTime(recordingSeconds)} / {formatTime(MAX_SECONDS)}
-              </span>
-            )}
+    <div className="w-full bg-[#1e1e24]/40 border border-white/5 rounded-2xl p-5 mb-4 animate-fadeIn transition-all duration-300 shadow-md backdrop-blur-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+        <div className="flex items-start gap-4 flex-1 min-w-0">
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+            isRecording 
+              ? "bg-red-500/20 text-red-500 animate-pulse shadow-lg shadow-red-900/10" 
+              : isParsing
+                ? "bg-indigo-500/20 text-indigo-400 animate-pulse"
+                : "bg-[#f5f3ff] text-[#6d28d9]"
+          }`}>
+            <FaMicrophone size={20} />
           </div>
-          
-          <div className="relative h-6 mt-1 flex items-center">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="font-bold text-sm text-gray-200 select-none">Voice report</h4>
+              <span className="bg-purple-500/20 text-purple-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider select-none">Beta</span>
+            </div>
+            
             {isRecording ? (
-              <canvas 
-                ref={canvasRef} 
-                width={200} 
-                height={24} 
-                className="w-full h-full rounded opacity-90"
-              />
+              <div className="mt-1 space-y-1">
+                <p className="text-xs text-red-400 font-mono flex items-center gap-1.5 select-none">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-ping inline-block"></span>
+                  Recording: {formatTime(recordingSeconds)} / {formatTime(MAX_SECONDS)}
+                </p>
+                <div className="relative h-6 mt-1 flex items-center max-w-[240px]">
+                  <canvas 
+                    ref={canvasRef} 
+                    width={240} 
+                    height={24} 
+                    className="w-full h-full rounded opacity-90"
+                  />
+                </div>
+              </div>
             ) : isParsing ? (
-              <p className="text-[10px] text-indigo-400 font-semibold flex items-center gap-1.5 animate-pulse select-none">
-                <FaSpinner className="animate-spin" size={8} /> Transcribing speech and analyzing campus categories...
+              <p className="text-xs text-indigo-400 font-semibold mt-1 animate-pulse select-none flex items-center gap-1.5">
+                <FaSpinner className="animate-spin" size={10} /> Transcribing speech and analyzing campus categories...
               </p>
             ) : (
-              <p className="text-[10px] text-gray-500 leading-normal truncate select-none">
-                Hold record to narrate naturally (e.g. "I found a blue thermos in the library")
+              <p className="text-xs text-gray-400 mt-1 select-none leading-relaxed">
+                Hold to narrate — "{isLostPage ? 'I lost a blue thermos near the library.' : 'I found a blue thermos near the library.'}"
               </p>
             )}
           </div>
         </div>
-      </div>
 
-      {!isRecording && !isParsing && (
-        <button
-          type="button"
-          onClick={startRecording}
-          className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black rounded-lg transition-all uppercase tracking-widest active:scale-95 whitespace-nowrap"
-        >
-          Talk
-        </button>
-      )}
-      
-      {isRecording && (
-        <button
-          type="button"
-          onClick={stopRecording}
-          className="px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black rounded-lg transition-all uppercase tracking-widest active:scale-95 whitespace-nowrap shadow-lg shadow-red-900/10"
-        >
-          Done
-        </button>
-      )}
+        {isRecording ? (
+          <button
+            type="button"
+            onClick={stopRecording}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-semibold transition-all animate-pulse active:scale-95 self-start sm:self-center whitespace-nowrap shadow-lg shadow-red-900/10"
+          >
+            <FaStop size={12} /> Done
+          </button>
+        ) : isParsing ? (
+          <button
+            type="button"
+            disabled
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600/30 text-indigo-300 border border-indigo-500/20 rounded-xl text-xs font-semibold self-start sm:self-center whitespace-nowrap"
+          >
+            <FaSpinner size={12} className="animate-spin" /> Analyzing
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={startRecording}
+            className="flex items-center gap-2 px-4 py-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-semibold transition-all active:scale-95 self-start sm:self-center whitespace-nowrap"
+          >
+            <FaMicrophone size={12} className="text-purple-400" /> Hold to talk
+          </button>
+        )}
+      </div>
+      <hr className="border-white/5 my-4" />
+      <p className="text-xs text-gray-500 select-none">Speak naturally — AI extracts item details from your description automatically.</p>
     </div>
   );
 };

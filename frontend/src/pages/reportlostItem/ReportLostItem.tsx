@@ -1077,37 +1077,54 @@ const ReportLostItem = () => {
                 {/* ── Step 1: Item Details ── */}
                 {step === 1 && (
                   <div className="space-y-5">
-                    {/* Magic AI Scan Button */}
-                    <div className="flex justify-between items-center bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 sm:p-4 mb-2 animate-fadeIn">
-                      <div className="flex items-center gap-2 sm:gap-3">
-
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">AI Scan</p>
-                            <button
-                              type="button"
-                              onClick={() => setShowAiHelp(true)}
-                              className="w-3.5 h-3.5 rounded-full bg-gray-700/50 hover:bg-gray-600 border border-gray-600/50 text-gray-400 hover:text-white flex items-center justify-center transition-all"
-                              title="How it works"
-                            >
-                              <span className="text-[8px] font-black leading-none">i</span>
-                            </button>
+                    {/* Magic AI Scan Card */}
+                    <div className="w-full bg-[#1e1e24]/40 border border-white/5 rounded-2xl p-5 mb-4 animate-fadeIn transition-all duration-300 shadow-md backdrop-blur-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+                        <div className="flex items-start gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                            isAiRecognizing ? "bg-blue-500/20 text-blue-400 animate-pulse" : "bg-[#f0f7ff] text-[#1e6fd9]"
+                          }`}>
+                            <FaCamera size={20} />
                           </div>
-                          <p className="text-[9px] sm:text-[10px] text-gray-500">Auto-fill details from a photo.</p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-bold text-sm text-gray-200 select-none">Photo scan</h4>
+                              <span className="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider select-none">AI</span>
+                              <button
+                                type="button"
+                                onClick={() => setShowAiHelp(true)}
+                                className="w-3.5 h-3.5 rounded-full bg-gray-700/50 hover:bg-gray-600 border border-gray-600/50 text-gray-400 hover:text-white flex items-center justify-center transition-all inline-flex align-middle"
+                                title="How it works"
+                              >
+                                <span className="text-[8px] font-black leading-none">i</span>
+                              </button>
+                            </div>
+                            {isAiRecognizing ? (
+                              <p className="text-xs text-blue-400 font-semibold mt-1 animate-pulse">Analyzing image details...</p>
+                            ) : (
+                              <p className="text-xs text-gray-400 mt-1 select-none">Snap a photo to auto-fill item name, category, and description.</p>
+                            )}
+                          </div>
                         </div>
+                        <label className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 self-start sm:self-center whitespace-nowrap cursor-pointer ${
+                          isAiRecognizing 
+                            ? "bg-blue-600/30 text-blue-300 border border-blue-500/20" 
+                            : "border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white"
+                        }`}>
+                          {isAiRecognizing ? (
+                            <><FaSpinner className="animate-spin" size={12} /> Analyzing</>
+                          ) : (
+                            <><FaCamera size={12} className="text-blue-400" /> Scan photo</>
+                          )}
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
+                        </label>
                       </div>
-                      <label className="cursor-pointer px-2.5 py-1.5 sm:px-4 sm:py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[9px] sm:text-[10px] font-black rounded-lg transition-all uppercase tracking-widest active:scale-95 flex items-center gap-1.5 sm:gap-2 shrink-0">
-                        {isAiRecognizing ? (
-                          <><FaSpinner className="animate-spin" size={9} /> Analyzing...</>
-                        ) : (
-                          <><FaCamera size={9} /> AI SCAN</>
-                        )}
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
-                      </label>
+                      <hr className="border-white/5 my-4" />
+                      <p className="text-xs text-gray-500 select-none">Best for items with visible features — bags, electronics, clothing, IDs.</p>
                     </div>
 
                     {/* AI Voice-Report Assist Button */}
-                    <VoiceReportButton onParsed={handleVoiceParsed} />
+                    <VoiceReportButton isLostPage={true} onParsed={handleVoiceParsed} />
 
                     <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
                       <Field label="Item Name" required error={errors.lostItemName?.message as string} icon={<IconTag />}>
