@@ -12,7 +12,6 @@ import {
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
-import VoiceReportButton from "../../components/ui/VoiceReportButton";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 import { sanitizeObject } from "../../utils/sanitize";
 import { useOfflineSync } from "../../hooks/useOfflineSync";
@@ -1080,40 +1079,34 @@ const ReportLostItem = () => {
                     {/* Magic AI Scan Card */}
                     {/* Unified AI Assist Card */}
                     <div className="w-full bg-[#1e1e24]/40 border border-white/5 rounded-2xl p-4 sm:p-5 mb-4 animate-fadeIn transition-all duration-300 shadow-md backdrop-blur-sm">
-                      <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
-                        {/* Photo scan card */}
-                        <div className="bg-white/5 border border-white/5 rounded-xl p-3.5 sm:p-4 flex flex-col gap-3 hover:bg-white/[0.07] transition-all duration-300 h-full">
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Photo scan</h4>
-                              <span className="bg-blue-500/20 text-blue-300 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider select-none">AI</span>
-                              <span className="text-gray-500 hover:text-gray-300 cursor-pointer select-none text-[10px]" title="Snap or upload a photo to auto-fill details">
-                                <FaInfoCircle size={10} className="opacity-60" />
-                              </span>
-                            </div>
-                            {isAiRecognizing ? (
-                              <p className="text-[10px] sm:text-xs text-blue-400 font-semibold animate-pulse">Analyzing details...</p>
-                            ) : (
-                              <p className="text-[10px] sm:text-xs text-gray-400 select-none leading-normal">Snap a photo to auto-fill details.</p>
-                            )}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 w-full">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Photo scan</h4>
+                            <span className="bg-blue-500/20 text-blue-300 text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider select-none">AI</span>
+                            <span className="text-gray-500 hover:text-gray-300 cursor-pointer select-none text-[10px]" title="Snap or upload a photo to auto-fill details">
+                              <FaInfoCircle size={10} className="opacity-60" />
+                            </span>
                           </div>
-                          
-                          <label className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer ${
-                            isAiRecognizing 
-                              ? "bg-blue-600/30 text-blue-300 border border-blue-500/20" 
-                              : "border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white"
-                          }`}>
-                            {isAiRecognizing ? (
-                              <><FaSpinner className="animate-spin" size={10} /> Analyzing</>
-                            ) : (
-                              <><FaCamera size={10} className="text-blue-400" /> Scan photo</>
-                            )}
-                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
-                          </label>
+                          {isAiRecognizing ? (
+                            <p className="text-[10px] sm:text-xs text-blue-400 font-semibold animate-pulse mt-0.5">Analyzing image details...</p>
+                          ) : (
+                            <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 select-none leading-relaxed">Snap a photo to auto-fill details.</p>
+                          )}
                         </div>
-
-                        {/* Voice report card */}
-                        <VoiceReportButton isLostPage={true} layout="card" onParsed={handleVoiceParsed} />
+                        
+                        <label className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 self-start sm:self-center whitespace-nowrap cursor-pointer ${
+                          isAiRecognizing 
+                            ? "bg-blue-600/30 text-blue-300 border border-blue-500/20" 
+                            : "border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white"
+                        }`}>
+                          {isAiRecognizing ? (
+                            <><FaSpinner className="animate-spin" size={10} /> Analyzing</>
+                          ) : (
+                            <><FaCamera size={10} className="text-blue-400" /> Scan photo</>
+                          )}
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
+                        </label>
                       </div>
                     </div>
 

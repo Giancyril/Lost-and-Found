@@ -256,9 +256,6 @@ const api = baseApi.injectEndpoints({
     aiRecognize: builder.mutation({
       query: (data: any) => ({ url: "/ai-recognize", method: "POST", body: data }),
     }),
-    aiVoiceParse: builder.mutation({
-      query: (data: any) => ({ url: "/ai-voice-parse", method: "POST", body: data }),
-    }),
 
     // bulletin posts
     getBulletinPosts: builder.query({
@@ -461,7 +458,6 @@ export const {
   useAiSearchMutation,
   useAiChatMutation,
   useAiRecognizeMutation,
-  useAiVoiceParseMutation,
   useSendLostItemEmailMutation,
   useSendClaimApprovedEmailMutation,
   useGetArchivedFoundItemsQuery,
