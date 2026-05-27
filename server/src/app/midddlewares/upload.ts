@@ -20,3 +20,10 @@ export const uploadImages = multer({
     files: 5 // Maximum 5 files
   }
 });
+
+export const uploadAudio = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  }
+});

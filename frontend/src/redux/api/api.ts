@@ -256,6 +256,9 @@ const api = baseApi.injectEndpoints({
     aiRecognize: builder.mutation({
       query: (data: any) => ({ url: "/ai-recognize", method: "POST", body: data }),
     }),
+    aiVoiceParse: builder.mutation({
+      query: (data: any) => ({ url: "/ai-voice-parse", method: "POST", body: data }),
+    }),
 
     // bulletin posts
     getBulletinPosts: builder.query({
@@ -384,7 +387,7 @@ const api = baseApi.injectEndpoints({
       query: () => ({ url: "/admin/security/compliance", method: "GET" }),
     }),
     clearOldLogs: builder.mutation({
-      query: () => ({ url: "/admin/security/logs/clear", method: "DELETE" }),
+      query: () => ({ url: "/admin/security/logs", method: "DELETE" }),
     }),
     exportUsers: builder.query({
       query: () => ({ url: "/admin/security/export-users", method: "GET" }),
@@ -458,6 +461,7 @@ export const {
   useAiSearchMutation,
   useAiChatMutation,
   useAiRecognizeMutation,
+  useAiVoiceParseMutation,
   useSendLostItemEmailMutation,
   useSendClaimApprovedEmailMutation,
   useGetArchivedFoundItemsQuery,

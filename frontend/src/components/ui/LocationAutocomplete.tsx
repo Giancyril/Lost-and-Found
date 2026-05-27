@@ -8,6 +8,7 @@ interface LocationAutocompleteProps {
   error?: string;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 // Generate common room suggestions for better UX
@@ -29,7 +30,8 @@ const LocationAutocomplete = ({
   onBlur,
   error,
   placeholder = "e.g. Library, Room 205",
-  className = ""
+  className = "",
+  disabled = false
 }: LocationAutocompleteProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filtered, setFiltered] = useState<string[]>([]);
@@ -103,6 +105,7 @@ const LocationAutocomplete = ({
         onBlur={onBlur}
         placeholder={placeholder}
         className={className}
+        disabled={disabled}
       />
 
       {/* Dropdown UI */}

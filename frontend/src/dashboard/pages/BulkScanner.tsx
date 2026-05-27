@@ -7,6 +7,7 @@ import {
   FaUpload, FaSpinner, FaCheckCircle, FaTimesCircle,
   FaMagic, FaTrash, FaBolt, FaBoxOpen, FaSearch,
 } from "react-icons/fa";
+import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
 
 interface ProcessedItem {
   id: string;
@@ -39,7 +40,7 @@ const StatusBadge = ({ status }: { status: ProcessedItem["status"] }) => {
 const scannerStore = {
   items: [] as ProcessedItem[],
   isProcessing: false,
-  globalLocation: "SAS Office / Security",
+  globalLocation: "SAS Office",
   listeners: new Set<() => void>(),
   subscribe(listener: () => void) {
     this.listeners.add(listener);
@@ -171,10 +172,9 @@ const BulkScanner = () => {
       <div className="border-b border-white/5 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div className="flex-1 w-full sm:max-w-xs">
           <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Batch Location</label>
-          <input 
-            type="text" 
+          <LocationAutocomplete 
             value={globalLocation}
-            onChange={(e) => setGlobalLocation(e.target.value)}
+            onChange={(val) => setGlobalLocation(val)}
             disabled={isProcessing}
             placeholder="e.g. Library, SAS Office..."
             className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-xl text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-50"

@@ -12,6 +12,7 @@ import {
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
+import VoiceReportButton from "../../components/ui/VoiceReportButton";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 import { sanitizeObject } from "../../utils/sanitize";
 import { useOfflineSync } from "../../hooks/useOfflineSync";
@@ -715,6 +716,29 @@ const ReportLostItem = () => {
     }
   };
 
+  const handleVoiceParsed = (data: any) => {
+    if (data.itemName) {
+      setValue("lostItemName", data.itemName);
+    }
+    if (data.location) {
+      setValue("location", data.location);
+    }
+    if (data.description) {
+      setValue("description", data.description);
+    }
+    if (data.categoryId) {
+      const cat = Category?.data?.find((c: any) => c.id === data.categoryId);
+      handleMenuChange(cat ? cat.name : (data.categoryName || ""), data.categoryId);
+    }
+    if (data.color) {
+      setValue("color", data.color);
+      setSelectedColor(data.color);
+    }
+    if (data.condition) {
+      setValue("condition", data.condition);
+    }
+  };
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
   const [uploadError, setUploadError] = useState("");
@@ -1081,6 +1105,9 @@ const ReportLostItem = () => {
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAiScan(e.target.files)} disabled={isAiRecognizing} />
                       </label>
                     </div>
+
+                    {/* AI Voice-Report Assist Button */}
+                    <VoiceReportButton onParsed={handleVoiceParsed} />
 
                     <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
                       <Field label="Item Name" required error={errors.lostItemName?.message as string} icon={<IconTag />}>

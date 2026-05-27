@@ -28,7 +28,7 @@ import { studentRoutes } from "../modules/student/student.routes";
  import sheetsRoutes from "../modules/sheets/sheets.routes";
  import { chatRoutes } from "../modules/chat/chat.routes";
 import { pushRoutes } from "../modules/push/push.routes";
-import { uploadImages } from "../midddlewares/upload";
+import { uploadImages, uploadAudio } from "../midddlewares/upload";
 import { commentsRouter } from "../comments/commentsRouter";
 import { pointsController } from "../modules/points/points.controller";
 import {
@@ -139,6 +139,7 @@ router.get("/admin/match-notifications", auth(), getMatchNotifications);
 // ////////////////////////////////////////////////// AI search //////////////////////////////////////////////
 router.post("/ai-search", validateRequest(aiSearchValidation.aiSearchSchema), aiSearchController.aiSearch);
 router.post("/ai-recognize", auth(true), uploadImages.single("image"), aiRecognitionController.recognizeImage);
+router.post("/ai-voice-parse", auth(true), uploadAudio.single("audio"), aiRecognitionController.parseVoice);
 router.use("/ai-chat", aiChatRoutes);
 
 // ── Email / Mailer ──
@@ -204,6 +205,7 @@ router.delete("/admin/feedback/:id", auth(), deleteFeedback);           // admin
 router.get("/admin/security/stats", auth(), getSecurityStats);
 router.get("/admin/security/logs", auth(), getLoginLogs);
 router.delete("/admin/security/logs", auth(), clearOldLogs);
+router.delete("/admin/security/logs/clear", auth(), clearOldLogs);
 
 // Access Control
 router.get("/admin/security/access-control", auth(), getAccessControlData);

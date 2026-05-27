@@ -262,8 +262,86 @@ const analyzeClaimFraud = async (claimantFeatures: string, itemDescription: stri
   }
 };
 
+/**
+ * Transcribes and parses a voice recording into structured lost/found item metadata using Gemini.
+ */
+const parseVoice = async (audioBuffer: Buffer, mimeType = "audio/webm") => {
+  try {
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+
+    // Fetch categories for context matching
+    const categories = await prisma.itemCategory.findMany({
+      select: { id: true, name: true }
+    });
+
+    const base64Data = audioBuffer.toString("base64");
+
+    const prompt = `
+    You are an exceptionally smart AI speech assistant for a campus Lost and Found system called "Lost & Found NBSC".
+    Listen to the audio recording carefully and extract all details to report a lost or found item.
+    
+    Extract:
+    1. Item Name: A descriptive name of the item (e.g. "Silver JBL Wireless Headphones", "Black Nike Backpack"). Be specific and concise.
+    2. Category: Map the item to the best category ID from the provided list of {id, name}.
+    3. Location: Where the item was lost or found (e.g. "Library second floor corner table", "SWDC Building Room 205").
+    4. Description: Write a professional, detailed description describing the item, colors, brand, or specific markings as described in the voice recording.
+    5. Color: Extract the primary color if mentioned (e.g. "Blue", "Black", "Silver").
+    6. Condition: Extract the condition (e.g. "scratched", "new", "dusty") if mentioned.
+    
+    Available Categories (List of {id, name}):
+    ${JSON.stringify(categories)}
+    
+    Output format (JSON only):
+    {
+      "itemName": "extracted specific item name",
+      "categoryId": "the-uuid-from-the-category-list",
+      "categoryName": "the-name-from-the-category-list",
+      "location": "extracted campus location",
+      "description": "professional description based on the audio recording details",
+      "color": "extracted primary color or empty string",
+      "condition": "extracted condition or empty string",
+      "confidence": 0.0 to 1.0
+    }
+    
+    Rules:
+    - Return ONLY valid JSON.
+    - If a field is not explicitly spoken in the audio, make a highly reasonable inference or keep it blank ("").
+    - Pick the category that is the absolute closest match. If "Other" exists, pick it if no other categories match.
+    `;
+
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: mimeType
+        }
+      }
+    ]);
+
+    const response = await result.response;
+    let text = response.text().trim();
+    
+    // Clean codeblock markers
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+
+    try {
+      const parsed = JSON.parse(text);
+      return parsed;
+    } catch (parseError) {
+      console.error("[AI] Voice Parsing JSON Parse Error. Raw text:", text);
+      throw new Error("AI returned invalid JSON format for voice parsing");
+    }
+  } catch (error: any) {
+    console.error("[AI] Voice parsing pipeline failure:", error);
+    throw error;
+  }
+};
+
 export const aiRecognitionService = {
   recognizeImage,
   analyzeUrgency,
   analyzeClaimFraud,
+  parseVoice,
 };
