@@ -1079,7 +1079,7 @@ const ReportLostItem = () => {
                     {/* Magic AI Scan Card */}
                     {/* Unified AI Assist Card */}
                     <div className="w-full bg-[#1e1e24]/40 border border-white/5 rounded-2xl p-4 sm:p-5 mb-4 animate-fadeIn transition-all duration-300 shadow-md backdrop-blur-sm">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 w-full">
+                      <div className="flex flex-row items-center justify-between gap-2.5 sm:gap-4 w-full">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Photo scan</h4>
@@ -1095,7 +1095,7 @@ const ReportLostItem = () => {
                           )}
                         </div>
                         
-                        <label className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 self-start sm:self-center whitespace-nowrap cursor-pointer ${
+                        <label className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer shrink-0 ${
                           isAiRecognizing 
                             ? "bg-blue-600/30 text-blue-300 border border-blue-500/20" 
                             : "border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white"
