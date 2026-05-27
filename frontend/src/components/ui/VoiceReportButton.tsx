@@ -62,8 +62,27 @@ const VoiceReportButton = ({ onParsed }: VoiceReportButtonProps) => {
       // Start visualizer animation
       drawVisualizer();
 
-      // 2. MediaRecorder setup
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      // 2. MediaRecorder setup with cross-browser formats
+      let selectedMimeType = "audio/webm";
+      let options = {};
+      
+      if (typeof MediaRecorder.isTypeSupported === "function") {
+        if (MediaRecorder.isTypeSupported("audio/webm")) {
+          selectedMimeType = "audio/webm";
+          options = { mimeType: selectedMimeType };
+        } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+          selectedMimeType = "audio/mp4";
+          options = { mimeType: selectedMimeType };
+        } else if (MediaRecorder.isTypeSupported("audio/ogg")) {
+          selectedMimeType = "audio/ogg";
+          options = { mimeType: selectedMimeType };
+        } else if (MediaRecorder.isTypeSupported("audio/wav")) {
+          selectedMimeType = "audio/wav";
+          options = { mimeType: selectedMimeType };
+        }
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (e) => {
@@ -73,8 +92,9 @@ const VoiceReportButton = ({ onParsed }: VoiceReportButtonProps) => {
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        await handleAudioUpload(audioBlob);
+        const actualMimeType = mediaRecorder.mimeType || selectedMimeType;
+        const audioBlob = new Blob(audioChunksRef.current, { type: actualMimeType });
+        await handleAudioUpload(audioBlob, actualMimeType);
       };
 
       mediaRecorder.start(250); // Slice chunks every 250ms
@@ -188,12 +208,21 @@ const VoiceReportButton = ({ onParsed }: VoiceReportButtonProps) => {
     draw();
   };
 
-  const handleAudioUpload = async (audioBlob: Blob) => {
+  const handleAudioUpload = async (audioBlob: Blob, mimeType: string) => {
     const toastId = toast.loading("Analyzing speech details...");
     
     try {
+      let filename = "recording.webm";
+      if (mimeType.includes("mp4") || mimeType.includes("aac")) {
+        filename = "recording.mp4";
+      } else if (mimeType.includes("ogg")) {
+        filename = "recording.ogg";
+      } else if (mimeType.includes("wav")) {
+        filename = "recording.wav";
+      }
+
       const formData = new FormData();
-      formData.append("audio", audioBlob, "recording.webm");
+      formData.append("audio", audioBlob, filename);
 
       const res = await aiVoiceParse(formData).unwrap();
 

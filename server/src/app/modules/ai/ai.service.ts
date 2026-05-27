@@ -277,23 +277,30 @@ const parseVoice = async (audioBuffer: Buffer, mimeType = "audio/webm") => {
 
     const base64Data = audioBuffer.toString("base64");
 
+    // Defensive check to map octet-stream/generic binary to audio/webm
+    let resolvedMimeType = mimeType;
+    if (resolvedMimeType === "application/octet-stream" || !resolvedMimeType) {
+      resolvedMimeType = "audio/webm";
+    }
+
     const prompt = `
     You are an exceptionally smart AI speech assistant for a campus Lost and Found system called "Lost & Found NBSC".
-    Listen to the audio recording carefully and extract all details to report a lost or found item.
+    Listen to the audio recording carefully and transcribe it, then extract all details to report a lost or found item.
     
-    Extract:
-    1. Item Name: A descriptive name of the item (e.g. "Silver JBL Wireless Headphones", "Black Nike Backpack"). Be specific and concise.
-    2. Category: Map the item to the best category ID from the provided list of {id, name}.
-    3. Location: Where the item was lost or found (e.g. "Library second floor corner table", "SWDC Building Room 205").
-    4. Description: Write a professional, detailed description describing the item, colors, brand, or specific markings as described in the voice recording.
-    5. Color: Extract the primary color if mentioned (e.g. "Blue", "Black", "Silver").
-    6. Condition: Extract the condition (e.g. "scratched", "new", "dusty") if mentioned.
-    
+    Instructions:
+    1. Transcribe the audio word-for-word literally in the "transcription" field. This is critical as it anchors your understanding.
+    2. Identify the specific "itemName" (e.g. "Silver JBL Wireless Headphones", "Black Nike Backpack"). Be specific and concise.
+    3. Match the item category with the best fitting category ID from the provided Available Categories list.
+    4. Extract the specific campus "location" where the item was lost or found.
+    5. Write a professional, detailed "description" of the item, including colors, brand, or markings mentioned in the recording.
+    6. Extract primary "color" and "condition" if mentioned.
+
     Available Categories (List of {id, name}):
     ${JSON.stringify(categories)}
     
     Output format (JSON only):
     {
+      "transcription": "Verbatim, full word-for-word transcript of everything spoken in the audio file.",
       "itemName": "extracted specific item name",
       "categoryId": "the-uuid-from-the-category-list",
       "categoryName": "the-name-from-the-category-list",
@@ -304,6 +311,53 @@ const parseVoice = async (audioBuffer: Buffer, mimeType = "audio/webm") => {
       "confidence": 0.0 to 1.0
     }
     
+    Examples of Perfect Voice-to-JSON Parsing:
+
+    Example 1:
+    - Voice Input: "I just found some silver wireless JBL headphones on the corner library table... they look almost brand new."
+    - Expected Output:
+    {
+      "transcription": "I just found some silver wireless JBL headphones on the corner library table... they look almost brand new.",
+      "itemName": "Silver JBL Wireless Headphones",
+      "categoryId": "electronics-uuid",
+      "categoryName": "Electronics",
+      "location": "Library second floor corner table",
+      "description": "A pair of silver wireless JBL headphones in almost brand-new condition, found on a corner table in the library.",
+      "color": "Silver",
+      "condition": "New",
+      "confidence": 0.98
+    }
+
+    Example 2:
+    - Voice Input: "Uh, yeah, I lost a blue thermos water bottle, it has some stickers on it. I think I left it in the SWDC Building Room 205."
+    - Expected Output:
+    {
+      "transcription": "Uh, yeah, I lost a blue thermos water bottle, it has some stickers on it. I think I left it in the SWDC Building Room 205.",
+      "itemName": "Blue Thermos Water Bottle",
+      "categoryId": "personal-items-uuid",
+      "categoryName": "Personal Items",
+      "location": "SWDC Building Room 205",
+      "description": "A blue thermos water bottle featuring various stickers, reported lost in SWDC Building Room 205.",
+      "color": "Blue",
+      "condition": "Used",
+      "confidence": 0.95
+    }
+
+    Example 3:
+    - Voice Input: "Hey, I found a black jacket on the bench outside the SAS Office. It's quite dusty and looks like a medium size."
+    - Expected Output:
+    {
+      "transcription": "Hey, I found a black jacket on the bench outside the SAS Office. It's quite dusty and looks like a medium size.",
+      "itemName": "Black Medium Jacket",
+      "categoryId": "clothing-uuid",
+      "categoryName": "Clothing",
+      "location": "SAS Office (Bench outside)",
+      "description": "A medium-sized black jacket found on the bench outside the SAS Office. The jacket appears dusty.",
+      "color": "Black",
+      "condition": "Used",
+      "confidence": 0.96
+    }
+
     Rules:
     - Return ONLY valid JSON.
     - If a field is not explicitly spoken in the audio, make a highly reasonable inference or keep it blank ("").
@@ -315,7 +369,7 @@ const parseVoice = async (audioBuffer: Buffer, mimeType = "audio/webm") => {
       {
         inlineData: {
           data: base64Data,
-          mimeType: mimeType
+          mimeType: resolvedMimeType
         }
       }
     ]);
