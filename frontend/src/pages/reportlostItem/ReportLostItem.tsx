@@ -1089,7 +1089,7 @@ const ReportLostItem = () => {
                             <button
                               type="button"
                               onClick={() => setShowAiHelp(true)}
-                              className="w-3.5 h-3.5 rounded-full bg-gray-700/50 hover:bg-gray-600 border border-gray-600/50 text-gray-400 hover:text-white flex items-center justify-center transition-all inline-flex align-middle"
+                              className="w-3.5 h-3.5 rounded-full bg-gray-700/50 hover:bg-gray-600 border border-gray-600/50 text-gray-400 hover:text-white inline-flex items-center justify-center transition-all align-middle"
                               title="How it works"
                             >
                               <span className="text-[8px] font-black leading-none">i</span>
