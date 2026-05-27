@@ -912,18 +912,18 @@ const ReportLostItem = () => {
                 {step === 0 && (
                   <div className="space-y-5">
                     {scannedStudent && (
-                      <div className="flex items-center justify-between p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 animate-fadeIn">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
-                            <FaUserCheck size={18} />
+                      <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 animate-fadeIn">
+                        <div className="flex items-center gap-2.5 sm:gap-3">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                            <FaUserCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-white uppercase">{scannedStudent.name}</p>
-                            <p className="text-[10px] font-bold text-blue-500/60 uppercase tracking-widest">Student ID: {scannedStudent.id}</p>
+                            <p className="text-xs sm:text-sm font-bold text-white uppercase leading-tight">{scannedStudent.name}</p>
+                            <p className="text-[9px] sm:text-[10px] font-bold text-blue-500/60 uppercase tracking-widest mt-0.5">Student ID: {scannedStudent.id}</p>
                           </div>
                         </div>
-                        <button onClick={clearScan} className="p-2 text-gray-500 hover:text-red-400 transition-colors">
-                          <FaTimes size={14} />
+                        <button onClick={clearScan} className="p-1 sm:p-2 text-gray-500 hover:text-red-400 transition-colors shrink-0">
+                          <FaTimes className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       </div>
                     )}
@@ -1079,7 +1079,7 @@ const ReportLostItem = () => {
                     {/* Magic AI Scan Card */}
                     {/* Unified AI Assist Card */}
                     <div className="w-full bg-[#1e1e24]/40 border border-white/5 rounded-2xl p-4 sm:p-5 mb-4 animate-fadeIn transition-all duration-300 shadow-md backdrop-blur-sm">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 w-full">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 w-full">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Photo scan</h4>
