@@ -339,8 +339,8 @@ const VoiceReportButton = ({ isLostPage = false, noContainer = false, layout = "
 
   if (layout === "card") {
     return (
-      <div className="bg-white/5 border border-white/5 rounded-xl p-3.5 sm:p-4 flex flex-col justify-between min-h-[160px] sm:min-h-[180px] hover:bg-white/[0.07] transition-all duration-300 h-full">
-        <div>
+      <div className="bg-white/5 border border-white/5 rounded-xl p-3.5 sm:p-4 flex flex-col gap-3 hover:bg-white/[0.07] transition-all duration-300 h-full">
+        <div className="flex flex-col gap-1.5">
           {/* Header */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Voice report</h4>
@@ -349,12 +349,12 @@ const VoiceReportButton = ({ isLostPage = false, noContainer = false, layout = "
 
           {/* Middle Body Content */}
           {isRecording ? (
-            <div className="mt-1.5 space-y-1">
+            <div className="space-y-1">
               <p className="text-[9px] sm:text-[10px] text-red-400 font-mono flex items-center gap-1.5 select-none">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping inline-block"></span>
                 Recording: {formatTime(recordingSeconds)} / {formatTime(MAX_SECONDS)}
               </p>
-              <div className="relative h-4 mt-1 flex items-center w-full">
+              <div className="relative h-4 flex items-center w-full">
                 <canvas 
                   ref={canvasRef} 
                   width={160} 
@@ -364,11 +364,11 @@ const VoiceReportButton = ({ isLostPage = false, noContainer = false, layout = "
               </div>
             </div>
           ) : isParsing ? (
-            <p className="text-[10px] sm:text-xs text-indigo-400 font-semibold mt-1.5 animate-pulse select-none flex items-center gap-1">
+            <p className="text-[10px] sm:text-xs text-indigo-400 font-semibold animate-pulse select-none flex items-center gap-1">
               <FaSpinner className="animate-spin" size={10} /> Transcribing...
             </p>
           ) : (
-            <p className="text-[10px] sm:text-xs text-gray-400 mt-1.5 select-none leading-normal">
+            <p className="text-[10px] sm:text-xs text-gray-400 select-none leading-normal">
               Hold to narrate naturally.
             </p>
           )}
@@ -379,7 +379,7 @@ const VoiceReportButton = ({ isLostPage = false, noContainer = false, layout = "
           <button
             type="button"
             onClick={stopRecording}
-            className="w-full mt-3 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all animate-pulse active:scale-95 whitespace-nowrap cursor-pointer shadow-lg shadow-red-900/10"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all animate-pulse active:scale-95 whitespace-nowrap cursor-pointer shadow-lg shadow-red-900/10"
           >
             <FaStop size={10} /> Done
           </button>
@@ -387,7 +387,7 @@ const VoiceReportButton = ({ isLostPage = false, noContainer = false, layout = "
           <button
             type="button"
             disabled
-            className="w-full mt-3 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600/30 text-indigo-300 border border-indigo-500/20 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold whitespace-nowrap"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600/30 text-indigo-300 border border-indigo-500/20 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold whitespace-nowrap"
           >
             <FaSpinner size={10} className="animate-spin" /> Analyzing
           </button>
@@ -395,7 +395,7 @@ const VoiceReportButton = ({ isLostPage = false, noContainer = false, layout = "
           <button
             type="button"
             onClick={startRecording}
-            className="w-full mt-3 flex items-center justify-center gap-1.5 px-3 py-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer"
           >
             <FaMicrophone size={10} className="text-purple-400" /> Hold to talk
           </button>

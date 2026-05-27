@@ -959,8 +959,8 @@ const ReportFoundItem = () => {
                     <div className="w-full bg-[#1e1e24]/40 border border-white/5 rounded-2xl p-4 sm:p-5 mb-4 animate-fadeIn transition-all duration-300 shadow-md backdrop-blur-sm">
                       <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
                         {/* Photo scan card */}
-                        <div className="bg-white/5 border border-white/5 rounded-xl p-3.5 sm:p-4 flex flex-col justify-between min-h-[160px] sm:min-h-[180px] hover:bg-white/[0.07] transition-all duration-300 h-full">
-                          <div>
+                        <div className="bg-white/5 border border-white/5 rounded-xl p-3.5 sm:p-4 flex flex-col gap-3 hover:bg-white/[0.07] transition-all duration-300 h-full">
+                          <div className="flex flex-col gap-1.5">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Photo scan</h4>
                               <span className="bg-blue-500/20 text-blue-300 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider select-none">AI</span>
@@ -969,13 +969,13 @@ const ReportFoundItem = () => {
                               </span>
                             </div>
                             {isAiRecognizing ? (
-                              <p className="text-[10px] sm:text-xs text-blue-400 font-semibold mt-1.5 animate-pulse">Analyzing details...</p>
+                              <p className="text-[10px] sm:text-xs text-blue-400 font-semibold animate-pulse">Analyzing details...</p>
                             ) : (
-                              <p className="text-[10px] sm:text-xs text-gray-400 mt-1.5 select-none leading-normal">Snap a photo to auto-fill details.</p>
+                              <p className="text-[10px] sm:text-xs text-gray-400 select-none leading-normal">Snap a photo to auto-fill details.</p>
                             )}
                           </div>
                           
-                          <label className={`w-full mt-3 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer ${
+                          <label className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer ${
                             isAiRecognizing 
                               ? "bg-blue-600/30 text-blue-300 border border-blue-500/20" 
                               : "border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white"
