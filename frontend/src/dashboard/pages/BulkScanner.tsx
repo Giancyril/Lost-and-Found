@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import imageCompression from "browser-image-compression";
 import { toast } from "react-toastify";
@@ -37,62 +37,42 @@ const StatusBadge = ({ status }: { status: ProcessedItem["status"] }) => {
   );
 };
 
-const scannerStore = {
-  items: [] as ProcessedItem[],
-  isProcessing: false,
-  globalLocation: "SAS Office",
-  listeners: new Set<() => void>(),
-  subscribe(listener: () => void) {
-    this.listeners.add(listener);
-    return () => { this.listeners.delete(listener); };
-  },
-  setItems(action: React.SetStateAction<ProcessedItem[]>) {
-    this.items = typeof action === "function" ? action(this.items) : action;
-    this.notify();
-  },
-  setIsProcessing(action: React.SetStateAction<boolean>) {
-    this.isProcessing = typeof action === "function" ? action(this.isProcessing) : action;
-    this.notify();
-  },
-  setGlobalLocation(val: string) {
-    this.globalLocation = val;
-    this.notify();
-  },
-  notify() {
-    this.listeners.forEach(l => l());
-  }
-};
-
 const BulkScanner = () => {
-  const [items, _setItems] = useState<ProcessedItem[]>(scannerStore.items);
-  const [isProcessing, _setIsProcessing] = useState(scannerStore.isProcessing);
-  const [globalLocation, _setGlobalLocation] = useState(scannerStore.globalLocation);
+  const [items, setItems] = useState<ProcessedItem[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [globalLocation, setGlobalLocation] = useState("SAS Office");
+  const [batchSummary, setBatchSummary] = useState<{ success: number; failed: number } | null>(null);
 
-  React.useEffect(() => {
-    return scannerStore.subscribe(() => {
-      _setItems(scannerStore.items);
-      _setIsProcessing(scannerStore.isProcessing);
-      _setGlobalLocation(scannerStore.globalLocation);
+  // Use a ref so async processItem always reads the latest items without stale closure
+  const itemsRef = useRef<ProcessedItem[]>([]);
+  const locationRef = useRef("SAS Office");
+
+  // Keep refs in sync with state
+  const updateItems = useCallback((action: React.SetStateAction<ProcessedItem[]>) => {
+    setItems(prev => {
+      const next = typeof action === "function" ? action(prev) : action;
+      itemsRef.current = next;
+      return next;
     });
   }, []);
 
-  const setItems = (action: React.SetStateAction<ProcessedItem[]>) => scannerStore.setItems(action);
-  const setIsProcessing = (action: React.SetStateAction<boolean>) => scannerStore.setIsProcessing(action);
-  const setGlobalLocation = (val: string) => scannerStore.setGlobalLocation(val);
+  const updateLocation = useCallback((val: string) => {
+    locationRef.current = val;
+    setGlobalLocation(val);
+  }, []);
 
   const [aiRecognize]     = useAiRecognizeMutation();
   const [createFoundItem] = useCreateFoundItemMutation();
-  const [batchSummary, setBatchSummary] = useState<{ success: number; failed: number } | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newItems = acceptedFiles.map(file => ({
+    const newItems: ProcessedItem[] = acceptedFiles.map(file => ({
       id: Math.random().toString(36).substring(7),
       file,
       previewUrl: URL.createObjectURL(file),
       status: "pending" as const,
     }));
-    setItems(prev => [...prev, ...newItems]);
-  }, []);
+    updateItems(prev => [...prev, ...newItems]);
+  }, [updateItems]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -100,18 +80,18 @@ const BulkScanner = () => {
     disabled: isProcessing,
   });
 
-  const removeFile = (id: string) => setItems(prev => prev.filter(i => i.id !== id));
-  const clearAll = () => setItems([]);
-  const clearCompleted = () => setItems(prev => prev.filter(i => i.status !== "success"));
+  const removeFile  = (id: string) => updateItems(prev => prev.filter(i => i.id !== id));
+  const clearAll    = () => updateItems([]);
+  const clearCompleted = () => updateItems(prev => prev.filter(i => i.status !== "success"));
 
   /** Core processing logic for a single item by id. Returns true on success. */
   const processItem = async (itemId: string): Promise<boolean> => {
-    const item = scannerStore.items.find(i => i.id === itemId);
+    // Always read from ref so we get the latest file object even mid-batch
+    const item = itemsRef.current.find(i => i.id === itemId);
     if (!item) return false;
 
-    setItems(prev => prev.map(p => p.id === itemId
-      ? { ...p, status: "analyzing", errorMessage: undefined }
-      : p
+    updateItems(prev => prev.map(p =>
+      p.id === itemId ? { ...p, status: "analyzing", errorMessage: undefined } : p
     ));
 
     try {
@@ -131,9 +111,8 @@ const BulkScanner = () => {
       if (!aiRes.success || !aiRes.data) throw new Error("AI could not extract tags.");
 
       const aiData = aiRes.data;
-      setItems(prev => prev.map(p => p.id === itemId
-        ? { ...p, status: "uploading", resultDetails: aiData }
-        : p
+      updateItems(prev => prev.map(p =>
+        p.id === itemId ? { ...p, status: "uploading", resultDetails: aiData } : p
       ));
 
       const createRes: any = await createFoundItem({
@@ -141,7 +120,7 @@ const BulkScanner = () => {
         description:   aiData.description || "Found via Bulk Scanner.",
         categoryId:    aiData.categoryId || null,
         img:           base64,
-        location:      scannerStore.globalLocation || "Unknown Location",
+        location:      locationRef.current || "Unknown Location",
         date:          new Date().toISOString(),
         reporterName:  "Admin Scanner",
         schoolEmail:   "",
@@ -150,10 +129,12 @@ const BulkScanner = () => {
       if (createRes.error || createRes?.data?.success === false)
         throw new Error("Failed to save item to database.");
 
-      setItems(prev => prev.map(p => p.id === itemId ? { ...p, status: "success" } : p));
+      updateItems(prev => prev.map(p =>
+        p.id === itemId ? { ...p, status: "success" } : p
+      ));
       return true;
     } catch (err: any) {
-      setItems(prev => prev.map(p =>
+      updateItems(prev => prev.map(p =>
         p.id === itemId
           ? { ...p, status: "error", errorMessage: err.message || "Unknown error" }
           : p
@@ -164,14 +145,13 @@ const BulkScanner = () => {
 
   /** Process all pending + errored items as a batch. */
   const processAll = async () => {
-    const toProcess = scannerStore.items.filter(i => i.status === "pending" || i.status === "error");
+    const toProcess = itemsRef.current.filter(i => i.status === "pending" || i.status === "error");
     if (toProcess.length === 0) { toast.info("No new images to process."); return; }
     setIsProcessing(true);
     setBatchSummary(null);
 
     let successCount = 0;
     let failCount = 0;
-
     for (const item of toProcess) {
       const ok = await processItem(item.id);
       if (ok) successCount++; else failCount++;
@@ -185,22 +165,19 @@ const BulkScanner = () => {
     } else if (successCount === 0) {
       toast.error(`All ${failCount} image${failCount !== 1 ? "s" : ""} failed. Use "Retry Failed" to try again.`);
     } else {
-      toast.warn(
-        `${successCount} succeeded, ${failCount} failed. Use "Retry Failed" to reprocess only the failed ones.`
-      );
+      toast.warn(`${successCount} succeeded, ${failCount} failed. Use "Retry Failed" to reprocess only the failed ones.`);
     }
   };
 
   /** Retry only the items currently in error state. */
   const retryFailed = async () => {
-    const failed = scannerStore.items.filter(i => i.status === "error");
+    const failed = itemsRef.current.filter(i => i.status === "error");
     if (failed.length === 0) { toast.info("No failed items to retry."); return; }
     setIsProcessing(true);
     setBatchSummary(null);
 
     let successCount = 0;
     let failCount = 0;
-
     for (const item of failed) {
       const ok = await processItem(item.id);
       if (ok) successCount++; else failCount++;
@@ -225,10 +202,10 @@ const BulkScanner = () => {
     else toast.error("Item still failed. Check the error message.");
   };
 
-  const total    = items.length;
-  const done     = items.filter(i => i.status === "success").length;
-  const pending  = items.filter(i => i.status === "pending").length;
-  const errored  = items.filter(i => i.status === "error").length;
+  const total   = items.length;
+  const done    = items.filter(i => i.status === "success").length;
+  const pending = items.filter(i => i.status === "pending").length;
+  const errored = items.filter(i => i.status === "error").length;
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
@@ -237,50 +214,40 @@ const BulkScanner = () => {
       <div className="border-b border-white/5 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div className="flex-1 w-full sm:max-w-xs">
           <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Batch Location</label>
-          <LocationAutocomplete 
+          <LocationAutocomplete
             value={globalLocation}
-            onChange={(val) => setGlobalLocation(val)}
+            onChange={updateLocation}
             disabled={isProcessing}
             placeholder="e.g. Library, SAS Office..."
             className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-xl text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-50"
           />
         </div>
         <div className="flex justify-end flex-wrap gap-2 w-full sm:w-auto">
-        {items.some(i => i.status === "success") && (
-          <button
-            onClick={clearCompleted}
-            className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all"
-          >
-            <FaTrash size={10} /> Clear Done
+          {items.some(i => i.status === "success") && (
+            <button onClick={clearCompleted}
+              className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
+              <FaTrash size={10} /> Clear Done
+            </button>
+          )}
+          {items.length > 0 && !isProcessing && (
+            <button onClick={clearAll}
+              className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
+              <FaTimesCircle size={10} /> Clear All
+            </button>
+          )}
+          {errored > 0 && !isProcessing && (
+            <button onClick={retryFailed}
+              className="flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400 hover:text-amber-300 text-xs font-bold rounded-xl transition-all">
+              <FaRedo size={10} /> Retry Failed ({errored})
+            </button>
+          )}
+          <button onClick={processAll} disabled={isProcessing || items.length === 0}
+            className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-900/30 active:scale-95">
+            {isProcessing
+              ? <><FaSpinner className="animate-spin" size={12} /> Processing...</>
+              : <><FaBolt size={12} /> Start Processing</>}
           </button>
-        )}
-        {items.length > 0 && !isProcessing && (
-          <button
-            onClick={clearAll}
-            className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all"
-          >
-            <FaTimesCircle size={10} /> Clear All
-          </button>
-        )}
-        {errored > 0 && !isProcessing && (
-          <button
-            onClick={retryFailed}
-            className="flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400 hover:text-amber-300 text-xs font-bold rounded-xl transition-all"
-          >
-            <FaRedo size={10} /> Retry Failed ({errored})
-          </button>
-        )}
-        <button
-          onClick={processAll}
-          disabled={isProcessing || items.length === 0}
-          className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-900/30 active:scale-95"
-        >
-          {isProcessing
-            ? <><FaSpinner className="animate-spin" size={12} /> Processing...</>
-            : <><FaBolt size={12} /> Start Processing</>
-          }
-        </button>
-      </div>
+        </div>
       </div>
 
       {/* ── Stats Row ── */}
@@ -306,14 +273,12 @@ const BulkScanner = () => {
       )}
 
       {/* ── Drop Zone ── */}
-      <div
-        {...getRootProps()}
+      <div {...getRootProps()}
         className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all duration-200 ${
           isDragActive
             ? "border-indigo-400 bg-indigo-500/10 scale-[1.01]"
             : "border-white/10 bg-gray-900 hover:border-indigo-500/40 hover:bg-gray-800/60"
-        } ${isProcessing ? "opacity-40 pointer-events-none" : ""}`}
-      >
+        } ${isProcessing ? "opacity-40 pointer-events-none" : ""}`}>
         <input {...getInputProps()} />
         <div className="flex flex-col items-center gap-4">
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 ${
@@ -366,11 +331,9 @@ const BulkScanner = () => {
               : "bg-amber-500/5 border-amber-500/20"
         }`}>
           <div className="flex items-center gap-3">
-            {batchSummary.failed === 0 ? (
-              <FaCheckCircle size={16} className="text-emerald-400 shrink-0" />
-            ) : (
-              <FaExclamationTriangle size={16} className="text-amber-400 shrink-0" />
-            )}
+            {batchSummary.failed === 0
+              ? <FaCheckCircle size={16} className="text-emerald-400 shrink-0" />
+              : <FaExclamationTriangle size={16} className="text-amber-400 shrink-0" />}
             <div>
               <p className={`text-xs font-bold ${
                 batchSummary.failed === 0 ? "text-emerald-400"
@@ -392,18 +355,14 @@ const BulkScanner = () => {
             </div>
           </div>
           {batchSummary.failed > 0 && (
-            <button
-              onClick={retryFailed}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 text-xs font-bold rounded-xl transition-all shrink-0"
-            >
+            <button onClick={retryFailed}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 text-xs font-bold rounded-xl transition-all shrink-0">
               <FaRedo size={10} /> Retry {batchSummary.failed} Failed
             </button>
           )}
-          <button
-            onClick={() => setBatchSummary(null)}
+          <button onClick={() => setBatchSummary(null)}
             className="absolute top-2 right-2 sm:static text-gray-600 hover:text-gray-400 transition-colors"
-            aria-label="Dismiss"
-          >
+            aria-label="Dismiss">
             <FaTimesCircle size={12} />
           </button>
         </div>
@@ -419,7 +378,7 @@ const BulkScanner = () => {
       ) : (
         <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
 
-          {/* ── Desktop table header (hidden on mobile) ── */}
+          {/* Desktop table header */}
           <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 border-b border-white/5 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">
             <div className="col-span-1">Preview</div>
             <div className="col-span-3">File Name</div>
@@ -433,7 +392,7 @@ const BulkScanner = () => {
             {items.map(item => (
               <div key={item.id}>
 
-                {/* ── Desktop row ── */}
+                {/* Desktop row */}
                 <div className="hidden sm:grid grid-cols-12 gap-4 items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
                   <div className="col-span-1">
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-800 border border-white/5">
@@ -475,27 +434,19 @@ const BulkScanner = () => {
                   <div className="col-span-1 flex justify-end gap-1">
                     {!isProcessing && item.status === "error" && (
                       <>
-                        <button
-                          onClick={() => retrySingle(item.id)}
-                          title="Retry this item"
-                          className="w-6 h-6 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-400 transition-colors"
-                        >
+                        <button onClick={() => retrySingle(item.id)} title="Retry this item"
+                          className="w-6 h-6 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-400 transition-colors">
                           <FaRedo size={9} />
                         </button>
-                        <button
-                          onClick={() => removeFile(item.id)}
-                          title="Remove"
-                          className="w-6 h-6 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"
-                        >
+                        <button onClick={() => removeFile(item.id)} title="Remove"
+                          className="w-6 h-6 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors">
                           <FaTimesCircle size={10} />
                         </button>
                       </>
                     )}
                     {!isProcessing && item.status === "pending" && (
-                      <button
-                        onClick={() => removeFile(item.id)}
-                        className="w-6 h-6 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"
-                      >
+                      <button onClick={() => removeFile(item.id)}
+                        className="w-6 h-6 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors">
                         <FaTimesCircle size={10} />
                       </button>
                     )}
@@ -503,33 +454,23 @@ const BulkScanner = () => {
                   </div>
                 </div>
 
-                {/* ── Mobile card ── */}
+                {/* Mobile card */}
                 <div className="sm:hidden flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors">
-
-                  {/* Thumbnail */}
                   <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-800 border border-white/5 shrink-0">
                     <img src={item.previewUrl} alt="preview" className="w-full h-full object-cover" />
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 min-w-0 space-y-1">
                     <p className="text-white text-xs font-semibold truncate">
                       {item.resultDetails?.itemName || item.file.name}
                     </p>
-
-                    {/* Category + size row */}
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-gray-600 text-[10px]">
-                        {(item.file.size / 1024).toFixed(0)} KB
-                      </span>
+                      <span className="text-gray-600 text-[10px]">{(item.file.size / 1024).toFixed(0)} KB</span>
                       {item.resultDetails?.categoryName && (
                         <span className="text-[10px] px-1.5 py-0.5 bg-white/5 border border-white/5 text-gray-400 rounded-md">
                           {item.resultDetails.categoryName}
                         </span>
                       )}
                     </div>
-
-                    {/* Status + sub-message row */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <StatusBadge status={item.status} />
                       {item.status === "error" && (
@@ -540,37 +481,26 @@ const BulkScanner = () => {
                       )}
                     </div>
                   </div>
-
-                  {/* Remove / retry / done icon */}
                   <div className="shrink-0 flex flex-col gap-1 items-center">
                     {!isProcessing && item.status === "error" && (
                       <>
-                        <button
-                          onClick={() => retrySingle(item.id)}
-                          title="Retry"
-                          className="w-7 h-7 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-400 transition-colors"
-                        >
+                        <button onClick={() => retrySingle(item.id)} title="Retry"
+                          className="w-7 h-7 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-400 transition-colors">
                           <FaRedo size={10} />
                         </button>
-                        <button
-                          onClick={() => removeFile(item.id)}
-                          className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"
-                        >
+                        <button onClick={() => removeFile(item.id)}
+                          className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors">
                           <FaTimesCircle size={11} />
                         </button>
                       </>
                     )}
                     {!isProcessing && item.status === "pending" && (
-                      <button
-                        onClick={() => removeFile(item.id)}
-                        className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"
-                      >
+                      <button onClick={() => removeFile(item.id)}
+                        className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors">
                         <FaTimesCircle size={11} />
                       </button>
                     )}
-                    {item.status === "success" && (
-                      <FaCheckCircle size={16} className="text-emerald-400" />
-                    )}
+                    {item.status === "success" && <FaCheckCircle size={16} className="text-emerald-400" />}
                   </div>
                 </div>
 
@@ -584,10 +514,8 @@ const BulkScanner = () => {
               <p className="text-gray-500 text-xs">
                 <span className="text-emerald-400 font-bold">{done}</span> of {total} items saved
               </p>
-              <button
-                onClick={clearCompleted}
-                className="text-xs text-gray-500 hover:text-white transition-colors underline underline-offset-2"
-              >
+              <button onClick={clearCompleted}
+                className="text-xs text-gray-500 hover:text-white transition-colors underline underline-offset-2">
                 Clear completed
               </button>
             </div>
