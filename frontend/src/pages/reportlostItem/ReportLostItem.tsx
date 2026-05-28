@@ -620,16 +620,22 @@ const ReportLostItem = () => {
 
   const handleFetchDetails = async () => {
     // Read directly from watched values (more reliable with Controller fields)
-    const name = reporterName?.trim() || "";
-    const email = schoolEmail?.trim() || "";
+    let name = reporterName?.trim() || "";
+    let email = schoolEmail?.trim() || "";
 
     if (!name && !email) {
       toast.info("Please enter a name or email to fetch details");
       return;
     }
-    if (name && /^\d{8}$|^\d{4}-\d{2}-\d{2}$/.test(name)) {
-      toast.warn("Please enter a valid name");
-      return;
+
+    // Resilient input routing: if user/autofill entered email/ID in the wrong field, correct it!
+    if (name && !email) {
+      const isEmail = name.includes("@");
+      const isId = /^\d{8}$|^\d{4}-\d{2}-\d{2}$/.test(name);
+      if (isEmail || isId) {
+        email = name;
+        name = "";
+      }
     }
 
     try {
@@ -1083,7 +1089,6 @@ const ReportLostItem = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Photo scan</h4>
-                            <span className="bg-blue-500/20 text-blue-300 text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider select-none">AI</span>
                             <span className="text-gray-500 hover:text-gray-300 cursor-pointer select-none text-[10px]" title="Snap or upload a photo to auto-fill details">
                               <FaInfoCircle size={10} className="opacity-60" />
                             </span>
@@ -1447,7 +1452,7 @@ const ReportLostItem = () => {
           </div>
 
           <p className="text-center text-xs text-gray-600 mt-4">
-            All reports are reviewed by the NBSC Lost & Found office.
+            All reports are reviewed by SAS office.
           </p>
         </div>
       </section>

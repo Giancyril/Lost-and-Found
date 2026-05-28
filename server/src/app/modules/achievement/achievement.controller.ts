@@ -150,6 +150,20 @@ const getUnseenAchievements = async (req: Request, res: Response) => {
       data: unseen,
     });
   } catch (error: any) {
+    // Graceful fallback: if the `seen` column doesn't exist yet in the DB
+    // (pending migration), return an empty array so the UI doesn't break.
+    if (
+      error?.message?.includes("seen") ||
+      error?.code === "P2025" ||
+      error?.code?.startsWith("P")
+    ) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "No unseen achievements",
+        data: [],
+      });
+    }
     sendResponse(res, {
       statusCode: StatusCodes.BAD_REQUEST,
       success: false,

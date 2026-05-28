@@ -550,16 +550,22 @@ const ReportFoundItem = () => {
 
   const handleFetchDetails = async () => {
     // Read directly from watched values (more reliable with Controller fields)
-    const name = reporterName?.trim() || "";
-    const email = schoolEmail?.trim() || "";
+    let name = reporterName?.trim() || "";
+    let email = schoolEmail?.trim() || "";
 
     if (!name && !email) {
       toast.info("Please enter a name or email to fetch details");
       return;
     }
-    if (name && /^\d{8}$|^\d{4}-\d{2}-\d{2}$/.test(name)) {
-      toast.warn("Please enter a valid name");
-      return;
+
+    // Resilient input routing: if user/autofill entered email/ID in the wrong field, correct it!
+    if (name && !email) {
+      const isEmail = name.includes("@");
+      const isId = /^\d{8}$|^\d{4}-\d{2}-\d{2}$/.test(name);
+      if (isEmail || isId) {
+        email = name;
+        name = "";
+      }
     }
 
     try {

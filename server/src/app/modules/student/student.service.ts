@@ -111,8 +111,19 @@ const getStudentById = async (id: string) => {
 
 const getStudentByDetails = async (name: string, email: string) => {
   const masterlist  = await fetchMasterlist();
-  const searchName  = (name  || "").toLowerCase().trim();
-  const searchEmail = (email || "").toLowerCase().trim();
+  let searchName  = (name  || "").toLowerCase().trim();
+  let searchEmail = (email || "").toLowerCase().trim();
+
+  // Robust check: If name looks like an email or student ID, and searchEmail is empty, swap/fix them!
+  // This gracefully handles browser auto-fill/user-input mixups where the email/ID is pasted into the "Your Name" input.
+  if (searchName && !searchEmail) {
+    const isEmail = searchName.includes("@");
+    const isId = /^\d{6,12}$|^\d{4}-\d{2}-\d{2}$/.test(searchName.replace(/[-\s]/g, ""));
+    if (isEmail || isId) {
+      searchEmail = searchName;
+      searchName = "";
+    }
+  }
 
   // Extract numeric ID from email like "20221270@nbsc.edu.ph" → "20221270"
   const emailLocalPart = searchEmail.split("@")[0];

@@ -1010,19 +1010,29 @@ const FoundItemsPage = () => {
   const handleFetchDetails = async () => {
     // Use the form's live watched values instead of DOM querySelector
     // (Controller-managed fields don't reliably expose via querySelector)
-    const name = watchedReporterName?.trim() || "";
-    const email = watchedSchoolEmail?.trim() || "";
+    let name = watchedReporterName?.trim() || "";
+    let email = watchedSchoolEmail?.trim() || "";
 
     if (!name && !email) {
       toast.info("Please enter a name or email to fetch details");
       return;
     }
 
+    // Resilient input routing: if user/autofill entered email/ID in the wrong field, correct it!
+    if (name && !email) {
+      const isEmail = name.includes("@");
+      const isId = /^\d{8}$|^\d{4}-\d{2}-\d{2}$/.test(name);
+      if (isEmail || isId) {
+        email = name;
+        name = "";
+      }
+    }
+
     try {
       // Try name first, fall back to email
       let student: any = null;
 
-      if (name) {
+      if (name || email) {
         try {
           const res = await getStudentByDetails({ name, email }).unwrap();
           student = res?.data ?? res;
