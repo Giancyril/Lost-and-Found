@@ -337,37 +337,41 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const portalToken = searchParams.get("portalToken");
     const directToken = searchParams.get("token");
 
+    const authPayloadToken = portalToken || directToken;
+    const authPayloadUser = portalUser || "admin"; // Default to admin if user omitted but token provided
+
     const authenticate = async () => {
       try {
-        if (directToken) {
-          // If a direct JWT token is provided
-          setUserLocalStorage(directToken);
-          setIsAuthenticating(false);
-          // Clean up URL
-          searchParams.delete("token");
-          if (portalUser) searchParams.delete("portalUser");
-          setSearchParams(searchParams, { replace: true });
-        } else if (portalUser && portalToken) {
-          // If portal credentials are provided, use portal login
-          const res: any = await portalLogin({ portalUser, portalToken });
+        if (authPayloadToken) {
+          // Exchange the foreign portal token for a valid backend JWT
+          const res: any = await portalLogin({ 
+            portalUser: authPayloadUser, 
+            portalToken: authPayloadToken 
+          });
+
           if (res?.data?.data?.token) {
             setUserLocalStorage(res.data.data.token);
+          } else {
+            console.warn("Failed to exchange portal token for backend JWT");
           }
+          
           setIsAuthenticating(false);
+          
           // Clean up URL
-          searchParams.delete("portalUser");
-          searchParams.delete("portalToken");
+          if (directToken) searchParams.delete("token");
+          if (portalToken) searchParams.delete("portalToken");
+          if (portalUser) searchParams.delete("portalUser");
           setSearchParams(searchParams, { replace: true });
         } else {
           setIsAuthenticating(false);
         }
       } catch (error) {
-        console.error("Portal auto-login failed in dashboard:", error);
+        console.error("Portal auto-login exchange failed in dashboard:", error);
         setIsAuthenticating(false);
       }
     };
 
-    if (portalToken || directToken) {
+    if (authPayloadToken) {
       authenticate();
     }
   }, [searchParams, portalLogin, setSearchParams]);
