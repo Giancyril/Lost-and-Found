@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { useAiRecognizeMutation, useCreateFoundItemMutation } from "../../redux/api/api";
 import {
   FaUpload, FaSpinner, FaCheckCircle, FaTimesCircle,
-  FaMagic, FaTrash, FaBolt, FaBoxOpen, FaSearch,
+  FaTrash, FaBolt, FaBoxOpen, FaSearch, FaRedo, FaExclamationTriangle,
 } from "react-icons/fa";
 import LocationAutocomplete from "../../components/ui/LocationAutocomplete";
 
@@ -81,8 +81,8 @@ const BulkScanner = () => {
   const setGlobalLocation = (val: string) => scannerStore.setGlobalLocation(val);
 
   const [aiRecognize]     = useAiRecognizeMutation();
-
   const [createFoundItem] = useCreateFoundItemMutation();
+  const [batchSummary, setBatchSummary] = useState<{ success: number; failed: number } | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newItems = acceptedFiles.map(file => ({
@@ -104,60 +104,125 @@ const BulkScanner = () => {
   const clearAll = () => setItems([]);
   const clearCompleted = () => setItems(prev => prev.filter(i => i.status !== "success"));
 
+  /** Core processing logic for a single item by id. Returns true on success. */
+  const processItem = async (itemId: string): Promise<boolean> => {
+    const item = scannerStore.items.find(i => i.id === itemId);
+    if (!item) return false;
+
+    setItems(prev => prev.map(p => p.id === itemId
+      ? { ...p, status: "analyzing", errorMessage: undefined }
+      : p
+    ));
+
+    try {
+      const compressed = await imageCompression(item.file, {
+        maxSizeMB: 0.2, maxWidthOrHeight: 800, useWebWorker: true,
+      });
+
+      const base64: string = await new Promise(resolve => {
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result as string);
+        r.readAsDataURL(compressed);
+      });
+
+      const formData = new FormData();
+      formData.append("image", compressed);
+      const aiRes = await aiRecognize(formData).unwrap();
+      if (!aiRes.success || !aiRes.data) throw new Error("AI could not extract tags.");
+
+      const aiData = aiRes.data;
+      setItems(prev => prev.map(p => p.id === itemId
+        ? { ...p, status: "uploading", resultDetails: aiData }
+        : p
+      ));
+
+      const createRes: any = await createFoundItem({
+        foundItemName: aiData.itemName || "Unknown Item",
+        description:   aiData.description || "Found via Bulk Scanner.",
+        categoryId:    aiData.categoryId || null,
+        img:           base64,
+        location:      scannerStore.globalLocation || "Unknown Location",
+        date:          new Date().toISOString(),
+        reporterName:  "Admin Scanner",
+        schoolEmail:   "",
+      });
+
+      if (createRes.error || createRes?.data?.success === false)
+        throw new Error("Failed to save item to database.");
+
+      setItems(prev => prev.map(p => p.id === itemId ? { ...p, status: "success" } : p));
+      return true;
+    } catch (err: any) {
+      setItems(prev => prev.map(p =>
+        p.id === itemId
+          ? { ...p, status: "error", errorMessage: err.message || "Unknown error" }
+          : p
+      ));
+      return false;
+    }
+  };
+
+  /** Process all pending + errored items as a batch. */
   const processAll = async () => {
-    const toProcess = items.filter(i => i.status === "pending" || i.status === "error");
+    const toProcess = scannerStore.items.filter(i => i.status === "pending" || i.status === "error");
     if (toProcess.length === 0) { toast.info("No new images to process."); return; }
     setIsProcessing(true);
+    setBatchSummary(null);
 
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.status === "success") continue;
+    let successCount = 0;
+    let failCount = 0;
 
-      setItems(prev => prev.map(p => p.id === item.id ? { ...p, status: "analyzing" } : p));
-
-      try {
-        const compressed = await imageCompression(item.file, {
-          maxSizeMB: 0.2, maxWidthOrHeight: 800, useWebWorker: true,
-        });
-
-        const base64: string = await new Promise(resolve => {
-          const r = new FileReader();
-          r.onloadend = () => resolve(r.result as string);
-          r.readAsDataURL(compressed);
-        });
-
-        const formData = new FormData();
-        formData.append("image", compressed);
-        const aiRes = await aiRecognize(formData).unwrap();
-        if (!aiRes.success || !aiRes.data) throw new Error("AI could not extract tags.");
-
-        const aiData = aiRes.data;
-        setItems(prev => prev.map(p => p.id === item.id ? { ...p, status: "uploading", resultDetails: aiData } : p));
-
-        const createRes: any = await createFoundItem({
-          foundItemName: aiData.itemName || "Unknown Item",
-          description:   aiData.description || "Found via Bulk Scanner.",
-          categoryId:    aiData.categoryId || null,
-          img:           base64,
-          location:      scannerStore.globalLocation || "Unknown Location",
-          date:          new Date().toISOString(),
-          reporterName:  "Admin Scanner",
-          schoolEmail:   "",
-        });
-
-        if (createRes.error || createRes?.data?.success === false)
-          throw new Error("Failed to save item to database.");
-
-        setItems(prev => prev.map(p => p.id === item.id ? { ...p, status: "success" } : p));
-      } catch (err: any) {
-        setItems(prev => prev.map(p =>
-          p.id === item.id ? { ...p, status: "error", errorMessage: err.message || "Unknown error" } : p
-        ));
-      }
+    for (const item of toProcess) {
+      const ok = await processItem(item.id);
+      if (ok) successCount++; else failCount++;
     }
 
     setIsProcessing(false);
-    toast.success("Bulk processing complete!");
+    setBatchSummary({ success: successCount, failed: failCount });
+
+    if (failCount === 0) {
+      toast.success(`All ${successCount} image${successCount !== 1 ? "s" : ""} processed successfully.`);
+    } else if (successCount === 0) {
+      toast.error(`All ${failCount} image${failCount !== 1 ? "s" : ""} failed. Use "Retry Failed" to try again.`);
+    } else {
+      toast.warn(
+        `${successCount} succeeded, ${failCount} failed. Use "Retry Failed" to reprocess only the failed ones.`
+      );
+    }
+  };
+
+  /** Retry only the items currently in error state. */
+  const retryFailed = async () => {
+    const failed = scannerStore.items.filter(i => i.status === "error");
+    if (failed.length === 0) { toast.info("No failed items to retry."); return; }
+    setIsProcessing(true);
+    setBatchSummary(null);
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const item of failed) {
+      const ok = await processItem(item.id);
+      if (ok) successCount++; else failCount++;
+    }
+
+    setIsProcessing(false);
+    setBatchSummary({ success: successCount, failed: failCount });
+
+    if (failCount === 0) {
+      toast.success(`Retry complete — all ${successCount} item${successCount !== 1 ? "s" : ""} saved.`);
+    } else {
+      toast.warn(`Retry done: ${successCount} succeeded, ${failCount} still failing.`);
+    }
+  };
+
+  /** Retry a single errored item inline. */
+  const retrySingle = async (itemId: string) => {
+    setIsProcessing(true);
+    const ok = await processItem(itemId);
+    setIsProcessing(false);
+    if (ok) toast.success("Item saved successfully.");
+    else toast.error("Item still failed. Check the error message.");
   };
 
   const total    = items.length;
@@ -197,6 +262,14 @@ const BulkScanner = () => {
             <FaTimesCircle size={10} /> Clear All
           </button>
         )}
+        {errored > 0 && !isProcessing && (
+          <button
+            onClick={retryFailed}
+            className="flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400 hover:text-amber-300 text-xs font-bold rounded-xl transition-all"
+          >
+            <FaRedo size={10} /> Retry Failed ({errored})
+          </button>
+        )}
         <button
           onClick={processAll}
           disabled={isProcessing || items.length === 0}
@@ -217,7 +290,7 @@ const BulkScanner = () => {
             { label: "Total",  value: total,   color: "text-white",       bg: "bg-gray-800 border-white/5",             icon: <FaBoxOpen size={12} className="text-gray-400" /> },
             { label: "Queued", value: pending,  color: "text-blue-400",    bg: "bg-blue-500/5 border-blue-500/10",       icon: <FaUpload size={12} className="text-blue-400" /> },
             { label: "Done",   value: done,     color: "text-emerald-400", bg: "bg-emerald-500/5 border-emerald-500/10", icon: <FaCheckCircle size={12} className="text-emerald-400" /> },
-            { label: "Errors", value: errored,  color: "text-blue-400",     bg: "bg-blue-500/5 border-blue-500/10",         icon: <FaTimesCircle size={12} className="text-blue-400" /> },
+            { label: "Errors", value: errored,  color: "text-red-400",     bg: "bg-red-500/5 border-red-500/10",         icon: <FaTimesCircle size={12} className="text-red-400" /> },
           ].map(s => (
             <div key={s.label} className={`bg-gray-900 border rounded-2xl p-3 sm:p-4 flex flex-col gap-2 ${s.bg}`}>
               <div className="flex items-start justify-between gap-1">
@@ -280,6 +353,59 @@ const BulkScanner = () => {
               style={{ width: `${total > 0 ? Math.round((done / total) * 100) : 0}%` }}
             />
           </div>
+        </div>
+      )}
+
+      {/* ── Batch Summary Banner ── */}
+      {!isProcessing && batchSummary && (
+        <div className={`relative rounded-2xl border px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+          batchSummary.failed === 0
+            ? "bg-emerald-500/5 border-emerald-500/20"
+            : batchSummary.success === 0
+              ? "bg-red-500/5 border-red-500/20"
+              : "bg-amber-500/5 border-amber-500/20"
+        }`}>
+          <div className="flex items-center gap-3">
+            {batchSummary.failed === 0 ? (
+              <FaCheckCircle size={16} className="text-emerald-400 shrink-0" />
+            ) : (
+              <FaExclamationTriangle size={16} className="text-amber-400 shrink-0" />
+            )}
+            <div>
+              <p className={`text-xs font-bold ${
+                batchSummary.failed === 0 ? "text-emerald-400"
+                  : batchSummary.success === 0 ? "text-red-400"
+                  : "text-amber-400"
+              }`}>
+                {batchSummary.failed === 0
+                  ? "Batch complete — all items saved"
+                  : batchSummary.success === 0
+                    ? "Batch failed — no items were saved"
+                    : "Batch finished with errors"}
+              </p>
+              <p className="text-[10px] text-gray-500 mt-0.5">
+                <span className="text-emerald-400 font-semibold">{batchSummary.success} succeeded</span>
+                {batchSummary.failed > 0 && (
+                  <> · <span className="text-red-400 font-semibold">{batchSummary.failed} failed</span></>
+                )}
+              </p>
+            </div>
+          </div>
+          {batchSummary.failed > 0 && (
+            <button
+              onClick={retryFailed}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 text-xs font-bold rounded-xl transition-all shrink-0"
+            >
+              <FaRedo size={10} /> Retry {batchSummary.failed} Failed
+            </button>
+          )}
+          <button
+            onClick={() => setBatchSummary(null)}
+            className="absolute top-2 right-2 sm:static text-gray-600 hover:text-gray-400 transition-colors"
+            aria-label="Dismiss"
+          >
+            <FaTimesCircle size={12} />
+          </button>
         </div>
       )}
 
@@ -346,8 +472,26 @@ const BulkScanner = () => {
                   <div className="col-span-2">
                     <StatusBadge status={item.status} />
                   </div>
-                  <div className="col-span-1 flex justify-end">
-                    {!isProcessing && item.status !== "success" && (
+                  <div className="col-span-1 flex justify-end gap-1">
+                    {!isProcessing && item.status === "error" && (
+                      <>
+                        <button
+                          onClick={() => retrySingle(item.id)}
+                          title="Retry this item"
+                          className="w-6 h-6 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-400 transition-colors"
+                        >
+                          <FaRedo size={9} />
+                        </button>
+                        <button
+                          onClick={() => removeFile(item.id)}
+                          title="Remove"
+                          className="w-6 h-6 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"
+                        >
+                          <FaTimesCircle size={10} />
+                        </button>
+                      </>
+                    )}
+                    {!isProcessing && item.status === "pending" && (
                       <button
                         onClick={() => removeFile(item.id)}
                         className="w-6 h-6 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"
@@ -397,9 +541,26 @@ const BulkScanner = () => {
                     </div>
                   </div>
 
-                  {/* Remove / done icon */}
-                  <div className="shrink-0">
-                    {!isProcessing && item.status !== "success" && (
+                  {/* Remove / retry / done icon */}
+                  <div className="shrink-0 flex flex-col gap-1 items-center">
+                    {!isProcessing && item.status === "error" && (
+                      <>
+                        <button
+                          onClick={() => retrySingle(item.id)}
+                          title="Retry"
+                          className="w-7 h-7 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-400 transition-colors"
+                        >
+                          <FaRedo size={10} />
+                        </button>
+                        <button
+                          onClick={() => removeFile(item.id)}
+                          className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"
+                        >
+                          <FaTimesCircle size={11} />
+                        </button>
+                      </>
+                    )}
+                    {!isProcessing && item.status === "pending" && (
                       <button
                         onClick={() => removeFile(item.id)}
                         className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"
