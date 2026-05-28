@@ -574,6 +574,7 @@ export function Navbars() {
               { label: "Report Lost Item", href: "/reportLostItem", icon: "ti-file-description", iconColor: "text-orange-400", iconBg: "bg-orange-500/10" },
               { label: "Smart Search", href: "/ai-search", icon: "ti-sparkles", iconColor: "text-violet-400", iconBg: "bg-violet-500/10" },
               { label: "Item Status", href: "/track", icon: "ti-radar", iconColor: "text-blue-400", iconBg: "bg-blue-500/10" },
+              { label: "Bounties", href: "/bounties", icon: "ti-trophy", iconColor: "text-amber-400", iconBg: "bg-amber-500/10" },
             ].map(({ label, href, icon, iconColor, iconBg }) => (
               <Link
                 key={href}
@@ -644,6 +645,7 @@ export function Navbars() {
               items={[
                 { label: "Smart Search", href: "/ai-search", icon: <FaSearch size={11} />, color: "text-violet-400", bg: "bg-violet-500/10" },
                 { label: "Indoor Map", href: "/indoor-map", icon: <FaMap size={11} />, color: "text-cyan-400", bg: "bg-cyan-500/10" },
+                { label: "Bounties", href: "/bounties", icon: <FaTrophy size={11} />, color: "text-amber-400", bg: "bg-amber-500/10" },
               ]}
             />
 

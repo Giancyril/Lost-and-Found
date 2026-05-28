@@ -52,6 +52,7 @@ import ItemStatus from "./pages/itemStatus/ItemStatus.tsx";
 import ChatPage from "./dashboard/pages/ChatPage.tsx";
 import IndoorMapPage from "./pages/IndoorMapPage.tsx";
 import AuditLogsPage from "./dashboard/pages/AuditLogsPage.tsx";
+import Bounties from "./pages/bounties/Bounties.tsx";
 
 const rawAdminPath = import.meta.env.VITE_ADMIN_PATH || "/nbsc-secure-portal";
 const ADMIN_PATH = rawAdminPath.startsWith("/") ? rawAdminPath : `/${rawAdminPath}`;
@@ -82,6 +83,7 @@ const router = createBrowserRouter([
       { path: "/itemStatus", element: <ItemStatus /> },
       { path: "/indoor-map", element: <IndoorMapPage /> },
       { path: "/track", element: <ItemStatus /> },
+      { path: "/bounties", element: <Bounties /> },
     ],
   },
 
