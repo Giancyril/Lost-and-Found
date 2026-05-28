@@ -10,6 +10,42 @@ const createClaim = async (
   item: Claim & { claimantName?: string; contactNumber?: string; schoolEmail?: string },
   user?: JwtPayload
 ) => {
+  // 0. Duplicate Claim Prevention — check if user already has PENDING or APPROVED claim for this item
+  if (user?.id && item.foundItemId) {
+    const existingClaim = await prisma.claim.findFirst({
+      where: {
+        userId: user.id,
+        foundItemId: item.foundItemId,
+        status: { in: ["PENDING", "APPROVED"] },
+        isDeleted: false,
+      },
+    });
+
+    if (existingClaim) {
+      throw new Error(
+        `You already have a ${existingClaim.status.toLowerCase()} claim for this item. Please wait for the admin to review your existing claim.`
+      );
+    }
+  }
+
+  // Also check by email for guest claims (when userId is not available)
+  if (!user?.id && item.schoolEmail && item.foundItemId) {
+    const existingClaim = await prisma.claim.findFirst({
+      where: {
+        schoolEmail: item.schoolEmail,
+        foundItemId: item.foundItemId,
+        status: { in: ["PENDING", "APPROVED"] },
+        isDeleted: false,
+      },
+    });
+
+    if (existingClaim) {
+      throw new Error(
+        `A ${existingClaim.status.toLowerCase()} claim for this item already exists with this email. Please wait for the admin to review the existing claim.`
+      );
+    }
+  }
+
   let isHighRisk = false;
   let fraudScore = 0;
   let fraudReason = "";

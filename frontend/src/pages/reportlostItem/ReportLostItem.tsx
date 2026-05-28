@@ -781,9 +781,13 @@ const ReportLostItem = () => {
   };
 
   const [trackingCode, setTrackingCode] = useState<string | null>(null);
+  const [submittedMatchData, setSubmittedMatchData] = useState<{
+    categoryId: string; categoryName: string; itemName: string; location: string;
+  } | null>(null);
 
   const handleCloseTrackingModal = () => {
     setTrackingCode(null);
+    setSubmittedMatchData(null);
     reset(); setSelectedFile(null); setPreview(""); setUploadError("");
     setselectedMenu(""); setselectedMenucategoryId(""); setCategoryTouched(false);
     setSelectedColor(""); setSelectedCondition("");
@@ -818,6 +822,13 @@ const ReportLostItem = () => {
       const createdId = res.data?.data?.id || res.data?.id;
       toast.success("Lost item reported successfully");
       if (createdId) {
+        // Capture match data before form resets so the modal can show suggestions
+        setSubmittedMatchData({
+          categoryId:   selectedMenucategoryId,
+          categoryName: selectedMenu,
+          itemName:     data.lostItemName || "",
+          location:     data.location || "",
+        });
         setTrackingCode(createdId);
       } else {
         handleCloseTrackingModal();
@@ -1329,8 +1340,8 @@ const ReportLostItem = () => {
                     {selectedMenucategoryId && (
                       <ItemMatchSuggestions
                         categoryId={selectedMenucategoryId} categoryName={selectedMenu}
-                        itemName={(document.querySelector('input[name="lostItemName"]') as HTMLInputElement)?.value ?? ""}
-                        location={(document.querySelector('input[name="location"]') as HTMLInputElement)?.value ?? ""}
+                        itemName={lostItemName ?? ""}
+                        location={location ?? ""}
                       />
                     )}
                   </div>
@@ -1497,8 +1508,8 @@ const ReportLostItem = () => {
       )}
 
       {trackingCode && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-          <div className="bg-gray-900 border border-white/8 rounded-[20px] w-full max-w-[360px] overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 overflow-y-auto">
+          <div className="bg-gray-900 border border-white/8 rounded-[20px] w-full max-w-[400px] overflow-hidden shadow-2xl my-auto">
 
             {/* Top accent bar */}
             <div className="h-[3px] bg-gradient-to-r from-blue-500 via-cyan-400 to-violet-500" />
@@ -1536,6 +1547,21 @@ const ReportLostItem = () => {
                   <FaCopy size={13} className="text-blue-400" />
                 </button>
               </div>
+
+              {/* Smart Match suggestions — shown immediately after submission */}
+              {submittedMatchData?.categoryId && (
+                <div className="w-full">
+                  <p className="text-[9px] font-bold text-gray-600 uppercase tracking-[0.15em] mb-2">
+                    Potential Matches Found
+                  </p>
+                  <ItemMatchSuggestions
+                    categoryId={submittedMatchData.categoryId}
+                    categoryName={submittedMatchData.categoryName}
+                    itemName={submittedMatchData.itemName}
+                    location={submittedMatchData.location}
+                  />
+                </div>
+              )}
 
               {/* Close button */}
               <button
