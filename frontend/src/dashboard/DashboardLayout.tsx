@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaTachometerAlt, FaSearch, FaClipboardList, FaUsers, FaBoxOpen,
   FaExclamationTriangle, FaCog, FaBars, FaTimes, FaChevronLeft,
@@ -8,7 +8,7 @@ import {
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate,
   FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy
 } from "react-icons/fa";
-import { useUserVerification, signOut } from "../auth/auth";
+import { useUserVerification, signOut, setUserLocalStorage } from "../auth/auth";
 
 import Modals from "../components/modal/Modal";
 import {
@@ -16,10 +16,12 @@ import {
   useGetFoundItemsQuery,
   useGetLostItemsQuery,
   useGetSecurityStatsQuery,
+  usePortalLoginMutation,
 } from "../redux/api/api";
 import { baseApi } from "../redux/api/baseApi";
 import ChatbotConcierge from "../components/chatbot/ChatbotConcierge";
 import ChatDropdown from "./components/ChatDropdown";
+import { Spinner } from "flowbite-react";
 
 interface DashboardLayoutProps { children: React.ReactNode; }
 
@@ -319,21 +321,82 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isAuthenticating, setIsAuthenticating] = useState(() => {
+    // Check if URL has portal tokens on initial load to prevent flash/redirect
+    return !!(searchParams.get("portalToken") || searchParams.get("token"));
+  });
+  const [portalLogin] = usePortalLoginMutation();
+
   const user = useUserVerification() as any;
   const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+
+  // ── Portal Interception Auth ──────────────────────────────────────────────
+  useEffect(() => {
+    const portalUser = searchParams.get("portalUser");
+    const portalToken = searchParams.get("portalToken");
+    const directToken = searchParams.get("token");
+
+    const authenticate = async () => {
+      try {
+        if (directToken) {
+          // If a direct JWT token is provided
+          setUserLocalStorage(directToken);
+          setIsAuthenticating(false);
+          // Clean up URL
+          searchParams.delete("token");
+          if (portalUser) searchParams.delete("portalUser");
+          setSearchParams(searchParams, { replace: true });
+        } else if (portalUser && portalToken) {
+          // If portal credentials are provided, use portal login
+          const res: any = await portalLogin({ portalUser, portalToken });
+          if (res?.data?.data?.token) {
+            setUserLocalStorage(res.data.data.token);
+          }
+          setIsAuthenticating(false);
+          // Clean up URL
+          searchParams.delete("portalUser");
+          searchParams.delete("portalToken");
+          setSearchParams(searchParams, { replace: true });
+        } else {
+          setIsAuthenticating(false);
+        }
+      } catch (error) {
+        console.error("Portal auto-login failed in dashboard:", error);
+        setIsAuthenticating(false);
+      }
+    };
+
+    if (portalToken || directToken) {
+      authenticate();
+    }
+  }, [searchParams, portalLogin, setSearchParams]);
 
   // ── Public bypass check ───────────────────────────────────────────
   const isPublicBypass = checkPublicBypass(location.pathname, location.search);
 
   // ── Auth guard: if no token and no bypass, redirect to login ──────
   useEffect(() => {
-    if (!token && !isPublicBypass) {
+    if (!token && !isPublicBypass && !isAuthenticating) {
       navigate("/login", { replace: true });
     }
-  }, [token, isPublicBypass, navigate]);
+  }, [token, isPublicBypass, isAuthenticating, navigate]);
 
   // Close sidebar on route change (mobile) — must be before any early return
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
+
+  if (isAuthenticating) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#060a12] text-white">
+        <div className="flex flex-col items-center gap-4">
+          <Spinner size="xl" />
+          <p className="text-sm text-gray-400 animate-pulse tracking-widest uppercase">
+            Authenticating with SAS Portal...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // ── Public bypass render: clean iframe-friendly layout ────────────
   if (isPublicBypass) {
