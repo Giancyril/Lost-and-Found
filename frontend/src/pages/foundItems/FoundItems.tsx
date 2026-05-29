@@ -172,10 +172,12 @@ const getCategoryIcon = (name: string) => {
   return <FaTag size={9} className="text-blue-400" />;
 };
 
-const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
+const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse", "coin purse", "flap wallet"];
 const shouldBlurImage = (cat: string | undefined, isAdmin: boolean) => {
   if (isAdmin) return false;
-  return HIDDEN_IMAGE_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
+  if (!cat) return false;
+  const lowerCat = cat.toLowerCase();
+  return HIDDEN_IMAGE_CATEGORIES.some(c => lowerCat.includes(c));
 };
 
 // Category Help Modal Content
@@ -257,17 +259,23 @@ const CustomSelect = ({ options, value, onChange }: {
 };
 // ── Found Item Card ─────────────────────────────────────────────────────────
 const FoundItemCard = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser, onInitiateChat }: { item: any; setClaimItem: (item: any) => void; onOpenComments: () => void; isAdmin: boolean; currentUser: any; onInitiateChat: (item: any) => void }) => {
-  const isReporter = item?.userId === currentUser?.id || item?.user?.id === currentUser?.id || item?.user?._id === currentUser?.id;
-  const hasClaimed = item?.claim?.some((c: any) => c.userId === currentUser?.id);
+  const isReporter = currentUser && (item?.userId === currentUser?.id || item?.user?.id === currentUser?.id || item?.user?._id === currentUser?.id);
+  const hasClaimed = currentUser && item?.claim?.some((c: any) => c.userId === currentUser?.id);
   const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isReporter && !hasClaimed;
   const dateStr = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
+  const isClaimed = item?.isClaimed || item?.claimStatus === "CLAIMED";
+  
+  // Calculate days ago
+  const itemDate = new Date(item?.date ?? item?.createdAt ?? Date.now());
+  const now = new Date();
+  const daysAgo = Math.floor((now.getTime() - itemDate.getTime()) / (1000 * 60 * 60 * 24));
 
   return (
     <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col">
       <div className="relative h-48 overflow-hidden bg-gray-800 flex items-center justify-center">
         <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "") : "") || item?.img || "/bgimg.png"}
           alt={item?.foundItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-          className={`w-full h-full object-cover ${shouldBlur ? "blur-[8px] select-none pointer-events-none" : "group-hover:scale-105 transition-transform duration-300"}`} />
+          className={`w-full h-full object-cover ${shouldBlur ? "blur-sm select-none pointer-events-none" : "group-hover:scale-105 transition-transform duration-300"}`} />
         {shouldBlur && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 p-4 text-center">
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400 mb-1" strokeWidth="2">
@@ -320,8 +328,8 @@ const FoundItemRow = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser
   const dateStr = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
 
   const isClaimed = item?.isClaimed || item?.claimStatus === "CLAIMED";
-  const isReporter = item?.userId === currentUser?.id || item?.user?.id === currentUser?.id || item?.user?._id === currentUser?.id;
-  const hasClaimed = item?.claim?.some((c: any) => c.userId === currentUser?.id);
+  const isReporter = currentUser && (item?.userId === currentUser?.id || item?.user?.id === currentUser?.id || item?.user?._id === currentUser?.id);
+  const hasClaimed = currentUser && item?.claim?.some((c: any) => c.userId === currentUser?.id);
   const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isReporter && !hasClaimed;
   const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
     ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
@@ -336,7 +344,7 @@ const FoundItemRow = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-gray-800 shrink-0 border border-white/5 flex items-center justify-center">
             <img src={imgSrc} alt={item.foundItemName}
-              className={`w-full h-full object-cover ${shouldBlur ? "blur-[5px] select-none pointer-events-none" : ""}`}
+              className={`w-full h-full object-cover ${shouldBlur ? "blur-sm select-none pointer-events-none" : ""}`}
               onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
             {shouldBlur && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/40">

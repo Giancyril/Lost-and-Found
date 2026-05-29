@@ -280,6 +280,7 @@ const SingleLostItem = () => {
   const { lostItemName, date, createdAt, isFound, img, description, location, user, category } = lostItem;
   const isOwner = user?.id === users?.id || user?._id === users?.id || user === users?.id;
   const shouldBlur = shouldBlurImage(category?.name, isAdmin) && !isOwner;
+  const alreadyFound = isFound || reportedFound;
 
   const imageList: string[] = Array.isArray(lostItem.images) && lostItem.images.length > 0
     ? lostItem.images.map((i: any) => (typeof i === "string" ? i : i?.url ?? i?.src ?? ""))

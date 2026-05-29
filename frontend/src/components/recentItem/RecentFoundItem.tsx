@@ -6,10 +6,12 @@ import { FaCalendarAlt, FaMapMarkerAlt, FaClock, FaChevronLeft, FaChevronRight, 
 import { useUserVerification } from "../../auth/auth";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 
-const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
+const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse", "coin purse", "flap wallet"];
 const shouldBlurImage = (categoryName: string | undefined, isAdmin: boolean) => {
   if (isAdmin) return false;
-  return HIDDEN_IMAGE_CATEGORIES.some((c) => categoryName?.toLowerCase().includes(c));
+  if (!categoryName) return false;
+  const lowerCat = categoryName.toLowerCase();
+  return HIDDEN_IMAGE_CATEGORIES.some((c) => lowerCat.includes(c));
 };
 const timeAgo = (d: string) => {
   const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
@@ -61,8 +63,8 @@ const RecentFoundItem = () => {
       <div className="w-full px-4 sm:px-8 lg:px-16 mb-6">
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {visibleItems.map((item: any) => {
-            const isReporter = item?.userId === users?.id || item?.user?.id === users?.id || item?.user?._id === users?.id;
-            const hasClaimed = item?.claim?.some((c: any) => c.userId === users?.id);
+            const isReporter = users && (item?.userId === users?.id || item?.user?.id === users?.id || item?.user?._id === users?.id);
+            const hasClaimed = users && item?.claim?.some((c: any) => c.userId === users?.id);
             const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isReporter && !hasClaimed;
             const isClaimed = item?.isClaimed;
             return (
@@ -79,7 +81,7 @@ const RecentFoundItem = () => {
                         : "") || item?.img || "/bgimg.png"}
                       alt={item?.foundItemName}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                      className={`w-full h-full object-cover ${shouldBlur ? "blur-[6px] select-none pointer-events-none" : ""}`}
+                      className={`w-full h-full object-cover ${shouldBlur ? "blur-sm select-none pointer-events-none" : ""}`}
                     />
                     {shouldBlur && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40">
@@ -116,7 +118,7 @@ const RecentFoundItem = () => {
                   {/* Image */}
                   <div className="relative h-44 overflow-hidden bg-gray-800 flex items-center justify-center">
                     <img
-                      className={`w-full h-full object-cover ${shouldBlur ? "blur-[8px] select-none pointer-events-none" : "transition-transform duration-300 group-hover:scale-105"}`}
+                      className={`w-full h-full object-cover ${shouldBlur ? "blur-sm select-none pointer-events-none" : "transition-transform duration-300 group-hover:scale-105"}`}
                       src={(Array.isArray(item?.images) && item.images.length > 0
                         ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
                         : "") || item?.img || "/bgimg.png"}

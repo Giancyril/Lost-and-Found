@@ -31,13 +31,13 @@ const openModal = (setter: (v: boolean) => void) => { setter(true); document.bod
 const closeModal = (setter: (v: boolean) => void) => { setter(false); document.body.classList.remove("modal-open"); };
 
 // ── Blur image for Wallets & Purses (admin always sees) ──
-const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
+const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse", "coin purse", "flap wallet"];
 
 const shouldBlurImage = (categoryName: string | undefined, isAdmin: boolean) => {
   if (isAdmin) return false;
-  return HIDDEN_IMAGE_CATEGORIES.some((c) =>
-    categoryName?.toLowerCase().includes(c)
-  );
+  if (!categoryName) return false;
+  const lowerCat = categoryName.toLowerCase();
+  return HIDDEN_IMAGE_CATEGORIES.some((c) => lowerCat.includes(c));
 };
 
 function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
@@ -454,8 +454,8 @@ const SingleFoundItem = () => {
   );
 
   const isClaimed = foundItemData?.isClaimed;
-  const isReporter = foundItemData?.userId === users?.id || foundItemData?.user?.id === users?.id || foundItemData?.user?._id === users?.id;
-  const hasClaimed = foundItemData?.claim?.some((c: any) => c.userId === users?.id);
+  const isReporter = users && (foundItemData?.userId === users?.id || foundItemData?.user?.id === users?.id || foundItemData?.user?._id === users?.id);
+  const hasClaimed = users && foundItemData?.claim?.some((c: any) => c.userId === users?.id);
   const shouldBlur = shouldBlurImage(foundItemData?.category?.name, isAdmin) && !isReporter && !hasClaimed;
 
   const imageList: string[] = Array.isArray(foundItemData.images) && foundItemData.images.length > 0
@@ -522,7 +522,7 @@ const SingleFoundItem = () => {
                   </span>
                 )}
               </div>
-              <div className={shouldBlur ? "blur-md select-none pointer-events-none w-full h-full min-h-[430px]" : "w-full h-full min-h-[430px]"}>
+              <div className={shouldBlur ? "blur-sm select-none pointer-events-none w-full h-full min-h-[430px]" : "w-full h-full min-h-[430px]"}>
                 <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
               </div>
               {shouldBlur && (
@@ -758,7 +758,7 @@ const SingleFoundItem = () => {
                     src={imageList[0] || "/bgimg.png"}
                     alt={foundItemData?.foundItemName}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                    className={`w-full h-full object-cover ${shouldBlur ? "blur-[6px] select-none pointer-events-none" : ""}`}
+                    className={`w-full h-full object-cover ${shouldBlur ? "blur-sm select-none pointer-events-none" : ""}`}
                   />
                   {shouldBlur && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40">
@@ -768,13 +768,13 @@ const SingleFoundItem = () => {
                     </div>
                   )}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-white text-sm font-semibold truncate">{foundItemData?.foundItemName}</p>
-                  <p className="text-gray-500 text-[10px] mt-0.5 flex items-center gap-1">
+                  <p className="text-gray-500 text-[10px] mt-0.5 flex items-center gap-1 truncate">
                     <FaMapMarkerAlt size={8} /> {foundItemData?.location}
                   </p>
                 </div>
-                <span className="shrink-0 px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full border border-blue-500/20">
+                <span className="shrink-0 px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full border border-blue-500/20 whitespace-nowrap">
                   Available
                 </span>
               </div>
