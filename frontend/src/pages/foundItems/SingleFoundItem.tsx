@@ -522,7 +522,7 @@ const SingleFoundItem = () => {
                   </span>
                 )}
               </div>
-              <div className={shouldBlur ? "blur-sm select-none pointer-events-none w-full h-full min-h-[430px]" : "w-full h-full min-h-[430px]"}>
+              <div className={shouldBlur ? "blur-xl select-none pointer-events-none w-full h-full min-h-[430px]" : "w-full h-full min-h-[430px]"}>
                 <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
               </div>
               {shouldBlur && (
@@ -534,7 +534,7 @@ const SingleFoundItem = () => {
                   </div>
                   <p className="text-white font-bold text-base mb-1.5 drop-shadow-md">Photo Blurred for Privacy</p>
                   <p className="text-gray-300 text-xs leading-relaxed max-w-sm drop-shadow-md">
-                    This item belongs to a restricted category (e.g., wallets/purses).
+                    This item belongs to a restricted category.
                     Submit a claim with details to verify ownership and unlock the photo.
                   </p>
                 </div>
@@ -758,7 +758,7 @@ const SingleFoundItem = () => {
                     src={imageList[0] || "/bgimg.png"}
                     alt={foundItemData?.foundItemName}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                    className={`w-full h-full object-cover ${shouldBlur ? "blur-sm select-none pointer-events-none" : ""}`}
+                    className={`w-full h-full object-cover ${shouldBlur ? "blur-xl select-none pointer-events-none" : ""}`}
                   />
                   {shouldBlur && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40">

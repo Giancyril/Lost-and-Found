@@ -358,7 +358,7 @@ const SingleLostItem = () => {
                     Lost
                   </div>
                 )}
-                <div className={shouldBlur ? "blur-md select-none pointer-events-none w-full h-full min-h-[320px] lg:h-full lg:min-h-0" : "w-full h-full min-h-[320px] lg:h-full lg:min-h-0"}>
+                <div className={shouldBlur ? "blur-xl select-none pointer-events-none w-full h-full min-h-[320px] lg:h-full lg:min-h-0" : "w-full h-full min-h-[320px] lg:h-full lg:min-h-0"}>
                   <ImageCarousel images={imageList} alt={lostItemName} />
                 </div>
                 {shouldBlur && (
@@ -637,7 +637,7 @@ const SingleLostItem = () => {
                     src={img || "/bgimg.png"}
                     alt={lostItemName}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                    className={`w-full h-full object-cover ${shouldBlur ? "blur-[6px] select-none pointer-events-none" : ""}`}
+                    className={`w-full h-full object-cover ${shouldBlur ? "blur-xl select-none pointer-events-none" : ""}`}
                   />
                   {shouldBlur && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40">

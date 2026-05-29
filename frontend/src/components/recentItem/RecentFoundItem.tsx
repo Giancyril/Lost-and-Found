@@ -81,7 +81,7 @@ const RecentFoundItem = () => {
                         : "") || item?.img || "/bgimg.png"}
                       alt={item?.foundItemName}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                      className={`w-full h-full object-cover ${shouldBlur ? "blur-sm select-none pointer-events-none" : ""}`}
+                      className={`w-full h-full object-cover ${shouldBlur ? "blur-xl select-none pointer-events-none" : ""}`}
                     />
                     {shouldBlur && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40">
@@ -118,7 +118,7 @@ const RecentFoundItem = () => {
                   {/* Image */}
                   <div className="relative h-44 overflow-hidden bg-gray-800 flex items-center justify-center">
                     <img
-                      className={`w-full h-full object-cover ${shouldBlur ? "blur-sm select-none pointer-events-none" : "transition-transform duration-300 group-hover:scale-105"}`}
+                      className={`w-full h-full object-cover ${shouldBlur ? "blur-xl select-none pointer-events-none" : "transition-transform duration-300 group-hover:scale-105"}`}
                       src={(Array.isArray(item?.images) && item.images.length > 0
                         ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
                         : "") || item?.img || "/bgimg.png"}
