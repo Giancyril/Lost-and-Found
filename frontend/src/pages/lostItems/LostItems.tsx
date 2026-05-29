@@ -57,7 +57,7 @@ const getItemGroup = (item: any): "today" | "week" | "older" => {
 };
 
 const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
-const shouldHideImage = (cat: string | undefined, isAdmin: boolean) => {
+const shouldBlurImage = (cat: string | undefined, isAdmin: boolean) => {
   if (isAdmin) return false;
   return HIDDEN_IMAGE_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
 };
@@ -249,12 +249,13 @@ const GroupHeader = ({ label, count, accent }: {
 
 // ── Item Card (Grid) ──────────────────────────────────────────────────────────
 const ItemCard = ({
-  item, isAdmin, onShare, onOpenComments,
+  item, isAdmin, onShare, onOpenComments, currentUser,
 }: {
-  item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void;
+  item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void; currentUser: any;
 }) => {
   const daysAgo = Math.floor((Date.now() - new Date(item.date || item.createdAt).getTime()) / 86400000);
-  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
+  const isOwner = item?.userId === currentUser?.id || item?.user?.id === currentUser?.id || item?.user?._id === currentUser?.id;
+  const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isOwner;
 
   const ageBadgeClass =
     daysAgo > 30 ? "bg-red-500/10 text-red-400 border-red-500/20"
@@ -269,23 +270,21 @@ const ItemCard = ({
     <div className={`reveal reveal-delay-${(Math.floor(Math.random() * 3) + 1)} group bg-gray-900 border border-white/5 hover:border-white/15 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-black/20 flex flex-col`}>
 
       {/* Image */}
-      <div className="relative h-44 sm:h-48 overflow-hidden bg-gray-800 shrink-0">
-        {hideImg ? (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gray-800/80">
-            <div className="w-11 h-11 rounded-xl bg-gray-700/60 border border-white/5 flex items-center justify-center">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-              </svg>
-            </div>
-            <p className="text-gray-500 text-xs">Image Hidden</p>
+      <div className="relative h-44 sm:h-48 overflow-hidden bg-gray-800 shrink-0 flex items-center justify-center">
+        <img
+          src={imgSrc}
+          alt={item?.lostItemName}
+          onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+          className={`w-full h-full object-cover ${shouldBlur ? "blur-[8px] select-none pointer-events-none" : "group-hover:scale-[1.03] transition-transform duration-300"}`}
+        />
+        {shouldBlur && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 p-4 text-center">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400 mb-1" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            <p className="text-white font-bold text-[11px]">Photo Blurred</p>
+            <p className="text-gray-300 text-[9px] leading-snug">Private item category</p>
           </div>
-        ) : (
-          <img
-            src={imgSrc}
-            alt={item?.lostItemName}
-            onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
-          />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent pointer-events-none" />
         <div className="absolute top-3 left-3">
@@ -350,13 +349,14 @@ const ItemCard = ({
 
 // ── Item Row (List) ───────────────────────────────────────────────────────────
 const ItemRow = ({
-  item, isAdmin, onShare, onOpenComments,
+  item, isAdmin, onShare, onOpenComments, currentUser,
 }: {
-  item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void;
+  item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void; currentUser: any;
 }) => {
   const daysAgo = Math.floor((Date.now() - new Date(item.date || item.createdAt).getTime()) / 86400000);
   const lostDateStr = item?.date?.split("T")[0] ?? "—";
-  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
+  const isOwner = item?.userId === currentUser?.id || item?.user?.id === currentUser?.id || item?.user?._id === currentUser?.id;
+  const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isOwner;
 
   const ageColor =
     daysAgo > 30 ? "text-red-400"
@@ -373,17 +373,16 @@ const ItemRow = ({
       {/* Mobile */}
       <div className="sm:hidden flex flex-col gap-2.5 p-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-800 shrink-0">
-            {hideImg ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+          <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-800 shrink-0 flex items-center justify-center">
+            <img src={imgSrc} alt={item?.lostItemName}
+              onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+              className={`w-full h-full object-cover ${shouldBlur ? "blur-[5px] select-none pointer-events-none" : ""}`} />
+            {shouldBlur && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
               </div>
-            ) : (
-              <img src={imgSrc} alt={item?.lostItemName}
-                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                className="w-full h-full object-cover" />
             )}
           </div>
           <div className="flex-1 min-w-0">
@@ -432,17 +431,16 @@ const ItemRow = ({
       {/* Desktop */}
       <div className="hidden sm:grid grid-cols-12 gap-4 items-center px-4 py-3">
         <div className="col-span-4 flex items-center gap-3 min-w-0">
-          <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0">
-            {hideImg ? (
-              <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+          <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0 flex items-center justify-center">
+            <img src={imgSrc} alt={item?.lostItemName}
+              onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+              className={`w-full h-full object-cover ${shouldBlur ? "blur-[5px] select-none pointer-events-none" : ""}`} />
+            {shouldBlur && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
               </div>
-            ) : (
-              <img src={imgSrc} alt={item?.lostItemName}
-                onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                className="w-full h-full object-cover" />
             )}
           </div>
           <div className="min-w-0">
@@ -580,7 +578,7 @@ const LostItemsPage = () => {
         {viewMode === "grid" ? (
           <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-4">
             {items.map(item => (
-              <ItemCard key={item.id} item={item} isAdmin={isAdmin}
+              <ItemCard key={item.id} item={item} isAdmin={isAdmin} currentUser={users}
                 onShare={() => setShareItem(item)}
                 onOpenComments={() => setCommentItem(item)}
               />
@@ -589,7 +587,7 @@ const LostItemsPage = () => {
         ) : (
           <div className="space-y-2 mb-4">
             {items.map(item => (
-              <ItemRow key={item.id} item={item} isAdmin={isAdmin}
+              <ItemRow key={item.id} item={item} isAdmin={isAdmin} currentUser={users}
                 onShare={() => setShareItem(item)}
                 onOpenComments={() => setCommentItem(item)}
               />

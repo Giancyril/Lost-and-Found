@@ -9,6 +9,7 @@ import { useScrollReveal } from "./hooks/useScrollReveal";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { useEffect } from "react";
 import { fetchCsrfToken } from "./redux/api/baseApi";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   useScrollReveal();
@@ -22,6 +23,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       <OnboardingTour />
       <Navbars />
       <Outlet />

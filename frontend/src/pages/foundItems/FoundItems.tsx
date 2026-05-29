@@ -173,7 +173,7 @@ const getCategoryIcon = (name: string) => {
 };
 
 const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
-const shouldHideImage = (cat: string | undefined, isAdmin: boolean) => {
+const shouldBlurImage = (cat: string | undefined, isAdmin: boolean) => {
   if (isAdmin) return false;
   return HIDDEN_IMAGE_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
 };
@@ -257,24 +257,25 @@ const CustomSelect = ({ options, value, onChange }: {
 };
 // ── Found Item Card ─────────────────────────────────────────────────────────
 const FoundItemCard = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser, onInitiateChat }: { item: any; setClaimItem: (item: any) => void; onOpenComments: () => void; isAdmin: boolean; currentUser: any; onInitiateChat: (item: any) => void }) => {
-  const isClaimed = item?.isClaimed;
-  const daysAgo = Math.floor((Date.now() - new Date(item.date || item.createdAt).getTime()) / 86400000);
-  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
+  const isReporter = item?.userId === currentUser?.id || item?.user?.id === currentUser?.id || item?.user?._id === currentUser?.id;
+  const hasClaimed = item?.claim?.some((c: any) => c.userId === currentUser?.id);
+  const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isReporter && !hasClaimed;
   const dateStr = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
 
   return (
     <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col">
-      <div className="relative h-48 overflow-hidden bg-gray-800">
-        {hideImg ? (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-gray-700 border border-gray-700 flex items-center justify-center"><svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg></div>
-            <p className="text-gray-500 text-xs">Image Hidden</p>
-            <p className="text-gray-600 text-[10px] text-center px-6 leading-relaxed">Submit a claim to verify ownership</p>
+      <div className="relative h-48 overflow-hidden bg-gray-800 flex items-center justify-center">
+        <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "") : "") || item?.img || "/bgimg.png"}
+          alt={item?.foundItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+          className={`w-full h-full object-cover ${shouldBlur ? "blur-[8px] select-none pointer-events-none" : "group-hover:scale-105 transition-transform duration-300"}`} />
+        {shouldBlur && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 p-4 text-center">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400 mb-1" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            <p className="text-white font-bold text-[11px]">Photo Blurred</p>
+            <p className="text-gray-300 text-[9px] leading-snug">Submit a claim to view</p>
           </div>
-        ) : (
-          <img src={(Array.isArray(item?.images) && item.images.length > 0 ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "") : "") || item?.img || "/bgimg.png"}
-            alt={item?.foundItemName} onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
         <div className="absolute top-3 left-3">
@@ -319,7 +320,9 @@ const FoundItemRow = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser
   const dateStr = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
 
   const isClaimed = item?.isClaimed || item?.claimStatus === "CLAIMED";
-  const hideImg = shouldHideImage(item?.category?.name, isAdmin);
+  const isReporter = item?.userId === currentUser?.id || item?.user?.id === currentUser?.id || item?.user?._id === currentUser?.id;
+  const hasClaimed = item?.claim?.some((c: any) => c.userId === currentUser?.id);
+  const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isReporter && !hasClaimed;
   const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
     ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
     : "") || item?.img || "/bgimg.png";
@@ -331,8 +334,17 @@ const FoundItemRow = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         {/* Top Section: Image & Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-gray-800 shrink-0 border border-white/5">
-            {!hideImg && <img src={imgSrc} alt={item.foundItemName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />}
+          <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-gray-800 shrink-0 border border-white/5 flex items-center justify-center">
+            <img src={imgSrc} alt={item.foundItemName}
+              className={`w-full h-full object-cover ${shouldBlur ? "blur-[5px] select-none pointer-events-none" : ""}`}
+              onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
+            {shouldBlur && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">

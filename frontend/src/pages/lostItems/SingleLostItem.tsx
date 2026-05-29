@@ -37,26 +37,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
+// ── Blur image for Wallets & Purses (admin always sees) ──
 const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
 
-const shouldHideImage = (categoryName: string | undefined, isAdmin: boolean) => {
+const shouldBlurImage = (categoryName: string | undefined, isAdmin: boolean) => {
   if (isAdmin) return false;
   return HIDDEN_IMAGE_CATEGORIES.some((c) => categoryName?.toLowerCase().includes(c));
 };
-
-const HiddenImagePlaceholder = () => (
-  <div className="relative w-full h-full min-h-[280px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 flex flex-col items-center justify-center gap-4">
-    <div className="w-20 h-20 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
-      <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-600" strokeWidth="1.5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-      </svg>
-    </div>
-    <div className="text-center px-6">
-      <p className="text-white font-semibold text-sm mb-1">Image Not Available</p>
-      <p className="text-gray-500 text-xs leading-relaxed">The photo of this item is hidden from public view. Submit a claim with proof of ownership to proceed.</p>
-    </div>
-  </div>
-);
 
 function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -291,8 +278,8 @@ const SingleLostItem = () => {
   );
 
   const { lostItemName, date, createdAt, isFound, img, description, location, user, category } = lostItem;
-  const alreadyFound = isFound || reportedFound;
-  const hideImage = shouldHideImage(category?.name, isAdmin);
+  const isOwner = user?.id === users?.id || user?._id === users?.id || user === users?.id;
+  const shouldBlur = shouldBlurImage(category?.name, isAdmin) && !isOwner;
 
   const imageList: string[] = Array.isArray(lostItem.images) && lostItem.images.length > 0
     ? lostItem.images.map((i: any) => (typeof i === "string" ? i : i?.url ?? i?.src ?? ""))
@@ -370,10 +357,22 @@ const SingleLostItem = () => {
                     Lost
                   </div>
                 )}
-                {hideImage ? (
-                  <HiddenImagePlaceholder />
-                ) : (
+                <div className={shouldBlur ? "blur-md select-none pointer-events-none w-full h-full min-h-[320px] lg:h-full lg:min-h-0" : "w-full h-full min-h-[320px] lg:h-full lg:min-h-0"}>
                   <ImageCarousel images={imageList} alt={lostItemName} />
+                </div>
+                {shouldBlur && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px] p-6 text-center z-10">
+                    <div className="w-16 h-16 rounded-full bg-gray-800/80 border border-gray-700/85 flex items-center justify-center mb-4 shadow-xl">
+                      <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                    </div>
+                    <p className="text-white font-bold text-base mb-1.5 drop-shadow-md">Photo Blurred for Privacy</p>
+                    <p className="text-gray-300 text-xs leading-relaxed max-w-sm drop-shadow-md">
+                      This item belongs to a restricted category (e.g., wallets/purses).
+                      Only the owner and SAS admins can view the full photo.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -632,17 +631,21 @@ const SingleLostItem = () => {
 
             <div className="px-4 py-4 space-y-3">
               <div className="flex items-center gap-3 bg-gray-800/70 rounded-xl p-3 border border-gray-700/60">
-                {hideImage ? (
-                  <div className="w-14 h-14 rounded-lg shrink-0 border border-gray-700 bg-gray-700 flex items-center justify-center">
-                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gray-500" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                    </svg>
-                  </div>
-                ) : (
-                  <img src={img} alt={lostItemName}
-                    className="w-14 h-14 rounded-lg object-cover shrink-0 border border-gray-700"
-                    onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }} />
-                )}
+                <div className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-gray-700 flex items-center justify-center bg-gray-950">
+                  <img
+                    src={img || "/bgimg.png"}
+                    alt={lostItemName}
+                    onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                    className={`w-full h-full object-cover ${shouldBlur ? "blur-[6px] select-none pointer-events-none" : ""}`}
+                  />
+                  {shouldBlur && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold truncate">{lostItemName}</p>
                   <p className="text-gray-400 text-xs mt-0.5 truncate">{location}</p>
