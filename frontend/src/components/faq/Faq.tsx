@@ -19,7 +19,7 @@ const Faq = () => {
     {
       question: "Do I need an account to use this?",
       answer:
-        "No account is needed. Students and visitors can freely browse the Lost Items Board and Found Items Board without logging in.",
+        "No account is needed. Students and can freely browse the Lost Items Board and Found Items Board without logging in.",
     },
     {
       question: "How do I report my lost item?",
@@ -29,12 +29,12 @@ const Faq = () => {
     {
       question: " I found an item. What should I do?",
       answer:
-        "You have two options: browse the Lost Items Board to see if the item matches a report, then click 'I Found This Item' on that listing or bring the item directly to the SAS Office",
+        "You have two options: browse the Lost Items Board to see if the item matches a report, then click 'I Found This Item' on that listing and bring the item to the SAS Office",
     },
     {
       question: "How do I claim a found item?",
       answer:
-        "Browse the Found Items page, find your item, and click 'Claim'. You'll need to provide proof of ownership.",
+        "Browse the Found Items page, find your item, and click “Claim” to submit a request.",
     },
     {
       question: "How do I use Smart Search?",

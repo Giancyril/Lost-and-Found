@@ -132,10 +132,13 @@ const NotificationBell = () => {
   const latestLostTs = useRef<string | null>(getSavedLatestTs("lost"));
   const initialized = useRef({ claims: getSavedLatestTs("claims") !== null, found: getSavedLatestTs("found") !== null, lost: getSavedLatestTs("lost") !== null });
   const pollOpts = { pollingInterval: 8000, refetchOnFocus: true, refetchOnReconnect: true };
+  // Sort by newest first with a generous limit so ALL batch-entered items are detected,
+  // not just whichever one lands in the first page of an alphabetical sort.
+  const notifQueryParams = { sortBy: "createdAt", sortOrder: "desc", limit: 50 };
 
   const { data: claimsData } = useGetAllClaimsQuery(undefined, pollOpts);
-  const { data: foundData } = useGetFoundItemsQuery({}, pollOpts);
-  const { data: lostData } = useGetLostItemsQuery({}, pollOpts);
+  const { data: foundData } = useGetFoundItemsQuery(notifQueryParams, pollOpts);
+  const { data: lostData } = useGetLostItemsQuery(notifQueryParams, pollOpts);
 
   // Close on route change
   useEffect(() => { setOpen(false); }, [location.pathname]);

@@ -325,29 +325,29 @@ const BulkScanner = () => {
       {!isProcessing && batchSummary && (
         <div className={`relative rounded-2xl border px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
           batchSummary.failed === 0
-            ? "bg-emerald-500/5 border-emerald-500/20"
+            ? "bg-blue-500/5 border-blue-500/20"
             : batchSummary.success === 0
               ? "bg-red-500/5 border-red-500/20"
               : "bg-amber-500/5 border-amber-500/20"
         }`}>
           <div className="flex items-center gap-3">
             {batchSummary.failed === 0
-              ? <FaCheckCircle size={16} className="text-emerald-400 shrink-0" />
+              ? <FaCheckCircle size={16} className="text-blue-400 shrink-0" />
               : <FaExclamationTriangle size={16} className="text-amber-400 shrink-0" />}
             <div>
               <p className={`text-xs font-bold ${
-                batchSummary.failed === 0 ? "text-emerald-400"
+                batchSummary.failed === 0 ? "text-blue-400"
                   : batchSummary.success === 0 ? "text-red-400"
                   : "text-amber-400"
               }`}>
                 {batchSummary.failed === 0
-                  ? "Batch complete — all items saved"
+                  ? "All batch items were saved successfully."
                   : batchSummary.success === 0
                     ? "Batch failed — no items were saved"
                     : "Batch finished with errors"}
               </p>
               <p className="text-[10px] text-gray-500 mt-0.5">
-                <span className="text-emerald-400 font-semibold">{batchSummary.success} succeeded</span>
+                <span className="text-blue-400 font-semibold">{batchSummary.success} succeeded</span>
                 {batchSummary.failed > 0 && (
                   <> · <span className="text-red-400 font-semibold">{batchSummary.failed} failed</span></>
                 )}

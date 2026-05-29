@@ -1100,7 +1100,7 @@ const ReportLostItem = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="font-bold text-xs sm:text-sm text-gray-200 select-none">Photo scan</h4>
-                            <span className="text-gray-500 hover:text-gray-300 cursor-pointer select-none text-[10px]" title="Snap or upload a photo to auto-fill details">
+                            <span onClick={() => setShowAiHelp(true)} className="text-gray-500 hover:text-gray-300 cursor-pointer select-none text-[10px]" title="Snap or upload a photo to auto-fill details">
                               <FaInfoCircle size={10} className="opacity-60" />
                             </span>
                           </div>

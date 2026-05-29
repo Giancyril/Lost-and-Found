@@ -90,13 +90,13 @@ const RecentFoundItem = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-white text-sm font-semibold truncate leading-snug">
+                      <h3 className="text-white text-sm font-semibold truncate leading-snug flex-1 min-w-0">
                         {item?.foundItemName}
                       </h3>
                       {isClaimed ? (
-                        <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase tracking-widest rounded-md border border-emerald-500/20 shrink-0">Claimed</span>
+                        <span className="ml-auto px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase tracking-widest rounded-md border border-emerald-500/20 shrink-0">Claimed</span>
                       ) : (
-                        <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest rounded-md border border-blue-500/20 shrink-0">Available</span>
+                        <span className="ml-auto px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest rounded-md border border-blue-500/20 shrink-0">Available</span>
                       )}
                     </div>
                     <p className="text-gray-500 text-[11px] mt-0.5 truncate flex items-center gap-1">

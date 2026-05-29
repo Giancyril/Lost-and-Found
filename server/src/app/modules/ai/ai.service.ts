@@ -16,6 +16,32 @@ const getGenAI = () => {
   return genAIInstance;
 };
 
+const generateContentWithRetry = async (genAI: any, prompt: any, options: any = {}, maxRetries = 3) => {
+  const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-1.5-pro"];
+  let lastError;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    for (const modelName of models) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName, ...options });
+        const result = await model.generateContent(prompt);
+        return result;
+      } catch (error: any) {
+        lastError = error;
+        console.warn(`[AI] Attempt ${attempt + 1} with ${modelName} failed:`, error.message);
+        if (error.message.includes("429") || error.message.includes("503")) {
+          // Wait before retrying
+          await new Promise(res => setTimeout(res, 1000 * (attempt + 1)));
+          continue; // Try the next model
+        }
+        // For other errors, we might still want to try the next model just in case it's model-specific
+        continue;
+      }
+    }
+  }
+  throw lastError;
+};
+
 /**
  * AI Service to handle image recognition and feature extraction
  */
@@ -63,7 +89,7 @@ const recognizeImage = async (imageSource: string | Buffer, mimeType = "image/jp
     console.log("[AI] Categories found:", categories.length);
 
     // 3. Initialize Gemini model (Updated to latest flash alias)
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     // 4. Construct the prompt
     const prompt = `
@@ -99,7 +125,7 @@ const recognizeImage = async (imageSource: string | Buffer, mimeType = "image/jp
     // 5. Generate content
     let result;
     try {
-      result = await model.generateContent([
+      result = await generateContentWithRetry(genAI, [
         prompt,
         {
           inlineData: {
@@ -148,7 +174,7 @@ const recognizeImage = async (imageSource: string | Buffer, mimeType = "image/jp
 const analyzeUrgency = async (name: string, description: string) => {
   try {
     const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
     You are an AI moderator for a campus Lost and Found system called "Lost & Found NBSC".
@@ -181,7 +207,7 @@ const analyzeUrgency = async (name: string, description: string) => {
 
     let result;
     try {
-      result = await model.generateContent(prompt);
+      result = await generateContentWithRetry(genAI, prompt);
     } catch (genError: any) {
       console.error("[AI] Gemini Urgency Analysis Error:", genError.message);
       return { urgencyScore: 0, urgencyLevel: "NORMAL", urgencyReason: "AI Service unavailable" };
@@ -209,7 +235,7 @@ const analyzeUrgency = async (name: string, description: string) => {
 const analyzeClaimFraud = async (claimantFeatures: string, itemDescription: string, itemName: string) => {
   try {
     const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
     You are a Fraud Detection AI for a campus Lost and Found system called "Lost & Found NBSC".
@@ -240,7 +266,7 @@ const analyzeClaimFraud = async (claimantFeatures: string, itemDescription: stri
 
     let result;
     try {
-      result = await model.generateContent(prompt);
+      result = await generateContentWithRetry(genAI, prompt);
     } catch (genError: any) {
       console.error("[AI] Gemini Claim Fraud Analysis Error:", genError.message);
       return { fraudScore: 0, isHighRisk: false, fraudReason: "AI Service unavailable" };
@@ -269,7 +295,7 @@ const parseVoice = async (audioBuffer: Buffer, mimeType = "audio/webm") => {
   try {
     const genAI = getGenAI();
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-flash-latest",
+      model: "gemini-2.5-flash",
       generationConfig: {
         responseMimeType: "application/json"
       }
@@ -369,7 +395,7 @@ const parseVoice = async (audioBuffer: Buffer, mimeType = "audio/webm") => {
     - Pick the category that is the absolute closest match. If "Other" exists, pick it if no other categories match.
     `;
 
-    const result = await model.generateContent([
+    const result = await generateContentWithRetry(genAI, [
       prompt,
       {
         inlineData: {
@@ -377,7 +403,11 @@ const parseVoice = async (audioBuffer: Buffer, mimeType = "audio/webm") => {
           mimeType: resolvedMimeType
         }
       }
-    ]);
+    ], {
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
+    });
 
     const response = await result.response;
     let text = response.text().trim();
