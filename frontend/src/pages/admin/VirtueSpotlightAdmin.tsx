@@ -74,7 +74,7 @@ const StudentTagInput = ({
         <button
           type="button"
           onClick={add}
-          className="px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-medium rounded-lg transition-all"
+          className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-medium rounded-lg transition-all"
         >
           Add
         </button>
@@ -248,7 +248,7 @@ const SpotlightModal = ({
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -329,7 +329,7 @@ const VirtueSpotlightAdmin: React.FC = () => {
       </div>
 
       {/* ── Stats strip ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
         {[
           {
             label: "Total Posts",

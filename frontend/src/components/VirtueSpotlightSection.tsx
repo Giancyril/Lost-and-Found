@@ -1,21 +1,65 @@
-import React, { useState } from "react";
-import { FaStar, FaChevronLeft, FaChevronRight, FaShieldAlt } from "react-icons/fa";
+import React, { useState, useRef, useEffect } from "react";
+import { FaStar, FaChevronLeft, FaChevronRight, FaShieldAlt, FaHeart } from "react-icons/fa";
 import { useGetVirtueSpotlightsQuery } from "../redux/api/api";
 
 const VirtueSpotlightSection: React.FC = () => {
   const { data, isLoading } = useGetVirtueSpotlightsQuery({});
   const spotlights: any[] = data?.data || [];
   const [activeIdx, setActiveIdx] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  const [likedPosts, setLikedPosts] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("virtue_liked_posts");
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>(() => {
+    try {
+      const saved = localStorage.getItem("virtue_like_counts");
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
+
 
   if (isLoading) return null;
   if (!spotlights.length) return null;
 
   const active = spotlights[activeIdx];
-  const prev = () => setActiveIdx((i) => (i === 0 ? spotlights.length - 1 : i - 1));
-  const next = () => setActiveIdx((i) => (i === spotlights.length - 1 ? 0 : i + 1));
+  const handleLike = () => {
+    if (!active) return;
+    const isLiked = likedPosts.includes(active.id);
+    let newLikes: string[];
+    let newCounts = { ...likeCounts };
+
+    if (isLiked) {
+      newLikes = likedPosts.filter((id) => id !== active.id);
+      newCounts[active.id] = Math.max(0, (likeCounts[active.id] || 1) - 1);
+    } else {
+      newLikes = [...likedPosts, active.id];
+      newCounts[active.id] = (likeCounts[active.id] || 0) + 1;
+    }
+
+    setLikedPosts(newLikes);
+    setLikeCounts(newCounts);
+    localStorage.setItem("virtue_liked_posts", JSON.stringify(newLikes));
+    localStorage.setItem("virtue_like_counts", JSON.stringify(newCounts));
+  };
+
+  const prev = () => {
+    setActiveIdx((i) => (i === 0 ? spotlights.length - 1 : i - 1));
+    setIsExpanded(false);
+  };
+  const next = () => {
+    setActiveIdx((i) => (i === spotlights.length - 1 ? 0 : i + 1));
+    setIsExpanded(false);
+  };
 
   return (
-    <section className="relative w-full bg-gray-950 py-16 overflow-hidden">
+    <section ref={sectionRef} className="relative w-full bg-gray-950 py-16 overflow-hidden">
 
       {/* Ambient background glow */}
       <div className="pointer-events-none absolute inset-0">
@@ -82,8 +126,11 @@ const VirtueSpotlightSection: React.FC = () => {
                       <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
                         Recognized Students
                       </p>
-                      <div className="flex flex-wrap gap-2">
-                        {active.students.map((name: string, i: number) => (
+                      <div className="flex flex-wrap gap-2 items-center">
+                        {(isExpanded || active.students.length <= 6
+                          ? active.students
+                          : active.students.slice(0, 6)
+                        ).map((name: string, i: number) => (
                           <span
                             key={i}
                             className="inline-flex items-center px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-300 text-[11px] font-medium rounded-lg"
@@ -91,6 +138,15 @@ const VirtueSpotlightSection: React.FC = () => {
                             {name}
                           </span>
                         ))}
+                        {active.students.length > 6 && (
+                          <button
+                            type="button"
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="inline-flex items-center px-2.5 py-1 bg-gray-800 text-gray-500 text-[11px] font-bold rounded-lg transition-colors cursor-pointer select-none"
+                          >
+                            {isExpanded ? "See Less" : `+${active.students.length - 6} More`}
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -98,11 +154,18 @@ const VirtueSpotlightSection: React.FC = () => {
 
                 {/* Bottom row — date + navigation */}
                 <div className="flex items-center justify-between pt-4 border-t border-white/[0.05]">
-                  <p className="text-gray-600 text-xs">
-                    {new Date(active.createdAt).toLocaleDateString("en-US", {
-                      month: "long", day: "numeric", year: "numeric"
-                    })}
-                  </p>
+                  <button
+                    type="button"
+                    onClick={handleLike}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus:outline-none select-none border ${
+                      likedPosts.includes(active.id)
+                        ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
+                        : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    <FaHeart size={11} className={likedPosts.includes(active.id) ? "text-red-500 fill-red-500" : ""} />
+                    <span>{likeCounts[active.id] || 0} Congratulate</span>
+                  </button>
 
                   {spotlights.length > 1 && (
                     <div className="flex items-center gap-2">
@@ -134,7 +197,7 @@ const VirtueSpotlightSection: React.FC = () => {
               {spotlights.map((_: any, i: number) => (
                 <button
                   key={i}
-                  onClick={() => setActiveIdx(i)}
+                  onClick={() => { setActiveIdx(i); setIsExpanded(false); }}
                   className={`rounded-full transition-all duration-300 ${
                     i === activeIdx
                       ? "w-6 h-1.5 bg-blue-500"
