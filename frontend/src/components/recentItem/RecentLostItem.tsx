@@ -6,11 +6,6 @@ import { FaCalendarAlt, FaMapMarkerAlt, FaClock, FaChevronLeft, FaChevronRight }
 import { useUserVerification } from "../../auth/auth";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 
-const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
-const shouldBlurImage = (categoryName: string | undefined, isAdmin: boolean) => {
-  if (isAdmin) return false;
-  return HIDDEN_IMAGE_CATEGORIES.some((c) => categoryName?.toLowerCase().includes(c));
-};
 const timeAgo = (d: string) => {
   const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
   if (m < 1) return "Just now";
@@ -24,10 +19,10 @@ const RecentLostItem = () => {
   const isAdmin = users?.role === "ADMIN";
   const { data: lostItems, isLoading } = useGetLostItemsQuery({ limit: 50, sortBy: "date", sortOrder: "desc" });
 
-  const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+  const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
   const items = (lostItems?.data ?? []).filter((item: any) => {
     const created = new Date(item.createdAt ?? item.date).getTime();
-    return Date.now() - created <= TWENTY_FOUR_HOURS_MS;
+    return Date.now() - created <= THREE_HOURS_MS;
   }).slice(0, 10);
 
   const ITEMS_PER_PAGE = 5;
@@ -53,7 +48,7 @@ const RecentLostItem = () => {
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Recent Lost Items</h2>
         <div className="flex items-center justify-center gap-1.5 mt-1.5">
           <FaClock size={10} className="text-blue-400" />
-          <p className="text-gray-500 text-xs">Reported within the last 24 hours</p>
+          <p className="text-gray-500 text-xs">Reported within the last 3 hours</p>
         </div>
       </div>
 
@@ -61,8 +56,6 @@ const RecentLostItem = () => {
       <div className="w-full px-4 sm:px-8 lg:px-16 mb-6">
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {visibleItems.map((item: any) => {
-            const isOwner = item?.userId === users?.id || item?.user?.id === users?.id || item?.user?._id === users?.id;
-            const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isOwner;
             const isFound = item?.isFound;
             return (
               <React.Fragment key={item?.id}>
@@ -71,22 +64,15 @@ const RecentLostItem = () => {
                   to={`/lostItems/${item.id}`} 
                   className="sm:hidden flex items-center gap-3 p-3 bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all active:scale-[0.99]"
                 >
-                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-850 shrink-0 border border-white/5 relative flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-850 shrink-0 border border-white/5 relative">
                     <img
                       src={(Array.isArray(item?.images) && item.images.length > 0
                         ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
                         : "") || item?.img || "/bgimg.png"}
                       alt={item?.lostItemName}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-                      className={`w-full h-full object-cover ${shouldBlur ? "blur-[6px] select-none pointer-events-none" : ""}`}
+                      className="w-full h-full object-cover"
                     />
-                    {shouldBlur && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400" strokeWidth="2">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                        </svg>
-                      </div>
-                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -113,24 +99,15 @@ const RecentLostItem = () => {
                   className="hidden sm:flex group bg-gray-900 border border-gray-800 hover:border-blue-500/40 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-blue-900/20 flex-col"
                 >
                   {/* Image */}
-                  <div className="relative h-44 overflow-hidden bg-gray-800 flex items-center justify-center">
+                  <div className="relative h-44 overflow-hidden bg-gray-800">
                     <img
-                      className={`w-full h-full object-cover ${shouldBlur ? "blur-[8px] select-none pointer-events-none" : "transition-transform duration-300 group-hover:scale-105"}`}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       src={(Array.isArray(item?.images) && item.images.length > 0
                         ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
                         : "") || item?.img || "/bgimg.png"}
                       alt={item?.lostItemName}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
                     />
-                    {shouldBlur && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 p-4 text-center">
-                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400 mb-1" strokeWidth="2">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                        </svg>
-                        <p className="text-white font-bold text-[11px]">Photo Blurred</p>
-                        <p className="text-gray-300 text-[9px] leading-snug">Private item category</p>
-                      </div>
-                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
                     {/* Status */}
                     <div className="absolute top-2.5 left-2.5">

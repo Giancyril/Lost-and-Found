@@ -56,12 +56,6 @@ const getItemGroup = (item: any): "today" | "week" | "older" => {
   return "older";
 };
 
-const HIDDEN_IMAGE_CATEGORIES = ["wallets & purses", "wallet", "purse"];
-const shouldBlurImage = (cat: string | undefined, isAdmin: boolean) => {
-  if (isAdmin) return false;
-  return HIDDEN_IMAGE_CATEGORIES.some(c => cat?.toLowerCase().includes(c));
-};
-
 // ── Custom Select ─────────────────────────────────────────────────────────────
 interface SelectOption { value: string; label: string; icon?: React.ReactNode; }
 
@@ -254,8 +248,6 @@ const ItemCard = ({
   item: any; isAdmin: boolean; onShare: () => void; onOpenComments: () => void; currentUser: any;
 }) => {
   const daysAgo = Math.floor((Date.now() - new Date(item.date || item.createdAt).getTime()) / 86400000);
-  const isOwner = item?.userId === currentUser?.id || item?.user?.id === currentUser?.id || item?.user?._id === currentUser?.id;
-  const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isOwner;
 
   const ageBadgeClass =
     daysAgo > 30 ? "bg-red-500/10 text-red-400 border-red-500/20"
@@ -275,17 +267,8 @@ const ItemCard = ({
           src={imgSrc}
           alt={item?.lostItemName}
           onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-          className={`w-full h-full object-cover ${shouldBlur ? "blur-[8px] select-none pointer-events-none" : "group-hover:scale-[1.03] transition-transform duration-300"}`}
+          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
         />
-        {shouldBlur && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 p-4 text-center">
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400 mb-1" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-            <p className="text-white font-bold text-[11px]">Photo Blurred</p>
-            <p className="text-gray-300 text-[9px] leading-snug">Private item category</p>
-          </div>
-        )}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent pointer-events-none" />
         <div className="absolute top-3 left-3">
           <span className="px-2 py-0.5 bg-red-500/90 text-white text-[10px] font-bold rounded-full border border-red-400/30 backdrop-blur-sm">
@@ -355,8 +338,6 @@ const ItemRow = ({
 }) => {
   const daysAgo = Math.floor((Date.now() - new Date(item.date || item.createdAt).getTime()) / 86400000);
   const lostDateStr = item?.date?.split("T")[0] ?? "—";
-  const isOwner = item?.userId === currentUser?.id || item?.user?.id === currentUser?.id || item?.user?._id === currentUser?.id;
-  const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isOwner;
 
   const ageColor =
     daysAgo > 30 ? "text-red-400"
@@ -376,14 +357,7 @@ const ItemRow = ({
           <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-800 shrink-0 flex items-center justify-center">
             <img src={imgSrc} alt={item?.lostItemName}
               onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-              className={`w-full h-full object-cover ${shouldBlur ? "blur-[5px] select-none pointer-events-none" : ""}`} />
-            {shouldBlur && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                </svg>
-              </div>
-            )}
+              className="w-full h-full object-cover" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition-colors">
@@ -434,14 +408,7 @@ const ItemRow = ({
           <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-gray-800 shrink-0 flex items-center justify-center">
             <img src={imgSrc} alt={item?.lostItemName}
               onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
-              className={`w-full h-full object-cover ${shouldBlur ? "blur-[5px] select-none pointer-events-none" : ""}`} />
-            {shouldBlur && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-blue-400" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                </svg>
-              </div>
-            )}
+              className="w-full h-full object-cover" />
           </div>
           <div className="min-w-0">
             <p className="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition-colors">
