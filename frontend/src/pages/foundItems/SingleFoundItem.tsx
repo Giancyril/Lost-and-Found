@@ -511,17 +511,6 @@ const SingleFoundItem = () => {
           {/* Left: Image */}
           <div className="lg:col-span-7 flex flex-col gap-3">
             <div className="relative rounded-2xl overflow-hidden bg-gray-900 border border-white/5 shadow-2xl lg:h-full lg:min-h-0">
-              <div className="absolute top-3 left-3 z-10">
-                {isClaimed ? (
-                  <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-600/90 text-white text-[10px] font-black rounded-full backdrop-blur-md border border-emerald-500/30 shadow-lg uppercase tracking-wider">
-                    <FaCheckCircle size={9} /> Claimed
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-1 bg-blue-600/90 text-white text-[10px] font-black rounded-full backdrop-blur-md border border-blue-500/30 shadow-lg uppercase tracking-wider">
-                    Available
-                  </span>
-                )}
-              </div>
               <div className={shouldBlur ? "blur-xl select-none pointer-events-none w-full h-full min-h-[430px]" : "w-full h-full min-h-[430px]"}>
                 <ImageCarousel images={imageList} alt={foundItemData?.foundItemName} />
               </div>
@@ -532,13 +521,24 @@ const SingleFoundItem = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                     </svg>
                   </div>
-                  <p className="text-white font-bold text-base mb-1.5 drop-shadow-md">Photo Blurred for Privacy</p>
+                  <p className="text-white font-bold text-base mb-1.5 drop-shadow-md">Photo Blurred</p>
                   <p className="text-gray-300 text-xs leading-relaxed max-w-sm drop-shadow-md">
-                    This item belongs to a restricted category.
-                    Submit a claim with details to verify ownership and unlock the photo.
+                    Submit a claim to view
                   </p>
                 </div>
               )}
+              {/* Badge always on top */}
+              <div className="absolute top-3 left-3 z-20">
+                {isClaimed ? (
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-black rounded-xl shadow-lg uppercase tracking-wider">
+                    <FaCheckCircle size={10} /> Claimed
+                  </span>
+                ) : (
+                  <span className="px-3 py-1.5 bg-blue-600 text-white text-xs font-black rounded-xl shadow-lg uppercase tracking-wider">
+                    Available
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Mobile discussion button */}
@@ -677,11 +677,11 @@ const SingleFoundItem = () => {
       )}
 
       {isClaimModalOpen && (
-        <div className="fixed inset-0 z-[60] grid place-items-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-[60] grid place-items-center p-4 sm:p-6 overflow-y-auto overflow-x-hidden">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => closeModal(setIsClaimModalOpen)} />
           <div
             id="single-claim-modal"
-            className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-white/10 shadow-2xl flex flex-col max-h-[90vh] my-auto"
+            className="relative w-full max-w-md bg-gray-900 rounded-2xl border border-white/10 shadow-2xl flex flex-col max-h-[90vh] my-auto overflow-hidden"
             style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.2) rgba(255,255,255,0.05)" }}
           >
             {/* ── Header ── */}
@@ -715,18 +715,18 @@ const SingleFoundItem = () => {
                     <button
                       onClick={handleClaimFetchDetails}
                       disabled={isFetchingClaimStudent}
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50"
+                      className="flex-1 min-w-0 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider active:scale-95 disabled:opacity-50"
                     >
                       {isFetchingClaimStudent
-                        ? <FaSpinner className="animate-spin" size={8} />
-                        : <FaSearch size={8} />}
-                      Fetch Student Info
+                        ? <FaSpinner className="animate-spin shrink-0" size={8} />
+                        : <FaSearch size={8} className="shrink-0" />}
+                      <span className="truncate">Fetch Student Info</span>
                     </button>
                     <button
                       onClick={() => setShowClaimScanner(true)}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider active:scale-95"
+                      className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 text-blue-400 text-[9px] font-black rounded-lg transition-all uppercase tracking-wider active:scale-95"
                     >
-                      <FaQrcode size={9} /> Scan Student ID
+                      <FaQrcode size={9} className="shrink-0" /> <span className="truncate">Scan Student ID</span>
                     </button>
                   </>
                 ) : (
@@ -750,9 +750,9 @@ const SingleFoundItem = () => {
             </div>
 
             {/* ── Body ── */}
-            <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
+            <div className="p-5 overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar">
               {/* Item preview strip */}
-              <div className="flex items-center gap-3 bg-gray-800/60 border border-white/5 rounded-xl p-3 mb-5">
+              <div className="flex items-center gap-3 bg-gray-800/60 border border-white/5 rounded-xl p-3 mb-5 overflow-hidden">
                 <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-white/5 flex items-center justify-center bg-gray-950">
                   <img
                     src={imageList[0] || "/bgimg.png"}
@@ -768,10 +768,10 @@ const SingleFoundItem = () => {
                     </div>
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 overflow-hidden">
                   <p className="text-white text-sm font-semibold truncate">{foundItemData?.foundItemName}</p>
                   <p className="text-gray-500 text-[10px] mt-0.5 flex items-center gap-1 truncate">
-                    <FaMapMarkerAlt size={8} /> {foundItemData?.location}
+                    <FaMapMarkerAlt size={8} className="shrink-0" /> <span className="truncate">{foundItemData?.location}</span>
                   </p>
                 </div>
                 <span className="shrink-0 px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full border border-blue-500/20 whitespace-nowrap">
