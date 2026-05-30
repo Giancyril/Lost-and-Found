@@ -603,3 +603,16 @@ model Sighting {
 
   @@map("sightings")
 }
+
+model VirtueSpotlight {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String?
+  students    String[] // array of recognized student names
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("virtue_spotlights")
+}

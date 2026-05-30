@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useGetLostItemsQuery, useGetFoundItemsQuery, useAdminStatsQuery } from "../../redux/api/api";
 import { PointsTeaserBanner } from "../../components/home/PointsTeaserBanner";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
+import { FaChevronDown, FaLightbulb } from "react-icons/fa";
 
 const Banner = () => {
   useScrollReveal();
@@ -9,7 +10,7 @@ const Banner = () => {
 
   const { data: lostItems } = useGetLostItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
   const { data: foundItems } = useGetFoundItemsQuery({ limit: 3, sortBy: "date", sortOrder: "desc" });
-  const { data: stats } = useAdminStatsQuery("");
+  const { data: stats } = useAdminStatsQuery(undefined);
 
   const slides = [
   {
@@ -244,6 +245,7 @@ const Banner = () => {
           <RecentLostPanel />
           <RecentFoundPanel />
         </div>
+
       </section>
     </>
   );

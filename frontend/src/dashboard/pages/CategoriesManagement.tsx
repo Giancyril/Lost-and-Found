@@ -117,11 +117,7 @@ const CategoriesManagement = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* Header row */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-white text-xl font-bold tracking-tight">Categories</h1>
-          <p className="text-gray-500 text-xs mt-0.5">Manage item categories for lost and found</p>
-        </div>
+      <div className="flex justify-end">
         <button onClick={() => setShowAddForm(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shrink-0">
           <FaPlus size={10} /> Add Category

@@ -404,6 +404,36 @@ const api = baseApi.injectEndpoints({
       query: () => ({ url: "/bounties/active", method: "GET" }),
       providesTags: ["bounties"] as any,
     }),
+    
+    // ── VIRTUE Spotlights ────────────────────────────────────────────────────────
+    getVirtueSpotlights: builder.query({
+      query: () => ({ url: "/virtue-spotlights", method: "GET" }),
+      providesTags: ["virtueSpotlights"] as any,
+    }),
+    getAllVirtueSpotlights: builder.query({
+      query: () => ({ url: "/virtue-spotlights/all", method: "GET" }),
+      providesTags: ["virtueSpotlights"] as any,
+    }),
+    createVirtueSpotlight: builder.mutation({
+      query: (formData: FormData) => ({
+        url: "/virtue-spotlights",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["virtueSpotlights"] as any,
+    }),
+    updateVirtueSpotlight: builder.mutation({
+      query: ({ id, formData }: { id: string; formData: FormData }) => ({
+        url: `/virtue-spotlights/${id}`,
+        method: "PUT",
+        body: formData,
+      }),
+      invalidatesTags: ["virtueSpotlights"] as any,
+    }),
+    deleteVirtueSpotlight: builder.mutation({
+      query: (id: string) => ({ url: `/virtue-spotlights/${id}`, method: "DELETE" }),
+      invalidatesTags: ["virtueSpotlights"] as any,
+    }),
   }),
 });
 
@@ -496,4 +526,9 @@ export const {
   useClearOldLogsMutation,
   useLazyExportUsersQuery,
   useGetActiveBountiesQuery,
+  useGetVirtueSpotlightsQuery,
+  useGetAllVirtueSpotlightsQuery,
+  useCreateVirtueSpotlightMutation,
+  useUpdateVirtueSpotlightMutation,
+  useDeleteVirtueSpotlightMutation,
 } = api;

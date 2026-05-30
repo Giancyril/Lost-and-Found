@@ -1,5 +1,5 @@
 import { FaPlus, FaMinus } from "react-icons/fa";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 interface FaqItem {
@@ -10,6 +10,31 @@ interface FaqItem {
 const Faq = () => {
   useScrollReveal();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [tipsOpen, setTipsOpen] = useState(false);
+  const [faqVisible, setFaqVisible] = useState(false);
+  const faqRef = useRef<HTMLDivElement>(null);
+
+  const TIPS = [
+    "Always use Fetch Student Info or scan your ID when reporting it auto-fills your name and email instantly.",
+    "Check the Found Items page first before filing a lost report your item may already be there.",
+    "Offline reports are saved automatically and submitted once your connection is restored.",
+    "Use the AI Search tool to find potential matches for your lost item across all found reports.",
+    "Add a clear photo when reporting items with photos are matched and claimed significantly faster.",
+  ];
+
+  useEffect(() => {
+    const el = faqRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setFaqVisible(entry.isIntersecting);
+        if (!entry.isIntersecting) setTipsOpen(false);
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const toggleFaq = (index: number) => {
     setExpandedIndex(expandedIndex === index ? null : index);
@@ -44,7 +69,7 @@ const Faq = () => {
   ];
 
   return (
-    <div className="py-10 lg:py-20 relative overflow-hidden bg-gray-950 min-h-[500px] lg:min-h-[650px] reveal">
+    <div ref={faqRef} className="py-10 lg:py-20 relative overflow-hidden bg-gray-950 min-h-[500px] lg:min-h-[650px] reveal">
 
       {/* Background */}
       <div className="absolute inset-0 z-0">
@@ -118,6 +143,70 @@ const Faq = () => {
 
         </div>
       </div>
+
+      {/* ── Tips Arrow Button + Panel — outside overflow:hidden via portal-like placement ── */}
+
+      {/* Arrow tab — top-right, just below navbar, only when FAQ is in view */}
+      {!tipsOpen && faqVisible && (
+        <button
+          onClick={() => setTipsOpen(true)}
+          aria-label="Open tips panel"
+          className="fixed right-0 z-[60] w-8 h-10 rounded-l-xl shadow-xl transition-all duration-200 flex items-center justify-center border border-white/10 border-r-0 hover:bg-white/20"
+          style={{
+            top: "15px",
+            background: "rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)"
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="rgba(255,255,255,0.7)" strokeWidth="2.5"
+            strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+      )}
+
+      {/* Backdrop */}
+      {tipsOpen && (
+        <div
+          className="fixed inset-0 z-[55] bg-black/30 backdrop-blur-[2px]"
+          onClick={() => setTipsOpen(false)}
+        />
+      )}
+
+      {/* Slide-in panel from right */}
+      <div
+        className={`fixed top-0 right-0 h-full z-[58] w-80 max-w-[90vw] bg-gray-900 border-l border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${tipsOpen ? "translate-x-0" : "translate-x-full"}`}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 shrink-0">
+          <div className="flex items-center gap-2.5">
+            
+            <div>
+              <p className="text-white text-sm font-bold">Tips</p>
+              <p className="text-gray-500 text-[10px]">When using the website</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setTipsOpen(false)}
+            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5 space-y-3">
+          {TIPS.map((tip, i) => (
+            <div key={i} className="flex items-start gap-3 p-3 bg-white/[0.03] border border-white/5 rounded-xl">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+              <p className="text-gray-300 text-xs leading-relaxed">{tip}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
     </div>
   );
 };

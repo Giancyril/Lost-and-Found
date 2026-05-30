@@ -6,7 +6,7 @@ import {
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt, FaMapMarkerAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate,
-  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy
+  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy, FaAward
 } from "react-icons/fa";
 import { useUserVerification, signOut, setUserLocalStorage } from "../auth/auth";
 
@@ -37,6 +37,7 @@ interface Notification {
 
 const menuItems = [
   { title: "Overview", icon: FaTachometerAlt, path: "/dashboard", exact: true },
+  { title: "Recognition Feed", icon: FaAward, path: "/dashboard/virtue-spotlight" },
 
   // Item Management
   { title: "Batch Entry", icon: FaQrcode, path: "/dashboard/bulk-scanner" },
@@ -75,6 +76,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/analytics": { title: "Analytics", subtitle: "Monthly trends, category breakdown and top reporters, user activity, item flow, and performance metrics." },
   "/dashboard/heatmap": { title: "Heatmap", subtitle: "Visualize where items are most commonly lost or found." },
   "/dashboard/comm-hub": { title: "Communication Hub", subtitle: "Announcements, support tickets, feedback and broadcasts." },
+  "/dashboard/virtue-spotlight": { title: "Recognition Feed", subtitle: "Manage recognition posts displayed on the homepage." },
   "/dashboard/achievements": { title: "Achievements", subtitle: "Monitor badge distribution and top community contributors." },
   "/dashboard/report": { title: "Report", subtitle: "Generate and export weekly or monthly summary reports." },
   "/dashboard/moderation": { title: "Content Moderation", subtitle: "Review flagged content, manage reports, and moderate community posts." },
