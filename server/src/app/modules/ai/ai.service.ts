@@ -428,9 +428,79 @@ const parseVoice = async (audioBuffer: Buffer, mimeType = "audio/webm") => {
   }
 };
 
+/**
+ * Writes an inspiring, heartwarming, and professional recognition/spotlight story based on administrator notes/bullet points.
+ */
+const writeSpotlightStory = async (bulletPoints: string) => {
+  try {
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    const prompt = `
+    You are an exceptionally engaging, empathetic, and professional AI Story Writer for a campus Lost and Found platform called "Lost & Found NBSC".
+    Your task is to write a heartwarming, beautifully engaging, and professional spotlight story/article based on the short bullet points or notes provided by the administrator.
+    This story is to recognize and celebrate the outstanding civic values and integrity of the students involved (such as returning a lost item or showing honesty).
+
+    Admin Notes/Bullet Points:
+    "${bulletPoints}"
+
+    Instructions:
+    1. Write a compelling title that grabs attention (e.g., "Honesty in Action: How a Lost Wallet Found Its Way Home"). Do not include quotes in the title string.
+    2. Write a beautifully structured narrative story that highlights integrity, trustworthiness, and community spirit. Make it feel heartwarming and premium.
+    3. Keep the story within 120-220 words.
+    4. The output must be JSON format only, containing two fields: "title" and "description".
+
+    Output format (JSON only):
+    {
+      "title": "A beautifully written headline",
+      "description": "The complete narrative story/article text..."
+    }
+
+    Rules:
+    - Return ONLY valid JSON.
+    - Write in an inspiring, professional, and appreciative tone.
+    `;
+
+    let result;
+    try {
+      result = await generateContentWithRetry(genAI, prompt, {
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      });
+    } catch (genError: any) {
+      console.error("[AI] Gemini Story Writing Error:", genError.message);
+      throw new Error(`Gemini AI service unavailable: ${genError.message}`);
+    }
+
+    const response = await result.response;
+    let text = response.text().trim();
+    
+    // Clean any accidental markdown codeblock wrappers
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+
+    try {
+      const parsed = JSON.parse(text);
+      return parsed;
+    } catch (parseError) {
+      console.error("[AI] Failed to parse Spotlight Story AI response. Raw Text:", text);
+      throw new Error("AI returned invalid JSON format");
+    }
+  } catch (error: any) {
+    console.error("[AI] Story Writing Pipeline Failure:", error);
+    throw error;
+  }
+};
+
 export const aiRecognitionService = {
   recognizeImage,
   analyzeUrgency,
   analyzeClaimFraud,
   parseVoice,
+  writeSpotlightStory,
 };

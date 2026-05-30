@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import {
   FaPlus, FaStar, FaTimes, FaTrash, FaToggleOn, FaToggleOff,
-  FaImage, FaSpinner, FaEdit, FaUserCheck,
+  FaImage, FaSpinner, FaEdit, FaUserCheck, FaMagic,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -9,6 +9,7 @@ import {
   useCreateVirtueSpotlightMutation,
   useUpdateVirtueSpotlightMutation,
   useDeleteVirtueSpotlightMutation,
+  useAiWriteVirtueSpotlightMutation,
 } from "../../redux/api/api";
 
 // ── Student name tag input ────────────────────────────────────────────────────
@@ -34,7 +35,7 @@ const StudentTagInput = ({
   return (
     <div>
       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
-        Recognized Students
+        Recognized Students <span className="text-gray-600 font-normal normal-case tracking-normal">(optional)</span>
       </label>
 
       {students.length > 0 && (
@@ -107,7 +108,28 @@ const SpotlightModal = ({
     useCreateVirtueSpotlightMutation();
   const [updateSpotlight, { isLoading: updating }] =
     useUpdateVirtueSpotlightMutation();
+  const [aiWriteStory, { isLoading: isAiWriting }] =
+    useAiWriteVirtueSpotlightMutation();
   const isLoading = creating || updating;
+
+  const [aiBulletPoints, setAiBulletPoints] = useState("");
+  const [showAiAssist, setShowAiAssist] = useState(false);
+
+  const handleAiGenerate = async () => {
+    if (!aiBulletPoints.trim()) {
+      return toast.error("Please enter some notes or bullet points first.");
+    }
+    try {
+      const res = await aiWriteStory(aiBulletPoints.trim()).unwrap();
+      if (res.title) setTitle(res.title);
+      if (res.description) setDescription(res.description);
+      toast.success("AI drafted your spotlight story successfully!");
+      setShowAiAssist(false);
+      setAiBulletPoints("");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to draft story with AI.");
+    }
+  };
 
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -119,10 +141,11 @@ const SpotlightModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return toast.error("Title is required");
+    if (!description.trim()) return toast.error("Description is required");
 
     const fd = new FormData();
     fd.append("title", title.trim());
-    if (description.trim()) fd.append("description", description.trim());
+    fd.append("description", description.trim());
     fd.append("students", JSON.stringify(students));
     if (file) fd.append("image", file);
 
@@ -202,6 +225,55 @@ const SpotlightModal = ({
             />
           </div>
 
+          {/* AI Assist Panel */}
+          <div className="bg-gray-800/40 border border-white/5 rounded-xl p-3.5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">AI Story Writer</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAiAssist(!showAiAssist)}
+                className="text-[11px] font-bold text-blue-400 hover:text-blue-300 uppercase focus:outline-none transition-colors"
+              >
+                {showAiAssist ? "Hide Panel" : "Use AI Writer"}
+              </button>
+            </div>
+
+            {showAiAssist && (
+              <div className="space-y-3 pt-1 border-t border-white/5">
+                <p className="text-[10px] text-gray-500 leading-relaxed">
+                  Describe what the student did (e.g. "Jane found a lost iPhone 14 in SWDC 102 and immediately returned it to the security desk") and Gemini will write a heartwarming title and story.
+                </p>
+                <textarea
+                  value={aiBulletPoints}
+                  onChange={(e) => setAiBulletPoints(e.target.value)}
+                  rows={2}
+                  disabled={isAiWriting}
+                  placeholder="Enter quick bullet points or what happened..."
+                  className="w-full bg-gray-900 border border-white/10 text-white text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-cyan-500/50 placeholder-gray-600 resize-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleAiGenerate}
+                  disabled={isAiWriting}
+                  className="w-full py-1.5 bg-cyan-600/10 hover:bg-blue-600 border border-blue-500/20 hover:border-blue-500 text-blue-400 hover:text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isAiWriting ? (
+                    <>
+                      <FaSpinner className="animate-spin text-blue-400" size={10} />
+                      AI is writing story...
+                    </>
+                  ) : (
+                    <>
+                      Generate Story
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Title */}
           <div>
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
@@ -219,15 +291,13 @@ const SpotlightModal = ({
           {/* Description */}
           <div>
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
-              Description{" "}
-              <span className="text-gray-600 font-normal normal-case tracking-normal">
-                (optional)
-              </span>
+              Description <span className="text-red-400">*</span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
+              required
               placeholder="e.g. The SASDD VIRTUE program aims to celebrate and honor students who demonstrate exceptional moral character..."
               className="w-full bg-gray-800 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-cyan-500/50 placeholder-gray-600 resize-none"
             />

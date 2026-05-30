@@ -434,6 +434,13 @@ const api = baseApi.injectEndpoints({
       query: (id: string) => ({ url: `/virtue-spotlights/${id}`, method: "DELETE" }),
       invalidatesTags: ["virtueSpotlights"] as any,
     }),
+    aiWriteVirtueSpotlight: builder.mutation({
+      query: (bulletPoints: string) => ({
+        url: "/virtue-spotlights/ai-write",
+        method: "POST",
+        body: { bulletPoints },
+      }),
+    }),
   }),
 });
 
@@ -531,4 +538,5 @@ export const {
   useCreateVirtueSpotlightMutation,
   useUpdateVirtueSpotlightMutation,
   useDeleteVirtueSpotlightMutation,
+  useAiWriteVirtueSpotlightMutation,
 } = api;

@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import auth from "../app/midddlewares/auth";
 import { uploadImages } from "../app/midddlewares/upload";
 import { uploadFileToStorage } from "../app/utils/storage";
+import { aiRecognitionService } from "../app/modules/ai/ai.service";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -113,6 +114,22 @@ router.delete("/virtue-spotlights/:id", auth(), async (req: Request, res: Respon
     res.json({ success: true, message: "Spotlight deleted" });
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to delete spotlight" });
+  }
+});
+
+// ── POST /virtue-spotlights/ai-write  (admin only) ───────────────────────────
+router.post("/virtue-spotlights/ai-write", auth(), async (req: Request, res: Response) => {
+  try {
+    const { bulletPoints } = req.body;
+    if (!bulletPoints) {
+      return res.status(400).json({ success: false, message: "Bullet points are required" });
+    }
+
+    const aiWrittenContent = await aiRecognitionService.writeSpotlightStory(bulletPoints);
+    res.json({ success: true, ...aiWrittenContent });
+  } catch (err: any) {
+    console.error("[AI-Write] Error:", err.message);
+    res.status(500).json({ success: false, message: err.message || "Failed to generate story with AI" });
   }
 });
 
