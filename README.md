@@ -15,6 +15,7 @@ A comprehensive lost and found management system built with modern web technolog
 ### Advanced Features
 - **Magic AI Scan**: Instantly identify items from a single photo — automatically populates item name, detailed description, color, and condition using computer vision
 - **AI-Powered Search**: Integration with Google Gemini AI for intelligent item search and matching
+- **AI-Powered Story Writer**: Integrated spotlight drafting utility inside the Recognition Feed dashboard. Staff enter brief bullet points, and Google Gemini instantly generates heartwarming, inspiring, and professional student recognition titles and complete narrative stories.
 - **High-Performance Web Scanner**: Next-generation hybrid barcode scanner using jsQR + QuaggaJS + native fallback for 1-2 second scan performance — 3-5x faster than previous implementation
 - **Continuous Bulk Scanner**: Seamlessly scan multiple IDs or items in rapid succession without closing the scanner interface. Maintains persistent state and automatically fills location data, supercharging mass-processing workflows for security and admin staff.
 - **Student Masterlist Integration**: Google Sheets-backed masterlist that resolves student name, email, and department from a scanned or entered ID — with fuzzy name matching and ID normalization
@@ -601,3 +602,4 @@ Here is the difference between the two:
 - **Interactive "Journey Tracking"**: A visual, data-driven timeline tracing the complete lifecycle of a claim or lost report, dynamically aggregating sightings and exact `ClaimAuditLog` milestones (like "Verification Passed" or "Claim Rejected").
 - **AI Fraud & 'Serial Claimant' Prevention Engine**: A dual-layer security mechanism. A heuristic layer flags users submitting 3+ claims in 30 days. Then, Gemini AI cross-references the claimant's "Proof of Ownership" against hidden item details to detect vague guesses or blatant lies, emitting a 0-100% Risk Score and instant red FRAUD ALERTS on the Admin claims dashboard.
 - **Recognition Feed (VIRTUE Spotlight)**: Fully-responsive and beautifully integrated admin dashboard and home hero feed for creating and showcasing student role-model spotlight posts, celebrating community integrity and high civic standards.
+- **AI-Powered Spotlight Story Writer**: Seamless integration of Google Gemini (`gemini-2.5-flash`) inside the Recognition Feed creation modal, permitting administrators to generate heartwarming and inspiring recognition narratives from quick notes or bullet points.
