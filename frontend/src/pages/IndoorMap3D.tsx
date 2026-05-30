@@ -1294,8 +1294,8 @@ const IndoorMap3D = ({
         </div>
       </div>
 
-      {/* MiniMap — desktop only. On mobile, IndoorMapPage's bottom sheet handles floor plan + details */}
-      <div className="hidden lg:block">
+      {/* MiniMap — shown on all screen sizes */}
+      <div>
         <MiniMap
           layout={layout}
           activeFloorIdx={activeFloorIdx}

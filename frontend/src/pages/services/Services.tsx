@@ -51,7 +51,7 @@ const services: Service[] = [
   },
   {
     title: "Real-time Status Tracking",
-    description: "Receive live notifications on your reports. Track exactly where your item is—from initial report and verification to final recovery.",
+    description: "Receive live notifications on your reports. Track exactly where your item is from initial report and verification to final recovery.",
     accent: "from-violet-500 to-purple-600",
     tag: "Core",
     link: "/itemStatus",

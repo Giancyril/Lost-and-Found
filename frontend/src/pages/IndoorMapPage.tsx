@@ -374,22 +374,42 @@ const IndoorMapPage = () => {
           )}
         </div>
 
-        <div className="lg:hidden flex-1 flex flex-col p-4 overflow-hidden">
+        <div className="lg:hidden flex-1 flex flex-col p-4 gap-3 overflow-y-auto">
           {mapMode === "indoor" ? (
-            <div className="flex-1 relative transition-all duration-500" style={mapStyle}>
-              {(selectedBuilding as any).isComingSoon ? (
-                <div className="w-full h-full bg-[#0f1522] border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center flex-col p-6 text-center">
-                   <FaBuilding className="text-gray-800/50 text-4xl mb-4" />
-                   <h2 className="text-xl font-bold text-white mb-2">{selectedBuilding.name}</h2>
-                   <p className="text-gray-500 text-xs mb-5">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
-                   <span className="px-3 py-1 bg-white/5 border border-white/10 text-gray-400 text-[10px] font-black rounded-md uppercase tracking-widest">Coming Soon</span>
+            <>
+              {/* 3D Map — fixed height, floor plan MiniMap is rendered inside IndoorMap3D */}
+              <div className="relative rounded-2xl overflow-visible shrink-0" style={{ height: "55vw", minHeight: "260px", maxHeight: "420px" }}>
+                {(selectedBuilding as any).isComingSoon ? (
+                  <div className="w-full h-full bg-[#0f1522] border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center flex-col p-6 text-center">
+                     <FaBuilding className="text-gray-800/50 text-4xl mb-4" />
+                     <h2 className="text-xl font-bold text-white mb-2">{selectedBuilding.name}</h2>
+                     <p className="text-gray-500 text-xs mb-5">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
+                     <span className="px-3 py-1 bg-white/5 border border-white/10 text-gray-400 text-[10px] font-black rounded-md uppercase tracking-widest">Coming Soon</span>
+                  </div>
+                ) : (
+                  <div className="w-full h-full rounded-2xl overflow-hidden border border-white/5">
+                    <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
+                  </div>
+                )}
+              </div>
+
+              {/* Room Details — always shown, no close button, matches desktop */}
+              <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden shrink-0">
+                <div className="p-4 border-b border-white/5 flex items-center gap-2">
+                  <h3 className="text-white text-[11px] font-bold uppercase tracking-widest">Room Details</h3>
                 </div>
-              ) : (
-                <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
-              )}
-            </div>
+                {!selectedRoom || (selectedBuilding as any).isComingSoon ? (
+                  <div className="flex flex-col items-center justify-center p-8 text-center text-gray-500">
+                    <FaInfoCircle size={22} className="mb-3" />
+                    <p className="text-sm">Select a room</p>
+                  </div>
+                ) : (
+                  <DesktopRoomDetails selectedRoom={selectedRoom} roomItems={roomItems} navigate={navigate} />
+                )}
+              </div>
+            </>
           ) : (
-            <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden relative">
+            <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden relative" style={{ minHeight: "400px" }}>
               <MapContainer center={CAMPUS_CENTER} zoom={CAMPUS_ZOOM - 1} style={{ height: "100%", width: "100%" }} zoomControl={false} attributionControl={false}>
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
                 <HeatLayer points={mappableStats} filter={heatmapFilter} max={maxFilter} />
