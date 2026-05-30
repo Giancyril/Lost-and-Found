@@ -252,17 +252,12 @@ const ItemStatus = () => {
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 py-8 sm:py-16">
 
-        {/* ── Hero Header ── */}
-        <div className="text-center mb-8 lg:mb-12">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-            <p className="text-blue-400 text-[11px] font-bold uppercase tracking-widest">Item Tracking</p>
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-          </div>
-          <h1 className="text-2xl sm:text-5xl font-bold text-white mb-3 sm:mb-4 tracking-tight">
-            My Reports & Claims
+         {/* ── Hero ── */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">
+            My Reports &amp; Claims
           </h1>
-          <p className="text-gray-400 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-500 text-sm max-w-md mx-auto leading-relaxed">
             View real-time updates on your submitted reports and active claims.
           </p>
         </div>

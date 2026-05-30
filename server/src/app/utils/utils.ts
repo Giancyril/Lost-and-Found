@@ -53,7 +53,7 @@ const calculateMeta = async (data: any) => {
         });
       } else {
         total = await prisma.foundItem.count({
-          where: { isDeleted: false }
+          where: { isDeleted: false, isArchived: false }
         });
       }
       break; // Success, exit retry loop

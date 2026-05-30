@@ -63,12 +63,16 @@ const AiSearch: React.FC = () => {
       <div className="relative z-10 max-w-5xl mx-auto px-4 py-8 sm:py-16">
 
         {/* ── Hero ── */}
-        <div className="text-center mb-8 lg:mb-12">
-          <h1 className="text-2xl sm:text-5xl font-bold text-white mb-2 sm:mb-4 tracking-tight">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-4">
+            <FaRobot size={10} className="text-cyan-400" />
+            <span className="text-cyan-400 text-[10px] font-bold uppercase tracking-widest">AI-Powered Search</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">
             Smart Item Search
           </h1>
-          <p className="text-gray-400 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            Describe what you lost or found in natural language
+          <p className="text-gray-500 text-sm max-w-md mx-auto leading-relaxed">
+            Describe what you lost or found in natural language our AI will find the best matches.
           </p>
         </div>
 

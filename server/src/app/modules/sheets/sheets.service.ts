@@ -144,7 +144,7 @@ const createOrUpdateStudent = async (_data: any) => {
 };
 
 // Google Sheets logging functionality
-const SHEETS_WEBHOOK_URL = process.env.SHEETS_WEBHOOK_URL;
+const SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
 
 interface SheetLogData {
   sheetName: string;

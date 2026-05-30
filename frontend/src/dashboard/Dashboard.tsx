@@ -319,7 +319,7 @@ const Dashboard = () => {
                 <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-widest">Stale Items</p>
               </div>
               <p className="text-2xl font-bold text-orange-400">{staleItems.length}</p>
-              <p className="text-gray-600 text-[10px] mt-0.5">Unclaimed 30+ days</p>
+              <p className="text-gray-600 text-[10px] mt-0.5">Unclaimed 90+ days</p>
             </div>
             <div className="bg-gray-800/60 border border-white/5 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1.5">
@@ -341,7 +341,7 @@ const Dashboard = () => {
               <div className="flex flex-col items-center justify-center py-10 text-gray-600">
                 <FaCheckCircle size={22} className="mb-2 opacity-40 text-emerald-500" />
                 <p className="text-xs text-gray-400">No stale items</p>
-                <p className="text-[10px] mt-0.5 opacity-60">All items claimed within 30 days</p>
+                <p className="text-[10px] mt-0.5 opacity-60">All items claimed within 90 days</p>
               </div>
             ) : staleItems.slice(0, 5).map((item: any) => {
               const daysOld = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24));

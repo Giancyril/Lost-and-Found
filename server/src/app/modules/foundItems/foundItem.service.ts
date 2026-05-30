@@ -240,15 +240,15 @@ const getArchivedFoundItems = async () => {
 };
 
 const getStaleFoundItems = async () => {
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
   return prisma.foundItem.findMany({
     where: {
       isDeleted: false,
       isArchived: false,
       isClaimed: false,
-      createdAt: { lte: thirtyDaysAgo },
+      createdAt: { lte: ninetyDaysAgo },
     },
     include: { category: true },
   });

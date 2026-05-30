@@ -164,7 +164,7 @@ const ArchivePage = () => {
         <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl px-4 py-3 flex items-start gap-3">
           <FaExclamationTriangle className="text-orange-400 shrink-0 mt-0.5" size={13} />
           <p className="text-orange-300 text-xs leading-relaxed text-justify">
-            These found items have been <strong>unclaimed for 30+ days</strong>. You can archive them to remove them from the public listing, or leave them visible. Archived items can be restored at any time.
+            These found items have been <strong>unclaimed for 90+ days</strong>. You can archive them to remove them from the public listing, or leave them visible. Archived items can be restored at any time.
           </p>
         </div>
       )}
@@ -205,7 +205,7 @@ const ArchivePage = () => {
           </p>
           <p className="text-xs mt-1 opacity-60">
             {activeTab === "stale"
-              ? "All found items have been claimed within 30 days"
+              ? "All found items have been claimed within 90 days"
               : "Items you archive will appear here"}
           </p>
         </div>
