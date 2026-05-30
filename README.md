@@ -65,6 +65,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Community Engagement**: Rich interaction features including comments, replies, and collaborative problem-solving
 - **Achievement System**: Badge system for recognizing helpful community contributions
 - **Trust Indicators**: Visual trust levels based on user reputation and activity
+- **Recognition Feed (VIRTUE Spotlight)**: A dedicated homepage section and comprehensive, mobile-responsive administrator management dashboard that allows staff to highlight and celebrate students who exhibit outstanding civic values, like returning lost property. Features seamless sidebar positioning, dynamic stats cards, clean tagging systems, and real-time custom recognition feeds.
 
 ### Real-Time Comment System
 - **Modern-Style Interface**: Modern card-based comment layout with visual hierarchy and smooth animations
@@ -599,3 +600,4 @@ Here is the difference between the two:
 - **Continuous Bulk Scanner**: Uninterrupted mass-scanning utility that retains persistent state across navigation, enabling rapid continuous entry of multiple items.
 - **Interactive "Journey Tracking"**: A visual, data-driven timeline tracing the complete lifecycle of a claim or lost report, dynamically aggregating sightings and exact `ClaimAuditLog` milestones (like "Verification Passed" or "Claim Rejected").
 - **AI Fraud & 'Serial Claimant' Prevention Engine**: A dual-layer security mechanism. A heuristic layer flags users submitting 3+ claims in 30 days. Then, Gemini AI cross-references the claimant's "Proof of Ownership" against hidden item details to detect vague guesses or blatant lies, emitting a 0-100% Risk Score and instant red FRAUD ALERTS on the Admin claims dashboard.
+- **Recognition Feed (VIRTUE Spotlight)**: Fully-responsive and beautifully integrated admin dashboard and home hero feed for creating and showcasing student role-model spotlight posts, celebrating community integrity and high civic standards.
