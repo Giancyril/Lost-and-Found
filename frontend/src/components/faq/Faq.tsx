@@ -24,17 +24,17 @@ const Faq = () => {
     {
       question: "How do I report my lost item?",
       answer:
-        "Go to the Lost Items page and click 'Report Lost Item'. Fill in the details including item description, location it was lost, and date. You'll receive a confirmation email.",
+        "Go to the Report Lost Item page. Fill in the details including item description, location it was lost, and date. You'll receive a confirmation email.",
     },
     {
       question: " I found an item. What should I do?",
       answer:
-        "You have two options: browse the Lost Items Board to see if the item matches a report, then click 'I Found This Item' on that listing and bring the item to the SAS Office",
+        "Browse the Lost Items page to see if the item matches a report, then click 'I Found This Item' on that listing and bring the item to the SAS Office",
     },
     {
       question: "How do I claim a found item?",
       answer:
-        "Browse the Found Items page, find your item, and click “Claim” to submit a request.",
+        "Browse the Found Items page, find your item, and click “Submit a Claim” to submit a request.",
     },
     {
       question: "How do I use Smart Search?",

@@ -81,7 +81,7 @@ const Footers = () => {
             </span>
             {/* Desktop */}
             <span className="hidden sm:inline">
-              © 2025 <span className="font-semibold text-gray-400">SAS Lost &amp; Found Management System.</span> All Rights Reserved.
+              © 2026 <span className="font-semibold text-gray-400">SAS Lost &amp; Found Management System.</span> All Rights Reserved.
             </span>
           </p>
 
