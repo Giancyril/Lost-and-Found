@@ -40,12 +40,12 @@ const VirtueSpotlightSection: React.FC = () => {
         </div>
 
         {/* Card */}
-        <div className="relative max-w-4xl mx-auto">
+        <div className="relative max-w-6xl mx-auto">
           <div className="bg-gray-900 border border-white/[0.06] rounded-2xl overflow-hidden shadow-2xl shadow-black/40">
             <div className="flex flex-col lg:flex-row">
 
               {/* Image */}
-              <div className="relative lg:w-[55%] h-64 lg:h-auto shrink-0 overflow-hidden">
+              <div className="relative lg:w-[40%] h-64 lg:h-auto shrink-0 overflow-hidden border-b lg:border-b-0 lg:border-r border-white/[0.08]">
                 {active.imageUrl ? (
                   <img
                     src={active.imageUrl}
@@ -57,9 +57,6 @@ const VirtueSpotlightSection: React.FC = () => {
                     <FaStar size={48} className="text-blue-400/30" />
                   </div>
                 )}
-                {/* Gradient overlay on image */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-gray-900 hidden lg:block" />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent lg:hidden" />
               </div>
 
               {/* Content */}
