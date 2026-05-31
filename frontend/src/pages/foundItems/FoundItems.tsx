@@ -801,7 +801,7 @@ const FoundItemsPage = () => {
 
   const [getStudentByDetails, { isFetching: isFetchingByDetails }] = useLazyGetStudentByDetailsQuery();
 
-  const { data: foundItems, isLoading } = useGetFoundItemsQuery({ searchTerm, page: currentPage, limit, sortBy, sortOrder });
+  const { data: foundItems, isLoading, isFetching } = useGetFoundItemsQuery({ searchTerm, page: currentPage, limit, sortBy, sortOrder });
   const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery("");
   const [initiateChat] = useInitiateChatMutation();
   const navigate = useNavigate();
@@ -1429,7 +1429,7 @@ const FoundItemsPage = () => {
 
       {/* ── Content ── */}
       <div className="px-6 sm:px-10 lg:px-16">
-        {isLoading ? (
+        {(isLoading || (isFetching && !foundItems)) ? (
           <div className={viewMode === "grid" ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-2"}>
             {Array.from({ length: 8 }).map((_, i) => (
               viewMode === "grid" ? (

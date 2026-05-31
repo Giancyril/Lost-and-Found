@@ -54,14 +54,18 @@ import cookieParser from "cookie-parser";
 import { doubleCsrf } from "csrf-csrf";
 import config from "./app/config/config";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => config.jwt_secrets as string || "default_csrf_secret",
-  getSessionIdentifier: (req) => req.cookies?.refreshToken || "anonymous",
+  getSessionIdentifier: (req) => req.cookies?.refreshToken || req.ip || "anonymous",
   cookieName: "x-csrf-token",
   cookieOptions: {
-    sameSite: "strict",
+    // "none" is required for cross-site requests (frontend & backend on different domains).
+    // "lax" works for same-site / localhost dev. "strict" blocks cross-origin entirely.
+    sameSite: isProduction ? "none" : "lax",
     path: "/",
-    secure: process.env.NODE_ENV === "production",
+    secure: isProduction,   // "none" requires secure:true
   },
   size: 64,
   ignoredMethods: ["GET", "HEAD", "OPTIONS"],

@@ -77,7 +77,7 @@ const Footers = () => {
           <p className="text-gray-500 text-[9px] sm:text-xs">
             {/* Mobile */}
             <span className="sm:hidden">
-              © 2025 <span className="font-semibold text-gray-400">NBSC SAS.</span> All Rights Reserved.
+              © 2026 <span className="font-semibold text-gray-400">NBSC SAS.</span> All Rights Reserved.
             </span>
             {/* Desktop */}
             <span className="hidden sm:inline">

@@ -111,10 +111,10 @@ const AboutUs = () => {
               {/* Values grid — 2 columns always */}
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { emoji: "🔍", label: "Transparency", desc: "Open and trackable reporting" },
-                  { emoji: "🛡️", label: "Privacy", desc: "Student data always protected" },
-                  { emoji: "⚡", label: "Efficiency", desc: "Fast resolution within 24hrs" },
-                  { emoji: "🤝", label: "Integrity", desc: "Honest, verified claiming" },
+                  { emoji: "🔍", label: "Transparency", desc: "Real-time status updates on every reported item" },
+                  { emoji: "🛡️", label: "Privacy", desc: "Sensitive items are blurred; only verified claimants see details" },
+                  { emoji: "⚡", label: "Efficiency", desc: "Streamlined SAS office workflow for faster item resolution" },
+                  { emoji: "🤝", label: "Integrity", desc: "Claims are verified by the SAS office before release" },
                 ].map((v) => (
                   <div
                     key={v.label}
@@ -122,7 +122,7 @@ const AboutUs = () => {
                   >
                     <div className="text-xl mb-2">{v.emoji}</div>
                     <p className="text-white font-semibold text-xs sm:text-sm mb-1">{v.label}</p>
-                    <p className="text-gray-500 text-[11px] sm:text-xs leading-relaxed">{v.desc}</p>
+                    <p className="text-gray-500 text-[11px] sm:text-xs leading-relaxed text-justify">{v.desc}</p>
                   </div>
                 ))}
               </div>
