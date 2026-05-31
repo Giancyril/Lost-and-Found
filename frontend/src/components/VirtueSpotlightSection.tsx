@@ -167,9 +167,9 @@ const VirtueSpotlightSection: React.FC = () => {
                               Recognized Students
                             </p>
                             <div className="flex flex-wrap gap-2 items-center">
-                              {(isExpanded || spotlight.students.length <= 6
+                              {(isExpanded || spotlight.students.length <= 3
                                 ? spotlight.students
-                                : spotlight.students.slice(0, 6)
+                                : spotlight.students.slice(0, 3)
                               ).map((name: string, i: number) => (
                                 <span
                                   key={i}
@@ -178,13 +178,13 @@ const VirtueSpotlightSection: React.FC = () => {
                                   {name}
                                 </span>
                               ))}
-                              {spotlight.students.length > 6 && (
+                              {spotlight.students.length > 3 && (
                                 <button
                                   type="button"
                                   onClick={() => setExpandedCardId(isExpanded ? null : spotlight.id)}
                                   className="inline-flex items-center px-2.5 py-1 bg-gray-800 text-gray-500 text-[11px] font-bold rounded-lg transition-colors cursor-pointer select-none"
                                 >
-                                  {isExpanded ? "See Less" : `+${spotlight.students.length - 6} More`}
+                                  {isExpanded ? "See Less" : `+${spotlight.students.length - 3} More`}
                                 </button>
                               )}
                             </div>
