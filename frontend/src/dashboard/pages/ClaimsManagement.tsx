@@ -1225,7 +1225,7 @@ const ClaimsManagement = () => {
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
                               isSending
                                 ? "bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5"
-                                : "bg-cyan-500 text-black hover:bg-cyan-400 font-black shadow-lg shadow-cyan-500/10 active:scale-95"
+                                : "bg-blue-500 text-white hover:bg-blue-400 font-black active:scale-95"
                             }`}
                           >
                             {isSending ? (

@@ -312,11 +312,11 @@ const FoundItemCard = ({ item, setClaimItem, onOpenComments, isAdmin, currentUse
             if (hasMyClaim) return <button onClick={() => onInitiateChat(item)} className="flex items-center justify-center py-2.5 sm:py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs sm:text-[11px] font-bold rounded-lg transition-all">Chat</button>;
             if (isClaimed) return <div className="flex items-center justify-center py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg">Claimed</div>;
             return <button onClick={() => setClaimItem(item)} className="flex items-center justify-center py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">Claim</button>;
-          })()}
+          })()}         
+          <Link to={`/foundItems/${item.id}`} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">Details</Link>
           <button onClick={onOpenComments} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
             Comments
           </button>
-          <Link to={`/foundItems/${item.id}`} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">Details</Link>
         </div>
       </div>
     </div>
@@ -384,15 +384,16 @@ const FoundItemRow = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser
               </button>
             )}
 
+            <Link to={`/foundItems/${item.id}`}
+              className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-xs sm:text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5">
+              <span className="xs:inline sm:inline">Details</span>
+            </Link>
             <button onClick={onOpenComments}
               className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-xs sm:text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5" title="Comments">
 
               <span className="xs:inline sm:inline">Comments</span>
             </button>
-            <Link to={`/foundItems/${item.id}`}
-              className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-xs sm:text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5">
-              <span className="xs:inline sm:inline">Details</span>
-            </Link>
+            
           </div>
         </div>
       </div>

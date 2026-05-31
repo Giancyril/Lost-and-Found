@@ -171,7 +171,7 @@ const SpotlightModal = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
             <h3 className="text-white font-semibold text-sm">
-              {existing ? "Edit Spotlight" : "New VIRTUE Spotlight"}
+              {existing ? "Edit Spotlight" : "Create Post"}
             </h3>
           </div>
           <button
