@@ -930,80 +930,97 @@ const ClaimsManagement = () => {
                     <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lost Item</div>
                     <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Found Item</div>
                     <div className="col-span-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Notified</div>
-                    <div className="col-span-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Category</div>
+                    <div className="col-span-1 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Category</div>
+                    <div className="col-span-1 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center">Score</div>
                     <div className="col-span-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sent</div>
                   </div>
                   <div className="divide-y divide-white/[0.04]">
-                    {paginatedMatches.map((m: any) => (
-                      <div key={m.id} className="grid grid-cols-12 gap-3 items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
-                        <div className="col-span-3 min-w-0">
-                          <p className="text-white text-xs font-semibold truncate">{m.lostItem?.lostItemName ?? "—"}</p>
-                          <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-0.5">
-                            <FaMapMarkerAlt size={7} className="text-red-400 shrink-0" />
-                            <span className="truncate">{m.lostItem?.location ?? "—"}</span>
-                          </div>
-                        </div>
-                        <div className="col-span-3 min-w-0">
-                          <p className="text-white text-xs font-semibold truncate">{m.foundItem?.foundItemName ?? "—"}</p>
-                          <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-0.5">
-                            <FaMapMarkerAlt size={7} className="text-emerald-400 shrink-0" />
-                            <span className="truncate">{m.foundItem?.location ?? "—"}</span>
-                          </div>
-                        </div>
-                        <div className="col-span-2 min-w-0">
-                          {m.lostItem?.schoolEmail ? (
-                            <div className="flex items-center gap-1 text-[10px] text-blue-300">
-                              <FaEnvelope size={8} className="text-blue-400 shrink-0" />
-                              <span className="truncate">{m.lostItem.schoolEmail}</span>
+                    {paginatedMatches.map((m: any) => {
+                      const { score } = calculateMatchScore(m.lostItem || {}, m.foundItem || {});
+                      return (
+                        <div key={m.id} className="grid grid-cols-12 gap-3 items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+                          <div className="col-span-3 min-w-0">
+                            <p className="text-white text-xs font-semibold truncate">{m.lostItem?.lostItemName ?? "—"}</p>
+                            <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-0.5">
+                              <FaMapMarkerAlt size={7} className="text-red-400 shrink-0" />
+                              <span className="truncate">{m.lostItem?.location ?? "—"}</span>
                             </div>
-                          ) : (
-                            <span className="text-gray-600 text-[10px] italic">No email</span>
-                          )}
+                          </div>
+                          <div className="col-span-3 min-w-0">
+                            <p className="text-white text-xs font-semibold truncate">{m.foundItem?.foundItemName ?? "—"}</p>
+                            <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-0.5">
+                              <FaMapMarkerAlt size={7} className="text-emerald-400 shrink-0" />
+                              <span className="truncate">{m.foundItem?.location ?? "—"}</span>
+                            </div>
+                          </div>
+                          <div className="col-span-2 min-w-0">
+                            {m.lostItem?.schoolEmail ? (
+                              <div className="flex items-center gap-1 text-[10px] text-blue-300">
+                                <FaEnvelope size={8} className="text-blue-400 shrink-0" />
+                                <span className="truncate">{m.lostItem.schoolEmail}</span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-600 text-[10px] italic">No email</span>
+                            )}
+                          </div>
+                          <div className="col-span-1">
+                            <span className="text-[10px] px-2 py-0.5 bg-white/5 border border-white/5 text-gray-300 rounded-lg whitespace-nowrap">
+                              {m.lostItem?.category?.name ?? m.foundItem?.category?.name ?? "—"}
+                            </span>
+                          </div>
+                          <div className="col-span-1 flex justify-center">
+                            <span className="text-[10px] px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-bold rounded-lg">
+                              {score}%
+                            </span>
+                          </div>
+                          <div className="col-span-2">
+                            <p className="text-gray-400 text-[10px]">{formatDateTime(m.sentAt)}</p>
+                            <p className="text-gray-600 text-[10px] mt-0.5">{timeAgo(m.sentAt)}</p>
+                          </div>
                         </div>
-                        <div className="col-span-2">
-                          <span className="text-[10px] px-2 py-0.5 bg-white/5 border border-white/5 text-gray-300 rounded-lg">
-                            {m.lostItem?.category?.name ?? m.foundItem?.category?.name ?? "—"}
-                          </span>
-                        </div>
-                        <div className="col-span-2">
-                          <p className="text-gray-400 text-[10px]">{formatDateTime(m.sentAt)}</p>
-                          <p className="text-gray-600 text-[10px] mt-0.5">{timeAgo(m.sentAt)}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Mobile */}
                 <div className="md:hidden divide-y divide-white/[0.04]">
-                  {paginatedMatches.map((m: any) => (
-                    <div key={m.id} className="p-4 space-y-2.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-[10px] px-1.5 py-0.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full font-bold">Lost</span>
-                            <p className="text-white text-xs font-semibold truncate">{m.lostItem?.lostItemName ?? "—"}</p>
+                  {paginatedMatches.map((m: any) => {
+                    const { score } = calculateMatchScore(m.lostItem || {}, m.foundItem || {});
+                    return (
+                      <div key={m.id} className="p-4 space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="text-[10px] px-1.5 py-0.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full font-bold">Lost</span>
+                              <p className="text-white text-xs font-semibold truncate">{m.lostItem?.lostItemName ?? "—"}</p>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-bold">Found</span>
+                              <p className="text-white text-xs truncate">{m.foundItem?.foundItemName ?? "—"}</p>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-bold">Found</span>
-                            <p className="text-white text-xs truncate">{m.foundItem?.foundItemName ?? "—"}</p>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-[10px] px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-bold rounded-lg shrink-0">
+                              {score}% Match
+                            </span>
+                            <p className="text-gray-600 text-[10px] shrink-0">{timeAgo(m.sentAt)}</p>
                           </div>
                         </div>
-                        <p className="text-gray-600 text-[10px] shrink-0">{timeAgo(m.sentAt)}</p>
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px] text-blue-300">
-                        <FaEnvelope size={8} className="text-blue-400 shrink-0" />
-                        <span className="truncate">{m.lostItem?.schoolEmail ?? "No email on file"}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <FaTag size={7} className="text-gray-600" />
-                          {m.lostItem?.category?.name ?? "—"}
+                        <div className="flex items-center gap-1 text-[10px] text-blue-300">
+                          <FaEnvelope size={8} className="text-blue-400 shrink-0" />
+                          <span className="truncate">{m.lostItem?.schoolEmail ?? "No email on file"}</span>
                         </div>
-                        <span>{formatDateTime(m.sentAt)}</span>
+                        <div className="flex items-center justify-between text-[10px] text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <FaTag size={7} className="text-gray-600" />
+                            {m.lostItem?.category?.name ?? "—"}
+                          </div>
+                          <span>{formatDateTime(m.sentAt)}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}
