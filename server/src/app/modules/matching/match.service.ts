@@ -137,6 +137,49 @@ const findMatchesForLostItem = async (lostItem: LostItem): Promise<void> => {
   }
 };
 
+const calculateMatchPercentage = (lostItem: LostItem, foundItem: FoundItem): number => {
+  // Normalize strings
+  const cleanLostName = lostItem.lostItemName.toLowerCase().replace(/[^a-z0-9\s]/g, "");
+  const cleanFoundName = foundItem.foundItemName.toLowerCase().replace(/[^a-z0-9\s]/g, "");
+
+  const lostTokens = new Set(cleanLostName.split(/\s+/).filter(t => t.length > 2));
+  const foundTokens = new Set(cleanFoundName.split(/\s+/).filter(t => t.length > 2));
+
+  if (lostTokens.size === 0 || foundTokens.size === 0) {
+    return 75; // base match category
+  }
+
+  // Intersection Jaccard Similarity
+  let intersectionCount = 0;
+  for (const token of lostTokens) {
+    if (foundTokens.has(token)) intersectionCount++;
+  }
+
+  const unionCount = lostTokens.size + foundTokens.size - intersectionCount;
+  const wordSimilarity = unionCount > 0 ? (intersectionCount / unionCount) : 0;
+
+  // Location Proximity Scoring
+  let locationSimilarity = 0.5;
+  const lostCoords = getCoordinates(lostItem.location);
+  const foundCoords = getCoordinates(foundItem.location);
+  if (lostCoords && foundCoords) {
+    const dist = getDistance(lostCoords[0], lostCoords[1], foundCoords[0], foundCoords[1]);
+    if (dist <= 0.01) { // 10 meters
+      locationSimilarity = 1.0;
+    } else if (dist <= 0.05) { // 50 meters
+      locationSimilarity = 0.9;
+    } else if (dist <= 0.1) { // 100 meters
+      locationSimilarity = 0.8;
+    }
+  } else if (lostItem.location.toLowerCase() === foundItem.location.toLowerCase()) {
+    locationSimilarity = 1.0;
+  }
+
+  // Final score: 40% category (implicit), 40% word similarity, 20% location
+  const score = 40 + (wordSimilarity * 40) + (locationSimilarity * 20);
+  return Math.round(Math.min(99, Math.max(50, score)));
+};
+
 // ── Email notification with deduplication ────────────────────────────────────
 const notifyMatch = async (
   lostItem: LostItem,
@@ -150,14 +193,14 @@ const notifyMatch = async (
   }
 
   const senderEmail = process.env.SMTP_FROM_EMAIL;
-if (!senderEmail) {
-  console.error("[SmartMatch] SMTP_FROM_EMAIL env var is not set — cannot send notification");
-  return;
-}
+  if (!senderEmail) {
+    console.error("[SmartMatch] SMTP_FROM_EMAIL env var is not set — cannot send notification");
+    return;
+  }
 
-const senderName = process.env.SMTP_FROM_NAME ?? "NBSC Lost & Found";
+  const senderName = process.env.SMTP_FROM_NAME ?? "NBSC Lost & Found";
 
-  // FIX 2: Deduplication — skip if we already sent this exact pair
+  // Deduplication — skip if we already sent this exact pair
   const isDuplicate = await alreadyNotified(lostItem.id, foundItem.id);
   if (isDuplicate) {
     console.log(
@@ -166,11 +209,14 @@ const senderName = process.env.SMTP_FROM_NAME ?? "NBSC Lost & Found";
     return;
   }
 
+  const matchPercentage = calculateMatchPercentage(lostItem, foundItem);
+
   const template = smartMatchNotificationTemplate({
     reporterName: lostItem.reporterName || "User",
     itemName:     foundItem.foundItemName,
     location:     foundItem.location,
     date:         foundItem.date.toLocaleDateString(),
+    matchPercentage,
   });
 
   try {
@@ -181,15 +227,15 @@ const senderName = process.env.SMTP_FROM_NAME ?? "NBSC Lost & Found";
       subject:   template.subject,
       html:      template.html,
     });
-     console.log(
-      `[SmartMatch] Notification sent → ${lostItem.schoolEmail} | lost: ${lostItem.id} | found: ${foundItem.id}`
+    console.log(
+      `[SmartMatch] Notification sent → ${lostItem.schoolEmail} | lost: ${lostItem.id} | found: ${foundItem.id} | match: ${matchPercentage}%`
     );
 
     // Trigger Push Notification
     if (lostItem.userId) {
       await pushService.sendNotificationToUser(lostItem.userId, {
         title: "Potential Match Found!",
-        body: `We found an item that matches your reported lost "${lostItem.lostItemName}".`,
+        body: `We found a ${matchPercentage}% match reported in the ${foundItem.location}!`,
         data: {
           type: "MATCH",
           foundItemId: foundItem.id,

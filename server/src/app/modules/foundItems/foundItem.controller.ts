@@ -18,24 +18,34 @@ import { sendFacebookNotification } from "../../../utils/facebookPoster";
 const createFoundItem = async (req: Request, res: Response) => {
   try {
     const requestUserId = req.user?.id;
-    const isAdmin = req.user?.role === "ADMIN";
+
+    if (!req.user) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.UNAUTHORIZED,
+        success: false,
+        message: "Authentication required to report found items.",
+        data: null,
+      });
+    }
 
     // For admin submissions: find the student's User record by their email
     // so the found item is linked to them and points go to them
     let reporterUserId: string | undefined = undefined;
 
-    if (!isAdmin) {
-      // Student submitting directly — use their own account
-      reporterUserId = requestUserId;
-    } else if (req.body.schoolEmail) {
-      // Admin submitting on behalf of student — look up by schoolEmail
+    if (req.body.schoolEmail) {
+      // Look up student by schoolEmail to award points
       const studentUser = await prisma.user.findFirst({
         where: { email: req.body.schoolEmail, role: "USER", isDeleted: false },
         select: { id: true },
       });
       if (studentUser) {
         reporterUserId = studentUser.id;
+      } else {
+        // Fall back to the requesting user
+        reporterUserId = requestUserId;
       }
+    } else {
+      reporterUserId = requestUserId;
     }
 
     const result = await foundItemService.createFoundItem(req.body, reporterUserId);

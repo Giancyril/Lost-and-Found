@@ -404,8 +404,9 @@ export const smartMatchNotificationTemplate = (data: {
   itemName: string;
   location: string;
   date: string;
+  matchPercentage: number;
 }) => ({
-  subject: `Potential Match Found — ${data.itemName}`,
+  subject: `Potential Match Found (${data.matchPercentage}% Match) — ${data.itemName}`,
   html: `
     <!DOCTYPE html>
     <html lang="en">
@@ -476,7 +477,7 @@ export const smartMatchNotificationTemplate = (data: {
                           <tr>
                             <td style="padding:12px 0;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Match Conf.</td>
                             <td style="padding:12px 0;">
-                              <span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:6px 14px;border-radius:16px;border:1px solid #bbf7d0;display:inline-block;white-space:nowrap;">🎯 High Confidence Match</span>
+                              <span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:6px 14px;border-radius:16px;border:1px solid #bbf7d0;display:inline-block;white-space:nowrap;">🎯 ${data.matchPercentage}% Match</span>
                             </td>
                           </tr>
                         </table>

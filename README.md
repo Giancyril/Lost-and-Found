@@ -495,8 +495,8 @@ Here is the difference between the two:
 
 **1. Smart Match Notifications (Automated & User-Facing)**
 - **What it is**: A fully automated background process that runs on the server whenever a new item is reported.
-- **How it works**: If someone reports a Found Item, the system instantly scans all active Lost Item reports. If it finds a very strict, high-confidence match (e.g., exact category, very close location, similar timeframe), it automatically sends an email alert to the student who lost the item, telling them their item might have been found.
-- **Purpose**: To provide instant, zero-touch resolutions for obvious matches without requiring an admin to intervene.
+- **How it works**: The system instantly scans all active reports, computes a multi-faceted **Match Percentage Score** (synthesizing text similarity, location proximity, and category), and automatically sends an email and push alert containing the exact Match Percentage (e.g., *"We found a 92% match!"*) to the student who lost the item.
+- **Purpose**: To provide instant, high-confidence alerts with transparent scoring so students know exactly how likely a found item is to be theirs without requiring admin intervention.
 
 **2. AI Recommender (Manual & Admin-Facing)**
 - **What it is**: An advanced administrative tool located in your Claims Management dashboard.

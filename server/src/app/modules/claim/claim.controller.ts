@@ -8,7 +8,6 @@ import { checkClaimAchievements, checkPointAchievements } from "../../utils/achi
 const createClaim = async (req: Request, res: Response) => {
   try {
     const item: Claim = req.body;
-    // req.user is undefined for students (no auth) — service handles this gracefully
     const result = await claimsService.createClaim(item, req.user);
 
     sendResponse(res, {
