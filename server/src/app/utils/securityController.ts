@@ -142,14 +142,13 @@ export const getLoginLogs = async (req: Request, res: Response) => {
 
 export const clearOldLogs = async (req: Request, res: Response) => {
   try {
-    const cutoff      = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const cutoff      = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
     const { count }   = await prisma.loginLog.deleteMany({ where: { createdAt: { lt: cutoff } } });
     sendResponse(res, { statusCode: StatusCodes.OK, success: true, message: `Cleared ${count} old logs`, data: { count } });
   } catch (error: any) {
     sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: error?.message, data: null });
   }
 };
-
 // ════════════════════════════════════════════════════════════════════════════════
 // ACCESS CONTROL
 // ════════════════════════════════════════════════════════════════════════════════

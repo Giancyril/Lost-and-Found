@@ -211,7 +211,7 @@ const SecurityMonitorTab = () => {
   const logs: any[] = logsData?.data || [];
 
   const handleClearLogs = async () => {
-    if (!confirm("Clear all login logs older than 30 days?")) return;
+    if (!confirm("Clear all login logs older than 90 days?")) return;
     try {
       const res: any = await clearLogs(undefined).unwrap();
       toast.success(res.message || "Logs cleared successfully");
@@ -518,7 +518,7 @@ const DataPrivacyTab = () => {
         <div className="p-5 space-y-3">
           {[
             { label: "Retention Period",    value: "90 days after soft-delete",          color: "text-cyan-400"    },
-            { label: "Login Logs",          value: "30 days rolling window",             color: "text-yellow-400"  },
+            { label: "Login Logs",          value: "90 days rolling window",             color: "text-yellow-400"  },
             { label: "Claim Audit Logs",    value: "Kept indefinitely for compliance",   color: "text-emerald-400" },
             { label: "Personal Data",       value: "Name, email, school ID stored only for service delivery", color: "text-gray-300" },
             { label: "Data Shared With",    value: "No third parties — internal use only", color: "text-emerald-400" },
