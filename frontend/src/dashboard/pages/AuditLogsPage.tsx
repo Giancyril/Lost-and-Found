@@ -26,6 +26,36 @@ const SectionCard = ({ title, subtitle, children, action }: any) => (
   </div>
 );
 
+const getActionBadgeClass = (action: string) => {
+  const act = action.toUpperCase();
+  if (act.includes("PURGE")) {
+    return "bg-rose-500/10 text-rose-400 border-rose-500/20";
+  }
+  if (act.includes("RESTORE")) {
+    return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+  }
+  if (act.includes("REPORT_SEND")) {
+    return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+  }
+  // Reconciliation-specific badges
+  if (act.includes("RECONCILIATION_RESYNC")) {
+    return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+  }
+  if (act.includes("RECONCILIATION_CHECK")) {
+    return "bg-orange-500/10 text-orange-400 border-orange-500/20";
+  }
+  if (act.includes("RECONCILIATION")) {
+    return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
+  }
+  if (act.includes("APPROVED") || act.includes("SUCCESS")) {
+    return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+  }
+  if (act.includes("REJECTED") || act.includes("FAIL")) {
+    return "bg-rose-500/10 text-rose-400 border-rose-500/20";
+  }
+  return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
+};
+
 export default function AuditLogsPage() {
   const { data: auditData, isLoading, refetch, isFetching } = useGetSystemAuditLogsQuery({});
   const logs = auditData?.data || [];
@@ -132,7 +162,7 @@ export default function AuditLogsPage() {
                   <span className="text-xs text-white font-medium">{log.performedBy || "System"}</span>
                 </div>
                 <div>
-                  <span className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                  <span className={`border px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getActionBadgeClass(log.action)}`}>
                     {log.action}
                   </span>
                 </div>
@@ -176,7 +206,7 @@ export default function AuditLogsPage() {
                 </div>
                 <span className="text-sm text-white font-medium truncate">{log.performedBy || "System"}</span>
               </div>
-              <span className="shrink-0 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+              <span className={`shrink-0 border px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getActionBadgeClass(log.action)}`}>
                 {log.action}
               </span>
             </div>

@@ -899,7 +899,48 @@ const EMAIL_TEMPLATES = [
       noteColor: "#bfdbfe", noteBg: "rgba(59, 130, 246, 0.1)", noteBorder: "rgba(59, 130, 246, 0.2)",
     },
   },
+  {
+    id: "retention-report",
+    label: "Weekly Deletion Report",
+    tag: "Scheduled / Weekly",
+    tagColor: "text-red-400 bg-red-400/10 border-red-400/20",
+    accent: "#dc2626",
+    trigger: "Sent every Monday at 9:00 AM to all administrators, listing items pending permanent deletion within 7 days",
+    preview: {
+      subject: "[Lost & Found] Weekly Deletion Report — 3 Items Pending Purge",
+      to: "admin@nbsc.edu.ph",
+      fields: [
+        { label: "FoundItem",     value: "Water Bottle (Hydro Flask) - Cafeteria (3 days left)", highlight: "text-red-400" },
+        { label: "LostItem",      value: "Calculator (Casio) - SWDC Building Room 102 (5 days left)", highlight: "text-red-400" },
+        { label: "Claim",         value: "Claim by Maria for Blue Umbrella (6 days left)", highlight: "text-red-400" },
+      ],
+      note: "Restoration Action Required? To restore any of these items and prevent their permanent deletion, please log in to the admin dashboard, navigate to Security & Compliance, and check the Retention Policy tab.",
+      noteColor: "#fca5a5", noteBg: "rgba(220, 38, 38, 0.1)", noteBorder: "rgba(220, 38, 38, 0.2)",
+    },
+  },
+  {
+    id: "sheets-reconciliation",
+    label: "Sheets Reconciliation Alert",
+    tag: "Scheduled / Weekly",
+    tagColor: "text-orange-400 bg-orange-400/10 border-orange-400/20",
+    accent: "#ea580c",
+    trigger: "Sent every Sunday at 11:00 PM to all administrators when items are missing from Google Sheets",
+    preview: {
+      subject: "[Lost & Found] ⚠️ Sheets Reconciliation Alert — 3 items missing",
+      to: "admin@nbsc.edu.ph",
+      fields: [
+        { label: "Total Checked",   value: "42 items checked (last 7 days)" },
+        { label: "LOST Missing",    value: "Black Backpack — Library (Jan 20, 2026)", highlight: "text-red-400" },
+        { label: "FOUND Missing",   value: "Water Bottle — Cafeteria (Jan 21, 2026)", highlight: "text-emerald-400" },
+        { label: "LOST Missing",    value: "Calculator — SWDC Room 102 (Jan 22, 2026)", highlight: "text-red-400" },
+        { label: "Re-sync Status",  value: "⚠ Action Required", highlight: "text-orange-400" },
+      ],
+      note: "Items listed above exist in the database but are missing from your Google Sheets audit trail. This may indicate network failures, offline submissions, or webhook errors. Use the Sheets Reconciliation tab in Security & Compliance to re-sync them with one click.",
+      noteColor: "#fed7aa", noteBg: "rgba(234, 88, 12, 0.08)", noteBorder: "rgba(249, 115, 22, 0.2)",
+    },
+  },
 ];
+
 
 const EmailTemplatesTab = () => {
   const [selected, setSelected] = useState<string | null>(null);

@@ -23,8 +23,12 @@ const checkAdminRole = (req: Request, res: Response): boolean => {
 const getReconciliationStatus = async (req: Request, res: Response) => {
   if (!checkAdminRole(req, res)) return;
 
+  const performer = req.user
+    ? { id: req.user.id, name: req.user.name || req.user.username || req.user.email }
+    : undefined;
+
   try {
-    const result = await reconciliationService.performReconciliation();
+    const result = await reconciliationService.performReconciliation(performer);
 
     sendResponse(res, {
       statusCode: 200,
@@ -47,6 +51,10 @@ const getReconciliationStatus = async (req: Request, res: Response) => {
 const resyncMissingItems = async (req: Request, res: Response) => {
   if (!checkAdminRole(req, res)) return;
 
+  const performer = req.user
+    ? { id: req.user.id, name: req.user.name || req.user.username || req.user.email }
+    : undefined;
+
   try {
     const { itemIds } = req.body;
 
@@ -58,7 +66,7 @@ const resyncMissingItems = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await reconciliationService.resyncMissingItems(itemIds);
+    const result = await reconciliationService.resyncMissingItems(itemIds, performer);
 
     sendResponse(res, {
       statusCode: 200,
@@ -81,8 +89,12 @@ const resyncMissingItems = async (req: Request, res: Response) => {
 const triggerWeeklyReport = async (req: Request, res: Response) => {
   if (!checkAdminRole(req, res)) return;
 
+  const performer = req.user
+    ? { id: req.user.id, name: req.user.name || req.user.username || req.user.email }
+    : undefined;
+
   try {
-    const result = await reconciliationService.runWeeklyReconciliation();
+    const result = await reconciliationService.runWeeklyReconciliation(performer);
 
     sendResponse(res, {
       statusCode: 200,
@@ -106,3 +118,4 @@ export const reconciliationController = {
   resyncMissingItems,
   triggerWeeklyReport,
 };
+

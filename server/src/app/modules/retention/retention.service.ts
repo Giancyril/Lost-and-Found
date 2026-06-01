@@ -1,8 +1,10 @@
 import prisma from "../../config/prisma";
 import { sendEmail } from "../../utils/mailer";
+import { weeklyDeletionReportTemplate } from "../../utils/emailTemplates";
+import { logSystemAudit } from "../../utils/auditLog";
 
-// Grace period: 30 days after soft-delete before permanent deletion
-const GRACE_PERIOD_DAYS = 30;
+// Grace period: 90 days after soft-delete before permanent deletion
+const GRACE_PERIOD_DAYS = 90;
 const WARNING_DAYS_BEFORE_PURGE = 7; // Send report 7 days before purge
 
 interface PendingDeletionItem {
@@ -138,7 +140,7 @@ const getItemsPendingDeletion = async (): Promise<PendingDeletionItem[]> => {
 /**
  * Permanently delete items that have exceeded the grace period
  */
-const purgeExpiredItems = async () => {
+const purgeExpiredItems = async (performer?: { id: string; name: string }) => {
   const gracePeriodDate = new Date();
   gracePeriodDate.setDate(gracePeriodDate.getDate() - GRACE_PERIOD_DAYS);
 
@@ -183,30 +185,59 @@ const purgeExpiredItems = async () => {
 
   console.log(`[RetentionPolicy] Purged ${results.foundItems} found items, ${results.lostItems} lost items, ${results.claims} claims`);
 
+  // Write system audit log
+  await logSystemAudit({
+    entityType: "RETENTION",
+    action: performer ? "MANUAL_PURGE" : "AUTO_PURGE",
+    newData: results,
+    performedBy: performer?.name || "System (Auto Purge)",
+    performedById: performer?.id,
+  });
+
   return results;
 };
 
 /**
  * Restore a soft-deleted item (admin action)
  */
-const restoreItem = async (itemId: string, itemType: "FoundItem" | "LostItem" | "Claim") => {
+const restoreItem = async (
+  itemId: string,
+  itemType: "FoundItem" | "LostItem" | "Claim",
+  performer?: { id: string; name: string }
+) => {
+  let restoredItem;
   switch (itemType) {
     case "FoundItem":
-      return prisma.foundItem.update({
+      restoredItem = await prisma.foundItem.update({
         where: { id: itemId },
         data: { isDeleted: false, deletedAt: null },
       });
+      break;
     case "LostItem":
-      return prisma.lostItem.update({
+      restoredItem = await prisma.lostItem.update({
         where: { id: itemId },
         data: { isDeleted: false, deletedAt: null },
       });
+      break;
     case "Claim":
-      return prisma.claim.update({
+      restoredItem = await prisma.claim.update({
         where: { id: itemId },
         data: { isDeleted: false, deletedAt: null },
       });
+      break;
   }
+
+  // Write system audit log
+  await logSystemAudit({
+    entityType: "RETENTION",
+    entityId: itemId,
+    action: `RESTORE_${itemType.toUpperCase()}`,
+    newData: { itemId, itemType },
+    performedBy: performer?.name || "Admin",
+    performedById: performer?.id,
+  });
+
+  return restoredItem;
 };
 
 /**
@@ -223,11 +254,23 @@ const generateCSVReport = (items: PendingDeletionItem[]): string => {
 /**
  * Send weekly deletion report to admins
  */
-const sendWeeklyDeletionReport = async () => {
+const sendWeeklyDeletionReport = async (performer?: { id: string; name: string }) => {
   const pendingItems = await getItemsPendingDeletion();
 
   if (pendingItems.length === 0) {
     console.log("[RetentionPolicy] No items pending deletion this week.");
+    // Write system audit log
+    await logSystemAudit({
+      entityType: "RETENTION",
+      action: performer ? "MANUAL_REPORT_SEND" : "AUTO_REPORT_SEND",
+      newData: {
+        recipientCount: 0,
+        pendingItemsCount: 0,
+        message: "No items pending deletion this week",
+      },
+      performedBy: performer?.name || "System (Auto Scheduler)",
+      performedById: performer?.id,
+    });
     return;
   }
 
@@ -242,32 +285,8 @@ const sendWeeklyDeletionReport = async () => {
     return;
   }
 
-  const csvReport = generateCSVReport(pendingItems);
-
-  const emailBody = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #1e40af;">Weekly Retention Policy Report</h2>
-      <p>The following items are scheduled for permanent deletion within the next 7 days:</p>
-      <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <ul style="list-style-type: none; padding: 0;">
-          ${pendingItems
-            .map(
-              (item) =>
-                `<li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                  <strong style="color: #1e40af;">${item.type}</strong>: ${item.name} 
-                  <span style="color: #dc2626; font-weight: bold;">(${item.daysRemaining} days remaining)</span>
-                </li>`
-            )
-            .join("")}
-        </ul>
-      </div>
-      <p><strong>Total items pending deletion:</strong> ${pendingItems.length}</p>
-      <p style="margin-top: 20px;">To restore any of these items before permanent deletion, please log in to the admin dashboard and navigate to the <strong>Retention Policy</strong> section.</p>
-      <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-        This is an automated report sent every Monday. CSV report is attached for your records.
-      </p>
-    </div>
-  `;
+  // Use new styled email template
+  const template = weeklyDeletionReportTemplate({ pendingItems });
 
   const fromName = process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found";
   const fromEmail = process.env.SMTP_FROM_EMAIL || "mijaresgiancyril@gmail.com";
@@ -279,14 +298,26 @@ const sendWeeklyDeletionReport = async () => {
         fromName,
         fromEmail,
         toEmail: admin.email,
-        subject: `[Lost & Found] Weekly Deletion Report - ${pendingItems.length} items pending`,
-        html: emailBody,
+        subject: template.subject,
+        html: template.html,
       });
       console.log(`[RetentionPolicy] Report sent to ${admin.email}`);
     } catch (error) {
       console.error(`[RetentionPolicy] Failed to send report to ${admin.email}:`, error);
     }
   }
+
+  // Write system audit log
+  await logSystemAudit({
+    entityType: "RETENTION",
+    action: performer ? "MANUAL_REPORT_SEND" : "AUTO_REPORT_SEND",
+    newData: {
+      recipientCount: admins.length,
+      pendingItemsCount: pendingItems.length,
+    },
+    performedBy: performer?.name || "System (Auto Scheduler)",
+    performedById: performer?.id,
+  });
 };
 
 export const retentionService = {

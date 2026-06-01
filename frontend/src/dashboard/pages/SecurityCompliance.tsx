@@ -16,6 +16,7 @@ import {
   useBlockUserMutation,
   useSoftDeleteUserMutation,
 } from "../../redux/api/api";
+import { getUserLocalStorage } from "../../auth/auth";
 
 // ── RTK Query endpoints ───────────────────────────────────────────────────────
 const securityApi = baseApi.injectEndpoints({
@@ -28,6 +29,16 @@ const securityApi = baseApi.injectEndpoints({
     getPurgeCheck:      builder.query({ query: () => ({ url: "/admin/security/purge-check", method: "GET" }) }),
     getComplianceReport:builder.query({ query: () => ({ url: "/admin/security/compliance",  method: "GET" }), providesTags:    ["security"] }),
     clearOldLogs:       builder.mutation({ query: () => ({ url: "/admin/security/logs",     method: "DELETE" }), invalidatesTags: ["security"] }),
+    
+    // Retention Policy Engine Endpoints
+    getPendingDeletions: builder.query({ query: () => ({ url: "/admin/retention/pending", method: "GET" }), providesTags: ["security"] }),
+    purgeExpiredItems:   builder.mutation({ query: () => ({ url: "/admin/retention/purge", method: "POST" }), invalidatesTags: ["security"] }),
+    restoreItem:         builder.mutation({ query: (data: { itemId: string, itemType: string }) => ({ url: "/admin/retention/restore", method: "POST", body: data }), invalidatesTags: ["security"] }),
+    sendWeeklyReport:    builder.mutation({ query: () => ({ url: "/admin/retention/report/send", method: "POST" }) }),
+    // Sheets Reconciliation Endpoints
+    getReconciliationStatus: builder.query({ query: () => ({ url: "/admin/reconciliation/status", method: "GET" }) }),
+    resyncMissingItems:      builder.mutation({ query: (data: { itemIds: string[] }) => ({ url: "/admin/reconciliation/resync", method: "POST", body: data }) }),
+    triggerWeeklyReport:     builder.mutation({ query: () => ({ url: "/admin/reconciliation/trigger", method: "POST" }) }),
   }),
   overrideExisting: false,
 });
@@ -37,6 +48,17 @@ const {
   useGetPrivacyStatsQuery, useGetComplianceReportQuery,
   useLazyExportUserDataQuery, useGetPurgeCheckQuery,
   useClearOldLogsMutation,
+  
+  // Retention Engine Hooks
+  useGetPendingDeletionsQuery,
+  usePurgeExpiredItemsMutation,
+  useRestoreItemMutation,
+  useSendWeeklyReportMutation,
+
+  // Sheets Reconciliation Hooks
+  useGetReconciliationStatusQuery,
+  useResyncMissingItemsMutation,
+  useTriggerWeeklyReportMutation,
 } = securityApi;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -78,10 +100,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const TABS = [
-  { id: "monitor",    label: "Security Monitor",   icon: FaShieldAlt   },
-  { id: "access",     label: "Access Control",     icon: FaUserShield  },
-  { id: "privacy",    label: "Data Privacy",       icon: FaLock        },
-  { id: "compliance", label: "Compliance Reports", icon: FaFileAlt     },
+  { id: "monitor",      label: "Security Monitor",       icon: FaShieldAlt   },
+  { id: "access",       label: "Access Control",         icon: FaUserShield  },
+  { id: "privacy",      label: "Data Privacy",           icon: FaLock        },
+  { id: "compliance",   label: "Compliance Reports",     icon: FaFileAlt     },
+  { id: "retention",    label: "Retention Policy",       icon: FaTrash       },
+  { id: "reconcile",    label: "Sheets Reconciliation",  icon: FaDatabase    },
 ];
 
 const StatCard = ({ label, value, color, bg, icon, sub }: any) => (
@@ -689,6 +713,400 @@ const ComplianceTab = () => {
   );
 };
 
+const getBaseUrl = () => {
+  const isProduction = import.meta.env.PROD;
+  if (isProduction) {
+    const serverUrl = import.meta.env.VITE_SERVER_URL;
+    return serverUrl ? `${serverUrl}/api` : "http://localhost:5001/api";
+  }
+  return "http://localhost:5002/api";
+};
+
+const RetentionPolicyTab = () => {
+  const { data: pendingData, isLoading, refetch, isFetching } = useGetPendingDeletionsQuery(undefined);
+  const [purgeExpired, { isLoading: isPurging }] = usePurgeExpiredItemsMutation();
+  const [restoreItem, { isLoading: isRestoring }] = useRestoreItemMutation();
+  const [sendWeeklyReport, { isLoading: isSendingReport }] = useSendWeeklyReportMutation();
+
+  const pendingItems = pendingData?.data?.items || [];
+  const gracePeriodDays = pendingData?.data?.gracePeriodDays || 30;
+
+  const handlePurge = async () => {
+    if (!confirm("Are you sure you want to permanently purge all expired soft-deleted items? This action cannot be undone.")) return;
+    try {
+      const res: any = await purgeExpired(undefined);
+      if (res?.data?.success) {
+        toast.success(res.data.message || "Expired items purged successfully");
+        refetch();
+      } else {
+        toast.error(res?.error?.data?.message || "Failed to purge items");
+      }
+    } catch {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleRestore = async (itemId: string, itemType: string) => {
+    if (!confirm(`Are you sure you want to restore this soft-deleted ${itemType}?`)) return;
+    try {
+      const res: any = await restoreItem({ itemId, itemType });
+      if (res?.data?.success) {
+        toast.success(res.data.message || `${itemType} restored successfully`);
+        refetch();
+      } else {
+        toast.error(res?.error?.data?.message || "Failed to restore item");
+      }
+    } catch {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleSendReport = async () => {
+    try {
+      const res: any = await sendWeeklyReport(undefined);
+      if (res?.data?.success) {
+        toast.success(res.data.message || "Weekly deletion report email sent to all administrators");
+      } else {
+        toast.error(res?.error?.data?.message || "Failed to send report");
+      }
+    } catch {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    try {
+      const token = getUserLocalStorage();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+      }
+      const response = await fetch(`${getBaseUrl()}/admin/retention/report/download`, {
+        headers
+      });
+      if (!response.ok) throw new Error("Failed to download report");
+      const csvContent = await response.text();
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nbsc-retention-deletion-report-${new Date().toISOString().split("T")[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("CSV report downloaded successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to download report");
+    }
+  };
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Top Warning Box */}
+      <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5">
+        <FaExclamationTriangle className="text-rose-400 shrink-0 mt-0.5 animate-pulse" size={16} />
+        <div>
+          <h4 className="text-rose-400 text-xs font-bold uppercase tracking-wider">Strict Compliance &amp; Permanent Purging</h4>
+          <p className="text-gray-300 text-xs mt-1 leading-relaxed">
+            Unclaimed items and related claims are kept under a **{gracePeriodDays}-day grace period** once soft-deleted. After {gracePeriodDays} days, they are permanently purged from the database every day at 2:00 AM. 
+            Before purging, administrators receive automated weekly email digests to allow for override restorations.
+          </p>
+        </div>
+      </div>
+
+      {/* Manual Actions Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <button
+          onClick={handleSendReport}
+          disabled={isSendingReport}
+          className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 hover:bg-gray-850 border border-white/10 disabled:opacity-50 text-gray-300 hover:text-white text-xs font-semibold rounded-xl transition-all"
+        >
+          <FaGlobe size={11} className={isSendingReport ? "animate-spin text-cyan-400" : "text-amber-400"} />
+          Send Weekly Deletion Report
+        </button>
+
+        <button
+          onClick={handlePurge}
+          disabled={isPurging}
+          className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 hover:bg-gray-850 border border-white/10 disabled:opacity-50 text-gray-300 hover:text-white text-xs font-semibold rounded-xl transition-all"
+        >
+          <FaTrash size={11} className={isPurging ? "animate-spin text-rose-400" : "text-rose-400"} />
+          Trigger Manual Deletion Purge
+        </button>
+
+        <button
+          onClick={handleDownloadReport}
+          className="flex items-center justify-center gap-2 px-4 py-3 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-cyan-950/20"
+        >
+          <FaDownload size={11} />
+          Download Compliance CSV
+        </button>
+      </div>
+
+      {/* Table Section */}
+      <SectionCard 
+        title={`Pending Deletions Queue (${pendingItems.length})`}
+        subtitle={`Soft-deleted records within their ${gracePeriodDays}-day grace period`}
+        action={
+          <button onClick={() => refetch()} disabled={isFetching} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-xs rounded-lg transition-all">
+            <FaSync size={9} className={isFetching ? "animate-spin" : ""} /> Refresh
+          </button>
+        }
+      >
+        <div className="overflow-x-auto">
+          {isLoading ? (
+            <div className="py-12 text-center text-gray-500">
+              <FaClock className="animate-spin mx-auto mb-3 opacity-30" size={20} />
+              <p className="text-xs">Loading deletion queue...</p>
+            </div>
+          ) : pendingItems.length === 0 ? (
+            <div className="py-16 text-center text-gray-500">
+              <FaCheckCircle className="mx-auto mb-3 text-emerald-400 opacity-20" size={28} />
+              <p className="text-sm">Compliance Queue is Clear</p>
+              <p className="text-xs mt-1 text-gray-600">No items are scheduled for permanent deletion within the next 7 days.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/5 max-h-[500px] overflow-y-auto custom-scrollbar">
+              <div className="hidden md:grid px-5 py-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold gap-4"
+                   style={{ gridTemplateColumns: "1fr 2.5fr 1.5fr 1.2fr" }}>
+                <div>Type</div>
+                <div>Record Description</div>
+                <div>Grace Period Expiry</div>
+                <div className="text-right">Actions</div>
+              </div>
+
+              {pendingItems.map((item: any) => {
+                const isUrgent = item.daysRemaining <= 3;
+                return (
+                  <div key={item.id} className="grid items-center px-5 py-3.5 gap-4 hover:bg-white/[0.02] transition-colors flex-col md:flex-row animate-fade-in"
+                       style={{ gridTemplateColumns: "1fr 2.5fr 1.5fr 1.2fr" }}>
+                    <div>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        item.type === "FoundItem" 
+                          ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
+                          : item.type === "LostItem"
+                          ? "bg-violet-500/10 border-violet-500/20 text-violet-400"
+                          : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                      }`}>
+                        {item.type}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white text-xs font-semibold truncate">{item.name}</p>
+                      <p className="font-mono text-[9px] text-gray-500 mt-0.5 truncate">UUID: {item.id}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-xs">{new Date(item.permanentDeletionDate).toLocaleDateString()}</p>
+                      <span className={`text-[10px] font-bold mt-0.5 inline-block ${
+                        isUrgent ? "text-rose-400" : "text-amber-400"
+                      }`}>
+                        ⏳ {item.daysRemaining} days remaining
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-end shrink-0">
+                      <button
+                        onClick={() => handleRestore(item.id, item.type)}
+                        disabled={isRestoring}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-lg transition-all"
+                      >
+                        Restore Record
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </SectionCard>
+    </div>
+  );
+};
+
+// ════════════════════════════════════════════════════════════════════════════════
+// SheetsReconciliationTab
+// ════════════════════════════════════════════════════════════════════════════════
+const SheetsReconciliationTab = () => {
+  const { data: statusData, isLoading, refetch, isFetching } = useGetReconciliationStatusQuery({}, { refetchOnMountOrArgChange: true });
+  const [resync, { isLoading: isResyncing }] = useResyncMissingItemsMutation();
+  const [triggerReport, { isLoading: isTriggering }] = useTriggerWeeklyReportMutation();
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+
+  const result = statusData?.data;
+  const discrepancies: any[] = result?.discrepancies ?? [];
+  const hasDiscrepancies = discrepancies.length > 0;
+
+  const toggleSelect = (id: string) =>
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const toggleAll = () =>
+    setSelectedIds(selectedIds.length === discrepancies.length ? [] : discrepancies.map((d: any) => d.id));
+
+  const handleResync = async (ids?: string[]) => {
+    const target = ids ?? selectedIds;
+    if (!target.length) return;
+    try {
+      const r: any = await resync({ itemIds: target }).unwrap();
+      toast.success(`Re-synced ${r.data?.success ?? 0} item(s) successfully`);
+      setSelectedIds([]);
+      refetch();
+    } catch { toast.error("Re-sync failed. Check console for details."); }
+  };
+
+  const handleTriggerReport = async () => {
+    try {
+      const r: any = await triggerReport({}).unwrap();
+      toast.success(r.message || "Reconciliation report sent to admins");
+      refetch();
+    } catch { toast.error("Failed to trigger report."); }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <SectionCard
+        title="Google Sheets Reconciliation"
+        subtitle="Compares database records (last 7 days) with Google Sheets logs to detect missing entries"
+        action={
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={() => refetch()} disabled={isFetching}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors disabled:opacity-50">
+              <FaSync size={10} className={isFetching ? "animate-spin" : ""} /> Run Check
+            </button>
+            <button onClick={handleTriggerReport} disabled={isTriggering}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors disabled:opacity-50">
+              <FaDownload size={10} className={isTriggering ? "animate-spin" : ""} /> Send Email Report
+            </button>
+          </div>
+        }
+      >
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4">
+          <StatCard label="Total Checked"      value={result?.totalChecked ?? 0}              color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"    icon={<FaDatabase size={14} className="text-cyan-400" />} />
+          <StatCard label="Discrepancies"      value={result?.discrepancies?.length ?? 0}     color={hasDiscrepancies ? "text-red-400" : "text-emerald-400"} bg={hasDiscrepancies ? "bg-red-400/10 border-red-400/20" : "bg-emerald-400/10 border-emerald-400/20"} icon={<FaExclamationTriangle size={14} className={hasDiscrepancies ? "text-red-400" : "text-emerald-400"} />} />
+          <StatCard label="Lost Missing"       value={result?.lostItemsDiscrepancies ?? 0}   color="text-red-400"     bg="bg-red-400/10 border-red-400/20"     icon={<FaTimesCircle size={14} className="text-red-400" />} />
+          <StatCard label="Found Missing"      value={result?.foundItemsDiscrepancies ?? 0}  color="text-orange-400"  bg="bg-orange-400/10 border-orange-400/20" icon={<FaCheckCircle size={14} className="text-orange-400" />} />
+        </div>
+      </SectionCard>
+
+      {/* Status Banner */}
+      {!isLoading && (
+        <div className={`rounded-xl border p-4 flex items-center gap-3 ${
+          hasDiscrepancies
+            ? "bg-red-500/5 border-red-500/20"
+            : "bg-emerald-500/5 border-emerald-500/20"
+        }`}>
+          {hasDiscrepancies
+            ? <FaExclamationTriangle className="text-red-400 shrink-0" size={16} />
+            : <FaCheckCircle className="text-emerald-400 shrink-0" size={16} />}
+          <div>
+            <p className={`text-sm font-semibold ${hasDiscrepancies ? "text-red-400" : "text-emerald-400"}`}>
+              {hasDiscrepancies
+                ? `${discrepancies.length} item${discrepancies.length !== 1 ? "s" : ""} missing from Google Sheets`
+                : "All items are properly synced ✓"}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {hasDiscrepancies
+                ? "These items exist in the database but are absent from your audit trail. Use Re-sync to fix them."
+                : "Database records and Google Sheets logs are in sync for the last 7 days."}
+            </p>
+          </div>
+          {hasDiscrepancies && selectedIds.length > 0 && (
+            <button onClick={() => handleResync()} disabled={isResyncing}
+              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors disabled:opacity-50 shrink-0">
+              <FaSync size={10} className={isResyncing ? "animate-spin" : ""} />
+              Re-sync Selected ({selectedIds.length})
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Discrepancies Table */}
+      {hasDiscrepancies && (
+        <SectionCard
+          title={`Missing Items (${discrepancies.length})`}
+          subtitle="Items found in the database but absent from Google Sheets"
+          action={
+            <button onClick={() => handleResync(discrepancies.map((d: any) => d.id))} disabled={isResyncing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors disabled:opacity-50">
+              <FaSync size={10} className={isResyncing ? "animate-spin" : ""} />
+              Re-sync All
+            </button>
+          }
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/5">
+                  <th className="px-4 py-3 text-left">
+                    <input type="checkbox"
+                      checked={selectedIds.length === discrepancies.length && discrepancies.length > 0}
+                      onChange={toggleAll}
+                      className="accent-cyan-500 w-3.5 h-3.5" />
+                  </th>
+                  <th className="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-wider">Type</th>
+                  <th className="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-wider">Item Name</th>
+                  <th className="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-wider">Reporter</th>
+                  <th className="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-wider">Location</th>
+                  <th className="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-wider">Created</th>
+                  <th className="px-4 py-3 text-right text-gray-500 font-medium uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {discrepancies.map((item: any) => (
+                  <tr key={item.id} className="border-b border-white/5 hover:bg-white/2 transition-colors">
+                    <td className="px-4 py-3">
+                      <input type="checkbox"
+                        checked={selectedIds.includes(item.id)}
+                        onChange={() => toggleSelect(item.id)}
+                        className="accent-cyan-500 w-3.5 h-3.5" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                        item.type === "LOST"
+                          ? "bg-red-500/10 text-red-400 border-red-500/20"
+                          : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      }`}>
+                        {item.type}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-200 font-medium">{item.itemName}</td>
+                    <td className="px-4 py-3 text-gray-400">{item.reporterName}</td>
+                    <td className="px-4 py-3 text-gray-400">{item.location}</td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {new Date(item.createdAt).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => handleResync([item.id])} disabled={isResyncing}
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors disabled:opacity-50">
+                        Re-sync
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !hasDiscrepancies && (
+        <div className="bg-gray-900 border border-white/5 rounded-2xl p-10 flex flex-col items-center gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-400/10 flex items-center justify-center">
+            <FaCheckCircle className="text-emerald-400" size={22} />
+          </div>
+          <p className="text-white font-semibold text-sm">All Clear</p>
+          <p className="text-gray-500 text-xs text-center max-w-xs">No discrepancies detected. All items from the last 7 days are properly logged in Google Sheets.</p>
+        </div>
+      )}
+
+      {/* Loading */}
+      {isLoading && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{Array.from({length:4}).map((_,i)=><div key={i} className="h-20 bg-gray-800/60 rounded-2xl animate-pulse"/>)}</div>
+      )}
+    </div>
+  );
+};
+
 // ════════════════════════════════════════════════════════════════════════════════
 // MAIN: SecurityCompliance
 // ════════════════════════════════════════════════════════════════════════════════
@@ -698,7 +1116,7 @@ const SecurityCompliance = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
       {/* Tabs */}
-      <div className="grid grid-cols-4 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
+      <div className="grid grid-cols-6 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
       {TABS.map(tab => {
         const Icon   = tab.icon;
         const active = activeTab === tab.id;
@@ -721,6 +1139,8 @@ const SecurityCompliance = () => {
       {activeTab === "access"     && <AccessControlTab />}
       {activeTab === "privacy"    && <DataPrivacyTab />}
       {activeTab === "compliance" && <ComplianceTab />}
+      {activeTab === "retention"  && <RetentionPolicyTab />}
+      {activeTab === "reconcile"  && <SheetsReconciliationTab />}
 
     </div>
   );

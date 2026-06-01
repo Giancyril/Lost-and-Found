@@ -75,7 +75,7 @@ const purgeExpiredItems = async (req: Request, res: Response) => {
   if (!checkAdminRole(req, res)) return;
 
   try {
-    const results = await retentionService.purgeExpiredItems();
+    const results = await retentionService.purgeExpiredItems(req.user ? { id: req.user.id, name: req.user.name || req.user.username } : undefined);
 
     sendResponse(res, {
       statusCode: 200,
@@ -117,7 +117,7 @@ const restoreItem = async (req: Request, res: Response) => {
       });
     }
 
-    const restoredItem = await retentionService.restoreItem(itemId, itemType);
+    const restoredItem = await retentionService.restoreItem(itemId, itemType, req.user ? { id: req.user.id, name: req.user.name || req.user.username } : undefined);
 
     sendResponse(res, {
       statusCode: 200,
@@ -141,7 +141,7 @@ const sendWeeklyReport = async (req: Request, res: Response) => {
   if (!checkAdminRole(req, res)) return;
 
   try {
-    await retentionService.sendWeeklyDeletionReport();
+    await retentionService.sendWeeklyDeletionReport(req.user ? { id: req.user.id, name: req.user.name || req.user.username } : undefined);
 
     sendResponse(res, {
       statusCode: 200,
