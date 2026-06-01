@@ -604,6 +604,7 @@ const api = baseApi.injectEndpoints({
     }),
     clearOldLogs: builder.mutation({
       query: () => ({ url: "/admin/security/logs", method: "DELETE" }),
+      invalidatesTags: ["loginLogs", "security"],
     }),
     exportUsers: builder.query({
       query: () => ({ url: "/admin/security/export-users", method: "GET" }),

@@ -213,14 +213,13 @@ const SecurityMonitorTab = () => {
   const handleClearLogs = async () => {
     if (!confirm("Clear all login logs older than 30 days?")) return;
     try {
-      const res: any = await clearLogs(undefined);
-      if (res?.data?.success) {
-        toast.success(res.data.message || "Logs cleared successfully");
-      } else if (res?.error) {
-        toast.error(res.error?.data?.message || "Failed to clear logs");
-      }
-    } catch (error) {
-      toast.error("Failed to clear logs");
+      const res: any = await clearLogs(undefined).unwrap();
+      toast.success(res.message || "Logs cleared successfully");
+      // Force refetch the logs after clearing
+      refetchLogs();
+      refetch();
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to clear logs");
     }
   };
 
