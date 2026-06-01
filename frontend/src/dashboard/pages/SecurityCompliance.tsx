@@ -22,13 +22,20 @@ import { getUserLocalStorage } from "../../auth/auth";
 const securityApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getSecurityStats:   builder.query({ query: () => ({ url: "/admin/security/stats",       method: "GET" }), providesTags:    ["security"] }),
-    getLoginLogs:       builder.query({ query: (s?: string) => ({ url: "/admin/security/logs", method: "GET", params: s ? { success: s } : {} }), providesTags: ["security"] }),
+    getLoginLogs:       builder.query({ 
+      query: (params?: { success?: boolean; limit?: number }) => ({ 
+        url: "/admin/security/logs", 
+        method: "GET", 
+        params 
+      }), 
+      providesTags: ["loginLogs"] 
+    }),
     getAccessControl:   builder.query({ query: () => ({ url: "/admin/security/access-control",      method: "GET" }), providesTags:    ["security"] }),
     getPrivacyStats:    builder.query({ query: () => ({ url: "/admin/security/privacy",     method: "GET" }), providesTags:    ["security"] }),
     exportUserData:     builder.query({ query: () => ({ url: "/admin/security/export",      method: "GET" }) }),
     getPurgeCheck:      builder.query({ query: () => ({ url: "/admin/security/purge-check", method: "GET" }) }),
     getComplianceReport:builder.query({ query: () => ({ url: "/admin/security/compliance",  method: "GET" }), providesTags:    ["security"] }),
-    clearOldLogs:       builder.mutation({ query: () => ({ url: "/admin/security/logs",     method: "DELETE" }), invalidatesTags: ["security"] }),
+    clearOldLogs:       builder.mutation({ query: () => ({ url: "/admin/security/logs",     method: "DELETE" }), invalidatesTags: ["loginLogs", "security"] }),
     
     // Retention Policy Engine Endpoints
     getPendingDeletions: builder.query({ query: () => ({ url: "/admin/retention/pending", method: "GET" }), providesTags: ["security"] }),
@@ -192,9 +199,14 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
 // ════════════════════════════════════════════════════════════════════════════════
 const SecurityMonitorTab = () => {
   const { data: statsData, isLoading, refetch } = useGetSecurityStatsQuery(undefined);
-  const [clearLogs, { isLoading: isClearing }] = useClearOldLogsMutation();
-  const [logFilter, setLogFilter] = useState("");
-  const { data: logsData, refetch: refetchLogs } = useGetLoginLogsQuery(logFilter || undefined);
+  const [clearLogs] = useClearOldLogsMutation();
+  const [logFilter, setLogFilter] = useState<"" | "true" | "false">("");
+  
+  // Build params object based on filter
+  const params = logFilter === "" ? undefined : { success: logFilter === "true" };
+  
+  // Use regular query with params
+  const { data: logsData, isLoading: logsLoading, refetch: refetchLogs } = useGetLoginLogsQuery(params);
   const stats = statsData?.data;
   const logs: any[] = logsData?.data || [];
 
@@ -204,9 +216,8 @@ const SecurityMonitorTab = () => {
       const res: any = await clearLogs(undefined);
       if (res?.data?.success) {
         toast.success(res.data.message || "Logs cleared successfully");
-        refetchLogs(); // Refetch logs after clearing
-      } else {
-        toast.error("Failed to clear logs");
+      } else if (res?.error) {
+        toast.error(res.error?.data?.message || "Failed to clear logs");
       }
     } catch (error) {
       toast.error("Failed to clear logs");
@@ -301,7 +312,7 @@ const SecurityMonitorTab = () => {
               className="flex items-center gap-1 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] font-bold rounded-lg transition-all whitespace-nowrap">
               <FaDownload size={8} /> Export
             </button>
-            <button onClick={handleClearLogs} disabled={isClearing}
+            <button onClick={handleClearLogs}
               className="flex items-center gap-1 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-lg transition-all whitespace-nowrap">
               <FaTrash size={8} /> Clear
             </button>
