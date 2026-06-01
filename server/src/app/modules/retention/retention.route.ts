@@ -1,6 +1,6 @@
 import express from "express";
 import { retentionController } from "./retention.controller";
-import auth from "../../middlewares/auth";
+import auth from "../../midddlewares/auth";
 
 const router = express.Router();
 
