@@ -25,6 +25,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Archive System**: Automated archiving of stale items to keep the database clean
 - **Audit Logging**: Comprehensive audit trail for all administrative actions
 - **Sheets Activity Logger**: Every lost and found report submission is logged to a Google Sheet in real time for offline recordkeeping and audit trails
+- **Google Sheets Reconciliation**: Automated weekly integrity checker that compares database records with Google Sheets logs to detect silent logging failures caused by network errors or offline submissions. Runs every Sunday at 11:00 PM, sends email alerts to administrators when discrepancies are found, and provides one-click re-sync functionality to automatically fix missing entries. Ensures complete audit trail for compliance.
 - **Image Handling**:
   - **Image Compression**: Uploaded images are automatically compressed client-side before submission to reduce bandwidth and storage usage
   - **Multi-Image Upload**: Found items support up to 6 images per report with a cover photo selector
@@ -161,6 +162,7 @@ A dedicated security and governance layer for administrators.
 - **Soft-Delete Policy**: Items are never hard-deleted immediately; they enter a 30-day "grace period" before permanent removal.
 - **Audit Traceability**: Every sensitive action (Approvals/Rejections) is logged with the Admin's unique ID for accountability.
 - **Retention Policy Engine**: Automated data lifecycle management with weekly deletion reports sent to administrators every Monday, listing items pending permanent deletion within 7 days. Includes a 30-day grace period for item restoration, automated daily purge jobs, and comprehensive admin dashboard for viewing, restoring, and managing soft-deleted items. Fully compliant with school audit requirements.
+- **Google Sheets Reconciliation**: Weekly automated audit trail integrity checker (runs every Sunday at 11:00 PM) that compares database records with Google Sheets logs to detect silent logging failures. Sends email alerts to administrators when discrepancies are found and provides one-click re-sync functionality to fix missing entries. Ensures complete offline backup for compliance and prevents audit trail gaps.
 
 
 ### Content Moderation
@@ -619,3 +621,10 @@ Here is the difference between the two:
   - **Admin Dashboard API**: View pending deletions, download CSV reports, restore items, and manually trigger operations
   - **Audit Compliance**: Complete audit trail with timestamps, email delivery tracking, and CSV exports for school compliance requirements
   - **SendGrid Integration**: Professional email delivery with delivery tracking and error handling
+- **Google Sheets Reconciliation System**: Automated weekly audit trail integrity checker that compares database records with Google Sheets logs to detect and alert administrators of any discrepancies caused by network failures, offline submissions, or webhook errors. Features include:
+  - **Weekly Automated Check**: Runs every Sunday at 11:00 PM, checking all items from the last 7 days
+  - **Discrepancy Detection**: Identifies items that exist in the database but are missing from Google Sheets
+  - **Email Alerts**: Sends detailed HTML reports to all active administrators with missing item lists and statistics
+  - **One-Click Re-Sync**: Admin dashboard button to automatically re-log missing items to Google Sheets
+  - **Detailed Reporting**: Shows lost/found breakdown, reporter names, locations, and creation dates
+  - **Silent Failure Prevention**: Catches logging failures that would otherwise go unnoticed until audits

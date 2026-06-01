@@ -204,7 +204,7 @@ const resyncMissingItems = async (itemIds: string[]): Promise<{ success: number;
   for (const itemId of itemIds) {
     try {
       // Try to find in lost items first
-      let item = await prisma.lostItem.findUnique({
+      let item: any = await prisma.lostItem.findUnique({
         where: { id: itemId },
         include: { category: true },
       });
@@ -225,19 +225,24 @@ const resyncMissingItems = async (itemIds: string[]): Promise<{ success: number;
           continue;
         }
 
-        item = foundItem as any;
+        item = foundItem;
         type = "FOUND";
         sheetName = "Found Items";
       }
+
+      // At this point, item is guaranteed to be non-null
+      const itemName = type === "LOST" 
+        ? (item as any).lostItemName 
+        : (item as any).foundItemName;
 
       // Prepare log data
       const logData = {
         sheetName,
         timestamp: item.createdAt.toISOString(),
-        studentId: (item as any).schoolEmail ? (item as any).schoolEmail.split("@")[0] : "N/A",
-        reporterName: (item as any).reporterName || "Anonymous",
-        email: (item as any).schoolEmail || "N/A",
-        itemName: (item as any).lostItemName || (item as any).foundItemName,
+        studentId: item.schoolEmail ? item.schoolEmail.split("@")[0] : "N/A",
+        reporterName: item.reporterName || "Anonymous",
+        email: item.schoolEmail || "N/A",
+        itemName,
         description: item.description,
         location: item.location,
         date: item.date.toISOString(),
