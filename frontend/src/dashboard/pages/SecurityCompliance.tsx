@@ -194,15 +194,23 @@ const SecurityMonitorTab = () => {
   const { data: statsData, isLoading, refetch } = useGetSecurityStatsQuery(undefined);
   const [clearLogs, { isLoading: isClearing }] = useClearOldLogsMutation();
   const [logFilter, setLogFilter] = useState("");
-  const { data: logsData } = useGetLoginLogsQuery(logFilter || undefined);
+  const { data: logsData, refetch: refetchLogs } = useGetLoginLogsQuery(logFilter || undefined);
   const stats = statsData?.data;
   const logs: any[] = logsData?.data || [];
 
   const handleClearLogs = async () => {
     if (!confirm("Clear all login logs older than 30 days?")) return;
-    const res: any = await clearLogs(undefined);
-    if (res?.data?.success) toast.success(res.data.message);
-    else toast.error("Failed to clear logs");
+    try {
+      const res: any = await clearLogs(undefined);
+      if (res?.data?.success) {
+        toast.success(res.data.message || "Logs cleared successfully");
+        refetchLogs(); // Refetch logs after clearing
+      } else {
+        toast.error("Failed to clear logs");
+      }
+    } catch (error) {
+      toast.error("Failed to clear logs");
+    }
   };
 
   if (isLoading) return (
