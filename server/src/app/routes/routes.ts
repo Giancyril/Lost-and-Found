@@ -39,6 +39,7 @@ import {
 } from "../utils/communicationController";
 import { achievementController } from "../modules/achievement/achievement.controller";
 import { bountyRoutes } from "../modules/bounty/bounty.routes";
+import { retentionRoutes } from "../modules/retention/retention.route";
 
 import {
   getSecurityStats,
@@ -178,6 +179,9 @@ router.post("/admin/backfill-students", auth(), userController.backfillStudentDa
 
 //////////////////////////////////////////////// bounties //////////////////////////////////////////////
 router.use("/bounties", bountyRoutes);
+
+//////////////////////////////////////////////// retention policy //////////////////////////////////////////////
+router.use("/admin/retention", retentionRoutes);
 
 // Communication Hub stats
 router.get("/admin/comm-hub/stats", auth(), getCommHubStats);

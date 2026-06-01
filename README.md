@@ -147,12 +147,20 @@ A dedicated security and governance layer for administrators.
   - Scheduled report generation
   - Export to PDF/CSV
   - Audit-ready logs for data access, modifications, and deletions
+- **Retention Policy Engine**: Automated data lifecycle management system ensuring compliance with data retention policies
+  - 30-day grace period for soft-deleted items with restoration capability
+  - Weekly deletion reports sent to administrators every Monday at 9:00 AM
+  - Automated daily purge of expired items at 2:00 AM
+  - Admin dashboard for viewing pending deletions, downloading CSV reports, and restoring items
+  - Complete audit trail with email delivery tracking for school compliance
+  - Configurable grace periods and schedules via cron jobs
 
 ### Data Governance & Privacy
 - **ID Anonymization**: Sensitive student ID numbers are masked in public views.
 - **Institutional Guardrails**: Only `@nbsc.edu.ph` emails are permitted for student accounts.
 - **Soft-Delete Policy**: Items are never hard-deleted immediately; they enter a 30-day "grace period" before permanent removal.
 - **Audit Traceability**: Every sensitive action (Approvals/Rejections) is logged with the Admin's unique ID for accountability.
+- **Retention Policy Engine**: Automated data lifecycle management with weekly deletion reports sent to administrators every Monday, listing items pending permanent deletion within 7 days. Includes a 30-day grace period for item restoration, automated daily purge jobs, and comprehensive admin dashboard for viewing, restoring, and managing soft-deleted items. Fully compliant with school audit requirements.
 
 
 ### Content Moderation
@@ -212,6 +220,7 @@ A dedicated moderation layer for managing user-generated content, enforcing comm
 - **Socket.io** for real-time communication
 - **Redis** for caching and session management
 - **Web Push API** with VAPID for cross-platform background notifications
+- **node-cron** for scheduled jobs (retention policy, bounty management)
 
 ### Frontend
 - **React 19** with TypeScript
@@ -603,3 +612,10 @@ Here is the difference between the two:
 - **AI Fraud & 'Serial Claimant' Prevention Engine**: A dual-layer security mechanism. A heuristic layer flags users submitting 3+ claims in 30 days. Then, Gemini AI cross-references the claimant's "Proof of Ownership" against hidden item details to detect vague guesses or blatant lies, emitting a 0-100% Risk Score and instant red FRAUD ALERTS on the Admin claims dashboard.
 - **Recognition Feed (VIRTUE Spotlight)**: Fully-responsive and beautifully integrated admin dashboard and home hero feed for creating and showcasing student role-model spotlight posts, celebrating community integrity and high civic standards.
 - **AI-Powered Spotlight Story Writer**: Seamless integration of Google Gemini (`gemini-2.5-flash`) inside the Recognition Feed creation modal, permitting administrators to generate heartwarming and inspiring recognition narratives from quick notes or bullet points.
+- **Retention Policy Engine**: Comprehensive data lifecycle management system with automated weekly deletion reports (every Monday at 9:00 AM) sent to all administrators, listing items pending permanent deletion within 7 days. Features include:
+  - **30-Day Grace Period**: Soft-deleted items retained for 30 days before permanent deletion
+  - **Weekly Email Reports**: HTML-formatted reports with item details, days remaining, and restoration instructions
+  - **Automated Daily Purge**: Scheduled job (2:00 AM daily) that permanently deletes expired items
+  - **Admin Dashboard API**: View pending deletions, download CSV reports, restore items, and manually trigger operations
+  - **Audit Compliance**: Complete audit trail with timestamps, email delivery tracking, and CSV exports for school compliance requirements
+  - **SendGrid Integration**: Professional email delivery with delivery tracking and error handling
