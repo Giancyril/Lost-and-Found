@@ -79,6 +79,30 @@ const api = baseApi.injectEndpoints({
     deleteMyFoundItem: builder.mutation({
       query: (id: string) => ({ url: `/my/foundItem/${id}`, method: "DELETE" }),
       invalidatesTags: ["myFoundItems", "foundItems"],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        // Optimistically remove from found items list
+        const patchFoundItems = dispatch(
+          api.util.updateQueryData('getFoundItems', undefined as any, (draft: any) => {
+            if (draft?.data) {
+              draft.data = draft.data.filter((item: any) => item.id !== id);
+            }
+          })
+        );
+        // Optimistically remove from archived items if present
+        const patchArchived = dispatch(
+          api.util.updateQueryData('getArchivedFoundItems', undefined, (draft: any) => {
+            if (draft?.data) {
+              draft.data = draft.data.filter((item: any) => item.id !== id);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchFoundItems.undo();
+          patchArchived.undo();
+        }
+      },
     }),
 
     // profile
@@ -115,16 +139,70 @@ const api = baseApi.injectEndpoints({
     updateClaimStatus: builder.mutation({
       query: ({ claimId, ...data }: any) => ({ url: `/claims/${claimId}`, method: "PUT", body: data }),
       invalidatesTags: ["adminData", "claims", "auditLogs", "points"],
+      async onQueryStarted({ claimId, status }, { dispatch, queryFulfilled }) {
+        // Optimistically update claim status in all claims list
+        const patchResult = dispatch(
+          api.util.updateQueryData('getAllClaims', undefined, (draft: any) => {
+            if (draft?.data) {
+              const claim = draft.data.find((c: any) => c.id === claimId);
+              if (claim) {
+                claim.status = status;
+                claim.updatedAt = new Date().toISOString();
+              }
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     updateClaimStatusWithNote: builder.mutation({
       query: ({ claimId, status, note }: { claimId: string; status: string; note?: string }) => ({
         url: `/claims/${claimId}`, method: "PUT", body: { status, note },
       }),
       invalidatesTags: ["adminData", "claims", "auditLogs", "points"],
+      async onQueryStarted({ claimId, status, note }, { dispatch, queryFulfilled }) {
+        // Optimistically update claim status
+        const patchResult = dispatch(
+          api.util.updateQueryData('getAllClaims', undefined, (draft: any) => {
+            if (draft?.data) {
+              const claim = draft.data.find((c: any) => c.id === claimId);
+              if (claim) {
+                claim.status = status;
+                claim.note = note;
+                claim.updatedAt = new Date().toISOString();
+              }
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     deleteClaim: builder.mutation({
       query: (claimId: string) => ({ url: `/claims/${claimId}`, method: "DELETE" }),
       invalidatesTags: ["adminData", "claims", "auditLogs"],
+      async onQueryStarted(claimId, { dispatch, queryFulfilled }) {
+        // Optimistically remove claim from list
+        const patchResult = dispatch(
+          api.util.updateQueryData('getAllClaims', undefined, (draft: any) => {
+            if (draft?.data) {
+              draft.data = draft.data.filter((c: any) => c.id !== claimId);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
 
     // admin stats
@@ -158,10 +236,43 @@ const api = baseApi.injectEndpoints({
     blockUser: builder.mutation({
       query: (id: string) => ({ url: `/block/user/${id}`, method: "PUT" }),
       invalidatesTags: ["users"],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        // Optimistically update user blocked status
+        const patchResult = dispatch(
+          api.util.updateQueryData('getAllUsers', undefined, (draft: any) => {
+            if (draft?.data) {
+              const user = draft.data.find((u: any) => u.id === id);
+              if (user) {
+                user.isBlocked = !user.isBlocked;
+              }
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     softDeleteUser: builder.mutation({
       query: (id: string) => ({ url: `/delete-user/${id}`, method: "DELETE" }),
       invalidatesTags: ["users"],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        // Optimistically remove user from list
+        const patchResult = dispatch(
+          api.util.updateQueryData('getAllUsers', undefined, (draft: any) => {
+            if (draft?.data) {
+              draft.data = draft.data.filter((u: any) => u.id !== id);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     getAllUsers: builder.query({
       query: () => ({ url: "/users", method: "GET" }),
@@ -236,10 +347,51 @@ const api = baseApi.injectEndpoints({
     archiveFoundItem: builder.mutation({
       query: (id: string) => ({ url: `/found-items/${id}/archive`, method: "PUT" }),
       invalidatesTags: ["foundItems"],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        // Optimistically remove from stale items
+        const patchStale = dispatch(
+          api.util.updateQueryData('getStaleFoundItems', undefined, (draft: any) => {
+            if (draft?.data) {
+              draft.data = draft.data.filter((item: any) => item.id !== id);
+            }
+          })
+        );
+        // Optimistically add to archived items
+        const patchArchived = dispatch(
+          api.util.updateQueryData('getArchivedFoundItems', undefined, (draft: any) => {
+            const staleData = api.endpoints.getStaleFoundItems.select(undefined)(dispatch as any).data;
+            const item = staleData?.data?.find((i: any) => i.id === id);
+            if (item && draft?.data) {
+              draft.data.unshift({ ...item, isArchived: true, archivedAt: new Date().toISOString() });
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchStale.undo();
+          patchArchived.undo();
+        }
+      },
     }),
     restoreFoundItem: builder.mutation({
       query: (id: string) => ({ url: `/found-items/${id}/restore`, method: "PUT" }),
       invalidatesTags: ["foundItems"],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        // Optimistically remove from archived items
+        const patchArchived = dispatch(
+          api.util.updateQueryData('getArchivedFoundItems', undefined, (draft: any) => {
+            if (draft?.data) {
+              draft.data = draft.data.filter((item: any) => item.id !== id);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchArchived.undo();
+        }
+      },
     }),
 
     // AI search
@@ -278,16 +430,68 @@ const api = baseApi.injectEndpoints({
     deleteBulletinPost: builder.mutation({
       query: (id: string) => ({ url: `/bulletin-posts/${id}`, method: "DELETE" }),
       invalidatesTags: ["bulletinPosts"],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        // Optimistically remove bulletin post
+        const patchResult = dispatch(
+          api.util.updateQueryData('getBulletinPosts', undefined as any, (draft: any) => {
+            if (draft?.data) {
+              draft.data = draft.data.filter((post: any) => post.id !== id);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     deleteBulletinTip: builder.mutation({
       query: ({ postId, tipId }: { postId: string; tipId: string }) => ({
         url: `/bulletin-posts/${postId}/tips/${tipId}`, method: "DELETE",
       }),
       invalidatesTags: ["bulletinPosts"],
+      async onQueryStarted({ postId, tipId }, { dispatch, queryFulfilled }) {
+        // Optimistically remove tip from post
+        const patchResult = dispatch(
+          api.util.updateQueryData('getBulletinPosts', undefined as any, (draft: any) => {
+            if (draft?.data) {
+              const post = draft.data.find((p: any) => p.id === postId);
+              if (post?.tips) {
+                post.tips = post.tips.filter((t: any) => t.id !== tipId);
+              }
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     resolveBulletinPost: builder.mutation({
       query: (id: string) => ({ url: `/bulletin-posts/${id}/resolve`, method: "PUT" }),
       invalidatesTags: ["bulletinPosts"],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        // Optimistically mark post as resolved
+        const patchResult = dispatch(
+          api.util.updateQueryData('getBulletinPosts', undefined as any, (draft: any) => {
+            if (draft?.data) {
+              const post = draft.data.find((p: any) => p.id === id);
+              if (post) {
+                post.isResolved = true;
+                post.resolvedAt = new Date().toISOString();
+              }
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
 
     // comments
@@ -313,6 +517,21 @@ const api = baseApi.injectEndpoints({
         method: "DELETE",
       }),
       invalidatesTags: ["comments"],
+      async onQueryStarted({ commentId, itemId }, { dispatch, queryFulfilled }) {
+        // Optimistically remove comment
+        const patchResult = dispatch(
+          api.util.updateQueryData('getComments', { itemId, itemType: 'found' } as any, (draft: any) => {
+            if (draft?.data) {
+              draft.data = draft.data.filter((c: any) => c.id !== commentId);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     updateComment: builder.mutation({
       query: ({ commentId, itemId, ...data }: any) => ({
@@ -433,6 +652,29 @@ const api = baseApi.injectEndpoints({
     deleteVirtueSpotlight: builder.mutation({
       query: (id: string) => ({ url: `/virtue-spotlights/${id}`, method: "DELETE" }),
       invalidatesTags: ["virtueSpotlights"] as any,
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        // Optimistically remove spotlight
+        const patchAll = dispatch(
+          api.util.updateQueryData('getAllVirtueSpotlights', undefined, (draft: any) => {
+            if (draft?.data) {
+              draft.data = draft.data.filter((s: any) => s.id !== id);
+            }
+          })
+        );
+        const patchPublic = dispatch(
+          api.util.updateQueryData('getVirtueSpotlights', undefined, (draft: any) => {
+            if (draft?.data) {
+              draft.data = draft.data.filter((s: any) => s.id !== id);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchAll.undo();
+          patchPublic.undo();
+        }
+      },
     }),
     aiWriteVirtueSpotlight: builder.mutation({
       query: (bulletPoints: string) => ({
