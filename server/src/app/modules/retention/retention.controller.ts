@@ -3,9 +3,26 @@ import { retentionService } from "./retention.service";
 import sendResponse from "../../global/response";
 
 /**
+ * Check if user is admin
+ */
+const checkAdminRole = (req: Request, res: Response): boolean => {
+  if (!req.user || req.user.role !== "ADMIN") {
+    sendResponse(res, {
+      statusCode: 403,
+      success: false,
+      message: "Access denied. Admin privileges required.",
+    });
+    return false;
+  }
+  return true;
+};
+
+/**
  * Get items pending deletion (admin only)
  */
 const getItemsPendingDeletion = async (req: Request, res: Response) => {
+  if (!checkAdminRole(req, res)) return;
+
   try {
     const items = await retentionService.getItemsPendingDeletion();
 
@@ -33,6 +50,8 @@ const getItemsPendingDeletion = async (req: Request, res: Response) => {
  * Download CSV report of items pending deletion (admin only)
  */
 const downloadDeletionReport = async (req: Request, res: Response) => {
+  if (!checkAdminRole(req, res)) return;
+
   try {
     const items = await retentionService.getItemsPendingDeletion();
     const csv = retentionService.generateCSVReport(items);
@@ -53,6 +72,8 @@ const downloadDeletionReport = async (req: Request, res: Response) => {
  * Manually trigger purge of expired items (admin only)
  */
 const purgeExpiredItems = async (req: Request, res: Response) => {
+  if (!checkAdminRole(req, res)) return;
+
   try {
     const results = await retentionService.purgeExpiredItems();
 
@@ -75,6 +96,8 @@ const purgeExpiredItems = async (req: Request, res: Response) => {
  * Restore a soft-deleted item (admin only)
  */
 const restoreItem = async (req: Request, res: Response) => {
+  if (!checkAdminRole(req, res)) return;
+
   try {
     const { itemId, itemType } = req.body;
 
@@ -115,6 +138,8 @@ const restoreItem = async (req: Request, res: Response) => {
  * Manually trigger weekly deletion report email (admin only)
  */
 const sendWeeklyReport = async (req: Request, res: Response) => {
+  if (!checkAdminRole(req, res)) return;
+
   try {
     await retentionService.sendWeeklyDeletionReport();
 

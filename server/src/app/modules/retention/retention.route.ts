@@ -5,21 +5,11 @@ import auth from "../../midddlewares/auth";
 const router = express.Router();
 
 // All retention policy routes require admin authentication
-router.use(auth("ADMIN"));
-
-// Get items pending deletion
-router.get("/pending", retentionController.getItemsPendingDeletion);
-
-// Download CSV report
-router.get("/report/download", retentionController.downloadDeletionReport);
-
-// Manually trigger purge
-router.post("/purge", retentionController.purgeExpiredItems);
-
-// Restore a soft-deleted item
-router.post("/restore", retentionController.restoreItem);
-
-// Manually send weekly report
-router.post("/report/send", retentionController.sendWeeklyReport);
+// Note: Admin role checking is handled by the auth middleware and controller logic
+router.get("/pending", auth(), retentionController.getItemsPendingDeletion);
+router.get("/report/download", auth(), retentionController.downloadDeletionReport);
+router.post("/purge", auth(), retentionController.purgeExpiredItems);
+router.post("/restore", auth(), retentionController.restoreItem);
+router.post("/report/send", auth(), retentionController.sendWeeklyReport);
 
 export const retentionRoutes = router;
