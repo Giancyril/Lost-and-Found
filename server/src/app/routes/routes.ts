@@ -26,6 +26,7 @@ import { postCreationLimiter, tipSubmissionLimiter } from "../midddlewares/bulle
 import { getMatchNotifications } from "../utils/getMatchNotifications";
 import { studentRoutes } from "../modules/student/student.routes";
  import sheetsRoutes from "../modules/sheets/sheets.routes";
+ import { reconciliationRoutes } from "../modules/sheets/reconciliation.route";
  import { chatRoutes } from "../modules/chat/chat.routes";
 import { pushRoutes } from "../modules/push/push.routes";
 import { uploadImages, uploadAudio } from "../midddlewares/upload";
@@ -158,6 +159,7 @@ router.put("/bulletin-posts/:id/resolve", auth(), bulletinPostController.resolve
 
  router.use("/students", studentRoutes);
 router.use("/sheets", sheetsRoutes);
+router.use("/admin/reconciliation", reconciliationRoutes);
  router.use("/chat", chatRoutes);
 router.use("/notifications", pushRoutes);
 router.use("/", commentsRouter);
