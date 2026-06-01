@@ -5,9 +5,13 @@
 // Uses node-cron (already in package.json). Call `startMasterlistSync()` once
 // during server startup — it runs an immediate warm-up fetch, then schedules
 // the recurring job.
+//
+// Redis is OPTIONAL — if Redis is not available, the sync job will skip
+// gracefully and the system will continue using Google Sheets directly.
 
 import cron from "node-cron";
 import { setMasterlistCache } from "./masterlist.cache";
+import { isRedisConnected } from "../../config/redis";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -51,6 +55,12 @@ const parseGvizResponse = (data: string): StudentRow[] => {
  * Safe to call manually (e.g. from an admin "force refresh" endpoint).
  */
 export const syncMasterlistNow = async (): Promise<{ success: boolean; count: number; error?: string }> => {
+  // Skip sync if Redis is not available
+  if (!isRedisConnected()) {
+    console.log("[Sync] Redis not available - skipping masterlist sync");
+    return { success: false, count: 0, error: "Redis not available" };
+  }
+
   console.log("[Sync] Fetching masterlist from Google Sheets…");
   try {
     const response = await fetch(GVIZ_URL);
@@ -78,6 +88,12 @@ export const syncMasterlistNow = async (): Promise<{ success: boolean; count: nu
  *  2. Schedules the recurring 6-hour cron job.
  */
 export const startMasterlistSync = (): void => {
+  // Check if Redis is available before starting sync
+  if (!isRedisConnected()) {
+    console.log("[Sync] Redis not available - masterlist sync disabled (using Google Sheets only)");
+    return;
+  }
+
   // 1 — Warm-up (async, does not block startup)
   syncMasterlistNow().then(result => {
     if (!result.success) {
