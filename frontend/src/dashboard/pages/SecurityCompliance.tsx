@@ -1036,11 +1036,8 @@ const SheetsReconciliationTab = () => {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-white/5">
-                  <th className="px-4 py-3 text-left">
-                    <input type="checkbox"
-                      checked={selectedIds.length === discrepancies.length && discrepancies.length > 0}
-                      onChange={toggleAll}
-                      className="accent-cyan-500 w-3.5 h-3.5" />
+                  <th className="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-wider">
+                    Select
                   </th>
                   <th className="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-wider">Type</th>
                   <th className="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-wider">Item Name</th>
@@ -1057,7 +1054,7 @@ const SheetsReconciliationTab = () => {
                       <input type="checkbox"
                         checked={selectedIds.includes(item.id)}
                         onChange={() => toggleSelect(item.id)}
-                        className="accent-cyan-500 w-3.5 h-3.5" />
+                        className="accent-cyan-500 w-3.5 h-3.5 cursor-pointer" />
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
