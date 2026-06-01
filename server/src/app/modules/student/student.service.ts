@@ -2,11 +2,16 @@
 // Fix: return `department` as alias for `course` so all consumers
 // (ReportLostItem, BarcodeScannerModal, handleFetchDetails) get the
 // field they expect without any frontend changes.
+//
+// Cache upgrade: fetchMasterlist() now checks Redis first (< 5 ms).
+// Gviz is only hit on a cache miss (cold start or expired TTL).
+// The background sync job (masterlist.sync.ts) keeps Redis warm every 6 h.
 
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../global/error";
 import prisma from "../../config/prisma";
 import axios from "axios";
+import { getMasterlistCache } from "./masterlist.cache";
 
 const SHEET_ID         = "1-uxgLmMS13UbC_BvcVjxeGjlJUgykvRIbb4D0y7zrPI";
 const MASTERLIST_SHEET = "Copy of Master List";
@@ -44,7 +49,7 @@ const parseGvizResponse = (data: string) => {
   try {
     const startIdx = data.indexOf("(");
     const endIdx = data.lastIndexOf(")");
-    
+
     if (startIdx === -1 || endIdx === -1) {
       console.error("[Masterlist] Invalid Gviz response format. Raw data starts with:", data.substring(0, 100));
       throw new Error("Invalid Gviz response format (missing parentheses)");
@@ -52,7 +57,7 @@ const parseGvizResponse = (data: string) => {
 
     const jsonStr = data.substring(startIdx + 1, endIdx);
     const json    = JSON.parse(jsonStr);
-    
+
     if (!json.table || !json.table.rows) {
       console.error("[Masterlist] Unexpected JSON structure:", JSON.stringify(json).substring(0, 200));
       throw new Error("Gviz response missing table/rows");
@@ -65,16 +70,42 @@ const parseGvizResponse = (data: string) => {
   }
 };
 
+// ── Masterlist fetcher (cache-first) ─────────────────────────────────────────
+
+/**
+ * Returns the full student masterlist.
+ *
+ * Priority:
+ *   1. Redis cache  → sub-5 ms, works during Sheets outages
+ *   2. Gviz (live)  → fallback on cache miss or Redis unavailability
+ *
+ * All existing Gviz logic (axios, User-Agent header, 10s timeout,
+ * parseGvizResponse error handling) is preserved unchanged.
+ */
 const fetchMasterlist = async () => {
+  // ── 1. Try Redis cache ──────────────────────────────────────────────────────
+  try {
+    const cached = await getMasterlistCache();
+    if (cached && cached.length > 0) {
+      console.log(`[Masterlist] Cache hit – ${cached.length} students`);
+      return cached;
+    }
+    console.log("[Masterlist] Cache miss – falling back to Gviz");
+  } catch (cacheErr) {
+    // Redis is down / unreachable — degrade gracefully to Gviz
+    console.warn("[Masterlist] Redis unavailable, falling back to Gviz:", cacheErr);
+  }
+
+  // ── 2. Fallback: Gviz (Google Sheets) ───────────────────────────────────────
   try {
     console.log("[Masterlist] Fetching from:", GVIZ_URL);
     const response = await axios.get(GVIZ_URL, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
       },
-      timeout: 10000 // 10s timeout
+      timeout: 10000, // 10s timeout
     });
-    
+
     if (response.status !== 200) {
       console.error("[Masterlist] Google Sheets HTTP Error:", response.status, response.statusText);
       throw new AppError(
@@ -87,7 +118,7 @@ const fetchMasterlist = async () => {
   } catch (err: any) {
     console.error("[Masterlist] Pipeline Failure:", {
       message: err.message,
-      url: GVIZ_URL
+      url: GVIZ_URL,
     });
     if (err instanceof AppError) throw err;
     throw new AppError(
@@ -152,8 +183,8 @@ const getStudentByDetails = async (name: string, email: string) => {
 
     // Email / ID signals
     if (searchEmail) {
-      if (rowEmail === searchEmail)   score += 100;
-      if (rowId    === searchId)      score += 100;
+      if (rowEmail === searchEmail) score += 100;
+      if (rowId    === searchId)    score += 100;
     }
 
     // Name matching — each word in the search must appear in the row name
