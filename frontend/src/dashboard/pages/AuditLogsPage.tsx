@@ -56,6 +56,56 @@ const getActionBadgeClass = (action: string) => {
   return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
 };
 
+const ChangesDataRenderer = ({ data, align = "right" }: { data: string | null | undefined; align?: "left" | "right" }) => {
+  if (!data) return <span className="text-gray-600 text-[10px]">—</span>;
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(data);
+  } catch {
+    return (
+      <div className="max-w-xs text-gray-400 font-mono text-[10px] bg-black/20 p-1.5 rounded text-left truncate" title={data}>
+        {data}
+      </div>
+    );
+  }
+
+  if (typeof parsed !== "object" || parsed === null) {
+    return (
+      <div className="max-w-xs text-gray-400 font-mono text-[10px] bg-black/20 p-1.5 rounded text-left truncate" title={String(parsed)}>
+        {String(parsed)}
+      </div>
+    );
+  }
+
+  const formatKey = (key: string) => {
+    const result = key.replace(/([A-Z])/g, " $1");
+    return result.charAt(0).toUpperCase() + result.slice(1);
+  };
+
+  return (
+    <div className={`flex flex-wrap gap-1 max-w-xs ${align === "right" ? "justify-end" : "justify-start"}`}>
+      {Object.entries(parsed).map(([key, val]: [string, any]) => {
+        let displayVal = val;
+        if (Array.isArray(val)) {
+          displayVal = `[${val.length} items]`;
+        } else if (typeof val === "object" && val !== null) {
+          displayVal = JSON.stringify(val);
+        } else {
+          displayVal = String(val);
+        }
+
+        return (
+          <div key={key} className="flex items-center gap-1 bg-black/30 px-1.5 py-0.5 rounded border border-white/5 text-[9px] text-gray-300 font-mono select-none" title={`${key}: ${displayVal}`}>
+            <span className="text-gray-500 font-semibold">{formatKey(key)}:</span>
+            <span className="text-cyan-400 truncate max-w-[120px]">{displayVal}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 export default function AuditLogsPage() {
   const { data: auditData, isLoading, refetch, isFetching } = useGetSystemAuditLogsQuery({});
   const logs = auditData?.data || [];
@@ -129,7 +179,7 @@ export default function AuditLogsPage() {
       {/* ── Desktop Table ── */}
       <div className="hidden md:block bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         <div className="grid px-5 py-3 border-b border-white/5 text-[10px] uppercase tracking-widest text-gray-600 font-semibold gap-4"
-             style={{ gridTemplateColumns: "2fr 2fr 1fr 1.5fr 1.5fr" }}>
+             style={{ gridTemplateColumns: "2fr 2fr 1.8fr 1.2fr 2.5fr" }}>
           <div>Timestamp</div>
           <div>Admin / User</div>
           <div>Action</div>
@@ -151,7 +201,7 @@ export default function AuditLogsPage() {
           <div className="divide-y divide-white/[0.04]">
             {filteredLogs.map((log: any) => (
               <div key={log.id} className="grid items-center px-5 py-3.5 gap-4 hover:bg-white/[0.02] transition-colors"
-                   style={{ gridTemplateColumns: "2fr 2fr 1fr 1.5fr 1.5fr" }}>
+                   style={{ gridTemplateColumns: "2fr 2fr 1.8fr 1.2fr 2.5fr" }}>
                 <div className="text-[11px] text-gray-400">
                   {format(new Date(log.createdAt), "MMM d, yyyy HH:mm:ss")}
                 </div>
@@ -161,8 +211,8 @@ export default function AuditLogsPage() {
                   </div>
                   <span className="text-xs text-white font-medium">{log.performedBy || "System"}</span>
                 </div>
-                <div>
-                  <span className={`border px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getActionBadgeClass(log.action)}`}>
+                <div className="min-w-0 flex items-center">
+                  <span className={`border px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider truncate whitespace-nowrap ${getActionBadgeClass(log.action)}`} title={log.action}>
                     {log.action}
                   </span>
                 </div>
@@ -171,13 +221,7 @@ export default function AuditLogsPage() {
                   <span className="font-mono text-[9px] text-gray-500 mt-0.5 truncate">{log.entityId || "N/A"}</span>
                 </div>
                 <div className="text-xs min-w-0 flex justify-end">
-                  {log.newData ? (
-                    <div className="max-w-xs truncate text-gray-400 font-mono text-[10px] bg-black/20 p-1.5 rounded text-left" title={log.newData}>
-                      {log.newData}
-                    </div>
-                  ) : (
-                    <span className="text-gray-600 text-[10px]">—</span>
-                  )}
+                  <ChangesDataRenderer data={log.newData} align="right" />
                 </div>
               </div>
             ))}
@@ -226,10 +270,8 @@ export default function AuditLogsPage() {
 
             {log.newData && (
               <div className="pt-2 border-t border-white/5">
-                <p className="text-gray-600 text-[10px] uppercase tracking-widest mb-1">Changes</p>
-                <div className="text-gray-400 font-mono text-[10px] bg-black/30 p-2 rounded-lg break-words overflow-x-auto max-h-24 custom-scrollbar">
-                  {log.newData}
-                </div>
+                <p className="text-gray-600 text-[10px] uppercase tracking-widest mb-1.5">Changes</p>
+                <ChangesDataRenderer data={log.newData} align="left" />
               </div>
             )}
           </div>

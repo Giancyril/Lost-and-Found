@@ -806,7 +806,7 @@ const RetentionPolicyTab = () => {
         <FaExclamationTriangle className="text-rose-400 shrink-0 mt-0.5 animate-pulse" size={16} />
         <div>
           <h4 className="text-rose-400 text-xs font-bold uppercase tracking-wider">Strict Compliance &amp; Permanent Purging</h4>
-          <p className="text-gray-300 text-xs mt-1 leading-relaxed">
+          <p className="text-gray-300 text-xs mt-1 leading-relaxed text-justify">
             Unclaimed items and related claims are kept under a **{gracePeriodDays}-day grace period** once soft-deleted. After {gracePeriodDays} days, they are permanently purged from the database every day at 2:00 AM. 
             Before purging, administrators receive automated weekly email digests to allow for override restorations.
           </p>
@@ -1073,7 +1073,7 @@ const SheetsReconciliationTab = () => {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button onClick={() => handleResync([item.id])} disabled={isResyncing}
-                        className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors disabled:opacity-50">
+                        className="px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[9px] sm:text-[10px] font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors disabled:opacity-50 whitespace-nowrap">
                         Re-sync
                       </button>
                     </td>
