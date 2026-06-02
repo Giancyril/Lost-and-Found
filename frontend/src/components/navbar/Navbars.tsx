@@ -255,12 +255,14 @@ export function Navbars() {
   const isAdmin = users?.role === "ADMIN";
   const isLoggedIn = !!(users?.email || users?.id);
 
-  const { data: pointsData, refetch: refetchPoints } = useGetMyPointsQuery(undefined, {
+  const { data: pointsData, refetch: refetchPoints, isError } = useGetMyPointsQuery(undefined, {
     skip: !isLoggedIn || isAdmin,
     pollingInterval: 120_000,
+    refetchOnMountOrArgChange: true,
   });
   const { data: boardData } = useGetLeaderboardQuery(undefined, {
     skip: !isLoggedIn || isAdmin,
+    refetchOnMountOrArgChange: true,
   });
 
   const points = pointsData?.data?.totalPoints ?? 0;
@@ -288,8 +290,15 @@ export function Navbars() {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn && !isAdmin) refetchPoints();
-  }, [isLoggedIn, isAdmin]);
+    // Only refetch if user is authenticated and not admin
+    // Add a small delay to prevent multiple simultaneous calls
+    if (isLoggedIn && !isAdmin) {
+      const timer = setTimeout(() => {
+        refetchPoints();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoggedIn, isAdmin, refetchPoints]);
 
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

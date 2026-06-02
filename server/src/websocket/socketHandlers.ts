@@ -153,14 +153,15 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
     });
   });
 
-  socket.on('send-message', async (data: { chatRoomId: string, content: string }) => {
+  socket.on('send-message', async (data: { chatRoomId: string, content: string, replyTo?: any }) => {
     try {
       if (!socket.userId) throw new Error('Unauthorized');
 
       const message = await chatService.saveMessage(
         data.chatRoomId,
         socket.userId,
-        data.content
+        data.content,
+        data.replyTo?.id
       );
 
       const roomName = `chat-${data.chatRoomId}`;
@@ -188,6 +189,41 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
     } catch (error) {
       console.error('Error sending message:', error);
       socket.emit('error', { message: 'Failed to send message' });
+    }
+  });
+
+  socket.on('delete-message', async (data: { messageId: string, chatRoomId: string }) => {
+    try {
+      if (!socket.userId) throw new Error('Unauthorized');
+      
+      await chatService.deleteMessage(data.messageId, socket.userId);
+      
+      const roomName = `chat-${data.chatRoomId}`;
+      io.to(roomName).emit('message-deleted', { messageId: data.messageId });
+      
+      console.log(`Message ${data.messageId} deleted by ${socket.userId}`);
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      socket.emit('error', { message: 'Failed to delete message' });
+    }
+  });
+
+  socket.on('add-reaction', async (data: { messageId: string, chatRoomId: string, emoji: string }) => {
+    try {
+      if (!socket.userId) throw new Error('Unauthorized');
+      
+      const updatedMessage = await chatService.addReaction(data.messageId, socket.userId, data.emoji);
+      
+      const roomName = `chat-${data.chatRoomId}`;
+      io.to(roomName).emit('reaction-updated', { 
+        messageId: data.messageId, 
+        reactions: updatedMessage.reactions 
+      });
+      
+      console.log(`Reaction ${data.emoji} added to message ${data.messageId} by ${socket.userId}`);
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+      socket.emit('error', { message: 'Failed to add reaction' });
     }
   });
 };

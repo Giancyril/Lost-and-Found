@@ -16,9 +16,16 @@ function App() {
   useSessionTimeout();
   const { current, dismiss } = useAchievementWatcher();
 
-  // Fetch CSRF token on app initialization
+  // Fetch CSRF token on app initialization (only if backend is likely running)
   useEffect(() => {
-    fetchCsrfToken();
+    // Delay CSRF fetch to avoid blocking app startup
+    const timer = setTimeout(() => {
+      fetchCsrfToken().catch(() => {
+        // Silent fail - will retry when needed
+      });
+    }, 2000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   return (

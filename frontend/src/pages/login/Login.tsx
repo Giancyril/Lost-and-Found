@@ -121,10 +121,12 @@ const Login = () => {
       if (res?.data) {
         localStorage.removeItem(STORAGE_KEY);
         setAttempts(0);
-        Modals({ message: "Logged in successfully", status: true });
         setUserLocalStorage(res?.data?.data?.token);
-        navigate("/");
-        window.location.reload();
+        Modals({ message: "Logged in successfully", status: true });
+        // Small delay to ensure token is set before navigation
+        setTimeout(() => {
+          navigate("/");
+        }, 100);
       } else {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);

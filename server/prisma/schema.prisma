@@ -384,6 +384,11 @@ model ChatMessage {
   senderId   String
   content    String
   createdAt  DateTime @default(now())
+  isDeleted  Boolean  @default(false)
+  reactions  Json?    @default("[]")
+  replyToId  String?
+  replyTo    ChatMessage? @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies    ChatMessage[] @relation("MessageReplies")
   chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   sender     User     @relation(fields: [senderId], references: [id])
 

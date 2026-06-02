@@ -161,12 +161,14 @@ const OnboardingTour = () => {
       return;
     }
 
+    // Wait for user verification to complete before showing tour
+    // This prevents tour from showing during login/navigation transitions
     const done = localStorage.getItem(STORAGE_KEY);
-    if (!done) {
-      const t = setTimeout(() => setVisible(true), 800);
+    if (!done && user !== null) {
+      const t = setTimeout(() => setVisible(true), 1200);
       return () => clearTimeout(t);
     }
-  }, [location.pathname, isAdmin]);
+  }, [location.pathname, isAdmin, user]);
 
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, "1");

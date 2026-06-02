@@ -132,8 +132,12 @@ const router = createBrowserRouter([
 
 import { fetchCsrfToken } from "./redux/api/baseApi";
 
-// Initialize CSRF token before rendering
-fetchCsrfToken();
+// Initialize CSRF token asynchronously (don't block render)
+setTimeout(() => {
+  fetchCsrfToken().catch(() => {
+    // Silent fail - will retry when needed
+  });
+}, 1000);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

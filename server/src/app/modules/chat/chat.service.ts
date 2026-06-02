@@ -58,19 +58,34 @@ const createOrGetChatRoom = async (claimId: string | null, participants: string[
   });
 };
 
-const saveMessage = async (chatRoomId: string, senderId: string, content: string) => {
+const saveMessage = async (chatRoomId: string, senderId: string, content: string, replyToId?: string) => {
   const message = await (prisma as any).chatMessage.create({
     data: {
       chatRoomId,
       senderId,
       content,
+      replyToId: replyToId || null,
     },
     include: {
       sender: {
         select: {
           id: true,
           username: true,
+          name: true,
+          role: true,
           userImg: true,
+        },
+      },
+      replyTo: {
+        include: {
+          sender: {
+            select: {
+              id: true,
+              username: true,
+              name: true,
+              role: true,
+            },
+          },
         },
       },
     },
@@ -138,7 +153,21 @@ const getMessages = async (chatRoomId: string) => {
         select: {
           id: true,
           username: true,
+          name: true,
+          role: true,
           userImg: true,
+        },
+      },
+      replyTo: {
+        include: {
+          sender: {
+            select: {
+              id: true,
+              username: true,
+              name: true,
+              role: true,
+            },
+          },
         },
       },
     },
@@ -214,6 +243,53 @@ const deleteChatRoom = async (chatRoomId: string, userId: string) => {
   });
 };
 
+const deleteMessage = async (messageId: string, userId: string) => {
+  const message = await (prisma as any).chatMessage.findUnique({
+    where: { id: messageId },
+  });
+
+  if (!message || message.senderId !== userId) {
+    throw new Error("Message not found or unauthorized");
+  }
+
+  return await (prisma as any).chatMessage.update({
+    where: { id: messageId },
+    data: { 
+      isDeleted: true, 
+      content: "Message deleted" 
+    },
+  });
+};
+
+const addReaction = async (messageId: string, userId: string, emoji: string) => {
+  const message = await (prisma as any).chatMessage.findUnique({
+    where: { id: messageId },
+  });
+
+  if (!message) {
+    throw new Error("Message not found");
+  }
+
+  const reactions = Array.isArray(message.reactions) ? message.reactions : [];
+  const existingIndex = reactions.findIndex(
+    (r: any) => r.emoji === emoji && r.userId === userId
+  );
+
+  let updatedReactions;
+  if (existingIndex !== -1) {
+    // Remove reaction if exists (toggle off)
+    updatedReactions = reactions.filter((_: any, i: number) => i !== existingIndex);
+  } else {
+    // Add reaction
+    updatedReactions = [...reactions, { emoji, userId }];
+  }
+
+  return await (prisma as any).chatMessage.update({
+    where: { id: messageId },
+    data: { reactions: updatedReactions },
+  });
+};
+
 export const chatService = {
   createOrGetChatRoom,
   saveMessage,
@@ -223,4 +299,6 @@ export const chatService = {
   markRoomAsRead,
   markRoomAsUnread,
   deleteChatRoom,
+  deleteMessage,
+  addReaction,
 };

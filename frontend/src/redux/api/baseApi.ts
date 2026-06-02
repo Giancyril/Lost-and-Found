@@ -22,13 +22,26 @@ let csrfToken: string | null = null;
 // Function to fetch and set CSRF token
 export const fetchCsrfToken = async () => {
   try {
-    const response = await fetch(`${getBaseUrl()}/csrf-token`, { credentials: "include" });
+    const response = await fetch(`${getBaseUrl()}/csrf-token`, { 
+      credentials: "include",
+      signal: AbortSignal.timeout(5000) // 5 second timeout
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
     const data = await response.json();
     if (data.token) {
       csrfToken = data.token;
+      console.log('✅ CSRF token fetched successfully');
     }
   } catch (error) {
-    console.error("Failed to fetch CSRF token", error);
+    // Silently fail - CSRF token is optional for most operations
+    // The baseQueryWithReauth will retry if we get a 403 csrf error
+    if (error instanceof Error && error.name !== 'AbortError') {
+      console.warn('⚠️ CSRF token fetch failed (will retry if needed):', error.message);
+    }
   }
 };
 

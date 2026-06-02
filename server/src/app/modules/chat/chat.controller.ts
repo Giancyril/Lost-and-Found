@@ -81,6 +81,31 @@ const deleteConversation = async (req: Request, res: Response) => {
   });
 };
 
+const deleteMessage = async (req: Request, res: Response) => {
+  const { messageId } = req.params;
+  const userId = (req as any).user.id;
+  const result = await chatService.deleteMessage(messageId, userId);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Message deleted successfully",
+    data: result,
+  });
+};
+
+const addReaction = async (req: Request, res: Response) => {
+  const { messageId } = req.params;
+  const { emoji } = req.body;
+  const userId = (req as any).user.id;
+  const result = await chatService.addReaction(messageId, userId, emoji);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Reaction added successfully",
+    data: result,
+  });
+};
+
 export const chatController = {
   getMyChatRooms,
   getChatMessages,
@@ -88,4 +113,6 @@ export const chatController = {
   markAsRead,
   markAsUnread,
   deleteConversation,
+  deleteMessage,
+  addReaction,
 };
