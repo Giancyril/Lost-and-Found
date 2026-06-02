@@ -25,6 +25,20 @@ export const chatApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["chat"],
     }),
+    markAsUnread: builder.mutation({
+      query: (roomId) => ({
+        url: `/chat/mark-as-unread/${roomId}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["chat"],
+    }),
+    deleteConversation: builder.mutation({
+      query: (roomId) => ({
+        url: `/chat/rooms/${roomId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["chat"],
+    }),
   }),
 });
 
@@ -33,4 +47,6 @@ export const {
   useGetChatMessagesQuery,
   useInitiateChatMutation,
   useMarkAsReadMutation,
+  useMarkAsUnreadMutation,
+  useDeleteConversationMutation,
 } = chatApi;

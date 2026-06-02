@@ -171,6 +171,49 @@ const markRoomAsRead = async (chatRoomId: string, userId: string) => {
   });
 };
 
+const markRoomAsUnread = async (chatRoomId: string, userId: string) => {
+  // Delete the read status to mark as unread
+  const result = await (prisma as any).chatReadStatus.deleteMany({
+    where: {
+      chatRoomId,
+      userId,
+    },
+  });
+  console.log(`[Chat Service] Marked room ${chatRoomId} as unread for user ${userId}. Deleted ${result.count} read status(es).`);
+  return result;
+};
+
+const deleteChatRoom = async (chatRoomId: string, userId: string) => {
+  // First, verify the user is a participant
+  const room = await (prisma as any).chatRoom.findFirst({
+    where: {
+      id: chatRoomId,
+      participants: {
+        has: userId,
+      },
+    },
+  });
+
+  if (!room) {
+    throw new Error("Chat room not found or unauthorized");
+  }
+
+  // Delete all messages in the room
+  await (prisma as any).chatMessage.deleteMany({
+    where: { chatRoomId },
+  });
+
+  // Delete read statuses
+  await (prisma as any).chatReadStatus.deleteMany({
+    where: { chatRoomId },
+  });
+
+  // Delete the room
+  return await (prisma as any).chatRoom.delete({
+    where: { id: chatRoomId },
+  });
+};
+
 export const chatService = {
   createOrGetChatRoom,
   saveMessage,
@@ -178,4 +221,6 @@ export const chatService = {
   getMessages,
   getChatRoomById,
   markRoomAsRead,
+  markRoomAsUnread,
+  deleteChatRoom,
 };

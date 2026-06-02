@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FaPaperPlane, FaUserCircle, FaInbox, FaCircle, FaArrowLeft } from "react-icons/fa";
-import { useGetMyChatRoomsQuery, useGetChatMessagesQuery, useMarkAsReadMutation } from "../../redux/api/chatApi";
+import { FaPaperPlane, FaUserCircle, FaInbox, FaCircle, FaArrowLeft, FaEllipsisV, FaEnvelopeOpen, FaTrash } from "react-icons/fa";
+import { useGetMyChatRoomsQuery, useGetChatMessagesQuery, useMarkAsReadMutation, useMarkAsUnreadMutation, useDeleteConversationMutation } from "../../redux/api/chatApi";
 import { useSocket } from "../../hooks/useSocket";
 import { getUserLocalStorage } from "../../auth/auth";
 import { format } from "date-fns";
@@ -16,14 +16,63 @@ const ChatPage = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
   const typingTimeoutRef = useRef<any>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [skipAutoRead, setSkipAutoRead] = useState(false);
 
   const token = getUserLocalStorage();
   const { socket, isConnected } = useSocket({ autoConnect: true, token: token || "" });
-  const { data: roomsData, isLoading: roomsLoading } = useGetMyChatRoomsQuery(undefined);
+  const { data: roomsData, isLoading: roomsLoading, refetch: refetchRooms } = useGetMyChatRoomsQuery(undefined);
   const { data: initialMessages, isLoading: messagesLoading } = useGetChatMessagesQuery(activeRoomId, {
     skip: !activeRoomId,
   });
   const [markAsRead] = useMarkAsReadMutation();
+  const [markAsUnread] = useMarkAsUnreadMutation();
+  const [deleteConversation] = useDeleteConversationMutation();
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleMarkAsUnread = async (roomId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenMenuId(null); // Close menu immediately for better UX
+    try {
+      // If marking the current active room as unread, set skipAutoRead flag
+      if (roomId === activeRoomId) {
+        setSkipAutoRead(true);
+      }
+      await markAsUnread(roomId).unwrap();
+      await refetchRooms();
+      toast.success("Marked as unread");
+    } catch (error) {
+      console.error('[Chat] Failed to mark as unread:', error);
+      toast.error("Failed to mark as unread");
+    }
+  };
+
+  const handleDeleteConversation = async (roomId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenMenuId(null); // Close menu immediately
+    if (confirm("Delete this conversation? This cannot be undone.")) {
+      try {
+        await deleteConversation(roomId).unwrap();
+        toast.success("Conversation deleted");
+        if (roomId === activeRoomId) {
+          setSearchParams({});
+        }
+      } catch (error) {
+        toast.error("Failed to delete conversation");
+      }
+    }
+  };
 
 
 
@@ -33,14 +82,22 @@ const ChatPage = () => {
   const unreadCount = rooms.filter((room: any) => {
     const lastMsg = room.messages?.[0];
     const lastReadAt = room.readStatuses?.[0]?.lastReadAt;
-    return lastMsg && (!lastReadAt || new Date(lastMsg.createdAt) > new Date(lastReadAt)) && lastMsg.senderId !== currentUser.id;
+    // Show as unread if: 1) no read status exists, OR 2) last message is newer than last read time
+    return lastMsg && (!lastReadAt || new Date(lastMsg.createdAt) > new Date(lastReadAt));
   }).length;
 
   useEffect(() => {
-    if (activeRoomId) {
-      markAsRead(activeRoomId);
+    if (activeRoomId && !skipAutoRead) {
+      markAsRead(activeRoomId).catch((err) => {
+        console.error('[Chat] Failed to auto-mark as read:', err);
+      });
     }
-  }, [activeRoomId, markAsRead]);
+    // Reset skipAutoRead after a very short delay (just enough to prevent the race condition)
+    if (skipAutoRead) {
+      const timer = setTimeout(() => setSkipAutoRead(false), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeRoomId, markAsRead, skipAutoRead]);
 
   useEffect(() => {
     if (!socket) return;
@@ -179,33 +236,92 @@ const ChatPage = () => {
                 ? (otherUser.role === "ADMIN" ? "Admin" : (otherUser.name || otherUser.username))
                 : (room.claim?.foundItem?.foundItemName || "Lost Item");
 
-              // Unread logic
+              // Unread logic - show blue dot if no read status OR if last message is newer than last read
               const lastReadAt = room.readStatuses?.[0]?.lastReadAt;
-              const hasUnread = lastMsg && (!lastReadAt || new Date(lastMsg.createdAt) > new Date(lastReadAt)) && lastMsg.senderId !== currentUser.id;
+              const hasUnread = lastMsg && (!lastReadAt || new Date(lastMsg.createdAt) > new Date(lastReadAt));
 
               return (
-                <button key={room.id} onClick={() => handleSelectRoom(room.id)}
-                  className={`w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 ${isActive
-                    ? "bg-blue-500/10 border border-blue-500/20"
-                    : "hover:bg-white/5 border border-transparent hover:border-white/5"
-                    }`}>
-                  <div className="w-9 h-9 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0 relative">
-                    <FaUserCircle className="text-gray-500" size={20} />
-                    {hasUnread && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 border-2 border-gray-900 rounded-full" />}
+                <div key={room.id} className="relative">
+                  <div
+                    onClick={() => handleSelectRoom(room.id)}
+                    className={`w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 cursor-pointer ${isActive
+                      ? "bg-blue-500/10 border border-blue-500/20"
+                      : "hover:bg-white/5 border border-transparent hover:border-white/5"
+                      }`}>
+                    <div className="w-9 h-9 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0 relative">
+                      <FaUserCircle className="text-gray-500" size={20} />
+                      {hasUnread && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 border-2 border-gray-900 rounded-full" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-semibold truncate ${isActive || hasUnread ? "text-white" : "text-gray-300"}`}>
+                        {displayName}
+                      </p>
+                      <p className="text-[9px] text-gray-500 uppercase tracking-tighter truncate">
+                        {room.claim?.foundItem?.foundItemName || "General Chat"}
+                      </p>
+                      <p className={`text-[11px] truncate mt-0.5 ${hasUnread ? "text-blue-400 font-medium" : "text-gray-500"}`}>
+                        {lastMsg?.content || "No messages yet"}
+                      </p>
+                    </div>
+                    {isActive && <FaCircle className="text-blue-400 shrink-0" size={6} />}
+                    
+                    {/* 3-Dot Menu Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === room.id ? null : room.id);
+                      }}
+                      className="w-7 h-7 rounded-lg hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0"
+                    >
+                      <FaEllipsisV size={12} />
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-semibold truncate ${isActive || hasUnread ? "text-white" : "text-gray-300"}`}>
-                      {displayName}
-                    </p>
-                    <p className="text-[9px] text-gray-500 uppercase tracking-tighter truncate">
-                      {room.claim?.foundItem?.foundItemName || "General Chat"}
-                    </p>
-                    <p className={`text-[11px] truncate mt-0.5 ${hasUnread ? "text-blue-400 font-medium" : "text-gray-500"}`}>
-                      {lastMsg?.content || "No messages yet"}
-                    </p>
-                  </div>
-                  {isActive && <FaCircle className="text-blue-400 shrink-0" size={6} />}
-                </button>
+                  
+                  {/* Dropdown Menu */}
+                  {openMenuId === room.id && (
+                    <div
+                      ref={menuRef}
+                      className="absolute right-2 top-full mt-1 w-48 bg-gray-800 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 animate-fadeIn"
+                    >
+                      {/* Show Mark as Read/Unread based on current state */}
+                      {!hasUnread ? (
+                        <button
+                          onClick={(e) => handleMarkAsUnread(room.id, e)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-xs text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
+                        >
+                          <FaEnvelopeOpen size={12} className="text-blue-400" />
+                          <span>Mark as unread</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(null); // Close menu immediately
+                            try {
+                              await markAsRead(room.id).unwrap();
+                              toast.success("Marked as read");
+                              refetchRooms();
+                            } catch (error) {
+                              toast.error("Failed to mark as read");
+                            }
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-xs text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
+                        >
+                          <FaEnvelopeOpen size={12} className="text-green-400" />
+                          <span>Mark as read</span>
+                        </button>
+                      )}
+                      <div className="h-px bg-white/5" />
+                      <button
+                        onClick={(e) => handleDeleteConversation(room.id, e)}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-xs text-red-400 hover:bg-red-500/10 transition-colors"
+                      >
+                        <FaTrash size={12} />
+                        <span>Delete conversation</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             })
           )}
