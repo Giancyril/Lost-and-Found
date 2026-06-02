@@ -59,6 +59,13 @@ const saveKeywords = () => {
 loadKeywords();
 
 export const containsBlockedKeyword = (text: string): string | null => {
+  // ✅ SECURITY: ReDoS Protection - Limit input length
+  const MAX_LENGTH = 10000; // 10,000 characters max
+  if (text.length > MAX_LENGTH) {
+    console.warn(`[Moderation] Input too long (${text.length} chars), truncating to ${MAX_LENGTH}`);
+    text = text.substring(0, MAX_LENGTH);
+  }
+
   const lower = text.toLowerCase();
   return BLOCKED_KEYWORDS.find(kw => lower.includes(kw)) || null;
 };
@@ -354,6 +361,18 @@ export const testContent = async (req: Request, res: Response) => {
     if (!text) {
       return sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: "text is required", data: null });
     }
+
+    // ✅ SECURITY: ReDoS Protection - Reject extremely long inputs
+    const MAX_TEST_LENGTH = 10000;
+    if (text.length > MAX_TEST_LENGTH) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.BAD_REQUEST,
+        success: false,
+        message: `Text too long for testing (max ${MAX_TEST_LENGTH} characters)`,
+        data: null,
+      });
+    }
+
     const hit = containsBlockedKeyword(text);
     sendResponse(res, {
       statusCode: StatusCodes.OK, success: true,

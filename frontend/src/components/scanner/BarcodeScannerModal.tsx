@@ -24,29 +24,50 @@ interface Props {
 const autoEmail = (id: string) =>
   id ? `${id.replace(/\s+/g, "")}@${EMAIL_DOMAIN}` : "";
 
+// ✅ SECURITY: Sanitize HTML to prevent XSS injection
+function sanitizeText(text: string): string {
+  if (!text) return "";
+  // Remove all HTML tags and dangerous characters
+  return text
+    .replace(/<[^>]*>/g, "") // Remove HTML tags
+    .replace(/[<>'"&]/g, "") // Remove dangerous characters
+    .replace(/javascript:/gi, "") // Remove javascript: protocol
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, "") // Remove event handlers
+    .trim();
+}
+
 // ── Parse barcode payload ─────────────────────────────────────────────────────
 function parseBarcodeText(raw: string): ScannedStudent | null {
-  const text = raw.trim();
+  // ✅ SECURITY: Limit input length to prevent DoS
+  const MAX_LENGTH = 1000;
+  if (raw.length > MAX_LENGTH) {
+    console.warn(`[Scanner] Input too long (${raw.length} chars), truncating`);
+    raw = raw.substring(0, MAX_LENGTH);
+  }
+
+  const text = sanitizeText(raw);
   if (!text) return null;
 
   if (text.startsWith("{")) {
     try {
       const obj = JSON.parse(text);
-      const name = obj.name || obj.borrowerName || obj.fullName || "";
-      const email = obj.email || obj.borrowerEmail || "";
-      const id = String(obj.id || obj.studentId || obj.student_id || "");
+      const name = sanitizeText(obj.name || obj.borrowerName || obj.fullName || "");
+      const email = sanitizeText(obj.email || obj.borrowerEmail || "");
+      const id = sanitizeText(String(obj.id || obj.studentId || obj.student_id || ""));
+      const department = sanitizeText(obj.department || obj.dept || obj.borrowerDepartment || "");
+      
       if (!name && !email && !id) return null;
       return {
         id,
         name: name || "Unknown Student",
-        department: obj.department || obj.dept || obj.borrowerDepartment || "",
+        department,
         email: email || autoEmail(id),
         raw: text,
       };
     } catch { /* fall through */ }
   }
 
-  const parts = text.split("|").map((p: string) => p.trim());
+  const parts = text.split("|").map((p: string) => sanitizeText(p));
   if (parts.length >= 2) {
     const id = parts[0] || "";
     return {
@@ -63,15 +84,15 @@ function parseBarcodeText(raw: string): ScannedStudent | null {
 
   const emailMatch = remainder.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
   if (emailMatch) {
-    extractedEmail = emailMatch[1];
-    remainder = remainder.replace(extractedEmail, "").trim();
+    extractedEmail = sanitizeText(emailMatch[1]);
+    remainder = remainder.replace(emailMatch[1], "").trim();
   }
 
   const idMatch = remainder.match(/\b(\d{4,})\b/);
-  const extractedId = idMatch ? idMatch[1] : "";
+  const extractedId = idMatch ? sanitizeText(idMatch[1]) : "";
   if (idMatch) remainder = remainder.replace(idMatch[0], "").trim();
 
-  const cleanName = remainder.replace(/^[,\-\s]+|[,\-\s]+$/g, "").trim();
+  const cleanName = sanitizeText(remainder.replace(/^[,\-\s]+|[,\-\s]+$/g, ""));
 
   return {
     id: extractedId || text,

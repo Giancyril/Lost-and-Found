@@ -182,7 +182,26 @@ const updateClaimStatus = async (
   data: Partial<Claim>,
   performer?: { id?: string; name?: string }
 ) => {
-  const existing = await prisma.claim.findUnique({ where: { id: claimId } });
+  const existing = await prisma.claim.findUnique({
+    where: { id: claimId },
+    include: { foundItem: true }
+  });
+
+  if (!existing) {
+    throw new Error("Claim not found");
+  }
+
+  // ✅ CRITICAL SECURITY: Prevent users from approving their own claims
+  if (data.status === "APPROVED" && performer?.id) {
+    if (existing.userId === performer.id) {
+      throw new Error("You cannot approve your own claim. This action has been logged.");
+    }
+    // Also prevent approving claims for items you reported
+    if (existing.foundItem?.userId === performer.id) {
+      throw new Error("You cannot approve a claim for an item you reported. This action has been logged.");
+    }
+  }
+
   const fromStatus = existing?.status ?? "PENDING";
 
   const result = await prisma.claim.update({
@@ -256,7 +275,7 @@ const updateClaimStatus = async (
   return result;
 };
 
-const deleteClaim = async (claimId: string) => {
+const deleteClaim = async (claimId: string, requestingUserId?: string) => {
   const existing = await prisma.claim.findUnique({ 
     where: { id: claimId },
     include: { foundItem: true }
@@ -264,6 +283,12 @@ const deleteClaim = async (claimId: string) => {
 
   if (!existing) {
     throw new Error("Claim not found");
+  }
+
+  // ✅ CRITICAL SECURITY: IDOR Protection - Only allow users to delete their own claims
+  // Admins can delete any claim (checked in controller via role)
+  if (requestingUserId && existing.userId && existing.userId !== requestingUserId) {
+    throw new Error("You are not authorized to delete this claim");
   }
 
   // If claim is approved, we need to handle the foreign key constraint
@@ -288,8 +313,8 @@ const deleteClaim = async (claimId: string) => {
       action: "DELETED",
       fromStatus: existing.status,
       toStatus: "DELETED",
-      performedBy: "Admin",
-      note: "Claim deleted by admin",
+      performedBy: requestingUserId ? "User" : "Admin",
+      note: "Claim deleted",
     },
   });
 

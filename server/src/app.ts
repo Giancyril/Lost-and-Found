@@ -20,6 +20,17 @@ const ALLOWED_ORIGINS = [
   "https://lost-and-found-liart-seven.vercel.app",
 ];
 
+// ✅ SECURITY: CORS Configuration Check
+// WARNING: Remove localhost origins before deploying to production
+if (process.env.NODE_ENV === "production") {
+  const devOrigins = ALLOWED_ORIGINS.filter(origin => origin.includes("localhost") || origin.includes("127.0.0.1"));
+  if (devOrigins.length > 0) {
+    console.error("⚠️  SECURITY WARNING: Development origins detected in production CORS policy:");
+    console.error(devOrigins);
+    console.error("Remove these origins from ALLOWED_ORIGINS before deploying!");
+  }
+}
+
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow requests with no origin (e.g. curl, server-to-server, or mobile apps)

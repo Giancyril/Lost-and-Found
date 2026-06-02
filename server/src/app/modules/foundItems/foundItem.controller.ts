@@ -342,6 +342,16 @@ const uploadFoundItemImages = async (req: Request, res: Response) => {
       });
     }
 
+    // ✅ SECURITY: Server-side validation of image count (defense in depth)
+    if (files.length > 5) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.BAD_REQUEST,
+        success: false,
+        message: "Maximum 5 images allowed per item",
+        data: null,
+      });
+    }
+
     const uploadedUrls = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];

@@ -23,6 +23,7 @@ import { sendLostItemEmail, sendClaimApprovedEmail } from "../utils/emailControl
 import { bulletinPostController } from "../modules/bulletinPost/bulletinPost.controller";
 import { createPostSchema, createTipSchema } from "../modules/bulletinPost/bulletinPost.validate";
 import { postCreationLimiter, tipSubmissionLimiter } from "../midddlewares/bulletinRateLimit";
+import { loginRateLimiter, registerRateLimiter } from "../midddlewares/authRateLimit";
 import { getMatchNotifications } from "../utils/getMatchNotifications";
 import { studentRoutes } from "../modules/student/student.routes";
  import sheetsRoutes from "../modules/sheets/sheets.routes";
@@ -65,10 +66,11 @@ import {
 const router = express.Router();
 
 ////////////////////////////////////////////////// user //////////////////////////////////////////////
-router.post("/register", userController.registerUser);
+// ✅ SECURITY: Rate limiting applied to prevent brute-force attacks
+router.post("/register", registerRateLimiter, userController.registerUser);
 router.get("/users", userController.allUsers);
-router.post("/login", validateRequest(UserSchema.userLoginSchema), authController.login);
-router.post("/portal-login", authController.portalLogin);
+router.post("/login", loginRateLimiter, validateRequest(UserSchema.userLoginSchema), authController.login);
+router.post("/portal-login", loginRateLimiter, authController.portalLogin);
 router.post("/refresh", authController.refresh);
 router.post("/logout", authController.logout);
 ////////////////////////////////////////////////// profile //////////////////////////////////////////////

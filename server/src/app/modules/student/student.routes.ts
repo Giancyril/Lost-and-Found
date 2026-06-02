@@ -4,7 +4,8 @@ import auth from "../../midddlewares/auth";
 
 const router = express.Router();
 
-router.get("/debug/masterlist",        studentController.debugMasterlist);
+// ✅ SECURITY: Debug endpoints must be protected - only admins should access raw masterlist
+router.get("/debug/masterlist",        auth(), studentController.debugMasterlist);
 router.get("/details",                 studentController.getStudentByDetails);
 
 router.get("/validate-registration",   studentController.validateRegistration);

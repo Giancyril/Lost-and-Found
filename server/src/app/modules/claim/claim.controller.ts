@@ -105,7 +105,8 @@ const updateClaimStatus = async (req: Request, res: Response, next: NextFunction
 
 const deleteClaim = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await claimsService.deleteClaim(req.params.claimId);
+    const userId = req.user?.role === "ADMIN" ? undefined : req.user?.id;
+    const result = await claimsService.deleteClaim(req.params.claimId, userId);
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,

@@ -7,18 +7,25 @@ import { pushService } from '../app/modules/push/push.service';
 import prisma from '../app/config/prisma';
 
 export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
-  // Join item room for real-time updates
+  // ✅ SECURITY: Join item room for real-time updates (authentication required)
   socket.on('join-item', (itemId: string) => {
+    // Verify user is authenticated
+    if (!socket.userId) {
+      socket.emit('error', { message: 'Authentication required to join item rooms' });
+      console.warn(`Unauthenticated socket attempted to join room: item-${itemId}`);
+      return;
+    }
+
     const roomName = `item-${itemId}`;
     socket.join(roomName);
     console.log(`User ${socket.userId} joined room: ${roomName}`);
   });
 
-  // Leave item room
+  // ✅ SECURITY: Leave item room
   socket.on('leave-item', (itemId: string) => {
     const roomName = `item-${itemId}`;
     socket.leave(roomName);
-    console.log(`User ${socket.userId} left room: ${roomName}`);
+    console.log(`User ${socket.userId || 'anonymous'} left room: ${roomName}`);
   });
 
   // Handle new comment (Broadcast only, saving is handled by REST API)
@@ -123,10 +130,37 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
 
   // ── CHAT HANDLERS ───────────────────────────────────────────────────────────
 
-  socket.on('join-chat', (chatRoomId: string) => {
-    const roomName = `chat-${chatRoomId}`;
-    socket.join(roomName);
-    console.log(`User ${socket.userId} joined chat room: ${roomName}`);
+  // ✅ SECURITY: Join chat room (authentication required)
+  socket.on('join-chat', async (chatRoomId: string) => {
+    // Verify user is authenticated
+    if (!socket.userId) {
+      socket.emit('error', { message: 'Authentication required to join chat rooms' });
+      console.warn(`Unauthenticated socket attempted to join room: chat-${chatRoomId}`);
+      return;
+    }
+
+    // ✅ SECURITY: Verify user is a participant in this chat room
+    try {
+      const room = await chatService.getChatRoomById(chatRoomId);
+      if (!room) {
+        socket.emit('error', { message: 'Chat room not found' });
+        return;
+      }
+
+      const isParticipant = (room.participants as string[]).includes(socket.userId);
+      if (!isParticipant) {
+        socket.emit('error', { message: 'You are not authorized to join this chat room' });
+        console.warn(`User ${socket.userId} attempted to join unauthorized chat room: ${chatRoomId}`);
+        return;
+      }
+
+      const roomName = `chat-${chatRoomId}`;
+      socket.join(roomName);
+      console.log(`User ${socket.userId} joined chat room: ${roomName}`);
+    } catch (error) {
+      console.error('Error joining chat room:', error);
+      socket.emit('error', { message: 'Failed to join chat room' });
+    }
   });
 
   socket.on('leave-chat', (chatRoomId: string) => {

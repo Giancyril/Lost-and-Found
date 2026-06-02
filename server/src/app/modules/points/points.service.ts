@@ -18,6 +18,24 @@ const award = async (userId: string, reason: string, refId?: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, `Unknown point reason: ${reason}`);
   }
 
+  // ✅ CRITICAL SECURITY: Prevent points farming
+  // Check if points have already been awarded for this specific action
+  if (refId) {
+    const existingAward = await prisma.points.findFirst({
+      where: {
+        userId,
+        reason,
+        refId,
+        amount: { gt: 0 }, // Only check positive awards, not revocations
+      },
+    });
+
+    if (existingAward) {
+      console.warn(`[Points] Duplicate award attempt blocked: ${reason} for refId ${refId} by user ${userId}`);
+      return existingAward; // Return existing record, don't award again
+    }
+  }
+
   // Create the Points record and bump totalPoints atomically
   const [pointRecord] = await prisma.$transaction([
     prisma.points.create({
