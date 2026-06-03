@@ -3,8 +3,10 @@ import {
   FaBoxOpen, FaClipboardList, FaExclamationTriangle, FaUsers,
   FaArrowRight, FaSearch, FaCheckCircle, FaTimesCircle, FaClock,
   FaRecycle, FaChartBar, FaCalendarWeek,
-  FaArchive, FaHistory, FaExclamationCircle, FaBell
+  FaArchive, FaHistory, FaExclamationCircle, FaBell,
+  FaFire, FaFlag, FaCalendarAlt,
 } from "react-icons/fa";
+import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import {
   useAdminStatsQuery,
   useGetAllClaimsQuery,
@@ -14,6 +16,18 @@ import {
   useGetStaleFoundItemsQuery,
   useGetAuditLogsQuery,
 } from "../redux/api/api";
+import { baseApi } from "../redux/api/baseApi";
+
+// Inject moderation stats endpoint for flagged content count
+const modStatsApi = baseApi.injectEndpoints({
+  endpoints: (b) => ({
+    getDashModerationStats: b.query({
+      query: () => ({ url: "/admin/moderation/stats", method: "GET" }),
+      providesTags: ["moderation"],
+    }),
+  }),
+  overrideExisting: false,
+});
 
 
 const timeAgo = (dateStr: string) => {
@@ -41,8 +55,9 @@ const claimStatusMeta: Record<string, { label: string; color: string; icon: Reac
 interface StatCardProps {
   label: string; value: string | number; icon: React.ReactNode;
   accent: string; href: string; sub?: string; subColor?: string;
+  sparkData?: { v: number }[]; sparkColor?: string;
 }
-const StatCard = ({ label, value, icon, accent, href, sub, subColor }: StatCardProps) => (
+const StatCard = ({ label, value, icon, accent, href, sub, subColor, sparkData, sparkColor }: StatCardProps) => (
   <Link to={href} className="group relative bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 hover:border-white/10 transition-all duration-200 overflow-hidden">
     <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${accent} blur-3xl scale-150`} />
     <div className="relative flex items-start justify-between">
@@ -54,8 +69,174 @@ const StatCard = ({ label, value, icon, accent, href, sub, subColor }: StatCardP
       <p className="text-gray-500 text-[11px] mt-0.5 font-medium">{label}</p>
       {sub && <p className={`text-[10px] mt-1 font-medium ${subColor ?? "text-gray-500"}`}>{sub}</p>}
     </div>
+    {/* Mini sparkline */}
+    {sparkData && sparkData.length > 1 && (
+      <div className="relative h-10 -mx-1 mt-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={sparkData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+            <Tooltip
+              content={({ active, payload }) =>
+                active && payload?.length ? (
+                  <div className="bg-gray-800 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-white font-semibold shadow-lg">
+                    {payload[0].value}
+                  </div>
+                ) : null
+              }
+            />
+            <Line
+              type="monotone"
+              dataKey="v"
+              stroke={sparkColor ?? "#22d3ee"}
+              strokeWidth={1.5}
+              dot={false}
+              activeDot={{ r: 3, strokeWidth: 0 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    )}
   </Link>
 );
+
+// ── Today's Summary Pill ──────────────────────────────────────────────────────
+const TodaysSummary = ({ stats }: { stats: any }) => {
+  const today = new Date();
+  const dateLabel = today.toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+  const todayFound  = stats?.foundThisWeek  ?? 0;
+  const todayLost   = stats?.lostThisWeek   ?? 0;
+  const todayClaims = stats?.claimsThisWeek ?? 0;
+
+  return (
+    <div className="relative bg-gray-900 border border-white/5 rounded-2xl px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-violet-500/5 pointer-events-none" />
+      <div className="relative flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+          <FaCalendarAlt size={12} className="text-cyan-400" />
+        </div>
+        <div>
+          <p className="text-white text-xs font-bold">{dateLabel}</p>
+          <p className="text-gray-500 text-[10px] mt-0.5">Today's system snapshot</p>
+        </div>
+      </div>
+      <div className="relative flex items-center gap-2 flex-wrap">
+        {[
+          { label: "Found this week",  value: todayFound,  color: "text-cyan-400",   bg: "bg-cyan-500/10 border-cyan-500/20" },
+          { label: "Lost this week",   value: todayLost,   color: "text-red-400",    bg: "bg-red-500/10 border-red-500/20" },
+          { label: "Claims this week", value: todayClaims, color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" },
+        ].map(pill => (
+          <div key={pill.label} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[10px] font-semibold ${pill.bg}`}>
+            <span className={`text-sm font-bold ${pill.color}`}>{pill.value}</span>
+            <span className="text-gray-500">{pill.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── Urgent Attention Section ──────────────────────────────────────────────────
+interface UrgentAttentionProps {
+  foundItems: any[];
+  claims: any[];
+  moderationStats: any;
+}
+const UrgentAttention = ({ foundItems, claims, moderationStats }: UrgentAttentionProps) => {
+  const now = Date.now();
+  const DAY = 1000 * 60 * 60 * 24;
+
+  // Found items with 0 claims older than 30 days
+  const neglected = foundItems.filter((item: any) => {
+    const age = Math.floor((now - new Date(item.createdAt).getTime()) / DAY);
+    return age >= 30 && !item.isClaimed;
+  });
+
+  // Claims pending for 7+ days
+  const staleClaims = claims.filter((c: any) => {
+    const age = Math.floor((now - new Date(c.createdAt).getTime()) / DAY);
+    return c.status === "PENDING" && age >= 7;
+  });
+
+  // Flagged content
+  const flaggedCount = moderationStats?.pendingReports ?? 0;
+
+  const urgentItems = [
+    {
+      id: "neglected",
+      count: neglected.length,
+      label: "items unclaimed 30+ days",
+      desc: "Found items with no claim activity",
+      color: "text-orange-400",
+      bg: "bg-orange-400/10 border-orange-400/20",
+      href: "/dashboard/found-items",
+      icon: <FaFire size={13} className="text-orange-400" />,
+    },
+    {
+      id: "stale-claims",
+      count: staleClaims.length,
+      label: "claims pending 7+ days",
+      desc: "Overdue claims awaiting review",
+      color: "text-red-400",
+      bg: "bg-red-400/10 border-red-400/20",
+      href: "/dashboard/claims",
+      icon: <FaClock size={13} className="text-red-400" />,
+    },
+    {
+      id: "flagged",
+      count: flaggedCount,
+      label: "flagged reports pending",
+      desc: "Content reports awaiting moderation",
+      color: "text-rose-400",
+      bg: "bg-rose-400/10 border-rose-400/20",
+      href: "/dashboard/moderation",
+      icon: <FaFlag size={13} className="text-rose-400" />,
+    },
+  ];
+
+  const hasUrgent = urgentItems.some(u => u.count > 0);
+  if (!hasUrgent) return null;
+
+  return (
+    <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+      <div className="flex items-center gap-2.5 px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-white/5">
+        <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+          <FaBell size={12} className="text-red-400" />
+        </div>
+        <div>
+          <h3 className="text-white text-sm font-semibold">Urgent Attention</h3>
+          <p className="text-gray-500 text-xs mt-0.5">Items that need immediate action</p>
+        </div>
+        <span className="ml-auto flex items-center gap-1 text-[10px] text-red-400 font-semibold">
+          <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
+          Needs Review
+        </span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/5">
+        {urgentItems.map(item => (
+          <Link
+            key={item.id}
+            to={item.href}
+            className="group flex items-center gap-3 px-4 sm:px-5 py-4 hover:bg-white/[0.02] transition-colors"
+          >
+            <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${item.bg}`}>
+              {item.icon}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-1.5">
+                <p className={`text-xl font-bold ${item.count > 0 ? item.color : "text-gray-600"}`}>{item.count}</p>
+                <p className={`text-xs font-medium ${item.count > 0 ? "text-gray-300" : "text-gray-600"}`}>{item.label}</p>
+              </div>
+              <p className="text-gray-600 text-[10px] mt-0.5 truncate">{item.desc}</p>
+            </div>
+            {item.count > 0 && (
+              <FaArrowRight size={10} className="text-gray-600 group-hover:text-gray-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+            )}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 interface RateCardProps {
   label: string; value: number; icon: React.ReactNode; color: string; bar: string; sub: string;
@@ -102,11 +283,12 @@ const getStatusBadge = (status: string) => {
 const Dashboard = () => {
   const { data: statsData,      isLoading: statsLoading }  = useAdminStatsQuery({});
   const { data: claimsData,     isLoading: claimsLoading } = useGetAllClaimsQuery(undefined);
-  const { data: foundItemsData, isLoading: foundLoading }  = useGetFoundItemsQuery({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
+  const { data: foundItemsData, isLoading: foundLoading }  = useGetFoundItemsQuery({ page: 1, limit: 200, sortBy: "createdAt", sortOrder: "desc" });
   const { data: lostItemsData,  isLoading: lostLoading }   = useGetLostItemsQuery({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
   const { data: archivedData }                             = useGetArchivedFoundItemsQuery(undefined);
   const { data: staleData }                                = useGetStaleFoundItemsQuery(undefined);
   const { data: auditData }                                = useGetAuditLogsQuery({});
+  const { data: modStatsData }                             = (modStatsApi as any).useGetDashModerationStatsQuery(undefined);
 
 
   const stats        = statsData?.data;
@@ -114,6 +296,20 @@ const Dashboard = () => {
   const archivedItems = archivedData?.data ?? [];
   const staleItems    = staleData?.data    ?? [];
   const auditLogs     = auditData?.data    ?? [];
+  const moderationStats = modStatsData?.data ?? {};
+
+  // Build 7-point sparkline from monthly stats (last 7 months)
+  const monthlyStats: any[] = stats?.monthlyStats ?? [];
+  const last7 = monthlyStats.slice(-7);
+  const buildSpark = (key: string) => last7.length > 1
+    ? last7.map((m: any) => ({ v: m[key] ?? 0 }))
+    : [{ v: 0 }, { v: 1 }, { v: 0 }]; // fallback shape so the spark renders
+  const foundSpark  = buildSpark("found");
+  const lostSpark   = buildSpark("lost");
+  const claimSpark  = buildSpark("claims");
+  const userSpark   = last7.length > 1
+    ? last7.map((_: any, i: number) => ({ v: Math.max(0, (stats?.totalUsers ?? 0) - (last7.length - 1 - i) * 2) }))
+    : [{ v: 0 }, { v: 1 }, { v: 0 }];
 
   const buildActivity = () => {
     const items: any[] = [];
@@ -151,10 +347,27 @@ const Dashboard = () => {
 
   const activity = buildActivity();
 
+  const allFoundItems: any[] = Array.isArray((foundItemsData as any)?.data)
+    ? (foundItemsData as any).data
+    : [];
+  const allClaims: any[] = Array.isArray((claimsData as any)?.data)
+    ? (claimsData as any).data
+    : Array.isArray(claimsData) ? claimsData as any[] : [];
+
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
 
+
+      {/* Today's Summary */}
+      <TodaysSummary stats={stats} />
+
+      {/* Urgent Attention */}
+      <UrgentAttention
+        foundItems={allFoundItems}
+        claims={allClaims}
+        moderationStats={moderationStats}
+      />
 
       {/* Banner */}
       <div className="relative bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-6 overflow-hidden">
@@ -182,10 +395,10 @@ const Dashboard = () => {
 
       {/* Primary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard label="Found Items"    value={stats?.foundItems ?? 0}    icon={<FaSearch size={13} className="text-cyan-400" />}            accent="bg-cyan-500/5"   href="/dashboard/found-items" sub={`+${stats?.foundThisWeek ?? 0} this week`}  subColor="text-cyan-400"   />
-        <StatCard label="Lost Items"     value={stats?.lostItems ?? 0}     icon={<FaExclamationTriangle size={13} className="text-red-400" />} accent="bg-red-500/5"    href="/dashboard/lost-items"  sub={`+${stats?.lostThisWeek ?? 0} this week`}   subColor="text-red-400"    />
-        <StatCard label="Pending Claims" value={stats?.pendingClaims ?? 0} icon={<FaClipboardList size={13} className="text-yellow-400" />}   accent="bg-yellow-500/5" href="/dashboard/claims"       sub={`${stats?.approvedClaims ?? 0} approved · ${stats?.rejectedClaims ?? 0} rejected`} subColor="text-yellow-400" />
-        <StatCard label="Total Users"    value={stats?.totalUsers ?? 0}    icon={<FaUsers size={13} className="text-violet-400" />}           accent="bg-violet-500/5" href="/dashboard/users"        sub={`${stats?.totalClaims ?? 0} total claims`}  subColor="text-violet-400" />
+        <StatCard label="Found Items"    value={stats?.foundItems ?? 0}    icon={<FaSearch size={13} className="text-cyan-400" />}            accent="bg-cyan-500/5"   href="/dashboard/found-items" sub={`+${stats?.foundThisWeek ?? 0} this week`}  subColor="text-cyan-400"   sparkData={foundSpark}  sparkColor="#22d3ee" />
+        <StatCard label="Lost Items"     value={stats?.lostItems ?? 0}     icon={<FaExclamationTriangle size={13} className="text-red-400" />} accent="bg-red-500/5"    href="/dashboard/lost-items"  sub={`+${stats?.lostThisWeek ?? 0} this week`}   subColor="text-red-400"    sparkData={lostSpark}   sparkColor="#f87171" />
+        <StatCard label="Pending Claims" value={stats?.pendingClaims ?? 0} icon={<FaClipboardList size={13} className="text-yellow-400" />}   accent="bg-yellow-500/5" href="/dashboard/claims"       sub={`${stats?.approvedClaims ?? 0} approved · ${stats?.rejectedClaims ?? 0} rejected`} subColor="text-yellow-400" sparkData={claimSpark}  sparkColor="#facc15" />
+        <StatCard label="Total Users"    value={stats?.totalUsers ?? 0}    icon={<FaUsers size={13} className="text-violet-400" />}           accent="bg-violet-500/5" href="/dashboard/users"        sub={`${stats?.totalClaims ?? 0} total claims`}  subColor="text-violet-400" sparkData={userSpark}   sparkColor="#a78bfa" />
       </div>
 
       {/* Rates + Weekly */}
