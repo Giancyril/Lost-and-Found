@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { baseApi } from "../../redux/api/baseApi";
+import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 
 // ── RTK Query endpoints ────────────────────────────────────────────────────────
 const commApi = baseApi.injectEndpoints({
@@ -180,6 +181,119 @@ const CustomDropdown = ({
   );
 };
 
+// ── Custom Time Picker ────────────────────────────────────────────────────────
+const TIME_SLOTS: string[] = [];
+for (let h = 0; h < 24; h++) {
+  for (let m = 0; m < 60; m += 15) {
+    TIME_SLOTS.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+  }
+}
+
+const CustomTimePicker = ({
+  value, onChange, placeholder = "Select time",
+}: {
+  value: string; onChange: (val: string) => void; placeholder?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
+  const display = value
+    ? (() => { const [h, m] = value.split(":").map(Number); const p = h >= 12 ? "PM" : "AM"; return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${p}`; })()
+    : placeholder;
+
+  return (
+    <div ref={ref} className="relative">
+      <div onClick={() => setOpen(o => !o)}
+        className={`w-full flex items-center gap-2 bg-gray-800/60 border rounded-lg cursor-pointer select-none transition-all duration-200 px-3 py-2.5 ${
+          open ? "ring-2 ring-blue-500/60 border-blue-500/40" : "border-gray-700 hover:border-gray-600"
+        } ${value ? "text-white" : "text-gray-500"}`}>
+        <FaClock size={10} className={value ? "text-blue-400 shrink-0" : "text-gray-600 shrink-0"} />
+        <span className="flex-1 text-xs truncate">{display}</span>
+        {value && <span role="button" onClick={e => { e.stopPropagation(); onChange(""); }} className="text-gray-500 hover:text-gray-300 cursor-pointer shrink-0"><FaTimes size={9} /></span>}
+      </div>
+      {open && (
+        <div className="absolute top-full mt-2 left-0 right-0 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 z-[999] overflow-hidden">
+          <div className="max-h-44 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.15) transparent" }}>
+            {TIME_SLOTS.map(t => {
+              const [h, m] = t.split(":").map(Number);
+              const p = h >= 12 ? "PM" : "AM";
+              const label = `${h % 12 || 12}:${String(m).padStart(2, "0")} ${p}`;
+              return (
+                <button key={t} type="button" onClick={() => { onChange(t); setOpen(false); }}
+                  className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${
+                    t === value ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  }`}>
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Custom Select ─────────────────────────────────────────────────────────────
+const CustomSelect = ({
+  options, value, onChange, placeholder = "Select…",
+}: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <div onClick={() => setOpen(o => !o)}
+        className={`w-full flex items-center gap-2 bg-gray-800/60 border rounded-lg cursor-pointer select-none transition-all duration-200 px-3 py-2 ${
+          open ? "ring-2 ring-cyan-500/30 border-cyan-500/40" : "border-gray-700 hover:border-gray-600"
+        } ${value ? "text-white" : "text-gray-500"}`}>
+        <span className="flex-1 text-xs truncate">{selected ? selected.label : placeholder}</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" className={`text-gray-500 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
+          <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        </svg>
+      </div>
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 right-0 bg-gray-900 border border-white/10 rounded-xl overflow-hidden z-50 shadow-2xl shadow-black/40">
+          {options.map((opt, i) => (
+            <div key={opt.value} onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`px-3 py-2 cursor-pointer text-xs font-medium transition-colors select-none ${
+                i < options.length - 1 ? "border-b border-white/[0.04]" : ""
+              } ${opt.value === value ? "bg-cyan-500/10 text-cyan-300" : "text-gray-400 hover:bg-white/[0.04] hover:text-white"}`}>
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const YEAR_LEVEL_OPTIONS = [
+  { value: "",            label: "All Year Levels" },
+  { value: "First Year",  label: "First Year"      },
+  { value: "Second Year", label: "Second Year"     },
+  { value: "Third Year",  label: "Third Year"      },
+  { value: "Fourth Year", label: "Fourth Year"     },
+];
+
 // ── Tab definitions ───────────────────────────────────────────────────────────
 const TABS = [
   { id: "announcements", label: "Announcements",     icon: FaBullhorn    },
@@ -276,7 +390,8 @@ const AnnouncementsTab = () => {
     type: "INFO",
     target: "ALL",
     sendEmail: false,
-    publishAt: "",
+    publishDate: "",
+    publishTime: "09:00",
     scheduleEnabled: false,
     targetGroupYear: "",
     targetGroupCourse: "",
@@ -292,7 +407,9 @@ const AnnouncementsTab = () => {
         type: form.type,
         target: form.target,
         sendEmail: form.sendEmail,
-        publishAt: form.scheduleEnabled && form.publishAt ? new Date(form.publishAt).toISOString() : null,
+        publishAt: form.scheduleEnabled && form.publishDate
+          ? new Date(`${form.publishDate}T${form.publishTime || "09:00"}`).toISOString()
+          : null,
         targetGroupYear: form.target === "STUDENTS" ? form.targetGroupYear : null,
         targetGroupCourse: form.target === "STUDENTS" ? form.targetGroupCourse : null,
       };
@@ -307,7 +424,8 @@ const AnnouncementsTab = () => {
           type: "INFO",
           target: "ALL",
           sendEmail: false,
-          publishAt: "",
+          publishDate: "",
+          publishTime: "09:00",
           scheduleEnabled: false,
           targetGroupYear: "",
           targetGroupCourse: "",
@@ -435,17 +553,12 @@ const AnnouncementsTab = () => {
                 </div>
                 <div className="space-y-1.5">
                   <FieldLabel>Filter Year Level</FieldLabel>
-                  <select
+                  <CustomSelect
+                    options={YEAR_LEVEL_OPTIONS}
                     value={form.targetGroupYear}
-                    onChange={e => setForm(f => ({ ...f, targetGroupYear: e.target.value }))}
-                    className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
-                  >
-                    <option value="">All Year Levels</option>
-                    <option value="First Year">First Year</option>
-                    <option value="Second Year">Second Year</option>
-                    <option value="Third Year">Third Year</option>
-                    <option value="Fourth Year">Fourth Year</option>
-                  </select>
+                    onChange={val => setForm(f => ({ ...f, targetGroupYear: val }))}
+                    placeholder="All Year Levels"
+                  />
                 </div>
               </div>
             )}
@@ -483,12 +596,19 @@ const AnnouncementsTab = () => {
             {form.scheduleEnabled && (
               <div className="space-y-1.5 p-3 bg-gray-800/40 border border-white/5 rounded-xl">
                 <FieldLabel>Publish Date &amp; Time</FieldLabel>
-                <input
-                  type="datetime-local"
-                  value={form.publishAt}
-                  onChange={e => setForm(f => ({ ...f, publishAt: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <CustomDatePicker
+                    value={form.publishDate}
+                    onChange={val => setForm(f => ({ ...f, publishDate: val }))}
+                    min={new Date().toISOString().split("T")[0]}
+                    placeholder="Select date"
+                  />
+                  <CustomTimePicker
+                    value={form.publishTime}
+                    onChange={val => setForm(f => ({ ...f, publishTime: val }))}
+                    placeholder="Select time"
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -873,7 +993,8 @@ const NotificationCenterTab = () => {
     message: "",
     type: "INFO",
     target: "ALL",
-    publishAt: "",
+    publishDate: "",
+    publishTime: "09:00",
     scheduleEnabled: false,
     targetGroupYear: "",
     targetGroupCourse: "",
@@ -904,14 +1025,16 @@ const NotificationCenterTab = () => {
         type: form.type,
         target: form.target,
         sendEmail: true,
-        publishAt: form.scheduleEnabled && form.publishAt ? new Date(form.publishAt).toISOString() : null,
+        publishAt: form.scheduleEnabled && form.publishDate
+          ? new Date(`${form.publishDate}T${form.publishTime || "09:00"}`).toISOString()
+          : null,
         targetGroupYear: form.target === "STUDENTS" ? form.targetGroupYear : null,
         targetGroupCourse: form.target === "STUDENTS" ? form.targetGroupCourse : null,
       };
 
       const res: any = await createAnnouncement(payload);
       if (res?.data?.success) {
-        const isScheduled = form.scheduleEnabled && !!form.publishAt;
+        const isScheduled = form.scheduleEnabled && !!form.publishDate;
         setLastResult({ 
           count: res.data.data?.emailCount || 0, 
           target: form.target,
@@ -923,7 +1046,8 @@ const NotificationCenterTab = () => {
           message: "",
           type: "INFO",
           target: "ALL",
-          publishAt: "",
+          publishDate: "",
+          publishTime: "09:00",
           scheduleEnabled: false,
           targetGroupYear: "",
           targetGroupCourse: "",
@@ -987,17 +1111,12 @@ const NotificationCenterTab = () => {
                 </div>
                 <div className="space-y-1.5">
                   <FieldLabel>Filter Year Level</FieldLabel>
-                  <select
+                  <CustomSelect
+                    options={YEAR_LEVEL_OPTIONS}
                     value={form.targetGroupYear}
-                    onChange={e => setForm(f => ({ ...f, targetGroupYear: e.target.value }))}
-                    className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
-                  >
-                    <option value="">All Year Levels</option>
-                    <option value="First Year">First Year</option>
-                    <option value="Second Year">Second Year</option>
-                    <option value="Third Year">Third Year</option>
-                    <option value="Fourth Year">Fourth Year</option>
-                  </select>
+                    onChange={val => setForm(f => ({ ...f, targetGroupYear: val }))}
+                    placeholder="All Year Levels"
+                  />
                 </div>
               </div>
             )}
@@ -1022,12 +1141,19 @@ const NotificationCenterTab = () => {
             {form.scheduleEnabled && (
               <div className="space-y-1.5 p-3 bg-gray-800/40 border border-white/5 rounded-xl">
                 <FieldLabel>Publish Date &amp; Time</FieldLabel>
-                <input
-                  type="datetime-local"
-                  value={form.publishAt}
-                  onChange={e => setForm(f => ({ ...f, publishAt: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <CustomDatePicker
+                    value={form.publishDate}
+                    onChange={val => setForm(f => ({ ...f, publishDate: val }))}
+                    min={new Date().toISOString().split("T")[0]}
+                    placeholder="Select date"
+                  />
+                  <CustomTimePicker
+                    value={form.publishTime}
+                    onChange={val => setForm(f => ({ ...f, publishTime: val }))}
+                    placeholder="Select time"
+                  />
+                </div>
               </div>
             )}
 
