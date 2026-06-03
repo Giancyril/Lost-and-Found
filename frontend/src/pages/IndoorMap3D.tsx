@@ -478,13 +478,13 @@ const RoomTile = ({
   // Prevent click when dragging
   const downPos = useRef({ x: 0, y: 0 });
   const handlePointerDown = (e: any) => {
-    downPos.current = { x: e.nativeEvent.clientX, y: e.nativeEvent.clientY };
+    downPos.current = { x: e.clientX, y: e.clientY };
   };
   const handleSafeClick = (e: any, id: string) => {
     e.stopPropagation();
     const dist = Math.sqrt(
-      Math.pow(e.nativeEvent.clientX - downPos.current.x, 2) +
-      Math.pow(e.nativeEvent.clientY - downPos.current.y, 2)
+      Math.pow(e.clientX - downPos.current.x, 2) +
+      Math.pow(e.clientY - downPos.current.y, 2)
     );
     if (dist < 5) onClick(id); // 5px threshold
   };
@@ -1008,7 +1008,6 @@ const MiniMap = ({
         </div>
 
         {/* Scrollable SVG */}
-        {/* Scrollable SVG */}
         <div
           className={`px-3 pb-2 transition-all duration-500 ease-in-out ${isCollapsed ? "opacity-0 pointer-events-none translate-y-2" : "opacity-100 pointer-events-auto translate-y-0"
             }`}
@@ -1106,16 +1105,24 @@ const MiniMap = ({
     </div>
   );
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Public API
-// ─────────────────────────────────────────────────────────────────────────────
 interface IndoorMap3DProps {
   onRoomSelect: (roomId: string | null) => void;
   selectedRoomId: string | null;
   items: any[];
   currentFloor: number;
 }
+
+const checkWebGLSupport = (): boolean => {
+  try {
+    const canvas = document.createElement("canvas");
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+    );
+  } catch (e) {
+    return false;
+  }
+};
 
 const IndoorMap3D = ({
   onRoomSelect, selectedRoomId, items, currentFloor,
@@ -1124,12 +1131,24 @@ const IndoorMap3D = ({
   const halfDepth = BUILDING_DEPTH / 2;
   const [isNight, setIsNight] = useState(false);
   const palette = usePalette(isNight);
+  
+  // WebGL support and toggle view mode states
+  const [hasWebGL, setHasWebGL] = useState(true);
+  const [mapViewMode, setMapViewMode] = useState<"3d" | "2d">("3d");
 
   const layout = useMemo(buildLayout, []);
   const activeFloorIdx = useMemo(
     () => floorIdxFromId(selectedRoomId) ?? (currentFloor - 1),
     [selectedRoomId, currentFloor]
   );
+
+  useEffect(() => {
+    const supported = checkWebGLSupport();
+    setHasWebGL(supported);
+    if (!supported) {
+      setMapViewMode("2d");
+    }
+  }, []);
 
   const getRoomItemStats = (roomId: string) => {
     const rid = roomId.toLowerCase();
@@ -1150,6 +1169,23 @@ const IndoorMap3D = ({
   const hudBorder = isNight ? "border-white/10" : "border-black/5";
   const hudTextStrong = isNight ? "text-slate-100" : "text-slate-900";
   const hudTextSoft = isNight ? "text-slate-400" : "text-slate-500";
+  
+  // 2D calculations
+  const SCALE_2D = 12;
+  const PAD_2D = 15;
+  const svgW = (TOTAL_W + 2) * SCALE_2D + PAD_2D * 2;
+  const svgH = (BUILDING_DEPTH + 1.6) * SCALE_2D + PAD_2D * 2 + 18;
+
+  const toX = (x: number) => PAD_2D + (x + TOTAL_W / 2 + 1) * SCALE_2D;
+  const toY = (z: number) => PAD_2D + 18 + (z + BUILDING_DEPTH / 2 + 0.8) * SCALE_2D;
+  const floorRooms = layout.filter((r) => r.floorIdx === activeFloorIdx);
+  const stroke = isNight ? "#334155" : "#e2e8f0";
+  const fillRoom = isNight ? "#1e2638" : "#f8fafc";
+  const corridor = isNight ? "#0f172a" : "#f1f5f9";
+  const accent = "#3b82f6";
+  const accentSoft = isNight ? "#1e3a5f" : "#eff6ff";
+  const textCol = isNight ? "#94a3b8" : "#64748b";
+  const titleCol = isNight ? "#f1f5f9" : "#0f172a";
 
   return (
     <div
@@ -1161,80 +1197,243 @@ const IndoorMap3D = ({
       data-testid="indoor-map-3d"
     >
       <ThemeContext.Provider value={{ palette, isNight }}>
-        <Canvas shadows dpr={[1, 1.5]} performance={{ min: 0.5 }}>
-          <color attach="background" args={[sceneBg]} />
-          <fog attach="fog" args={[sceneBg, 30, isNight ? 60 : 80]} />
-          <PerspectiveCamera makeDefault position={[18, 14, 18]} fov={32} />
-          <OrbitControls enablePan maxPolarAngle={Math.PI / 2.15} minDistance={8} maxDistance={36} makeDefault />
-          <CameraController selectedRoomId={selectedRoomId} layout={layout} />
+        {mapViewMode === "3d" ? (
+          <Canvas shadows dpr={[1, 1.5]} performance={{ min: 0.5 }}>
+            <color attach="background" args={[sceneBg]} />
+            <fog attach="fog" args={[sceneBg, 30, isNight ? 60 : 80]} />
+            <PerspectiveCamera makeDefault position={[18, 14, 18]} fov={32} />
+            <OrbitControls
+              enablePan
+              enableDamping
+              dampingFactor={0.05}
+              maxPolarAngle={Math.PI / 2.15}
+              minDistance={8}
+              maxDistance={36}
+              touches={{
+                ONE: THREE.TOUCH.ROTATE,
+                TWO: THREE.TOUCH.DOLLY_PAN
+              }}
+              makeDefault
+            />
+            <CameraController selectedRoomId={selectedRoomId} layout={layout} />
 
-          <ambientLight intensity={isNight ? 0.18 : 0.55} color={isNight ? "#5b6b9c" : "#fff8ec"} />
-          <hemisphereLight args={[isNight ? "#3b4a72" : "#ffffff", isNight ? "#0a0d18" : "#cdd5c0", isNight ? 0.25 : 0.45]} />
-          <SunLight isNight={isNight} />
+            <ambientLight intensity={isNight ? 0.18 : 0.55} color={isNight ? "#5b6b9c" : "#fff8ec"} />
+            <hemisphereLight args={[isNight ? "#3b4a72" : "#ffffff", isNight ? "#0a0d18" : "#cdd5c0", isNight ? 0.25 : 0.45]} />
+            <SunLight isNight={isNight} />
 
-          {isNight && Array.from({ length: FLOORS }).map((_, f) => (
-            <pointLight key={`int-l-${f}`} position={[0, f * FLOOR_HEIGHT + ROOM_H * 0.6, 0]} intensity={0.55} distance={TOTAL_W} color="#fbbf24" />
-          ))}
+            {isNight && Array.from({ length: FLOORS }).map((_, f) => (
+              <pointLight key={`int-l-${f}`} position={[0, f * FLOOR_HEIGHT + ROOM_H * 0.6, 0]} intensity={0.55} distance={TOTAL_W} color="#fbbf24" />
+            ))}\
 
-          <Environment preset={isNight ? "night" : "apartment"} />
-          <Landscape />
+            <Environment preset={isNight ? "night" : "apartment"} />
+            <Landscape />
 
-          {Array.from({ length: FLOORS }).map((_, f) => (
-            <FloorShell key={`floor-${f}`} floorIdx={f} isActive={f === activeFloorIdx} isTopFloor={f === FLOORS - 1} />
-          ))}
+            {Array.from({ length: FLOORS }).map((_, f) => (
+              <FloorShell key={`floor-${f}`} floorIdx={f} isActive={f === activeFloorIdx} isTopFloor={f === FLOORS - 1} />
+            ))}
 
-          {layout.map((room) => {
-            const { foundCount, lostCount } = getRoomItemStats(room.id);
-            return (
-              <RoomTile
-                key={room.id}
-                layout={room}
-                isActiveFloor={room.floorIdx === activeFloorIdx}
-                isSelected={selectedRoomId === room.id}
-                isHovered={hoveredRoom === room.id}
-                hasItems={foundCount > 0 || lostCount > 0}
-                itemCount={foundCount + lostCount}
-                foundCount={foundCount}
-                lostCount={lostCount}
-                onHover={setHoveredRoom}
-                onClick={onRoomSelect}
-              />
-            );
-          })}
+            {layout.map((room) => {
+              const { foundCount, lostCount } = getRoomItemStats(room.id);
+              return (
+                <RoomTile
+                  key={room.id}
+                  layout={room}
+                  isActiveFloor={room.floorIdx === activeFloorIdx}
+                  isSelected={selectedRoomId === room.id}
+                  isHovered={hoveredRoom === room.id}
+                  hasItems={foundCount > 0 || lostCount > 0}
+                  itemCount={foundCount + lostCount}
+                  foundCount={foundCount}
+                  lostCount={lostCount}
+                  onHover={setHoveredRoom}
+                  onClick={onRoomSelect}
+                />
+              );
+            })}
 
-          {Array.from({ length: FLOORS }).map((_, f) => (
+            {Array.from({ length: FLOORS }).map((_, f) => (
+              <Text
+                key={`label-${f}`}
+                position={[-TOTAL_W / 2 - 3.2, f * FLOOR_HEIGHT + SLAB_T + ROOM_H / 2, -BUILDING_DEPTH / 2 - 0.2]}
+                fontSize={0.22}
+                color={f === activeFloorIdx ? palette.text : palette.textDim}
+                anchorX="left"
+                anchorY="middle"
+                fillOpacity={f === activeFloorIdx ? 1 : 0.5}
+              >
+                {["Ground Floor", "Second Floor", "Third Floor"][f]}
+              </Text>
+            ))}
+
+            <CentralCore activeFloorIdx={activeFloorIdx} onFloorClick={onRoomSelect} selectedFloorId={selectedRoomId} />
+            <CornerFacade x={-TOTAL_W / 2 + CORNER_SPACE / 2} />
+            <CornerFacade x={TOTAL_W / 2 - CORNER_SPACE / 2} />
+            <Staircase x={-(TOTAL_W / 2 - CORNER_SPACE + 0.8)} z={-BUILDING_DEPTH / 2 + ROOM_D * 0.5} mirrored={false} />
+            <Staircase x={TOTAL_W / 2 - CORNER_SPACE + 0.8} z={-BUILDING_DEPTH / 2 + ROOM_D * 0.5} mirrored={true} />
+
             <Text
-              key={`label-${f}`}
-              position={[-TOTAL_W / 2 - 3.2, f * FLOOR_HEIGHT + SLAB_T + ROOM_H / 2, -BUILDING_DEPTH / 2 - 0.2]}
-              fontSize={0.22}
-              color={f === activeFloorIdx ? palette.text : palette.textDim}
-              anchorX="left"
+              position={[0, FLOORS * FLOOR_HEIGHT + 0.55, -BUILDING_DEPTH / 2 - 0.05]}
+              fontSize={0.34}
+              color={palette.text}
+              anchorX="center"
               anchorY="middle"
-              fillOpacity={f === activeFloorIdx ? 1 : 0.5}
+              letterSpacing={0.08}
             >
-              {["Ground Floor", "Second Floor", "Third Floor"][f]}
+              SWDC
             </Text>
-          ))}
 
-          <CentralCore activeFloorIdx={activeFloorIdx} onFloorClick={onRoomSelect} selectedFloorId={selectedRoomId} />
-          <CornerFacade x={-TOTAL_W / 2 + CORNER_SPACE / 2} />
-          <CornerFacade x={TOTAL_W / 2 - CORNER_SPACE / 2} />
-          <Staircase x={-(TOTAL_W / 2 - CORNER_SPACE + 0.8)} z={-BUILDING_DEPTH / 2 + ROOM_D * 0.5} mirrored={false} />
-          <Staircase x={TOTAL_W / 2 - CORNER_SPACE + 0.8} z={-BUILDING_DEPTH / 2 + ROOM_D * 0.5} mirrored={true} />
+            <ContactShadows position={[0, -SLAB_T - 0.04, 0]} opacity={isNight ? 0.55 : 0.35} scale={40} blur={2.6} far={6} />
+          </Canvas>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-y-auto overflow-x-auto select-none">
+            <div className={`w-full max-w-4xl p-4 sm:p-6 rounded-2xl border ${isNight ? "bg-slate-900/60 border-white/5" : "bg-white/60 border-slate-200/50"} backdrop-blur-md shadow-xl transition-all duration-300`}>
+              <div className="flex items-center justify-between mb-4 border-b pb-3 border-white/5">
+                <div>
+                  <h4 className={`text-[10px] font-black uppercase tracking-wider ${isNight ? "text-slate-400" : "text-slate-500"}`}>
+                    Interactive 2D Plan
+                  </h4>
+                  <p className={`text-base font-bold ${isNight ? "text-white" : "text-slate-800"}`}>
+                    {["Ground Floor", "Second Floor", "Third Floor"][activeFloorIdx]}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${isNight ? "bg-blue-500/10 text-blue-300 border border-blue-500/20" : "bg-blue-50 text-blue-600 border border-blue-100"}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block animate-pulse" />
+                    2D View
+                  </span>
+                </div>
+              </div>
+              
+              <div className="w-full overflow-x-auto overscroll-contain pb-2" style={{ WebkitOverflowScrolling: "touch" }}>
+                <svg
+                  width="100%"
+                  viewBox={`0 0 ${svgW} ${svgH}`}
+                  style={{ minWidth: "480px", display: "block" }}
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  <rect
+                    x={toX(-TOTAL_W / 2)}
+                    y={toY(halfDepth - CORRIDOR_W)}
+                    width={TOTAL_W * SCALE_2D}
+                    height={CORRIDOR_W * SCALE_2D}
+                    fill={corridor}
+                    rx={4}
+                  />
+                  <rect
+                    x={toX(-LOBBY_W / 2)}
+                    y={toY(-halfDepth + ROOM_D / 2)}
+                    width={LOBBY_W * SCALE_2D}
+                    height={ROOM_D * SCALE_2D}
+                    fill={isNight ? "#334155" : "#e2e8f0"}
+                    stroke={stroke}
+                    strokeWidth={1}
+                    rx={3}
+                  />
+                  <text
+                    x={toX(0)}
+                    y={toY(-halfDepth + ROOM_D / 2) + 3}
+                    fontSize="7"
+                    fontWeight="800"
+                    fill={titleCol}
+                    textAnchor="middle"
+                  >
+                    LOBBY
+                  </text>
+                  <text
+                    x={toX(0)}
+                    y={toY(-halfDepth + ROOM_D / 2) + 9}
+                    fontSize="5"
+                    fontWeight="700"
+                    fill={textCol}
+                    textAnchor="middle"
+                  >
+                    ▼▲
+                  </text>
 
-          <Text
-            position={[0, FLOORS * FLOOR_HEIGHT + 0.55, -BUILDING_DEPTH / 2 - 0.05]}
-            fontSize={0.34}
-            color={palette.text}
-            anchorX="center"
-            anchorY="middle"
-            letterSpacing={0.08}
-          >
-            SWDC
-          </Text>
+                  {floorRooms.map((r) => {
+                    const isSel = selectedRoomId === r.id;
+                    const isHov = hoveredRoom === r.id;
+                    const rxPos = toX(r.x - ROOM_W / 2);
+                    const ryPos = toY(-halfDepth + ROOM_D / 2 - ROOM_D / 2);
+                    const ww = ROOM_W * SCALE_2D;
+                    const hh = ROOM_D * SCALE_2D;
+                    const stats = getRoomItemStats(r.id);
+                    const count = stats.foundCount + stats.lostCount;
+                    return (
+                      <g
+                        key={r.id}
+                        onClick={() => onRoomSelect(r.id)}
+                        onMouseEnter={() => setHoveredRoom(r.id)}
+                        onMouseLeave={() => setHoveredRoom(null)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <rect
+                          x={rxPos} y={ryPos} width={ww} height={hh}
+                          fill={isSel ? accent : isHov ? accentSoft : fillRoom}
+                          stroke={isSel ? accent : isHov ? "#60a5fa" : stroke}
+                          strokeWidth={isSel ? 2 : 1}
+                          rx={3}
+                        />
+                        {isSel && (
+                          <rect x={rxPos} y={ryPos} width={ww} height={hh} fill="none" stroke={accent} strokeWidth={3.5} rx={3} opacity={0.3} />
+                        )}
+                        <text
+                          x={rxPos + ww / 2}
+                          y={ryPos + hh / 2 + 2.5}
+                          fontSize="7"
+                          fontWeight={isSel ? "900" : "700"}
+                          fill={isSel ? "#ffffff" : titleCol}
+                          textAnchor="middle"
+                        >
+                          {r.id.replace("SC-", "")}
+                        </text>
+                        {count > 0 && (
+                          <g>
+                            <circle cx={rxPos + ww - 4.5} cy={ryPos + 4.5} r={4} fill="#f59e0b" stroke={isNight ? "#0b1020" : "#ffffff"} strokeWidth={1} />
+                            <text x={rxPos + ww - 4.5} y={ryPos + 6} fontSize="5" fontWeight="900" fill="#1e293b" textAnchor="middle">{count}</text>
+                          </g>
+                        )}
+                      </g>
+                    );
+                  })}
 
-          <ContactShadows position={[0, -SLAB_T - 0.04, 0]} opacity={isNight ? 0.55 : 0.35} scale={40} blur={2.6} far={6} />
-        </Canvas>
+                  <g transform={`translate(${toX(-(TOTAL_W / 2 - CORNER_SPACE + 0.8)) - 10}, ${toY(-halfDepth + ROOM_D * 0.5) - 6})`}>
+                    <rect width="20" height="12" fill={isNight ? "#1e293b" : "#e2e8f0"} stroke={stroke} strokeWidth={0.5} rx={1} />
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <line key={`st-l-${idx}`} x1={idx * 4 + 2} y1="0" x2={idx * 4 + 2} y2="12" stroke={stroke} strokeWidth={0.5} />
+                    ))}
+                    <text x="10" y="8" fontSize="4.5" fontWeight="700" fill={textCol} textAnchor="middle">STAIRS</text>
+                  </g>
+                  <g transform={`translate(${toX(TOTAL_W / 2 - CORNER_SPACE + 0.8) - 10}, ${toY(-halfDepth + ROOM_D * 0.5) - 6})`}>
+                    <rect width="20" height="12" fill={isNight ? "#1e293b" : "#e2e8f0"} stroke={stroke} strokeWidth={0.5} rx={1} />
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <line key={`st-r-${idx}`} x1={idx * 4 + 2} y1="0" x2={idx * 4 + 2} y2="12" stroke={stroke} strokeWidth={0.5} />
+                    ))}
+                    <text x="10" y="8" fontSize="4.5" fontWeight="700" fill={textCol} textAnchor="middle">STAIRS</text>
+                  </g>
+
+                  <text x={toX(-TOTAL_W / 2 + 0.3)} y={toY(-halfDepth - 0.5)} fontSize="5.5" fontWeight="900" fill={textCol} textAnchor="start" letterSpacing="0.6">LEFT WING</text>
+                  <text x={toX(TOTAL_W / 2 - 0.3)} y={toY(-halfDepth - 0.5)} fontSize="5.5" fontWeight="900" fill={textCol} textAnchor="end" letterSpacing="0.6">RIGHT WING</text>
+                </svg>
+              </div>
+              
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-gray-500">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded bg-blue-500" />
+                  <span className={isNight ? "text-slate-300" : "text-slate-700"}>Selected Room</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded bg-amber-400" />
+                  <span className={isNight ? "text-slate-300" : "text-slate-700"}>Active Reports</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`w-3 h-3 rounded border ${isNight ? "bg-slate-800 border-white/5" : "bg-white border-slate-200"}`} />
+                  <span>Available Rooms</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </ThemeContext.Provider>
 
       {/* HUD: Title top-left */}
@@ -1243,12 +1442,16 @@ const IndoorMap3D = ({
           <h3 className={`${hudTextStrong} font-black text-[10px] uppercase tracking-tighter`}>
             SWDC Building
           </h3>
-          <p className={`text-gray-400 text-[9px] font-medium mt-0.5 sm:hidden`}>
-            Pinch · Tap rooms
-          </p>
-          <p className={`text-gray-400 text-[9px] font-medium mt-0.5 hidden sm:block`}>
-            Drag · Scroll · Click rooms
-          </p>
+          {mapViewMode === "3d" ? (
+            <p className={`text-gray-400 text-[9px] font-medium mt-0.5`}>
+              <span className="sm:hidden">Pinch · Tap rooms</span>
+              <span className="hidden sm:inline">Drag · Scroll · Click rooms</span>
+            </p>
+          ) : (
+            <p className={`text-gray-400 text-[9px] font-medium mt-0.5`}>
+              Tap rooms to select
+            </p>
+          )}
         </div>
       </div>
 
@@ -1261,14 +1464,30 @@ const IndoorMap3D = ({
         {/* Day/Night toggle */}
         <button
           onClick={() => setIsNight((v) => !v)}
-          className={`h-9 w-9 rounded-xl text-base font-bold transition-all border flex items-center justify-center shadow-sm ${isNight
-            ? "bg-amber-400 text-slate-900 border-amber-500"
-            : "bg-slate-800 text-amber-200 border-slate-700"
-            }`}
+          className={`h-9 w-9 rounded-xl text-base font-bold transition-all border flex items-center justify-center shadow-sm ${
+            isNight
+              ? "bg-amber-400 text-slate-900 border-amber-500"
+              : "bg-slate-800 text-amber-200 border-slate-700"
+          }`}
           title={isNight ? "Switch to Day" : "Switch to Night"}
         >
           {isNight ? "☀" : "☾"}
         </button>
+
+        {/* 2D / 3D Mode Toggle (only if WebGL is supported) */}
+        {hasWebGL && (
+          <button
+            onClick={() => setMapViewMode((m) => (m === "3d" ? "2d" : "3d"))}
+            className={`h-9 w-9 rounded-xl text-[10px] font-black transition-all border flex items-center justify-center shadow-sm uppercase ${
+              mapViewMode === "3d"
+                ? "bg-slate-800 text-blue-300 border-slate-700"
+                : "bg-blue-600 text-white border-blue-500"
+            }`}
+            title={mapViewMode === "3d" ? "Switch to 2D Plan" : "Switch to 3D View"}
+          >
+            {mapViewMode === "3d" ? "2D" : "3D"}
+          </button>
+        )}
 
         {/* Divider */}
         <div className={`h-px mx-1 ${isNight ? "bg-white/10" : "bg-black/10"}`} />
@@ -1282,10 +1501,11 @@ const IndoorMap3D = ({
               <button
                 key={id}
                 onClick={() => onRoomSelect(id)}
-                className={`w-9 h-9 text-[11px] font-black tracking-tight transition-all flex items-center justify-center border-b last:border-b-0 ${isActive
-                  ? "bg-blue-600 text-white"
-                  : `${hudBg} ${hudTextSoft} hover:bg-blue-50`
-                  } ${isNight ? "border-white/10" : "border-black/6"}`}
+                className={`w-9 h-9 text-[11px] font-black tracking-tight transition-all flex items-center justify-center border-b last:border-b-0 ${
+                  isActive
+                    ? "bg-blue-600 text-white"
+                    : `${hudBg} ${hudTextSoft} hover:bg-blue-50`
+                } ${isNight ? "border-white/10" : "border-black/6"}`}
               >
                 {lvl}
               </button>
@@ -1294,19 +1514,21 @@ const IndoorMap3D = ({
         </div>
       </div>
 
-      {/* MiniMap — shown on all screen sizes */}
-      <div>
-        <MiniMap
-          layout={layout}
-          activeFloorIdx={activeFloorIdx}
-          selectedRoomId={selectedRoomId}
-          hoveredRoom={hoveredRoom}
-          onSelect={onRoomSelect}
-          onHover={setHoveredRoom}
-          items={items}
-          isNight={isNight}
-        />
-      </div>
+      {/* MiniMap — shown on all screen sizes only in 3D mode */}
+      {mapViewMode === "3d" && (
+        <div>
+          <MiniMap
+            layout={layout}
+            activeFloorIdx={activeFloorIdx}
+            selectedRoomId={selectedRoomId}
+            hoveredRoom={hoveredRoom}
+            onSelect={onRoomSelect}
+            onHover={setHoveredRoom}
+            items={items}
+            isNight={isNight}
+          />
+        </div>
+      )}
     </div>
   );
 };

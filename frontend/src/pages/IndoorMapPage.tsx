@@ -377,8 +377,8 @@ const IndoorMapPage = () => {
         <div className="lg:hidden flex-1 flex flex-col p-4 gap-3 overflow-y-auto">
           {mapMode === "indoor" ? (
             <>
-              {/* 3D Map — fixed height, floor plan MiniMap is rendered inside IndoorMap3D */}
-              <div className="relative rounded-2xl overflow-visible shrink-0" style={{ height: "55vw", minHeight: "260px", maxHeight: "420px" }}>
+              {/* 3D Map — expanded height for mobile gesture and 2D view space */}
+              <div className="relative rounded-2xl overflow-visible shrink-0 animate-fade-in" style={{ height: "70vw", minHeight: "360px", maxHeight: "500px" }}>
                 {(selectedBuilding as any).isComingSoon ? (
                   <div className="w-full h-full bg-[#0f1522] border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center flex-col p-6 text-center">
                      <FaBuilding className="text-gray-800/50 text-4xl mb-4" />
