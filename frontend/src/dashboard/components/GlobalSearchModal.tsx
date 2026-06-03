@@ -2,10 +2,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaSearch, FaTimes, FaBoxOpen, FaExclamationTriangle, FaClipboardList,
-  FaTachometerAlt, FaChartLine, FaQrcode, FaUsers, FaCog, FaShieldAlt,
+  FaTachometerAlt, FaChartLine, FaQrcode, FaCog, FaShieldAlt,
   FaFileAlt, FaArchive, FaBullhorn, FaMedal, FaFlag, FaUserGraduate,
-  FaTrophy, FaMapMarkedAlt, FaUserShield, FaCheckCircle, FaChevronRight,
-  FaKeyboard, FaAward
+  FaTrophy, FaMapMarkedAlt, FaUserShield, FaChevronRight,
+  FaKeyboard, FaAward, FaClock
 } from "react-icons/fa";
 import { useGetFoundItemsQuery, useGetLostItemsQuery, useGetAllClaimsQuery } from "../../redux/api/api";
 
@@ -72,9 +72,40 @@ interface GlobalSearchModalProps {
   onClose: () => void;
 }
 
+// ── Recent searches localStorage helpers ─────────────────────────────────────
+const RECENT_KEY = "gsearch_recent";
+const MAX_RECENT = 6;
+
+interface RecentEntry {
+  id: string;
+  title: string;
+  subtitle: string;
+  path: string;
+  iconType: "page" | "found" | "lost" | "claim";
+  savedAt: number;
+}
+
+const loadRecent = (): RecentEntry[] => {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]"); }
+  catch { return []; }
+};
+
+const saveRecent = (entry: RecentEntry) => {
+  const prev = loadRecent().filter(r => r.id !== entry.id);
+  localStorage.setItem(RECENT_KEY, JSON.stringify([entry, ...prev].slice(0, MAX_RECENT)));
+};
+
+const removeRecent = (id: string) => {
+  localStorage.setItem(RECENT_KEY, JSON.stringify(loadRecent().filter(r => r.id !== id)));
+};
+
+const clearAllRecent = () => localStorage.removeItem(RECENT_KEY);
+
+// ── Main Modal ────────────────────────────────────────────────────────────────
 const GlobalSearchModal = ({ open, onClose }: GlobalSearchModalProps) => {
   const [query, setQuery] = useState("");
   const [selectedIdx, setSelectedIdx] = useState(0);
+  const [recentSearches, setRecentSearches] = useState<RecentEntry[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -181,8 +212,23 @@ const GlobalSearchModal = ({ open, onClose }: GlobalSearchModalProps) => {
 
   const flatResults = groups.flatMap(g => g.items);
 
-  // Navigation
+  // Load recent searches when modal opens
+  useEffect(() => {
+    if (open) setRecentSearches(loadRecent());
+  }, [open]);
+
+  // Navigation — also persists to recent searches
   const navigate_ = useCallback((result: SearchResult) => {
+    const entry: RecentEntry = {
+      id: result.id,
+      title: result.title,
+      subtitle: result.subtitle,
+      path: result.path,
+      iconType: result.type,
+      savedAt: Date.now(),
+    };
+    saveRecent(entry);
+    setRecentSearches(loadRecent());
     onClose();
     navigate(result.path);
   }, [navigate, onClose]);
@@ -210,8 +256,16 @@ const GlobalSearchModal = ({ open, onClose }: GlobalSearchModalProps) => {
 
   // Focus input when opened
   useEffect(() => {
-    if (open) { setTimeout(() => inputRef.current?.focus(), 50); setQuery(""); setSelectedIdx(0); }
+    if (open) { setTimeout(() => inputRef.current?.focus(), 50); setQuery(""); setSelectedIdx(0); setRecentSearches(loadRecent()); }
   }, [open]);
+
+  // Icon resolver for recent entries
+  const recentIconMap: Record<string, { icon: React.ComponentType<any>; color: string }> = {
+    page:  { icon: FaChevronRight,       color: "text-blue-400"   },
+    found: { icon: FaBoxOpen,            color: "text-cyan-400"   },
+    lost:  { icon: FaExclamationTriangle, color: "text-orange-400" },
+    claim: { icon: FaClipboardList,      color: "text-yellow-400" },
+  };
 
   if (!open) return null;
 
@@ -258,27 +312,87 @@ const GlobalSearchModal = ({ open, onClose }: GlobalSearchModalProps) => {
 
           {/* Results */}
           <div ref={listRef} className="overflow-y-auto max-h-[55vh] custom-scrollbar">
-            {/* Empty query — show quick-nav tiles */}
+            {/* Empty query — show recent searches + quick-nav tiles */}
             {showHelp && (
-              <div className="p-5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3">Quick Navigation</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {PAGES.slice(0, 9).map(p => {
-                    const Icon = p.icon;
-                    return (
+              <div className="p-4 space-y-4">
+
+                {/* Recent Searches */}
+                {recentSearches.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600">Recent Searches</p>
                       <button
-                        key={p.path}
-                        onClick={() => { onClose(); navigate(p.path); }}
-                        className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 text-left transition-all group"
+                        onClick={() => { clearAllRecent(); setRecentSearches([]); }}
+                        className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors font-medium"
                       >
-                        <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                          <Icon size={12} className={p.color} />
-                        </div>
-                        <span className="text-gray-300 text-xs font-medium group-hover:text-white transition-colors truncate">{p.title}</span>
+                        Clear all
                       </button>
-                    );
-                  })}
+                    </div>
+                    <div className="space-y-0.5">
+                      {recentSearches.map(entry => {
+                        const meta = recentIconMap[entry.iconType] ?? recentIconMap.page;
+                        const Icon = meta.icon;
+                        return (
+                          <div
+                            key={entry.id}
+                            className="group flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/[0.05] transition-all"
+                          >
+                            {/* Clock icon */}
+                            <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                              <FaClock size={11} className="text-gray-600" />
+                            </div>
+
+                            {/* Text — click navigates */}
+                            <button
+                              className="flex-1 min-w-0 text-left"
+                              onClick={() => { navigate(entry.path); onClose(); }}
+                            >
+                              <p className="text-gray-300 text-xs font-medium truncate group-hover:text-white transition-colors">{entry.title}</p>
+                              <p className="text-gray-600 text-[10px] truncate mt-0.5">{entry.subtitle}</p>
+                            </button>
+
+                            {/* Type badge */}
+                            <div className="shrink-0 w-6 h-6 rounded-lg bg-white/[0.04] flex items-center justify-center">
+                              <Icon size={10} className={meta.color} />
+                            </div>
+
+                            {/* Remove button */}
+                            <button
+                              onClick={() => { removeRecent(entry.id); setRecentSearches(loadRecent()); }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-700 hover:text-gray-400"
+                              title="Remove"
+                            >
+                              <FaTimes size={10} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Navigation */}
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-2">Quick Navigation</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {PAGES.slice(0, 9).map(p => {
+                      const Icon = p.icon;
+                      return (
+                        <button
+                          key={p.path}
+                          onClick={() => { onClose(); navigate(p.path); }}
+                          className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 text-left transition-all group"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                            <Icon size={12} className={p.color} />
+                          </div>
+                          <span className="text-gray-300 text-xs font-medium group-hover:text-white transition-colors truncate">{p.title}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
               </div>
             )}
 
