@@ -58,7 +58,7 @@ const AboutUs = () => {
             </h2>
             <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full mb-5" />
             <p className="text-gray-400 text-sm sm:text-base leading-relaxed max-w-2xl text-justify">
-              The <strong className="text-white font-semibold">SAS Lost & Found Management System</strong> is designed exclusively for students, teachers, and staff providing a safe, organized, and transparent way to report, track, and recover lost items within campus premises.
+              The <strong className="text-white font-semibold">SAS Lost & Found Management System</strong> is designed exclusively for students, faculty, and staff providing a safe, organized, and transparent way to report, track, and recover lost items within campus premises.
             </p>
           </div>
 
@@ -74,7 +74,7 @@ const AboutUs = () => {
               <div className="flex flex-col gap-3 text-justify">
                 {[
                   {  title: "For Students", desc: "Easily report or claim lost items from classrooms or school grounds." },
-                  {  title: "For Teachers & Staff", desc: "Manage found items and coordinate with the admin office through the system." },
+                  {  title: "For Faculty & Staff", desc: "Manage found items and coordinate with the admin office through the system." },
                   {  title: "School-Wide Coverage", desc: "Covers all campus areas including classrooms, cafeteria, and library." },
                 ].map((item) => (
                   <div

@@ -264,7 +264,7 @@ const FoundItemCard = ({ item, setClaimItem, onOpenComments, isAdmin, currentUse
   const shouldBlur = shouldBlurImage(item?.category?.name, isAdmin) && !isReporter && !hasClaimed;
   const dateStr = item?.date?.split("T")[0] ?? item?.createdAt?.split("T")[0] ?? "—";
   const isClaimed = item?.isClaimed || item?.claimStatus === "CLAIMED";
-  
+
   // Calculate days ago
   const itemDate = new Date(item?.date ?? item?.createdAt ?? Date.now());
   const now = new Date();
@@ -312,7 +312,7 @@ const FoundItemCard = ({ item, setClaimItem, onOpenComments, isAdmin, currentUse
             if (hasMyClaim) return <button onClick={() => onInitiateChat(item)} className="flex items-center justify-center py-2.5 sm:py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs sm:text-[11px] font-bold rounded-lg transition-all">Chat</button>;
             if (isClaimed) return <div className="flex items-center justify-center py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-semibold rounded-lg">Claimed</div>;
             return <button onClick={() => setClaimItem(item)} className="flex items-center justify-center py-2 bg-blue-600/20 hover:bg-blue-600 border border-blue-600/30 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg transition-all">Claim</button>;
-          })()}         
+          })()}
           <Link to={`/foundItems/${item.id}`} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">Details</Link>
           <button onClick={onOpenComments} className="flex items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-[11px] font-medium rounded-lg transition-all">
             Comments
@@ -393,7 +393,7 @@ const FoundItemRow = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser
 
               <span className="xs:inline sm:inline">Comments</span>
             </button>
-            
+
           </div>
         </div>
       </div>
@@ -1300,6 +1300,12 @@ const FoundItemsPage = () => {
     ? foundItems?.data ?? []
     : (foundItems?.data ?? []).filter((i: any) => i?.category?.name?.toLowerCase() === categoryFilter.toLowerCase());
 
+  // Split into available and claimed
+  const availableItems = filteredItems.filter((i: any) => !(i?.isClaimed || i?.claimStatus === "CLAIMED"));
+  const claimedItems = filteredItems.filter((i: any) => i?.isClaimed || i?.claimStatus === "CLAIMED");
+
+  const [showClaimedSection, setShowClaimedSection] = useState(false);
+
   const totalPages = foundItems?.meta?.totalPage || 1;
   const pagedItems = filteredItems;
 
@@ -1325,161 +1331,220 @@ const FoundItemsPage = () => {
   return (
     <>
       <div className="min-h-screen bg-gray-950 pb-16 reveal">
-      {/* Offline Sync Banner */}
-      {pendingReports.length > 0 && (
-        <div className="bg-blue-600/20 border-b border-blue-500/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-0 z-[60] backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
-              <FaSpinner className={isOnline ? "animate-spin" : ""} size={20} />
-            </div>
-            <div>
-              <p className="text-white text-sm font-bold">{pendingReports.length} Pending Reports</p>
-              <p className="text-blue-400/70 text-[10px] font-medium">
-              {isOnline ? "Connection restored. Syncing your reports automatically..." : "You are offline. Reports will sync when connection returns."}
-            </p>
-          </div>
-        </div>
-        {isOnline && (
-          <button
-            onClick={triggerSync}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
-          >
-            Sync Now
-          </button>
-        )}
-        </div>
-      )}
-
-      {/* ── Page header ── */}
-      <div className="border-b border-white/5 bg-gray-900/50">
-        <div className="px-6 sm:px-10 lg:px-16 py-6 sm:py-8">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-1.5 h-5 bg-blue-500 rounded-full" />
-                <p className="text-blue-400 text-[11px] font-bold uppercase tracking-widest">Found Items</p>
+        {/* Offline Sync Banner */}
+        {pendingReports.length > 0 && (
+          <div className="bg-blue-600/20 border-b border-blue-500/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-0 z-[60] backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                <FaSpinner className={isOnline ? "animate-spin" : ""} size={20} />
               </div>
-              <h1 className="text-white text-2xl sm:text-3xl font-bold tracking-tight">Items Found on Campus</h1>
-              <p className="text-gray-500 text-sm mt-1 max-w-lg">Browse items recovered and logged by the SAS office. If you recognize something, submit a claim to verify ownership.</p>
+              <div>
+                <p className="text-white text-sm font-bold">{pendingReports.length} Pending Reports</p>
+                <p className="text-blue-400/70 text-[10px] font-medium">
+                  {isOnline ? "Connection restored. Syncing your reports automatically..." : "You are offline. Reports will sync when connection returns."}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
-              
-              {isAdmin && (
-                <button onClick={() => setIsAddModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all">
-                  <FaPlus size={10} /> Add Found Item
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Points Teaser Banner ── */}
-      {!isAdmin && (
-        <div className="px-6 sm:px-10 lg:px-16 pt-5 reveal reveal-delay-1">
-          <PointsTeaserBanner />
-        </div>
-      )}
-
-      {/* ── Search & filters ── */}
-      <div className="px-6 sm:px-10 lg:px-16 py-5">
-        <div className="flex flex-col gap-3">
-          {/* Search + View Toggle Row */}
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <FaSearch className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
-              <input type="text" value={fuzzyTerm} onChange={handleFuzzyChange}
-                placeholder="Search by name, location, or description..."
-                className="w-full h-9 sm:h-auto pl-9 sm:pl-11 pr-20 sm:pr-28 sm:py-3 bg-gray-900 border border-white/5 rounded-xl text-white text-xs sm:text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" />
-              {fuzzyTerm && (
-                <button onClick={clearSearch} className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] sm:text-xs rounded-lg transition-all">
-                  <FaTimes size={9} /> Clear
-                </button>
-              )}
-            </div>
-            <div className="flex gap-0.5 bg-gray-900 border border-white/5 rounded-xl p-1 sm:py-2 shrink-0">
-              <button onClick={() => setViewMode("grid")} title="Grid view"
-                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-500/10 text-blue-400" : "text-gray-500 hover:text-white"}`}>
-                <FaTh size={12} />
+            {isOnline && (
+              <button
+                onClick={triggerSync}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
+              >
+                Sync Now
               </button>
-              <button onClick={() => setViewMode("list")} title="List view"
-                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-blue-500/10 text-blue-400" : "text-gray-500 hover:text-white"}`}>
-                <FaList size={12} />
-              </button>
-            </div>
-          </div>
-          {/* Filter Dropdowns Row */}
-          <div className="grid grid-cols-2 gap-2">
-            <CustomSelect
-              options={sortOptions}
-              value={sortValue}
-              onChange={(v) => { const [f, o] = v.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }}
-            />
-            <CustomSelect
-              options={categoryOptions}
-              value={categoryFilter}
-              onChange={(v) => { setCategoryFilter(v); setCurrentPage(1); }}
-            />
-          </div>
-          {fuzzyTerm && (
-            <p className="text-xs text-gray-600 pl-1">Results for <span className="text-blue-400 font-medium">"{fuzzyTerm}"</span> — updating as you type</p>
-          )}
-        </div>
-      </div>
-
-      {/* ── Content ── */}
-      <div className="px-6 sm:px-10 lg:px-16">
-        {(isLoading || (isFetching && !foundItems)) ? (
-          <div className={viewMode === "grid" ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-2"}>
-            {Array.from({ length: 8 }).map((_, i) => (
-              viewMode === "grid" ? (
-                <div key={i} className="bg-gray-900 rounded-xl border border-white/5 overflow-hidden animate-pulse">
-                  <div className="h-48 bg-gray-800/60" /><div className="p-4 space-y-2.5"><div className="h-4 bg-gray-800/60 rounded-lg" /><div className="h-3 bg-gray-800/60 rounded-lg w-3/4" /><div className="h-8 bg-gray-800/60 rounded-xl mt-3" /></div>
-                </div>
-              ) : <div key={i} className="bg-gray-900 rounded-xl border border-white/5 h-16 animate-pulse" />
-            ))}
-          </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="w-16 h-16 rounded-2xl bg-gray-900 border border-white/5 flex items-center justify-center mx-auto mb-4"><FaSearch className="text-gray-600" size={20} /></div>
-            <p className="text-white font-semibold mb-1">No found items</p>
-            <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
-            {(fuzzyTerm || categoryFilter !== "ALL") && (
-              <button onClick={() => { clearSearch(); setCategoryFilter("ALL"); }} className="mt-4 px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">Clear filters</button>
             )}
           </div>
-        ) : (
-          <div className={viewMode === "grid" ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-2"}>
-            {filteredItems.map((item: any) => (
-              viewMode === "grid"
-                ? <FoundItemCard key={item.id} item={item} isAdmin={isAdmin} currentUser={users} onInitiateChat={handleInitiateChat} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
-                : <FoundItemRow key={item.id} item={item} isAdmin={isAdmin} currentUser={users} onInitiateChat={handleInitiateChat} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
-            ))}
+        )}
+
+        {/* ── Page header ── */}
+        <div className="border-b border-white/5 bg-gray-900/50">
+          <div className="px-6 sm:px-10 lg:px-16 py-6 sm:py-8">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-1.5 h-5 bg-blue-500 rounded-full" />
+                  <p className="text-blue-400 text-[11px] font-bold uppercase tracking-widest">Found Items</p>
+                </div>
+                <h1 className="text-white text-2xl sm:text-3xl font-bold tracking-tight">Items Found on Campus</h1>
+                <p className="text-gray-500 text-sm mt-1 max-w-lg">Browse items recovered and logged by the SAS office. If you recognize something, submit a claim to verify ownership.</p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+
+                {isAdmin && (
+                  <button onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all">
+                    <FaPlus size={10} /> Add Found Item
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Points Teaser Banner ── */}
+        {!isAdmin && (
+          <div className="px-6 sm:px-10 lg:px-16 pt-5 reveal reveal-delay-1">
+            <PointsTeaserBanner />
           </div>
         )}
-      </div>
 
-      {/* ── Pagination ── */}
-      {totalPages > 1 && (
-        <div className="flex flex-col items-center mt-12 space-y-3">
-          <p className="text-gray-600 text-xs">Page {currentPage} of {totalPages} · {foundItems?.meta?.total || 0} items</p>
-          <nav className="inline-flex items-center gap-1 bg-gray-900 border border-white/5 rounded-2xl p-1.5">
-            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="flex items-center px-3.5 py-2 text-xs font-medium rounded-xl text-gray-400 hover:text-white hover:bg-white/5 disabled:text-gray-700 disabled:cursor-not-allowed transition-all"><FaChevronLeft size={10} className="mr-1.5" /> Prev</button>
-            {(() => {
-              const pages = []; const max = 5;
-              let start = Math.max(1, currentPage - Math.floor(max / 2));
-              const end = Math.min(totalPages, start + max - 1);
-              if (end - start + 1 < max) start = Math.max(1, end - max + 1);
-              if (start > 1) { pages.push(<button key={1} onClick={() => setCurrentPage(1)} className="px-3 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">1</button>); if (start > 2) pages.push(<span key="e1" className="px-1 text-gray-700 text-xs">…</span>); }
-              for (let i = start; i <= end; i++) pages.push(<button key={i} onClick={() => setCurrentPage(i)} className={`px-3 py-2 text-xs font-medium rounded-lg transition-all ${currentPage === i ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>{i}</button>);
-              if (end < totalPages) { if (end < totalPages - 1) pages.push(<span key="e2" className="px-1 text-gray-700 text-xs">…</span>); pages.push(<button key={totalPages} onClick={() => setCurrentPage(totalPages)} className="px-3 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">{totalPages}</button>); }
-              return pages;
-            })()}
-            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="flex items-center px-3.5 py-2 text-xs font-medium rounded-xl text-gray-400 hover:text-white hover:bg-white/5 disabled:text-gray-700 disabled:cursor-not-allowed transition-all">Next <FaChevronRight size={10} className="ml-1.5" /></button>
-          </nav>
+        {/* ── Search & filters ── */}
+        <div className="px-6 sm:px-10 lg:px-16 py-5">
+          <div className="flex flex-col gap-3">
+            {/* Search + View Toggle Row */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <FaSearch className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={13} />
+                <input type="text" value={fuzzyTerm} onChange={handleFuzzyChange}
+                  placeholder="Search by name, location, or description..."
+                  className="w-full h-9 sm:h-auto pl-9 sm:pl-11 pr-20 sm:pr-28 sm:py-3 bg-gray-900 border border-white/5 rounded-xl text-white text-xs sm:text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all" />
+                {fuzzyTerm && (
+                  <button onClick={clearSearch} className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] sm:text-xs rounded-lg transition-all">
+                    <FaTimes size={9} /> Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-0.5 bg-gray-900 border border-white/5 rounded-xl p-1 sm:py-2 shrink-0">
+                <button onClick={() => setViewMode("grid")} title="Grid view"
+                  className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-blue-500/10 text-blue-400" : "text-gray-500 hover:text-white"}`}>
+                  <FaTh size={12} />
+                </button>
+                <button onClick={() => setViewMode("list")} title="List view"
+                  className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-blue-500/10 text-blue-400" : "text-gray-500 hover:text-white"}`}>
+                  <FaList size={12} />
+                </button>
+              </div>
+            </div>
+            {/* Filter Dropdowns Row */}
+            <div className="grid grid-cols-2 gap-2">
+              <CustomSelect
+                options={sortOptions}
+                value={sortValue}
+                onChange={(v) => { const [f, o] = v.split("-"); setSortBy(f); setSortOrder(o); setCurrentPage(1); }}
+              />
+              <CustomSelect
+                options={categoryOptions}
+                value={categoryFilter}
+                onChange={(v) => { setCategoryFilter(v); setCurrentPage(1); }}
+              />
+            </div>
+            {fuzzyTerm && (
+              <p className="text-xs text-gray-600 pl-1">Results for <span className="text-blue-400 font-medium">"{fuzzyTerm}"</span> — updating as you type</p>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* ── Content ── */}
+        <div className="px-6 sm:px-10 lg:px-16">
+          {(isLoading || (isFetching && !foundItems)) ? (
+            <div className={viewMode === "grid" ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-2"}>
+              {Array.from({ length: 8 }).map((_, i) => (
+                viewMode === "grid" ? (
+                  <div key={i} className="bg-gray-900 rounded-xl border border-white/5 overflow-hidden animate-pulse">
+                    <div className="h-48 bg-gray-800/60" /><div className="p-4 space-y-2.5"><div className="h-4 bg-gray-800/60 rounded-lg" /><div className="h-3 bg-gray-800/60 rounded-lg w-3/4" /><div className="h-8 bg-gray-800/60 rounded-xl mt-3" /></div>
+                  </div>
+                ) : <div key={i} className="bg-gray-900 rounded-xl border border-white/5 h-16 animate-pulse" />
+              ))}
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-20">
+              <div className="w-16 h-16 rounded-2xl bg-gray-900 border border-white/5 flex items-center justify-center mx-auto mb-4"><FaSearch className="text-gray-600" size={20} /></div>
+              <p className="text-white font-semibold mb-1">No found items</p>
+              <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
+              {(fuzzyTerm || categoryFilter !== "ALL") && (
+                <button onClick={() => { clearSearch(); setCategoryFilter("ALL"); }} className="mt-4 px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">Clear filters</button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* ── Available Items ── */}
+              {availableItems.length > 0 ? (
+                <div className={viewMode === "grid" ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-2"}>
+                  {availableItems.map((item: any) => (
+                    viewMode === "grid"
+                      ? <FoundItemCard key={item.id} item={item} isAdmin={isAdmin} currentUser={users} onInitiateChat={handleInitiateChat} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
+                      : <FoundItemRow key={item.id} item={item} isAdmin={isAdmin} currentUser={users} onInitiateChat={handleInitiateChat} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-gray-900/40 border border-white/5 rounded-2xl">
+                  <div className="w-12 h-12 rounded-xl bg-gray-800 border border-white/5 flex items-center justify-center mx-auto mb-3"><FaCheckCircle className="text-gray-600" size={18} /></div>
+                  <p className="text-gray-400 font-semibold text-sm">All items have been claimed</p>
+                  <p className="text-gray-600 text-xs mt-1">Check the Claimed Items section below</p>
+                </div>
+              )}
+
+              {/* ── Claimed Items Section ── */}
+              {claimedItems.length > 0 && (
+                <div className="mt-10">
+                  {/* Section Header */}
+                  <button
+                    type="button"
+                    onClick={() => setShowClaimedSection(v => !v)}
+                    className="w-full flex items-center justify-between gap-3 mb-4 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-1.5 h-5 bg-blue-500 rounded-full" />
+                      <div className="flex items-center gap-2">
+                        <FaCheckCircle size={13} className="text-blue-400" />
+                        <p className="text-blue-400 text-xs font-bold uppercase tracking-widest">Claimed Items</p>
+                      </div>
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 bg-blue-500/15 border border-blue-500/30 text-blue-400 text-[10px] font-black rounded-full">
+                        {claimedItems.length}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-600 text-[10px] font-medium group-hover:text-gray-400 transition-colors">
+                        {showClaimedSection ? "Hide" : "Show"}
+                      </span>
+                      <div className={`w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 transition-transform duration-300 ${showClaimedSection ? "rotate-180" : ""}`}>
+                        <FaChevronDown size={9} />
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Divider */}
+                  <div className="h-px bg-gradient-to-r from-blue-500/30 via-emerald-500/10 to-transparent mb-5" />
+
+                  {/* Collapsible Content */}
+                  {showClaimedSection && (
+                    <>
+                      <p className="text-gray-600 text-[11px] mb-4 pl-1">These items have already been returned to their owners.</p>
+                      <div className={`${viewMode === "grid" ? "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-2"} opacity-75`}>
+                        {claimedItems.map((item: any) => (
+                          viewMode === "grid"
+                            ? <FoundItemCard key={item.id} item={item} isAdmin={isAdmin} currentUser={users} onInitiateChat={handleInitiateChat} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
+                            : <FoundItemRow key={item.id} item={item} isAdmin={isAdmin} currentUser={users} onInitiateChat={handleInitiateChat} setClaimItem={setClaimItem} onOpenComments={() => setCommentItem(item)} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* ── Pagination ── */}
+        {totalPages > 1 && (
+          <div className="flex flex-col items-center mt-12 space-y-3">
+            <p className="text-gray-600 text-xs">Page {currentPage} of {totalPages} · {foundItems?.meta?.total || 0} items</p>
+            <nav className="inline-flex items-center gap-1 bg-gray-900 border border-white/5 rounded-2xl p-1.5">
+              <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="flex items-center px-3.5 py-2 text-xs font-medium rounded-xl text-gray-400 hover:text-white hover:bg-white/5 disabled:text-gray-700 disabled:cursor-not-allowed transition-all"><FaChevronLeft size={10} className="mr-1.5" /> Prev</button>
+              {(() => {
+                const pages = []; const max = 5;
+                let start = Math.max(1, currentPage - Math.floor(max / 2));
+                const end = Math.min(totalPages, start + max - 1);
+                if (end - start + 1 < max) start = Math.max(1, end - max + 1);
+                if (start > 1) { pages.push(<button key={1} onClick={() => setCurrentPage(1)} className="px-3 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">1</button>); if (start > 2) pages.push(<span key="e1" className="px-1 text-gray-700 text-xs">…</span>); }
+                for (let i = start; i <= end; i++) pages.push(<button key={i} onClick={() => setCurrentPage(i)} className={`px-3 py-2 text-xs font-medium rounded-lg transition-all ${currentPage === i ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>{i}</button>);
+                if (end < totalPages) { if (end < totalPages - 1) pages.push(<span key="e2" className="px-1 text-gray-700 text-xs">…</span>); pages.push(<button key={totalPages} onClick={() => setCurrentPage(totalPages)} className="px-3 py-2 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all">{totalPages}</button>); }
+                return pages;
+              })()}
+              <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="flex items-center px-3.5 py-2 text-xs font-medium rounded-xl text-gray-400 hover:text-white hover:bg-white/5 disabled:text-gray-700 disabled:cursor-not-allowed transition-all">Next <FaChevronRight size={10} className="ml-1.5" /></button>
+            </nav>
+          </div>
+        )}
       </div>
 
       {/* ── Add Found Item Modal ── */}
@@ -1937,9 +2002,8 @@ const FoundItemsPage = () => {
       {/* ── Scroll to Top Button ── */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        className={`fixed bottom-6 right-6 p-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg shadow-black/50 transition-all duration-300 z-40 hover:scale-110 ${
-          showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
-        }`}
+        className={`fixed bottom-6 right-6 p-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg shadow-black/50 transition-all duration-300 z-40 hover:scale-110 ${showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
+          }`}
         title="Back to top"
       >
         <FaChevronUp size={16} />
