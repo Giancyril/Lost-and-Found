@@ -190,18 +190,27 @@ for (let h = 0; h < 24; h++) {
 }
 
 const CustomTimePicker = ({
-  value, onChange, placeholder = "Select time",
+  value, onChange, placeholder = "Select time", openUp = false,
 }: {
-  value: string; onChange: (val: string) => void; placeholder?: string;
+  value: string; onChange: (val: string) => void; placeholder?: string; openUp?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("mousedown", fn);
     return () => document.removeEventListener("mousedown", fn);
   }, []);
+
+  // Scroll selected item into view when opening
+  useEffect(() => {
+    if (open && value && listRef.current) {
+      const btn = listRef.current.querySelector(`[data-t="${value}"]`) as HTMLElement;
+      if (btn) btn.scrollIntoView({ block: "center" });
+    }
+  }, [open, value]);
 
   const display = value
     ? (() => { const [h, m] = value.split(":").map(Number); const p = h >= 12 ? "PM" : "AM"; return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${p}`; })()
@@ -218,14 +227,14 @@ const CustomTimePicker = ({
         {value && <span role="button" onClick={e => { e.stopPropagation(); onChange(""); }} className="text-gray-500 hover:text-gray-300 cursor-pointer shrink-0"><FaTimes size={9} /></span>}
       </div>
       {open && (
-        <div className="absolute top-full mt-2 left-0 right-0 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 z-[999] overflow-hidden">
-          <div className="max-h-44 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.15) transparent" }}>
+        <div className={`absolute ${openUp ? "bottom-full mb-2" : "top-full mt-2"} left-0 right-0 bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 z-[999] overflow-hidden`}>
+          <div ref={listRef} className="max-h-44 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.15) transparent" }}>
             {TIME_SLOTS.map(t => {
               const [h, m] = t.split(":").map(Number);
               const p = h >= 12 ? "PM" : "AM";
               const label = `${h % 12 || 12}:${String(m).padStart(2, "0")} ${p}`;
               return (
-                <button key={t} type="button" onClick={() => { onChange(t); setOpen(false); }}
+                <button key={t} data-t={t} type="button" onClick={() => { onChange(t); setOpen(false); }}
                   className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${
                     t === value ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}>
@@ -602,11 +611,13 @@ const AnnouncementsTab = () => {
                     onChange={val => setForm(f => ({ ...f, publishDate: val }))}
                     min={new Date().toISOString().split("T")[0]}
                     placeholder="Select date"
+                    openUp
                   />
                   <CustomTimePicker
                     value={form.publishTime}
                     onChange={val => setForm(f => ({ ...f, publishTime: val }))}
                     placeholder="Select time"
+                    openUp
                   />
                 </div>
               </div>
