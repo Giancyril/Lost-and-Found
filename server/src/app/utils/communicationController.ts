@@ -11,23 +11,55 @@ const prisma = new PrismaClient();
 
 export const createAnnouncement = async (req: Request, res: Response) => {
   try {
-    const { title, message, type = "INFO", target = "ALL", sendEmail: shouldSendEmail = false } = req.body;
+    const {
+      title,
+      message,
+      type = "INFO",
+      target = "ALL",
+      sendEmail: shouldSendEmail = false,
+      publishAt,
+      targetGroupYear,
+      targetGroupCourse,
+    } = req.body;
+
     if (!title || !message) {
       return sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: "Title and message are required", data: null });
     }
 
+    const publishDate = publishAt ? new Date(publishAt) : new Date();
+    const isFuture = publishDate.getTime() > Date.now();
+
     const announcement = await prisma.announcement.create({
-      data: { title, message, type, target, sentByName: (req as any).user?.username || "Admin", sentById: (req as any).user?.id },
+      data: {
+        title,
+        message,
+        type,
+        target,
+        publishAt: publishDate,
+        sendEmail: shouldSendEmail,
+        targetGroupYear: targetGroupYear || null,
+        targetGroupCourse: targetGroupCourse || null,
+        sentByName: (req as any).user?.username || "Admin",
+        sentById: (req as any).user?.id,
+        emailSent: false,
+        emailCount: 0,
+      },
     });
 
     let emailCount = 0;
+    let sentNow = false;
 
-    if (shouldSendEmail) {
+    if (shouldSendEmail && !isFuture) {
       const allUsers = await userService.allUsers();
       const targets = allUsers.filter((u: any) => {
         if (u.isDeleted || !u.activated || !u.email) return false;
         if (target === "ADMINS") return u.role === "ADMIN";
-        if (target === "STUDENTS") return u.role !== "ADMIN";
+        if (target === "STUDENTS") {
+          if (u.role === "ADMIN") return false;
+          if (targetGroupYear && u.yearLevel !== targetGroupYear) return false;
+          if (targetGroupCourse && u.course !== targetGroupCourse) return false;
+          return true;
+        }
         return true;
       });
 
@@ -43,6 +75,7 @@ export const createAnnouncement = async (req: Request, res: Response) => {
 
       const results = await Promise.allSettled(emailPromises);
       emailCount = results.filter(r => r.status === "fulfilled" && r.value !== null).length;
+      sentNow = true;
 
       await prisma.announcement.update({
         where: { id: announcement.id },
@@ -52,8 +85,10 @@ export const createAnnouncement = async (req: Request, res: Response) => {
 
     sendResponse(res, {
       statusCode: StatusCodes.CREATED, success: true,
-      message: shouldSendEmail ? `Announcement sent to ${emailCount} users` : "Announcement created",
-      data: { ...announcement, emailCount },
+      message: isFuture 
+        ? "Announcement scheduled successfully" 
+        : (sentNow ? `Announcement sent to ${emailCount} users` : "Announcement created"),
+      data: { ...announcement, emailCount: sentNow ? emailCount : 0, emailSent: sentNow },
     });
   } catch (error: any) {
     sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, message: error?.message, data: null });
@@ -93,6 +128,7 @@ export const sendMassReminder = async (req: Request, res: Response) => {
         target: "STUDENTS",
         sentByName: (req as any).user?.username || "Admin",
         sentById: (req as any).user?.id,
+        sendEmail: true,
         emailSent: true,
         emailCount
       },
@@ -286,7 +322,7 @@ export const getCommHubStats = async (req: Request, res: Response) => {
 // ── EMAIL TEMPLATES ───────────────────────────────────────────────────────────
 import { reminderEmailTemplate } from "./emailTemplates";
 
-const announcementEmailTemplate = (data: { title: string; message: string; type: string; recipientName: string }) => {
+export const announcementEmailTemplate = (data: { title: string; message: string; type: string; recipientName: string }) => {
   const accentColor = data.type === "URGENT" ? "#ef4444" : data.type === "WARNING" ? "#f59e0b" : data.type === "SUCCESS" ? "#10b981" : "#0891b2";
   const badge = data.type === "URGENT" ? " URGENT" : data.type === "WARNING" ? " NOTICE" : data.type === "SUCCESS" ? " UPDATE" : " ANNOUNCEMENT";
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>

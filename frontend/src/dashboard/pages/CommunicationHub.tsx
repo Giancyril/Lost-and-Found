@@ -270,17 +270,48 @@ const AnnouncementsTab = () => {
   const [createAnnouncement, { isLoading: isSending }] = useCreateAnnouncementMutation();
   const [deleteAnnouncement] = useDeleteAnnouncementMutation();
   const [showCompose, setShowCompose] = useState(false);
-  const [form, setForm] = useState({ title: "", message: "", type: "INFO", target: "ALL", sendEmail: false });
+  const [form, setForm] = useState({
+    title: "",
+    message: "",
+    type: "INFO",
+    target: "ALL",
+    sendEmail: false,
+    publishAt: "",
+    scheduleEnabled: false,
+    targetGroupYear: "",
+    targetGroupCourse: "",
+  });
   const announcements: any[] = annData?.data || [];
 
   const handleSubmit = async () => {
     if (!form.title.trim() || !form.message.trim()) { toast.error("Title and message are required"); return; }
     try {
-      const res: any = await createAnnouncement(form);
+      const payload = {
+        title: form.title,
+        message: form.message,
+        type: form.type,
+        target: form.target,
+        sendEmail: form.sendEmail,
+        publishAt: form.scheduleEnabled && form.publishAt ? new Date(form.publishAt).toISOString() : null,
+        targetGroupYear: form.target === "STUDENTS" ? form.targetGroupYear : null,
+        targetGroupCourse: form.target === "STUDENTS" ? form.targetGroupCourse : null,
+      };
+
+      const res: any = await createAnnouncement(payload);
       if (res?.data?.success) {
         toast.success(res.data.message || "Announcement sent!");
         setShowCompose(false);
-        setForm({ title: "", message: "", type: "INFO", target: "ALL", sendEmail: false });
+        setForm({
+          title: "",
+          message: "",
+          type: "INFO",
+          target: "ALL",
+          sendEmail: false,
+          publishAt: "",
+          scheduleEnabled: false,
+          targetGroupYear: "",
+          targetGroupCourse: "",
+        });
       } else { toast.error("Failed to send announcement"); }
     } catch { toast.error("Something went wrong"); }
   };
@@ -313,6 +344,7 @@ const AnnouncementsTab = () => {
         <div className="space-y-3">
           {announcements.map((a: any) => {
             const tc = TYPE_CONFIG[a.type] || TYPE_CONFIG.INFO;
+            const isScheduled = a.publishAt && new Date(a.publishAt).getTime() > Date.now();
             return (
               <div key={a.id} className="bg-gray-900 border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-all">
                 <div className="flex items-start justify-between gap-3">
@@ -321,12 +353,41 @@ const AnnouncementsTab = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-white text-sm font-semibold">{a.title}</p>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${tc.bg} ${tc.color}`}>{tc.label}</span>
-                        <span className="text-[10px] text-gray-600 border border-white/5 px-2 py-0.5 rounded-full">{a.target}</span>
+                        <span className="text-[10px] text-gray-600 border border-white/5 px-2 py-0.5 rounded-full">
+                          {a.target}
+                          {a.target === "STUDENTS" && (a.targetGroupCourse || a.targetGroupYear) && (
+                            <span className="text-gray-500 font-medium">
+                              {a.targetGroupCourse ? ` · ${a.targetGroupCourse.split(" in ").pop()}` : ""}
+                              {a.targetGroupYear ? ` · ${a.targetGroupYear}` : ""}
+                            </span>
+                          )}
+                        </span>
+                        {isScheduled && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-400 flex items-center gap-1">
+                            <FaClock size={8} /> Scheduled
+                          </span>
+                        )}
                       </div>
                       <p className="text-gray-400 text-xs mt-1 line-clamp-2 leading-relaxed">{a.message}</p>
                       <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-600">
-                        <span>By {a.sentByName}</span><span>·</span><span>{timeAgo(a.createdAt)}</span>
-                        {a.emailSent && <><span>·</span><span className="text-cyan-600 flex items-center gap-1"><FaEnvelope size={8} /> {a.emailCount} emails sent</span></>}
+                        <span>By {a.sentByName}</span>
+                        <span>·</span>
+                        <span>{isScheduled ? `Publishes ${timeAgo(a.publishAt)}` : timeAgo(a.createdAt)}</span>
+                        {isScheduled ? (
+                          <>
+                            <span>·</span>
+                            <span className="text-amber-400 font-bold">Scheduled: {new Date(a.publishAt).toLocaleString("en-PH")}</span>
+                          </>
+                        ) : (
+                          a.emailSent && (
+                            <>
+                              <span>·</span>
+                              <span className="text-cyan-600 flex items-center gap-1">
+                                <FaEnvelope size={8} /> {a.emailCount} emails sent
+                              </span>
+                            </>
+                          )
+                        )}
                       </div>
                     </div>
                   </div>
@@ -360,21 +421,76 @@ const AnnouncementsTab = () => {
                 <CustomDropdown options={ANN_TARGETS} value={form.target} onChange={val => setForm(f => ({ ...f, target: val }))} accentColor="violet" />
               </div>
             </div>
+
+            {form.target === "STUDENTS" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-gray-800/40 border border-white/5 rounded-xl">
+                <div className="space-y-1.5">
+                  <FieldLabel>Filter Course</FieldLabel>
+                  <input
+                    value={form.targetGroupCourse}
+                    onChange={e => setForm(f => ({ ...f, targetGroupCourse: e.target.value }))}
+                    placeholder="e.g. Bachelor of Science in Information Technology"
+                    className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <FieldLabel>Filter Year Level</FieldLabel>
+                  <select
+                    value={form.targetGroupYear}
+                    onChange={e => setForm(f => ({ ...f, targetGroupYear: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+                  >
+                    <option value="">All Year Levels</option>
+                    <option value="First Year">First Year</option>
+                    <option value="Second Year">Second Year</option>
+                    <option value="Third Year">Third Year</option>
+                    <option value="Fourth Year">Fourth Year</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <FieldLabel>Message <span className="text-red-400">*</span></FieldLabel>
               <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={5} placeholder=" "
                 className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
             </div>
-            <label className="flex items-center gap-3 p-3 bg-gray-800/60 border border-white/5 rounded-xl cursor-pointer hover:border-cyan-500/20 transition-all">
-              <div className={`w-10 h-5 rounded-full transition-all relative ${form.sendEmail ? "bg-cyan-500" : "bg-gray-700"}`}
-                onClick={() => setForm(f => ({ ...f, sendEmail: !f.sendEmail }))}>
-                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${form.sendEmail ? "left-5" : "left-0.5"}`} />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="flex items-center gap-3 p-3 bg-gray-800/60 border border-white/5 rounded-xl cursor-pointer hover:border-cyan-500/20 transition-all">
+                <div className={`w-10 h-5 rounded-full transition-all relative ${form.sendEmail ? "bg-cyan-500" : "bg-gray-700"}`}
+                  onClick={() => setForm(f => ({ ...f, sendEmail: !f.sendEmail }))}>
+                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${form.sendEmail ? "left-5" : "left-0.5"}`} />
+                </div>
+                <div>
+                  <p className="text-white text-xs font-semibold">Send as Email</p>
+                  <p className="text-gray-500 text-[10px]">Deliver via email</p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-3 bg-gray-800/60 border border-white/5 rounded-xl cursor-pointer hover:border-cyan-500/20 transition-all">
+                <div className={`w-10 h-5 rounded-full transition-all relative ${form.scheduleEnabled ? "bg-cyan-500" : "bg-gray-700"}`}
+                  onClick={() => setForm(f => ({ ...f, scheduleEnabled: !f.scheduleEnabled }))}>
+                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${form.scheduleEnabled ? "left-5" : "left-0.5"}`} />
+                </div>
+                <div>
+                  <p className="text-white text-xs font-semibold">Schedule Later</p>
+                  <p className="text-gray-500 text-[10px]">Publish at a future date</p>
+                </div>
+              </label>
+            </div>
+
+            {form.scheduleEnabled && (
+              <div className="space-y-1.5 p-3 bg-gray-800/40 border border-white/5 rounded-xl">
+                <FieldLabel>Publish Date &amp; Time</FieldLabel>
+                <input
+                  type="datetime-local"
+                  value={form.publishAt}
+                  onChange={e => setForm(f => ({ ...f, publishAt: e.target.value }))}
+                  className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+                />
               </div>
-              <div>
-                <p className="text-white text-xs font-semibold">Send as Email</p>
-                <p className="text-gray-500 text-[10px]">Deliver this announcement via email to target users</p>
-              </div>
-            </label>
+            )}
           </div>
           <div className="px-5 py-4 border-t border-white/5 flex gap-3 shrink-0">
             <button onClick={() => setShowCompose(false)} className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
@@ -385,6 +501,73 @@ const AnnouncementsTab = () => {
           </div>
         </Modal>
       )}
+    </div>
+  );
+};
+
+const SlaTimer = ({ ticket }: { ticket: any }) => {
+  const slaTargets: Record<string, number> = {
+    LOW: 72 * 60 * 60 * 1000,
+    NORMAL: 48 * 60 * 60 * 1000,
+    HIGH: 24 * 60 * 60 * 1000,
+    URGENT: 12 * 60 * 60 * 1000,
+  };
+  const targetTime = slaTargets[ticket.priority] || slaTargets.NORMAL;
+  const isResolved = ticket.status === "RESOLVED" || ticket.status === "CLOSED";
+  
+  const end = isResolved && ticket.repliedAt ? new Date(ticket.repliedAt).getTime() : Date.now();
+  const elapsed = end - new Date(ticket.createdAt).getTime();
+  const breached = elapsed > targetTime;
+  
+  const formatDuration = (ms: number) => {
+    const hours = Math.floor(ms / (3600 * 1000));
+    const minutes = Math.floor((ms % (3600 * 1000)) / (60 * 1000));
+    if (hours === 0) return `${minutes}m`;
+    return `${hours}h ${minutes}m`;
+  };
+  
+  const pct = Math.min(100, Math.floor((elapsed / targetTime) * 100));
+  
+  return (
+    <div className="mt-3 p-3 bg-gray-800/40 border border-white/5 rounded-xl space-y-2">
+      <div className="flex items-center justify-between text-[10px] font-semibold text-gray-400">
+        <span className="flex items-center gap-1">
+          ⏱️ SLA Response Time Target: {formatDuration(targetTime)} ({ticket.priority} Priority)
+        </span>
+        {isResolved ? (
+          breached ? (
+            <span className="text-red-400 bg-red-400/10 border border-red-400/20 px-2 py-0.5 rounded-full">
+              SLA Breached (Resolved in {formatDuration(elapsed)})
+            </span>
+          ) : (
+            <span className="text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-full">
+              SLA Met (Resolved in {formatDuration(elapsed)})
+            </span>
+          )
+        ) : (
+          breached ? (
+            <span className="text-red-400 bg-red-400/10 border border-red-400/20 px-2 py-0.5 rounded-full animate-pulse">
+              SLA Breached (Overdue by {formatDuration(elapsed - targetTime)})
+            </span>
+          ) : (
+            <span className="text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-2 py-0.5 rounded-full">
+              SLA Active ({formatDuration(targetTime - elapsed)} left)
+            </span>
+          )
+        )}
+      </div>
+      <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+        <div 
+          className={`h-full transition-all duration-500 ${
+            breached 
+              ? "bg-red-500" 
+              : pct > 75 
+                ? "bg-amber-500" 
+                : "bg-cyan-500"
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
     </div>
   );
 };
@@ -464,6 +647,7 @@ const SupportTicketsTab = () => {
                       {t.senderEmail && <span className="flex items-center gap-1"><FaEnvelope size={8} /> {t.senderEmail}</span>}
                       <span>{timeAgo(t.createdAt)}</span>
                     </div>
+                    <SlaTimer ticket={t} />
                     {t.adminReply && (
                       <div className="mt-3 p-3 bg-cyan-500/5 border border-cyan-500/15 rounded-xl">
                         <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-1">Admin Reply · {t.repliedBy}</p>
@@ -684,9 +868,18 @@ const FeedbackTab = () => {
 const NotificationCenterTab = () => {
   const [createAnnouncement, { isLoading: isBroadcasting }] = useCreateAnnouncementMutation();
   const [sendMassReminder, { isLoading: isReminding }] = useSendMassReminderMutation();
-  const [form, setForm] = useState({ title: "", message: "", type: "INFO", target: "ALL" });
+  const [form, setForm] = useState({
+    title: "",
+    message: "",
+    type: "INFO",
+    target: "ALL",
+    publishAt: "",
+    scheduleEnabled: false,
+    targetGroupYear: "",
+    targetGroupCourse: "",
+  });
   const [sent, setSent] = useState(false);
-  const [lastResult, setLastResult] = useState<{ count: number; target: string } | null>(null);
+  const [lastResult, setLastResult] = useState<{ count: number; target: string; isScheduled?: boolean } | null>(null);
 
   const handleSendReminder = async () => {
     if (!confirm("This will send an email reminder to all active student accounts. Continue?")) return;
@@ -705,11 +898,36 @@ const NotificationCenterTab = () => {
   const handleBroadcast = async () => {
     if (!form.title.trim() || !form.message.trim()) { toast.error("Title and message are required"); return; }
     try {
-      const res: any = await createAnnouncement({ ...form, sendEmail: true });
+      const payload = {
+        title: form.title,
+        message: form.message,
+        type: form.type,
+        target: form.target,
+        sendEmail: true,
+        publishAt: form.scheduleEnabled && form.publishAt ? new Date(form.publishAt).toISOString() : null,
+        targetGroupYear: form.target === "STUDENTS" ? form.targetGroupYear : null,
+        targetGroupCourse: form.target === "STUDENTS" ? form.targetGroupCourse : null,
+      };
+
+      const res: any = await createAnnouncement(payload);
       if (res?.data?.success) {
-        setLastResult({ count: res.data.data?.emailCount || 0, target: form.target });
+        const isScheduled = form.scheduleEnabled && !!form.publishAt;
+        setLastResult({ 
+          count: res.data.data?.emailCount || 0, 
+          target: form.target,
+          isScheduled
+        });
         setSent(true);
-        setForm({ title: "", message: "", type: "INFO", target: "ALL" });
+        setForm({
+          title: "",
+          message: "",
+          type: "INFO",
+          target: "ALL",
+          publishAt: "",
+          scheduleEnabled: false,
+          targetGroupYear: "",
+          targetGroupCourse: "",
+        });
         toast.success(res.data.message);
       } else toast.error("Broadcast failed");
     } catch { toast.error("Something went wrong"); }
@@ -727,8 +945,15 @@ const NotificationCenterTab = () => {
             <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
               <FaCheckCircle size={24} className="text-emerald-400" />
             </div>
-            <p className="text-white font-semibold">Broadcast Sent!</p>
-            <p className="text-gray-400 text-sm mt-1">Delivered to <span className="text-emerald-400 font-bold">{lastResult.count}</span> {lastResult.target === "ALL" ? "users" : lastResult.target.toLowerCase()}</p>
+            <p className="text-white font-semibold">
+              {lastResult.isScheduled ? "Broadcast Scheduled!" : "Broadcast Sent!"}
+            </p>
+            <p className="text-gray-400 text-sm mt-1">
+              {lastResult.isScheduled 
+                ? "The broadcast will be delivered automatically at the scheduled time." 
+                : <>Delivered to <span className="text-emerald-400 font-bold">{lastResult.count}</span> {lastResult.target === "ALL" ? "users" : lastResult.target.toLowerCase()}</>
+              }
+            </p>
             <button onClick={() => setSent(false)} className="mt-4 px-5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors">Send Another</button>
           </div>
         ) : (
@@ -748,20 +973,73 @@ const NotificationCenterTab = () => {
                 <CustomDropdown options={ANN_TARGETS} value={form.target} onChange={val => setForm(f => ({ ...f, target: val }))} accentColor="violet" />
               </div>
             </div>
+
+            {form.target === "STUDENTS" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-gray-800/40 border border-white/5 rounded-xl">
+                <div className="space-y-1.5">
+                  <FieldLabel>Filter Course</FieldLabel>
+                  <input
+                    value={form.targetGroupCourse}
+                    onChange={e => setForm(f => ({ ...f, targetGroupCourse: e.target.value }))}
+                    placeholder="e.g. Bachelor of Science in Information Technology"
+                    className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <FieldLabel>Filter Year Level</FieldLabel>
+                  <select
+                    value={form.targetGroupYear}
+                    onChange={e => setForm(f => ({ ...f, targetGroupYear: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+                  >
+                    <option value="">All Year Levels</option>
+                    <option value="First Year">First Year</option>
+                    <option value="Second Year">Second Year</option>
+                    <option value="Third Year">Third Year</option>
+                    <option value="Fourth Year">Fourth Year</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <FieldLabel>Message <span className="text-red-400">*</span></FieldLabel>
               <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={6} placeholder=" "
                 className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/30" />
             </div>
+
+            <label className="flex items-center gap-3 p-3 bg-gray-800/60 border border-white/5 rounded-xl cursor-pointer hover:border-cyan-500/20 transition-all select-none">
+              <div className={`w-10 h-5 rounded-full transition-all relative ${form.scheduleEnabled ? "bg-cyan-500" : "bg-gray-700"}`}
+                onClick={() => setForm(f => ({ ...f, scheduleEnabled: !f.scheduleEnabled }))}>
+                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${form.scheduleEnabled ? "left-5" : "left-0.5"}`} />
+              </div>
+              <div>
+                <p className="text-white text-xs font-semibold">Schedule Broadcast (Publish Later)</p>
+                <p className="text-gray-500 text-[10px]">Deliver email and announcement at a future date and time</p>
+              </div>
+            </label>
+
+            {form.scheduleEnabled && (
+              <div className="space-y-1.5 p-3 bg-gray-800/40 border border-white/5 rounded-xl">
+                <FieldLabel>Publish Date &amp; Time</FieldLabel>
+                <input
+                  type="datetime-local"
+                  value={form.publishAt}
+                  onChange={e => setForm(f => ({ ...f, publishAt: e.target.value }))}
+                  className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+                />
+              </div>
+            )}
+
             <div className="p-3 bg-blue-500/5 border border-blue-500/15 rounded-xl flex items-start gap-2">
               <FaExclamationTriangle size={10} className="text-blue-400 shrink-0 mt-0.5" />
               <p className="text-blue-300/70 text-xs leading-relaxed">
-                This will send an email to <strong className="text-blue-300">{form.target === "ALL" ? "all active users" : form.target.toLowerCase()}</strong>. Make sure the message is accurate before broadcasting.
+                This will send an email to <strong className="text-blue-300">{form.target === "ALL" ? "all active users" : form.target.toLowerCase()}</strong>{form.target === "STUDENTS" && (form.targetGroupCourse || form.targetGroupYear) && <> matching specified target filters</>}. Make sure the message is accurate before broadcasting.
               </p>
             </div>
             <button onClick={handleBroadcast} disabled={isBroadcasting}
               className="w-full py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-              {isBroadcasting ? <><FaSpinner className="animate-spin" size={12} /> Broadcasting…</> : <><FaBell size={11} /> Broadcast Now</>}
+              {isBroadcasting ? <><FaSpinner className="animate-spin" size={12} /> Broadcasting…</> : <><FaBell size={11} /> {form.scheduleEnabled ? "Schedule Broadcast" : "Broadcast Now"}</>}
             </button>
           </div>
         )}

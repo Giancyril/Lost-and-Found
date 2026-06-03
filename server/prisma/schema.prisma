@@ -250,18 +250,22 @@ model Points {
 }
 
 model Announcement {
-  id         String             @id @default(uuid())
-  title      String
-  message    String
-  type       AnnouncementType   @default(INFO)
-  target     AnnouncementTarget @default(ALL)
-  sentByName String             @default("Admin")
-  sentById   String?
-  emailSent  Boolean            @default(false)
-  emailCount Int                @default(0)
-  isDeleted  Boolean            @default(false)
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
+  id                String             @id @default(uuid())
+  title             String
+  message           String
+  type              AnnouncementType   @default(INFO)
+  target            AnnouncementTarget @default(ALL)
+  sentByName        String             @default("Admin")
+  sentById          String?
+  sendEmail         Boolean            @default(false)
+  emailSent         Boolean            @default(false)
+  emailCount        Int                @default(0)
+  publishAt         DateTime           @default(now())
+  targetGroupYear   String?
+  targetGroupCourse String?
+  isDeleted         Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@map("announcements")
 }

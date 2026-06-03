@@ -4,6 +4,7 @@ import { createServer } from "http";
 import { initializeSocket } from "./websocket/socketServer";
 import { startBountyCron } from "./app/modules/bounty/bounty.service";
 import { startRetentionScheduler } from "./app/jobs/retentionScheduler";
+import { startAnnouncementScheduler } from "./app/jobs/announcementScheduler";
 import { connectRedis } from "./app/config/redis";
 import { startMasterlistSync } from "./app/modules/student/masterlist.sync";
 
@@ -23,6 +24,7 @@ async function main() {
   // Start background jobs
   startBountyCron();
   startRetentionScheduler();
+  startAnnouncementScheduler();
   startMasterlistSync();
   
   httpServer.listen(Number(PORT), "0.0.0.0", () => {
