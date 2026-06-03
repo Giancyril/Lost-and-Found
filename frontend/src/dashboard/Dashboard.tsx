@@ -4,9 +4,8 @@ import {
   FaArrowRight, FaSearch, FaCheckCircle, FaTimesCircle, FaClock,
   FaRecycle, FaChartBar, FaCalendarWeek,
   FaArchive, FaHistory, FaExclamationCircle, FaBell,
-  FaFire, FaFlag, FaCalendarAlt,
+  FaFire, FaFlag,
 } from "react-icons/fa";
-import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import {
   useAdminStatsQuery,
   useGetAllClaimsQuery,
@@ -44,20 +43,19 @@ const formatDate = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
 
 const claimStatusMeta: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  PENDING:   { label: "Pending",   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",    icon: <FaClock size={10} />            },
-  APPROVED:  { label: "Approved",  color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", icon: <FaCheckCircle size={10} />      },
-  REJECTED:  { label: "Rejected",  color: "text-red-400 bg-red-400/10 border-red-400/20",             icon: <FaTimesCircle size={10} />      },
-  Claimed:   { label: "Claimed",   color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", icon: <FaCheckCircle size={10} />      },
-  Available: { label: "Available", color: "text-blue-400 bg-blue-400/10 border-blue-400/20",          icon: <FaSearch size={10} />           },
-  Lost:      { label: "Lost",      color: "text-red-400 bg-red-400/10 border-red-400/20",             icon: <FaExclamationTriangle size={10} /> },
+  PENDING: { label: "Pending", color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20", icon: <FaClock size={10} /> },
+  APPROVED: { label: "Approved", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", icon: <FaCheckCircle size={10} /> },
+  REJECTED: { label: "Rejected", color: "text-red-400 bg-red-400/10 border-red-400/20", icon: <FaTimesCircle size={10} /> },
+  Claimed: { label: "Claimed", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", icon: <FaCheckCircle size={10} /> },
+  Available: { label: "Available", color: "text-blue-400 bg-blue-400/10 border-blue-400/20", icon: <FaSearch size={10} /> },
+  Lost: { label: "Lost", color: "text-red-400 bg-red-400/10 border-red-400/20", icon: <FaExclamationTriangle size={10} /> },
 };
 
 interface StatCardProps {
   label: string; value: string | number; icon: React.ReactNode;
   accent: string; href: string; sub?: string; subColor?: string;
-  sparkData?: { v: number }[]; sparkColor?: string;
 }
-const StatCard = ({ label, value, icon, accent, href, sub, subColor, sparkData, sparkColor }: StatCardProps) => (
+const StatCard = ({ label, value, icon, accent, href, sub, subColor }: StatCardProps) => (
   <Link to={href} className="group relative bg-gray-900 border border-white/5 rounded-2xl p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 hover:border-white/10 transition-all duration-200 overflow-hidden">
     <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${accent} blur-3xl scale-150`} />
     <div className="relative flex items-start justify-between">
@@ -69,71 +67,8 @@ const StatCard = ({ label, value, icon, accent, href, sub, subColor, sparkData, 
       <p className="text-gray-500 text-[11px] mt-0.5 font-medium">{label}</p>
       {sub && <p className={`text-[10px] mt-1 font-medium ${subColor ?? "text-gray-500"}`}>{sub}</p>}
     </div>
-    {/* Mini sparkline */}
-    {sparkData && sparkData.length > 1 && (
-      <div className="relative h-10 -mx-1 mt-1">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={sparkData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
-            <Tooltip
-              content={({ active, payload }) =>
-                active && payload?.length ? (
-                  <div className="bg-gray-800 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-white font-semibold shadow-lg">
-                    {payload[0].value}
-                  </div>
-                ) : null
-              }
-            />
-            <Line
-              type="monotone"
-              dataKey="v"
-              stroke={sparkColor ?? "#22d3ee"}
-              strokeWidth={1.5}
-              dot={false}
-              activeDot={{ r: 3, strokeWidth: 0 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    )}
   </Link>
 );
-
-// ── Today's Summary Pill ──────────────────────────────────────────────────────
-const TodaysSummary = ({ stats }: { stats: any }) => {
-  const today = new Date();
-  const dateLabel = today.toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-
-  const todayFound  = stats?.foundThisWeek  ?? 0;
-  const todayLost   = stats?.lostThisWeek   ?? 0;
-  const todayClaims = stats?.claimsThisWeek ?? 0;
-
-  return (
-    <div className="relative bg-gray-900 border border-white/5 rounded-2xl px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-violet-500/5 pointer-events-none" />
-      <div className="relative flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
-          <FaCalendarAlt size={12} className="text-cyan-400" />
-        </div>
-        <div>
-          <p className="text-white text-xs font-bold">{dateLabel}</p>
-          <p className="text-gray-500 text-[10px] mt-0.5">Today's system snapshot</p>
-        </div>
-      </div>
-      <div className="relative flex items-center gap-2 flex-wrap">
-        {[
-          { label: "Found this week",  value: todayFound,  color: "text-cyan-400",   bg: "bg-cyan-500/10 border-cyan-500/20" },
-          { label: "Lost this week",   value: todayLost,   color: "text-red-400",    bg: "bg-red-500/10 border-red-500/20" },
-          { label: "Claims this week", value: todayClaims, color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" },
-        ].map(pill => (
-          <div key={pill.label} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[10px] font-semibold ${pill.bg}`}>
-            <span className={`text-sm font-bold ${pill.color}`}>{pill.value}</span>
-            <span className="text-gray-500">{pill.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 // ── Urgent Attention Section ──────────────────────────────────────────────────
 interface UrgentAttentionProps {
@@ -266,50 +201,39 @@ const MiniStat = ({ label, value, color }: { label: string; value: number; color
 
 const typeDot: Record<string, string> = {
   found: "bg-cyan-400",
-  lost:  "bg-red-400",
+  lost: "bg-red-400",
   claim: "bg-yellow-400",
 };
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "PENDING":  return "bg-yellow-400/10 text-yellow-400 border-yellow-400/20";
+    case "PENDING": return "bg-yellow-400/10 text-yellow-400 border-yellow-400/20";
     case "APPROVED": return "bg-emerald-400/10 text-emerald-400 border-emerald-400/20";
     case "REJECTED": return "bg-red-400/10 text-red-400 border-red-400/20";
     case "SUBMITTED": return "bg-cyan-400/10 text-cyan-400 border-cyan-400/20";
-    default:         return "bg-gray-500/10 text-gray-400 border-gray-500/20";
+    default: return "bg-gray-500/10 text-gray-400 border-gray-500/20";
   }
 };
 
 const Dashboard = () => {
-  const { data: statsData,      isLoading: statsLoading }  = useAdminStatsQuery({});
-  const { data: claimsData,     isLoading: claimsLoading } = useGetAllClaimsQuery(undefined);
-  const { data: foundItemsData, isLoading: foundLoading }  = useGetFoundItemsQuery({ page: 1, limit: 200, sortBy: "createdAt", sortOrder: "desc" });
-  const { data: lostItemsData,  isLoading: lostLoading }   = useGetLostItemsQuery({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
-  const { data: archivedData }                             = useGetArchivedFoundItemsQuery(undefined);
-  const { data: staleData }                                = useGetStaleFoundItemsQuery(undefined);
-  const { data: auditData }                                = useGetAuditLogsQuery({});
-  const { data: modStatsData }                             = (modStatsApi as any).useGetDashModerationStatsQuery(undefined);
+  const { data: statsData, isLoading: statsLoading } = useAdminStatsQuery({});
+  const { data: claimsData, isLoading: claimsLoading } = useGetAllClaimsQuery(undefined);
+  const { data: foundItemsData, isLoading: foundLoading } = useGetFoundItemsQuery({ page: 1, limit: 200, sortBy: "createdAt", sortOrder: "desc" });
+  const { data: lostItemsData, isLoading: lostLoading } = useGetLostItemsQuery({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
+  const { data: archivedData } = useGetArchivedFoundItemsQuery(undefined);
+  const { data: staleData } = useGetStaleFoundItemsQuery(undefined);
+  const { data: auditData } = useGetAuditLogsQuery({});
+  const { data: modStatsData } = (modStatsApi as any).useGetDashModerationStatsQuery(undefined);
 
 
-  const stats        = statsData?.data;
-  const isLoading    = statsLoading || claimsLoading || foundLoading || lostLoading;
+  const stats = statsData?.data;
+  const isLoading = statsLoading || claimsLoading || foundLoading || lostLoading;
   const archivedItems = archivedData?.data ?? [];
-  const staleItems    = staleData?.data    ?? [];
-  const auditLogs     = auditData?.data    ?? [];
+  const staleItems = staleData?.data ?? [];
+  const auditLogs = auditData?.data ?? [];
   const moderationStats = modStatsData?.data ?? {};
 
-  // Build 7-point sparkline from monthly stats (last 7 months)
-  const monthlyStats: any[] = stats?.monthlyStats ?? [];
-  const last7 = monthlyStats.slice(-7);
-  const buildSpark = (key: string) => last7.length > 1
-    ? last7.map((m: any) => ({ v: m[key] ?? 0 }))
-    : [{ v: 0 }, { v: 1 }, { v: 0 }]; // fallback shape so the spark renders
-  const foundSpark  = buildSpark("found");
-  const lostSpark   = buildSpark("lost");
-  const claimSpark  = buildSpark("claims");
-  const userSpark   = last7.length > 1
-    ? last7.map((_: any, i: number) => ({ v: Math.max(0, (stats?.totalUsers ?? 0) - (last7.length - 1 - i) * 2) }))
-    : [{ v: 0 }, { v: 1 }, { v: 0 }];
+
 
   const buildActivity = () => {
     const items: any[] = [];
@@ -336,7 +260,7 @@ const Dashboard = () => {
     <div className="space-y-4 sm:space-y-6 animate-pulse">
       <div className="h-20 sm:h-24 bg-gray-800/60 rounded-2xl" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {[1,2,3,4].map(i => <div key={i} className="h-28 sm:h-32 bg-gray-800/60 rounded-2xl" />)}
+        {[1, 2, 3, 4].map(i => <div key={i} className="h-28 sm:h-32 bg-gray-800/60 rounded-2xl" />)}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         <div className="lg:col-span-2 h-64 sm:h-80 bg-gray-800/60 rounded-2xl" />
@@ -359,8 +283,7 @@ const Dashboard = () => {
 
 
 
-      {/* Today's Summary */}
-      <TodaysSummary stats={stats} />
+
 
       {/* Urgent Attention */}
       <UrgentAttention
@@ -395,16 +318,16 @@ const Dashboard = () => {
 
       {/* Primary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard label="Found Items"    value={stats?.foundItems ?? 0}    icon={<FaSearch size={13} className="text-cyan-400" />}            accent="bg-cyan-500/5"   href="/dashboard/found-items" sub={`+${stats?.foundThisWeek ?? 0} this week`}  subColor="text-cyan-400"   sparkData={foundSpark}  sparkColor="#22d3ee" />
-        <StatCard label="Lost Items"     value={stats?.lostItems ?? 0}     icon={<FaExclamationTriangle size={13} className="text-red-400" />} accent="bg-red-500/5"    href="/dashboard/lost-items"  sub={`+${stats?.lostThisWeek ?? 0} this week`}   subColor="text-red-400"    sparkData={lostSpark}   sparkColor="#f87171" />
-        <StatCard label="Pending Claims" value={stats?.pendingClaims ?? 0} icon={<FaClipboardList size={13} className="text-yellow-400" />}   accent="bg-yellow-500/5" href="/dashboard/claims"       sub={`${stats?.approvedClaims ?? 0} approved · ${stats?.rejectedClaims ?? 0} rejected`} subColor="text-yellow-400" sparkData={claimSpark}  sparkColor="#facc15" />
-        <StatCard label="Total Users"    value={stats?.totalUsers ?? 0}    icon={<FaUsers size={13} className="text-violet-400" />}           accent="bg-violet-500/5" href="/dashboard/users"        sub={`${stats?.totalClaims ?? 0} total claims`}  subColor="text-violet-400" sparkData={userSpark}   sparkColor="#a78bfa" />
+        <StatCard label="Found Items" value={stats?.foundItems ?? 0} icon={<FaSearch size={13} className="text-cyan-400" />} accent="bg-cyan-500/5" href="/dashboard/found-items" sub={`+${stats?.foundThisWeek ?? 0} this week`} subColor="text-cyan-400" />
+        <StatCard label="Lost Items" value={stats?.lostItems ?? 0} icon={<FaExclamationTriangle size={13} className="text-red-400" />} accent="bg-red-500/5" href="/dashboard/lost-items" sub={`+${stats?.lostThisWeek ?? 0} this week`} subColor="text-red-400" />
+        <StatCard label="Pending Claims" value={stats?.pendingClaims ?? 0} icon={<FaClipboardList size={13} className="text-yellow-400" />} accent="bg-yellow-500/5" href="/dashboard/claims" sub={`${stats?.approvedClaims ?? 0} approved · ${stats?.rejectedClaims ?? 0} rejected`} subColor="text-yellow-400" />
+        <StatCard label="Total Users" value={stats?.totalUsers ?? 0} icon={<FaUsers size={13} className="text-violet-400" />} accent="bg-violet-500/5" href="/dashboard/users" sub={`${stats?.totalClaims ?? 0} total claims`} subColor="text-violet-400" />
       </div>
 
       {/* Rates + Weekly */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <RateCard label="Disposal Rate"   value={stats?.disposalRate ?? 0}   icon={<FaRecycle size={14} className="text-emerald-400" />} color="bg-emerald-400/10 text-emerald-400" bar="bg-emerald-400" sub={`${stats?.claimedItems ?? 0} of ${stats?.foundItems ?? 0} found items have been claimed`} />
-        <RateCard label="Resolution Rate" value={stats?.resolutionRate ?? 0} icon={<FaChartBar size={14} className="text-blue-400" />}   color="bg-blue-400/10 text-blue-400"       bar="bg-blue-400"    sub={`${stats?.resolvedLostItems ?? 0} of ${stats?.lostItems ?? 0} lost items have been found`}    />
+        <RateCard label="Disposal Rate" value={stats?.disposalRate ?? 0} icon={<FaRecycle size={14} className="text-emerald-400" />} color="bg-emerald-400/10 text-emerald-400" bar="bg-emerald-400" sub={`${stats?.claimedItems ?? 0} of ${stats?.foundItems ?? 0} found items have been claimed`} />
+        <RateCard label="Resolution Rate" value={stats?.resolutionRate ?? 0} icon={<FaChartBar size={14} className="text-blue-400" />} color="bg-blue-400/10 text-blue-400" bar="bg-blue-400" sub={`${stats?.resolvedLostItems ?? 0} of ${stats?.lostItems ?? 0} lost items have been found`} />
         <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-8 rounded-lg bg-orange-400/10 flex items-center justify-center">
@@ -413,8 +336,8 @@ const Dashboard = () => {
             <p className="text-white text-sm font-semibold">This Week</p>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <MiniStat label="Found"  value={stats?.foundThisWeek  ?? 0} color="text-cyan-400"   />
-            <MiniStat label="Lost"   value={stats?.lostThisWeek   ?? 0} color="text-red-400"    />
+            <MiniStat label="Found" value={stats?.foundThisWeek ?? 0} color="text-cyan-400" />
+            <MiniStat label="Lost" value={stats?.lostThisWeek ?? 0} color="text-red-400" />
             <MiniStat label="Claims" value={stats?.claimsThisWeek ?? 0} color="text-yellow-400" />
           </div>
           <p className="text-gray-600 text-[11px] mt-1">
@@ -546,10 +469,10 @@ const Dashboard = () => {
 
           {/* Stale items preview */}
           <div className="flex-1 divide-y divide-white/5 overflow-auto max-h-[240px]"
-                  style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
-          }}>
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
+            }}>
             {staleItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-gray-600">
                 <FaCheckCircle size={22} className="mb-2 opacity-40 text-emerald-500" />
@@ -572,11 +495,10 @@ const Dashboard = () => {
                     <p className="text-gray-500 text-[10px] truncate">{item.location}</p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                      isVeryStale
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${isVeryStale
                         ? "bg-red-400/10 text-red-400 border-red-400/20"
                         : "bg-orange-400/10 text-orange-400 border-orange-400/20"
-                    }`}>
+                      }`}>
                       {daysOld}d
                     </span>
                     <p className="text-gray-700 text-[10px] mt-0.5">{formatDate(item.createdAt)}</p>
@@ -645,9 +567,9 @@ const Dashboard = () => {
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-2 p-4 sm:p-5 border-b border-white/5">
             {[
-              { label: "Total",    value: (claimsData?.data || []).length,                                                    color: "text-white"       },
-              { label: "Approved", value: (claimsData?.data || []).filter((c: any) => c.status === "APPROVED").length,        color: "text-emerald-400" },
-              { label: "Rejected", value: (claimsData?.data || []).filter((c: any) => c.status === "REJECTED").length,        color: "text-red-400"     },
+              { label: "Total", value: (claimsData?.data || []).length, color: "text-white" },
+              { label: "Approved", value: (claimsData?.data || []).filter((c: any) => c.status === "APPROVED").length, color: "text-emerald-400" },
+              { label: "Rejected", value: (claimsData?.data || []).filter((c: any) => c.status === "REJECTED").length, color: "text-red-400" },
             ].map(s => (
               <div key={s.label} className="bg-gray-800/50 border border-white/5 rounded-xl p-2.5 text-center">
                 <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
@@ -658,10 +580,10 @@ const Dashboard = () => {
 
           {/* Recent audit entries timeline */}
           <div className="flex-1 overflow-auto max-h-[360px]"
-          style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
-          }}>
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05)'
+            }}>
             {recentAuditLogs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-600">
                 <FaHistory size={22} className="mb-2 opacity-40" />
@@ -679,18 +601,17 @@ const Dashboard = () => {
                     return (
                       <div key={log.id} className="relative flex items-start gap-3">
                         {/* Timeline dot */}
-                        <div className={`relative z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                          isApproved
+                        <div className={`relative z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${isApproved
                             ? "bg-emerald-400/10 border-emerald-400"
                             : isRejected
-                            ? "bg-red-400/10 border-red-400"
-                            : "bg-violet-400/10 border-violet-400"
-                        }`}>
+                              ? "bg-red-400/10 border-red-400"
+                              : "bg-violet-400/10 border-violet-400"
+                          }`}>
                           {isApproved
                             ? <FaCheckCircle size={10} className="text-emerald-400" />
                             : isRejected
-                            ? <FaTimesCircle size={10} className="text-red-400" />
-                            : <FaHistory size={10} className="text-violet-400" />
+                              ? <FaTimesCircle size={10} className="text-red-400" />
+                              : <FaHistory size={10} className="text-violet-400" />
                           }
                         </div>
 
@@ -743,10 +664,10 @@ const Dashboard = () => {
         <h3 className="text-white text-sm font-semibold mb-3 sm:mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {[
-            { label: "Add Category",   icon: <FaBoxOpen size={16} />,       href: "/dashboard/categories",          color: "text-cyan-400   bg-cyan-400/5   hover:bg-cyan-400/10   border-cyan-400/10"   },
-            { label: "Manage Users",   icon: <FaUsers size={16} />,          href: "/dashboard/users",               color: "text-violet-400 bg-violet-400/5 hover:bg-violet-400/10 border-violet-400/10" },
-            { label: "Review Claims",  icon: <FaClipboardList size={16} />,  href: "/dashboard/claims",              color: "text-yellow-400 bg-yellow-400/5 hover:bg-yellow-400/10 border-yellow-400/10" },
-            { label: "Archive Log",    icon: <FaArchive size={16} />,        href: "/dashboard/archive", color: "text-orange-400 bg-orange-400/5 hover:bg-orange-400/10 border-orange-400/10" },
+            { label: "Add Category", icon: <FaBoxOpen size={16} />, href: "/dashboard/categories", color: "text-cyan-400   bg-cyan-400/5   hover:bg-cyan-400/10   border-cyan-400/10" },
+            { label: "Manage Users", icon: <FaUsers size={16} />, href: "/dashboard/users", color: "text-violet-400 bg-violet-400/5 hover:bg-violet-400/10 border-violet-400/10" },
+            { label: "Review Claims", icon: <FaClipboardList size={16} />, href: "/dashboard/claims", color: "text-yellow-400 bg-yellow-400/5 hover:bg-yellow-400/10 border-yellow-400/10" },
+            { label: "Archive Log", icon: <FaArchive size={16} />, href: "/dashboard/archive", color: "text-orange-400 bg-orange-400/5 hover:bg-orange-400/10 border-orange-400/10" },
           ].map((action) => (
             <Link key={action.href} to={action.href}
               className={`flex flex-col items-center gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-xl border transition-all duration-150 ${action.color}`}>
