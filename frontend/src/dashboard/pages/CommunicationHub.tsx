@@ -612,6 +612,7 @@ const AnnouncementsTab = () => {
                     min={new Date().toISOString().split("T")[0]}
                     placeholder="Select date"
                     openUp
+                    size="sm"
                   />
                   <CustomTimePicker
                     value={form.publishTime}
@@ -1158,6 +1159,7 @@ const NotificationCenterTab = () => {
                     onChange={val => setForm(f => ({ ...f, publishDate: val }))}
                     min={new Date().toISOString().split("T")[0]}
                     placeholder="Select date"
+                    size="sm"
                   />
                   <CustomTimePicker
                     value={form.publishTime}

@@ -128,7 +128,7 @@ export function CustomDatePicker({
       <div
         onClick={() => setOpen(o => !o)}
         className={`w-full flex items-center gap-2 bg-gray-800/60 border border-gray-700 rounded-lg cursor-pointer select-none transition-all duration-200 ${
-          size === "sm" ? "px-3 py-1.5 text-xs" : "px-4 py-2.5 text-sm"
+          size === "sm" ? "px-3 py-2.5 text-xs" : "px-4 py-2.5 text-sm"
         } ${
           open ? "ring-2 ring-blue-500/60 focus:border-blue-500" : "hover:border-gray-600"
         } ${value ? "text-white" : "text-gray-500"}`}
