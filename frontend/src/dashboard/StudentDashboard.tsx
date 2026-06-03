@@ -401,13 +401,13 @@ export default function StudentDashboard() {
           </div>
 
           {/* Tabs — Horizontal scroll on mobile, single row on sm+ */}
-          <div className="flex flex-row overflow-x-auto gap-2 px-4 pt-3 pb-3 scrollbar-none flex-nowrap">
+          <div className="flex flex-row overflow-x-auto gap-2 px-4 sm:px-5 pt-3 pb-3 scrollbar-none flex-nowrap">
             {TABS.map(({ key, label, icon }) => {
               const active = tab === key;
               const count  = tabCount[key];
               return (
                 <button key={key} onClick={() => setTab(key)}
-                  className={`flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-xs font-semibold transition-all border shrink-0 ${
+                  className={`flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-xs font-semibold transition-all border shrink-0 ${
                     active
                       ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
                       : "border-white/5 text-gray-500 hover:text-gray-300 bg-transparent hover:bg-white/5"
