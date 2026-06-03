@@ -129,6 +129,12 @@ A centralized admin panel for all outbound and inbound user communications.
   - In-app and email delivery channels
   - Notification history and read-receipt tracking
 - **Email Templates**: Read-only preview of all 3 automated email templates (found item report, claim approved, smart match notification) with desktop and mobile preview modes
+- **Custom-Designed Scheduling Elements**: Replaced native inputs with high-fidelity, custom-designed input widgets matching the dark admin design system:
+  - **CustomDatePicker**: High-fidelity custom calendar widget with date range restrictions, single-tap Today/Clear controls, and left-aligned layouts to prevent screen cutoff on mobile.
+  - **CustomTimePicker**: Interactive scrollable selection picker (15-min intervals) with automatic scroll-to-selected action.
+  - **CustomSelect**: Sleek custom dropdown component tailored for target student course filters and year levels.
+  - **Smart Boundary Direction (`openUp`)**: Automated page space detection that dynamically opens popovers upward when close to bottom viewports to avoid overlapping or clipping behind modal footers.
+  - **Responsive Input Grids**: Dual-input fields automatically stack vertically on mobile viewport sizes (`grid-cols-1`) for comfortable tap targets, and layout side-by-side on tablets/desktop (`sm:grid-cols-2`).
 
 ### Security & Compliance
 A dedicated security and governance layer for administrators.
