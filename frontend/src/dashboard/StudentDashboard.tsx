@@ -43,12 +43,13 @@ const medalColor = (i: number) =>
   : i === 1 ? "text-gray-300 border-gray-500/40 bg-gray-500/10"
   : "text-amber-600 border-amber-700/40 bg-amber-700/10";
 
-type TabKey = "claims" | "found" | "lost" | "points";
+type TabKey = "timeline" | "claims" | "found" | "lost" | "points";
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
-  { key: "claims", label: "Claims",        icon: <FaClipboardList size={11} /> },
-  { key: "found",  label: "Found Reports", icon: <FaBoxOpen size={11} /> },
-  { key: "lost",   label: "Lost Reports",  icon: <FaSearch size={11} /> },
-  { key: "points", label: "Points",        icon: <FaStar size={11} /> },
+  { key: "timeline", label: "Timeline",    icon: <FaHistory size={11} /> },
+  { key: "claims",   label: "Claims",      icon: <FaClipboardList size={11} /> },
+  { key: "found",    label: "Found Reports", icon: <FaBoxOpen size={11} /> },
+  { key: "lost",     label: "Lost Reports",  icon: <FaSearch size={11} /> },
+  { key: "points",   label: "Points",      icon: <FaStar size={11} /> },
 ];
 
 // ── Podium ────────────────────────────────────────────────────────────────────
@@ -96,7 +97,7 @@ const Podium = ({ top3, currentUserId }: { top3: any[]; currentUserId: string })
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 export default function StudentDashboard() {
   const user: any = useUserVerification();
-  const [tab, setTab] = useState<TabKey>("claims");
+  const [tab, setTab] = useState<TabKey>("timeline");
   const isLoggedIn = !!user?.id;
 
   const { data: pointsData, isLoading: p1 } = useGetMyPointsQuery(undefined, { skip: !isLoggedIn });
@@ -121,11 +122,131 @@ export default function StudentDashboard() {
   const pendingClaims  = claims.filter((c: any) => c.status === "PENDING").length;
 
   const tabCount: Record<TabKey, number> = {
+    timeline: claims.length + foundItems.length + lostItems.length + pointsHistory.length + myAchievements.length,
     claims: claims.length,
     found:  foundItems.length,
     lost:   lostItems.length,
     points: pointsHistory.length,
   };
+
+  const timelineEvents = React.useMemo(() => {
+    const events: {
+      type: "claim" | "found" | "lost" | "badge" | "points";
+      date: Date;
+      title: string;
+      desc: string;
+      icon: React.ReactNode;
+      color: string;
+      bg: string;
+      border: string;
+      link: string;
+    }[] = [];
+
+    // 1. Claims
+    claims.forEach((c: any) => {
+      const date = new Date(c.createdAt || Date.now());
+      const itemName = c.foundItem?.foundItemName ?? c.lostItem?.lostItemName ?? "Item";
+      let title = "Claim Submitted";
+      let color = "text-yellow-400";
+      let bg = "bg-yellow-400/10";
+      let border = "border-yellow-400/20";
+      let icon = <FaClock size={10} />;
+
+      if (c.status === "APPROVED") {
+        title = "Claim Approved 🎉";
+        color = "text-emerald-400";
+        bg = "bg-emerald-400/10";
+        border = "border-emerald-400/20";
+        icon = <FaCheckCircle size={10} />;
+      } else if (c.status === "REJECTED") {
+        title = "Claim Rejected";
+        color = "text-red-400";
+        bg = "bg-red-400/10";
+        border = "border-red-400/20";
+        icon = <FaTimesCircle size={10} />;
+      }
+
+      events.push({
+        type: "claim",
+        date,
+        title,
+        desc: `Claim request for "${itemName}" is currently ${c.status.toLowerCase()}`,
+        icon,
+        color,
+        bg,
+        border,
+        link: "/itemStatus",
+      });
+    });
+
+    // 2. Found Reports
+    foundItems.forEach((fi: any) => {
+      const date = new Date(fi.date || fi.createdAt || Date.now());
+      events.push({
+        type: "found",
+        date,
+        title: "Reported Found Item",
+        desc: `Reported found "${fi.foundItemName}" at ${fi.location || "campus"}`,
+        icon: <FaBoxOpen size={10} />,
+        color: "text-cyan-400",
+        bg: "bg-cyan-400/10",
+        border: "border-cyan-400/20",
+        link: "/foundItems",
+      });
+    });
+
+    // 3. Lost Reports
+    lostItems.forEach((li: any) => {
+      const date = new Date(li.date || li.createdAt || Date.now());
+      events.push({
+        type: "lost",
+        date,
+        title: "Reported Lost Item",
+        desc: `Reported lost "${li.lostItemName}" at ${li.location || "campus"}`,
+        icon: <FaSearch size={10} />,
+        color: "text-blue-400",
+        bg: "bg-blue-400/10",
+        border: "border-blue-400/20",
+        link: "/reportLostItem",
+      });
+    });
+
+    // 4. Badges / Achievements
+    myAchievements.forEach((a: any) => {
+      const date = new Date(a.unlockedAt || a.createdAt || Date.now());
+      events.push({
+        type: "badge",
+        date,
+        title: "Badge Unlocked! 🏆",
+        desc: `Unlocked the "${a.achievement?.name || "Achievement"}" badge (+${a.achievement?.xp || 0} XP)`,
+        icon: <span className="text-xs shrink-0 select-none">{a.achievement?.icon || "🏅"}</span>,
+        color: "text-purple-400",
+        bg: "bg-purple-500/10",
+        border: "border-purple-500/20",
+        link: "/dashboard/student/achievements",
+      });
+    });
+
+    // 5. Points history
+    pointsHistory.forEach((h: any) => {
+      const date = new Date(h.createdAt || Date.now());
+      const amountSign = h.amount > 0 ? `+${h.amount}` : `${h.amount}`;
+      events.push({
+        type: "points",
+        date,
+        title: `${h.amount > 0 ? "Earned" : "Spent"} Points`,
+        desc: `${amountSign} points for ${h.reason?.replace(/_/g, " ").toLowerCase()}`,
+        icon: <FaStar size={10} />,
+        color: h.amount > 0 ? "text-yellow-400" : "text-red-400",
+        bg: h.amount > 0 ? "bg-yellow-400/10" : "bg-red-400/10",
+        border: h.amount > 0 ? "border-yellow-400/25" : "border-red-400/25",
+        link: "/dashboard/student/achievements",
+      });
+    });
+
+    // Sort descending by date (newest first)
+    return events.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [claims, foundItems, lostItems, myAchievements, pointsHistory]);
 
   if (loading) return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center">
@@ -279,14 +400,14 @@ export default function StudentDashboard() {
 
           </div>
 
-          {/* Tabs — 2×2 grid on mobile, single row on sm+ */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 px-4 pt-3 pb-3">
+          {/* Tabs — Horizontal scroll on mobile, single row on sm+ */}
+          <div className="flex flex-row overflow-x-auto gap-2 px-4 pt-3 pb-3 scrollbar-none flex-nowrap">
             {TABS.map(({ key, label, icon }) => {
               const active = tab === key;
               const count  = tabCount[key];
               return (
                 <button key={key} onClick={() => setTab(key)}
-                  className={`flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-xs font-semibold transition-all border ${
+                  className={`flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-xs font-semibold transition-all border shrink-0 ${
                     active
                       ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
                       : "border-white/5 text-gray-500 hover:text-gray-300 bg-transparent hover:bg-white/5"
@@ -305,6 +426,36 @@ export default function StudentDashboard() {
 
           {/* Content */}
           <div className="px-3 pb-3 space-y-0.5 max-h-[340px] overflow-y-auto divide-y divide-white/5" style={{ scrollbarWidth: "none" }}>
+
+            {tab === "timeline" && (
+              timelineEvents.length === 0 ? (
+                <Empty label="No recent activity yet. Participate in reporting and claims to build your timeline!" />
+              ) : (
+                <div className="relative pl-6 pr-2 py-4 space-y-6 before:absolute before:left-3 before:top-4 before:bottom-4 before:w-0.5 before:bg-white/5">
+                  {timelineEvents.map((ev, i) => (
+                    <div key={i} className="relative flex items-start gap-4 group">
+                      {/* Timeline Dot Indicator */}
+                      <div className={`absolute -left-6 translate-y-0.5 w-6 h-6 rounded-full border flex items-center justify-center bg-gray-950 transition-all z-10 ${ev.border} ${ev.color} group-hover:scale-110 shadow-lg`}>
+                        {ev.icon}
+                      </div>
+
+                      {/* Event details card */}
+                      <Link to={ev.link} className="flex-1 min-w-0 bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 hover:border-white/10 rounded-xl p-3 transition-all duration-200 block">
+                        <div className="flex items-center justify-between gap-3 mb-1">
+                          <h4 className="text-white text-xs font-semibold">{ev.title}</h4>
+                          <span className="text-gray-500 text-[9px] font-medium shrink-0">{fmt(ev.date.toISOString())}</span>
+                        </div>
+                        <p className="text-gray-400 text-[11px] leading-relaxed pr-6">{ev.desc}</p>
+                        <div className="flex items-center gap-1 text-[9px] text-cyan-400/70 font-semibold uppercase tracking-wider mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span>View Details</span>
+                          <FaChevronRight size={6} />
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )
+            )}
 
             {tab === "claims" && (
               claims.length === 0
