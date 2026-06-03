@@ -605,7 +605,7 @@ const AnnouncementsTab = () => {
             {form.scheduleEnabled && (
               <div className="space-y-1.5 p-3 bg-gray-800/40 border border-white/5 rounded-xl">
                 <FieldLabel>Publish Date &amp; Time</FieldLabel>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <CustomDatePicker
                     value={form.publishDate}
                     onChange={val => setForm(f => ({ ...f, publishDate: val }))}
@@ -1153,18 +1153,20 @@ const NotificationCenterTab = () => {
             {form.scheduleEnabled && (
               <div className="space-y-1.5 p-3 bg-gray-800/40 border border-white/5 rounded-xl">
                 <FieldLabel>Publish Date &amp; Time</FieldLabel>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <CustomDatePicker
                     value={form.publishDate}
                     onChange={val => setForm(f => ({ ...f, publishDate: val }))}
                     min={new Date().toISOString().split("T")[0]}
                     placeholder="Select date"
                     size="sm"
+                    openUp
                   />
                   <CustomTimePicker
                     value={form.publishTime}
                     onChange={val => setForm(f => ({ ...f, publishTime: val }))}
                     placeholder="Select time"
+                    openUp
                   />
                 </div>
               </div>

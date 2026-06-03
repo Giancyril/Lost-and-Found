@@ -147,10 +147,7 @@ export function CustomDatePicker({
       </div>
 
       {open && (
-        <div className={`absolute z-[999] ${shouldOpenUp ? "bottom-full mb-2" : "top-full mt-2"} bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 w-72 overflow-hidden
-          /* mobile: center on screen, desktop: align left */
-          left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0
-        `}>
+        <div className={`absolute z-[999] ${shouldOpenUp ? "bottom-full mb-2" : "top-full mt-2"} bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 w-72 overflow-hidden left-0`}>
           <div className="p-4">
             {/* Month/Year nav */}
             <div className="flex items-center justify-between mb-4">
