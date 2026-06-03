@@ -1129,7 +1129,7 @@ const IndoorMap3D = ({
 }: IndoorMap3DProps) => {
   const [hoveredRoom, setHoveredRoom] = useState<string | null>(null);
   const halfDepth = BUILDING_DEPTH / 2;
-  const [isNight, setIsNight] = useState(false);
+  const isNight = false;
   const palette = usePalette(isNight);
   
   // WebGL support and toggle view mode states
@@ -1455,24 +1455,12 @@ const IndoorMap3D = ({
         </div>
       </div>
 
-      {/* HUD: Floor switcher + Day/Night — right side pill group */}
+      {/* HUD: Floor switcher — right side pill group */}
       <div
         className="absolute right-3 flex flex-col gap-1.5"
         style={{ top: "12px", zIndex: 20 }}
         data-testid="map-hud-floors"
       >
-        {/* Day/Night toggle */}
-        <button
-          onClick={() => setIsNight((v) => !v)}
-          className={`h-9 w-9 rounded-xl text-base font-bold transition-all border flex items-center justify-center shadow-sm ${
-            isNight
-              ? "bg-amber-400 text-slate-900 border-amber-500"
-              : "bg-slate-800 text-amber-200 border-slate-700"
-          }`}
-          title={isNight ? "Switch to Day" : "Switch to Night"}
-        >
-          {isNight ? "☀" : "☾"}
-        </button>
 
         {/* 2D / 3D Mode Toggle (only if WebGL is supported) */}
         {hasWebGL && (
