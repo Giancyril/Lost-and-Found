@@ -22,6 +22,7 @@ import { baseApi } from "../redux/api/baseApi";
 import ChatbotConcierge from "../components/chatbot/ChatbotConcierge";
 import ChatDropdown from "./components/ChatDropdown";
 import { Spinner } from "flowbite-react";
+import GlobalSearchModal from "./components/GlobalSearchModal";
 
 interface DashboardLayoutProps { children: React.ReactNode; }
 
@@ -323,7 +324,19 @@ const checkPublicBypass = (pathname: string, search: string): boolean => {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchModalOpen(prev => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
   const navigate = useNavigate();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -537,15 +550,41 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <div className={`w-full flex flex-col min-h-screen bg-gray-950 overflow-x-hidden transition-all duration-300 ${sidebarCollapsed ? "lg:ml-[72px] lg:w-[calc(100%-72px)]" : "lg:ml-60 lg:w-[calc(100%-240px)]"}`}>
 
         {/* Topbar */}
-        <header className="h-16 bg-gray-900/80 backdrop-blur border-b border-white/5 flex items-center px-4 sm:px-5 gap-4 shrink-0 sticky top-0 z-30">
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors">
-            <FaBars size={16} />
-          </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-white text-sm sm:text-base font-semibold tracking-tight truncate">{pageMeta.title}</h1>
-            <p className="text-gray-500 text-xs truncate hidden sm:block">{pageMeta.subtitle}</p>
+        <header className="h-16 bg-gray-900/80 backdrop-blur border-b border-white/5 flex items-center justify-between px-4 sm:px-5 gap-4 shrink-0 sticky top-0 z-30">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors shrink-0">
+              <FaBars size={16} />
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-white text-sm sm:text-base font-semibold tracking-tight truncate">{pageMeta.title}</h1>
+              <p className="text-gray-500 text-xs truncate hidden sm:block">{pageMeta.subtitle}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
+
+          {/* Centered Search Bar */}
+          <div className="hidden md:flex flex-1 justify-center max-w-xl mx-4">
+            <button
+              onClick={() => setSearchModalOpen(true)}
+              className="w-full max-w-md flex items-center justify-between px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all text-xs focus:outline-none"
+            >
+              <div className="flex items-center gap-2.5">
+                <FaSearch size={12} className="text-gray-500" />
+                <span>Search dashboard, items, claims...</span>
+              </div>
+              <kbd className="inline-flex items-center justify-center px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono font-semibold text-gray-500">Ctrl+K</kbd>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Mobile Search Button */}
+            <button
+              onClick={() => setSearchModalOpen(true)}
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition-all"
+              aria-label="Search"
+            >
+              <FaSearch size={13} />
+            </button>
+
             <ChatbotConcierge />
             <ChatDropdown />
             <NotificationBell />
@@ -556,7 +595,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <main className="flex-1 p-4 sm:p-5 lg:p-7 overflow-auto bg-gray-950 custom-scrollbar">{children}</main>
       </div>
 
-
+      <GlobalSearchModal open={searchModalOpen} onClose={() => setSearchModalOpen(false)} />
     </div>
   );
 };
