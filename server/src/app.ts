@@ -94,7 +94,7 @@ app.get("/api/csrf-token", (req, res) => {
 });
 
 // Selective CSRF — exempt login, register, refresh
-const CSRF_EXEMPT = ["/api/login", "/api/register", "/api/refresh", "/api/auth"];
+const CSRF_EXEMPT = ["/api/login", "/api/register", "/api/refresh", "/api/auth", "/api/achievements/mark-seen"];
 
 app.use((req, res, next) => {
   if (CSRF_EXEMPT.some(path => req.path.startsWith(path))) {

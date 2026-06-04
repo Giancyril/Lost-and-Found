@@ -46,10 +46,9 @@ export const useAchievementWatcher = () => {
       if (newAchievements.length > 0) {
         newAchievements.forEach((a: any) => displayedSessionIds.add(a.id));
         setQueue((prev) => [...prev, ...newAchievements]);
-        markSeen(undefined);
       }
     }
-  }, [data, markSeen]);
+  }, [data]);
 
   useEffect(() => {
     if (queue.length > 0 && !current) {
@@ -58,7 +57,10 @@ export const useAchievementWatcher = () => {
     }
   }, [queue, current]);
 
-  const dismiss = useCallback(() => setCurrent(null), []);
+  const dismiss = useCallback(() => {
+    setCurrent(null);
+    markSeen(undefined);
+  }, [markSeen]);
 
   return { current, dismiss };
 };
