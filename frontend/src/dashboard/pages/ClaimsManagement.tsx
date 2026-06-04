@@ -827,21 +827,19 @@ const ClaimsManagement = () => {
 
                   {/* Row 2: claimant info + ID score */}
                   <div className="bg-gray-800/50 border border-white/5 rounded-xl px-3 py-2.5 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-gray-300">
-                        <FaUser size={9} className="text-gray-500 shrink-0" />
-                        <span className="font-medium truncate">{claim.claimantName || "—"}</span>
+                    <div className="flex items-center gap-2 text-xs text-gray-300">
+                      <FaUser size={9} className="text-gray-500 shrink-0" />
+                      <span className="font-medium truncate">{claim.claimantName || "—"}</span>
+                    </div>
+                    {/* ID score row */}
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-bold shrink-0 ${idColor}`}>{idScore}%</span>
+                      <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-700 ${
+                          idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
+                        }`} style={{ width: `${idScore}%` }} />
                       </div>
-                      {/* ID score badge */}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className={`text-[10px] font-bold ${idColor}`}>{idScore}%</span>
-                        <div className="w-14 h-1 bg-gray-700 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${
-                            idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
-                          }`} style={{ width: `${idScore}%` }} />
-                        </div>
-                        <span className={`text-[9px] ${idColor} opacity-70`}>{idLabel}</span>
-                      </div>
+                      <span className={`text-[9px] font-semibold shrink-0 ${idColor} opacity-80`}>{idLabel}</span>
                     </div>
                     {claim.schoolEmail && (
                       <div className="flex items-center gap-2 text-xs">
