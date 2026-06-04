@@ -601,40 +601,44 @@ const ClaimsManagement = () => {
           </div>
 
           {/* Filters + View Toggle */}
-          <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
+          <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
+            {/* Search — full width */}
+            <div className="relative">
               <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
               <input type="text" placeholder="Search by item, claimant, or contact..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-4 py-2.5 bg-gray-800/80 border border-transparent rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all" />
             </div>
-            <CustomDropdown
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { id: "PENDING",  name: "Pending" },
-                { id: "APPROVED", name: "Approved" },
-                { id: "REJECTED", name: "Rejected" },
-              ]}
-              allLabel="All Status"
-            />
-            {/* View switcher */}
-            <div className="flex gap-1 p-1 bg-gray-800 border border-white/5 rounded-xl self-start sm:self-auto shrink-0 sm:ml-auto">
-              <button
-                onClick={() => { setClaimView("table"); setExpandedTimeline(new Set()); }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  claimView === "table" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"
-                }`}
-              >
-                <FaClipboardList size={10} /> Table
-              </button>
-              <button
-                onClick={() => setClaimView("timeline")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  claimView === "timeline" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"
-                }`}
-              >
-                <FaHistory size={10} /> Timeline
-              </button>
+            {/* Second row: dropdown and view toggle on the right */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+              <CustomDropdown
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={[
+                  { id: "PENDING",  name: "Pending" },
+                  { id: "APPROVED", name: "Approved" },
+                  { id: "REJECTED", name: "Rejected" },
+                ]}
+                allLabel="All Status"
+              />
+              {/* View switcher — matched size and styling */}
+              <div className="flex gap-1 p-1 bg-gray-800 border border-white/5 rounded-2xl shrink-0 w-full sm:w-56">
+                <button
+                  onClick={() => { setClaimView("table"); setExpandedTimeline(new Set()); }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                    claimView === "table" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"
+                  }`}
+                >
+                  <FaClipboardList size={10} /> Table
+                </button>
+                <button
+                  onClick={() => setClaimView("timeline")}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                    claimView === "timeline" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"
+                  }`}
+                >
+                  <FaHistory size={10} /> Timeline
+                </button>
+              </div>
             </div>
           </div>
 

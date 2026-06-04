@@ -102,22 +102,22 @@ interface DropdownOption {
 }
 
 const ANN_TYPES: DropdownOption[] = [
-  { value: "INFO",    icon: "ℹ️",  label: "Info",    sub: "General information for users",        bg: "#ecfeff", color: "#164e63" },
-  { value: "WARNING", icon: "⚠️",  label: "Warning", sub: "Important notice requiring attention", bg: "#fefce8", color: "#713f12" },
-  { value: "SUCCESS", icon: "✅",  label: "Success", sub: "Positive update or achievement",       bg: "#f0fdf4", color: "#14532d" },
-  { value: "URGENT",  icon: "🚨",  label: "Urgent",  sub: "Critical alert needing immediate action", bg: "#fff1f2", color: "#881337" },
+  { value: "INFO", icon: "ℹ️", label: "Info", sub: "General information for users", bg: "#ecfeff", color: "#164e63" },
+  { value: "WARNING", icon: "⚠️", label: "Warning", sub: "Important notice requiring attention", bg: "#fefce8", color: "#713f12" },
+  { value: "SUCCESS", icon: "✅", label: "Success", sub: "Positive update or achievement", bg: "#f0fdf4", color: "#14532d" },
+  { value: "URGENT", icon: "🚨", label: "Urgent", sub: "Critical alert needing immediate action", bg: "#fff1f2", color: "#881337" },
 ];
 
 const ANN_TARGETS: DropdownOption[] = [
-  { value: "ALL",      icon: "👥", label: "All Users",     sub: "Broadcast to everyone",        bg: "#ede9fe", color: "#4c1d95" },
+  { value: "ALL", icon: "👥", label: "All Users", sub: "Broadcast to everyone", bg: "#ede9fe", color: "#4c1d95" },
   { value: "STUDENTS", icon: "🎓", label: "Students Only", sub: "Target student accounts only", bg: "#eff6ff", color: "#1e3a5f" },
-  { value: "ADMINS",   icon: "🛡️", label: "Admins Only",   sub: "Target admin accounts only",   bg: "#fef3c7", color: "#78350f" },
+  { value: "ADMINS", icon: "🛡️", label: "Admins Only", sub: "Target admin accounts only", bg: "#fef3c7", color: "#78350f" },
 ];
 
 const TICKET_STATUS_OPTIONS: DropdownOption[] = [
-  { value: "RESOLVED",    icon: "✅", label: "Resolved",    sub: "Mark the issue as successfully resolved", bg: "#f0fdf4", color: "#14532d" },
+  { value: "RESOLVED", icon: "✅", label: "Resolved", sub: "Mark the issue as successfully resolved", bg: "#f0fdf4", color: "#14532d" },
   { value: "IN_PROGRESS", icon: "⏳", label: "In Progress", sub: "Currently investigating or working on it", bg: "#fffbeb", color: "#92400e" },
-  { value: "CLOSED",      icon: "🔒", label: "Closed",      sub: "Close this ticket without resolution", bg: "#f3f4f6", color: "#374151" },
+  { value: "CLOSED", icon: "🔒", label: "Closed", sub: "Close this ticket without resolution", bg: "#f3f4f6", color: "#374151" },
 ];
 
 // ── Custom Dropdown ───────────────────────────────────────────────────────────
@@ -133,10 +133,10 @@ const CustomDropdown = ({
   const ref = useRef<HTMLDivElement>(null);
   const selected = options.find(o => o.value === value) ?? options[0];
 
-  const ring     = accentColor === "cyan" ? "border-cyan-500/40" : accentColor === "blue" ? "border-blue-500/40" : "border-violet-500/40";
-  const activeBg = accentColor === "cyan" ? "bg-cyan-500/10"    : accentColor === "blue" ? "bg-blue-500/10"    : "bg-violet-500/10";
-  const dotColor = accentColor === "cyan" ? "bg-cyan-400"       : accentColor === "blue" ? "bg-blue-400"       : "bg-violet-400";
-  const textSel  = accentColor === "cyan" ? "text-cyan-300"     : accentColor === "blue" ? "text-blue-300"     : "text-violet-300";
+  const ring = accentColor === "cyan" ? "border-cyan-500/40" : accentColor === "blue" ? "border-blue-500/40" : "border-violet-500/40";
+  const activeBg = accentColor === "cyan" ? "bg-cyan-500/10" : accentColor === "blue" ? "bg-blue-500/10" : "bg-violet-500/10";
+  const dotColor = accentColor === "cyan" ? "bg-cyan-400" : accentColor === "blue" ? "bg-blue-400" : "bg-violet-400";
+  const textSel = accentColor === "cyan" ? "text-cyan-300" : accentColor === "blue" ? "text-blue-300" : "text-violet-300";
 
   useEffect(() => {
     const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
@@ -219,9 +219,8 @@ const CustomTimePicker = ({
   return (
     <div ref={ref} className="relative">
       <div onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center gap-2 bg-gray-800/60 border rounded-lg cursor-pointer select-none transition-all duration-200 px-3 py-2.5 ${
-          open ? "ring-2 ring-blue-500/60 border-blue-500/40" : "border-gray-700 hover:border-gray-600"
-        } ${value ? "text-white" : "text-gray-500"}`}>
+        className={`w-full flex items-center gap-2 bg-gray-800/60 border rounded-lg cursor-pointer select-none transition-all duration-200 px-3 py-2.5 ${open ? "ring-2 ring-blue-500/60 border-blue-500/40" : "border-gray-700 hover:border-gray-600"
+          } ${value ? "text-white" : "text-gray-500"}`}>
         <FaClock size={10} className={value ? "text-blue-400 shrink-0" : "text-gray-600 shrink-0"} />
         <span className="flex-1 text-xs truncate">{display}</span>
         {value && <span role="button" onClick={e => { e.stopPropagation(); onChange(""); }} className="text-gray-500 hover:text-gray-300 cursor-pointer shrink-0"><FaTimes size={9} /></span>}
@@ -235,9 +234,8 @@ const CustomTimePicker = ({
               const label = `${h % 12 || 12}:${String(m).padStart(2, "0")} ${p}`;
               return (
                 <button key={t} data-t={t} type="button" onClick={() => { onChange(t); setOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${
-                    t === value ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}>
+                  className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${t === value ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
+                    }`}>
                   {label}
                 </button>
               );
@@ -271,9 +269,8 @@ const CustomSelect = ({
   return (
     <div ref={ref} className="relative">
       <div onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center gap-2 bg-gray-800/60 border rounded-lg cursor-pointer select-none transition-all duration-200 px-3 py-2 ${
-          open ? "ring-2 ring-cyan-500/30 border-cyan-500/40" : "border-gray-700 hover:border-gray-600"
-        } ${value ? "text-white" : "text-gray-500"}`}>
+        className={`w-full flex items-center gap-2 bg-gray-800/60 border rounded-lg cursor-pointer select-none transition-all duration-200 px-3 py-2 ${open ? "ring-2 ring-cyan-500/30 border-cyan-500/40" : "border-gray-700 hover:border-gray-600"
+          } ${value ? "text-white" : "text-gray-500"}`}>
         <span className="flex-1 text-xs truncate">{selected ? selected.label : placeholder}</span>
         <svg width="10" height="6" viewBox="0 0 10 6" className={`text-gray-500 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
           <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
@@ -283,9 +280,8 @@ const CustomSelect = ({
         <div className="absolute top-full mt-1.5 left-0 right-0 bg-gray-900 border border-white/10 rounded-xl overflow-hidden z-50 shadow-2xl shadow-black/40">
           {options.map((opt, i) => (
             <div key={opt.value} onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`px-3 py-2 cursor-pointer text-xs font-medium transition-colors select-none ${
-                i < options.length - 1 ? "border-b border-white/[0.04]" : ""
-              } ${opt.value === value ? "bg-cyan-500/10 text-cyan-300" : "text-gray-400 hover:bg-white/[0.04] hover:text-white"}`}>
+              className={`px-3 py-2 cursor-pointer text-xs font-medium transition-colors select-none ${i < options.length - 1 ? "border-b border-white/[0.04]" : ""
+                } ${opt.value === value ? "bg-cyan-500/10 text-cyan-300" : "text-gray-400 hover:bg-white/[0.04] hover:text-white"}`}>
               {opt.label}
             </div>
           ))}
@@ -296,55 +292,55 @@ const CustomSelect = ({
 };
 
 const YEAR_LEVEL_OPTIONS = [
-  { value: "",            label: "All Year Levels" },
-  { value: "First Year",  label: "First Year"      },
-  { value: "Second Year", label: "Second Year"     },
-  { value: "Third Year",  label: "Third Year"      },
-  { value: "Fourth Year", label: "Fourth Year"     },
+  { value: "", label: "All Year Levels" },
+  { value: "First Year", label: "First Year" },
+  { value: "Second Year", label: "Second Year" },
+  { value: "Third Year", label: "Third Year" },
+  { value: "Fourth Year", label: "Fourth Year" },
 ];
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 const TABS = [
-  { id: "announcements", label: "Announcements",     icon: FaBullhorn    },
-  { id: "tickets",       label: "Support Tickets",   icon: FaTicketAlt   },
-  { id: "feedback",      label: "Feedback",          icon: FaCommentDots },
-  { id: "notifications", label: "Notification Center", icon: FaBell      },
-  { id: "templates",     label: "Email Templates",   icon: FaEnvelope    },
+  { id: "announcements", label: "Announcements", icon: FaBullhorn },
+  { id: "tickets", label: "Support Tickets", icon: FaTicketAlt },
+  { id: "feedback", label: "Feedback", icon: FaCommentDots },
+  { id: "notifications", label: "Notification Center", icon: FaBell },
+  { id: "templates", label: "Email Templates", icon: FaEnvelope },
 ];
 
 const TYPE_CONFIG: Record<string, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
-  INFO:    { color: "text-cyan-400",    bg: "bg-cyan-400/10 border-cyan-400/20",       icon: <FaInfoCircle size={11} />,          label: "Info"    },
-  WARNING: { color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20",   icon: <FaExclamationTriangle size={11} />, label: "Warning" },
-  SUCCESS: { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20", icon: <FaCheckCircle size={11} />,         label: "Success" },
-  URGENT:  { color: "text-red-400",     bg: "bg-red-400/10 border-red-400/20",         icon: <FaFire size={11} />,                label: "Urgent"  },
+  INFO: { color: "text-cyan-400", bg: "bg-cyan-400/10 border-cyan-400/20", icon: <FaInfoCircle size={11} />, label: "Info" },
+  WARNING: { color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20", icon: <FaExclamationTriangle size={11} />, label: "Warning" },
+  SUCCESS: { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20", icon: <FaCheckCircle size={11} />, label: "Success" },
+  URGENT: { color: "text-red-400", bg: "bg-red-400/10 border-red-400/20", icon: <FaFire size={11} />, label: "Urgent" },
 };
 
 const PRIORITY_CONFIG: Record<string, { color: string; bg: string }> = {
-  LOW:    { color: "text-gray-400",   bg: "bg-gray-400/10 border-gray-400/20"    },
-  NORMAL: { color: "text-cyan-400",   bg: "bg-cyan-400/10 border-cyan-400/20"    },
-  HIGH:   { color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20"},
-  URGENT: { color: "text-red-400",    bg: "bg-red-400/10 border-red-400/20"      },
+  LOW: { color: "text-gray-400", bg: "bg-gray-400/10 border-gray-400/20" },
+  NORMAL: { color: "text-cyan-400", bg: "bg-cyan-400/10 border-cyan-400/20" },
+  HIGH: { color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20" },
+  URGENT: { color: "text-red-400", bg: "bg-red-400/10 border-red-400/20" },
 };
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  OPEN:        { color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20",   label: "Open"        },
-  IN_PROGRESS: { color: "text-cyan-400",    bg: "bg-cyan-400/10 border-cyan-400/20",       label: "In Progress" },
-  RESOLVED:    { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20", label: "Resolved"    },
-  CLOSED:      { color: "text-gray-500",    bg: "bg-gray-500/10 border-gray-500/20",       label: "Closed"      },
+  OPEN: { color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20", label: "Open" },
+  IN_PROGRESS: { color: "text-cyan-400", bg: "bg-cyan-400/10 border-cyan-400/20", label: "In Progress" },
+  RESOLVED: { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20", label: "Resolved" },
+  CLOSED: { color: "text-gray-500", bg: "bg-gray-500/10 border-gray-500/20", label: "Closed" },
 };
 
 const FEEDBACK_STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  UNREAD:   { color: "text-red-400",     bg: "bg-red-400/10 border-red-400/20",        label: "Unread"   },
-  READ:     { color: "text-yellow-400",  bg: "bg-yellow-400/10 border-yellow-400/20",  label: "Read"     },
-  RESOLVED: { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20",label: "Resolved" },
+  UNREAD: { color: "text-red-400", bg: "bg-red-400/10 border-red-400/20", label: "Unread" },
+  READ: { color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20", label: "Read" },
+  RESOLVED: { color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20", label: "Resolved" },
 };
 
 const CATEGORY_CONFIG: Record<string, { color: string; label: string }> = {
-  GENERAL:    { color: "text-gray-400",    label: "General"         },
-  BUG:        { color: "text-red-400",     label: "Bug"             },
-  FEATURE:    { color: "text-violet-400",  label: "Feature Request" },
-  COMPLAINT:  { color: "text-orange-400",  label: "Complaint"       },
-  COMPLIMENT: { color: "text-emerald-400", label: "Compliment"      },
+  GENERAL: { color: "text-gray-400", label: "General" },
+  BUG: { color: "text-red-400", label: "Bug" },
+  FEATURE: { color: "text-violet-400", label: "Feature Request" },
+  COMPLAINT: { color: "text-orange-400", label: "Complaint" },
+  COMPLIMENT: { color: "text-emerald-400", label: "Compliment" },
 };
 
 // ── Modal wrapper ─────────────────────────────────────────────────────────────
@@ -646,25 +642,25 @@ const SlaTimer = ({ ticket }: { ticket: any }) => {
   };
   const targetTime = slaTargets[ticket.priority] || slaTargets.NORMAL;
   const isResolved = ticket.status === "RESOLVED" || ticket.status === "CLOSED";
-  
+
   const end = isResolved && ticket.repliedAt ? new Date(ticket.repliedAt).getTime() : Date.now();
   const elapsed = end - new Date(ticket.createdAt).getTime();
   const breached = elapsed > targetTime;
-  
+
   const formatDuration = (ms: number) => {
     const hours = Math.floor(ms / (3600 * 1000));
     const minutes = Math.floor((ms % (3600 * 1000)) / (60 * 1000));
     if (hours === 0) return `${minutes}m`;
     return `${hours}h ${minutes}m`;
   };
-  
+
   const pct = Math.min(100, Math.floor((elapsed / targetTime) * 100));
-  
+
   return (
     <div className="mt-3 p-3 bg-gray-800/40 border border-white/5 rounded-xl space-y-2">
       <div className="flex items-center justify-between text-[10px] font-semibold text-gray-400">
         <span className="flex items-center gap-1">
-          ⏱️ SLA Response Time Target: {formatDuration(targetTime)} ({ticket.priority} Priority)
+          SLA Response Time Target: {formatDuration(targetTime)} ({ticket.priority} Priority)
         </span>
         {isResolved ? (
           breached ? (
@@ -689,14 +685,13 @@ const SlaTimer = ({ ticket }: { ticket: any }) => {
         )}
       </div>
       <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
-        <div 
-          className={`h-full transition-all duration-500 ${
-            breached 
-              ? "bg-red-500" 
-              : pct > 75 
-                ? "bg-amber-500" 
+        <div
+          className={`h-full transition-all duration-500 ${breached
+              ? "bg-red-500"
+              : pct > 75
+                ? "bg-amber-500"
                 : "bg-cyan-500"
-          }`}
+            }`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -876,8 +871,8 @@ const FeedbackTab = () => {
     setAdminNote("");
   };
 
-  const handleMarkRead  = async (id: string) => { await updateFeedbackStatus({ id, status: "READ" }); };
-  const handleDelete    = async (id: string) => {
+  const handleMarkRead = async (id: string) => { await updateFeedbackStatus({ id, status: "READ" }); };
+  const handleDelete = async (id: string) => {
     if (!confirm("Delete this feedback?")) return;
     await deleteFeedback(id);
     toast.success("Deleted");
@@ -919,7 +914,7 @@ const FeedbackTab = () => {
         <div className="space-y-3">
           {feedbacks.map((f: any) => {
             const fsc = FEEDBACK_STATUS_CONFIG[f.status] || FEEDBACK_STATUS_CONFIG.UNREAD;
-            const cc  = CATEGORY_CONFIG[f.category]      || CATEGORY_CONFIG.GENERAL;
+            const cc = CATEGORY_CONFIG[f.category] || CATEGORY_CONFIG.GENERAL;
             return (
               <div key={f.id} className={`bg-gray-900 border rounded-2xl p-4 transition-all hover:border-white/10 ${f.status === "UNREAD" ? "border-cyan-500/20" : "border-white/5"}`}>
                 <div className="flex items-start justify-between gap-3">
@@ -1047,8 +1042,8 @@ const NotificationCenterTab = () => {
       const res: any = await createAnnouncement(payload);
       if (res?.data?.success) {
         const isScheduled = form.scheduleEnabled && !!form.publishDate;
-        setLastResult({ 
-          count: res.data.data?.emailCount || 0, 
+        setLastResult({
+          count: res.data.data?.emailCount || 0,
           target: form.target,
           isScheduled
         });
@@ -1085,8 +1080,8 @@ const NotificationCenterTab = () => {
               {lastResult.isScheduled ? "Broadcast Scheduled!" : "Broadcast Sent!"}
             </p>
             <p className="text-gray-400 text-sm mt-1">
-              {lastResult.isScheduled 
-                ? "The broadcast will be delivered automatically at the scheduled time." 
+              {lastResult.isScheduled
+                ? "The broadcast will be delivered automatically at the scheduled time."
                 : <>Delivered to <span className="text-emerald-400 font-bold">{lastResult.count}</span> {lastResult.target === "ALL" ? "users" : lastResult.target.toLowerCase()}</>
               }
             </p>
@@ -1189,10 +1184,10 @@ const NotificationCenterTab = () => {
         <h4 className="text-white text-xs font-semibold mb-3">Notification Guidelines</h4>
         <div className="space-y-2.5">
           {[
-            { icon: <FaInfoCircle size={10} className="text-cyan-400" />,          text: "Use Info type for general announcements like office hours changes"           },
-            { icon: <FaExclamationTriangle size={10} className="text-yellow-400"/>, text: "Use Warning for important notices that require user action"                  },
-            { icon: <FaFire size={10} className="text-red-400" />,                 text: "Reserve Urgent for critical alerts like system outages or security issues"    },
-            { icon: <FaCheckCircle size={10} className="text-emerald-400" />,      text: "Use Success to celebrate milestones or confirm resolved issues"               },
+            { icon: <FaInfoCircle size={10} className="text-cyan-400" />, text: "Use Info type for general announcements like office hours changes" },
+            { icon: <FaExclamationTriangle size={10} className="text-yellow-400" />, text: "Use Warning for important notices that require user action" },
+            { icon: <FaFire size={10} className="text-red-400" />, text: "Reserve Urgent for critical alerts like system outages or security issues" },
+            { icon: <FaCheckCircle size={10} className="text-emerald-400" />, text: "Use Success to celebrate milestones or confirm resolved issues" },
           ].map((tip, i) => (
             <div key={i} className="flex items-start gap-2.5">
               <div className="shrink-0 mt-0.5">{tip.icon}</div>
@@ -1211,14 +1206,14 @@ const NotificationCenterTab = () => {
         <div className="p-5">
           <div className="p-4 bg-gray-800/50 border border-white/5 rounded-xl flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-             
+
               <div>
                 <h4 className="text-white text-sm font-semibold">Mass Item Reminder</h4>
                 <p className="text-gray-400 text-xs mt-0.5">Email all active students reminding them to check for their lost items.</p>
               </div>
             </div>
-            <button 
-              onClick={handleSendReminder} 
+            <button
+              onClick={handleSendReminder}
               disabled={isReminding}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 shrink-0">
               {isReminding ? <><FaSpinner className="animate-spin" size={12} /> Sending…</> : <><FaEnvelope size={10} /> Send Reminder</>}
@@ -1247,11 +1242,11 @@ const EMAIL_TEMPLATES = [
       to: "reporter@nbsc.edu.ph",
       fields: [
         { label: "Reporter Name", value: "Juan Dela Cruz" },
-        { label: "Item Name",     value: "Black Backpack" },
-        { label: "Last Seen",     value: "SWDC Building - Room 205" },
-        { label: "Date Lost",     value: "January 15, 2026" },
-        { label: "Description",   value: "I am reporting a lost black bag with keychains." },
-        { label: "Status",        value: "⏳ Under Review", highlight: "text-amber-400" },
+        { label: "Item Name", value: "Black Backpack" },
+        { label: "Last Seen", value: "SWDC Building - Room 205" },
+        { label: "Date Lost", value: "January 15, 2026" },
+        { label: "Description", value: "I am reporting a lost black bag with keychains." },
+        { label: "Status", value: "⏳ Under Review", highlight: "text-amber-400" },
       ],
       note: "What happens next? The SAS office will review your report and contact the owner or relevant department to coordinate return of the item.",
       noteColor: "#93c5fd", noteBg: "rgba(30, 58, 138, 0.1)", noteBorder: "rgba(59, 130, 246, 0.2)",
@@ -1269,10 +1264,10 @@ const EMAIL_TEMPLATES = [
       to: "claimant@nbsc.edu.ph",
       fields: [
         { label: "Claimant Name", value: "Maria Santos" },
-        { label: "Item",          value: "Black Backpack" },
-        { label: "Found At",      value: "SWDC Building - Room 205" },
-        { label: "Date Claimed",  value: "January 20, 2026" },
-        { label: "Status",        value: "✓ Successfully Received", highlight: "text-emerald-400" },
+        { label: "Item", value: "Black Backpack" },
+        { label: "Found At", value: "SWDC Building - Room 205" },
+        { label: "Date Claimed", value: "January 20, 2026" },
+        { label: "Status", value: "✓ Successfully Received", highlight: "text-emerald-400" },
       ],
       note: "If you did NOT claim this item or did not authorize this transaction, please contact the SAS office immediately.",
       noteColor: "#6ee7b7", noteBg: "rgba(5, 150, 105, 0.1)", noteBorder: "rgba(16, 185, 129, 0.2)",
@@ -1290,10 +1285,10 @@ const EMAIL_TEMPLATES = [
       to: "reporter@nbsc.edu.ph",
       fields: [
         { label: "Reporter Name", value: "Juan Dela Cruz" },
-        { label: "Item Name",     value: "Black Backpack" },
-        { label: "Found At",      value: "SWDC Building - Room 205" },
-        { label: "Date Found",    value: "January 18, 2026" },
-        { label: "Match Conf.",   value: "🎯 92% Match Score", highlight: "text-emerald-400" },
+        { label: "Item Name", value: "Black Backpack" },
+        { label: "Found At", value: "SWDC Building - Room 205" },
+        { label: "Date Found", value: "January 18, 2026" },
+        { label: "Match Conf.", value: "🎯 92% Match Score", highlight: "text-emerald-400" },
       ],
       note: "Is this your item? Our Smart Match Engine calculated a high probability that this is yours based on location, time, and description. Please visit the SAS office at your earliest convenience to verify and claim your item.",
       noteColor: "#ddd6fe", noteBg: "rgba(91, 33, 182, 0.1)", noteBorder: "rgba(139, 92, 246, 0.2)",
@@ -1329,9 +1324,9 @@ const EMAIL_TEMPLATES = [
       subject: "[Lost & Found] Weekly Deletion Report — 3 Items Pending Purge",
       to: "admin@nbsc.edu.ph",
       fields: [
-        { label: "FoundItem",     value: "Water Bottle (Hydro Flask) - Cafeteria (3 days left)", highlight: "text-red-400" },
-        { label: "LostItem",      value: "Calculator (Casio) - SWDC Building Room 102 (5 days left)", highlight: "text-red-400" },
-        { label: "Claim",         value: "Claim by Maria for Blue Umbrella (6 days left)", highlight: "text-red-400" },
+        { label: "FoundItem", value: "Water Bottle (Hydro Flask) - Cafeteria (3 days left)", highlight: "text-red-400" },
+        { label: "LostItem", value: "Calculator (Casio) - SWDC Building Room 102 (5 days left)", highlight: "text-red-400" },
+        { label: "Claim", value: "Claim by Maria for Blue Umbrella (6 days left)", highlight: "text-red-400" },
       ],
       note: "Restoration Action Required? To restore any of these items and prevent their permanent deletion, please log in to the admin dashboard, navigate to Security & Compliance, and check the Retention Policy tab.",
       noteColor: "#fca5a5", noteBg: "rgba(220, 38, 38, 0.1)", noteBorder: "rgba(220, 38, 38, 0.2)",
@@ -1348,11 +1343,11 @@ const EMAIL_TEMPLATES = [
       subject: "[Lost & Found] ⚠️ Sheets Reconciliation Alert — 3 items missing",
       to: "admin@nbsc.edu.ph",
       fields: [
-        { label: "Total Checked",   value: "42 items checked (last 7 days)" },
-        { label: "LOST Missing",    value: "Black Backpack — Library (Jan 20, 2026)", highlight: "text-red-400" },
-        { label: "FOUND Missing",   value: "Water Bottle — Cafeteria (Jan 21, 2026)", highlight: "text-emerald-400" },
-        { label: "LOST Missing",    value: "Calculator — SWDC Room 102 (Jan 22, 2026)", highlight: "text-red-400" },
-        { label: "Re-sync Status",  value: "⚠ Action Required", highlight: "text-orange-400" },
+        { label: "Total Checked", value: "42 items checked (last 7 days)" },
+        { label: "LOST Missing", value: "Black Backpack — Library (Jan 20, 2026)", highlight: "text-red-400" },
+        { label: "FOUND Missing", value: "Water Bottle — Cafeteria (Jan 21, 2026)", highlight: "text-emerald-400" },
+        { label: "LOST Missing", value: "Calculator — SWDC Room 102 (Jan 22, 2026)", highlight: "text-red-400" },
+        { label: "Re-sync Status", value: "⚠ Action Required", highlight: "text-orange-400" },
       ],
       note: "Items listed above exist in the database but are missing from your Google Sheets audit trail. This may indicate network failures, offline submissions, or webhook errors. Use the Sheets Reconciliation tab in Security & Compliance to re-sync them with one click.",
       noteColor: "#fed7aa", noteBg: "rgba(234, 88, 12, 0.08)", noteBorder: "rgba(249, 115, 22, 0.2)",
@@ -1472,17 +1467,17 @@ const CommunicationHub = () => {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Open Tickets"    value={stats?.openTickets}        color="text-yellow-400" bg="bg-yellow-400/10 border-yellow-400/20" icon={<FaTicketAlt   size={14} className="text-yellow-400" />} />
-        <StatCard label="Urgent Tickets"  value={stats?.urgentTickets}      color="text-red-400"    bg="bg-red-400/10 border-red-400/20"       icon={<FaFire        size={14} className="text-red-400"    />} />
-        <StatCard label="Unread Feedback" value={stats?.unresolvedFeedback} color="text-violet-400" bg="bg-violet-400/10 border-violet-400/20" icon={<FaCommentDots size={14} className="text-violet-400"/>} />
-        <StatCard label="Announcements"   value={stats?.totalAnnouncements} color="text-cyan-400"   bg="bg-cyan-400/10 border-cyan-400/20"     icon={<FaBullhorn    size={14} className="text-cyan-400"   />} />
+        <StatCard label="Open Tickets" value={stats?.openTickets} color="text-yellow-400" bg="bg-yellow-400/10 border-yellow-400/20" icon={<FaTicketAlt size={14} className="text-yellow-400" />} />
+        <StatCard label="Urgent Tickets" value={stats?.urgentTickets} color="text-red-400" bg="bg-red-400/10 border-red-400/20" icon={<FaFire size={14} className="text-red-400" />} />
+        <StatCard label="Unread Feedback" value={stats?.unresolvedFeedback} color="text-violet-400" bg="bg-violet-400/10 border-violet-400/20" icon={<FaCommentDots size={14} className="text-violet-400" />} />
+        <StatCard label="Announcements" value={stats?.totalAnnouncements} color="text-cyan-400" bg="bg-cyan-400/10 border-cyan-400/20" icon={<FaBullhorn size={14} className="text-cyan-400" />} />
       </div>
 
       {activeTab === "announcements" && <AnnouncementsTab />}
-      {activeTab === "tickets"       && <SupportTicketsTab />}
-      {activeTab === "feedback"      && <FeedbackTab />}
+      {activeTab === "tickets" && <SupportTicketsTab />}
+      {activeTab === "feedback" && <FeedbackTab />}
       {activeTab === "notifications" && <NotificationCenterTab />}
-      {activeTab === "templates"     && <EmailTemplatesTab />}
+      {activeTab === "templates" && <EmailTemplatesTab />}
 
     </div>
   );
