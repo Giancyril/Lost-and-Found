@@ -22,6 +22,7 @@ import { getCoordinates } from "../../utils/campusLocations";
 
 type Tab       = "claims" | "audit" | "matches" | "recommender";
 type ModalTab  = "details" | "history";
+type ClaimView = "table" | "timeline";
 const AUDIT_PAGE_SIZE = 10;
 
 const formatDate     = (d: string) => new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
@@ -122,6 +123,7 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
 
 const ClaimsManagement = () => {
   const [activeTab, setActiveTab]       = useState<Tab>("claims");
+  const [claimView, setClaimView]       = useState<ClaimView>("table");
   const [searchTerm, setSearchTerm]     = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [auditSearch, setAuditSearch]   = useState("");
@@ -141,6 +143,11 @@ const ClaimsManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [claimToDelete, setClaimToDelete]         = useState<any>(null);
   const [isDeleting, setIsDeleting]               = useState(false);
+  // Bulk selection
+  const [selectedIds, setSelectedIds]             = useState<Set<string>>(new Set());
+  const [isBulkLoading, setIsBulkLoading]         = useState(false);
+  // Inline timeline expanded state
+  const [expandedTimeline, setExpandedTimeline]   = useState<Set<string>>(new Set());
   const [claimEmailSentIds, setClaimEmailSentIds] = useState<Set<string>>(() => {
     try { const s = localStorage.getItem("claimEmailSentIds"); return s ? new Set<string>(JSON.parse(s)) : new Set<string>(); }
     catch { return new Set<string>(); }
@@ -338,6 +345,80 @@ const ClaimsManagement = () => {
     auditLogs.filter((log: any) => log.claimId === claimId)
       .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
+  // ── Identity Verification Score ──────────────────────────────────────────────
+  const calcVerificationScore = (claim: any): { score: number; label: string; color: string; breakdown: string[] } => {
+    let score = 0;
+    const breakdown: string[] = [];
+    const item = claim.foundItem;
+    const desc = (claim.distinguishingFeatures || "").toLowerCase();
+    const itemDesc = (item?.description || "").toLowerCase();
+    const itemName = (item?.foundItemName || "").toLowerCase();
+
+    // 1. Description provided at all (+20)
+    if (desc.length > 10) { score += 20; breakdown.push("Proof description provided (+20%)"); }
+    else if (desc.length > 0) { score += 8; breakdown.push("Short description provided (+8%)"); }
+
+    // 2. Keyword overlap with item name/description (+30 max)
+    const stopWords = new Set(["a","an","the","and","or","is","it","my","in","on","at","was","with"]);
+    const tokenize = (t: string) => t.replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
+    const claimTokens = new Set(tokenize(desc));
+    const itemTokens  = [...new Set([...tokenize(itemDesc), ...tokenize(itemName)])];
+    let overlap = itemTokens.filter(t => claimTokens.has(t)).length;
+    if (overlap > 0) {
+      const kp = Math.min(30, overlap * 10);
+      score += kp;
+      breakdown.push(`Keyword match with item details (+${kp}%)`);
+    }
+
+    // 3. Lost date proximity to found date (+15)
+    if (claim.lostDate && item?.date) {
+      const diffDays = Math.abs(new Date(item.date).getTime() - new Date(claim.lostDate).getTime()) / 86400000;
+      if (diffDays <= 3) { score += 15; breakdown.push("Lost date near found date (+15%)"); }
+      else if (diffDays <= 10) { score += 8; breakdown.push("Lost date within 10 days (+8%)"); }
+    }
+
+    // 4. School email provided (+15)
+    if (claim.schoolEmail && claim.schoolEmail.includes("@")) { score += 15; breakdown.push("School email on file (+15%)"); }
+
+    // 5. Not flagged as high-risk (+20 bonus, else deduct 20)
+    if (claim.isHighRisk) { score = Math.max(0, score - 20); breakdown.push("⚠ High-risk flag (−20%)"); }
+    else { score += 20; breakdown.push("No fraud flag (+20%)"); }
+
+    score = Math.min(100, score);
+    const label = score >= 80 ? "High Confidence" : score >= 55 ? "Moderate" : "Low Confidence";
+    const color = score >= 80 ? "text-emerald-400" : score >= 55 ? "text-amber-400" : "text-red-400";
+    return { score, label, color, breakdown };
+  };
+
+  // ── Bulk actions ──────────────────────────────────────────────────────────────
+  const pendingClaims = (filteredClaims?: any[]) =>
+    (filteredClaims ?? claims).filter((c: any) => c.status === "PENDING");
+
+  const toggleSelectAll = (filtered: any[]) => {
+    const pendingIds = filtered.filter((c: any) => c.status === "PENDING").map((c: any) => c.id);
+    if (pendingIds.every((id: string) => selectedIds.has(id))) {
+      setSelectedIds(prev => { const n = new Set(prev); pendingIds.forEach(id => n.delete(id)); return n; });
+    } else {
+      setSelectedIds(prev => { const n = new Set(prev); pendingIds.forEach(id => n.add(id)); return n; });
+    }
+  };
+
+  const handleBulkAction = async (status: "APPROVED" | "REJECTED") => {
+    if (selectedIds.size === 0) return;
+    setIsBulkLoading(true);
+    let success = 0;
+    for (const id of Array.from(selectedIds)) {
+      try { await updateClaimStatus({ claimId: id, status }).unwrap(); success++; } catch {}
+    }
+    toast.success(`${success} claim(s) ${status.toLowerCase()} successfully`);
+    setSelectedIds(new Set());
+    setIsBulkLoading(false);
+  };
+
+  const toggleTimeline = (id: string) => {
+    setExpandedTimeline(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  };
+
   const filteredClaims = claims.filter((claim: any) => {
     const matchesSearch =
       claim.foundItem?.foundItemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -500,6 +581,7 @@ const ClaimsManagement = () => {
       {/* ── CLAIMS TAB ── */}
       {activeTab === "claims" && (
         <>
+          {/* ── View toggle + Bulk actions bar ── */}
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -518,7 +600,7 @@ const ClaimsManagement = () => {
             ))}
           </div>
 
-          {/* Filters */}
+          {/* Filters + View Toggle */}
           <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" size={11} />
@@ -535,9 +617,60 @@ const ClaimsManagement = () => {
               ]}
               allLabel="All Status"
             />
+            {/* View switcher */}
+            <div className="flex gap-1 p-1 bg-gray-800 border border-white/5 rounded-xl self-start sm:self-auto shrink-0">
+              <button
+                onClick={() => { setClaimView("table"); setExpandedTimeline(new Set()); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  claimView === "table" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"
+                }`}
+              >
+                <FaClipboardList size={10} /> Table
+              </button>
+              <button
+                onClick={() => setClaimView("timeline")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  claimView === "timeline" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"
+                }`}
+              >
+                <FaHistory size={10} /> Timeline
+              </button>
+            </div>
           </div>
 
-          {/* Table */}
+          {/* Bulk actions bar */}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl animate-fadeIn">
+              <span className="text-blue-300 text-xs font-semibold">
+                {selectedIds.size} claim{selectedIds.size > 1 ? "s" : ""} selected
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleBulkAction("APPROVED")}
+                  disabled={isBulkLoading}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-lg transition-all disabled:opacity-50"
+                >
+                  <FaCheck size={9} /> Approve All
+                </button>
+                <button
+                  onClick={() => handleBulkAction("REJECTED")}
+                  disabled={isBulkLoading}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold rounded-lg transition-all disabled:opacity-50"
+                >
+                  <FaTimes size={9} /> Reject All
+                </button>
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-800 border border-white/5 text-gray-400 text-xs rounded-lg hover:text-white transition-colors"
+                >
+                  <FaTimes size={9} /> Clear
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── TABLE / TIMELINE VIEW ── */}
+          {claimView === "table" ? (
           <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
             <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between">
               <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Claims</h2>
@@ -549,18 +682,45 @@ const ClaimsManagement = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/5 bg-gray-800/30">
-                    <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Item</th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Claimant</th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Proof</th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lost Date</th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
-                    <th className="px-5 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+                    <th className="px-4 py-3 text-left">
+                      {/* Select-all checkbox for pending */}
+                      <input
+                        type="checkbox"
+                        className="accent-blue-500 w-3.5 h-3.5 cursor-pointer rounded"
+                        checked={filteredClaims.filter((c: any) => c.status === "PENDING").length > 0 &&
+                          filteredClaims.filter((c: any) => c.status === "PENDING").every((c: any) => selectedIds.has(c.id))}
+                        onChange={() => toggleSelectAll(filteredClaims)}
+                        title="Select all pending"
+                      />
+                    </th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Item</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Claimant</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">ID Score</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lost Date</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
-                  {filteredClaims.map((claim: any) => (
-                    <tr key={claim.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-5 py-3.5">
+                  {filteredClaims.map((claim: any) => {
+                    const { score: idScore, label: idLabel, color: idColor } = calcVerificationScore(claim);
+                    const isPending = claim.status === "PENDING";
+                    const isSelected = selectedIds.has(claim.id);
+                    return (
+                    <tr key={claim.id} className={`transition-colors ${
+                      isSelected ? "bg-blue-500/5 border-l-2 border-l-blue-500/50" : "hover:bg-white/[0.02]"
+                    }`}>
+                      <td className="px-4 py-3.5">
+                        {isPending ? (
+                          <input
+                            type="checkbox"
+                            className="accent-blue-500 w-3.5 h-3.5 cursor-pointer"
+                            checked={isSelected}
+                            onChange={() => setSelectedIds(prev => { const n = new Set(prev); n.has(claim.id) ? n.delete(claim.id) : n.add(claim.id); return n; })}
+                          />
+                        ) : <span className="w-3.5 h-3.5 block" />}
+                      </td>
+                      <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
                           <img src={claim.foundItem?.img || "/default-item.png"} alt={claim.foundItem?.foundItemName}
                             className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/5" />
@@ -577,7 +737,7 @@ const ClaimsManagement = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-4 py-3.5">
                         <div className="flex items-center gap-1.5 text-white text-xs font-medium mb-0.5">
                           <FaUser size={9} className="text-gray-500" /> {claim.claimantName || "—"}
                         </div>
@@ -586,57 +746,79 @@ const ClaimsManagement = () => {
                           {claim.schoolEmail ? <span className="text-blue-300 text-[10px]">{claim.schoolEmail}</span> : <span className="text-gray-600 text-[10px] italic">No email</span>}
                         </div>
                       </td>
-                      <td className="px-5 py-3.5">
-                        <p className="text-gray-400 text-xs line-clamp-2 max-w-[180px]">
-                          {claim.distinguishingFeatures || <span className="text-gray-600 italic">None provided</span>}
-                        </p>
+                      {/* Identity Verification Score */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-xs font-bold ${idColor}`}>{idScore}%</span>
+                            <span className={`text-[9px] font-semibold ${idColor} opacity-70`}>{idLabel}</span>
+                          </div>
+                          <div className="w-20 h-1 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-700 ${
+                                idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
+                              }`}
+                              style={{ width: `${idScore}%` }}
+                            />
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-5 py-3.5 text-gray-400 text-xs">{formatDate(claim.lostDate)}</td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-4 py-3.5 text-gray-400 text-xs">{formatDate(claim.lostDate)}</td>
+                      <td className="px-4 py-3.5">
                         <StatusSelect value={claim.status} onChange={v => handleStatusChange(claim.id, v)} />
                       </td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-2 justify-end">
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1.5 justify-end">
                           <button onClick={() => handleViewDetails(claim)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
                             <FaEye size={10} /> Verify
                           </button>
-                          
-                          <div className="w-[72px] flex justify-center">
-                            {claim.status === "APPROVED" ? (
-                              claimEmailSentIds.has(claim.id) ? (
-                                <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
-                                  <FaCheckCircle size={10} /> Sent
-                                </span>
-                              ) : (
-                                <button onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg transition-colors">
-                                  <FaEnvelope size={10} /> Email
-                                </button>
-                              )
+                          {claim.status === "APPROVED" ? (
+                            claimEmailSentIds.has(claim.id) ? (
+                              <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
+                                <FaCheckCircle size={10} /> Sent
+                              </span>
                             ) : (
-                              <span className="w-full" />
-                            )}
-                          </div>
+                              <button onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg transition-colors">
+                                <FaEnvelope size={10} /> Email
+                              </button>
+                            )
+                          ) : null}
                           <button onClick={() => handleDeleteClaim(claim)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors">
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors">
                             <FaTrash size={10} /> Delete
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
-            {/* ── Mobile cards (improved) ── */}
+            {/* ── Mobile cards (table view) ── */}
             <div className="md:hidden divide-y divide-white/[0.04]">
-              {filteredClaims.map((claim: any) => (
-                <div key={claim.id} className="p-4 space-y-3">
+              {filteredClaims.map((claim: any) => {
+                const { score: idScore, label: idLabel, color: idColor } = calcVerificationScore(claim);
+                const isPending = claim.status === "PENDING";
+                const isSelected = selectedIds.has(claim.id);
+                return (
+                <div key={claim.id} className={`p-4 space-y-3 ${
+                  isSelected ? "bg-blue-500/5 border-l-2 border-l-blue-500/40" : ""
+                }`}>
 
-                  {/* Row 1: image + name + status badge */}
+                  {/* Row 1: checkbox + image + name + status */}
                   <div className="flex items-start gap-3">
+                    {isPending && (
+                      <input
+                        type="checkbox"
+                        className="accent-blue-500 w-3.5 h-3.5 mt-1 cursor-pointer shrink-0"
+                        checked={isSelected}
+                        onChange={() => setSelectedIds(prev => { const n = new Set(prev); n.has(claim.id) ? n.delete(claim.id) : n.add(claim.id); return n; })}
+                      />
+                    )}
                     <img
                       src={claim.foundItem?.img || "/default-item.png"}
                       alt={claim.foundItem?.foundItemName}
@@ -664,11 +846,23 @@ const ClaimsManagement = () => {
                     </div>
                   </div>
 
-                  {/* Row 2: claimant info */}
+                  {/* Row 2: claimant info + ID score */}
                   <div className="bg-gray-800/50 border border-white/5 rounded-xl px-3 py-2.5 space-y-1.5">
-                    <div className="flex items-center gap-2 text-xs text-gray-300">
-                      <FaUser size={9} className="text-gray-500 shrink-0" />
-                      <span className="font-medium truncate">{claim.claimantName || "—"}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-gray-300">
+                        <FaUser size={9} className="text-gray-500 shrink-0" />
+                        <span className="font-medium truncate">{claim.claimantName || "—"}</span>
+                      </div>
+                      {/* ID score badge */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`text-[10px] font-bold ${idColor}`}>{idScore}%</span>
+                        <div className="w-14 h-1 bg-gray-700 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${
+                            idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
+                          }`} style={{ width: `${idScore}%` }} />
+                        </div>
+                        <span className={`text-[9px] ${idColor} opacity-70`}>{idLabel}</span>
+                      </div>
                     </div>
                     {claim.schoolEmail && (
                       <div className="flex items-center gap-2 text-xs">
@@ -691,21 +885,13 @@ const ClaimsManagement = () => {
 
                   {/* Row 4: actions */}
                   <div className="flex items-center gap-2 pt-0.5 flex-wrap">
-                    {/* Status selector */}
                     <StatusSelect value={claim.status} onChange={v => handleStatusChange(claim.id, v)} />
-
-                    {/* Verify button */}
                     <button
                       onClick={() => handleViewDetails(claim)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors"
                     >
                       <FaEye size={10} /> Verify
                     </button>
-
-                    {/* Delete button */}
-                    
-
-                    {/* Email button — only for APPROVED */}
                     {claim.status === "APPROVED" && (
                       claimEmailSentIds.has(claim.id) ? (
                         <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
@@ -720,7 +906,6 @@ const ClaimsManagement = () => {
                         </button>
                       )
                     )}
-
                     <button
                       onClick={() => handleDeleteClaim(claim)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors"
@@ -729,7 +914,8 @@ const ClaimsManagement = () => {
                     </button>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
 
             {filteredClaims.length === 0 && (
@@ -739,6 +925,131 @@ const ClaimsManagement = () => {
               </div>
             )}
           </div>
+          ) : (
+          /* ── TIMELINE VIEW ── */
+          <div className="space-y-4">
+            {filteredClaims.length === 0 ? (
+              <div className="py-16 text-center bg-gray-900 border border-white/5 rounded-2xl">
+                <FaClipboardList className="mx-auto text-gray-700 mb-3" size={24} />
+                <p className="text-gray-500 text-sm">No claims found</p>
+              </div>
+            ) : filteredClaims.map((claim: any) => {
+              const { score: idScore, label: idLabel, color: idColor, breakdown: idBreak } = calcVerificationScore(claim);
+              const history = getClaimHistory(claim.id);
+              const submitted = { id: "sub", action: "SUBMITTED", toStatus: "PENDING", performedBy: claim.claimantName || "Student", createdAt: claim.createdAt };
+              const allEvents = [submitted, ...history];
+              const isExpanded = expandedTimeline.has(claim.id);
+              return (
+                <div key={claim.id} className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+                  {/* Card header */}
+                  <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
+                    <img
+                      src={claim.foundItem?.img || "/default-item.png"}
+                      alt={claim.foundItem?.foundItemName}
+                      className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-white text-xs font-semibold truncate">{claim.foundItem?.foundItemName}</p>
+                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(claim.status)}`}>{claim.status}</span>
+                        {claim.isHighRisk && (
+                          <span className="text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full">
+                            <FaExclamationTriangle className="inline mr-1" size={7} />FRAUD
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-500 text-[10px] mt-0.5">{claim.claimantName} · {formatDate(claim.lostDate)}</p>
+                    </div>
+                    {/* ID score */}
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className={`text-xs font-bold ${idColor}`}>{idScore}%</span>
+                      <span className={`text-[9px] ${idColor} opacity-70`}>{idLabel}</span>
+                      <div className="w-16 h-1 bg-gray-800 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${
+                          idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
+                        }`} style={{ width: `${idScore}%` }} />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => toggleTimeline(claim.id)}
+                      className={`ml-2 flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[10px] font-semibold transition-all ${
+                        isExpanded ? "bg-violet-500/10 border-violet-500/20 text-violet-400" : "bg-gray-800 border-white/5 text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <FaHistory size={9} />
+                      <span className="hidden sm:inline">{isExpanded ? "Hide" : "Timeline"}</span>
+                      <FaChevronDown size={8} className={`transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                    </button>
+                  </div>
+
+                  {/* Expandable timeline */}
+                  {isExpanded && (
+                    <div className="px-4 py-4">
+                      {/* Claim lifecycle timeline */}
+                      <div className="relative">
+                        <div className="absolute left-3 top-3 bottom-3 w-px bg-white/5" />
+                        <div className="space-y-4">
+                          {allEvents.map((evt: any, idx: number) => (
+                            <div key={evt.id ?? idx} className="relative flex items-start gap-3 pl-0.5">
+                              <div className="relative z-10">
+                                {evt.action === "SUBMITTED"
+                                  ? <div className="w-6 h-6 rounded-full bg-cyan-400/10 border-2 border-cyan-400 flex items-center justify-center shrink-0"><FaClipboardList size={9} className="text-cyan-400" /></div>
+                                  : getTimelineIcon(evt.toStatus)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-white text-xs font-semibold">
+                                    {evt.action === "SUBMITTED" ? "Claim Submitted" : `Status → ${evt.toStatus}`}
+                                  </p>
+                                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(evt.toStatus)}`}>{evt.toStatus}</span>
+                                  {idx === allEvents.length - 1 && (
+                                    <span className="text-[10px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 px-1.5 py-0.5 rounded-full">Latest</span>
+                                  )}
+                                </div>
+                                <p className="text-gray-500 text-[10px] mt-0.5">By <span className="text-gray-300">{evt.performedBy}</span></p>
+                                <p className="text-gray-700 text-[10px]">{formatDateTime(evt.createdAt)} · {timeAgo(evt.createdAt)}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* ID verification breakdown */}
+                      <div className="mt-4 pt-3 border-t border-white/5">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Identity Verification Breakdown</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {idBreak.map((b, i) => (
+                            <span key={i} className={`px-2 py-0.5 rounded-lg text-[9px] font-semibold border ${
+                              b.includes("−") || b.includes("⚠") ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-white/5 border-white/5 text-gray-300"
+                            }`}>{b}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Quick actions */}
+                      {claim.status === "PENDING" && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <button onClick={() => { handleStatusChange(claim.id, "APPROVED"); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg transition-all">
+                            <FaCheck size={9} /> Approve
+                          </button>
+                          <button onClick={() => { handleStatusChange(claim.id, "REJECTED"); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold rounded-lg transition-all">
+                            <FaTimes size={9} /> Reject
+                          </button>
+                          <button onClick={() => handleViewDetails(claim)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+                            <FaEye size={9} /> Full Details
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          )}
         </>
       )}
 
