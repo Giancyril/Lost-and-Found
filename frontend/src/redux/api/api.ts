@@ -566,8 +566,26 @@ const api = baseApi.injectEndpoints({
       providesTags: ["points"],
     }),
     getLeaderboard: builder.query({
-      query: () => ({ url: "/points/leaderboard", method: "GET" }),
+      query: (type?: "alltime" | "weighted" | "weekly" | "monthly") => ({
+        url: "/points/leaderboard",
+        method: "GET",
+        params: type ? { type } : undefined,
+      }),
       providesTags: ["points"],
+    }),
+    getBoostEvents: builder.query({
+      query: () => ({ url: "/admin/boost-events", method: "GET" }),
+      providesTags: ["boostEvents"] as any,
+    }),
+    createBoostEvent: builder.mutation({
+      query: (data: { name: string; multiplier: number; startDate: string; endDate: string }) => ({
+        url: "/admin/boost-events", method: "POST", body: data,
+      }),
+      invalidatesTags: ["boostEvents"] as any,
+    }),
+    deactivateBoostEvent: builder.mutation({
+      query: (id: string) => ({ url: `/admin/boost-events/${id}/deactivate`, method: "PUT" }),
+      invalidatesTags: ["boostEvents"] as any,
     }),
 
     // ── Student masterlist lookup ─────────────────────────────────────────────
@@ -759,6 +777,9 @@ export const {
   useDeleteCommentMutation,
   useGetMyPointsQuery,
   useGetLeaderboardQuery,
+  useGetBoostEventsQuery,
+  useCreateBoostEventMutation,
+  useDeactivateBoostEventMutation,
   // sightings
   useGetSightingsQuery,
   useCreateSightingMutation,

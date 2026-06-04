@@ -49,8 +49,36 @@ A comprehensive lost and found management system built with modern web technolog
 - **Points System**: Comprehensive gamification system with point rewards for various activities
   - **Leveling & Rank System**: An RPG-style progression system that automatically translates earned points into Account Levels (1-100). Students unlock prestigious Rank Titles (e.g., Novice Finder -> Grandmaster of Lost Items) as they level up, displayed proudly on their profile.
   - **Weekly Bounties & Time-Limited Events**: Dynamic rotating missions (e.g., "Report 3 Found Items") to drive student engagement and boost item recovery rates
+  - **Daily Login Streak Rewards**: Students earn consecutive daily login streak bonuses with escalating milestone rewards:
+    - Daily bonus of 50 XP for streaks ≥3 days
+    - 7-day streak milestone: 100 XP + Achievement unlock
+    - 30-day streak milestone: 300 XP + Achievement unlock
+    - 100-day streak milestone: 1000 XP + Achievement unlock
+    - Visual streak flame indicator (🔥) in student topbar showing current streak
+    - Automatic achievement unlocking at milestones for recognition
+  - **Point Decay / Freshness System**: Time-weighted scoring system that keeps leaderboards competitive:
+    - Points earned 0-30 days ago: 100% weight (full value)
+    - Points earned 31-90 days ago: 70% weight
+    - Points earned 90+ days ago: 40% weight
+    - Points never deleted from history, only affect ranking calculations
+    - Weighted leaderboard accessible via `?type=weighted` parameter
+    - Encourages continued participation while preserving historical achievements
+  - **XP Multipliers / Boost Events**: Time-limited XP boost events controlled by administrators:
+    - Admin-configurable boost events with custom multipliers (e.g., 2x, 3x XP weekends)
+    - Automatic XP multiplication for all point-earning actions during active events
+    - Streak bonuses excluded from multiplier to maintain fairness
+    - Yellow boost banner displayed in StudentLayout during active events
+    - Full admin management page with event creation, scheduling, and monitoring
+    - Real-time boost status checking across the platform
+  - **Seasonal/Weekly Leaderboards**: Multiple leaderboard time frames for re-engagement:
+    - All-Time Leaderboard: Cumulative lifetime points
+    - Weekly Leaderboard: Resets every Monday at midnight
+    - Monthly Leaderboard: Resets on the 1st of each month
+    - Weighted Leaderboard: Time-decayed scoring for freshness
+    - Uses `createdAt` filtering, no cron jobs needed
+    - Natural re-engagement cycles through periodic resets
   - **Points for Actions**: Earn points for reporting items, successful claims, helpful comments, and community contributions
-  - **Leaderboard**: Real-time leaderboard showing top contributors and point rankings
+  - **Leaderboard**: Real-time multi-type leaderboard showing top contributors with customizable time frames
   - **Points Badge**: Visual point display in navigation and user profiles
   - **Point History**: Track point earnings and spending over time
 - **Student Dashboard**: Dedicated dashboard for student users with personalized features
@@ -67,7 +95,12 @@ A comprehensive lost and found management system built with modern web technolog
 - **Real-Time Communication**: Socket.io powered real-time updates across all community features
 - **Content Moderation**: Advanced moderation tools with automated keyword filtering, user reporting, warning system, and appeal process
 - **Community Engagement**: Rich interaction features including comments, replies, and collaborative problem-solving
-- **Achievement System**: Badge system for recognizing helpful community contributions
+- **Achievement System**: Comprehensive badge system for recognizing helpful community contributions and milestones
+  - Automatic unlock on streak milestones (7-day, 30-day, 100-day login streaks)
+  - Badge awards for community contributions and helpfulness
+  - Visual achievement displays in user profiles
+  - Achievement tracking and progress monitoring
+  - Integration with points system for reward multipliers
 - **Trust Indicators**: Visual trust levels based on user reputation and activity
 - **Recognition Feed (VIRTUE Spotlight)**: A dedicated homepage section and comprehensive, mobile-responsive administrator management dashboard that allows staff to highlight and celebrate students who exhibit outstanding civic values, like returning lost property. Features seamless sidebar positioning, dynamic stats cards, clean tagging systems, and real-time custom recognition feeds.
 
@@ -398,7 +431,13 @@ The backend follows a RESTful pattern with the following core base routes:
 *   **Items**: `GET /items/found` - Retrieve all publicly visible found items.
 *   **Reporting**: `POST /items/lost` - Submit a new lost item report.
 *   **Claims**: `POST /claims` - Initiate an ownership claim for a found item.
-*   **Points**: `GET /points/leaderboard` - Fetch global student rankings.
+*   **Points**: `GET /points/leaderboard` - Fetch global student rankings with support for multiple leaderboard types (`?type=alltime|weekly|monthly|weighted`).
+*   **Points**: `GET /points/streak` - Get current login streak data for authenticated student.
+*   **Boost Events**: `GET /boost-events/active` - Check active XP boost multiplier.
+*   **Boost Events**: `GET /boost-events` - List all boost events (Admin only).
+*   **Boost Events**: `POST /boost-events` - Create new XP boost event (Admin only).
+*   **Boost Events**: `PATCH /boost-events/:id` - Update existing boost event (Admin only).
+*   **Boost Events**: `DELETE /boost-events/:id` - Delete boost event (Admin only).
 *   **Moderation**: `POST /moderation/reports` - Submit a content report for review.
 *   **Analytics**: `GET /analytics/stats` - Fetch real-time dashboard metrics (Admin only).
 *   **Students**: `GET /students/:id` - Resolve student details from ID (Redis cache-first with Gviz fallback).
@@ -574,6 +613,106 @@ Here is the difference between the two:
 - **Advanced DevTools Open Detection**: Integrates a dual-layered timing trap (window dimension differential + debugger loop) to lock the UI and block reverse-engineering if the browser's developer tools are opened.
 - **Double-Agent Honeypot Fields**: Trap-door features including hidden administrative input fields (`username` bot catchers) and interactive console trap commands (`adminHacker`) designed to catch bad-actors and fingerprint their sessions silently.
 
+### Gamification Features
+
+The system implements a comprehensive gamification layer designed to maximize student engagement and encourage active participation in campus lost-and-found activities.
+
+#### Daily Login Streak Rewards
+- **Automatic Tracking**: System records login dates and calculates consecutive day streaks
+- **Database Fields**: `loginStreak` (current streak count) and `lastLoginDate` stored in User model
+- **Streak Calculation**: `recordLoginStreak()` function runs on every login, comparing dates and incrementing or resetting streaks
+- **Daily Bonus**: Students with streaks ≥3 days receive 50 XP automatically on login
+- **Milestone Rewards**:
+  - **7-Day Streak**: 100 XP bonus + "Week Warrior" achievement unlock
+  - **30-Day Streak**: 300 XP bonus + "Monthly Master" achievement unlock
+  - **100-Day Streak**: 1000 XP bonus + "Century Champion" achievement unlock
+- **Visual Indicator**: Real-time streak flame (🔥) displayed in StudentLayout topbar showing current streak count
+- **Achievement Integration**: Automatic achievement unlocking via `unlockAchievement()` service at milestones
+- **Backend Integration**: Integrated into `auth.controller.ts` login handlers for both regular and Google OAuth flows
+
+#### Point Decay / Freshness System
+- **Time-Weighted Scoring**: Points are weighted based on age to keep leaderboards competitive and reward recent activity
+- **Weight Calculation**: `getWeightedScore()` function applies time-based multipliers:
+  - 0-30 days: 100% weight (full value)
+  - 31-90 days: 70% weight
+  - 90+ days: 40% weight
+- **Historical Preservation**: Points never deleted from database—only their weight changes for ranking calculations
+- **Weighted Leaderboard**: Accessible via `GET /points/leaderboard?type=weighted`
+- **Database Query**: Uses `PointHistory.createdAt` to calculate point age dynamically
+- **Encourages Participation**: Students must continue earning to maintain high rankings, preventing stagnation
+
+#### XP Multipliers / Boost Events
+- **Admin Control**: Full CRUD interface for creating and managing time-limited boost events
+- **XPBoostEvent Model**: Stores `name`, `multiplier`, `startDate`, `endDate`, and `isActive` status
+- **Automatic Multiplier**: `getActiveBoostMultiplier()` checks for active events and returns multiplier (default 1.0)
+- **Smart Application**: Multiplier applied in `award()` function before points are saved—streak bonuses excluded
+- **UI Banner**: Yellow boost alert banner in StudentLayout shows active boost details (name, multiplier, end time)
+- **Admin Dashboard**: Dedicated management page (`BoostEventsManagement.tsx`) with:
+  - Event creation form with name, multiplier, and date range inputs
+  - Real-time event list with edit and delete actions
+  - Visual status indicators (Active/Scheduled/Expired)
+  - Integrated into admin sidebar with ⚡ icon
+- **API Endpoints**:
+  - `GET /boost-events/active` - Check current active multiplier
+  - `GET /boost-events` - List all events (Admin only)
+  - `POST /boost-events` - Create new event (Admin only)
+  - `PATCH /boost-events/:id` - Update event (Admin only)
+  - `DELETE /boost-events/:id` - Delete event (Admin only)
+- **Real-Time Updates**: Frontend polls active boost status to update banner dynamically
+
+#### Seasonal/Weekly Leaderboards
+- **Multiple Time Frames**: Four distinct leaderboard types for varied competition cycles:
+  - `alltime`: Cumulative lifetime points (default)
+  - `weekly`: Points earned in current week (Monday-Sunday)
+  - `monthly`: Points earned in current month
+  - `weighted`: Time-decayed scoring for freshness
+- **Dynamic Filtering**: Uses `createdAt` timestamp filtering in `getLeaderboard()` service
+- **Automatic Resets**: Weekly reset every Monday at 00:00, Monthly reset on 1st of month
+- **No Cron Jobs**: Resets handled by query filtering, not scheduled jobs—reduces complexity
+- **API Access**: `GET /points/leaderboard?type={alltime|weekly|monthly|weighted}`
+- **Frontend Integration**: Leaderboard component supports type selector for switching views
+- **Re-Engagement Cycles**: Natural motivation cycles as students compete for weekly/monthly rankings
+
+#### Technical Implementation
+
+**Database Schema (Prisma)**:
+```prisma
+model User {
+  loginStreak    Int      @default(0)
+  lastLoginDate  DateTime?
+  // ... other fields
+}
+
+model XPBoostEvent {
+  id         String   @id @default(uuid())
+  name       String
+  multiplier Float
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+```
+
+**Key Functions**:
+- `recordLoginStreak(userId)` - Updates streak on login, awards bonuses, unlocks achievements
+- `getActiveBoostMultiplier()` - Returns current XP multiplier (1.0 if no active event)
+- `getWeightedScore(userId)` - Calculates time-decayed point total
+- `getLeaderboard(type)` - Fetches rankings with time-based filtering
+- `award(userId, points, reason)` - Core XP distribution with auto-multiplier
+
+**Frontend Components**:
+- `StudentLayout.tsx` - Displays streak flame (🔥) and boost banner
+- `BoostEventsManagement.tsx` - Admin boost event CRUD interface
+- `Leaderboard.tsx` - Multi-type leaderboard switcher (supports all 4 types)
+
+**Integration Points**:
+- Login flow: `auth.controller.ts` calls `recordLoginStreak()`
+- Points award: `points.service.ts` checks `getActiveBoostMultiplier()` before saving
+- Achievement unlock: `achievementService.ts` triggered at streak milestones
+- Found item reporting: XP multiplier applies when admin reports for student via email
+
 ### Predictive Analytics & AI Forecasting
 - **Risk Zone Mapping**: Analyzes historical data density to calculate a % risk score for campus locations, identifying "hotspots" where items are frequently lost.
 - **Peak Time Forecasting**: Predictive algorithm that correlates days and hours to forecast the most likely windows for future lost/found reports.
@@ -646,6 +785,31 @@ Here is the difference between the two:
 ### Phase 10: Gamification, Data Governance, Performance & UI Optimization (Completed)
 - **Weekly Bounties & Time-Limited Events**: Dynamic gamification engine powered by Prisma models and cron-jobs. Features rotating weekly missions (e.g., "Report 3 Found Items") to drive student engagement and boost item recovery rates.
 - **Leveling & Rank System**: RPG-style progression system capping at Level 100 with dynamic rank titles and progress bars based on community points.
+- **Daily Login Streak Rewards**: Comprehensive daily login tracking system with consecutive day streak bonuses and milestone rewards:
+  - Automatic streak calculation on every login with `loginStreak` and `lastLoginDate` tracking
+  - Daily 50 XP bonus for streaks ≥3 days
+  - Milestone rewards: 7-day (100 XP), 30-day (300 XP), 100-day (1000 XP)
+  - Visual streak flame indicator (🔥) in student topbar
+  - Automatic achievement unlocking at milestone thresholds
+  - Integrated into both regular and Google OAuth login flows
+- **Point Decay / Freshness System**: Time-weighted scoring system that keeps leaderboards competitive and encourages continued participation:
+  - Dynamic weight calculation: 0-30 days (100%), 31-90 days (70%), 90+ days (40%)
+  - Points preserved in history but weighted for rankings
+  - Weighted leaderboard type accessible via API parameter
+  - Prevents leaderboard stagnation while respecting historical achievements
+- **XP Multipliers / Boost Events**: Administrator-controlled time-limited XP boost system for driving engagement during key periods:
+  - Full CRUD admin interface for boost event management
+  - Custom multipliers (2x, 3x, etc.) with date range controls
+  - Automatic XP multiplication in `award()` function (streak bonuses excluded)
+  - Real-time yellow boost banner in StudentLayout during active events
+  - Dedicated admin management page with event creation, editing, and monitoring
+  - Integrated into admin sidebar with lightning bolt (⚡) icon
+- **Seasonal/Weekly Leaderboards**: Multiple leaderboard time frames providing natural re-engagement cycles:
+  - Four distinct types: All-Time, Weekly (Monday reset), Monthly (1st reset), Weighted (time-decayed)
+  - Dynamic filtering using `createdAt` timestamps—no cron jobs required
+  - API support via `?type={alltime|weekly|monthly|weighted}` parameter
+  - Frontend component with type selector for easy switching
+  - Creates natural competition cycles and prevents ranking fatigue
 - **Continuous Bulk Scanner**: Uninterrupted mass-scanning utility that retains persistent state across navigation, enabling rapid continuous entry of multiple items.
 - **Interactive "Journey Tracking"**: A visual, data-driven timeline tracing the complete lifecycle of a claim or lost report, dynamically aggregating sightings and exact `ClaimAuditLog` milestones (like "Verification Passed" or "Claim Rejected").
 - **AI Fraud & 'Serial Claimant' Prevention Engine**: A dual-layer security mechanism. A heuristic layer flags users submitting 3+ claims in 90 days. Then, Gemini AI cross-references the claimant's "Proof of Ownership" against hidden item details to detect vague guesses or blatant lies, emitting a 0-100% Risk Score and instant red FRAUD ALERTS on the Admin claims dashboard.

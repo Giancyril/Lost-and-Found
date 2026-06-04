@@ -170,6 +170,11 @@ router.use("/", commentsRouter);
 router.get("/points/my", auth(), pointsController.getMyPoints);
 router.get("/points/leaderboard", pointsController.getLeaderboard);
 
+// Admin boost event management
+router.get("/admin/boost-events", auth(), pointsController.getBoostEvents);
+router.post("/admin/boost-events", auth(), pointsController.createBoostEvent);
+router.put("/admin/boost-events/:id/deactivate", auth(), pointsController.deactivateBoostEvent);
+
 //////////////////////////////////////////////// achievements //////////////////////////////////////////////
 router.get("/achievements", auth(), achievementController.getAchievements);
 router.get("/achievements/my", auth(), achievementController.getMyAchievements);

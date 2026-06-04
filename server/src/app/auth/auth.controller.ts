@@ -5,6 +5,8 @@ import { authServices } from "./auth.service";
 import { logLoginAttempt, getClientIp } from "../utils/securityController"; 
 import { TLogin } from "../global/interface";
 import { utils } from "../utils/utils";
+import { pointsService } from "../modules/points/points.service";
+import { checkStreakAndAwardBonus } from "../utils/achievementService";
 
 const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -28,6 +30,10 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     } catch (logErr) {
       console.error("[LoginLog] Failed to log success:", logErr);
     }
+
+    // Record login streak and award milestones
+    await pointsService.recordLoginStreak(user.id);
+    await checkStreakAndAwardBonus(user.id);
 
     const { refreshToken, ...userData } = user;
 
@@ -91,6 +97,10 @@ const portalLogin = async (req: Request, res: Response, next: NextFunction) => {
     } catch (logErr) {
       console.error("[LoginLog] Failed to log success for portal login:", logErr);
     }
+
+    // Record login streak and award milestones for portal login too
+    await pointsService.recordLoginStreak(user.id);
+    await checkStreakAndAwardBonus(user.id);
 
     const { refreshToken, ...userData } = user;
 

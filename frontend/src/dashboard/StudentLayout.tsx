@@ -86,8 +86,36 @@ const Avatar = ({ size = "md" }: { name?: string; size?: "sm" | "md" | "lg" }) =
   );
 };
 
+// ── Boost Banner ─────────────────────────────────────────────────────────────
+const BoostBanner = ({ boostEvent }: { boostEvent: any }) => {
+  const [dismissed, setDismissed] = useState(false);
+  if (!boostEvent || dismissed) return null;
+  return (
+    <div className="bg-gradient-to-r from-yellow-500/10 via-orange-500/10 to-yellow-500/10 border-b border-yellow-500/20 px-4 py-1.5 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2 text-xs">
+        <span className="text-yellow-400 font-black animate-pulse">⚡ {boostEvent.multiplier}× XP BOOST ACTIVE</span>
+        <span className="text-yellow-600 hidden sm:inline">— {boostEvent.name}</span>
+        <span className="text-yellow-700 text-[10px]">
+          ends {new Date(boostEvent.endDate).toLocaleDateString()}
+        </span>
+      </div>
+      <button
+        onClick={() => setDismissed(true)}
+        className="text-yellow-700 hover:text-yellow-400 transition-colors shrink-0"
+      >
+        <FaTimes size={10} />
+      </button>
+    </div>
+  );
+};
+
 // ── Points Pill ───────────────────────────────────────────────────────────────
-const PointsDropdown = ({ points, history, rank }: { points: number; history: any[]; rank: number }) => {
+const PointsDropdown = ({ points, history, rank, loginStreak }: { 
+  points: number; 
+  history: any[]; 
+  rank: number;
+  loginStreak: number;
+}) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -101,7 +129,15 @@ const PointsDropdown = ({ points, history, rank }: { points: number; history: an
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative flex items-center gap-1">
+      {/* Streak Flame Indicator */}
+      {loginStreak >= 3 && (
+        <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20">
+          <span className="text-[10px]">🔥</span>
+          <span className="text-[9px] font-black text-orange-400">{loginStreak}</span>
+        </div>
+      )}
+
       {/* ── Header Trigger Button ── */}
       <button
         type="button"
@@ -331,10 +367,12 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   });
   const { data: boardData  } = useGetLeaderboardQuery(undefined);
 
-  const points  = pointsData?.data?.totalPoints ?? 0;
-  const history = pointsData?.data?.history     ?? [];
-  const board   = boardData?.data ?? [];
-  const rank    = board.findIndex((u: any) => u.id === user?.id) + 1;
+  const points      = pointsData?.data?.totalPoints ?? 0;
+  const history     = pointsData?.data?.history     ?? [];
+  const loginStreak = pointsData?.data?.loginStreak ?? 0;
+  const boostEvent  = pointsData?.data?.boostEvent  ?? null;
+  const board       = boardData?.data ?? [];
+  const rank        = board.findIndex((u: any) => u.id === user?.id) + 1;
 
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
@@ -475,10 +513,13 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {location.pathname === "/dashboard/student" && <ProximityAlertSystem />}
             <ChatDropdown />
-            <PointsDropdown points={points} history={history} rank={rank} />
+            <PointsDropdown points={points} history={history} rank={rank} loginStreak={loginStreak} />
             <ProfileDropdown user={user} onSignOut={handleSignOut} />
           </div>
         </header>
+
+        {/* ── Boost Banner ── */}
+        <BoostBanner boostEvent={boostEvent} />
 
         {/* ── Page content ── */}
         <main className="flex-1 p-4 sm:p-5 lg:p-7 overflow-auto bg-gray-950 custom-scrollbar">

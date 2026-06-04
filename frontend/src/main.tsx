@@ -54,6 +54,7 @@ import IndoorMapPage from "./pages/IndoorMapPage.tsx";
 import AuditLogsPage from "./dashboard/pages/AuditLogsPage.tsx";
 import Bounties from "./pages/bounties/Bounties.tsx";
 import VirtueSpotlightAdmin from "./pages/admin/VirtueSpotlightAdmin.tsx";
+import BoostEventsManagement from "./dashboard/pages/BoostEventsManagement.tsx";
 
 const rawAdminPath = import.meta.env.VITE_ADMIN_PATH || "/nbsc-secure-portal";
 const ADMIN_PATH = rawAdminPath.startsWith("/") ? rawAdminPath : `/${rawAdminPath}`;
@@ -112,6 +113,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/settings", element: <DashboardLayout><Settings /></DashboardLayout> },
   { path: "/dashboard/archive", element: <DashboardLayout><ArchievePage /></DashboardLayout> },
   { path: "/dashboard/achievements", element: <DashboardLayout><AchievementsManagement /></DashboardLayout> },
+  { path: "/dashboard/boost-events", element: <DashboardLayout><BoostEventsManagement /></DashboardLayout> },
   { path: "/dashboard/myFoundItems", element: <DashboardLayout><MyFoundItems /></DashboardLayout> },
   { path: "/dashboard/myLostItems", element: <DashboardLayout><MyLostItems /></DashboardLayout> },
   { path: "/dashboard/security", element: <DashboardLayout><SecurityPage /></DashboardLayout> },

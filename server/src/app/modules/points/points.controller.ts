@@ -26,7 +26,7 @@ const getMyPoints = async (req: Request, res: Response) => {
       });
     }
 
-    // Returns { totalPoints, name, history }
+    // Returns { totalPoints, name, history, loginStreak, lastLoginDate, streak, boostEvent }
     // Frontend reads pointsData?.data?.totalPoints  ✅
     const data = await pointsService.getMyPoints(userId);
     
@@ -53,12 +53,17 @@ const getMyPoints = async (req: Request, res: Response) => {
   }
 };
 
-// GET /points/leaderboard  — public, no auth required
+// GET /points/leaderboard?type=alltime|weighted|weekly|monthly
 const getLeaderboard = async (req: Request, res: Response) => {
   try {
-    // Returns array of { id, name, totalPoints, userImg, schoolId }
-    // Frontend reads boardData?.data  ✅
-    const data = await pointsService.getLeaderboard();
+    const type = (req.query.type as any) ?? "alltime";
+    let data: any[];
+
+    if (type === "weighted") {
+      data = await pointsService.getWeightedLeaderboard();
+    } else {
+      data = await pointsService.getLeaderboard(type);
+    }
 
     sendResponse(res, {
       statusCode: StatusCodes.OK,
@@ -76,7 +81,76 @@ const getLeaderboard = async (req: Request, res: Response) => {
   }
 };
 
+// Admin: create a boost event
+const createBoostEvent = async (req: Request, res: Response) => {
+  try {
+    const { name, multiplier, startDate, endDate } = req.body;
+    const data = await pointsService.createBoostEvent({
+      name,
+      multiplier: parseFloat(multiplier),
+      startDate:  new Date(startDate),
+      endDate:    new Date(endDate),
+    });
+    sendResponse(res, {
+      statusCode: StatusCodes.CREATED,
+      success:    true,
+      message:    "Boost event created",
+      data,
+    });
+  } catch (error: any) {
+    sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success:    false,
+      message:    error?.message ?? "Failed to create boost event",
+      data:       null,
+    });
+  }
+};
+
+// Admin: list boost events
+const getBoostEvents = async (req: Request, res: Response) => {
+  try {
+    const data = await pointsService.getBoostEvents();
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success:    true,
+      message:    "Boost events retrieved",
+      data,
+    });
+  } catch (error: any) {
+    sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success:    false,
+      message:    error?.message ?? "Failed to retrieve boost events",
+      data:       null,
+    });
+  }
+};
+
+// Admin: deactivate a boost event
+const deactivateBoostEvent = async (req: Request, res: Response) => {
+  try {
+    const data = await pointsService.deactivateBoostEvent(req.params.id);
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success:    true,
+      message:    "Boost event deactivated",
+      data,
+    });
+  } catch (error: any) {
+    sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success:    false,
+      message:    error?.message ?? "Failed to deactivate boost event",
+      data:       null,
+    });
+  }
+};
+
 export const pointsController = {
   getMyPoints,
   getLeaderboard,
+  createBoostEvent,
+  getBoostEvents,
+  deactivateBoostEvent,
 };

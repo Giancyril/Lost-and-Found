@@ -25,6 +25,8 @@ model User {
   course            String?
   yearLevel         String?
   totalPoints       Int                  @default(0)
+  loginStreak       Int                  @default(0)
+  lastLoginDate     DateTime?
   ClaimAuditLog     ClaimAuditLog[]
   claim             Claim[]
   foundItem         FoundItem[]
@@ -624,4 +626,17 @@ model VirtueSpotlight {
   updatedAt   DateTime @updatedAt
 
   @@map("virtue_spotlights")
+}
+
+model XPBoostEvent {
+  id          String   @id @default(uuid())
+  name        String
+  multiplier  Float    @default(2.0)
+  startDate   DateTime
+  endDate     DateTime
+  createdBy   String   @default("Admin")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("xpBoostEvents")
 }

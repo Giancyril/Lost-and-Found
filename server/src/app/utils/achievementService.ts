@@ -226,42 +226,18 @@ export const calculateStreak = async (userId: string) => {
 export const checkStreakAndAwardBonus = async (userId: string) => {
   try {
     const streak = await calculateStreak(userId);
-    if (streak.currentStreak >= 3) {
-      const todayStr = new Date().toISOString().split("T")[0];
-      // Check if STREAK_BONUS was already awarded today
-      const existingAward = await prisma.points.findFirst({
-        where: {
-          userId,
-          reason: "STREAK_BONUS",
-          refId: todayStr,
-          amount: { gt: 0 }
-        }
-      });
+    const { currentStreak } = streak;
 
-      if (!existingAward) {
-        // Award 50 points
-        await prisma.$transaction([
-          prisma.points.create({
-            data: {
-              userId,
-              amount: 50,
-              reason: "STREAK_BONUS",
-              refId: todayStr
-            }
-          }),
-          prisma.user.update({
-            where: { id: userId },
-            data: { totalPoints: { increment: 50 } }
-          })
-        ]);
-        console.log(`[Streak] Awarded streak bonus (+50 XP) to user ${userId}`);
-      }
+    // Milestone achievements
+    if (currentStreak >= 3)   await awardAchievement(userId, "STREAK_3");
+    if (currentStreak >= 7)   await awardAchievement(userId, "WEEK_WARRIOR");
+    if (currentStreak >= 14)  await awardAchievement(userId, "STREAK_14");
+    if (currentStreak >= 30)  await awardAchievement(userId, "MONTHLY_DEVOTEE");
 
-      // Also unlock the STREAK_3 achievement!
-      await awardAchievement(userId, "STREAK_3");
-    }
+    // Daily bonus (already idempotent via refId in recordLoginStreak)
+    // No need to duplicate logic here since recordLoginStreak handles it
   } catch (error) {
-    console.error("Error checking streak and awarding bonus:", error);
+    console.error("Error in checkStreakAndAwardBonus:", error);
   }
 };
 

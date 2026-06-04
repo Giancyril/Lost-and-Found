@@ -6,7 +6,7 @@ import {
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt, FaMapMarkerAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate,
-  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy, FaAward
+  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy, FaAward, FaBolt
 } from "react-icons/fa";
 import { useUserVerification, signOut, setUserLocalStorage } from "../auth/auth";
 
@@ -59,6 +59,7 @@ const menuItems = [
   { title: "Leaderboard", icon: FaTrophy, path: "/dashboard/leaderboard" },
 
   // Administration - Ordered for Professional Workflow
+  { title: "XP Boost Events", icon: FaBolt, path: "/dashboard/boost-events" },
   { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
   { title: "Security", icon: FaShieldAlt, path: "/dashboard/security" },
   { title: "Audit Logs", icon: FaClipboardList, path: "/dashboard/audit-logs" },
@@ -79,6 +80,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/comm-hub": { title: "Communication Hub", subtitle: "Announcements, support tickets, feedback and broadcasts." },
   "/dashboard/virtue-spotlight": { title: "Recognition Feed", subtitle: "Manage recognition posts displayed on the homepage." },
   "/dashboard/achievements": { title: "Achievements", subtitle: "Monitor badge distribution and top community contributors." },
+  "/dashboard/boost-events": { title: "XP Boost Events", subtitle: "Create and manage time-limited XP multiplier events to boost engagement." },
   "/dashboard/report": { title: "Report", subtitle: "Generate and export weekly or monthly summary reports." },
   "/dashboard/moderation": { title: "Content Moderation", subtitle: "Review flagged content, manage reports, and moderate community posts." },
   "/dashboard/students": { title: "Students", subtitle: "View and manage all registered student accounts." },
