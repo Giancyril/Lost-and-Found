@@ -682,17 +682,6 @@ const ClaimsManagement = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/5 bg-gray-800/30">
-                    <th className="px-4 py-3 text-left">
-                      {/* Select-all checkbox for pending */}
-                      <input
-                        type="checkbox"
-                        className="accent-blue-500 w-3.5 h-3.5 cursor-pointer rounded"
-                        checked={filteredClaims.filter((c: any) => c.status === "PENDING").length > 0 &&
-                          filteredClaims.filter((c: any) => c.status === "PENDING").every((c: any) => selectedIds.has(c.id))}
-                        onChange={() => toggleSelectAll(filteredClaims)}
-                        title="Select all pending"
-                      />
-                    </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Item</th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Claimant</th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">ID Score</th>
@@ -710,16 +699,6 @@ const ClaimsManagement = () => {
                     <tr key={claim.id} className={`transition-colors ${
                       isSelected ? "bg-blue-500/5 border-l-2 border-l-blue-500/50" : "hover:bg-white/[0.02]"
                     }`}>
-                      <td className="px-4 py-3.5">
-                        {isPending ? (
-                          <input
-                            type="checkbox"
-                            className="accent-blue-500 w-3.5 h-3.5 cursor-pointer"
-                            checked={isSelected}
-                            onChange={() => setSelectedIds(prev => { const n = new Set(prev); n.has(claim.id) ? n.delete(claim.id) : n.add(claim.id); return n; })}
-                          />
-                        ) : <span className="w-3.5 h-3.5 block" />}
-                      </td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
                           <img src={claim.foundItem?.img || "/default-item.png"} alt={claim.foundItem?.foundItemName}
