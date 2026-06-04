@@ -51,12 +51,12 @@ const menuItems = [
   { title: "Analytics", icon: FaChartLine, path: "/dashboard/analytics" },
   { title: "Heatmap", icon: FaMapMarkedAlt, path: "/dashboard/heatmap" },
   { title: "Communication", icon: FaBullhorn, path: "/dashboard/comm-hub" },
-  { title: "Achievements", icon: FaMedal, path: "/dashboard/achievements" },
   { title: "Content Moderation", icon: FaFlag, path: "/dashboard/moderation" },
 
   // Student Management
   { title: "Students", icon: FaUserGraduate, path: "/dashboard/students" },
   { title: "Leaderboard", icon: FaTrophy, path: "/dashboard/leaderboard" },
+  { title: "Achievements", icon: FaMedal, path: "/dashboard/achievements" },
 
   // Administration - Ordered for Professional Workflow
   { title: "XP Boost Events", icon: FaBolt, path: "/dashboard/boost-events" },
