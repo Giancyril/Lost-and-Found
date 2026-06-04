@@ -65,7 +65,7 @@ export const ACHIEVEMENTS = {
 
   // 🔵 Streak & Time Badges
   DAY_ONE: { key: "DAY_ONE", name: "Waking Up in a Wagon", description: "First login to the system", icon: "🐴", tier: "BRONZE", category: "streak", xp: 25 },
-  STREAK_3: { key: "STREAK_3", name: "Triple Threat", description: "3 day login streak", icon: "🔥", tier: "BRONZE", category: "streak", xp: 30 },
+  STREAK_3: { key: "STREAK_3", name: "Triple Threat", description: "3 consecutive days reporting items", icon: "🔥", tier: "BRONZE", category: "streak", xp: 30 },
   WEEK_WARRIOR: { key: "WEEK_WARRIOR", name: "7 Days to Die", description: "Login 7 days in a row", icon: "💀", tier: "SILVER", category: "streak", xp: 150 },
   STREAK_14: { key: "STREAK_14", name: "Fortnightly", description: "14 day login streak", icon: "🏰", tier: "SILVER", category: "streak", xp: 200 },
   MONTHLY_DEVOTEE: { key: "MONTHLY_DEVOTEE", name: "No Life Status", description: "Active for 30 consecutive days", icon: "🖥️", tier: "GOLD", category: "streak", xp: 500 },
@@ -162,8 +162,112 @@ export const awardAchievement = async (userId: string, achievementKey: string) =
 
 // ── Achievement Checkers ──────────────────────────────────────────────────
 
+export const calculateStreak = async (userId: string) => {
+  try {
+    const foundItems = await prisma.foundItem.findMany({
+      where: { userId, isDeleted: false },
+      select: { createdAt: true }
+    });
+    const lostItems = await prisma.lostItem.findMany({
+      where: { userId, isDeleted: false },
+      select: { createdAt: true }
+    });
+    
+    const dates = [
+      ...foundItems.map(f => f.createdAt),
+      ...lostItems.map(l => l.createdAt)
+    ];
+    
+    if (dates.length === 0) {
+      return { currentStreak: 0, isOnARoll: false };
+    }
+    
+    // Normalize to date strings in YYYY-MM-DD
+    const dateStrings = Array.from(
+      new Set(dates.map(d => d.toISOString().split("T")[0]))
+    ).sort(); // Ascending order
+    
+    const todayStr = new Date().toISOString().split("T")[0];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
+    
+    const hasToday = dateStrings.includes(todayStr);
+    const hasYesterday = dateStrings.includes(yesterdayStr);
+    
+    if (!hasToday && !hasYesterday) {
+      return { currentStreak: 0, isOnARoll: false };
+    }
+    
+    let anchorStr = hasToday ? todayStr : yesterdayStr;
+    let anchorDate = new Date(anchorStr);
+    let currentStreak = 1;
+    
+    while (true) {
+      anchorDate.setDate(anchorDate.getDate() - 1);
+      const prevStr = anchorDate.toISOString().split("T")[0];
+      if (dateStrings.includes(prevStr)) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+    
+    return {
+      currentStreak,
+      isOnARoll: currentStreak >= 3
+    };
+  } catch (error) {
+    console.error("Error calculating streak:", error);
+    return { currentStreak: 0, isOnARoll: false };
+  }
+};
+
+export const checkStreakAndAwardBonus = async (userId: string) => {
+  try {
+    const streak = await calculateStreak(userId);
+    if (streak.currentStreak >= 3) {
+      const todayStr = new Date().toISOString().split("T")[0];
+      // Check if STREAK_BONUS was already awarded today
+      const existingAward = await prisma.points.findFirst({
+        where: {
+          userId,
+          reason: "STREAK_BONUS",
+          refId: todayStr,
+          amount: { gt: 0 }
+        }
+      });
+
+      if (!existingAward) {
+        // Award 50 points
+        await prisma.$transaction([
+          prisma.points.create({
+            data: {
+              userId,
+              amount: 50,
+              reason: "STREAK_BONUS",
+              refId: todayStr
+            }
+          }),
+          prisma.user.update({
+            where: { id: userId },
+            data: { totalPoints: { increment: 50 } }
+          })
+        ]);
+        console.log(`[Streak] Awarded streak bonus (+50 XP) to user ${userId}`);
+      }
+
+      // Also unlock the STREAK_3 achievement!
+      await awardAchievement(userId, "STREAK_3");
+    }
+  } catch (error) {
+    console.error("Error checking streak and awarding bonus:", error);
+  }
+};
+
 export const checkFoundItemAchievements = async (userId: string) => {
   await incrementBountyProgress(userId, "REPORT_FOUND_ITEM");
+  await checkStreakAndAwardBonus(userId);
   const count = await prisma.foundItem.count({ where: { userId } });
   if (count >= 1) await awardAchievement(userId, "FIRST_FOUND_ITEM");
   if (count >= 5) await awardAchievement(userId, "FOUND_5_ITEMS");
@@ -174,6 +278,7 @@ export const checkFoundItemAchievements = async (userId: string) => {
 };
 
 export const checkLostItemAchievements = async (userId: string) => {
+  await checkStreakAndAwardBonus(userId);
   const count = await prisma.lostItem.count({ where: { userId } });
   if (count >= 1) await awardAchievement(userId, "FIRST_LOST_REPORT");
   if (count >= 5) await awardAchievement(userId, "LOST_5_ITEMS");

@@ -3,12 +3,14 @@
 import prisma from "../../config/prisma";
 import AppError from "../../global/error";
 import { StatusCodes } from "http-status-codes";
+import { calculateStreak } from "../../utils/achievementService";
 
 // ── Point values per action ───────────────────────────────────────────────────
 export const POINT_VALUES: Record<string, number> = {
   FOUND_ITEM_REPORTED: 50,
   CLAIM_APPROVED:      30,
   HELPFUL_COMMENT:     10,
+  STREAK_BONUS:        50,
 };
 
 // ── Award points to a user ────────────────────────────────────────────────────
@@ -79,10 +81,13 @@ const getMyPoints = async (userId: string) => {
     take:    50,
   });
 
+  const streak = await calculateStreak(userId);
+
   return {
     totalPoints: user?.totalPoints ?? 0,
     name:        user?.name        ?? "",
     history,
+    streak,
   };
 };
 

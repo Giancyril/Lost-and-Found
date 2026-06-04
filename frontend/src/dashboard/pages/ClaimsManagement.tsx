@@ -20,12 +20,12 @@ import {
 import ExportButton from "../../components/export/ExportButton";
 import { getCoordinates } from "../../utils/campusLocations";
 
-type Tab       = "claims" | "audit" | "matches" | "recommender";
-type ModalTab  = "details" | "history";
+type Tab = "claims" | "audit" | "matches" | "recommender";
+type ModalTab = "details" | "history";
 type ClaimView = "table" | "timeline";
 const AUDIT_PAGE_SIZE = 10;
 
-const formatDate     = (d: string) => new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+const formatDate = (d: string) => new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 const formatDateTime = (d: string) => new Date(d).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" });
 const timeAgo = (dateStr: string) => {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -39,27 +39,27 @@ const timeAgo = (dateStr: string) => {
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "PENDING":   return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-    case "APPROVED":  return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-    case "REJECTED":  return "bg-red-500/10 text-red-400 border-red-500/20";
+    case "PENDING": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+    case "APPROVED": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+    case "REJECTED": return "bg-red-500/10 text-red-400 border-red-500/20";
     case "SUBMITTED": return "bg-blue-500/10 text-blue-400 border-blue-500/20";
-    default:          return "bg-gray-500/10 text-gray-400 border-gray-500/20";
+    default: return "bg-gray-500/10 text-gray-400 border-gray-500/20";
   }
 };
 
 const getStatusSelect = (status: string) => {
   switch (status) {
-    case "PENDING":  return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+    case "PENDING": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
     case "APPROVED": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
     case "REJECTED": return "bg-red-500/10 text-red-400 border-red-500/20";
-    default:         return "bg-gray-700 text-gray-300 border-white/5";
+    default: return "bg-gray-700 text-gray-300 border-white/5";
   }
 };
 
 const StatusSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
   <select value={value} onChange={e => onChange(e.target.value)}
     className={`px-2.5 py-1 rounded-full text-[10px] font-bold border cursor-pointer focus:outline-none appearance-none ${getStatusSelect(value)}`}>
-    <option value="PENDING"  className="bg-gray-900 text-amber-400">PENDING</option>
+    <option value="PENDING" className="bg-gray-900 text-amber-400">PENDING</option>
     <option value="APPROVED" className="bg-gray-900 text-emerald-400">APPROVED</option>
     <option value="REJECTED" className="bg-gray-900 text-red-400">REJECTED</option>
   </select>
@@ -102,11 +102,10 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
                 key={opt.id}
                 type="button"
                 onClick={() => { onChange(opt.id); setOpen(false); }}
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
-                  value === opt.id
-                    ? "bg-white/5 text-white font-semibold"
-                    : "text-gray-400 hover:bg-white/[0.03] hover:text-white"
-                }`}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${value === opt.id
+                  ? "bg-white/5 text-white font-semibold"
+                  : "text-gray-400 hover:bg-white/[0.03] hover:text-white"
+                  }`}
               >
                 {opt.name}
                 {value === opt.id && (
@@ -122,32 +121,32 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
 };
 
 const ClaimsManagement = () => {
-  const [activeTab, setActiveTab]       = useState<Tab>("claims");
-  const [claimView, setClaimView]       = useState<ClaimView>("table");
-  const [searchTerm, setSearchTerm]     = useState("");
+  const [activeTab, setActiveTab] = useState<Tab>("claims");
+  const [claimView, setClaimView] = useState<ClaimView>("table");
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [auditSearch, setAuditSearch]   = useState("");
-  const [auditPage, setAuditPage]       = useState(1);
-  const [matchSearch, setMatchSearch]   = useState("");
-  const [matchPage, setMatchPage]       = useState(1);
+  const [auditSearch, setAuditSearch] = useState("");
+  const [auditPage, setAuditPage] = useState(1);
+  const [matchSearch, setMatchSearch] = useState("");
+  const [matchPage, setMatchPage] = useState(1);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedClaim, setSelectedClaim]         = useState<any>(null);
-  const [newStatus, setNewStatus]                 = useState("");
-  const [isStatusLoading, setIsStatusLoading]     = useState(false);
-  const [modalTab, setModalTab]                   = useState<ModalTab>("details");
-  const [isEmailModalOpen, setIsEmailModalOpen]   = useState(false);
-  const [emailClaim, setEmailClaim]               = useState<any>(null);
-  const [isSendingEmail, setIsSendingEmail]       = useState(false);
+  const [selectedClaim, setSelectedClaim] = useState<any>(null);
+  const [newStatus, setNewStatus] = useState("");
+  const [isStatusLoading, setIsStatusLoading] = useState(false);
+  const [modalTab, setModalTab] = useState<ModalTab>("details");
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailClaim, setEmailClaim] = useState<any>(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [claimEmailToAddress, setClaimEmailToAddress] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [claimToDelete, setClaimToDelete]         = useState<any>(null);
-  const [isDeleting, setIsDeleting]               = useState(false);
+  const [claimToDelete, setClaimToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   // Bulk selection
-  const [selectedIds, setSelectedIds]             = useState<Set<string>>(new Set());
-  const [isBulkLoading, setIsBulkLoading]         = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
   // Inline timeline expanded state
-  const [expandedTimeline, setExpandedTimeline]   = useState<Set<string>>(new Set());
+  const [expandedTimeline, setExpandedTimeline] = useState<Set<string>>(new Set());
   const [claimEmailSentIds, setClaimEmailSentIds] = useState<Set<string>>(() => {
     try { const s = localStorage.getItem("claimEmailSentIds"); return s ? new Set<string>(JSON.parse(s)) : new Set<string>(); }
     catch { return new Set<string>(); }
@@ -161,25 +160,25 @@ const ClaimsManagement = () => {
     });
   };
 
-  const { data: allClaims, isLoading }               = useGetAllClaimsQuery(undefined);
+  const { data: allClaims, isLoading } = useGetAllClaimsQuery(undefined);
   const { data: auditData, isLoading: auditLoading } = useGetAuditLogsQuery({});
   const { data: matchData, isLoading: matchLoading } = useGetMatchNotificationsQuery({});
   const { data: allLostItemsData, isLoading: lostLoading } = useGetAllLostItemsQuery({ limit: 1000 });
   const { data: allFoundItemsData, isLoading: foundLoading } = useGetFoundItemsQuery({ limit: 1000 });
 
-  const [updateClaimStatus]                          = useUpdateClaimStatusMutation();
-  const [sendClaimApprovedEmail]                     = useSendClaimApprovedEmailMutation();
-  const [deleteClaim]                               = useDeleteClaimMutation();
-  const [sendLostItemEmail]                          = useSendLostItemEmailMutation();
+  const [updateClaimStatus] = useUpdateClaimStatusMutation();
+  const [sendClaimApprovedEmail] = useSendClaimApprovedEmailMutation();
+  const [deleteClaim] = useDeleteClaimMutation();
+  const [sendLostItemEmail] = useSendLostItemEmailMutation();
 
   const [recommenderThreshold, setRecommenderThreshold] = useState<number>(50);
-  const [recommenderSearch, setRecommenderSearch]       = useState("");
-  const [recommenderPage, setRecommenderPage]           = useState(1);
-  const [emailSendingStatus, setEmailSendingStatus]     = useState<Record<string, boolean>>({});
+  const [recommenderSearch, setRecommenderSearch] = useState("");
+  const [recommenderPage, setRecommenderPage] = useState(1);
+  const [emailSendingStatus, setEmailSendingStatus] = useState<Record<string, boolean>>({});
 
-  const claims    = allClaims?.data  || [];
-  const auditLogs = auditData?.data  || [];
-  const matches   = matchData?.data  || [];
+  const claims = allClaims?.data || [];
+  const auditLogs = auditData?.data || [];
+  const matches = matchData?.data || [];
   const lostItems = allLostItemsData?.data || [];
   const foundItems = allFoundItemsData?.data || [];
 
@@ -191,9 +190,9 @@ const ClaimsManagement = () => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(deg2rad(lat1)) *
-        Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
@@ -359,10 +358,10 @@ const ClaimsManagement = () => {
     else if (desc.length > 0) { score += 8; breakdown.push("Short description provided (+8%)"); }
 
     // 2. Keyword overlap with item name/description (+30 max)
-    const stopWords = new Set(["a","an","the","and","or","is","it","my","in","on","at","was","with"]);
+    const stopWords = new Set(["a", "an", "the", "and", "or", "is", "it", "my", "in", "on", "at", "was", "with"]);
     const tokenize = (t: string) => t.replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
     const claimTokens = new Set(tokenize(desc));
-    const itemTokens  = [...new Set([...tokenize(itemDesc), ...tokenize(itemName)])];
+    const itemTokens = [...new Set([...tokenize(itemDesc), ...tokenize(itemName)])];
     let overlap = itemTokens.filter(t => claimTokens.has(t)).length;
     if (overlap > 0) {
       const kp = Math.min(30, overlap * 10);
@@ -408,7 +407,7 @@ const ClaimsManagement = () => {
     setIsBulkLoading(true);
     let success = 0;
     for (const id of Array.from(selectedIds)) {
-      try { await updateClaimStatus({ claimId: id, status }).unwrap(); success++; } catch {}
+      try { await updateClaimStatus({ claimId: id, status }).unwrap(); success++; } catch { }
     }
     toast.success(`${success} claim(s) ${status.toLowerCase()} successfully`);
     setSelectedIds(new Set());
@@ -433,7 +432,7 @@ const ClaimsManagement = () => {
     log.toStatus?.toLowerCase().includes(auditSearch.toLowerCase())
   );
   const totalAuditPages = Math.max(1, Math.ceil(filteredLogs.length / AUDIT_PAGE_SIZE));
-  const paginatedLogs   = filteredLogs.slice((auditPage - 1) * AUDIT_PAGE_SIZE, auditPage * AUDIT_PAGE_SIZE);
+  const paginatedLogs = filteredLogs.slice((auditPage - 1) * AUDIT_PAGE_SIZE, auditPage * AUDIT_PAGE_SIZE);
 
   const filteredMatches = matches.filter((m: any) =>
     m.lostItem?.lostItemName?.toLowerCase().includes(matchSearch.toLowerCase()) ||
@@ -442,10 +441,10 @@ const ClaimsManagement = () => {
     m.lostItem?.location?.toLowerCase().includes(matchSearch.toLowerCase()) ||
     m.foundItem?.location?.toLowerCase().includes(matchSearch.toLowerCase())
   );
-  const totalMatchPages  = Math.max(1, Math.ceil(filteredMatches.length / AUDIT_PAGE_SIZE));
+  const totalMatchPages = Math.max(1, Math.ceil(filteredMatches.length / AUDIT_PAGE_SIZE));
   const paginatedMatches = filteredMatches.slice((matchPage - 1) * AUDIT_PAGE_SIZE, matchPage * AUDIT_PAGE_SIZE);
 
-  const handleViewDetails  = (claim: any) => { setSelectedClaim(claim); setModalTab("details"); setIsDetailModalOpen(true); };
+  const handleViewDetails = (claim: any) => { setSelectedClaim(claim); setModalTab("details"); setIsDetailModalOpen(true); };
   const handleStatusChange = (claimId: string, status: string) => {
     const claim = claims.find((c: any) => c.id === claimId);
     setSelectedClaim(claim); setNewStatus(status); setIsStatusModalOpen(true);
@@ -521,9 +520,9 @@ const ClaimsManagement = () => {
   if (isLoading) return (
     <div className="space-y-4 animate-pulse">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-gray-900 border border-white/5 rounded-2xl" />)}
+        {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-gray-900 border border-white/5 rounded-2xl" />)}
       </div>
-      {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-900 border border-white/5 rounded-2xl" />)}
+      {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-900 border border-white/5 rounded-2xl" />)}
     </div>
   );
 
@@ -534,44 +533,40 @@ const ClaimsManagement = () => {
       <div className="flex w-full sm:w-fit gap-0.5 sm:gap-1 p-1 bg-gray-900 border border-white/5 rounded-xl max-w-full overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("claims")}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
-            activeTab === "claims"
-              ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-              : "text-gray-400 hover:text-white"
-          }`}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${activeTab === "claims"
+            ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+            : "text-gray-400 hover:text-white"
+            }`}
         >
           <FaClipboardList size={11} className="hidden sm:inline-block" /> Claims
           <span className="text-[8px] xs:text-[9px] sm:text-[10px] bg-white/10 px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full">{claims.length}</span>
         </button>
         <button
           onClick={() => { setActiveTab("audit"); setAuditPage(1); }}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
-            activeTab === "audit"
-              ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
-              : "text-gray-400 hover:text-white"
-          }`}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${activeTab === "audit"
+            ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
+            : "text-gray-400 hover:text-white"
+            }`}
         >
           <FaHistory size={11} className="hidden sm:inline-block" /> Audit Log
           <span className="text-[8px] xs:text-[9px] sm:text-[10px] bg-white/10 px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full">{auditLogs.length}</span>
         </button>
         <button
           onClick={() => { setActiveTab("matches"); setMatchPage(1); }}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
-            activeTab === "matches"
-              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-              : "text-gray-400 hover:text-white"
-          }`}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${activeTab === "matches"
+            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            : "text-gray-400 hover:text-white"
+            }`}
         >
           <FaBolt size={11} className="hidden sm:inline-block" /> Match Log
           <span className="text-[8px] xs:text-[9px] sm:text-[10px] bg-white/10 px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full">{matches.length}</span>
         </button>
         <button
           onClick={() => { setActiveTab("recommender"); setRecommenderPage(1); }}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${
-            activeTab === "recommender"
-              ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-              : "text-gray-400 hover:text-white"
-          }`}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${activeTab === "recommender"
+            ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+            : "text-gray-400 hover:text-white"
+            }`}
         >
           <FaBolt size={11} className="hidden sm:inline-block text-cyan-400 shrink-0" /> AI Recommender
           <span className="text-[8px] xs:text-[9px] sm:text-[10px] bg-white/10 px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full">{getAiRecommendations().length}</span>
@@ -585,10 +580,10 @@ const ClaimsManagement = () => {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: "Total",    value: claims.length,                                              accent: "text-white",        bg: "bg-blue-500/10",    icon: <FaClipboardList size={13} className="text-blue-400" />  },
-              { label: "Pending",  value: claims.filter((c: any) => c.status === "PENDING").length,   accent: "text-amber-400",    bg: "bg-amber-500/10",   icon: <FaEye size={13} className="text-amber-400" />           },
-              { label: "Approved", value: claims.filter((c: any) => c.status === "APPROVED").length,  accent: "text-emerald-400",  bg: "bg-emerald-500/10", icon: <FaCheck size={13} className="text-emerald-400" />       },
-              { label: "Rejected", value: claims.filter((c: any) => c.status === "REJECTED").length,  accent: "text-red-400",      bg: "bg-red-500/10",     icon: <FaTimes size={13} className="text-red-400" />           },
+              { label: "Total", value: claims.length, accent: "text-white", bg: "bg-blue-500/10", icon: <FaClipboardList size={13} className="text-blue-400" /> },
+              { label: "Pending", value: claims.filter((c: any) => c.status === "PENDING").length, accent: "text-amber-400", bg: "bg-amber-500/10", icon: <FaEye size={13} className="text-amber-400" /> },
+              { label: "Approved", value: claims.filter((c: any) => c.status === "APPROVED").length, accent: "text-emerald-400", bg: "bg-emerald-500/10", icon: <FaCheck size={13} className="text-emerald-400" /> },
+              { label: "Rejected", value: claims.filter((c: any) => c.status === "REJECTED").length, accent: "text-red-400", bg: "bg-red-500/10", icon: <FaTimes size={13} className="text-red-400" /> },
             ].map((s) => (
               <div key={s.label} className="bg-gray-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between">
                 <div>
@@ -614,7 +609,7 @@ const ClaimsManagement = () => {
                 value={statusFilter}
                 onChange={setStatusFilter}
                 options={[
-                  { id: "PENDING",  name: "Pending" },
+                  { id: "PENDING", name: "Pending" },
                   { id: "APPROVED", name: "Approved" },
                   { id: "REJECTED", name: "Rejected" },
                 ]}
@@ -624,17 +619,15 @@ const ClaimsManagement = () => {
               <div className="flex gap-1 p-1 bg-gray-800 border border-white/5 rounded-2xl shrink-0 w-full sm:w-56">
                 <button
                   onClick={() => { setClaimView("table"); setExpandedTimeline(new Set()); }}
-                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                    claimView === "table" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${claimView === "table" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"
+                    }`}
                 >
                   <FaClipboardList size={10} /> Table
                 </button>
                 <button
                   onClick={() => setClaimView("timeline")}
-                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                    claimView === "timeline" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${claimView === "timeline" ? "bg-gray-700 text-white" : "text-gray-500 hover:text-white"
+                    }`}
                 >
                   <FaHistory size={10} /> Timeline
                 </button>
@@ -675,361 +668,354 @@ const ClaimsManagement = () => {
 
           {/* ── TABLE / TIMELINE VIEW ── */}
           {claimView === "table" ? (
-          <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between">
-              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Claims</h2>
-              <span className="text-[10px] text-gray-600">{filteredClaims.length} results</span>
-            </div>
+            <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between">
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Claims</h2>
+                <span className="text-[10px] text-gray-600">{filteredClaims.length} results</span>
+              </div>
 
-            {/* Desktop table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/5 bg-gray-800/30">
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Item</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Claimant</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">ID Score</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lost Date</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
-                    <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.04]">
-                  {filteredClaims.map((claim: any) => {
-                    const { score: idScore, label: idLabel, color: idColor } = calcVerificationScore(claim);
-                    const isPending = claim.status === "PENDING";
-                    const isSelected = selectedIds.has(claim.id);
-                    return (
-                    <tr key={claim.id} className={`transition-colors ${
-                      isSelected ? "bg-blue-500/5 border-l-2 border-l-blue-500/50" : "hover:bg-white/[0.02]"
-                    }`}>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <img src={claim.foundItem?.img || "/default-item.png"} alt={claim.foundItem?.foundItemName}
-                            className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/5" />
-                          <div>
-                            <p className="text-white text-xs font-semibold">{claim.foundItem?.foundItemName}</p>
-                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full mt-0.5 inline-block">
-                              {claim.foundItem?.category?.name}
-                            </span>
-                            {claim.isHighRisk && (
-                              <span className="ml-2 text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full mt-0.5 inline-block">
-                                <FaExclamationTriangle className="inline mr-1 mb-0.5" size={8} /> FRAUD ALERT
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-1.5 text-white text-xs font-medium mb-0.5">
-                          <FaUser size={9} className="text-gray-500" /> {claim.claimantName || "—"}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <FaEnvelope size={9} className="text-gray-500" />
-                          {claim.schoolEmail ? <span className="text-blue-300 text-[10px]">{claim.schoolEmail}</span> : <span className="text-gray-600 text-[10px] italic">No email</span>}
-                        </div>
-                      </td>
-                      {/* Identity Verification Score */}
-                      <td className="px-4 py-3.5">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`text-xs font-bold ${idColor}`}>{idScore}%</span>
-                            <span className={`text-[9px] font-semibold ${idColor} opacity-70`}>{idLabel}</span>
-                          </div>
-                          <div className="w-20 h-1 bg-gray-800 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-700 ${
-                                idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
-                              }`}
-                              style={{ width: `${idScore}%` }}
-                            />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-gray-400 text-xs">{formatDate(claim.lostDate)}</td>
-                      <td className="px-4 py-3.5">
-                        <StatusSelect value={claim.status} onChange={v => handleStatusChange(claim.id, v)} />
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-1.5 justify-end">
-                          <button onClick={() => handleViewDetails(claim)}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
-                            <FaEye size={10} /> Verify
-                          </button>
-                          {claim.status === "APPROVED" ? (
-                            claimEmailSentIds.has(claim.id) ? (
-                              <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
-                                <FaCheckCircle size={10} /> Sent
-                              </span>
-                            ) : (
-                              <button onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg transition-colors">
-                                <FaEnvelope size={10} /> Email
-                              </button>
-                            )
-                          ) : null}
-                          <button onClick={() => handleDeleteClaim(claim)}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors">
-                            <FaTrash size={10} /> Delete
-                          </button>
-                        </div>
-                      </td>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/5 bg-gray-800/30">
+                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Item</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Claimant</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">ID Score</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lost Date</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                      <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
                     </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* ── Mobile cards (table view) ── */}
-            <div className="md:hidden divide-y divide-white/[0.04]">
-              {filteredClaims.map((claim: any) => {
-                const { score: idScore, label: idLabel, color: idColor } = calcVerificationScore(claim);
-                const isPending = claim.status === "PENDING";
-                const isSelected = selectedIds.has(claim.id);
-                return (
-                <div key={claim.id} className={`p-4 space-y-3 ${
-                  isSelected ? "bg-blue-500/5 border-l-2 border-l-blue-500/40" : ""
-                }`}>
-
-                  {/* Row 1: checkbox + image + name + status */}
-                  <div className="flex items-start gap-3">
-                    {isPending && (
-                      <input
-                        type="checkbox"
-                        className="accent-blue-500 w-3.5 h-3.5 mt-1 cursor-pointer shrink-0"
-                        checked={isSelected}
-                        onChange={() => setSelectedIds(prev => { const n = new Set(prev); n.has(claim.id) ? n.delete(claim.id) : n.add(claim.id); return n; })}
-                      />
-                    )}
-                    <img
-                      src={claim.foundItem?.img || "/default-item.png"}
-                      alt={claim.foundItem?.foundItemName}
-                      className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/5"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-white text-sm font-semibold leading-tight truncate">
-                          {claim.foundItem?.foundItemName}
-                          {claim.isHighRisk && (
-                            <span className="ml-2 inline-flex items-center text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full align-middle">
-                              <FaExclamationTriangle className="mr-1" size={8} /> FRAUD ALERT
-                            </span>
-                          )}
-                        </p>
-                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(claim.status)}`}>
-                          {claim.status}
-                        </span>
-                      </div>
-                      {claim.foundItem?.category?.name && (
-                        <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
-                          {claim.foundItem.category.name}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Row 2: claimant info + ID score */}
-                  <div className="bg-gray-800/50 border border-white/5 rounded-xl px-3 py-2.5 space-y-1.5">
-                    <div className="flex items-center gap-2 text-xs text-gray-300">
-                      <FaUser size={9} className="text-gray-500 shrink-0" />
-                      <span className="font-medium truncate">{claim.claimantName || "—"}</span>
-                    </div>
-                    {/* ID score row */}
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-bold shrink-0 ${idColor}`}>{idScore}%</span>
-                      <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-700 ${
-                          idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
-                        }`} style={{ width: `${idScore}%` }} />
-                      </div>
-                      <span className={`text-[9px] font-semibold shrink-0 ${idColor} opacity-80`}>{idLabel}</span>
-                    </div>
-                    {claim.schoolEmail && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <FaEnvelope size={9} className="text-gray-500 shrink-0" />
-                        <span className="text-blue-300 text-[11px] truncate">{claim.schoolEmail}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <FaCalendarAlt size={9} className="text-gray-600 shrink-0" />
-                      <span className="text-[11px]">Lost: {formatDate(claim.lostDate)}</span>
-                    </div>
-                  </div>
-
-                  {/* Row 3: proof snippet */}
-                  {claim.distinguishingFeatures && (
-                    <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-2 px-0.5">
-                      "{claim.distinguishingFeatures}"
-                    </p>
-                  )}
-
-                  {/* Row 4: actions */}
-                  <div className="flex items-center gap-2 pt-0.5 flex-wrap">
-                    <StatusSelect value={claim.status} onChange={v => handleStatusChange(claim.id, v)} />
-                    <button
-                      onClick={() => handleViewDetails(claim)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors"
-                    >
-                      <FaEye size={10} /> Verify
-                    </button>
-                    {claim.status === "APPROVED" && (
-                      claimEmailSentIds.has(claim.id) ? (
-                        <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
-                          <FaCheckCircle size={9} /> Sent
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg transition-colors"
-                        >
-                          <FaEnvelope size={9} /> Email
-                        </button>
-                      )
-                    )}
-                    <button
-                      onClick={() => handleDeleteClaim(claim)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors"
-                    >
-                      <FaTrash size={9} /> Delete
-                    </button>
-                  </div>
-                </div>
-              );
-              })}
-            </div>
-
-            {filteredClaims.length === 0 && (
-              <div className="py-16 text-center">
-                <FaClipboardList className="mx-auto text-gray-700 mb-3" size={24} />
-                <p className="text-gray-500 text-sm">No claims found</p>
-              </div>
-            )}
-          </div>
-          ) : (
-          /* ── TIMELINE VIEW ── */
-          <div className="space-y-4">
-            {filteredClaims.length === 0 ? (
-              <div className="py-16 text-center bg-gray-900 border border-white/5 rounded-2xl">
-                <FaClipboardList className="mx-auto text-gray-700 mb-3" size={24} />
-                <p className="text-gray-500 text-sm">No claims found</p>
-              </div>
-            ) : filteredClaims.map((claim: any) => {
-              const { score: idScore, label: idLabel, color: idColor, breakdown: idBreak } = calcVerificationScore(claim);
-              const history = getClaimHistory(claim.id);
-              const submitted = { id: "sub", action: "SUBMITTED", toStatus: "PENDING", performedBy: claim.claimantName || "Student", createdAt: claim.createdAt };
-              const allEvents = [submitted, ...history];
-              const isExpanded = expandedTimeline.has(claim.id);
-              return (
-                <div key={claim.id} className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-                  {/* Card header */}
-                  <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
-                    <img
-                      src={claim.foundItem?.img || "/default-item.png"}
-                      alt={claim.foundItem?.foundItemName}
-                      className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/5"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-white text-xs font-semibold truncate">{claim.foundItem?.foundItemName}</p>
-                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(claim.status)}`}>{claim.status}</span>
-                        {claim.isHighRisk && (
-                          <span className="text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full">
-                            <FaExclamationTriangle className="inline mr-1" size={7} />FRAUD
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-500 text-[10px] mt-0.5">{claim.claimantName} · {formatDate(claim.lostDate)}</p>
-                    </div>
-                    {/* ID score */}
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className={`text-xs font-bold ${idColor}`}>{idScore}%</span>
-                      <span className={`text-[9px] ${idColor} opacity-70`}>{idLabel}</span>
-                      <div className="w-16 h-1 bg-gray-800 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${
-                          idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
-                        }`} style={{ width: `${idScore}%` }} />
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => toggleTimeline(claim.id)}
-                      className={`ml-2 flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[10px] font-semibold transition-all ${
-                        isExpanded ? "bg-violet-500/10 border-violet-500/20 text-violet-400" : "bg-gray-800 border-white/5 text-gray-400 hover:text-white"
-                      }`}
-                    >
-                      <FaHistory size={9} />
-                      <span className="hidden sm:inline">{isExpanded ? "Hide" : "Timeline"}</span>
-                      <FaChevronDown size={8} className={`transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                    </button>
-                  </div>
-
-                  {/* Expandable timeline */}
-                  {isExpanded && (
-                    <div className="px-4 py-4">
-                      {/* Claim lifecycle timeline */}
-                      <div className="relative">
-                        <div className="absolute left-3 top-3 bottom-3 w-px bg-white/5" />
-                        <div className="space-y-4">
-                          {allEvents.map((evt: any, idx: number) => (
-                            <div key={evt.id ?? idx} className="relative flex items-start gap-3 pl-0.5">
-                              <div className="relative z-10">
-                                {evt.action === "SUBMITTED"
-                                  ? <div className="w-6 h-6 rounded-full bg-cyan-400/10 border-2 border-cyan-400 flex items-center justify-center shrink-0"><FaClipboardList size={9} className="text-cyan-400" /></div>
-                                  : getTimelineIcon(evt.toStatus)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-white text-xs font-semibold">
-                                    {evt.action === "SUBMITTED" ? "Claim Submitted" : `Status → ${evt.toStatus}`}
-                                  </p>
-                                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(evt.toStatus)}`}>{evt.toStatus}</span>
-                                  {idx === allEvents.length - 1 && (
-                                    <span className="text-[10px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 px-1.5 py-0.5 rounded-full">Latest</span>
-                                  )}
-                                </div>
-                                <p className="text-gray-500 text-[10px] mt-0.5">By <span className="text-gray-300">{evt.performedBy}</span></p>
-                                <p className="text-gray-700 text-[10px]">{formatDateTime(evt.createdAt)} · {timeAgo(evt.createdAt)}</p>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {filteredClaims.map((claim: any) => {
+                      const { score: idScore, label: idLabel, color: idColor } = calcVerificationScore(claim);
+                      const isPending = claim.status === "PENDING";
+                      const isSelected = selectedIds.has(claim.id);
+                      return (
+                        <tr key={claim.id} className={`transition-colors ${isSelected ? "bg-blue-500/5 border-l-2 border-l-blue-500/50" : "hover:bg-white/[0.02]"
+                          }`}>
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-3">
+                              <img src={claim.foundItem?.img || "/default-item.png"} alt={claim.foundItem?.foundItemName}
+                                className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/5" />
+                              <div>
+                                <p className="text-white text-xs font-semibold">{claim.foundItem?.foundItemName}</p>
+                                <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full mt-0.5 inline-block">
+                                  {claim.foundItem?.category?.name}
+                                </span>
+                                {claim.isHighRisk && (
+                                  <span className="ml-2 text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full mt-0.5 inline-block">
+                                    <FaExclamationTriangle className="inline mr-1 mb-0.5" size={8} /> FRAUD ALERT
+                                  </span>
+                                )}
                               </div>
                             </div>
-                          ))}
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-1.5 text-white text-xs font-medium mb-0.5">
+                              <FaUser size={9} className="text-gray-500" /> {claim.claimantName || "—"}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <FaEnvelope size={9} className="text-gray-500" />
+                              {claim.schoolEmail ? <span className="text-blue-300 text-[10px]">{claim.schoolEmail}</span> : <span className="text-gray-600 text-[10px] italic">No email</span>}
+                            </div>
+                          </td>
+                          {/* Identity Verification Score */}
+                          <td className="px-4 py-3.5">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`text-xs font-bold ${idColor}`}>{idScore}%</span>
+                                <span className={`text-[9px] font-semibold ${idColor} opacity-70`}>{idLabel}</span>
+                              </div>
+                              <div className="w-20 h-1 bg-gray-800 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-700 ${idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
+                                    }`}
+                                  style={{ width: `${idScore}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 text-gray-400 text-xs">{formatDate(claim.lostDate)}</td>
+                          <td className="px-4 py-3.5">
+                            <StatusSelect value={claim.status} onChange={v => handleStatusChange(claim.id, v)} />
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-1.5 justify-end">
+                              <button onClick={() => handleViewDetails(claim)}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+                                <FaEye size={10} /> Verify
+                              </button>
+                              {claim.status === "APPROVED" ? (
+                                claimEmailSentIds.has(claim.id) ? (
+                                  <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
+                                    <FaCheckCircle size={10} /> Sent
+                                  </span>
+                                ) : (
+                                  <button onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
+                                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg transition-colors">
+                                    <FaEnvelope size={10} /> Email
+                                  </button>
+                                )
+                              ) : null}
+                              <button onClick={() => handleDeleteClaim(claim)}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors">
+                                <FaTrash size={10} /> Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* ── Mobile cards (table view) ── */}
+              <div className="md:hidden divide-y divide-white/[0.04]">
+                {filteredClaims.map((claim: any) => {
+                  const { score: idScore, label: idLabel, color: idColor } = calcVerificationScore(claim);
+                  const isPending = claim.status === "PENDING";
+                  const isSelected = selectedIds.has(claim.id);
+                  return (
+                    <div key={claim.id} className={`p-4 space-y-3 ${isSelected ? "bg-blue-500/5 border-l-2 border-l-blue-500/40" : ""
+                      }`}>
+
+                      {/* Row 1: checkbox + image + name + status */}
+                      <div className="flex items-start gap-3">
+                        {isPending && (
+                          <input
+                            type="checkbox"
+                            className="accent-blue-500 w-3.5 h-3.5 mt-1 cursor-pointer shrink-0"
+                            checked={isSelected}
+                            onChange={() => setSelectedIds(prev => { const n = new Set(prev); n.has(claim.id) ? n.delete(claim.id) : n.add(claim.id); return n; })}
+                          />
+                        )}
+                        <img
+                          src={claim.foundItem?.img || "/default-item.png"}
+                          alt={claim.foundItem?.foundItemName}
+                          className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/5"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-white text-sm font-semibold leading-tight truncate">
+                              {claim.foundItem?.foundItemName}
+                              {claim.isHighRisk && (
+                                <span className="ml-2 inline-flex items-center text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full align-middle">
+                                  <FaExclamationTriangle className="mr-1" size={8} /> FRAUD ALERT
+                                </span>
+                              )}
+                            </p>
+                            <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(claim.status)}`}>
+                              {claim.status}
+                            </span>
+                          </div>
+                          {claim.foundItem?.category?.name && (
+                            <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
+                              {claim.foundItem.category.name}
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {/* ID verification breakdown */}
-                      <div className="mt-4 pt-3 border-t border-white/5">
-                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Identity Verification Breakdown</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {idBreak.map((b, i) => (
-                            <span key={i} className={`px-2 py-0.5 rounded-lg text-[9px] font-semibold border ${
-                              b.includes("−") || b.includes("⚠") ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-white/5 border-white/5 text-gray-300"
-                            }`}>{b}</span>
-                          ))}
+                      {/* Row 2: claimant info + ID score */}
+                      <div className="bg-gray-800/50 border border-white/5 rounded-xl px-3 py-2.5 space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs text-gray-300">
+                          <FaUser size={9} className="text-gray-500 shrink-0" />
+                          <span className="font-medium truncate">{claim.claimantName || "—"}</span>
+                        </div>
+                        {/* ID score row */}
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-bold shrink-0 ${idColor}`}>{idScore}%</span>
+                          <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-700 ${idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
+                              }`} style={{ width: `${idScore}%` }} />
+                          </div>
+                          <span className={`text-[9px] font-semibold shrink-0 ${idColor} opacity-80`}>{idLabel}</span>
+                        </div>
+                        {claim.schoolEmail && (
+                          <div className="flex items-center gap-2 text-xs">
+                            <FaEnvelope size={9} className="text-gray-500 shrink-0" />
+                            <span className="text-blue-300 text-[11px] truncate">{claim.schoolEmail}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <FaCalendarAlt size={9} className="text-gray-600 shrink-0" />
+                          <span className="text-[11px]">Lost: {formatDate(claim.lostDate)}</span>
                         </div>
                       </div>
 
-                      {/* Quick actions */}
-                      {claim.status === "PENDING" && (
-                        <div className="mt-3 flex items-center gap-2">
-                          <button onClick={() => { handleStatusChange(claim.id, "APPROVED"); }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg transition-all">
-                            <FaCheck size={9} /> Approve
-                          </button>
-                          <button onClick={() => { handleStatusChange(claim.id, "REJECTED"); }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold rounded-lg transition-all">
-                            <FaTimes size={9} /> Reject
-                          </button>
-                          <button onClick={() => handleViewDetails(claim)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
-                            <FaEye size={9} /> Full Details
-                          </button>
-                        </div>
+                      {/* Row 3: proof snippet */}
+                      {claim.distinguishingFeatures && (
+                        <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-2 px-0.5">
+                          "{claim.distinguishingFeatures}"
+                        </p>
                       )}
+
+                      {/* Row 4: actions */}
+                      <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                        <StatusSelect value={claim.status} onChange={v => handleStatusChange(claim.id, v)} />
+                        <button
+                          onClick={() => handleViewDetails(claim)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors"
+                        >
+                          <FaEye size={10} /> Verify
+                        </button>
+                        {claim.status === "APPROVED" && (
+                          claimEmailSentIds.has(claim.id) ? (
+                            <span className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg whitespace-nowrap">
+                              <FaCheckCircle size={9} /> Sent
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => { setEmailClaim(claim); setClaimEmailToAddress(claim.schoolEmail || ""); setIsEmailModalOpen(true); }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg transition-colors"
+                            >
+                              <FaEnvelope size={9} /> Email
+                            </button>
+                          )
+                        )}
+                        <button
+                          onClick={() => handleDeleteClaim(claim)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium rounded-lg transition-colors"
+                        >
+                          <FaTrash size={9} /> Delete
+                        </button>
+                      </div>
                     </div>
-                  )}
+                  );
+                })}
+              </div>
+
+              {filteredClaims.length === 0 && (
+                <div className="py-16 text-center">
+                  <FaClipboardList className="mx-auto text-gray-700 mb-3" size={24} />
+                  <p className="text-gray-500 text-sm">No claims found</p>
                 </div>
-              );
-            })}
-          </div>
+              )}
+            </div>
+          ) : (
+            /* ── TIMELINE VIEW ── */
+            <div className="space-y-4">
+              {filteredClaims.length === 0 ? (
+                <div className="py-16 text-center bg-gray-900 border border-white/5 rounded-2xl">
+                  <FaClipboardList className="mx-auto text-gray-700 mb-3" size={24} />
+                  <p className="text-gray-500 text-sm">No claims found</p>
+                </div>
+              ) : filteredClaims.map((claim: any) => {
+                const { score: idScore, label: idLabel, color: idColor, breakdown: idBreak } = calcVerificationScore(claim);
+                const history = getClaimHistory(claim.id);
+                const submitted = { id: "sub", action: "SUBMITTED", toStatus: "PENDING", performedBy: claim.claimantName || "Student", createdAt: claim.createdAt };
+                const allEvents = [submitted, ...history];
+                const isExpanded = expandedTimeline.has(claim.id);
+                return (
+                  <div key={claim.id} className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+                    {/* Card header */}
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
+                      <img
+                        src={claim.foundItem?.img || "/default-item.png"}
+                        alt={claim.foundItem?.foundItemName}
+                        className="w-10 h-10 rounded-xl object-cover shrink-0 border border-white/5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-white text-xs font-semibold truncate">{claim.foundItem?.foundItemName}</p>
+                          <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(claim.status)}`}>{claim.status}</span>
+                          {claim.isHighRisk && (
+                            <span className="text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full">
+                              <FaExclamationTriangle className="inline mr-1" size={7} />FRAUD
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-gray-500 text-[10px] mt-0.5">{claim.claimantName} · {formatDate(claim.lostDate)}</p>
+                      </div>
+                      {/* ID score */}
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className={`text-xs font-bold ${idColor}`}>{idScore}%</span>
+                        <span className={`text-[9px] ${idColor} opacity-70`}>{idLabel}</span>
+                        <div className="w-16 h-1 bg-gray-800 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${idScore >= 80 ? "bg-emerald-500" : idScore >= 55 ? "bg-amber-500" : "bg-red-500"
+                            }`} style={{ width: `${idScore}%` }} />
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => toggleTimeline(claim.id)}
+                        className={`ml-2 flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[10px] font-semibold transition-all ${isExpanded ? "bg-gray-800 border-white/5 text-gray-400 hover:text-white" : "bg-gray-800 border-white/5 text-gray-400 hover:text-white"
+                          }`}
+                      >
+                        <FaHistory size={9} />
+                        <span className="hidden sm:inline">{isExpanded ? "Hide" : "Timeline"}</span>
+                        <FaChevronDown size={8} className={`transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                      </button>
+                    </div>
+
+                    {/* Expandable timeline */}
+                    {isExpanded && (
+                      <div className="px-4 py-4">
+                        {/* Claim lifecycle timeline */}
+                        <div className="relative">
+                          <div className="absolute left-3 top-3 bottom-3 w-px bg-white/5" />
+                          <div className="space-y-4">
+                            {allEvents.map((evt: any, idx: number) => (
+                              <div key={evt.id ?? idx} className="relative flex items-start gap-3 pl-0.5">
+                                <div className="relative z-10">
+                                  {evt.action === "SUBMITTED"
+                                    ? <div className="w-6 h-6 rounded-full bg-cyan-400/10 border-2 border-cyan-400 flex items-center justify-center shrink-0"><FaClipboardList size={9} className="text-cyan-400" /></div>
+                                    : getTimelineIcon(evt.toStatus)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-white text-xs font-semibold">
+                                      {evt.action === "SUBMITTED" ? "Claim Submitted" : `Status → ${evt.toStatus}`}
+                                    </p>
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(evt.toStatus)}`}>{evt.toStatus}</span>
+                                    {idx === allEvents.length - 1 && (
+                                      <span className="text-[10px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 px-1.5 py-0.5 rounded-full">Latest</span>
+                                    )}
+                                  </div>
+                                  <p className="text-gray-500 text-[10px] mt-0.5">By <span className="text-gray-300">{evt.performedBy}</span></p>
+                                  <p className="text-gray-700 text-[10px]">{formatDateTime(evt.createdAt)} · {timeAgo(evt.createdAt)}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ID verification breakdown */}
+                        <div className="mt-4 pt-3 border-t border-white/5">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Identity Verification Breakdown</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {idBreak.map((b, i) => (
+                              <span key={i} className={`px-2 py-0.5 rounded-lg text-[9px] font-semibold border ${b.includes("−") || b.includes("⚠") ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-white/5 border-white/5 text-gray-300"
+                                }`}>{b}</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Quick actions */}
+                        {claim.status === "PENDING" && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <button onClick={() => { handleStatusChange(claim.id, "APPROVED"); }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg transition-all">
+                              <FaCheck size={9} /> Approve
+                            </button>
+                            <button onClick={() => { handleStatusChange(claim.id, "REJECTED"); }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold rounded-lg transition-all">
+                              <FaTimes size={9} /> Reject
+                            </button>
+                            <button onClick={() => handleViewDetails(claim)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+                              <FaEye size={9} /> Full Details
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </>
       )}
@@ -1066,7 +1052,7 @@ const ClaimsManagement = () => {
                 ))}
               </div>
               {auditLoading ? (
-                <div className="space-y-2 p-4">{[1,2,3].map(i => <div key={i} className="h-12 bg-gray-800/60 rounded-xl animate-pulse" />)}</div>
+                <div className="space-y-2 p-4">{[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-800/60 rounded-xl animate-pulse" />)}</div>
               ) : filteredLogs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-gray-600">
                   <FaHistory size={24} className="mb-3 opacity-40" /><p className="text-sm">No audit logs yet</p>
@@ -1139,9 +1125,8 @@ const ClaimsManagement = () => {
                     key={page}
                     type="button"
                     onClick={() => setAuditPage(page)}
-                    className={`w-7 h-7 rounded-lg text-xs font-semibold outline-none ${
-                      page === auditPage ? "text-gray-200 bg-gray-800" : "text-gray-500"
-                    }`}
+                    className={`w-7 h-7 rounded-lg text-xs font-semibold outline-none ${page === auditPage ? "text-gray-200 bg-gray-800" : "text-gray-500"
+                      }`}
                   >
                     {page}
                   </button>
@@ -1204,7 +1189,7 @@ const ClaimsManagement = () => {
 
             {matchLoading ? (
               <div className="space-y-2 p-4">
-                {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-800/60 rounded-xl animate-pulse" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-800/60 rounded-xl animate-pulse" />)}
               </div>
             ) : filteredMatches.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-gray-600">
@@ -1514,11 +1499,10 @@ const ClaimsManagement = () => {
                           <button
                             onClick={() => handleSendRecommenderEmail(r.id, r.lost, r.found)}
                             disabled={isSending}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                              isSending
-                                ? "bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5"
-                                : "bg-blue-500 text-white hover:bg-blue-400 font-black active:scale-95"
-                            }`}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${isSending
+                              ? "bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5"
+                              : "bg-blue-500 text-white hover:bg-blue-400 font-black active:scale-95"
+                              }`}
                           >
                             {isSending ? (
                               <>
@@ -1698,11 +1682,10 @@ const ClaimsManagement = () => {
                         <button
                           key={page}
                           onClick={() => setRecommenderPage(page)}
-                          className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${
-                            page === recommenderPage
-                              ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                              : "text-gray-500 hover:text-white hover:bg-white/5"
-                          }`}
+                          className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${page === recommenderPage
+                            ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                            : "text-gray-500 hover:text-white hover:bg-white/5"
+                            }`}
                         >
                           {page}
                         </button>
@@ -1752,11 +1735,10 @@ const ClaimsManagement = () => {
                   { key: "history" as ModalTab, label: "History", icon: <FaHistory size={10} /> },
                 ] as const).map(tab => (
                   <button key={tab.key} onClick={() => setModalTab(tab.key)}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px ${
-                      modalTab === tab.key
-                        ? tab.key === "details" ? "border-cyan-400 text-cyan-400" : "border-violet-400 text-violet-400"
-                        : "border-transparent text-gray-500"
-                    }`}>
+                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px ${modalTab === tab.key
+                      ? tab.key === "details" ? "border-cyan-400 text-cyan-400" : "border-violet-400 text-violet-400"
+                      : "border-transparent text-gray-500"
+                      }`}>
                     {tab.icon}{tab.label}
                     {tab.key === "history" && getClaimHistory(selectedClaim.id).length > 0 && (
                       <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{getClaimHistory(selectedClaim.id).length}</span>
@@ -1812,27 +1794,27 @@ const ClaimsManagement = () => {
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Proof of Ownership</p>
                     <p className="text-gray-200 text-sm leading-relaxed">{selectedClaim.distinguishingFeatures || <span className="text-gray-500 italic text-xs">No details provided</span>}</p>
                   </div>
-                  
+
                   {/* Security Assessment */}
                   <div className={`border rounded-xl p-3 ${selectedClaim.isHighRisk ? "bg-red-500/10 border-red-500/20" : "bg-gray-800/60 border-white/5"}`}>
                     <div className="flex items-center gap-2 mb-3">
                       <FaBolt size={10} className={selectedClaim.isHighRisk ? "text-red-400" : "text-cyan-400"} />
                       <p className={`text-[10px] font-bold uppercase tracking-widest ${selectedClaim.isHighRisk ? "text-red-400" : "text-cyan-400"}`}>AI Security Assessment</p>
                     </div>
-                    
+
                     <div className="mb-3">
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-xs font-semibold text-gray-300">Fraud Risk Score</span>
                         <span className={`text-xs font-bold ${selectedClaim.fraudScore >= 70 ? 'text-red-400' : selectedClaim.fraudScore >= 40 ? 'text-amber-400' : 'text-emerald-400'}`}>{selectedClaim.fraudScore || 0}%</span>
                       </div>
                       <div className="h-1.5 w-full bg-gray-900 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-1000 ${selectedClaim.fraudScore >= 70 ? 'bg-red-500' : selectedClaim.fraudScore >= 40 ? 'bg-amber-500' : 'bg-emerald-500'}`} 
-                          style={{ width: `${selectedClaim.fraudScore || 0}%` }} 
+                        <div
+                          className={`h-full rounded-full transition-all duration-1000 ${selectedClaim.fraudScore >= 70 ? 'bg-red-500' : selectedClaim.fraudScore >= 40 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                          style={{ width: `${selectedClaim.fraudScore || 0}%` }}
                         />
                       </div>
                     </div>
-                    
+
                     {selectedClaim.fraudReason && (
                       <p className={`text-xs leading-relaxed italic border-l-2 pl-2 ${selectedClaim.isHighRisk ? "text-red-300 border-red-500/30" : "text-gray-300 border-white/10"}`}>
                         {selectedClaim.fraudReason}
@@ -1970,15 +1952,15 @@ const ClaimsManagement = () => {
               </div>
             )}
             <div className="flex gap-2">
-              <button 
-                onClick={() => { setIsDeleteModalOpen(false); setClaimToDelete(null); }} 
+              <button
+                onClick={() => { setIsDeleteModalOpen(false); setClaimToDelete(null); }}
                 disabled={isDeleting}
                 className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-white/5 text-gray-300 text-xs font-medium rounded-xl transition-colors"
               >
                 Cancel
               </button>
-              <button 
-                onClick={handleDeleteConfirm} 
+              <button
+                onClick={handleDeleteConfirm}
                 disabled={isDeleting}
                 className="flex-1 bg-red-500/10 hover:bg-red-500 border border-red-500/30 text-red-400 hover:text-white disabled:opacity-50 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
               >

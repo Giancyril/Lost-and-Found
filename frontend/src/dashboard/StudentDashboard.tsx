@@ -6,8 +6,10 @@ import {
   FaTimesCircle, FaClock, FaMedal, FaSearch, FaArrowRight,
   FaChartLine, FaHistory, FaMapMarkerAlt, FaCalendarAlt,
   FaBolt, FaChevronRight, FaUser, FaHeart, FaSun, FaAward,
+  FaShareAlt, FaFire,
 } from "react-icons/fa";
- import { MdVerified } from "react-icons/md";
+import { MdVerified } from "react-icons/md";
+import { toast } from "react-toastify";
 
 import { FaBell } from "react-icons/fa";
 import {
@@ -98,6 +100,8 @@ const Podium = ({ top3, currentUserId }: { top3: any[]; currentUserId: string })
 export default function StudentDashboard() {
   const user: any = useUserVerification();
   const [tab, setTab] = useState<TabKey>("timeline");
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const isLoggedIn = !!user?.id;
 
   const { data: pointsData, isLoading: p1 } = useGetMyPointsQuery(undefined, { skip: !isLoggedIn });
@@ -116,6 +120,204 @@ export default function StudentDashboard() {
   const board         = boardData?.data  ?? [];
   const myAchievements = achievementData?.data ?? [];
 
+  // Streak tracking
+  const streak = pointsData?.data?.streak ?? { currentStreak: 0, isOnARoll: false };
+
+  // Level System calculations
+  const getLevelInfo = (pts: number) => {
+    if (pts < 200) {
+      return {
+        tier: "Bronze",
+        min: 0,
+        max: 200,
+        progress: Math.round((pts / 200) * 100),
+        color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+        barColor: "bg-amber-600",
+        icon: "🥉",
+        nextTier: "Silver"
+      };
+    } else if (pts < 500) {
+      return {
+        tier: "Silver",
+        min: 200,
+        max: 500,
+        progress: Math.round(((pts - 200) / 300) * 100),
+        color: "text-gray-300 bg-gray-500/10 border-gray-500/20",
+        barColor: "bg-gray-400",
+        icon: "🥈",
+        nextTier: "Gold"
+      };
+    } else if (pts < 1000) {
+      return {
+        tier: "Gold",
+        min: 500,
+        max: 1000,
+        progress: Math.round(((pts - 500) / 500) * 100),
+        color: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+        barColor: "bg-yellow-400",
+        icon: "🥇",
+        nextTier: "Platinum"
+      };
+    } else {
+      return {
+        tier: "Platinum",
+        min: 1000,
+        max: 2500,
+        progress: Math.min(Math.round(((pts - 1000) / 1500) * 100), 100),
+        color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+        barColor: "bg-cyan-400",
+        icon: "💎",
+        nextTier: "Legend"
+      };
+    }
+  };
+
+  const levelInfo = getLevelInfo(totalPoints);
+
+  // Top 3 badges showcase
+  const top3Badges = React.useMemo(() => {
+    const pinned = myAchievements.filter((a: any) => a.isPinned);
+    if (pinned.length >= 3) return pinned.slice(0, 3);
+    const unpinned = myAchievements.filter((a: any) => !a.isPinned);
+    const tierPriority: Record<string, number> = {
+      LEGEND: 5,
+      PLATINUM: 4,
+      GOLD: 3,
+      SILVER: 2,
+      BRONZE: 1
+    };
+    const sortedUnpinned = [...unpinned].sort((a: any, b: any) => {
+      const aTier = tierPriority[a.achievement?.tier] ?? 0;
+      const bTier = tierPriority[b.achievement?.tier] ?? 0;
+      if (bTier !== aTier) return bTier - aTier;
+      return new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime();
+    });
+    return [...pinned, ...sortedUnpinned].slice(0, 3);
+  }, [myAchievements]);
+
+  // Social sharing Canvas export helper
+  const downloadShareCard = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // 1. Draw Background
+    const gradient = ctx.createLinearGradient(0, 0, 600, 400);
+    gradient.addColorStop(0, "#0b0f19");
+    gradient.addColorStop(1, "#111827");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 600, 400);
+
+    // Draw border
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, 596, 396);
+
+    // 2. Draw Header
+    ctx.fillStyle = "#22d3ee";
+    ctx.font = "bold 10px sans-serif";
+    ctx.fillText("CAMPUS HONOR REGISTRY", 40, 50);
+
+    // 3. Draw Profile Avatar Circle
+    ctx.beginPath();
+    ctx.arc(80, 140, 40, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(59, 130, 246, 0.2)";
+    ctx.fill();
+    ctx.strokeStyle = "#3b82f6";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Avatar Initial
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 32px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText((user?.name || "S").charAt(0).toUpperCase(), 80, 140);
+
+    // 4. Draw User Info
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 20px sans-serif";
+    ctx.fillText(user?.name || "Verified Student", 140, 110);
+
+    ctx.fillStyle = "#9ca3af";
+    ctx.font = "12px sans-serif";
+    ctx.fillText(user?.email || "", 140, 140);
+
+    // Verified Tag
+    ctx.fillStyle = "rgba(34, 211, 238, 0.1)";
+    ctx.fillRect(140, 160, 120, 22);
+    ctx.strokeStyle = "rgba(34, 211, 238, 0.25)";
+    ctx.strokeRect(140, 160, 120, 22);
+    ctx.fillStyle = "#22d3ee";
+    ctx.font = "bold 9px sans-serif";
+    ctx.fillText("★ HONEST CITIZEN", 150, 166);
+
+    // 5. Draw Level & Streak Info
+    ctx.fillStyle = "#e5e7eb";
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillText(`${levelInfo.tier} Tier (${totalPoints} XP)`, 380, 110);
+
+    // Streak
+    if (streak.currentStreak > 0) {
+      ctx.fillStyle = "#f59e0b";
+      ctx.font = "bold 13px sans-serif";
+      ctx.fillText(`🔥 ${streak.currentStreak}-Day Streak`, 380, 140);
+      if (streak.isOnARoll) {
+        ctx.fillStyle = "#10b981";
+        ctx.font = "bold 10px sans-serif";
+        ctx.fillText("ON A ROLL BONUS ACTIVE", 380, 165);
+      }
+    }
+
+    // 6. Draw Badges Showcase
+    ctx.fillStyle = "#9ca3af";
+    ctx.font = "bold 11px sans-serif";
+    ctx.fillText("FEATURED BADGES", 40, 230);
+
+    // Draw 3 badges
+    top3Badges.forEach((badge: any, idx: number) => {
+      const x = 40 + idx * 175;
+      const y = 250;
+      
+      ctx.fillStyle = "rgba(255, 255, 255, 0.02)";
+      ctx.fillRect(x, y, 160, 80);
+      
+      ctx.strokeStyle = badge.achievement?.tier === "GOLD" ? "#eab308" :
+                        badge.achievement?.tier === "PLATINUM" ? "#22d3ee" :
+                        badge.achievement?.tier === "SILVER" ? "#9ca3af" : "#d97706";
+      ctx.strokeRect(x, y, 160, 80);
+      
+      ctx.font = "28px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(badge.achievement?.icon || "🏅", x + 35, y + 40);
+      
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 11px sans-serif";
+      const badgeName = badge.achievement?.name || "Badge";
+      ctx.fillText(badgeName.length > 15 ? badgeName.substring(0, 13) + "..." : badgeName, x + 70, y + 25);
+      
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "bold 9px sans-serif";
+      ctx.fillText(badge.achievement?.tier || "BRONZE", x + 70, y + 45);
+    });
+
+    ctx.fillStyle = "#374151";
+    ctx.font = "9px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("HONOR PROFILE • GENERATED AT LOST-AND-FOUND PORTAL", 300, 375);
+
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = `${user?.username || "student"}_achievements.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const myRank         = board.findIndex((u: any) => u.id === user?.id) + 1;
   const approvedClaims = claims.filter((c: any) => c.status === "APPROVED").length;
@@ -266,95 +468,133 @@ export default function StudentDashboard() {
 
 
       {/* ── Profile Card ──────────────────────────────────────────────── */}
-      <div className="relative bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+      <div className="relative bg-gray-900 border border-white/5 rounded-2xl overflow-hidden p-5 space-y-4 sm:space-y-0">
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-transparent pointer-events-none" />
         <div className="absolute -top-10 -right-10 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Desktop layout */}
-        <div className="relative hidden sm:flex items-center gap-5 p-5">
-          <div className="relative shrink-0">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center border-2 border-gray-700 shadow-lg">
-              <FaUser size={32} className="text-white opacity-90" />
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
-              <FaCheckCircle size={10} className="text-white" />
-            </div>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-white font-bold text-xl tracking-tight break-words">
-                {user?.name || user?.username || "Student"}
-              </h1>
-              <span className="flex items-center gap-1.5 text-[10px] text-cyan-300 bg-cyan-500/10 border border-cyan-500/25 px-2.5 py-1 rounded-full font-bold tracking-widest shrink-0">
-                <MdVerified size={10} /> VERIFIED STUDENT
-              </span>
-            </div>
-            <p className="text-gray-500 text-sm mt-1">{user?.email}</p>
-
-            <div className="flex items-center gap-2 mt-3 flex-wrap">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/5 bg-white/5">
-                <FaStar size={11} className="text-yellow-400" />
-                <span className="text-white font-bold text-sm">{totalPoints}</span>
-                <span className="text-gray-500 text-xs">points</span>
-              </div>
-              {myRank > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/5 bg-white/5">
-                  <FaTrophy size={11} className="text-cyan-400" />
-                  <span className="text-white font-bold text-sm">#{myRank}</span>
-                  <span className="text-gray-500 text-xs">rank</span>
-                </div>
-              )}
-              <Link to="/dashboard/student/achievements" className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
-                <FaMedal size={11} className="text-purple-400" />
-                <span className="text-white font-bold text-sm">{myAchievements.length}</span>
-                <span className="text-gray-500 text-xs">badges</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile layout */}
-        <div className="relative sm:hidden p-4">
-          <div className="flex items-center gap-3 mb-3">
+        {/* Responsive Layout Grid */}
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          {/* Left: User Info & Avatar */}
+          <div className="flex items-center gap-4">
             <div className="relative shrink-0">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center border-2 border-gray-700">
-                <FaUser size={22} className="text-white opacity-90" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center border-2 border-gray-700 shadow-lg">
+                <FaUser size={28} className="text-white opacity-90 sm:hidden" />
+                <FaUser size={32} className="text-white opacity-90 hidden sm:block" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
-                <FaCheckCircle size={8} className="text-white" />
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-emerald-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
+                <FaCheckCircle size={8} className="text-white sm:hidden" />
+                <FaCheckCircle size={10} className="text-white hidden sm:block" />
               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-white font-bold text-sm tracking-tight truncate leading-tight">
-                {user?.name || user?.username || "Student"}
-              </h1>
-              <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
-                <span className="flex items-center gap-1 text-[9px] text-cyan-300 bg-cyan-500/10 border border-cyan-500/25 px-1.5 py-0.5 rounded-full font-bold shrink-0">
-                  <MdVerified size={8} /> VERIFIED
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-white font-bold text-lg sm:text-xl tracking-tight break-words">
+                  {user?.name || user?.username || "Student"}
+                </h1>
+                <span className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-cyan-300 bg-cyan-500/10 border border-cyan-500/25 px-2 py-0.5 sm:py-1 rounded-full font-bold tracking-widest shrink-0">
+                  <MdVerified size={9} /> VERIFIED STUDENT
                 </span>
-                <p className="text-gray-500 text-[10px] truncate">{user?.email}</p>
+              </div>
+              <p className="text-gray-500 text-xs sm:text-sm mt-0.5 truncate">{user?.email}</p>
+              
+              {/* Level system progress indicators */}
+              <div className="mt-2 space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-gray-300">{levelInfo.icon} {levelInfo.tier} Tier</span>
+                  <span className="text-[10px] text-gray-500 font-semibold">{totalPoints} XP</span>
+                </div>
+                <div className="w-full sm:w-48 h-2 bg-gray-800 rounded-full overflow-hidden border border-white/5">
+                  <div className={`h-full ${levelInfo.barColor} transition-all duration-500`} style={{ width: `${levelInfo.progress}%` }} />
+                </div>
+                <p className="text-[9px] text-gray-500 font-medium">
+                  {levelInfo.progress}% towards {levelInfo.nextTier} Tier
+                </p>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/5 bg-white/5">
-              <FaStar size={10} className="text-yellow-400" />
-              <span className="text-white font-bold text-sm">{totalPoints}</span>
-              <span className="text-gray-500 text-xs">points</span>
+
+          {/* Center: Statistics & Streak */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/5 bg-white/5">
+              <FaStar size={12} className="text-yellow-400" />
+              <div className="text-left">
+                <p className="text-white font-bold text-sm leading-none">{totalPoints}</p>
+                <p className="text-gray-500 text-[9px] font-bold uppercase tracking-wider mt-0.5">points</p>
+              </div>
             </div>
             {myRank > 0 && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/5 bg-white/5">
-                <FaTrophy size={10} className="text-cyan-400" />
-                <span className="text-white font-bold text-sm">#{myRank}</span>
-                <span className="text-gray-500 text-xs">rank</span>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/5 bg-white/5">
+                <FaTrophy size={12} className="text-cyan-400" />
+                <div className="text-left">
+                  <p className="text-white font-bold text-sm leading-none">#{myRank}</p>
+                  <p className="text-gray-500 text-[9px] font-bold uppercase tracking-wider mt-0.5">rank</p>
+                </div>
               </div>
             )}
-            <Link to="/dashboard/student/achievements" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/5 bg-white/5">
-              <FaMedal size={10} className="text-purple-400" />
-              <span className="text-white font-bold text-sm">{myAchievements.length}</span>
-              <span className="text-gray-500 text-xs">badges</span>
+            <Link to="/dashboard/student/achievements" className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all">
+              <FaMedal size={12} className="text-purple-400" />
+              <div className="text-left">
+                <p className="text-white font-bold text-sm leading-none">{myAchievements.length}</p>
+                <p className="text-gray-500 text-[9px] font-bold uppercase tracking-wider mt-0.5">badges</p>
+              </div>
             </Link>
+            
+            {/* Streak flame & On a Roll status */}
+            {streak.currentStreak > 0 && (
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                streak.isOnARoll 
+                  ? "border-orange-500/30 bg-orange-500/10 shadow-lg shadow-orange-500/5 animate-pulse" 
+                  : "border-white/5 bg-white/5"
+              }`}>
+                <FaFire size={12} className="text-orange-500" />
+                <div className="text-left">
+                  <p className="text-white font-bold text-sm leading-none">{streak.currentStreak} Days</p>
+                  <p className="text-gray-500 text-[9px] font-bold uppercase tracking-wider mt-0.5">
+                    {streak.isOnARoll ? "On a Roll!" : "streak"}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right: Top Badge Showcase & Share Action */}
+          <div className="flex flex-col items-start md:items-end gap-3 self-stretch md:self-auto justify-between md:justify-center">
+            {/* Top Badges Showcase */}
+            <div className="space-y-1.5 w-full md:w-auto">
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider md:text-right">Top Badges</p>
+              <div className="flex gap-2">
+                {top3Badges.map((badge: any) => {
+                  const ach = badge.achievement;
+                  const getTierColor = (tier: string) => {
+                    switch (tier) {
+                      case "BRONZE": return "border-amber-700 bg-amber-900/10 text-amber-500";
+                      case "SILVER": return "border-gray-500 bg-gray-500/10 text-gray-300";
+                      case "GOLD": return "border-yellow-400 bg-yellow-400/10 text-yellow-400";
+                      case "PLATINUM": return "border-cyan-400 bg-cyan-400/10 text-cyan-400";
+                      case "LEGEND": return "border-purple-500 bg-purple-500/10 text-purple-400 animate-pulse";
+                      default: return "border-white/10 bg-white/5 text-white";
+                    }
+                  };
+                  return (
+                    <div key={badge.id} className={`flex items-center justify-center w-10 h-10 rounded-xl border ${getTierColor(ach.tier)}`} title={`${ach.name}: ${ach.description}`}>
+                      <span className="text-lg">{ach.icon}</span>
+                    </div>
+                  );
+                })}
+                {top3Badges.length === 0 && (
+                  <p className="text-gray-600 text-xs italic">No badges unlocked yet</p>
+                )}
+              </div>
+            </div>
+
+            {/* Share achievements button */}
+            <button
+              onClick={() => setShareModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-colors shadow-lg shadow-blue-500/15 w-full md:w-auto justify-center"
+            >
+              <FaShareAlt size={10} /> Share achievements
+            </button>
           </div>
         </div>
       </div>
@@ -650,6 +890,94 @@ export default function StudentDashboard() {
           ))}
         </div>
       </div>
+
+      {shareModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="relative w-full max-w-lg bg-gray-900 border border-white/10 rounded-2xl p-6 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <h2 className="text-sm font-bold text-white uppercase tracking-widest">Share Achievements</h2>
+              <button onClick={() => setShareModalOpen(false)} className="text-gray-500 hover:text-white transition-colors">
+                <FaTimesCircle size={18} />
+              </button>
+            </div>
+
+            {/* Visual Card Preview */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-gray-950 to-gray-900 border border-white/5 rounded-xl p-5 shadow-lg space-y-4">
+              {/* Header */}
+              <div className="flex justify-between items-start">
+                <span className="text-[10px] font-bold text-cyan-400 tracking-wider">CAMPUS HONOR REGISTRY</span>
+                <span className="text-xs text-gray-500">🏆 Profile Card</span>
+              </div>
+              
+              {/* Body */}
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-white font-bold text-2xl">
+                  {(user?.name || "S").charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-lg leading-tight">{user?.name || "Student"}</h3>
+                  <p className="text-gray-500 text-xs">{user?.email}</p>
+                  <span className="inline-block mt-2 text-[9px] text-cyan-300 bg-cyan-500/10 border border-cyan-500/25 px-2 py-0.5 rounded-full font-bold">
+                    ★ HONEST CITIZEN
+                  </span>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3 bg-white/[0.02] border border-white/5 rounded-xl p-3 text-sm">
+                <div>
+                  <p className="text-gray-500 text-[9px] font-bold uppercase tracking-wider">Current Tier</p>
+                  <p className="text-white font-bold mt-0.5">{levelInfo.icon} {levelInfo.tier} Level</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-[9px] font-bold uppercase tracking-wider">Streak Status</p>
+                  <p className="text-white font-bold mt-0.5">
+                    {streak.currentStreak > 0 ? `🔥 ${streak.currentStreak}-Day Streak` : "No active streak"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Top Badges */}
+              <div className="space-y-2">
+                <p className="text-gray-500 text-[9px] font-bold uppercase tracking-wider">Top Badges</p>
+                <div className="flex gap-2">
+                  {top3Badges.map((badge: any) => (
+                    <div key={badge.id} className="flex-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/5 bg-white/5">
+                      <span className="text-base">{badge.achievement?.icon}</span>
+                      <span className="text-[10px] text-gray-300 font-bold truncate">{badge.achievement?.name}</span>
+                    </div>
+                  ))}
+                  {top3Badges.length === 0 && (
+                    <p className="text-gray-600 text-xs italic">No badges unlocked yet</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Hidden canvas for PNG export */}
+            <canvas ref={canvasRef} width={600} height={400} className="hidden" />
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={downloadShareCard}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-colors shadow-lg shadow-blue-500/20"
+              >
+                Download PNG Card
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success("Profile link copied to clipboard!");
+                }}
+                className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl text-xs border border-white/5 transition-colors"
+              >
+                Copy Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
