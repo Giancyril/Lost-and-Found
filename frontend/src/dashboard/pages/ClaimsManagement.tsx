@@ -618,7 +618,7 @@ const ClaimsManagement = () => {
               allLabel="All Status"
             />
             {/* View switcher */}
-            <div className="flex gap-1 p-1 bg-gray-800 border border-white/5 rounded-xl self-start sm:self-auto shrink-0">
+            <div className="flex gap-1 p-1 bg-gray-800 border border-white/5 rounded-xl self-start sm:self-auto shrink-0 sm:ml-auto">
               <button
                 onClick={() => { setClaimView("table"); setExpandedTimeline(new Set()); }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
