@@ -147,10 +147,41 @@ const deactivateBoostEvent = async (req: Request, res: Response) => {
   }
 };
 
+// GET /points/my-rank — get user's exact rank even outside top 50
+const getMyRank = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.UNAUTHORIZED,
+        success:    false,
+        message:    "Not authenticated",
+        data:       null,
+      });
+    }
+
+    const data = await pointsService.getMyRank(userId);
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success:    true,
+      message:    "Rank retrieved",
+      data,
+    });
+  } catch (error: any) {
+    sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success:    false,
+      message:    error?.message ?? "Failed",
+      data:       null,
+    });
+  }
+};
+
 export const pointsController = {
   getMyPoints,
   getLeaderboard,
   createBoostEvent,
   getBoostEvents,
   deactivateBoostEvent,
+  getMyRank,
 };

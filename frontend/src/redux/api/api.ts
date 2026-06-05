@@ -573,6 +573,10 @@ const api = baseApi.injectEndpoints({
       }),
       providesTags: ["points"],
     }),
+    getMyRank: builder.query({
+      query: () => ({ url: "/points/my-rank", method: "GET" }),
+      providesTags: ["points"],
+    }),
     getBoostEvents: builder.query({
       query: () => ({ url: "/admin/boost-events", method: "GET" }),
       providesTags: ["boostEvents"] as any,
@@ -777,6 +781,7 @@ export const {
   useDeleteCommentMutation,
   useGetMyPointsQuery,
   useGetLeaderboardQuery,
+  useGetMyRankQuery,
   useGetBoostEventsQuery,
   useCreateBoostEventMutation,
   useDeactivateBoostEventMutation,

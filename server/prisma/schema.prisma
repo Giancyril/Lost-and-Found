@@ -27,6 +27,7 @@ model User {
   totalPoints       Int                  @default(0)
   loginStreak       Int                  @default(0)
   lastLoginDate     DateTime?
+  rankSnapshot      Int?
   ClaimAuditLog     ClaimAuditLog[]
   claim             Claim[]
   foundItem         FoundItem[]

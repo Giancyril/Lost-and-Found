@@ -212,12 +212,13 @@ const getLeaderboard = async (type: "alltime" | "weighted" | "weekly" | "monthly
       orderBy: { totalPoints: "desc" },
       take:    50,
       select: {
-        id:          true,
-        name:        true,
-        totalPoints: true,
-        userImg:     true,
-        schoolId:    true,
-        loginStreak: true,
+        id:           true,
+        name:         true,
+        totalPoints:  true,
+        userImg:      true,
+        schoolId:     true,
+        loginStreak:  true,
+        rankSnapshot: true,
       },
     });
   }
@@ -297,6 +298,64 @@ const deactivateBoostEvent = async (id: string) => {
   });
 };
 
+// ── Save today's ranks as tomorrow's "yesterday" snapshot ─────────────────────
+// Call this once daily via a cron job or on server startup
+export const snapshotRanks = async () => {
+  const users = await prisma.user.findMany({
+    where:   { role: "USER", isDeleted: false, totalPoints: { gt: 0 } },
+    orderBy: { totalPoints: "desc" },
+    select:  { id: true },
+  });
+
+  // Batch update in chunks of 50 to avoid query overload
+  const chunks = [];
+  for (let i = 0; i < users.length; i += 50) {
+    chunks.push(users.slice(i, i + 50));
+  }
+
+  for (const chunk of chunks) {
+    await Promise.all(
+      chunk.map((u, chunkIdx) => {
+        const rank = users.findIndex(x => x.id === u.id) + 1;
+        return prisma.user.update({
+          where: { id: u.id },
+          data:  { rankSnapshot: rank },
+        });
+      })
+    );
+  }
+
+  console.log(`[Snapshot] Ranks saved for ${users.length} users`);
+};
+
+// ── Get a user's exact rank even outside top 50 ───────────────────────────────
+const getMyRank = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where:  { id: userId },
+    select: { totalPoints: true, rankSnapshot: true, name: true },
+  });
+
+  if (!user) return null;
+
+  const rank = await prisma.user.count({
+    where: {
+      totalPoints: { gt: user.totalPoints },
+      role: "USER",
+      isDeleted: false,
+    },
+  }) + 1;
+
+  const delta = user.rankSnapshot != null ? user.rankSnapshot - rank : null;
+
+  return {
+    rank,
+    totalPoints:  user.totalPoints,
+    name:         user.name,
+    rankSnapshot: user.rankSnapshot,
+    delta, // positive = moved up, negative = moved down, 0 = same, null = no snapshot yet
+  };
+};
+
 export const pointsService = {
   award,
   revoke,
@@ -308,4 +367,6 @@ export const pointsService = {
   createBoostEvent,
   getBoostEvents,
   deactivateBoostEvent,
+  getMyRank,
+  snapshotRanks,
 };

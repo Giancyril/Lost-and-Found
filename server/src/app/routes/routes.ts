@@ -168,6 +168,7 @@ router.use("/", commentsRouter);
 
 ////////////////////////////////////////////////// points //////////////////////////////////////////////
 router.get("/points/my", auth(), pointsController.getMyPoints);
+router.get("/points/my-rank", auth(), pointsController.getMyRank);
 router.get("/points/leaderboard", pointsController.getLeaderboard);
 
 // Admin boost event management
