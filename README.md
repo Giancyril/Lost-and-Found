@@ -96,6 +96,22 @@ A comprehensive lost and found management system built with modern web technolog
 - **Content Moderation**: Advanced moderation tools with automated keyword filtering, user reporting, warning system, and appeal process
 - **Community Engagement**: Rich interaction features including comments, replies, and collaborative problem-solving
 - **Achievement System**: Comprehensive badge system for recognizing helpful community contributions and milestones
+  - **Progress Tracking**: Real-time progress bars on locked achievements showing actual database counts (e.g., "7/10 items found")
+    - Dynamic progress counters displayed in badge hover overlays
+    - Accurate progress calculation from live database queries
+    - Visual progress bars with percentage indicators
+    - Supports multiple achievement types: found items, claims, points, comments, login streaks
+  - **Achievement Chains**: Bronze → Silver → Gold badge progression system with automatic tier awarding
+    - Parent-child badge relationships defined via `parentKey` field
+    - Automatic parent tier unlocking when child tier is earned (prevents tier skipping)
+    - Visual chain indicator (⬆️) on upgraded badges
+    - "Upgraded Badge" label in hover overlays
+    - Example chains: Found Items (1→5→10→25→50→100), Claims (1→1→5→10→20), Points (50→200→500→1000→2500→5000)
+  - **Random Achievements**: "Lucky Find" secret badge with 5% drop chance on found item reports
+    - Random probability trigger using Math.random() on every found item submission
+    - Secret badge hidden until unlocked (won't appear in badge grid)
+    - Awards 500 XP (GOLD tier) when dropped
+    - Adds excitement and unpredictability to routine actions
   - Automatic unlock on streak milestones (7-day, 30-day, 100-day login streaks)
   - Badge awards for community contributions and helpfulness
   - Visual achievement displays in user profiles
@@ -810,6 +826,28 @@ model XPBoostEvent {
   - API support via `?type={alltime|weekly|monthly|weighted}` parameter
   - Frontend component with type selector for easy switching
   - Creates natural competition cycles and prevents ranking fatigue
+- **Achievement System Upgrades**: Three major enhancements to the badge system increasing engagement and transparency:
+  - **Progress Tracking**: Real-time progress bars and counters on locked achievements showing actual database counts:
+    - `PROGRESS_MAP` defines target values for progressive achievements (found items, claims, points, comments, streaks)
+    - `computeProgress()` function queries database for current user counts
+    - Frontend displays progress bars at bottom of locked badges (e.g., "40% - 4/10 items")
+    - Hover overlays show detailed progress counter ("Progress: 7/10")
+    - Supports multiple achievement types with accurate real-time calculation
+  - **Achievement Chains**: Bronze → Silver → Gold badge progression with automatic parent tier awarding:
+    - `parentKey` field added to Achievement model to define parent-child relationships
+    - `CHAIN_PARENTS` map establishes badge hierarchies (e.g., FIRST_FOUND_ITEM → FOUND_5_ITEMS → FOUND_10_ITEMS)
+    - `awardAchievement()` modified to recursively award parent tiers when child is unlocked
+    - Prevents tier skipping - earning Gold automatically unlocks Bronze and Silver
+    - Visual chain indicator (⬆️) displayed on upgraded badges
+    - "Upgraded Badge" label in hover overlays for recognition
+    - Example chains: Found Items (1→5→10→25→50→100), Claims (1→1→5→10→20), Points (50→200→500→1000→2500→5000)
+  - **Random Achievements**: "Lucky Find" secret badge with 5% probability drop on found item reports:
+    - `maybeAwardLuckyFind()` function triggers on every found item submission
+    - Uses `Math.random()` for 5% (0.05) probability check
+    - Awards 500 XP (GOLD tier, 🍀 icon) when dropped
+    - Secret achievement hidden in badge grid until unlocked
+    - Adds excitement and unpredictability to routine reporting actions
+    - Integrated into `checkFoundItemAchievements()` workflow
 - **Continuous Bulk Scanner**: Uninterrupted mass-scanning utility that retains persistent state across navigation, enabling rapid continuous entry of multiple items.
 - **Interactive "Journey Tracking"**: A visual, data-driven timeline tracing the complete lifecycle of a claim or lost report, dynamically aggregating sightings and exact `ClaimAuditLog` milestones (like "Verification Passed" or "Claim Rejected").
 - **AI Fraud & 'Serial Claimant' Prevention Engine**: A dual-layer security mechanism. A heuristic layer flags users submitting 3+ claims in 90 days. Then, Gemini AI cross-references the claimant's "Proof of Ownership" against hidden item details to detect vague guesses or blatant lies, emitting a 0-100% Risk Score and instant red FRAUD ALERTS on the Admin claims dashboard.
