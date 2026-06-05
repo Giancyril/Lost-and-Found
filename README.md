@@ -689,6 +689,34 @@ The system implements a comprehensive gamification layer designed to maximize st
 - **Frontend Integration**: Leaderboard component supports type selector for switching views
 - **Re-Engagement Cycles**: Natural motivation cycles as students compete for weekly/monthly rankings
 
+#### Leaderboard UX Enhancements
+- **Rank Change Indicators**: Visual delta badges showing daily rank movement to motivate continued engagement:
+  - **Daily Snapshots**: `snapshotRanks()` function captures current rankings once daily (on server startup + every 24h)
+  - **Delta Calculation**: Compares today's rank with yesterday's snapshot stored in `rankSnapshot` field
+  - **Color-Coded Badges**: 
+    - 🟢 **▲3** = Moved up 3 places (green, motivating)
+    - 🔴 **▼1** = Moved down 1 place (red, competitive pressure)
+    - ⚫ **—** = No change (gray, stable)
+  - **Visual Integration**: Delta badges appear in dedicated "Change" column (desktop) and inline with names (mobile)
+  - **Batch Processing**: Updates 50 users at a time to handle 500+ students efficiently
+  - **Automatic Scheduling**: Runs via `setInterval()` on server startup—no external cron required
+- **Personal Rank Card**: Always-visible rank display showing exact position even outside top 50:
+  - **Accurate Calculation**: Uses Prisma count query `count({ where: { totalPoints: { gt: user.totalPoints } } }) + 1`
+  - **Not Pagination-Limited**: Works for any rank (1-10,000+) regardless of leaderboard display limit
+  - **Rich Context Display**:
+    - Exact rank position (e.g., #127)
+    - Total points earned
+    - Points gap to next rank above (e.g., "250 pts to reach #126")
+    - Yesterday's rank movement with delta badge
+    - "outside top 50" indicator badge when rank > 50
+  - **Dual Positioning**: Card at top when in top 50, additional card at bottom when outside top 50
+  - **API Endpoint**: `GET /points/my-rank` returns `{ rank, totalPoints, rankSnapshot, delta }`
+- **Login Streak Integration**: Leaderboard displays user login streaks for social proof:
+  - Flame icon (🔥) for users with 3+ consecutive day streaks
+  - Streak count displayed (e.g., "7 day streak")
+  - Desktop: Dedicated "Streak" column in table
+  - Mobile: Icon badge below username
+
 #### Technical Implementation
 
 **Database Schema (Prisma)**:
@@ -696,6 +724,7 @@ The system implements a comprehensive gamification layer designed to maximize st
 model User {
   loginStreak    Int      @default(0)
   lastLoginDate  DateTime?
+  rankSnapshot   Int?     // yesterday's rank for delta calculation
   // ... other fields
 }
 
@@ -715,19 +744,24 @@ model XPBoostEvent {
 - `recordLoginStreak(userId)` - Updates streak on login, awards bonuses, unlocks achievements
 - `getActiveBoostMultiplier()` - Returns current XP multiplier (1.0 if no active event)
 - `getWeightedScore(userId)` - Calculates time-decayed point total
-- `getLeaderboard(type)` - Fetches rankings with time-based filtering
+- `getLeaderboard(type)` - Fetches rankings with time-based filtering (includes rankSnapshot)
 - `award(userId, points, reason)` - Core XP distribution with auto-multiplier
+- `snapshotRanks()` - Daily rank capture for delta tracking (runs on startup + every 24h)
+- `getMyRank(userId)` - Accurate rank calculation outside top 50 pagination
 
 **Frontend Components**:
 - `StudentLayout.tsx` - Displays streak flame (🔥) and boost banner
 - `BoostEventsManagement.tsx` - Admin boost event CRUD interface
-- `Leaderboard.tsx` - Multi-type leaderboard switcher (supports all 4 types)
+- `StudentLeaderboard.tsx` - Multi-type leaderboard with rank deltas, personal card, and streak column
+- `DeltaBadge` - Color-coded rank change indicator component
+- `PersonalRankCard` - Rich user rank display with contextual information
 
 **Integration Points**:
 - Login flow: `auth.controller.ts` calls `recordLoginStreak()`
 - Points award: `points.service.ts` checks `getActiveBoostMultiplier()` before saving
 - Achievement unlock: `achievementService.ts` triggered at streak milestones
 - Found item reporting: XP multiplier applies when admin reports for student via email
+- Server startup: `server.ts` triggers `snapshotRanks()` and sets 24h interval
 
 ### Predictive Analytics & AI Forecasting
 - **Risk Zone Mapping**: Analyzes historical data density to calculate a % risk score for campus locations, identifying "hotspots" where items are frequently lost.

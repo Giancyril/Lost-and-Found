@@ -161,7 +161,7 @@ const getTierColor = (tier: string) => {
     case "PLATINUM":
       return "border-cyan-400 bg-cyan-400/10 text-cyan-400";
     case "LEGEND":
-      return "border-purple-500 bg-purple-500/10 text-purple-400 animate-pulse";
+      return "border-purple-500 bg-purple-500/10 text-purple-400";
     default:
       return "border-white/10 bg-white/5 text-white";
   }
@@ -744,10 +744,7 @@ export default function StudentDashboard() {
                     <button
                       key={badge.id}
                       onClick={() => handleBadgeClick(badge)}
-                      className={`flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl border transition-all min-w-0 text-left min-h-[52px] ${getTierColor(ach.tier)} ${isUnseen
-                        ? "ring-2 ring-cyan-400 ring-offset-1 ring-offset-gray-900 shadow-[0_0_12px_rgba(34,211,238,0.4)]"
-                        : "hover:opacity-80"
-                        }`}
+                      className={`flex-1 flex items-center gap-2 px-2.5 py-2 rounded-xl border transition-all min-w-0 text-left min-h-[52px] ${getTierColor(ach.tier)} hover:opacity-80`}
                       title={ach.description}
                     >
                       <span className="text-lg shrink-0 leading-none">{ach.icon}</span>
@@ -759,7 +756,6 @@ export default function StudentDashboard() {
                       </div>
                       {isUnseen && (
                         <span className="shrink-0 flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-cyan-400 opacity-75" />
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
                         </span>
                       )}
