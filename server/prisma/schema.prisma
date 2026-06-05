@@ -526,6 +526,7 @@ model Achievement {
   category    String
   xp          Int             @default(0) // bonus XP on unlock
   secret      Boolean         @default(false)
+  parentKey   String?         // For achievement chains (e.g., Bronze → Silver → Gold)
   createdAt   DateTime        @default(now())
 
   userAchievements UserAchievement[]

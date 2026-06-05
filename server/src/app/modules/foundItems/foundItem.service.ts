@@ -19,7 +19,7 @@ const createFoundItem = async (
     categoryId: data.categoryId,
     description: data.description,
     date: data.date,
-    claimProcess: data.claimProcess || "Visit the SAS office with valid ID to claim this item.",
+    claimProcess: data.claimProcess || "Visit the SAS office with school ID to claim this item.",
     img: imgUrl,
     foundItemName: data.foundItemName,
     location: data.location,
@@ -158,7 +158,7 @@ const getMyFoundItem = async (user: JwtPayload) => {
   if (!user?.id) return [];
 
   const whereConditions: any = { isDeleted: false };
-  
+
   // Safely match by userId, OR by schoolEmail if the user's JWT includes an email.
   // This allows items reported while logged out (as guests) to be claimed by the user.
   if (user.email) {
@@ -192,7 +192,7 @@ const editMyFoundItem = async (data: any) => {
   if (data?.foundItemName || data?.description) {
     try {
       const urgency = await aiRecognitionService.analyzeUrgency(
-        data.foundItemName || "", 
+        data.foundItemName || "",
         data.description || ""
       );
       updateData.urgencyScore = urgency.urgencyScore;

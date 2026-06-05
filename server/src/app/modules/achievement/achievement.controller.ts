@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../../config/prisma";
 import sendResponse from "../../global/response";
 import { StatusCodes } from "http-status-codes";
-import { ACHIEVEMENTS, awardAchievement, seedAchievements } from "../../utils/achievementService";
+import { ACHIEVEMENTS, awardAchievement, seedAchievements, computeProgress, calculateStreak } from "../../utils/achievementService";
 
 const getAchievements = async (req: Request, res: Response) => {
   try {
@@ -35,11 +35,29 @@ const getAchievements = async (req: Request, res: Response) => {
 
     const totalUsers = await (prisma as any).user.count({ where: { role: "USER", isDeleted: false } });
 
+    // Compute progress for logged-in user
+    const userId = (req as any).user?.id;
+    let achievementsWithProgress = achievements;
+    
+    if (userId) {
+      const streak = await calculateStreak(userId);
+      achievementsWithProgress = await Promise.all(
+        achievements.map(async (ach: any) => {
+          const progress = await computeProgress(userId, ach.key);
+          return {
+            ...ach,
+            progress: progress || null,
+            currentStreak: ach.category === "streak" ? streak.currentStreak : undefined,
+          };
+        })
+      );
+    }
+
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
       message: "Achievements fetched successfully",
-      data: { achievements, totalUsers },
+      data: { achievements: achievementsWithProgress, totalUsers },
     });
   } catch (error: any) {
     sendResponse(res, {

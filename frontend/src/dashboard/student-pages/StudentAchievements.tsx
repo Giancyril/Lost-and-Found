@@ -451,9 +451,15 @@ const StudentAchievements: React.FC = () => {
           const rarityPercent = Math.round((unlockCount / (totalUsers || 1)) * 100);
           const isRare = rarityPercent <= 15;
 
-          // Progressive Badge Logic (Mock for specific categories)
-          const isProgressive = !isUnlocked && !isSecret && (ach.category === "found" || ach.category === "claim" || ach.category === "points");
-          const progress = isProgressive ? (ach.category === "found" ? 40 : ach.category === "claim" ? 60 : 25) : 0;
+          // Real Progress Tracking
+          const hasProgress = ach.progress && ach.progress.targetValue > 0;
+          const currentProgress = hasProgress ? ach.progress.currentProgress : 0;
+          const targetValue = hasProgress ? ach.progress.targetValue : 100;
+          const progressPercent = hasProgress ? Math.min(100, Math.round((currentProgress / targetValue) * 100)) : 0;
+          
+          // Chain indicator
+          const hasParent = !!ach.parentKey;
+          const isUpgraded = isUnlocked && hasParent;
 
           return (
             <div
@@ -472,19 +478,24 @@ const StudentAchievements: React.FC = () => {
                 <div className={`flex flex-col items-center justify-center w-full h-full transition-opacity duration-200 
                   ${isSelected ? "opacity-0" : "group-hover:opacity-0"}`}>
 
-                  {/* Progressive Bar - New Feature */}
-                  {isProgressive && (
+                  {/* Progressive Bar - Real Progress */}
+                  {!isUnlocked && !isSecret && hasProgress && progressPercent > 0 && (
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-white/5 overflow-hidden">
                       <div
                         className="h-full bg-blue-500/40 transition-all duration-1000"
-                        style={{ width: `${progress}%` }}
+                        style={{ width: `${progressPercent}%` }}
                       />
                     </div>
+                  )}
+                  
+                  {/* Chain Indicator - Shows if upgraded from previous tier */}
+                  {isUpgraded && (
+                    <div className="absolute top-1 left-1 text-[8px] opacity-70">⬆️</div>
                   )}
 
                   {/* Rarity Indicator */}
                   {!isSecret && (
-                    <div className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[5px] sm:text-[6px] font-black uppercase tracking-tighter transition-all duration-500
+                    <div className={`absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md text-[5px] sm:text-[6px] font-black uppercase tracking-tighter transition-all duration-500
                       ${isRare ? "bg-purple-600/20 text-purple-400 border border-purple-500/30 animate-pulse" : "bg-white/5 text-gray-600 border border-transparent"}`}>
                       {rarityPercent}% EARNED
                     </div>
@@ -536,12 +547,33 @@ const StudentAchievements: React.FC = () => {
                   <p className="text-[7.5px] sm:text-[10px] text-gray-300 font-bold leading-tight sm:leading-relaxed max-w-[85%] mx-auto">
                     {isSecret ? "Unlock this secret achievement to reveal its details." : ach.description}
                   </p>
+                  
+                  {/* Progress Counter for incomplete progressive achievements */}
+                  {!isUnlocked && !isSecret && hasProgress && (
+                    <div className="mt-2 space-y-1">
+                      <p className="text-[8px] text-blue-400 font-black uppercase">
+                        Progress: {currentProgress}/{targetValue}
+                      </p>
+                      <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500/60 transition-all duration-500"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
                   {isUnlocked && (
                     <div className="mt-2 sm:mt-3 space-y-0.5 sm:space-y-1">
                       <p className="text-[6px] sm:text-[8px] text-emerald-400 font-black uppercase">+{ach.xp} XP</p>
                       {unlockData && (
                         <p className="text-[7px] text-gray-500 font-bold uppercase">
                           {new Date(unlockData.unlockedAt).toLocaleDateString()}
+                        </p>
+                      )}
+                      {isUpgraded && (
+                        <p className="text-[6px] text-indigo-400 font-bold uppercase flex items-center gap-1 justify-center">
+                          <span>⬆️</span> Upgraded Badge
                         </p>
                       )}
                     </div>

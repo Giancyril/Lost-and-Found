@@ -1,6 +1,169 @@
 import prisma from "../config/prisma";
 import { incrementBountyProgress } from "../modules/bounty/bounty.service";
 
+// ──────────────────────────────────────────────────────────────────────────────
+// PROGRESS MAP - Define target values for progressive achievements
+// ──────────────────────────────────────────────────────────────────────────────
+export const PROGRESS_MAP: Record<string, { type: string; target: number }> = {
+  FIRST_FOUND_ITEM: { type: "foundItems", target: 1 },
+  FOUND_5_ITEMS: { type: "foundItems", target: 5 },
+  FOUND_10_ITEMS: { type: "foundItems", target: 10 },
+  FOUND_25_ITEMS: { type: "foundItems", target: 25 },
+  FOUND_50_ITEMS: { type: "foundItems", target: 50 },
+  FOUND_100: { type: "foundItems", target: 100 },
+  
+  FIRST_LOST_REPORT: { type: "lostItems", target: 1 },
+  LOST_5_ITEMS: { type: "lostItems", target: 5 },
+  LOST_10_ITEMS: { type: "lostItems", target: 10 },
+  LOST_25_ITEMS: { type: "lostItems", target: 25 },
+  LOST_50: { type: "lostItems", target: 50 },
+  
+  FIRST_CLAIM: { type: "totalClaims", target: 1 },
+  FIRST_CLAIM_APPROVED: { type: "approvedClaims", target: 1 },
+  CLAIMS_5_APPROVED: { type: "approvedClaims", target: 5 },
+  CLAIMS_10_APPROVED: { type: "approvedClaims", target: 10 },
+  CLAIM_MASTER: { type: "approvedClaims", target: 20 },
+  
+  POINT_50: { type: "points", target: 50 },
+  POINT_200: { type: "points", target: 200 },
+  POINT_500: { type: "points", target: 500 },
+  POINT_1000: { type: "points", target: 1000 },
+  POINT_2500: { type: "points", target: 2500 },
+  POINT_5000: { type: "points", target: 5000 },
+  
+  CONVERSATIONALIST: { type: "comments", target: 1 },
+  HELPER: { type: "comments", target: 10 },
+  COMMUNITY_PILLAR: { type: "comments", target: 50 },
+  COMMENT_100: { type: "comments", target: 100 },
+  
+  STREAK_3: { type: "loginStreak", target: 3 },
+  WEEK_WARRIOR: { type: "loginStreak", target: 7 },
+  STREAK_14: { type: "loginStreak", target: 14 },
+  MONTHLY_DEVOTEE: { type: "loginStreak", target: 30 },
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ACHIEVEMENT CHAINS - Define parent-child relationships for badge tiers
+// ──────────────────────────────────────────────────────────────────────────────
+export const CHAIN_PARENTS: Record<string, string | null> = {
+  // Found Item chains
+  FIRST_FOUND_ITEM: null,
+  FOUND_5_ITEMS: "FIRST_FOUND_ITEM",
+  FOUND_10_ITEMS: "FOUND_5_ITEMS",
+  FOUND_25_ITEMS: "FOUND_10_ITEMS",
+  FOUND_50_ITEMS: "FOUND_25_ITEMS",
+  FOUND_100: "FOUND_50_ITEMS",
+  
+  // Lost Item chains
+  FIRST_LOST_REPORT: null,
+  LOST_5_ITEMS: "FIRST_LOST_REPORT",
+  LOST_10_ITEMS: "LOST_5_ITEMS",
+  LOST_25_ITEMS: "LOST_10_ITEMS",
+  LOST_50: "LOST_25_ITEMS",
+  
+  // Claim chains
+  FIRST_CLAIM: null,
+  FIRST_CLAIM_APPROVED: "FIRST_CLAIM",
+  CLAIMS_5_APPROVED: "FIRST_CLAIM_APPROVED",
+  CLAIMS_10_APPROVED: "CLAIMS_5_APPROVED",
+  CLAIM_MASTER: "CLAIMS_10_APPROVED",
+  
+  // Points chains
+  POINT_50: null,
+  POINT_200: "POINT_50",
+  POINT_500: "POINT_200",
+  POINT_1000: "POINT_500",
+  POINT_2500: "POINT_1000",
+  POINT_5000: "POINT_2500",
+  
+  // Community chains
+  CONVERSATIONALIST: null,
+  HELPER: "CONVERSATIONALIST",
+  COMMUNITY_PILLAR: "HELPER",
+  COMMENT_100: "COMMUNITY_PILLAR",
+  
+  // Streak chains
+  STREAK_3: null,
+  WEEK_WARRIOR: "STREAK_3",
+  STREAK_14: "WEEK_WARRIOR",
+  MONTHLY_DEVOTEE: "STREAK_14",
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// COMPUTE PROGRESS - Calculate current progress for progressive achievements
+// ──────────────────────────────────────────────────────────────────────────────
+export const computeProgress = async (userId: string, achievementKey: string) => {
+  const config = PROGRESS_MAP[achievementKey];
+  if (!config) return null;
+
+  let currentProgress = 0;
+
+  try {
+    switch (config.type) {
+      case "foundItems":
+        currentProgress = await prisma.foundItem.count({ where: { userId, isDeleted: false } });
+        break;
+      case "lostItems":
+        currentProgress = await prisma.lostItem.count({ where: { userId, isDeleted: false } });
+        break;
+      case "totalClaims":
+        currentProgress = await prisma.claim.count({ where: { userId } });
+        break;
+      case "approvedClaims":
+        currentProgress = await prisma.claim.count({ where: { userId, status: "APPROVED" } });
+        break;
+      case "points":
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { totalPoints: true } });
+        currentProgress = user?.totalPoints || 0;
+        break;
+      case "comments":
+        currentProgress = await prisma.comment.count({ where: { userId } });
+        break;
+      case "loginStreak":
+        const userData = await prisma.user.findUnique({ where: { id: userId }, select: { loginStreak: true } });
+        currentProgress = userData?.loginStreak || 0;
+        break;
+      default:
+        currentProgress = 0;
+    }
+  } catch (error) {
+    console.error(`Error computing progress for ${achievementKey}:`, error);
+  }
+
+  return {
+    currentProgress,
+    targetValue: config.target,
+  };
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// LUCKY FIND - 5% chance to award "Lucky Find" achievement on found item reports
+// ──────────────────────────────────────────────────────────────────────────────
+export const maybeAwardLuckyFind = async (userId: string) => {
+  try {
+    // Check if user already has the achievement
+    const luckyFindAch = await prisma.achievement.findUnique({ where: { key: "LUCKY_FIND" } });
+    if (!luckyFindAch) return;
+
+    const existing = await prisma.userAchievement.findUnique({
+      where: { userId_achievementId: { userId, achievementId: luckyFindAch.id } }
+    });
+    if (existing) return;
+
+    // 5% chance
+    const roll = Math.random();
+    if (roll < 0.05) {
+      await awardAchievement(userId, "LUCKY_FIND");
+      console.log(`🍀 Lucky Find awarded to user ${userId}!`);
+    }
+  } catch (error) {
+    console.error("Error in maybeAwardLuckyFind:", error);
+  }
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ACHIEVEMENTS DEFINITION
+// ──────────────────────────────────────────────────────────────────────────────
 export const ACHIEVEMENTS = {
   // 🟦 Found Item Badges (Turned in to Office)
   FIRST_FOUND_ITEM: { key: "FIRST_FOUND_ITEM", name: "Press F to Pay Respects", description: "Turned in your first found item to the SAS office", icon: "🏹", tier: "BRONZE", category: "found", xp: 25 },
@@ -16,6 +179,7 @@ export const ACHIEVEMENTS = {
   TRUSTED_SOURCE: { key: "TRUSTED_SOURCE", name: "Trusted Source", description: "Have 10 approved reports with zero deletions", icon: "🛡️", tier: "GOLD", category: "found", xp: 500 },
   BORN_TO_FIND: { key: "BORN_TO_FIND", name: "Born to Find", description: "Turn in an item within 24 hours of account creation", icon: "👶", tier: "BRONZE", category: "found", xp: 100 },
   CAMPUS_WALKER: { key: "CAMPUS_WALKER", name: "Campus Walker", description: "Turned in found items from 5 different campus areas", icon: "🚶", tier: "GOLD", category: "found", xp: 500 },
+  LUCKY_FIND: { key: "LUCKY_FIND", name: "Lucky Find", description: "Won the random 5% drop chance badge!", icon: "🍀", tier: "GOLD", category: "found", xp: 500, secret: true },
 
   // 🟥 Lost Item Badges
   FIRST_LOST_REPORT: { key: "FIRST_LOST_REPORT", name: "Inventory Empty", description: "Submit your first lost item report", icon: "📦", tier: "BRONZE", category: "lost", xp: 25 },
@@ -118,18 +282,44 @@ export const ACHIEVEMENTS = {
   PLATINUM_GOD: { key: "PLATINUM_GOD", name: "Platinum God", description: "Unlock 100% of all other achievements", icon: "🧿", tier: "LEGEND", category: "special", xp: 10000, secret: true },
 } as const;
 
+// ──────────────────────────────────────────────────────────────────────────────
+// SEED ACHIEVEMENTS - Save parentKey relationships
+// ──────────────────────────────────────────────────────────────────────────────
 export const seedAchievements = async () => {
   console.log("🌱 Seeding achievements...");
   for (const [key, data] of Object.entries(ACHIEVEMENTS)) {
+    const parentKey = CHAIN_PARENTS[key] || null;
     await prisma.achievement.upsert({
       where: { key: data.key },
-      update: { name: data.name, description: data.description, icon: data.icon, tier: data.tier as any, category: data.category, xp: data.xp, secret: (data as any).secret || false },
-      create: { key: data.key, name: data.name, description: data.description, icon: data.icon, tier: data.tier as any, category: data.category, xp: data.xp, secret: (data as any).secret || false },
+      update: {
+        name: data.name,
+        description: data.description,
+        icon: data.icon,
+        tier: data.tier as any,
+        category: data.category,
+        xp: data.xp,
+        secret: (data as any).secret || false,
+        parentKey,
+      },
+      create: {
+        key: data.key,
+        name: data.name,
+        description: data.description,
+        icon: data.icon,
+        tier: data.tier as any,
+        category: data.category,
+        xp: data.xp,
+        secret: (data as any).secret || false,
+        parentKey,
+      },
     });
   }
-  console.log("✅ Achievements seeded!");
+  console.log("✅ Achievements seeded with parentKey relationships!");
 };
 
+// ──────────────────────────────────────────────────────────────────────────────
+// AWARD ACHIEVEMENT - With automatic chain tier awarding
+// ──────────────────────────────────────────────────────────────────────────────
 export const awardAchievement = async (userId: string, achievementKey: string) => {
   try {
     let achievementData = await prisma.achievement.findUnique({ where: { key: achievementKey } });
@@ -138,29 +328,80 @@ export const awardAchievement = async (userId: string, achievementKey: string) =
     if (!achievementData) {
       const def = (ACHIEVEMENTS as any)[achievementKey];
       if (def) {
+        const parentKey = CHAIN_PARENTS[achievementKey] || null;
         achievementData = await prisma.achievement.upsert({
           where: { key: achievementKey },
-          update: { name: def.name, description: def.description, icon: def.icon, tier: def.tier as any, category: def.category, xp: def.xp, secret: def.secret || false },
-          create: { key: achievementKey, name: def.name, description: def.description, icon: def.icon, tier: def.tier as any, category: def.category, xp: def.xp, secret: def.secret || false },
+          update: {
+            name: def.name,
+            description: def.description,
+            icon: def.icon,
+            tier: def.tier as any,
+            category: def.category,
+            xp: def.xp,
+            secret: def.secret || false,
+            parentKey,
+          },
+          create: {
+            key: achievementKey,
+            name: def.name,
+            description: def.description,
+            icon: def.icon,
+            tier: def.tier as any,
+            category: def.category,
+            xp: def.xp,
+            secret: def.secret || false,
+            parentKey,
+          },
         });
       }
     }
 
     if (!achievementData) return null;
-    const existing = await prisma.userAchievement.findUnique({ where: { userId_achievementId: { userId, achievementId: achievementData.id } } });
+    
+    const existing = await prisma.userAchievement.findUnique({
+      where: { userId_achievementId: { userId, achievementId: achievementData.id } }
+    });
     if (existing) return null;
-    const userAchievement = await prisma.userAchievement.create({ data: { userId, achievementId: achievementData.id }, include: { achievement: true } });
-    await prisma.user.update({ where: { id: userId }, data: { totalPoints: { increment: achievementData.xp } } });
+    
+    const userAchievement = await prisma.userAchievement.create({
+      data: { userId, achievementId: achievementData.id },
+      include: { achievement: true }
+    });
+    
+    await prisma.user.update({
+      where: { id: userId },
+      data: { totalPoints: { increment: achievementData.xp } }
+    });
+    
+    // Auto-award next tier in chain
+    if (achievementData.parentKey) {
+      const parentAch = await prisma.achievement.findUnique({ where: { key: achievementData.parentKey } });
+      if (parentAch) {
+        const parentUnlocked = await prisma.userAchievement.findUnique({
+          where: { userId_achievementId: { userId, achievementId: parentAch.id } }
+        });
+        if (!parentUnlocked) {
+          await awardAchievement(userId, achievementData.parentKey);
+        }
+      }
+    }
+    
     if (achievementKey !== "PLATINUM_GOD") {
       const totalAvailable = Object.keys(ACHIEVEMENTS).length - 1;
       const userTotal = await prisma.userAchievement.count({ where: { userId } });
-      if (userTotal >= totalAvailable) { await awardAchievement(userId, "PLATINUM_GOD"); }
+      if (userTotal >= totalAvailable) {
+        await awardAchievement(userId, "PLATINUM_GOD");
+      }
     }
+    
     return userAchievement;
-  } catch (error) { console.error("Error awarding achievement:", error); return null; }
+  } catch (error) {
+    console.error("Error awarding achievement:", error);
+    return null;
+  }
 };
 
-// ── Achievement Checkers ──────────────────────────────────────────────────
+// ── Achievement Checkers ──────────────────────────────────────────────────────
 
 export const calculateStreak = async (userId: string) => {
   try {
@@ -244,6 +485,7 @@ export const checkStreakAndAwardBonus = async (userId: string) => {
 export const checkFoundItemAchievements = async (userId: string) => {
   await incrementBountyProgress(userId, "REPORT_FOUND_ITEM");
   await checkStreakAndAwardBonus(userId);
+  await maybeAwardLuckyFind(userId);
   const count = await prisma.foundItem.count({ where: { userId } });
   if (count >= 1) await awardAchievement(userId, "FIRST_FOUND_ITEM");
   if (count >= 5) await awardAchievement(userId, "FOUND_5_ITEMS");

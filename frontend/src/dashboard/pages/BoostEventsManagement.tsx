@@ -219,10 +219,10 @@ export default function BoostEventsManagement() {
   }
 
   return (
-    <div className="space-y-3 sm:space-y-5 max-w-7xl mx-auto pb-10 px-2 sm:px-0">
+    <div className="space-y-3 sm:space-y-5 pb-10">
       {/* Header with Create Button */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <h1 className="text-white text-xl font-bold tracking-tight">
             XP Boost Events
           </h1>
@@ -232,7 +232,7 @@ export default function BoostEventsManagement() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2  bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl transition-all text-xs sm:text-sm"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl transition-all text-xs sm:text-sm shrink-0"
         >
           <FaPlus size={10} />
           <span className="hidden sm:inline">Create Boost Event</span>
