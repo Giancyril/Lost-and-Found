@@ -1308,21 +1308,20 @@ const SecurityCompliance = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
       {/* Tabs */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-7 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
+      <div className="grid grid-cols-7 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
         {TABS.map(tab => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               title={tab.label}
-              className={`flex items-center justify-center gap-1 px-1.5 sm:px-2 py-2 rounded-xl text-[9px] sm:text-[10px] font-medium transition-colors w-full focus:outline-none select-none
+              className={`flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 px-1 sm:px-2 py-2 rounded-xl text-[8px] sm:text-[10px] font-medium transition-colors w-full focus:outline-none select-none
               ${active
                   ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
                   : "text-gray-500 hover:text-gray-200 hover:bg-white/5 border border-transparent"
                 }`}>
-              <Icon size={8} className={`transition-colors shrink-0 ${active ? "text-cyan-400" : "text-gray-600"}`} />
+              <Icon size={14} className={`transition-colors shrink-0 sm:w-2 sm:h-2 ${active ? "text-cyan-400" : "text-gray-600"}`} />
               <span className="hidden sm:inline truncate">{tab.label}</span>
-              <span className="sm:hidden truncate text-[8px]">{tab.label.split(' ')[0]}</span>
             </button>
           );
         })}
