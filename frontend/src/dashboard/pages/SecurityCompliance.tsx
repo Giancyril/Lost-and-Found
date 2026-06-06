@@ -5,47 +5,52 @@ import {
   FaSignInAlt, FaBan, FaTrash, FaUserCheck, FaUserSlash,
   FaDownload, FaSync, FaEye, FaClock, FaGlobe,
   FaChartBar, FaUsers, FaDatabase, FaChevronDown, FaCheck,
+  FaUser, FaChartLine,
 } from "react-icons/fa";
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { toast } from "react-toastify";
+import { format } from "date-fns";
 import { baseApi } from "../../redux/api/baseApi";
 import {
   useBlockUserMutation,
   useSoftDeleteUserMutation,
+  useGetFlaggedUsersQuery,
+  useClearFlagMutation,
+  useGetSystemAuditLogsQuery,
 } from "../../redux/api/api";
 import { getUserLocalStorage } from "../../auth/auth";
 
 // ── RTK Query endpoints ───────────────────────────────────────────────────────
 const securityApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getSecurityStats:   builder.query({ query: () => ({ url: "/admin/security/stats",       method: "GET" }), providesTags:    ["security"] }),
-    getLoginLogs:       builder.query({ 
-      query: (params?: { success?: boolean; limit?: number }) => ({ 
-        url: "/admin/security/logs", 
-        method: "GET", 
-        params 
-      }), 
-      providesTags: ["loginLogs"] 
+    getSecurityStats: builder.query({ query: () => ({ url: "/admin/security/stats", method: "GET" }), providesTags: ["security"] }),
+    getLoginLogs: builder.query({
+      query: (params?: { success?: boolean; limit?: number }) => ({
+        url: "/admin/security/logs",
+        method: "GET",
+        params
+      }),
+      providesTags: ["loginLogs"]
     }),
-    getAccessControl:   builder.query({ query: () => ({ url: "/admin/security/access-control",      method: "GET" }), providesTags:    ["security"] }),
-    getPrivacyStats:    builder.query({ query: () => ({ url: "/admin/security/privacy",     method: "GET" }), providesTags:    ["security"] }),
-    exportUserData:     builder.query({ query: () => ({ url: "/admin/security/export",      method: "GET" }) }),
-    getPurgeCheck:      builder.query({ query: () => ({ url: "/admin/security/purge-check", method: "GET" }) }),
-    getComplianceReport:builder.query({ query: () => ({ url: "/admin/security/compliance",  method: "GET" }), providesTags:    ["security"] }),
-    clearOldLogs:       builder.mutation({ query: () => ({ url: "/admin/security/logs",     method: "DELETE" }), invalidatesTags: ["loginLogs", "security"] }),
-    
+    getAccessControl: builder.query({ query: () => ({ url: "/admin/security/access-control", method: "GET" }), providesTags: ["security"] }),
+    getPrivacyStats: builder.query({ query: () => ({ url: "/admin/security/privacy", method: "GET" }), providesTags: ["security"] }),
+    exportUserData: builder.query({ query: () => ({ url: "/admin/security/export", method: "GET" }) }),
+    getPurgeCheck: builder.query({ query: () => ({ url: "/admin/security/purge-check", method: "GET" }) }),
+    getComplianceReport: builder.query({ query: () => ({ url: "/admin/security/compliance", method: "GET" }), providesTags: ["security"] }),
+    clearOldLogs: builder.mutation({ query: () => ({ url: "/admin/security/logs", method: "DELETE" }), invalidatesTags: ["loginLogs", "security"] }),
+
     // Retention Policy Engine Endpoints
     getPendingDeletions: builder.query({ query: () => ({ url: "/admin/retention/pending", method: "GET" }), providesTags: ["security"] }),
-    purgeExpiredItems:   builder.mutation({ query: () => ({ url: "/admin/retention/purge", method: "POST" }), invalidatesTags: ["security"] }),
-    restoreItem:         builder.mutation({ query: (data: { itemId: string, itemType: string }) => ({ url: "/admin/retention/restore", method: "POST", body: data }), invalidatesTags: ["security"] }),
-    sendWeeklyReport:    builder.mutation({ query: () => ({ url: "/admin/retention/report/send", method: "POST" }) }),
+    purgeExpiredItems: builder.mutation({ query: () => ({ url: "/admin/retention/purge", method: "POST" }), invalidatesTags: ["security"] }),
+    restoreItem: builder.mutation({ query: (data: { itemId: string, itemType: string }) => ({ url: "/admin/retention/restore", method: "POST", body: data }), invalidatesTags: ["security"] }),
+    sendWeeklyReport: builder.mutation({ query: () => ({ url: "/admin/retention/report/send", method: "POST" }) }),
     // Sheets Reconciliation Endpoints
     getReconciliationStatus: builder.query({ query: () => ({ url: "/admin/reconciliation/status", method: "GET" }) }),
-    resyncMissingItems:      builder.mutation({ query: (data: { itemIds: string[] }) => ({ url: "/admin/reconciliation/resync", method: "POST", body: data }) }),
-    triggerWeeklyReport:     builder.mutation({ query: () => ({ url: "/admin/reconciliation/trigger", method: "POST" }) }),
+    resyncMissingItems: builder.mutation({ query: (data: { itemIds: string[] }) => ({ url: "/admin/reconciliation/resync", method: "POST", body: data }) }),
+    triggerWeeklyReport: builder.mutation({ query: () => ({ url: "/admin/reconciliation/trigger", method: "POST" }) }),
   }),
   overrideExisting: false,
 });
@@ -55,7 +60,7 @@ const {
   useGetPrivacyStatsQuery, useGetComplianceReportQuery,
   useLazyExportUserDataQuery, useGetPurgeCheckQuery,
   useClearOldLogsMutation,
-  
+
   // Retention Engine Hooks
   useGetPendingDeletionsQuery,
   usePurgeExpiredItemsMutation,
@@ -82,10 +87,10 @@ const timeAgo = (d: string) => {
 const downloadCSV = (data: any[], filename: string) => {
   if (!data.length) return;
   const headers = Object.keys(data[0]).join(",");
-  const rows    = data.map(r => Object.values(r).map(v => `"${v}"`).join(",")).join("\n");
-  const blob    = new Blob([`${headers}\n${rows}`], { type: "text/csv" });
-  const url     = URL.createObjectURL(blob);
-  const a       = document.createElement("a");
+  const rows = data.map(r => Object.values(r).map(v => `"${v}"`).join(",")).join("\n");
+  const blob = new Blob([`${headers}\n${rows}`], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
   a.href = url; a.download = `${filename}.csv`; a.click();
   URL.revokeObjectURL(url);
 };
@@ -107,12 +112,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const TABS = [
-  { id: "monitor",      label: "Security Monitor",       icon: FaShieldAlt   },
-  { id: "access",       label: "Access Control",         icon: FaUserShield  },
-  { id: "privacy",      label: "Data Privacy",           icon: FaLock        },
-  { id: "compliance",   label: "Compliance Reports",     icon: FaFileAlt     },
-  { id: "retention",    label: "Retention Policy",       icon: FaTrash       },
-  { id: "reconcile",    label: "Sheets Reconciliation",  icon: FaDatabase    },
+  { id: "monitor", label: "Security Monitor", icon: FaShieldAlt },
+  { id: "access", label: "Access Control", icon: FaUserShield },
+  { id: "privacy", label: "Data Privacy", icon: FaLock },
+  { id: "compliance", label: "Compliance Reports", icon: FaFileAlt },
+  { id: "retention", label: "Retention Policy", icon: FaTrash },
+  { id: "reconcile", label: "Sheets Reconciliation", icon: FaDatabase },
+  { id: "pointabuse", label: "Point Abuse", icon: FaExclamationTriangle },
 ];
 
 const StatCard = ({ label, value, color, bg, icon, sub }: any) => (
@@ -127,7 +133,7 @@ const StatCard = ({ label, value, color, bg, icon, sub }: any) => (
 
 const SectionCard = ({ title, subtitle, children, action }: any) => (
   <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-5 py-4 border-b border-white/5">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-5 py-4 border-b border-white/5">
       <div className="min-w-0">
         <h3 className="text-white text-sm font-semibold">{title}</h3>
         {subtitle && <p className="text-gray-500 text-xs mt-0.5">{subtitle}</p>}
@@ -175,11 +181,10 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
                 key={opt.id}
                 type="button"
                 onClick={() => { onChange(opt.id); setOpen(false); }}
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
-                  value === opt.id
-                    ? "bg-white/5 text-white font-semibold"
-                    : "text-gray-400 hover:bg-white/[0.03] hover:text-white"
-                }`}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${value === opt.id
+                  ? "bg-white/5 text-white font-semibold"
+                  : "text-gray-400 hover:bg-white/[0.03] hover:text-white"
+                  }`}
               >
                 {opt.name}
                 {value === opt.id && (
@@ -201,10 +206,10 @@ const SecurityMonitorTab = () => {
   const { data: statsData, isLoading, refetch } = useGetSecurityStatsQuery(undefined);
   const [clearLogs] = useClearOldLogsMutation();
   const [logFilter, setLogFilter] = useState<"" | "true" | "false">("");
-  
+
   // Build params object based on filter
   const params = logFilter === "" ? undefined : { success: logFilter === "true" };
-  
+
   // Use regular query with params
   const { data: logsData, isLoading: logsLoading, refetch: refetchLogs } = useGetLoginLogsQuery(params);
   const stats = statsData?.data;
@@ -225,8 +230,8 @@ const SecurityMonitorTab = () => {
 
   if (isLoading) return (
     <div className="space-y-4 animate-pulse">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{Array.from({length:4}).map((_,i)=><div key={i} className="h-20 bg-gray-800/60 rounded-2xl"/>)}</div>
-      <div className="h-64 bg-gray-800/60 rounded-2xl"/>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 bg-gray-800/60 rounded-2xl" />)}</div>
+      <div className="h-64 bg-gray-800/60 rounded-2xl" />
     </div>
   );
 
@@ -234,10 +239,10 @@ const SecurityMonitorTab = () => {
     <div className="space-y-4 sm:space-y-6">
       {/* KPI row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Logins (24h)"   value={stats?.totalLogins24h}            color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"    icon={<FaSignInAlt   size={14} className="text-cyan-400"   />} />
-        <StatCard label="Failed (24h)"   value={stats?.failedLogins24h}           color="text-red-400"     bg="bg-red-400/10 border-red-400/20"      icon={<FaTimesCircle size={14} className="text-red-400"   />} />
-        <StatCard label="Suspicious IPs" value={stats?.suspiciousIps?.length ?? 0} color="text-orange-400" bg="bg-orange-400/10 border-orange-400/20" icon={<FaGlobe       size={14} className="text-orange-400"/>} />
-        <StatCard label="Blocked Users"  value={stats?.blockedUsers}              color="text-yellow-400"  bg="bg-yellow-400/10 border-yellow-400/20" icon={<FaBan         size={14} className="text-yellow-400"/>} />
+        <StatCard label="Logins (24h)" value={stats?.totalLogins24h} color="text-cyan-400" bg="bg-cyan-400/10 border-cyan-400/20" icon={<FaSignInAlt size={14} className="text-cyan-400" />} />
+        <StatCard label="Failed (24h)" value={stats?.failedLogins24h} color="text-red-400" bg="bg-red-400/10 border-red-400/20" icon={<FaTimesCircle size={14} className="text-red-400" />} />
+        <StatCard label="Suspicious IPs" value={stats?.suspiciousIps?.length ?? 0} color="text-orange-400" bg="bg-orange-400/10 border-orange-400/20" icon={<FaGlobe size={14} className="text-orange-400" />} />
+        <StatCard label="Blocked Users" value={stats?.blockedUsers} color="text-yellow-400" bg="bg-yellow-400/10 border-yellow-400/20" icon={<FaBan size={14} className="text-yellow-400" />} />
       </div>
 
       {/* Login trend chart */}
@@ -261,7 +266,7 @@ const SecurityMonitorTab = () => {
                 <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<CustomTooltip />} />
                 <Line type="monotone" dataKey="success" name="Success" stroke="#22d3ee" strokeWidth={2} dot={{ fill: "#22d3ee", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
-                <Line type="monotone" dataKey="failed"  name="Failed"  stroke="#f87171" strokeWidth={2} dot={{ fill: "#f87171", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
+                <Line type="monotone" dataKey="failed" name="Failed" stroke="#f87171" strokeWidth={2} dot={{ fill: "#f87171", r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -297,27 +302,27 @@ const SecurityMonitorTab = () => {
         title="Recent Login Logs"
         subtitle="Latest authentication activity"
         action={
-        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end">
-          <div className="flex flex-1 sm:flex-none gap-1 bg-gray-800 border border-white/5 rounded-lg p-1">
-            {[["", "All"], ["true", "Success"], ["false", "Failed"]].map(([val, label]) => (
-              <button key={val} onClick={() => setLogFilter(val)}
-                className={`flex-1 sm:flex-none px-2 py-1 rounded-md text-[10px] font-medium transition-all ${logFilter === val ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
-                {label}
+          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex flex-1 sm:flex-none gap-1 bg-gray-800 border border-white/5 rounded-lg p-1">
+              {[["", "All"], ["true", "Success"], ["false", "Failed"]].map(([val, label]) => (
+                <button key={val} onClick={() => setLogFilter(val as "" | "true" | "false")}
+                  className={`flex-1 sm:flex-none px-2 py-1 rounded-md text-[10px] font-medium transition-all ${logFilter === val ? "bg-cyan-500/10 text-cyan-400" : "text-gray-500 hover:text-white"}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1.5">
+              <button onClick={() => downloadCSV(logs, "login-logs")}
+                className="flex items-center gap-1 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] font-bold rounded-lg transition-all whitespace-nowrap">
+                <FaDownload size={8} /> Export
               </button>
-            ))}
+              <button onClick={handleClearLogs}
+                className="flex items-center gap-1 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-lg transition-all whitespace-nowrap">
+                <FaTrash size={8} /> Clear
+              </button>
+            </div>
           </div>
-          <div className="flex gap-1.5">
-            <button onClick={() => downloadCSV(logs, "login-logs")}
-              className="flex items-center gap-1 px-2 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-[10px] font-bold rounded-lg transition-all whitespace-nowrap">
-              <FaDownload size={8} /> Export
-            </button>
-            <button onClick={handleClearLogs}
-              className="flex items-center gap-1 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-lg transition-all whitespace-nowrap">
-              <FaTrash size={8} /> Clear
-            </button>
-          </div>
-        </div>
-      }
+        }
       >
         <div className="divide-y divide-white/5 max-h-96 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.2) rgba(255,255,255,0.05)" }}>
           {logs.length === 0 ? (
@@ -358,20 +363,20 @@ const SecurityMonitorTab = () => {
 // ════════════════════════════════════════════════════════════════════════════════
 const AccessControlTab = () => {
   const { data: accessData, isLoading, refetch } = useGetAccessControlQuery(undefined);
-  const [blockUser]      = useBlockUserMutation();
-  const [deleteUser]     = useSoftDeleteUserMutation();
-  const [search, setSearch]   = useState("");
+  const [blockUser] = useBlockUserMutation();
+  const [deleteUser] = useSoftDeleteUserMutation();
+  const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  const users: any[]  = accessData?.data?.users  || [];
-  const stats: any    = accessData?.data?.stats   || {};
+  const users: any[] = accessData?.data?.users || [];
+  const stats: any = accessData?.data?.stats || {};
 
   const filtered = users.filter(u => {
     const matchSearch = !search || u.username.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
-    const matchRole   = !roleFilter || u.role === roleFilter;
+    const matchRole = !roleFilter || u.role === roleFilter;
     const matchStatus = !statusFilter ||
-      (statusFilter === "active"  && u.activated && !u.isDeleted) ||
+      (statusFilter === "active" && u.activated && !u.isDeleted) ||
       (statusFilter === "blocked" && !u.activated && !u.isDeleted) ||
       (statusFilter === "deleted" && u.isDeleted);
     return matchSearch && matchRole && matchStatus;
@@ -390,18 +395,18 @@ const AccessControlTab = () => {
     else toast.error("Failed to delete user");
   };
 
-  if (isLoading) return <div className="space-y-3">{Array.from({length:5}).map((_,i)=><div key={i} className="h-16 bg-gray-800/60 rounded-2xl animate-pulse"/>)}</div>;
+  if (isLoading) return <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 bg-gray-800/60 rounded-2xl animate-pulse" />)}</div>;
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: "Total Users",   value: stats.total,   color: "text-white",         bg: "bg-white/5 border-white/10"              },
-          { label: "Admins",        value: stats.admins,  color: "text-violet-400",    bg: "bg-violet-400/10 border-violet-400/20"   },
-          { label: "Active",        value: stats.active,  color: "text-emerald-400",   bg: "bg-emerald-400/10 border-emerald-400/20" },
-          { label: "Blocked",       value: stats.blocked, color: "text-yellow-400",    bg: "bg-yellow-400/10 border-yellow-400/20"   },
-          { label: "Deleted",       value: stats.deleted, color: "text-red-400",       bg: "bg-red-400/10 border-red-400/20"         },
+          { label: "Total Users", value: stats.total, color: "text-white", bg: "bg-white/5 border-white/10" },
+          { label: "Admins", value: stats.admins, color: "text-violet-400", bg: "bg-violet-400/10 border-violet-400/20" },
+          { label: "Active", value: stats.active, color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20" },
+          { label: "Blocked", value: stats.blocked, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20" },
+          { label: "Deleted", value: stats.deleted, color: "text-red-400", bg: "bg-red-400/10 border-red-400/20" },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-3 bg-gray-900 text-center ${s.bg}`}>
             <p className={`text-2xl font-bold ${s.color}`}>{s.value ?? 0}</p>
@@ -419,7 +424,7 @@ const AccessControlTab = () => {
           onChange={setRoleFilter}
           options={[
             { id: "ADMIN", name: "Admin" },
-            { id: "USER",  name: "User"  },
+            { id: "USER", name: "User" },
           ]}
           allLabel="All Roles"
         />
@@ -427,7 +432,7 @@ const AccessControlTab = () => {
           value={statusFilter}
           onChange={setStatusFilter}
           options={[
-            { id: "active",  name: "Active"  },
+            { id: "active", name: "Active" },
             { id: "blocked", name: "Blocked" },
             { id: "deleted", name: "Deleted" },
           ]}
@@ -485,8 +490,8 @@ const AccessControlTab = () => {
 // ════════════════════════════════════════════════════════════════════════════════
 const DataPrivacyTab = () => {
   const { data: privacyData, isLoading } = useGetPrivacyStatsQuery(undefined);
-  const { data: purgeData }              = useGetPurgeCheckQuery(undefined);
-  const [triggerExport]                  = useLazyExportUserDataQuery();
+  const { data: purgeData } = useGetPurgeCheckQuery(undefined);
+  const [triggerExport] = useLazyExportUserDataQuery();
   const stats = privacyData?.data;
 
   const handleExport = async () => {
@@ -499,7 +504,7 @@ const DataPrivacyTab = () => {
     }
   };
 
-  if (isLoading) return <div className="space-y-3">{Array.from({length:3}).map((_,i)=><div key={i} className="h-32 bg-gray-800/60 rounded-2xl animate-pulse"/>)}</div>;
+  if (isLoading) return <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-32 bg-gray-800/60 rounded-2xl animate-pulse" />)}</div>;
 
   const purgeEligible = purgeData?.data?.eligible ?? 0;
 
@@ -507,22 +512,22 @@ const DataPrivacyTab = () => {
     <div className="space-y-4 sm:space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Total Users"    value={stats?.totalUsers}       color="text-white"        bg="bg-white/5 border-white/10"              icon={<FaUsers size={14} className="text-gray-400"/>} />
-        <StatCard label="Deleted Users"  value={stats?.deletedUsers}     color="text-red-400"      bg="bg-red-400/10 border-red-400/20"          icon={<FaUserSlash size={14} className="text-red-400"/>} />
-        <StatCard label="With School ID" value={stats?.usersWithSchoolId} color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"        icon={<FaDatabase size={14} className="text-cyan-400"/>} />
-        <StatCard label="Purge Eligible" value={purgeEligible}           color="text-orange-400"   bg="bg-orange-400/10 border-orange-400/20"    icon={<FaTrash size={14} className="text-orange-400"/>} sub="Deleted 90+ days ago" />
+        <StatCard label="Total Users" value={stats?.totalUsers} color="text-white" bg="bg-white/5 border-white/10" icon={<FaUsers size={14} className="text-gray-400" />} />
+        <StatCard label="Deleted Users" value={stats?.deletedUsers} color="text-red-400" bg="bg-red-400/10 border-red-400/20" icon={<FaUserSlash size={14} className="text-red-400" />} />
+        <StatCard label="With School ID" value={stats?.usersWithSchoolId} color="text-cyan-400" bg="bg-cyan-400/10 border-cyan-400/20" icon={<FaDatabase size={14} className="text-cyan-400" />} />
+        <StatCard label="Purge Eligible" value={purgeEligible} color="text-orange-400" bg="bg-orange-400/10 border-orange-400/20" icon={<FaTrash size={14} className="text-orange-400" />} sub="Deleted 90+ days ago" />
       </div>
 
       {/* Data retention policy */}
       <SectionCard title="Data Retention Policy" subtitle="How user data is managed in this system">
         <div className="p-5 space-y-3">
           {[
-            { label: "Retention Period",    value: "90 days after soft-delete",          color: "text-cyan-400"    },
-            { label: "Login Logs",          value: "90 days rolling window",             color: "text-yellow-400"  },
-            { label: "Claim Audit Logs",    value: "Kept indefinitely for compliance",   color: "text-emerald-400" },
-            { label: "Personal Data",       value: "Name, email, school ID stored only for service delivery", color: "text-gray-300" },
-            { label: "Data Shared With",    value: "No third parties — internal use only", color: "text-emerald-400" },
-            { label: "Last Privacy Audit",  value: new Date(stats?.lastAuditDate || "").toLocaleDateString(), color: "text-violet-400" },
+            { label: "Retention Period", value: "90 days after soft-delete", color: "text-cyan-400" },
+            { label: "Login Logs", value: "90 days rolling window", color: "text-yellow-400" },
+            { label: "Claim Audit Logs", value: "Kept indefinitely for compliance", color: "text-emerald-400" },
+            { label: "Personal Data", value: "Name, email, school ID stored only for service delivery", color: "text-gray-300" },
+            { label: "Data Shared With", value: "No third parties — internal use only", color: "text-emerald-400" },
+            { label: "Last Privacy Audit", value: new Date(stats?.lastAuditDate || "").toLocaleDateString(), color: "text-violet-400" },
           ].map((item, i) => (
             <div key={i} className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0">
               <span className="text-gray-400 text-xs">{item.label}</span>
@@ -596,34 +601,34 @@ const DataPrivacyTab = () => {
 // ════════════════════════════════════════════════════════════════════════════════
 const ComplianceTab = () => {
   const { data: compData, isLoading, refetch } = useGetComplianceReportQuery(undefined);
-  const report  = compData?.data;
+  const report = compData?.data;
   const summary = report?.summary;
 
   const handleExportAudit = () => {
     if (!report?.auditLogs?.length) { toast.error("No audit logs to export"); return; }
     downloadCSV(report.auditLogs.map((l: any) => ({
-      ID:           l.id,
-      "Claim ID":   l.claimId,
-      Action:       l.action,
-      "From Status":l.fromStatus,
-      "To Status":  l.toStatus,
+      ID: l.id,
+      "Claim ID": l.claimId,
+      Action: l.action,
+      "From Status": l.fromStatus,
+      "To Status": l.toStatus,
       "Performed By": l.performedBy,
-      Note:         l.note,
-      Date:         new Date(l.createdAt).toLocaleString(),
+      Note: l.note,
+      Date: new Date(l.createdAt).toLocaleString(),
     })), "claim-audit-logs");
     toast.success("Audit logs exported");
   };
 
-  if (isLoading) return <div className="space-y-3">{Array.from({length:4}).map((_,i)=><div key={i} className="h-24 bg-gray-800/60 rounded-2xl animate-pulse"/>)}</div>;
+  if (isLoading) return <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 bg-gray-800/60 rounded-2xl animate-pulse" />)}</div>;
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Total Claims"    value={summary?.totalClaims}       color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"    icon={<FaFileAlt size={14} className="text-cyan-400"/>} />
-        <StatCard label="Approval Rate"   value={`${summary?.approvalRate ?? 0}%`} color="text-emerald-400" bg="bg-emerald-400/10 border-emerald-400/20" icon={<FaCheckCircle size={14} className="text-emerald-400"/>} />
-        <StatCard label="Logins This Month" value={summary?.loginLogsThisMonth} color="text-violet-400" bg="bg-violet-400/10 border-violet-400/20" icon={<FaSignInAlt size={14} className="text-violet-400"/>} />
-        <StatCard label="Fail Rate (Mo.)" value={`${summary?.failRateThisMonth ?? 0}%`} color="text-red-400" bg="bg-red-400/10 border-red-400/20" icon={<FaExclamationTriangle size={14} className="text-red-400"/>} />
+        <StatCard label="Total Claims" value={summary?.totalClaims} color="text-cyan-400" bg="bg-cyan-400/10 border-cyan-400/20" icon={<FaFileAlt size={14} className="text-cyan-400" />} />
+        <StatCard label="Approval Rate" value={`${summary?.approvalRate ?? 0}%`} color="text-emerald-400" bg="bg-emerald-400/10 border-emerald-400/20" icon={<FaCheckCircle size={14} className="text-emerald-400" />} />
+        <StatCard label="Logins This Month" value={summary?.loginLogsThisMonth} color="text-violet-400" bg="bg-violet-400/10 border-violet-400/20" icon={<FaSignInAlt size={14} className="text-violet-400" />} />
+        <StatCard label="Fail Rate (Mo.)" value={`${summary?.failRateThisMonth ?? 0}%`} color="text-red-400" bg="bg-red-400/10 border-red-400/20" icon={<FaExclamationTriangle size={14} className="text-red-400" />} />
       </div>
 
       {/* Monthly audit activity */}
@@ -646,17 +651,17 @@ const ComplianceTab = () => {
                 <XAxis dataKey="month" tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                <Bar dataKey="approved" name="Approved" fill="#34d399" radius={[4,4,0,0]} maxBarSize={28} />
-                <Bar dataKey="rejected" name="Rejected" fill="#f87171" radius={[4,4,0,0]} maxBarSize={28} />
+                <Bar dataKey="approved" name="Approved" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="rejected" name="Rejected" fill="#f87171" radius={[4, 4, 0, 0]} maxBarSize={28} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
         <div className="grid grid-cols-3 border-t border-white/5">
           {[
-            { label: "Approved",      value: summary?.approvedClaims, color: "text-emerald-400" },
-            { label: "Rejected",      value: summary?.rejectedClaims, color: "text-red-400"     },
-            { label: "This Month",    value: summary?.claimsThisMonth,color: "text-cyan-400"    },
+            { label: "Approved", value: summary?.approvedClaims, color: "text-emerald-400" },
+            { label: "Rejected", value: summary?.rejectedClaims, color: "text-red-400" },
+            { label: "This Month", value: summary?.claimsThisMonth, color: "text-cyan-400" },
           ].map((s, i) => (
             <div key={i} className={`px-5 py-4 flex flex-col gap-1 ${i > 0 ? "border-l border-white/5" : ""}`}>
               <p className={`text-2xl font-bold ${s.color}`}>{s.value ?? 0}</p>
@@ -670,14 +675,14 @@ const ComplianceTab = () => {
       <SectionCard title="System Summary" subtitle="Overall platform activity snapshot">
         <div className="p-5 space-y-0">
           {[
-            { label: "Total Found Items Logged",   value: summary?.totalFoundItems,      color: "text-cyan-400"    },
-            { label: "Total Lost Items Reported",  value: summary?.totalLostItems,       color: "text-red-400"     },
-            { label: "Total Claims Submitted",     value: summary?.totalClaims,          color: "text-yellow-400"  },
-            { label: "Claims Approved",            value: summary?.approvedClaims,       color: "text-emerald-400" },
-            { label: "Claims Rejected",            value: summary?.rejectedClaims,       color: "text-red-400"     },
-            { label: "New Users This Month",       value: summary?.newUsersThisMonth,    color: "text-violet-400"  },
-            { label: "Login Attempts This Month",  value: summary?.loginLogsThisMonth,   color: "text-cyan-400"    },
-            { label: "Failed Logins This Month",   value: summary?.failedLoginsThisMonth,color: "text-orange-400"  },
+            { label: "Total Found Items Logged", value: summary?.totalFoundItems, color: "text-cyan-400" },
+            { label: "Total Lost Items Reported", value: summary?.totalLostItems, color: "text-red-400" },
+            { label: "Total Claims Submitted", value: summary?.totalClaims, color: "text-yellow-400" },
+            { label: "Claims Approved", value: summary?.approvedClaims, color: "text-emerald-400" },
+            { label: "Claims Rejected", value: summary?.rejectedClaims, color: "text-red-400" },
+            { label: "New Users This Month", value: summary?.newUsersThisMonth, color: "text-violet-400" },
+            { label: "Login Attempts This Month", value: summary?.loginLogsThisMonth, color: "text-cyan-400" },
+            { label: "Failed Logins This Month", value: summary?.failedLoginsThisMonth, color: "text-orange-400" },
           ].map((item, i) => (
             <div key={i} className="flex items-center justify-between py-3 border-b border-white/[0.04] last:border-0">
               <span className="text-gray-400 text-xs">{item.label}</span>
@@ -825,7 +830,7 @@ const RetentionPolicyTab = () => {
         <div>
           <h4 className="text-rose-400 text-xs font-bold uppercase tracking-wider">Strict Compliance &amp; Permanent Purging</h4>
           <p className="text-gray-300 text-xs mt-1 leading-relaxed text-justify">
-            Unclaimed items and related claims are kept under a **{gracePeriodDays}-day grace period** once soft-deleted. After {gracePeriodDays} days, they are permanently purged from the database every day at 2:00 AM. 
+            Unclaimed items and related claims are kept under a **{gracePeriodDays}-day grace period** once soft-deleted. After {gracePeriodDays} days, they are permanently purged from the database every day at 2:00 AM.
             Before purging, administrators receive automated weekly email digests to allow for override restorations.
           </p>
         </div>
@@ -861,7 +866,7 @@ const RetentionPolicyTab = () => {
       </div>
 
       {/* Table Section */}
-      <SectionCard 
+      <SectionCard
         title={`Pending Deletions Queue (${pendingItems.length})`}
         subtitle={`Soft-deleted records within their ${gracePeriodDays}-day grace period`}
         action={
@@ -885,7 +890,7 @@ const RetentionPolicyTab = () => {
           ) : (
             <div className="divide-y divide-white/5 max-h-[500px] overflow-y-auto custom-scrollbar">
               <div className="hidden md:grid px-5 py-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold gap-4"
-                   style={{ gridTemplateColumns: "1fr 2.5fr 1.5fr 1.2fr" }}>
+                style={{ gridTemplateColumns: "1fr 2.5fr 1.5fr 1.2fr" }}>
                 <div>Type</div>
                 <div>Record Description</div>
                 <div>Grace Period Expiry</div>
@@ -896,15 +901,14 @@ const RetentionPolicyTab = () => {
                 const isUrgent = item.daysRemaining <= 3;
                 return (
                   <div key={item.id} className="grid items-center px-5 py-3.5 gap-4 hover:bg-white/[0.02] transition-colors flex-col md:flex-row animate-fade-in"
-                       style={{ gridTemplateColumns: "1fr 2.5fr 1.5fr 1.2fr" }}>
+                    style={{ gridTemplateColumns: "1fr 2.5fr 1.5fr 1.2fr" }}>
                     <div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                        item.type === "FoundItem" 
-                          ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
-                          : item.type === "LostItem"
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${item.type === "FoundItem"
+                        ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
+                        : item.type === "LostItem"
                           ? "bg-violet-500/10 border-violet-500/20 text-violet-400"
                           : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                      }`}>
+                        }`}>
                         {item.type}
                       </span>
                     </div>
@@ -914,9 +918,8 @@ const RetentionPolicyTab = () => {
                     </div>
                     <div>
                       <p className="text-gray-400 text-xs">{new Date(item.permanentDeletionDate).toLocaleDateString()}</p>
-                      <span className={`text-[10px] font-bold mt-0.5 inline-block ${
-                        isUrgent ? "text-rose-400" : "text-amber-400"
-                      }`}>
+                      <span className={`text-[10px] font-bold mt-0.5 inline-block ${isUrgent ? "text-rose-400" : "text-amber-400"
+                        }`}>
                         ⏳ {item.daysRemaining} days remaining
                       </span>
                     </div>
@@ -998,20 +1001,19 @@ const SheetsReconciliationTab = () => {
       >
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4">
-          <StatCard label="Total Checked"      value={result?.totalChecked ?? 0}              color="text-cyan-400"    bg="bg-cyan-400/10 border-cyan-400/20"    icon={<FaDatabase size={14} className="text-cyan-400" />} />
-          <StatCard label="Discrepancies"      value={result?.discrepancies?.length ?? 0}     color={hasDiscrepancies ? "text-red-400" : "text-emerald-400"} bg={hasDiscrepancies ? "bg-red-400/10 border-red-400/20" : "bg-emerald-400/10 border-emerald-400/20"} icon={<FaExclamationTriangle size={14} className={hasDiscrepancies ? "text-red-400" : "text-emerald-400"} />} />
-          <StatCard label="Lost Missing"       value={result?.lostItemsDiscrepancies ?? 0}   color="text-red-400"     bg="bg-red-400/10 border-red-400/20"     icon={<FaTimesCircle size={14} className="text-red-400" />} />
-          <StatCard label="Found Missing"      value={result?.foundItemsDiscrepancies ?? 0}  color="text-orange-400"  bg="bg-orange-400/10 border-orange-400/20" icon={<FaCheckCircle size={14} className="text-orange-400" />} />
+          <StatCard label="Total Checked" value={result?.totalChecked ?? 0} color="text-cyan-400" bg="bg-cyan-400/10 border-cyan-400/20" icon={<FaDatabase size={14} className="text-cyan-400" />} />
+          <StatCard label="Discrepancies" value={result?.discrepancies?.length ?? 0} color={hasDiscrepancies ? "text-red-400" : "text-emerald-400"} bg={hasDiscrepancies ? "bg-red-400/10 border-red-400/20" : "bg-emerald-400/10 border-emerald-400/20"} icon={<FaExclamationTriangle size={14} className={hasDiscrepancies ? "text-red-400" : "text-emerald-400"} />} />
+          <StatCard label="Lost Missing" value={result?.lostItemsDiscrepancies ?? 0} color="text-red-400" bg="bg-red-400/10 border-red-400/20" icon={<FaTimesCircle size={14} className="text-red-400" />} />
+          <StatCard label="Found Missing" value={result?.foundItemsDiscrepancies ?? 0} color="text-orange-400" bg="bg-orange-400/10 border-orange-400/20" icon={<FaCheckCircle size={14} className="text-orange-400" />} />
         </div>
       </SectionCard>
 
       {/* Status Banner */}
       {!isLoading && (
-        <div className={`rounded-xl border p-4 flex items-center gap-3 ${
-          hasDiscrepancies
-            ? "bg-red-500/5 border-red-500/20"
-            : "bg-emerald-500/5 border-emerald-500/20"
-        }`}>
+        <div className={`rounded-xl border p-4 flex items-center gap-3 ${hasDiscrepancies
+          ? "bg-red-500/5 border-red-500/20"
+          : "bg-emerald-500/5 border-emerald-500/20"
+          }`}>
           {hasDiscrepancies
             ? <FaExclamationTriangle className="text-red-400 shrink-0" size={16} />
             : <FaCheckCircle className="text-emerald-400 shrink-0" size={16} />}
@@ -1075,11 +1077,10 @@ const SheetsReconciliationTab = () => {
                         className="accent-cyan-500 w-3.5 h-3.5 cursor-pointer" />
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                        item.type === "LOST"
-                          ? "bg-red-500/10 text-red-400 border-red-500/20"
-                          : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      }`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${item.type === "LOST"
+                        ? "bg-red-500/10 text-red-400 border-red-500/20"
+                        : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        }`}>
                         {item.type}
                       </span>
                     </td>
@@ -1116,8 +1117,184 @@ const SheetsReconciliationTab = () => {
 
       {/* Loading */}
       {isLoading && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{Array.from({length:4}).map((_,i)=><div key={i} className="h-20 bg-gray-800/60 rounded-2xl animate-pulse"/>)}</div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 bg-gray-800/60 rounded-2xl animate-pulse" />)}</div>
       )}
+    </div>
+  );
+};
+
+// ════════════════════════════════════════════════════════════════════════════════
+// TAB: POINT ABUSE MONITORING
+// ════════════════════════════════════════════════════════════════════════════════
+const PointAbuseTab = () => {
+  const { data: flaggedData, isLoading: loadingFlags, refetch: refetchFlags } = useGetFlaggedUsersQuery(undefined);
+  const { data: auditData, isLoading: loadingAudit, refetch: refetchAudit } = useGetSystemAuditLogsQuery(undefined);
+  const [clearFlag] = useClearFlagMutation();
+
+  const [processingUserId, setProcessingUserId] = useState<string | null>(null);
+
+  const flaggedUsers = flaggedData?.data || [];
+  const auditLogs = auditData?.data || [];
+
+  // Filter security-related audit logs
+  const dailyCapHits = auditLogs.filter((log: any) => log.action === "DAILY_CAP_HIT");
+  const suspiciousActivity = auditLogs.filter((log: any) => log.action === "SUSPICIOUS_POINTS_ACTIVITY");
+
+  // Stats
+  const totalFlagged = flaggedUsers.length;
+  const totalCapHitsToday = dailyCapHits.filter((log: any) => {
+    const logDate = new Date(log.createdAt);
+    const today = new Date();
+    return logDate.toDateString() === today.toDateString();
+  }).length;
+  const totalSuspiciousToday = suspiciousActivity.filter((log: any) => {
+    const logDate = new Date(log.createdAt);
+    const today = new Date();
+    return logDate.toDateString() === today.toDateString();
+  }).length;
+
+  const handleClearFlag = async (userId: string, userName: string) => {
+    if (!confirm(`Clear flag for ${userName}? This will remove all security flags.`)) return;
+
+    setProcessingUserId(userId);
+    try {
+      await clearFlag(userId).unwrap();
+      toast.success(`Flag cleared for ${userName}`);
+      refetchFlags();
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to clear flag");
+    } finally {
+      setProcessingUserId(null);
+    }
+  };
+
+  const handleRefresh = () => {
+    refetchFlags();
+    refetchAudit();
+  };
+
+  if (loadingFlags || loadingAudit) return (
+    <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-32 bg-gray-800/60 rounded-2xl animate-pulse" />)}</div>
+  );
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-white text-sm font-semibold">Point Abuse Detection</h3>
+          <p className="text-gray-500 text-xs mt-0.5">Monitor suspicious activity and enforce daily caps</p>
+        </div>
+        <button onClick={handleRefresh}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 hover:text-white text-xs rounded-lg transition-all">
+          <FaSync size={9} /> Refresh
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatCard label="Flagged Users" value={totalFlagged} color="text-rose-400" bg="bg-rose-400/10 border-rose-400/20" icon={<FaExclamationTriangle size={14} className="text-rose-400" />} />
+        <StatCard label="Daily Cap Hits (Today)" value={totalCapHitsToday} color="text-amber-400" bg="bg-amber-400/10 border-amber-400/20" icon={<FaBan size={14} className="text-amber-400" />} />
+        <StatCard label="Suspicious Activity (Today)" value={totalSuspiciousToday} color="text-orange-400" bg="bg-orange-400/10 border-orange-400/20" icon={<FaChartLine size={14} className="text-orange-400" />} />
+        <StatCard label="Total Security Events" value={dailyCapHits.length + suspiciousActivity.length} color="text-cyan-400" bg="bg-cyan-400/10 border-cyan-400/20" icon={<FaShieldAlt size={14} className="text-cyan-400" />} />
+      </div>
+
+      {/* Flagged Users */}
+      <SectionCard title="Flagged Users" subtitle="Users detected with suspicious point-earning patterns (3× campus average)">
+        {flaggedUsers.length === 0 ? (
+          <div className="py-12 text-center">
+            <FaCheckCircle size={28} className="text-emerald-400/30 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">No flagged users - All clear!</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-white/5">
+            {flaggedUsers.map((user: any) => (
+              <div key={user.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-600 to-orange-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  {user.name?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-white text-xs font-semibold truncate">{user.name || "Unknown"}</p>
+                    <span className="text-[9px] font-mono text-gray-500">{user.schoolId || "N/A"}</span>
+                    <span className="text-[9px] text-gray-600">•</span>
+                    <span className="text-[9px] text-gray-500">{user.totalPoints} pts</span>
+                  </div>
+                  <p className="text-[10px] text-amber-400 mt-0.5 truncate">{user.flagReason || "No reason"}</p>
+                  <p className="text-[10px] text-gray-600 mt-0.5">Flagged: {user.flaggedAt ? format(new Date(user.flaggedAt), "MMM d, HH:mm") : "N/A"}</p>
+                </div>
+                <button onClick={() => handleClearFlag(user.id, user.name)} disabled={processingUserId === user.id}
+                  className="px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold rounded-lg transition-all disabled:opacity-50">
+                  {processingUserId === user.id ? "Clearing..." : "Clear"}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      {/* Recent Daily Cap Hits */}
+      <SectionCard title="Recent Daily Cap Hits" subtitle="Users who hit the 10 point awards/day limit">
+        {dailyCapHits.length === 0 ? (
+          <div className="py-8 text-center text-gray-600 text-sm">No daily cap hits recorded</div>
+        ) : (
+          <div className="divide-y divide-white/5 max-h-64 overflow-y-auto">
+            {dailyCapHits.slice(0, 15).map((log: any) => {
+              let details: any = {};
+              try { details = JSON.parse(log.newData || "{}"); } catch { }
+              return (
+                <div key={log.id} className="px-5 py-2.5 hover:bg-white/[0.02] transition-colors">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <FaUser size={10} className="text-gray-600 shrink-0" />
+                      <span className="text-[11px] text-gray-400 truncate">User: {log.entityId?.slice(0, 8)}...</span>
+                      <span className="text-[9px] text-gray-700">•</span>
+                      <span className="text-[9px] text-gray-600">{details.reason || "Unknown"}</span>
+                    </div>
+                    <span className="text-[9px] text-gray-600 shrink-0">{format(new Date(log.createdAt), "MMM d, HH:mm")}</span>
+                  </div>
+                  <div className="ml-4 text-[9px] text-amber-400 mt-0.5">Cap: {details.todayCount}/{details.cap} awards</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </SectionCard>
+
+      {/* Recent Suspicious Activity */}
+      <SectionCard title="Recent Suspicious Activity" subtitle="Automated detection of abnormal point-earning patterns">
+        {suspiciousActivity.length === 0 ? (
+          <div className="py-8 text-center text-gray-600 text-sm">No suspicious activity detected</div>
+        ) : (
+          <div className="divide-y divide-white/5 max-h-64 overflow-y-auto">
+            {suspiciousActivity.slice(0, 15).map((log: any) => {
+              let details: any = {};
+              try { details = JSON.parse(log.newData || "{}"); } catch { }
+              return (
+                <div key={log.id} className="px-5 py-2.5 hover:bg-white/[0.02] transition-colors">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <FaExclamationTriangle size={10} className="text-orange-400 shrink-0" />
+                      <span className="text-[11px] text-gray-400 truncate">User: {log.entityId?.slice(0, 8)}...</span>
+                    </div>
+                    <span className="text-[9px] text-gray-600 shrink-0">{format(new Date(log.createdAt), "MMM d, HH:mm")}</span>
+                  </div>
+                  <div className="ml-4 space-y-0.5 mt-1">
+                    <p className="text-[9px] text-orange-400">{details.reason || "Suspicious pattern"}</p>
+                    <div className="flex items-center gap-2 text-[9px] text-gray-600">
+                      <span>Daily: {details.dailyTotal} pts</span>
+                      <span>•</span>
+                      <span>Avg: {details.campusAverage} pts</span>
+                      <span>•</span>
+                      <span>Multiplier: {details.multiplier}×</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 };
@@ -1131,31 +1308,33 @@ const SecurityCompliance = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
       {/* Tabs */}
-      <div className="grid grid-cols-6 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
-      {TABS.map(tab => {
-        const Icon   = tab.icon;
-        const active = activeTab === tab.id;
-        return (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            title={tab.label}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-[11px] font-medium transition-colors w-full focus:outline-none select-none
+      <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-7 bg-gray-900 border border-white/5 rounded-xl p-0.5 gap-0.5">
+        {TABS.map(tab => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              title={tab.label}
+              className={`flex items-center justify-center gap-1 px-1.5 sm:px-2 py-2 rounded-xl text-[9px] sm:text-[10px] font-medium transition-colors w-full focus:outline-none select-none
               ${active
-                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                : "text-gray-500 hover:text-gray-200 hover:bg-white/5 border border-transparent"
-              }`}>
-            <Icon size={10} className={`transition-colors shrink-0 ${active ? "text-cyan-400" : "text-gray-600"}`} />
-            <span className="hidden sm:inline">{tab.label}</span>
-          </button>
-        );
-      })}
-    </div>
+                  ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                  : "text-gray-500 hover:text-gray-200 hover:bg-white/5 border border-transparent"
+                }`}>
+              <Icon size={8} className={`transition-colors shrink-0 ${active ? "text-cyan-400" : "text-gray-600"}`} />
+              <span className="hidden sm:inline truncate">{tab.label}</span>
+              <span className="sm:hidden truncate text-[8px]">{tab.label.split(' ')[0]}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      {activeTab === "monitor"    && <SecurityMonitorTab />}
-      {activeTab === "access"     && <AccessControlTab />}
-      {activeTab === "privacy"    && <DataPrivacyTab />}
+      {activeTab === "monitor" && <SecurityMonitorTab />}
+      {activeTab === "pointabuse" && <PointAbuseTab />}
+      {activeTab === "access" && <AccessControlTab />}
+      {activeTab === "privacy" && <DataPrivacyTab />}
       {activeTab === "compliance" && <ComplianceTab />}
-      {activeTab === "retention"  && <RetentionPolicyTab />}
-      {activeTab === "reconcile"  && <SheetsReconciliationTab />}
+      {activeTab === "retention" && <RetentionPolicyTab />}
+      {activeTab === "reconcile" && <SheetsReconciliationTab />}
 
     </div>
   );

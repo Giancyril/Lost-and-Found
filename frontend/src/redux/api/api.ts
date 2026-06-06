@@ -591,6 +591,14 @@ const api = baseApi.injectEndpoints({
       query: (id: string) => ({ url: `/admin/boost-events/${id}/deactivate`, method: "PUT" }),
       invalidatesTags: ["boostEvents"] as any,
     }),
+    getFlaggedUsers: builder.query({
+      query: () => ({ url: "/admin/flagged-users", method: "GET" }),
+      providesTags: ["flaggedUsers"] as any,
+    }),
+    clearFlag: builder.mutation({
+      query: (userId: string) => ({ url: `/admin/flagged-users/${userId}/clear`, method: "PUT" }),
+      invalidatesTags: ["flaggedUsers"] as any,
+    }),
 
     // ── Student masterlist lookup ─────────────────────────────────────────────
     // Used by BarcodeScannerModal, FoundItemsPage, SingleFoundItem,
@@ -785,6 +793,8 @@ export const {
   useGetBoostEventsQuery,
   useCreateBoostEventMutation,
   useDeactivateBoostEventMutation,
+  useGetFlaggedUsersQuery,
+  useClearFlagMutation,
   // sightings
   useGetSightingsQuery,
   useCreateSightingMutation,

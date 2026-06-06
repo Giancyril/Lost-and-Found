@@ -176,6 +176,10 @@ router.get("/admin/boost-events", auth(), pointsController.getBoostEvents);
 router.post("/admin/boost-events", auth(), pointsController.createBoostEvent);
 router.put("/admin/boost-events/:id/deactivate", auth(), pointsController.deactivateBoostEvent);
 
+// Admin flagged users management
+router.get("/admin/flagged-users", auth(), pointsController.getFlaggedUsers);
+router.put("/admin/flagged-users/:userId/clear", auth(), pointsController.clearFlag);
+
 //////////////////////////////////////////////// achievements //////////////////////////////////////////////
 router.get("/achievements", auth(), achievementController.getAchievements);
 router.get("/achievements/my", auth(), achievementController.getMyAchievements);

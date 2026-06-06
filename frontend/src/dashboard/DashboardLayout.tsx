@@ -87,7 +87,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/users": { title: "Accounts", subtitle: "View and manage all registered system users." },
   "/dashboard/categories": { title: "Categories", subtitle: "Create and organize item categories for better sorting." },
   "/dashboard/settings": { title: "Settings", subtitle: "Configure system preferences and account settings." },
-  "/dashboard/security": { title: "Security", subtitle: "Monitor login activity, access control, and compliance reports." },
+  "/dashboard/security": { title: "Security", subtitle: "Monitor login activity, access control, compliance reports, and point abuse detection." },
   "/dashboard/audit-logs": { title: "Audit Logs", subtitle: "Strict, un-deletable record of all administrative and system actions." },
   "/dashboard/chat": { title: "Messenger", subtitle: "Real-time communication hub for claims and support." },
   "/dashboard/leaderboard": { title: "Leaderboard", subtitle: "View top community contributors ranked by points." },

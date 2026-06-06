@@ -6,95 +6,227 @@ import { StatusCodes } from "http-status-codes";
 import { calculateStreak } from "../../utils/achievementService";
 import { startOfDay, startOfWeek, startOfMonth } from "date-fns";
 
-// ── Point values per action ───────────────────────────────────────────────────
 export const POINT_VALUES: Record<string, number> = {
-  FOUND_ITEM_REPORTED: 50,
-  CLAIM_APPROVED:      30,
-  HELPFUL_COMMENT:     10,
-  STREAK_BONUS:        50,
-  STREAK_MILESTONE_7:  100,
-  STREAK_MILESTONE_30: 300,
-  STREAK_MILESTONE_100:1000,
+  FOUND_ITEM_REPORTED:  50,
+  CLAIM_APPROVED:       30,
+  HELPFUL_COMMENT:      10,
+  STREAK_BONUS:         50,
+  STREAK_MILESTONE_7:   100,
+  STREAK_MILESTONE_30:  300,
+  STREAK_MILESTONE_100: 1000,
 };
 
-// ── Get active boost multiplier ─────────────────────────────────────────────── 
+// ── Daily cap — max positive award transactions per user per day ──────────────
+const DAILY_AWARD_CAP = 10;
+
+// ── Suspicious threshold — flag if daily total exceeds N × campus average ─────
+const SUSPICIOUS_MULTIPLIER = 3;
+
+// ── Get active boost multiplier ───────────────────────────────────────────────
 export const getActiveBoostMultiplier = async (): Promise<{ multiplier: number; event: any | null }> => {
   const now = new Date();
   const event = await prisma.xPBoostEvent.findFirst({
-    where: {
-      isActive:  true,
-      startDate: { lte: now },
-      endDate:   { gte: now },
-    },
+    where: { isActive: true, startDate: { lte: now }, endDate: { gte: now } },
   });
   return { multiplier: event?.multiplier ?? 1.0, event };
 };
 
-// ── Award points to a user (with boost support) ───────────────────────────────
+// ── Compute today's average points awarded across all active users ────────────
+// Used to set a dynamic suspicious threshold rather than a hardcoded number.
+const getDailyAveragePoints = async (): Promise<number> => {
+  const today = startOfDay(new Date());
+  const result = await prisma.points.aggregate({
+    where:  { createdAt: { gte: today }, amount: { gt: 0 } },
+    _sum:   { amount: true },
+    _count: { userId: true },
+  });
+
+  const totalPoints    = (result._sum as any)?.amount  ?? 0;
+  const distinctResult = await prisma.points.groupBy({
+    by:    ["userId"],
+    where: { createdAt: { gte: today }, amount: { gt: 0 } },
+  });
+  const activeUsers = distinctResult.length;
+
+  if (activeUsers === 0) return 0;
+  return totalPoints / activeUsers;
+};
+
+// ── Flag a user for suspicious activity ───────────────────────────────────────
+const flagUser = async (
+  userId:       string,
+  reason:       string,
+  dailyTotal:   number,
+  avgPoints:    number,
+) => {
+  // Only flag once — don't spam if already flagged today
+  const user = await prisma.user.findUnique({
+    where:  { id: userId },
+    select: { isFlagged: true, flaggedAt: true, name: true, username: true },
+  });
+
+  const alreadyFlaggedToday =
+    user?.isFlagged &&
+    user?.flaggedAt &&
+    startOfDay(user.flaggedAt).getTime() === startOfDay(new Date()).getTime();
+
+  if (alreadyFlaggedToday) return;
+
+  await prisma.user.update({
+    where: { id: userId },
+    data:  {
+      isFlagged:  true,
+      flagReason: reason,
+      flaggedAt:  new Date(),
+    },
+  });
+
+  // Write to SystemAuditLog so admins can see it in the audit panel
+  await prisma.systemAuditLog.create({
+    data: {
+      entityType:   "User",
+      entityId:     userId,
+      action:       "SUSPICIOUS_POINTS_ACTIVITY",
+      newData:      JSON.stringify({
+        dailyTotal,
+        campusAverage: Math.round(avgPoints),
+        multiplier:    (dailyTotal / Math.max(avgPoints, 1)).toFixed(2),
+        reason,
+        flaggedAt:     new Date().toISOString(),
+      }),
+      performedBy:  "System",
+      performedById: null,
+    },
+  });
+
+  console.warn(
+    `[Security] User ${userId} flagged — daily total: ${dailyTotal} pts, ` +
+    `campus avg: ${Math.round(avgPoints)} pts, multiplier: ${(dailyTotal / Math.max(avgPoints, 1)).toFixed(2)}×`
+  );
+};
+
+// ── Award points (with daily cap + suspicious activity detection) ─────────────
 const award = async (userId: string, reason: string, refId?: string) => {
   const baseAmount = POINT_VALUES[reason];
   if (!baseAmount) {
     throw new AppError(StatusCodes.BAD_REQUEST, `Unknown point reason: ${reason}`);
   }
 
-  // ✅ CRITICAL SECURITY: Prevent points farming
-  // Check if points have already been awarded for this specific action
+  // ── Duplicate guard (existing) ────────────────────────────────────────────
   if (refId) {
     const existingAward = await prisma.points.findFirst({
-      where: {
-        userId,
-        reason,
-        refId,
-        amount: { gt: 0 }, // Only check positive awards, not revocations
-      },
+      where: { userId, reason, refId, amount: { gt: 0 } },
     });
 
     if (existingAward) {
-      console.warn(`[Points] Duplicate award attempt blocked: ${reason} for refId ${refId} by user ${userId}`);
-      return existingAward; // Return existing record, don't award again
+      console.warn(`[Points] Duplicate blocked: ${reason} refId=${refId} user=${userId}`);
+      return existingAward;
     }
   }
 
-  // Apply boost multiplier (streak bonuses are NOT boosted — only actions are)
+  const today = startOfDay(new Date());
+
+  // ── Daily cap check ───────────────────────────────────────────────────────
+  // Streak bonuses and milestone rewards are exempt — they're already
+  // idempotent via refId and capping them would break streak incentives.
   const isStreakReason = reason.startsWith("STREAK");
+  if (!isStreakReason) {
+    const todayCount = await prisma.points.count({
+      where: {
+        userId,
+        createdAt: { gte: today },
+        amount:    { gt: 0 },
+      },
+    });
+
+    if (todayCount >= DAILY_AWARD_CAP) {
+      console.warn(`[Points] Daily cap hit — user=${userId} already has ${todayCount} positive awards today`);
+      
+      // Write a soft-block audit entry so admins can see the cap firing
+      await prisma.systemAuditLog.create({
+        data: {
+          entityType:    "User",
+          entityId:      userId,
+          action:        "DAILY_CAP_HIT",
+          newData:       JSON.stringify({ reason, refId, todayCount, cap: DAILY_AWARD_CAP }),
+          performedBy:   "System",
+          performedById: null,
+        },
+      });
+
+      return null; // silent block — user sees nothing
+    }
+  }
+
+  // ── Apply boost multiplier ────────────────────────────────────────────────
   let amount = baseAmount;
   if (!isStreakReason) {
     const { multiplier } = await getActiveBoostMultiplier();
     amount = Math.round(baseAmount * multiplier);
   }
 
-  // Create the Points record and bump totalPoints atomically
+  // ── Write the award ───────────────────────────────────────────────────────
   const [pointRecord] = await prisma.$transaction([
-    prisma.points.create({
-      data: { userId, amount, reason, refId },
-    }),
+    prisma.points.create({ data: { userId, amount, reason, refId } }),
     prisma.user.update({
       where: { id: userId },
       data:  { totalPoints: { increment: amount } },
     }),
   ]);
 
+  // ── Suspicious activity check (runs after award, non-blocking) ───────────
+  // Only check for action-based awards, not streak bonuses.
+  if (!isStreakReason) {
+    // Fire-and-forget — don't await so it never slows down the response
+    checkSuspiciousActivity(userId).catch(err =>
+      console.error("[Security] Suspicious activity check failed:", err)
+    );
+  }
+
   return pointRecord;
 };
 
-// ── Revoke points (e.g. claim rejected after approval) ───────────────────────
+// ── Check if a user's daily total is suspiciously high ───────────────────────
+const checkSuspiciousActivity = async (userId: string) => {
+  const today = startOfDay(new Date());
+
+  // Sum all positive points this user earned today
+  const userDailyResult = await prisma.points.aggregate({
+    where:  { userId, createdAt: { gte: today }, amount: { gt: 0 } },
+    _sum:   { amount: true },
+  });
+  const userDailyTotal = (userDailyResult._sum as any)?.amount ?? 0;
+
+  // Get campus-wide average for today
+  const avgPoints = await getDailyAveragePoints();
+
+  // Skip flagging if average is too low to be meaningful
+  // (e.g. early morning when only 1–2 users have earned anything)
+  if (avgPoints < 30) return;
+
+  const threshold = avgPoints * SUSPICIOUS_MULTIPLIER;
+  if (userDailyTotal >= threshold) {
+    await flagUser(
+      userId,
+      `Earned ${userDailyTotal} pts today — ${SUSPICIOUS_MULTIPLIER}× campus average of ${Math.round(avgPoints)} pts`,
+      userDailyTotal,
+      avgPoints,
+    );
+  }
+};
+
+// ── Revoke points ─────────────────────────────────────────────────────────────
 const revoke = async (userId: string, reason: string, refId?: string) => {
   const amount = POINT_VALUES[reason];
   if (!amount) return;
 
   await prisma.$transaction([
-    prisma.points.create({
-      data: { userId, amount: -amount, reason: `REVOKED_${reason}`, refId },
-    }),
-    prisma.user.update({
-      where: { id: userId },
-      data:  { totalPoints: { decrement: amount } },
-    }),
+    prisma.points.create({ data: { userId, amount: -amount, reason: `REVOKED_${reason}`, refId } }),
+    prisma.user.update({ where: { id: userId }, data: { totalPoints: { decrement: amount } } }),
   ]);
 };
 
-// ── Record login + award streak ─────────────────────────────────────────────── 
-// Call this from your auth.controller login handler
+// ── Record login streak ───────────────────────────────────────────────────────
 export const recordLoginStreak = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where:  { id: userId },
@@ -108,14 +240,8 @@ export const recordLoginStreak = async (userId: string) => {
 
   let newStreak = 1;
   if (lastLogin) {
-    if (lastLogin.getTime() === today.getTime()) {
-      // Already logged in today — no change
-      return;
-    } else if (lastLogin.getTime() === yesterday.getTime()) {
-      // Consecutive day — increment
-      newStreak = user.loginStreak + 1;
-    }
-    // else: streak broken — reset to 1
+    if (lastLogin.getTime() === today.getTime()) return; // already logged in today
+    if (lastLogin.getTime() === yesterday.getTime()) newStreak = user.loginStreak + 1;
   }
 
   await prisma.user.update({
@@ -123,61 +249,44 @@ export const recordLoginStreak = async (userId: string) => {
     data:  { loginStreak: newStreak, lastLoginDate: new Date() },
   });
 
-  // Award streak milestone XP (idempotent via refId)
   const milestones: Array<[number, string]> = [
     [7,   "STREAK_MILESTONE_7"],
     [30,  "STREAK_MILESTONE_30"],
     [100, "STREAK_MILESTONE_100"],
   ];
+
   for (const [days, reason] of milestones) {
     if (newStreak === days) {
       await award(userId, reason, `streak-${days}-${today.toISOString().split("T")[0]}`);
     }
   }
 
-  // Award daily streak bonus (≥3 days)
   if (newStreak >= 3) {
     const todayStr = today.toISOString().split("T")[0];
     await award(userId, "STREAK_BONUS", `streak-daily-${todayStr}`);
   }
 };
 
-// ── Weighted leaderboard score (decay older points) ─────────────────────────── 
-// Points from the last 30 days count fully.
-// Points 31–90 days old count at 70%.
-// Points older than 90 days count at 40%.
+// ── Weighted score (for freshness leaderboard) ────────────────────────────────
 const getWeightedScore = async (userId: string): Promise<number> => {
   const now = new Date();
-  const d30  = new Date(now.getTime() - 30  * 86_400_000);
-  const d90  = new Date(now.getTime() - 90  * 86_400_000);
+  const d30 = new Date(now.getTime() - 30 * 86_400_000);
+  const d90 = new Date(now.getTime() - 90 * 86_400_000);
 
   const [recent, mid, old] = await Promise.all([
-    prisma.points.aggregate({
-      where:   { userId, amount: { gt: 0 }, createdAt: { gte: d30 } },
-      _sum:    { amount: true },
-    }),
-    prisma.points.aggregate({
-      where:   { userId, amount: { gt: 0 }, createdAt: { gte: d90, lt: d30 } },
-      _sum:    { amount: true },
-    }),
-    prisma.points.aggregate({
-      where:   { userId, amount: { gt: 0 }, createdAt: { lt: d90 } },
-      _sum:    { amount: true },
-    }),
+    prisma.points.aggregate({ where: { userId, amount: { gt: 0 }, createdAt: { gte: d30 } }, _sum: { amount: true } }),
+    prisma.points.aggregate({ where: { userId, amount: { gt: 0 }, createdAt: { gte: d90, lt: d30 } }, _sum: { amount: true } }),
+    prisma.points.aggregate({ where: { userId, amount: { gt: 0 }, createdAt: { lt: d90 } }, _sum: { amount: true } }),
   ]);
 
-  const recentAmount = (recent._sum as any)?.amount || 0;
-  const midAmount = (mid._sum as any)?.amount || 0;
-  const oldAmount = (old._sum as any)?.amount || 0;
-
   return (
-    recentAmount * 1.0 +
-    midAmount * 0.7 +
-    oldAmount * 0.4
+    ((recent._sum as any)?.amount || 0) * 1.0 +
+    ((mid._sum as any)?.amount || 0) * 0.7 +
+    ((old._sum as any)?.amount || 0) * 0.4
   );
 };
 
-// ── Get points history for the logged-in user ─────────────────────────────────
+// ── Get my points ─────────────────────────────────────────────────────────────
 const getMyPoints = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where:  { id: userId },
@@ -204,28 +313,22 @@ const getMyPoints = async (userId: string) => {
   };
 };
 
-// ── Leaderboard (all-time, weighted, weekly, monthly) ────────────────────────
+// ── Leaderboard ───────────────────────────────────────────────────────────────
 const getLeaderboard = async (type: "alltime" | "weighted" | "weekly" | "monthly" = "alltime") => {
   if (type === "alltime") {
     return prisma.user.findMany({
       where:   { totalPoints: { gt: 0 }, role: "USER", isDeleted: false },
       orderBy: { totalPoints: "desc" },
       take:    50,
-      select: {
-        id:           true,
-        name:         true,
-        totalPoints:  true,
-        userImg:      true,
-        schoolId:     true,
-        loginStreak:  true,
-        rankSnapshot: true,
+      select:  {
+        id: true, name: true, totalPoints: true,
+        userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true,
       },
     });
   }
 
-  // For weekly/monthly: sum points in date range
   const since = type === "weekly"
-    ? startOfWeek(new Date(), { weekStartsOn: 1 })   // Monday
+    ? startOfWeek(new Date(), { weekStartsOn: 1 })
     : startOfMonth(new Date());
 
   const rows = await prisma.points.groupBy({
@@ -241,94 +344,32 @@ const getLeaderboard = async (type: "alltime" | "weighted" | "weekly" | "monthly
   const userIds = rows.map((r: any) => r.userId);
   const users   = await prisma.user.findMany({
     where:  { id: { in: userIds }, isDeleted: false },
-    select: { id: true, name: true, totalPoints: true, userImg: true, schoolId: true, loginStreak: true },
+    select: { id: true, name: true, totalPoints: true, userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true },
   });
   const userMap = Object.fromEntries(users.map(u => [u.id, u]));
 
   return rows
     .filter((r: any) => userMap[r.userId])
-    .map((r: any) => ({
-      ...userMap[r.userId],
-      periodPoints: r._sum?.amount ?? 0,
-    }));
+    .map((r: any) => ({ ...userMap[r.userId], periodPoints: (r._sum as any)?.amount ?? 0 }));
 };
 
-// ── Weighted leaderboard (for "freshness" tab) ──────────────────────────────── 
+// ── Weighted leaderboard ──────────────────────────────────────────────────────
 const getWeightedLeaderboard = async () => {
   const users = await prisma.user.findMany({
     where:   { role: "USER", isDeleted: false, totalPoints: { gt: 0 } },
-    select:  { id: true, name: true, totalPoints: true, userImg: true, schoolId: true, loginStreak: true },
+    select:  { id: true, name: true, totalPoints: true, userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true },
     take:    100,
     orderBy: { totalPoints: "desc" },
   });
 
   const withScores = await Promise.all(
-    users.map(async u => ({
-      ...u,
-      weightedScore: Math.round(await getWeightedScore(u.id)),
-    }))
+    users.map(async u => ({ ...u, weightedScore: Math.round(await getWeightedScore(u.id)) }))
   );
 
-  return withScores
-    .sort((a, b) => b.weightedScore - a.weightedScore)
-    .slice(0, 50);
+  return withScores.sort((a, b) => b.weightedScore - a.weightedScore).slice(0, 50);
 };
 
-// ── Boost event management (admin) ────────────────────────────────────────────
-const createBoostEvent = async (data: {
-  name: string;
-  multiplier: number;
-  startDate: Date;
-  endDate: Date;
-}) => {
-  return prisma.xPBoostEvent.create({ data });
-};
-
-const getBoostEvents = async () => {
-  return prisma.xPBoostEvent.findMany({
-    orderBy: { createdAt: "desc" },
-    take:    20,
-  });
-};
-
-const deactivateBoostEvent = async (id: string) => {
-  return prisma.xPBoostEvent.update({
-    where: { id },
-    data:  { isActive: false },
-  });
-};
-
-// ── Save today's ranks as tomorrow's "yesterday" snapshot ─────────────────────
-// Call this once daily via a cron job or on server startup
-export const snapshotRanks = async () => {
-  const users = await prisma.user.findMany({
-    where:   { role: "USER", isDeleted: false, totalPoints: { gt: 0 } },
-    orderBy: { totalPoints: "desc" },
-    select:  { id: true },
-  });
-
-  // Batch update in chunks of 50 to avoid query overload
-  const chunks = [];
-  for (let i = 0; i < users.length; i += 50) {
-    chunks.push(users.slice(i, i + 50));
-  }
-
-  for (const chunk of chunks) {
-    await Promise.all(
-      chunk.map((u, chunkIdx) => {
-        const rank = users.findIndex(x => x.id === u.id) + 1;
-        return prisma.user.update({
-          where: { id: u.id },
-          data:  { rankSnapshot: rank },
-        });
-      })
-    );
-  }
-
-  console.log(`[Snapshot] Ranks saved for ${users.length} users`);
-};
-
-// ── Get a user's exact rank even outside top 50 ───────────────────────────────
+// ── Get my exact rank (works outside top 50) ──────────────────────────────────
 const getMyRank = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where:  { id: userId },
@@ -338,22 +379,63 @@ const getMyRank = async (userId: string) => {
   if (!user) return null;
 
   const rank = await prisma.user.count({
-    where: {
-      totalPoints: { gt: user.totalPoints },
-      role: "USER",
-      isDeleted: false,
-    },
+    where: { totalPoints: { gt: user.totalPoints }, role: "USER", isDeleted: false },
   }) + 1;
 
   const delta = user.rankSnapshot != null ? user.rankSnapshot - rank : null;
 
-  return {
-    rank,
-    totalPoints:  user.totalPoints,
-    name:         user.name,
-    rankSnapshot: user.rankSnapshot,
-    delta, // positive = moved up, negative = moved down, 0 = same, null = no snapshot yet
-  };
+  return { rank, totalPoints: user.totalPoints, name: user.name, rankSnapshot: user.rankSnapshot, delta };
+};
+
+// ── Snapshot today's ranks ────────────────────────────────────────────────────
+export const snapshotRanks = async () => {
+  const users = await prisma.user.findMany({
+    where:   { role: "USER", isDeleted: false, totalPoints: { gt: 0 } },
+    orderBy: { totalPoints: "desc" },
+    select:  { id: true },
+  });
+
+  for (let i = 0; i < users.length; i++) {
+    await prisma.user.update({
+      where: { id: users[i].id },
+      data:  { rankSnapshot: i + 1 },
+    });
+  }
+
+  console.log(`[Snapshot] Ranks saved for ${users.length} users`);
+};
+
+// ── Boost event management ────────────────────────────────────────────────────
+const createBoostEvent = async (data: { name: string; multiplier: number; startDate: Date; endDate: Date }) => {
+  return prisma.xPBoostEvent.create({ data });
+};
+
+const getBoostEvents = async () => {
+  return prisma.xPBoostEvent.findMany({ orderBy: { createdAt: "desc" }, take: 20 });
+};
+
+const deactivateBoostEvent = async (id: string) => {
+  return prisma.xPBoostEvent.update({ where: { id }, data: { isActive: false } });
+};
+
+// ── Admin: get flagged users ──────────────────────────────────────────────────
+const getFlaggedUsers = async () => {
+  return prisma.user.findMany({
+    where:   { isFlagged: true, isDeleted: false },
+    orderBy: { flaggedAt: "desc" },
+    select:  {
+      id: true, name: true, username: true, email: true, schoolId: true,
+      totalPoints: true, isFlagged: true, flagReason: true, flaggedAt: true,
+    },
+  });
+};
+
+// ── Admin: clear a flag after review ─────────────────────────────────────────
+const clearFlag = async (userId: string) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data:  { isFlagged: false, flagReason: null, flaggedAt: null },
+  });
 };
 
 export const pointsService = {
@@ -369,4 +451,6 @@ export const pointsService = {
   deactivateBoostEvent,
   getMyRank,
   snapshotRanks,
+  getFlaggedUsers,
+  clearFlag,
 };

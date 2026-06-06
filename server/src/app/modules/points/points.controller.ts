@@ -177,6 +177,49 @@ const getMyRank = async (req: Request, res: Response) => {
   }
 };
 
+// ── Admin: view all flagged users ─────────────────────────────────────────────
+const getFlaggedUsers = async (req: Request, res: Response) => {
+  try {
+    const data = await pointsService.getFlaggedUsers();
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success:    true,
+      message:    "Flagged users retrieved",
+      data,
+    });
+  } catch (error: any) {
+    sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success:    false,
+      message:    error?.message ?? "Failed",
+      data:       null,
+    });
+  }
+};
+
+// ── Admin: clear a flag after manual review ───────────────────────────────────
+const clearFlag = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    await pointsService.clearFlag(userId);
+    
+    // Log the manual clearance in the audit trail
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success:    true,
+      message:    "Flag cleared",
+      data:       null,
+    });
+  } catch (error: any) {
+    sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success:    false,
+      message:    error?.message ?? "Failed",
+      data:       null,
+    });
+  }
+};
+
 export const pointsController = {
   getMyPoints,
   getLeaderboard,
@@ -184,4 +227,6 @@ export const pointsController = {
   getBoostEvents,
   deactivateBoostEvent,
   getMyRank,
+  getFlaggedUsers,
+  clearFlag,
 };

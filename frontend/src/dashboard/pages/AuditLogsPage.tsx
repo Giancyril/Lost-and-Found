@@ -107,7 +107,7 @@ const ChangesDataRenderer = ({ data, align = "right" }: { data: string | null | 
 };
 
 export default function AuditLogsPage() {
-  const { data: auditData, isLoading, refetch, isFetching } = useGetSystemAuditLogsQuery({});
+  const { data: auditData, isLoading, refetch, isFetching } = useGetSystemAuditLogsQuery(undefined);
   const logs = auditData?.data || [];
 
   const [searchTerm, setSearchTerm] = useState("");
