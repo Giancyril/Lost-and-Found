@@ -5,7 +5,12 @@ import {
   FaWallet, FaHeadphones, FaKey, FaGlasses, FaUmbrella, FaFootballBall,
   FaLaptop, FaTabletAlt, FaCamera, FaClock, FaRing, FaTag,
   FaPlug, FaUsb, FaTint, FaPaintBrush, FaMusic, FaUtensils,
-  FaCalculator, FaShapes, FaMoneyBillWave,
+  FaCalculator, FaShapes, FaMoneyBillWave, FaBicycle, FaCar, FaGuitar,
+  FaPen, FaRuler, FaFlask, FaMicrophone, FaGamepad, FaBatteryFull,
+  FaMemory, FaMouse, FaKeyboard, FaPrint, FaHdd, FaWifi,
+  FaBluetooth, FaSdCard, FaSimCard, FaTools, FaWrench, FaHammer,
+  FaScrewdriver, FaPalette, FaCut, FaTape, FaFileAlt, FaFolder,
+  FaEnvelope, FaPaperclip, FaStamp, FaBoxes, FaCube, FaScroll,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -18,11 +23,84 @@ import {
 interface Category {
   id: string;
   name: string;
+  icon?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-const getCategoryIcon = (name: string) => {
+const iconOptions = [
+  { icon: FaPaintBrush, name: "Art", color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
+  { icon: FaBriefcase, name: "Bag", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+  { icon: FaBatteryFull, name: "Battery", color: "text-lime-400", bg: "bg-lime-500/10 border-lime-500/20" },
+  { icon: FaBicycle, name: "Bicycle", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+  { icon: FaBluetooth, name: "Bluetooth", color: "text-sky-400", bg: "bg-sky-500/10 border-sky-500/20" },
+  { icon: FaBook, name: "Book", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" },
+  { icon: FaTint, name: "Bottle", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
+  { icon: FaBoxes, name: "Boxes", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20" },
+  { icon: FaCalculator, name: "Calculator", color: "text-lime-400", bg: "bg-lime-500/10 border-lime-500/20" },
+  { icon: FaCamera, name: "Camera", color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20" },
+  { icon: FaPlug, name: "Charger", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" },
+  { icon: FaTshirt, name: "Cloth", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+  { icon: FaCube, name: "Cube", color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" },
+  { icon: FaEnvelope, name: "Envelope", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+  { icon: FaFileAlt, name: "File", color: "text-sky-400", bg: "bg-sky-500/10 border-sky-500/20" },
+  { icon: FaFolder, name: "Folder", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+  { icon: FaUtensils, name: "Food", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20" },
+  { icon: FaGamepad, name: "Gaming", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+  { icon: FaGem, name: "Gem", color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/20" },
+  { icon: FaGlasses, name: "Glasses", color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/20" },
+  { icon: FaGuitar, name: "Guitar", color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
+  { icon: FaHammer, name: "Hammer", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+  { icon: FaHdd, name: "Hard Drive", color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" },
+  { icon: FaHeadphones, name: "Headphones", color: "text-green-400", bg: "bg-green-500/10 border-green-500/20" },
+  { icon: FaIdCard, name: "ID Card", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+  { icon: FaKey, name: "Key", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20" },
+  { icon: FaKeyboard, name: "Keyboard", color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" },
+  { icon: FaFlask, name: "Lab Equipment", color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/20" },
+  { icon: FaLaptop, name: "Laptop", color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" },
+  { icon: FaMemory, name: "Memory Card", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
+  { icon: FaMicrophone, name: "Microphone", color: "text-fuchsia-400", bg: "bg-fuchsia-500/10 border-fuchsia-500/20" },
+  { icon: FaMoneyBillWave, name: "Money", color: "text-green-400", bg: "bg-green-500/10 border-green-500/20" },
+  { icon: FaMouse, name: "Mouse", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
+  { icon: FaMusic, name: "Music", color: "text-fuchsia-400", bg: "bg-fuchsia-500/10 border-fuchsia-500/20" },
+  { icon: FaShapes, name: "Other", color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20" },
+  { icon: FaPalette, name: "Palette", color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/20" },
+  { icon: FaPaperclip, name: "Paperclip", color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/20" },
+  { icon: FaPen, name: "Pen", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+  { icon: FaMobileAlt, name: "Phone", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
+  { icon: FaPrint, name: "Printer", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+  { icon: FaRing, name: "Ring", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" },
+  { icon: FaRuler, name: "Ruler", color: "text-sky-400", bg: "bg-sky-500/10 border-sky-500/20" },
+  { icon: FaCut, name: "Scissors", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20" },
+  { icon: FaScroll, name: "Scroll", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" },
+  { icon: FaScrewdriver, name: "Screwdriver", color: "text-lime-400", bg: "bg-lime-500/10 border-lime-500/20" },
+  { icon: FaSdCard, name: "SD Card", color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
+  { icon: FaSimCard, name: "SIM Card", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20" },
+  { icon: FaFootballBall, name: "Sports", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20" },
+  { icon: FaStamp, name: "Stamp", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20" },
+  { icon: FaTabletAlt, name: "Tablet", color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" },
+  { icon: FaTag, name: "Tag", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+  { icon: FaTape, name: "Tape", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" },
+  { icon: FaTools, name: "Tools", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+  { icon: FaUmbrella, name: "Umbrella", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+  { icon: FaUsb, name: "USB", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+  { icon: FaCar, name: "Vehicle", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
+  { icon: FaWallet, name: "Wallet", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+  { icon: FaClock, name: "Watch", color: "text-sky-400", bg: "bg-sky-500/10 border-sky-500/20" },
+  { icon: FaWifi, name: "WiFi Device", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+  { icon: FaWrench, name: "Wrench", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20" },
+];
+
+const getCategoryIcon = (name: string, storedIcon?: string) => {
+  // If we have a stored icon, use it
+  if (storedIcon) {
+    const iconOption = iconOptions.find(opt => opt.name === storedIcon);
+    if (iconOption) {
+      return { icon: <iconOption.icon size={13} />, color: iconOption.color, bg: iconOption.bg };
+    }
+  }
+  
+  // Fall back to keyword matching
   const n = name.toLowerCase();
   if (n.includes("cloth") || n.includes("shirt") || n.includes("wear") || n.includes("uniform")) return { icon: <FaTshirt size={13} />, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" };
   if (n.includes("accessor") || n.includes("jewel") || n.includes("bracelet")) return { icon: <FaGem size={13} />, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/20" };
@@ -58,11 +136,13 @@ const getCategoryIcon = (name: string) => {
 const CategoriesManagement = () => {
   const [searchTerm, setSearchTerm]             = useState("");
   const [editingId, setEditingId]               = useState<string | null>(null);
-  const [editForm, setEditForm]                 = useState({ name: "" });
+  const [editForm, setEditForm]                 = useState({ name: "", iconIndex: 50 });
   const [showAddForm, setShowAddForm]           = useState(false);
-  const [newCategory, setNewCategory]           = useState({ name: "" });
+  const [newCategory, setNewCategory]           = useState({ name: "", iconIndex: 50 });
   const [showDeleteModal, setShowDeleteModal]   = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [showIconPicker, setShowIconPicker]     = useState(false);
+  const [iconPickerMode, setIconPickerMode]     = useState<"add" | "edit">("add");
 
   const { data: categoriesData, isLoading } = useCategoryQuery(undefined);
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
@@ -72,14 +152,20 @@ const CategoriesManagement = () => {
   const categories: Category[] = categoriesData?.data || [];
   const filteredCategories = categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const handleEdit   = (cat: Category) => { setEditingId(cat.id); setEditForm({ name: cat.name }); };
-  const handleCancel = () => { setEditingId(null); setEditForm({ name: "" }); };
+  const handleEdit   = (cat: Category) => { 
+    const { icon, color, bg } = getCategoryIcon(cat.name, cat.icon);
+    const iconIdx = iconOptions.findIndex(opt => opt.name === cat.icon);
+    setEditingId(cat.id); 
+    setEditForm({ name: cat.name, iconIndex: iconIdx >= 0 ? iconIdx : 50 }); 
+  };
+  const handleCancel = () => { setEditingId(null); setEditForm({ name: "", iconIndex: 50 }); };
 
   const handleSave = async () => {
     if (!editingId || !editForm.name.trim()) return;
     try {
-      await updateCategory({ id: editingId, data: { name: editForm.name.trim() } }).unwrap();
-      setEditingId(null); setEditForm({ name: "" });
+      const iconName = iconOptions[editForm.iconIndex].name;
+      await updateCategory({ id: editingId, data: { name: editForm.name.trim(), icon: iconName } }).unwrap();
+      setEditingId(null); setEditForm({ name: "", iconIndex: 50 });
       toast.success("Category updated");
     } catch (e: any) { toast.error(e?.data?.message || "Failed to update"); }
   };
@@ -87,8 +173,9 @@ const CategoriesManagement = () => {
   const handleAdd = async () => {
     if (!newCategory.name.trim()) return;
     try {
-      await createCategory({ name: newCategory.name.trim() }).unwrap();
-      setNewCategory({ name: "" }); setShowAddForm(false);
+      const iconName = iconOptions[newCategory.iconIndex].name;
+      await createCategory({ name: newCategory.name.trim(), icon: iconName }).unwrap();
+      setNewCategory({ name: "", iconIndex: 50 }); setShowAddForm(false);
       toast.success("Category added");
     } catch (e: any) { toast.error(e?.data?.message || "Failed to create"); }
   };
@@ -129,16 +216,28 @@ const CategoriesManagement = () => {
         <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5">
           <p className="text-white text-sm font-semibold mb-3">New Category</p>
           <div className="flex gap-3">
+            {/* Icon picker button - more identifiable with text label */}
+            <div className="flex flex-col gap-1 shrink-0">
+              <button type="button" onClick={() => { setIconPickerMode("add"); setShowIconPicker(true); }}
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center hover:scale-105 hover:ring-2 hover:ring-cyan-400/30 transition-all ${iconOptions[newCategory.iconIndex].bg}`}
+                title="Click to choose icon">
+                {(() => {
+                  const Icon = iconOptions[newCategory.iconIndex].icon;
+                  return <Icon size={14} className={iconOptions[newCategory.iconIndex].color} />;
+                })()}
+              </button>
+              <span className="text-[9px] text-gray-500 text-center font-medium">Icon</span>
+            </div>
             <input type="text" placeholder="Category name" value={newCategory.name}
-              onChange={e => setNewCategory({ name: e.target.value })}
+              onChange={e => setNewCategory({ ...newCategory, name: e.target.value })}
               onKeyDown={e => e.key === "Enter" && handleAdd()}
-              className="flex-1 px-3.5 py-2.5 bg-gray-800/60 border border-white/5 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" />
+              className="flex-1 h-9 px-3 bg-gray-800/60 border border-white/5 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" />
             <button onClick={handleAdd} disabled={!newCategory.name.trim() || isCreating}
-              className="px-4 py-2.5 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/30 text-emerald-400 hover:text-white disabled:opacity-50 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5">
+              className="h-9 px-4 bg-blue-600 hover:bg-blue-500 border border-blue-500/30 text-white disabled:opacity-50 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5">
               <FaSave size={11} /> {isCreating ? "Adding..." : "Add"}
             </button>
-            <button onClick={() => { setShowAddForm(false); setNewCategory({ name: "" }); }}
-              className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 rounded-xl text-xs font-semibold transition-colors">
+            <button onClick={() => { setShowAddForm(false); setNewCategory({ name: "", iconIndex: 50 }); }}
+              className="h-9 px-4 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-400 rounded-xl text-xs font-semibold transition-colors">
               Cancel
             </button>
           </div>
@@ -168,13 +267,24 @@ const CategoriesManagement = () => {
         ) : (
           <div className="divide-y divide-white/[0.04]">
             {filteredCategories.map(category => {
-              const { icon, color, bg } = getCategoryIcon(category.name);
+              const { icon, color, bg } = getCategoryIcon(category.name, category.icon);
               return (
                 <div key={category.id} className="grid grid-cols-12 gap-4 items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
                   <div className="col-span-4">
                     {editingId === category.id ? (
-                      <input type="text" value={editForm.name} onChange={e => setEditForm({ name: e.target.value })} onKeyDown={e => e.key === "Enter" && handleSave()}
-                        className="w-full px-3 py-1.5 bg-gray-800 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                      <div className="flex items-center gap-2">
+                        {/* Icon picker button in edit mode */}
+                        <button type="button" onClick={() => { setIconPickerMode("edit"); setShowIconPicker(true); }}
+                          className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 hover:scale-105 hover:ring-2 hover:ring-cyan-400/30 transition-all ${iconOptions[editForm.iconIndex].bg}`}
+                          title="Click to change icon">
+                          {(() => {
+                            const Icon = iconOptions[editForm.iconIndex].icon;
+                            return <Icon size={13} className={iconOptions[editForm.iconIndex].color} />;
+                          })()}
+                        </button>
+                        <input type="text" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} onKeyDown={e => e.key === "Enter" && handleSave()}
+                          className="flex-1 px-3 py-1.5 bg-gray-800 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                      </div>
                     ) : (
                       <div className="flex items-center gap-2.5">
                         <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${bg}`}>
@@ -190,7 +300,7 @@ const CategoriesManagement = () => {
                     {editingId === category.id ? (
                       <>
                         <button onClick={handleSave} disabled={!editForm.name.trim() || isUpdating}
-                          className="w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400 transition-colors disabled:opacity-50"><FaSave size={11} /></button>
+                          className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center text-blue-400 transition-colors disabled:opacity-50"><FaSave size={11} /></button>
                         <button onClick={handleCancel}
                           className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors"><FaTimes size={11} /></button>
                       </>
@@ -218,19 +328,30 @@ const CategoriesManagement = () => {
             <p className="text-gray-500 text-sm">{searchTerm ? "No categories match." : "No categories yet."}</p>
           </div>
         ) : filteredCategories.map(category => {
-          const { icon, color, bg } = getCategoryIcon(category.name);
+          const { icon, color, bg } = getCategoryIcon(category.name, category.icon);
           return (
             <div key={category.id} className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-3">
               {editingId === category.id ? (
                 <div className="space-y-3">
-                  <input type="text" value={editForm.name} onChange={e => setEditForm({ name: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                  <div className="flex items-center gap-2">
+                    {/* Icon picker button in mobile edit mode */}
+                    <button type="button" onClick={() => { setIconPickerMode("edit"); setShowIconPicker(true); }}
+                      className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 hover:scale-105 hover:ring-2 hover:ring-cyan-400/30 transition-all ${iconOptions[editForm.iconIndex].bg}`}
+                      title="Click to change icon">
+                      {(() => {
+                        const Icon = iconOptions[editForm.iconIndex].icon;
+                        return <Icon size={14} className={iconOptions[editForm.iconIndex].color} />;
+                      })()}
+                    </button>
+                    <input type="text" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                      className="flex-1 h-9 px-3 bg-gray-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                  </div>
                   <div className="flex gap-2">
                     <button onClick={handleSave} disabled={!editForm.name.trim() || isUpdating}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-semibold">
+                      className="flex-1 h-9 flex items-center justify-center gap-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl text-xs font-semibold">
                       <FaSave size={11} /> {isUpdating ? "Saving..." : "Save"}
                     </button>
-                    <button onClick={handleCancel} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-white/5 border border-white/5 text-gray-400 rounded-xl text-xs font-semibold">
+                    <button onClick={handleCancel} className="flex-1 h-9 flex items-center justify-center gap-1.5 bg-white/5 border border-white/5 text-gray-400 rounded-xl text-xs font-semibold">
                       <FaTimes size={11} /> Cancel
                     </button>
                   </div>
@@ -282,6 +403,57 @@ const CategoriesManagement = () => {
                 <button onClick={handleConfirmDelete} disabled={isDeleting} className="flex-1 bg-red-500/10 hover:bg-red-500 border border-red-500/30 text-red-400 hover:text-white disabled:opacity-50 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5">
                   {isDeleting ? "Deleting..." : <><FaTrash size={10} /> Delete</>}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Icon Picker Modal */}
+      {showIconPicker && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 shrink-0">
+              <div>
+                <h2 className="text-sm font-bold text-white">Choose an Icon</h2>
+                <p className="text-gray-500 text-[11px]">Select an icon for your category</p>
+              </div>
+              <button onClick={() => setShowIconPicker(false)} 
+                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                <FaTimes size={12} />
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto flex-1">
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                {iconOptions.map((opt, idx) => {
+                  const Icon = opt.icon;
+                  const isSelected = iconPickerMode === "add" 
+                    ? newCategory.iconIndex === idx 
+                    : editForm.iconIndex === idx;
+                  return (
+                    <button key={idx} type="button"
+                      onClick={() => {
+                        if (iconPickerMode === "add") {
+                          setNewCategory({ ...newCategory, iconIndex: idx });
+                        } else {
+                          setEditForm({ ...editForm, iconIndex: idx });
+                        }
+                        setShowIconPicker(false);
+                      }}
+                      className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all hover:scale-105 ${
+                        isSelected 
+                          ? `${opt.bg} ring-2 ring-cyan-400` 
+                          : "bg-gray-800/40 border-white/5 hover:bg-gray-800/60"
+                      }`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${opt.bg}`}>
+                        <Icon size={18} className={opt.color} />
+                      </div>
+                      <span className="text-[9px] text-gray-400 font-medium truncate w-full text-center">
+                        {opt.name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>

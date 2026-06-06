@@ -4,6 +4,7 @@ const createFoundItemCategory = z.object({
     name: z.string({
       required_error: "Category name field is required",
     }),
+    icon: z.string().optional(),
   }),
 });
 
