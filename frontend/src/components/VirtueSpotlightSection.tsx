@@ -1,262 +1,643 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FaStar, FaChevronLeft, FaChevronRight, FaShieldAlt, FaHeart } from "react-icons/fa";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { FaStar, FaHeart, FaTimes } from "react-icons/fa";
+import { useTransition, animated } from "@react-spring/web";
+import useMeasure from "react-use-measure";
 import { useGetVirtueSpotlightsQuery } from "../redux/api/api";
 
-const VirtueSpotlightSection: React.FC = () => {
-  const { data, isLoading } = useGetVirtueSpotlightsQuery({});
-  const spotlights: any[] = data?.data || [];
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+type Spotlight = {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  students: string[];
+  createdAt?: string;
+};
 
-  const [likedPosts, setLikedPosts] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem("virtue_liked_posts");
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
+type SortTab = "all" | "recent" | "liked";
+
+// ── Responsive columns ───────────────────────────────────────────────────────
+const useColumns = (): number => {
+  const get = () => {
+    if (typeof window === "undefined") return 2;
+    if (window.matchMedia("(min-width: 1024px)").matches) return 3;
+    return 2;
+  };
+  const [cols, setCols] = useState(get);
+  useEffect(() => {
+    const handler = () => setCols(get);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return cols;
+};
+
+// ── Like state ───────────────────────────────────────────────────────────────
+const useLikes = () => {
+  const [likedIds, setLikedIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("virtue_liked_posts") || "[]"); }
+    catch { return []; }
+  });
+  const [counts, setCounts] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem("virtue_like_counts") || "{}"); }
+    catch { return {}; }
   });
 
-  const [likeCounts, setLikeCounts] = useState<Record<string, number>>(() => {
-    try {
-      const saved = localStorage.getItem("virtue_like_counts");
-      return saved ? JSON.parse(saved) : {};
-    } catch { return {}; }
-  });
+  const likedIdsRef = useRef(likedIds);
+  likedIdsRef.current = likedIds;
 
-  if (isLoading) return null;
-  if (!spotlights.length) return null;
-
-  const handleLike = (spotlightId: string) => {
-    const isLiked = likedPosts.includes(spotlightId);
-    let newLikes: string[];
-    let newCounts = { ...likeCounts };
-
-    if (isLiked) {
-      newLikes = likedPosts.filter((id) => id !== spotlightId);
-      newCounts[spotlightId] = Math.max(0, (likeCounts[spotlightId] || 1) - 1);
-    } else {
-      newLikes = [...likedPosts, spotlightId];
-      newCounts[spotlightId] = (likeCounts[spotlightId] || 0) + 1;
-    }
-
-    setLikedPosts(newLikes);
-    setLikeCounts(newCounts);
-    localStorage.setItem("virtue_liked_posts", JSON.stringify(newLikes));
-    localStorage.setItem("virtue_like_counts", JSON.stringify(newCounts));
-  };
-
-  const handleScroll = () => {
-    if (!scrollContainerRef.current) return;
-    const container = scrollContainerRef.current;
-    const scrollLeft = container.scrollLeft;
-    const width = container.clientWidth;
-    const gap = 24; // gap-6
-    if (width === 0) return;
-
-    const index = Math.round(scrollLeft / (width + gap));
-    if (index !== activeIdx && index >= 0 && index < spotlights.length) {
-      setActiveIdx(index);
-      setExpandedCardId(null);
-    }
-  };
-
-  const scrollToIndex = (index: number) => {
-    if (!scrollContainerRef.current) return;
-    const container = scrollContainerRef.current;
-    const width = container.clientWidth;
-    const gap = 24;
-    container.scrollTo({
-      left: index * (width + gap),
-      behavior: "smooth",
+  const toggle = useCallback((id: string) => {
+    const isLiked = likedIdsRef.current.includes(id);
+    setLikedIds(prev => {
+      const next = isLiked ? prev.filter(x => x !== id) : [...prev, id];
+      localStorage.setItem("virtue_liked_posts", JSON.stringify(next));
+      return next;
     });
-    setActiveIdx(index);
-    setExpandedCardId(null);
-  };
+    setCounts(prev => {
+      const next = { ...prev, [id]: Math.max(0, (prev[id] ?? 0) + (isLiked ? -1 : 1)) };
+      localStorage.setItem("virtue_like_counts", JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
-  const prev = () => {
-    const newIdx = activeIdx === 0 ? spotlights.length - 1 : activeIdx - 1;
-    scrollToIndex(newIdx);
-  };
+  return { likedIds, counts, toggle };
+};
 
-  const next = () => {
-    const newIdx = activeIdx === spotlights.length - 1 ? 0 : activeIdx + 1;
-    scrollToIndex(newIdx);
-  };
+// ── Avatar stack ─────────────────────────────────────────────────────────────
+const AvatarStack = ({ students }: { students: string[] }) => {
+  const show = students.slice(0, 3);
+  return (
+    <div className="flex items-center">
+      {show.map((name, i) => (
+        <div
+          key={i}
+          title={name}
+          style={{ marginLeft: i === 0 ? 0 : -6, zIndex: show.length - i }}
+          className="w-5 h-5 rounded-full bg-blue-900/80 border-[1.5px] border-gray-900 flex items-center justify-center text-[7px] font-bold text-blue-300 shrink-0"
+        >
+          {name.charAt(0).toUpperCase()}
+        </div>
+      ))}
+      {students.length > 3 && (
+        <div
+          style={{ marginLeft: -6, zIndex: 0 }}
+          className="w-5 h-5 rounded-full bg-gray-700 border-[1.5px] border-gray-900 flex items-center justify-center text-[7px] font-bold text-gray-300 shrink-0"
+        >
+          +{students.length - 3}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Card ─────────────────────────────────────────────────────────────────────
+const SpotlightCard = ({
+  spotlight, isLiked, likeCount, onLike, onOpen,
+}: {
+  spotlight: Spotlight; isLiked: boolean; likeCount: number;
+  onLike: () => void; onOpen: () => void;
+}) => (
+  <div
+    onClick={onOpen}
+    className="group relative rounded-2xl overflow-hidden cursor-pointer border border-white/[0.06] hover:border-blue-500/40 transition-all duration-300 shadow-xl w-full"
+  >
+    {spotlight.imageUrl ? (
+      <img
+        src={spotlight.imageUrl}
+        alt={spotlight.title}
+        className="w-full block transition-transform duration-500 ease-out group-hover:scale-105"
+        loading="lazy"
+      />
+    ) : (
+      <div className="w-full flex items-center justify-center bg-[#0d1117]" style={{ aspectRatio: "4/3" }}>
+        <FaStar size={40} className="text-blue-500/20" />
+      </div>
+    )}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <div className="absolute inset-x-0 bottom-12 px-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+      <p className="text-white text-[12px] font-bold leading-snug line-clamp-2 drop-shadow-lg">
+        {spotlight.title}
+      </p>
+    </div>
+    {spotlight.students.length > 0 && (
+      <div className="absolute top-2.5 left-2.5 -translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500/90 border border-blue-400/30 rounded-full text-[10px] text-white font-bold shadow-lg backdrop-blur-sm">
+          {spotlight.students.length} student{spotlight.students.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+    )}
+    <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent">
+      <AvatarStack students={spotlight.students} />
+      <button
+        type="button"
+        onClick={e => { e.stopPropagation(); onLike(); }}
+        className={`flex items-center gap-1 text-[11px] font-bold transition-all duration-200 ${
+          isLiked ? "text-red-400 scale-110" : "text-gray-300 hover:text-white hover:scale-110"
+        }`}
+        aria-label={isLiked ? "Unlike" : "Congratulate"}
+      >
+        <FaHeart size={11} />
+        <span>{likeCount}</span>
+      </button>
+    </div>
+  </div>
+);
+
+// ── Masonry Grid ──────────────────────────────────────────────────────────────
+type GridItem = Spotlight & { x: number; y: number; w: number; h: number };
+
+const CSSMasonryGrid = ({
+  spotlights, likedIds, counts, onLike, onOpen, columns,
+}: {
+  spotlights: Spotlight[]; likedIds: string[]; counts: Record<string, number>;
+  onLike: (id: string) => void; onOpen: (s: Spotlight) => void; columns: number;
+}) => (
+  <div style={{ columnCount: columns, columnGap: "12px" }}>
+    {spotlights.map(s => (
+      <div key={s.id} style={{ breakInside: "avoid", marginBottom: "12px" }}>
+        <SpotlightCard
+          spotlight={s}
+          isLiked={likedIds.includes(s.id)}
+          likeCount={counts[s.id] ?? 0}
+          onLike={() => onLike(s.id)}
+          onOpen={() => onOpen(s)}
+        />
+      </div>
+    ))}
+  </div>
+);
+
+const SpringMasonryGrid = ({
+  spotlights, likedIds, counts, onLike, onOpen,
+}: {
+  spotlights: Spotlight[]; likedIds: string[]; counts: Record<string, number>;
+  onLike: (id: string) => void; onOpen: (s: Spotlight) => void;
+}) => {
+  const [containerRef, { width }] = useMeasure();
+  const columns = 3;
+  const gap = 12;
+  const [heights, setHeights] = useState<Record<string, number>>({});
+
+  const handleImageLoad = useCallback((id: string, e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    if (!width) return;
+    const colWidth = (width - gap * (columns - 1)) / columns;
+    setHeights(prev => {
+      if (prev[id]) return prev;
+      return { ...prev, [id]: colWidth * (img.naturalHeight / img.naturalWidth) };
+    });
+  }, [width]);
+
+  const [gridItems, containerHeight] = useMemo<[GridItem[], number]>(() => {
+    if (!width) return [[], 0];
+    const colWidth = (width - gap * (columns - 1)) / columns;
+    const colHeights = new Array(columns).fill(0);
+    const items = spotlights.map(s => {
+      const col = colHeights.indexOf(Math.min(...colHeights));
+      const x = col * (colWidth + gap);
+      const y = colHeights[col];
+      const h = heights[s.id] ?? colWidth * 0.75;
+      colHeights[col] += h + gap;
+      return { ...s, x, y, w: colWidth, h };
+    });
+    return [items, Math.max(...colHeights)];
+  }, [spotlights, width, heights]);
+
+  const transitions = useTransition(gridItems, {
+    key: (item: GridItem) => item.id,
+    from: (item: GridItem) => ({
+      transform: `translate3d(${item.x}px,${item.y + 20}px,0)`,
+      width: item.w, height: item.h, opacity: 0,
+    }),
+    enter: (item: GridItem) => ({
+      transform: `translate3d(${item.x}px,${item.y}px,0)`,
+      width: item.w, height: item.h, opacity: 1,
+    }),
+    update: (item: GridItem) => ({
+      transform: `translate3d(${item.x}px,${item.y}px,0)`,
+      width: item.w, height: item.h,
+    }),
+    leave: { opacity: 0 },
+    config: { mass: 1, tension: 280, friction: 30 },
+    trail: 30,
+  });
 
   return (
-    <section ref={sectionRef} className="relative w-full bg-gray-950 py-16 overflow-hidden">
+    <div ref={containerRef} className="relative w-full" style={{ height: containerHeight }}>
+      {transitions((style, item) => (
+        <animated.div style={{ position: "absolute", willChange: "transform, opacity", ...style }}>
+          {item.imageUrl && (
+            <img
+              src={item.imageUrl}
+              alt=""
+              style={{ position: "absolute", opacity: 0, pointerEvents: "none", width: 1, height: 1 }}
+              onLoad={e => handleImageLoad(item.id, e)}
+            />
+          )}
+          <SpotlightCard
+            spotlight={item}
+            isLiked={likedIds.includes(item.id)}
+            likeCount={counts[item.id] ?? 0}
+            onLike={() => onLike(item.id)}
+            onOpen={() => onOpen(item)}
+          />
+        </animated.div>
+      ))}
+    </div>
+  );
+};
 
-      {/* Ambient background glow */}
+const MasonryGrid = (props: {
+  spotlights: Spotlight[]; likedIds: string[]; counts: Record<string, number>;
+  onLike: (id: string) => void; onOpen: (s: Spotlight) => void;
+}) => {
+  const columns = useColumns();
+  const isDesktop = columns >= 3;
+  if (isDesktop) return <SpringMasonryGrid {...props} />;
+  return <CSSMasonryGrid {...props} columns={columns} />;
+};
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+const SpotlightModal = ({
+  spotlight, isLiked, likeCount, onLike, onClose,
+}: {
+  spotlight: Spotlight; isLiked: boolean; likeCount: number;
+  onLike: () => void; onClose: () => void;
+}) => {
+  const [showAll, setShowAll] = useState(false);
+  const visibleStudents = showAll ? spotlight.students : spotlight.students.slice(0, 3);
+
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [imgHeight, setImgHeight] = useState<number | null>(null);
+
+  const measure = useCallback(() => {
+    if (imgRef.current) setImgHeight(imgRef.current.offsetHeight);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [measure]);
+
+  // Shared header bar — rendered once, positioned differently on mobile vs desktop
+  const HeaderBar = (
+    <div
+      className="flex items-center justify-between shrink-0 px-6 py-3"
+      style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+    >
+      <span style={{
+        fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+        textTransform: "uppercase", color: "#378ADD",
+      }}>
+        Recognition post
+      </span>
+      <button
+        onClick={onClose}
+        style={{
+          width: 28, height: 28, borderRadius: 8,
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "#6b7280", cursor: "pointer", flexShrink: 0,
+          transition: "all .15s",
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#d1d5db";
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#6b7280";
+        }}
+      >
+        <FaTimes size={11} />
+      </button>
+    </div>
+  );
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      style={{
+        background: "rgba(0,0,0,0.85)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+      }}
+      onClick={onClose}
+    >
+      <style>{`
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(.96); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        .spotlight-right-scroll::-webkit-scrollbar { width: 4px; }
+        .spotlight-right-scroll::-webkit-scrollbar-track { background: transparent; }
+        .spotlight-right-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.12);
+          border-radius: 99px;
+        }
+        .spotlight-right-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(255,255,255,0.22);
+        }
+        .spotlight-right-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255,255,255,0.12) transparent;
+        }
+      `}</style>
+
+      <div
+        className="relative w-full max-w-sm sm:max-w-lg lg:max-w-4xl shadow-2xl"
+        style={{
+          background: "#0d1117",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "16px",
+          animation: "modalIn .2s ease",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.8)",
+          overflow: "hidden",
+          // On mobile: flex-col (stacked). On desktop: flex-row (side by side).
+          display: "flex",
+          flexDirection: "column",
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/*
+          ── MOBILE LAYOUT (flex-col) ──
+          Order: 1) Header bar  2) Image  3) Scrollable content
+
+          ── DESKTOP LAYOUT (flex-row, lg:) ──
+          Order: 1) Image (left)  2) Right column: Header + Scrollable content
+          We use CSS order to reposition on desktop.
+        */}
+
+        {/* Header bar — sits ABOVE image on mobile, ABOVE content on desktop */}
+        <div
+          className="flex items-center justify-between shrink-0 px-6 py-3 lg:hidden"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+        >
+          <span style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+            textTransform: "uppercase", color: "#378ADD",
+          }}>
+            Recognition post
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#6b7280", cursor: "pointer", flexShrink: 0,
+            }}
+          >
+            <FaTimes size={11} />
+          </button>
+        </div>
+
+        {/* Flex row wrapper for desktop — invisible on mobile */}
+        <div className="flex flex-col lg:flex-row flex-1 min-h-0">
+
+          {/* LEFT: Image */}
+          <div
+            className="w-full lg:w-[52%] shrink-0"
+            style={{ background: "#0d1117", lineHeight: 0 }}
+          >
+            {spotlight.imageUrl ? (
+              <img
+                ref={imgRef}
+                src={spotlight.imageUrl}
+                alt={spotlight.title}
+                onLoad={measure}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  height: "auto",
+                  objectFit: "fill",
+                }}
+              />
+            ) : (
+              <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <FaStar size={48} className="text-blue-500/20" />
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT: Desktop header + scrollable content */}
+          <div
+            className="flex flex-col flex-1 min-w-0"
+            style={{
+              height: imgHeight ? imgHeight : "auto",
+              maxHeight: imgHeight ? imgHeight : "80dvh",
+            }}
+          >
+            {/* Desktop-only header bar (hidden on mobile — mobile has its own above) */}
+            <div
+              className="hidden lg:flex items-center justify-between shrink-0 px-6 py-3"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+            >
+              <span style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+                textTransform: "uppercase", color: "#378ADD",
+              }}>
+                Recognition post
+              </span>
+              <button
+                onClick={onClose}
+                style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#6b7280", cursor: "pointer", flexShrink: 0,
+                  transition: "all .15s",
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#d1d5db";
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#6b7280";
+                }}
+              >
+                <FaTimes size={11} />
+              </button>
+            </div>
+
+            {/* Scrollable body */}
+            <div
+              className="spotlight-right-scroll overflow-y-auto flex-1"
+              style={{
+                overscrollBehavior: "contain",
+                padding: "20px 24px",
+                paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))",
+              }}
+            >
+              <h3 style={{
+                color: "#fff", fontWeight: 800, fontSize: 22,
+                lineHeight: 1.25, marginBottom: 14,
+              }}>
+                {spotlight.title}
+              </h3>
+
+              {spotlight.description && (
+                <p style={{
+                  color: "#9ca3af", fontSize: 14,
+                  lineHeight: 1.75, marginBottom: 20,
+                }}>
+                  {spotlight.description}
+                </p>
+              )}
+
+              {spotlight.students.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <p style={{
+                    fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
+                    textTransform: "uppercase", color: "#4b5563", marginBottom: 10,
+                  }}>
+                    Recognized students
+                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {visibleStudents.map((name, i) => (
+                      <span key={i} style={{
+                        padding: "5px 12px",
+                        background: "rgba(55,138,221,0.12)",
+                        border: "1px solid rgba(55,138,221,0.25)",
+                        borderRadius: 8, fontSize: 11, fontWeight: 700,
+                        color: "#85B7EB", letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                      }}>
+                        {name}
+                      </span>
+                    ))}
+                    {spotlight.students.length > 3 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAll(s => !s)}
+                        style={{
+                          padding: "5px 12px",
+                          background: "rgba(255,255,255,0.05)",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          borderRadius: 8, fontSize: 11, fontWeight: 700,
+                          color: "#6b7280", cursor: "pointer",
+                        }}
+                      >
+                        {showAll ? "Show less" : `+${spotlight.students.length - 3} More`}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={onLike}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "7px 14px", borderRadius: 10,
+                  background: isLiked ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.05)",
+                  border: isLiked ? "1px solid rgba(239,68,68,0.25)" : "1px solid rgba(255,255,255,0.08)",
+                  color: isLiked ? "#f87171" : "#9ca3af",
+                  fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all .15s",
+                }}
+              >
+                <FaHeart size={11} style={{ color: isLiked ? "#f87171" : "inherit" }} />
+                {likeCount} Congratulate
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+const VirtueSpotlightSection: React.FC = () => {
+  const { data, isLoading } = useGetVirtueSpotlightsQuery({});
+  const spotlights: Spotlight[] = (data?.data ?? []).filter((s: any) => s.isActive !== false);
+
+  const { likedIds, counts, toggle } = useLikes();
+  const [tab, setTab] = useState<SortTab>("all");
+  const [selected, setSelected] = useState<Spotlight | null>(null);
+
+  if (isLoading || !spotlights.length) return null;
+
+  const sorted = [...spotlights].sort((a, b) => {
+    if (tab === "liked") {
+      const aLikes = (counts[a.id] ?? 0) + ((a as any).likeCount ?? 0);
+      const bLikes = (counts[b.id] ?? 0) + ((b as any).likeCount ?? 0);
+      return bLikes - aLikes;
+    }
+    if (tab === "recent") {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    }
+    return 0;
+  });
+
+  return (
+    <section className="relative w-full bg-gray-950 py-16 overflow-hidden">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-blue-600/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-0 w-64 h-64 bg-yellow-500/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4">
-
-        {/* Section label */}
-        <div className="flex flex-col mb-10">
+        <div className="flex flex-col mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full w-fit mb-4">
             <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
-            <span className="text-blue-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest">SASDD Initiative</span>
+            <span className="text-blue-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest">
+              SASDD Initiative
+            </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-5xl font-black text-white leading-tight lg:leading-[1.1] tracking-tight mb-2 lg:mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-5xl font-black text-white leading-tight tracking-tight mb-2">
             VIRTUE <span className="text-blue-400">Spotlight</span>
           </h2>
-          <p className="text-gray-400 text-sm max-w-lg leading-relaxed text-justify">
-            Valuing Integrity, Responsibility, and Trustworthiness recognizing students who demonstrate exceptional moral character.
+          <p className="text-gray-400 text-sm max-w-lg leading-relaxed">
+            Valuing Integrity, Responsibility, and Trustworthiness — recognizing students who demonstrate exceptional moral character.
           </p>
         </div>
 
-        {/* Carousel Wrapper */}
-        <div className="relative max-w-6xl mx-auto">
-          <div
-            ref={scrollContainerRef}
-            onScroll={handleScroll}
-            className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none gap-6 pb-4"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {spotlights.map((spotlight: any, idx: number) => {
-              const isLiked = likedPosts.includes(spotlight.id);
-              const isExpanded = expandedCardId === spotlight.id;
-
-              return (
-                <div
-                  key={spotlight.id || idx}
-                  className="w-full shrink-0 snap-start snap-always bg-gray-900 border border-white/[0.06] rounded-2xl overflow-hidden shadow-2xl shadow-black/40"
-                >
-                  <div className="flex flex-col lg:flex-row h-full">
-
-                    {/* Image */}
-                    <div className="relative lg:w-[40%] h-64 lg:h-auto shrink-0 overflow-hidden border-b lg:border-b-0 lg:border-r border-white/[0.08]">
-                      {spotlight.imageUrl ? (
-                        <img
-                          src={spotlight.imageUrl}
-                          alt={spotlight.title}
-                          className="w-full h-full object-cover object-top"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-900/40 to-gray-900 flex items-center justify-center">
-                          <FaStar size={48} className="text-blue-400/30" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 p-6 lg:p-8 flex flex-col justify-between">
-                      <div>
-                        {/* Title */}
-                        <div className="mb-1">
-                          <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Recognition Post</span>
-                        </div>
-                        <h3 className="text-white text-xl sm:text-2xl font-bold leading-tight mb-3">
-                          {spotlight.title}
-                        </h3>
-
-                        {spotlight.description && (
-                          <p className="text-gray-400 text-sm leading-relaxed mb-5">
-                            {spotlight.description}
-                          </p>
-                        )}
-
-                        {/* Recognized students */}
-                        {spotlight.students?.length > 0 && (
-                          <div className="mb-6">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
-                              Recognized Students
-                            </p>
-                            <div className="flex flex-wrap gap-2 items-center">
-                              {(isExpanded || spotlight.students.length <= 3
-                                ? spotlight.students
-                                : spotlight.students.slice(0, 3)
-                              ).map((name: string, i: number) => (
-                                <span
-                                  key={i}
-                                  className="inline-flex items-center px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-300 text-[11px] font-medium rounded-lg"
-                                >
-                                  {name}
-                                </span>
-                              ))}
-                              {spotlight.students.length > 3 && (
-                                <button
-                                  type="button"
-                                  onClick={() => setExpandedCardId(isExpanded ? null : spotlight.id)}
-                                  className="inline-flex items-center px-2.5 py-1 bg-gray-800 text-gray-500 text-[11px] font-bold rounded-lg transition-colors cursor-pointer select-none"
-                                >
-                                  {isExpanded ? "See Less" : `+${spotlight.students.length - 3} More`}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Bottom row — date + navigation */}
-                      <div className="flex items-center justify-between pt-4 border-t border-white/[0.05]">
-                        <button
-                          type="button"
-                          onClick={() => handleLike(spotlight.id)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all focus:outline-none select-none border ${
-                            isLiked
-                              ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20"
-                              : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-                          }`}
-                        >
-                          <FaHeart size={11} className={isLiked ? "text-red-500 fill-red-500" : ""} />
-                          <span>{likeCounts[spotlight.id] || 0} Congratulate</span>
-                        </button>
-
-                        {spotlights.length > 1 && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-600 text-xs mr-1">
-                              {idx + 1} / {spotlights.length}
-                            </span>
-                            <button
-                              onClick={prev}
-                              className="w-8 h-8 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white rounded-lg flex items-center justify-center transition-all"
-                            >
-                              <FaChevronLeft size={10} />
-                            </button>
-                            <button
-                              onClick={next}
-                              className="w-8 h-8 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white rounded-lg flex items-center justify-center transition-all"
-                            >
-                              <FaChevronRight size={10} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Dot indicators */}
-          {spotlights.length > 1 && (
-            <div className="flex justify-center gap-1.5 mt-4">
-              {spotlights.map((_: any, i: number) => (
-                <button
-                  key={i}
-                  onClick={() => scrollToIndex(i)}
-                  className={`rounded-full transition-all duration-300 ${
-                    i === activeIdx
-                      ? "w-6 h-1.5 bg-blue-500"
-                      : "w-1.5 h-1.5 bg-gray-700 hover:bg-gray-500"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {(["all", "recent", "liked"] as SortTab[]).map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                tab === t
+                  ? "bg-blue-500/10 border-blue-500/25 text-blue-400"
+                  : "bg-transparent border-white/5 text-gray-500 hover:text-gray-300 hover:border-white/10"
+              }`}
+            >
+              {t === "all" ? "All posts" : t === "recent" ? "Most recent" : "Most liked"}
+            </button>
+          ))}
         </div>
 
-        {/* Bottom tagline */}
-        <p className="text-center text-gray-600 text-xs mt-8 uppercase tracking-widest font-semibold">
+        <MasonryGrid
+          spotlights={sorted}
+          likedIds={likedIds}
+          counts={counts}
+          onLike={toggle}
+          onOpen={setSelected}
+        />
+
+        <p className="text-center text-gray-700 text-[10px] mt-8 uppercase tracking-widest font-semibold">
           We proudly recognize acts of incredible honesty and integrity
         </p>
       </div>
+
+      {selected && (
+        <SpotlightModal
+          spotlight={selected}
+          isLiked={likedIds.includes(selected.id)}
+          likeCount={counts[selected.id] ?? 0}
+          onLike={() => toggle(selected.id)}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </section>
   );
 };
