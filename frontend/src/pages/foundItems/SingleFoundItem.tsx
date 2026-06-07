@@ -688,9 +688,7 @@ const SingleFoundItem = () => {
             <div className="flex flex-col gap-3 px-5 py-4 border-b border-white/5 sticky top-0 bg-gray-900 z-10 rounded-t-2xl">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                    <FaClipboardList size={11} className="text-blue-400" />
-                  </div>
+                 
                   <div className="min-w-0">
                     <h3 className="text-sm font-bold text-white truncate">
                       {isAdmin ? "Process Claim" : "Submit a Claim"}
