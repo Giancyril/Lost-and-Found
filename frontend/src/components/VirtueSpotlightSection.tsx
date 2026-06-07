@@ -11,6 +11,7 @@ type Spotlight = {
   imageUrl?: string;
   students: string[];
   createdAt?: string;
+  likeCount?: number;
 };
 
 type SortTab = "all" | "recent" | "liked";
@@ -71,16 +72,16 @@ const AvatarStack = ({ students }: { students: string[] }) => {
         <div
           key={i}
           title={name}
-          style={{ marginLeft: i === 0 ? 0 : -6, zIndex: show.length - i }}
-          className="w-5 h-5 rounded-full bg-blue-900/80 border-[1.5px] border-gray-900 flex items-center justify-center text-[7px] font-bold text-blue-300 shrink-0"
+          style={{ marginLeft: i === 0 ? 0 : -4, zIndex: show.length - i }}
+          className="w-3.5 h-3.5 sm:w-5 sm:h-5 rounded-full bg-blue-900/80 border border-gray-900 flex items-center justify-center text-[5px] sm:text-[7px] font-bold text-blue-300 shrink-0"
         >
           {name.charAt(0).toUpperCase()}
         </div>
       ))}
       {students.length > 3 && (
         <div
-          style={{ marginLeft: -6, zIndex: 0 }}
-          className="w-5 h-5 rounded-full bg-gray-700 border-[1.5px] border-gray-900 flex items-center justify-center text-[7px] font-bold text-gray-300 shrink-0"
+          style={{ marginLeft: -4, zIndex: 0 }}
+          className="w-3.5 h-3.5 sm:w-5 sm:h-5 rounded-full bg-gray-700 border border-gray-900 flex items-center justify-center text-[5px] sm:text-[7px] font-bold text-gray-300 shrink-0"
         >
           +{students.length - 3}
         </div>
@@ -112,30 +113,40 @@ const SpotlightCard = ({
         <FaStar size={40} className="text-blue-500/20" />
       </div>
     )}
+
+    {/* Dark overlay on hover */}
     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-    <div className="absolute inset-x-0 bottom-12 px-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
-      <p className="text-white text-[12px] font-bold leading-snug line-clamp-2 drop-shadow-lg">
+
+    {/* Title on hover */}
+    <div className="absolute inset-x-0 bottom-9 px-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+      <p className="text-white text-[9px] sm:text-[12px] font-bold leading-snug line-clamp-2 drop-shadow-lg">
         {spotlight.title}
       </p>
     </div>
+
+    {/* Student count pill on hover */}
     {spotlight.students.length > 0 && (
-      <div className="absolute top-2.5 left-2.5 -translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500/90 border border-blue-400/30 rounded-full text-[10px] text-white font-bold shadow-lg backdrop-blur-sm">
-          {spotlight.students.length} student{spotlight.students.length !== 1 ? "s" : ""}
+      <div className="absolute top-1.5 left-1.5 -translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 sm:px-2.5 sm:py-1 bg-blue-500/90 border border-blue-400/30 rounded-full text-[7px] sm:text-[10px] text-white font-bold shadow-lg backdrop-blur-sm">
+          <span>{spotlight.students.length}</span>
+          <span className="hidden sm:inline"> student{spotlight.students.length !== 1 ? "s" : ""}</span>
         </span>
       </div>
     )}
-    <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent">
+
+    {/* Bottom bar — always visible */}
+    <div className="absolute bottom-0 left-0 right-0 p-1.5 sm:p-3 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent">
       <AvatarStack students={spotlight.students} />
       <button
         type="button"
         onClick={e => { e.stopPropagation(); onLike(); }}
-        className={`flex items-center gap-1 text-[11px] font-bold transition-all duration-200 ${
+        className={`flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[11px] font-bold transition-all duration-200 ${
           isLiked ? "text-red-400 scale-110" : "text-gray-300 hover:text-white hover:scale-110"
         }`}
         aria-label={isLiked ? "Unlike" : "Congratulate"}
       >
-        <FaHeart size={11} />
+        <FaHeart size={9} className="sm:hidden" />
+        <FaHeart size={11} className="hidden sm:block" />
         <span>{likeCount}</span>
       </button>
     </div>
@@ -278,40 +289,29 @@ const SpotlightModal = ({
     return () => window.removeEventListener("resize", measure);
   }, [measure]);
 
-  // Shared header bar — rendered once, positioned differently on mobile vs desktop
-  const HeaderBar = (
-    <div
-      className="flex items-center justify-between shrink-0 px-6 py-3"
-      style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+  const CloseBtn = ({ className = "" }: { className?: string }) => (
+    <button
+      onClick={onClose}
+      className={className}
+      style={{
+        width: 28, height: 28, borderRadius: 8,
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.1)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#6b7280", cursor: "pointer", flexShrink: 0,
+        transition: "all .15s",
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)";
+        (e.currentTarget as HTMLButtonElement).style.color = "#d1d5db";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+        (e.currentTarget as HTMLButtonElement).style.color = "#6b7280";
+      }}
     >
-      <span style={{
-        fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
-        textTransform: "uppercase", color: "#378ADD",
-      }}>
-        Recognition post
-      </span>
-      <button
-        onClick={onClose}
-        style={{
-          width: 28, height: 28, borderRadius: 8,
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: "#6b7280", cursor: "pointer", flexShrink: 0,
-          transition: "all .15s",
-        }}
-        onMouseEnter={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)";
-          (e.currentTarget as HTMLButtonElement).style.color = "#d1d5db";
-        }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
-          (e.currentTarget as HTMLButtonElement).style.color = "#6b7280";
-        }}
-      >
-        <FaTimes size={11} />
-      </button>
-    </div>
+      <FaTimes size={11} />
+    </button>
   );
 
   return (
@@ -332,8 +332,7 @@ const SpotlightModal = ({
         .spotlight-right-scroll::-webkit-scrollbar { width: 4px; }
         .spotlight-right-scroll::-webkit-scrollbar-track { background: transparent; }
         .spotlight-right-scroll::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.12);
-          border-radius: 99px;
+          background: rgba(255,255,255,0.12); border-radius: 99px;
         }
         .spotlight-right-scroll::-webkit-scrollbar-thumb:hover {
           background: rgba(255,255,255,0.22);
@@ -353,24 +352,14 @@ const SpotlightModal = ({
           animation: "modalIn .2s ease",
           boxShadow: "0 25px 60px rgba(0,0,0,0.8)",
           overflow: "hidden",
-          // On mobile: flex-col (stacked). On desktop: flex-row (side by side).
           display: "flex",
           flexDirection: "column",
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/*
-          ── MOBILE LAYOUT (flex-col) ──
-          Order: 1) Header bar  2) Image  3) Scrollable content
-
-          ── DESKTOP LAYOUT (flex-row, lg:) ──
-          Order: 1) Image (left)  2) Right column: Header + Scrollable content
-          We use CSS order to reposition on desktop.
-        */}
-
-        {/* Header bar — sits ABOVE image on mobile, ABOVE content on desktop */}
+        {/* Mobile header — hidden on desktop */}
         <div
-          className="flex items-center justify-between shrink-0 px-6 py-3 lg:hidden"
+          className="flex items-center justify-between shrink-0 px-5 py-3 lg:hidden"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
         >
           <span style={{
@@ -379,21 +368,10 @@ const SpotlightModal = ({
           }}>
             Recognition post
           </span>
-          <button
-            onClick={onClose}
-            style={{
-              width: 28, height: 28, borderRadius: 8,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#6b7280", cursor: "pointer", flexShrink: 0,
-            }}
-          >
-            <FaTimes size={11} />
-          </button>
+          <CloseBtn />
         </div>
 
-        {/* Flex row wrapper for desktop — invisible on mobile */}
+        {/* Body — stacked on mobile, side-by-side on desktop */}
         <div className="flex flex-col lg:flex-row flex-1 min-h-0">
 
           {/* LEFT: Image */}
@@ -407,12 +385,7 @@ const SpotlightModal = ({
                 src={spotlight.imageUrl}
                 alt={spotlight.title}
                 onLoad={measure}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  height: "auto",
-                  objectFit: "fill",
-                }}
+                style={{ display: "block", width: "100%", height: "auto", objectFit: "fill" }}
               />
             ) : (
               <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -429,7 +402,7 @@ const SpotlightModal = ({
               maxHeight: imgHeight ? imgHeight : "80dvh",
             }}
           >
-            {/* Desktop-only header bar (hidden on mobile — mobile has its own above) */}
+            {/* Desktop-only header */}
             <div
               className="hidden lg:flex items-center justify-between shrink-0 px-6 py-3"
               style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
@@ -440,30 +413,10 @@ const SpotlightModal = ({
               }}>
                 Recognition post
               </span>
-              <button
-                onClick={onClose}
-                style={{
-                  width: 28, height: 28, borderRadius: 8,
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#6b7280", cursor: "pointer", flexShrink: 0,
-                  transition: "all .15s",
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)";
-                  (e.currentTarget as HTMLButtonElement).style.color = "#d1d5db";
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
-                  (e.currentTarget as HTMLButtonElement).style.color = "#6b7280";
-                }}
-              >
-                <FaTimes size={11} />
-              </button>
+              <CloseBtn />
             </div>
 
-            {/* Scrollable body */}
+            {/* Scrollable content */}
             <div
               className="spotlight-right-scroll overflow-y-auto flex-1"
               style={{
@@ -480,10 +433,7 @@ const SpotlightModal = ({
               </h3>
 
               {spotlight.description && (
-                <p style={{
-                  color: "#9ca3af", fontSize: 14,
-                  lineHeight: 1.75, marginBottom: 20,
-                }}>
+                <p style={{ color: "#9ca3af", fontSize: 14, lineHeight: 1.75, marginBottom: 20 }}>
                   {spotlight.description}
                 </p>
               )}
@@ -564,8 +514,8 @@ const VirtueSpotlightSection: React.FC = () => {
 
   const sorted = [...spotlights].sort((a, b) => {
     if (tab === "liked") {
-      const aLikes = (counts[a.id] ?? 0) + ((a as any).likeCount ?? 0);
-      const bLikes = (counts[b.id] ?? 0) + ((b as any).likeCount ?? 0);
+      const aLikes = (counts[a.id] ?? 0) + (a.likeCount ?? 0);
+      const bLikes = (counts[b.id] ?? 0) + (b.likeCount ?? 0);
       return bLikes - aLikes;
     }
     if (tab === "recent") {
@@ -584,6 +534,7 @@ const VirtueSpotlightSection: React.FC = () => {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4">
+        {/* Header */}
         <div className="flex flex-col mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full w-fit mb-4">
             <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
@@ -592,13 +543,14 @@ const VirtueSpotlightSection: React.FC = () => {
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl lg:text-5xl font-black text-white leading-tight tracking-tight mb-2">
-            VIRTUE <span className="text-blue-400">Spotlight</span>
+            SASDD <span className="text-blue-400">Bulletin Board</span>
           </h2>
           <p className="text-gray-400 text-sm max-w-lg leading-relaxed">
-            Valuing Integrity, Responsibility, and Trustworthiness — recognizing students who demonstrate exceptional moral character.
+            Stay updated with the latest announcements, reminders, and student recognitions from the Student Services & Affairs and Development Division.
           </p>
         </div>
 
+        {/* Tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {(["all", "recent", "liked"] as SortTab[]).map(t => (
             <button
