@@ -177,7 +177,7 @@ const AboutUs = () => {
 
             {/* Right: SASDD image with 3D tilt */}
             <div className="w-full max-w-md mx-auto lg:max-w-none h-full" style={{ animation: "fadeIn 0.7s ease 0.2s both" }}>
-              <TiltImage src="/sasdd.jpg" fillHeight />
+              <TiltImage src="/sasdd.png" fillHeight />
             </div>
           </div>
 

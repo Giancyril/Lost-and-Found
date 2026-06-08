@@ -356,7 +356,7 @@ export function Navbars() {
         </NavbarBrand>
 
         {/* Right side */}
-        <div className="flex md:order-2 items-center gap-2 !overflow-visible">
+        <div className="flex md:order-2 items-center gap-4 !overflow-visible">
           <ChatbotConcierge />
           <NotificationBell />
 

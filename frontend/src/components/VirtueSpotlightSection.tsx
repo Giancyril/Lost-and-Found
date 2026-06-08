@@ -366,7 +366,7 @@ const SpotlightModal = ({
             fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
             textTransform: "uppercase", color: "#378ADD",
           }}>
-            Recognition post
+            SASDD post
           </span>
           <CloseBtn />
         </div>
@@ -411,7 +411,7 @@ const SpotlightModal = ({
                 fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
                 textTransform: "uppercase", color: "#378ADD",
               }}>
-                Recognition post
+                SASDD post
               </span>
               <CloseBtn />
             </div>

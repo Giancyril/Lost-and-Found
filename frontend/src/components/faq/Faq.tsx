@@ -20,6 +20,12 @@ const Faq = () => {
     "Offline reports are saved automatically and submitted once your connection is restored.",
     "Use the AI Search tool to find potential matches for your lost item across all found reports.",
     "Add a clear photo when reporting items with photos are matched and claimed significantly faster.",
+    "Be specific in your descriptions include brand names, colors, and unique features to help others identify your item.",
+    "Check your email regularly for updates on your claims and reports the system sends automatic notifications.",
+    "Use the Nereid AI chatbot for quick answers about the system it's available 24/7 in the navbar.",
+    "Visit the Bulletin Board to see community announcements and updates from the SAS office.",
+    "Earn points by reporting found items and having claims approved check the leaderboard to track your progress.",
+    "For urgent inquiries, contact the SAS office directly during office hours: Monday-Friday, 8:00 AM - 6:00 PM.",
   ];
 
   useEffect(() => {

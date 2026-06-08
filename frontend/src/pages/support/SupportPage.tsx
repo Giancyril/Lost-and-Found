@@ -3,7 +3,7 @@ import { BiSupport } from "react-icons/bi";
 import {
   FaTicketAlt, FaCommentDots, FaEnvelope, FaUser,
   FaPaperPlane, FaCheckCircle, FaSpinner, FaStar, FaRegStar,
-  FaChevronDown, FaChevronUp,
+  FaChevronDown, FaChevronUp, FaFacebookF,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 
@@ -283,18 +283,30 @@ const SupportPage = () => {
           {/* ── Quick info cards ── */}
           <div className="fade-up fade-up-2 grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
             {[
-              { icon: <BiSupport size={18} className="text-blue-400" />, label: "Office Hours", value: "Mon – Fri, 8:00 AM – 6:00 PM", bg: "bg-blue-500/10 border-blue-500/20" },
-              { icon: <FaEnvelope size={14} className="text-blue-400" />, label: "Email Support", value: "sas@nbsc.edu.ph", bg: "bg-blue-500/10 border-blue-500/20" },
-              
-            ].map((c, i) => (
-              <div key={i} className={`flex items-center gap-3 p-4 rounded-2xl border bg-gray-900 ${c.bg}`}>
-                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${c.bg}`}>{c.icon}</div>
-                <div>
-                  <p className="text-gray-500 text-[10px] font-semibold uppercase tracking-widest">{c.label}</p>
-                  <p className="text-white text-sm font-semibold">{c.value}</p>
+              { icon: <BiSupport size={18} className="text-blue-400" />, label: "Office Hours", value: "Mon – Fri, 8:00 AM – 6:00 PM", bg: "bg-blue-500/10 border-blue-500/20", link: null },
+              { icon: <FaEnvelope size={14} className="text-blue-400" />, label: "Email Support", value: "sas@nbsc.edu.ph", bg: "bg-blue-500/10 border-blue-500/20", link: "mailto:sas@nbsc.edu.ph" },
+              { icon: <FaFacebookF size={14} className="text-blue-400" />, label: "Facebook Page", value: "NBSC Student Affairs & Services", bg: "bg-blue-500/10 border-blue-500/20", link: "https://www.facebook.com/nbscstudentaffairsandservices" },
+            ].map((c, i) => {
+              const content = (
+                <div className={`flex items-center gap-3 p-4 rounded-2xl border bg-gray-900 ${c.bg} ${c.link ? 'cursor-pointer hover:bg-blue-500/15 transition-all' : ''}`}>
+                  <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${c.bg}`}>{c.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-500 text-[10px] font-semibold uppercase tracking-widest">{c.label}</p>
+                    <p className="text-white text-[12px] font-semibold leading-tight break-words">{c.value}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+              
+              return c.link ? (
+                <a key={i} href={c.link} target="_blank" rel="noopener noreferrer" className="block">
+                  {content}
+                </a>
+              ) : (
+                <div key={i}>
+                  {content}
+                </div>
+              );
+            })}
           </div>
 
           <div className="fade-up fade-up-3 grid grid-cols-1 lg:grid-cols-5 gap-6">
