@@ -486,13 +486,51 @@ export const checkFoundItemAchievements = async (userId: string) => {
   await incrementBountyProgress(userId, "REPORT_FOUND_ITEM");
   await checkStreakAndAwardBonus(userId);
   await maybeAwardLuckyFind(userId);
+
   const count = await prisma.foundItem.count({ where: { userId } });
-  if (count >= 1) await awardAchievement(userId, "FIRST_FOUND_ITEM");
-  if (count >= 5) await awardAchievement(userId, "FOUND_5_ITEMS");
-  if (count >= 10) await awardAchievement(userId, "FOUND_10_ITEMS");
-  if (count >= 25) await awardAchievement(userId, "FOUND_25_ITEMS");
-  if (count >= 50) await awardAchievement(userId, "FOUND_50_ITEMS");
+  if (count >= 1)   await awardAchievement(userId, "FIRST_FOUND_ITEM");
+  if (count >= 5)   await awardAchievement(userId, "FOUND_5_ITEMS");
+  if (count >= 10)  await awardAchievement(userId, "FOUND_10_ITEMS");
+  if (count >= 25)  await awardAchievement(userId, "FOUND_25_ITEMS");
+  if (count >= 50)  await awardAchievement(userId, "FOUND_50_ITEMS");
   if (count >= 100) await awardAchievement(userId, "FOUND_100");
+
+  // Time-of-day / day-of-week achievements
+  const now  = new Date();
+  const hour = now.getHours();          // 0-23
+  const dow  = now.getDay();            // 0 = Sunday, 6 = Saturday
+
+  if (hour < 8)               await awardAchievement(userId, "EARLY_BIRD");
+  if (hour >= 21)             await awardAchievement(userId, "NIGHT_OWL");
+  if (dow === 0 || dow === 6) await awardAchievement(userId, "WEEKEND_WARRIOR");
+
+  // HAT_TRICK: 3 found items submitted in a single calendar day
+  const dayStart = new Date(now);
+  dayStart.setHours(0, 0, 0, 0);
+  const todayCount = await prisma.foundItem.count({
+    where: { userId, createdAt: { gte: dayStart } },
+  });
+  if (todayCount >= 3) await awardAchievement(userId, "HAT_TRICK");
+
+  // BORN_TO_FIND: first item within 24 h of account creation
+  const userRec = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { createdAt: true },
+  });
+  if (userRec) {
+    const accountAgeMs = now.getTime() - userRec.createdAt.getTime();
+    if (accountAgeMs <= 24 * 60 * 60 * 1000) {
+      await awardAchievement(userId, "BORN_TO_FIND");
+    }
+  }
+
+  // SPEEDRUNNER: a lost item was reported within the last 2 minutes
+  const twoMinsAgo = new Date(now.getTime() - 2 * 60 * 1000);
+  const recentLost = await prisma.lostItem.findFirst({
+    where: { createdAt: { gte: twoMinsAgo } },
+    orderBy: { createdAt: "desc" },
+  });
+  if (recentLost) await awardAchievement(userId, "SPEEDRUNNER");
 };
 
 export const checkLostItemAchievements = async (userId: string) => {
@@ -524,12 +562,24 @@ export const checkPointAchievements = async (userId: string) => {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { totalPoints: true } });
   if (!user) return;
   const pts = user.totalPoints;
-  if (pts >= 50) await awardAchievement(userId, "POINT_50");
-  if (pts >= 200) await awardAchievement(userId, "POINT_200");
-  if (pts >= 500) await awardAchievement(userId, "POINT_500");
+  if (pts >= 50)   await awardAchievement(userId, "POINT_50");
+  if (pts >= 200)  await awardAchievement(userId, "POINT_200");
+  if (pts >= 500)  await awardAchievement(userId, "POINT_500");
   if (pts >= 1000) await awardAchievement(userId, "POINT_1000");
   if (pts >= 2500) await awardAchievement(userId, "POINT_2500");
   if (pts >= 5000) await awardAchievement(userId, "POINT_5000");
+
+  // POINT_HUSTLER: earn 100+ points in a single calendar day
+  const dayStart = new Date();
+  dayStart.setHours(0, 0, 0, 0);
+  const todayPts = await prisma.points.aggregate({
+    where: { userId, amount: { gt: 0 }, createdAt: { gte: dayStart } },
+    _sum: { amount: true },
+  });
+  const dailyTotal = (todayPts._sum as { amount: number | null }).amount ?? 0;
+  if (dailyTotal >= 100) {
+    await awardAchievement(userId, "POINT_HUSTLER");
+  }
 };
 
 export const checkCommunityAchievements = async (userId: string) => {

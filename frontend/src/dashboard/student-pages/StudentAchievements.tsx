@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { baseApi } from "../../redux/api/baseApi";
 import { useUserVerification } from "../../auth/auth";
 import { notify } from "../../utils/notify";
+import { useGetMyRankQuery } from "../../redux/api/api";
 import {
   FaTrophy, FaSearch, FaBullseye, FaCheckCircle,
   FaStar, FaComments, FaBolt, FaClock, FaLock, FaFilter,
@@ -241,6 +242,10 @@ const StudentAchievements: React.FC = () => {
   const { data: myData, isLoading: loadingMy } = (achievementApi as any).useGetMyAchievementsQuery(undefined, { skip: !isLoggedIn });
   const [togglePin] = (achievementApi as any).useTogglePinAchievementMutation();
   const [unlockSecret] = (achievementApi as any).useUnlockSecretAchievementMutation();
+  const { data: rankData } = useGetMyRankQuery(undefined, { skip: !isLoggedIn });
+  const myRankInfo = rankData?.data ?? null;
+  const myRank: number = myRankInfo?.rank ?? 0;
+  const myDelta: number | null = myRankInfo?.delta ?? null;
 
 
   const allAchievements = allData?.data?.achievements || [];
@@ -328,8 +333,8 @@ const StudentAchievements: React.FC = () => {
         }
       `}</style>
 
-      {/* Stats row - Standard Layout */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+      {/* Stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
         {[
           {
             label: "Badges Earned",
@@ -340,6 +345,17 @@ const StudentAchievements: React.FC = () => {
           },
           { label: "Total Badges", value: stats.total, icon: <FaTrophy size={11} className="text-yellow-400" />, bg: "bg-yellow-500/10", accent: "text-yellow-400" },
           { label: "Bonus XP", value: stats.points, icon: <FaStar size={11} className="text-emerald-400" />, bg: "bg-emerald-500/10", accent: "text-emerald-400" },
+          {
+            label: "Leaderboard Rank",
+            value: myRank > 0 ? `#${myRank}` : "—",
+            sub: myDelta !== null && myDelta !== 0
+              ? (myDelta > 0 ? `▲${myDelta}` : `▼${Math.abs(myDelta)}`)
+              : null,
+            subColor: myDelta !== null && myDelta > 0 ? "text-emerald-400" : "text-red-400",
+            icon: <FaTrophy size={11} className="text-cyan-400" />,
+            bg: "bg-cyan-500/10",
+            accent: "text-cyan-400",
+          },
           {
             label: "Completion",
             value: `${stats.percent}%`,
@@ -359,14 +375,17 @@ const StudentAchievements: React.FC = () => {
               }
             }
           },
-        ].map(({ label, value, icon, bg, accent, onClick }: any) => (
+        ].map(({ label, value, sub, subColor, icon, bg, accent, onClick }: any) => (
           <div
             key={label}
             onClick={onClick}
             className={`bg-gray-900 border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex items-center justify-between transition-all relative overflow-hidden ${onClick ? 'cursor-help active:scale-95' : ''}`}
           >
             <div>
-              <p className={`text-lg sm:text-2xl font-bold tracking-tight ${accent}`}>{value}</p>
+              <div className="flex items-center gap-1.5">
+                <p className={`text-lg sm:text-2xl font-bold tracking-tight ${accent}`}>{value}</p>
+                {sub && <span className={`text-[9px] font-black ${subColor}`}>{sub}</span>}
+              </div>
               <p className="text-gray-500 text-[8px] sm:text-[10px] uppercase tracking-widest mt-0.5 font-bold">{label}</p>
             </div>
             <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${bg}`}>{icon}</div>
