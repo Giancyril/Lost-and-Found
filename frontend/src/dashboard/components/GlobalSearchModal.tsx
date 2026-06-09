@@ -476,7 +476,7 @@ const GlobalSearchModal = ({ open, onClose }: GlobalSearchModalProps) => {
             </div>
             <div className="ml-auto flex items-center gap-1 text-gray-700 text-[10px]">
               <FaKeyboard size={9} />
-              <span>Ctrl+K</span>
+              <span>Ctrl+Q</span>
             </div>
           </div>
         </div>

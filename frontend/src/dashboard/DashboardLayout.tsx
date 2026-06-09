@@ -331,7 +331,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "q") {
         e.preventDefault();
         setSearchModalOpen(prev => !prev);
       }
@@ -573,7 +573,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <FaSearch size={12} className="text-gray-500" />
                 <span>Search dashboard, items, claims...</span>
               </div>
-              <kbd className="inline-flex items-center justify-center px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono font-semibold text-gray-500">Ctrl+K</kbd>
+              <kbd className="inline-flex items-center justify-center px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono font-semibold text-gray-500">Ctrl+Q</kbd>
             </button>
           </div>
 
