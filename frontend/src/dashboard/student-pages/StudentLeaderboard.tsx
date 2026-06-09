@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useUserVerification } from "../../auth/auth";
-import { FaTrophy, FaMedal, FaStar, FaSearch, FaFire } from "react-icons/fa";
+import { FaTrophy, FaMedal, FaStar, FaSearch, FaFire, FaClock, FaCalendarAlt, FaInfinity } from "react-icons/fa";
 import { useGetLeaderboardQuery, useGetMyPointsQuery, useGetMyRankQuery } from "../../redux/api/api";
+
+// ── Leaderboard period tabs ───────────────────────────────────────────────────
+type LeaderboardType = "alltime" | "weekly" | "monthly";
+const PERIOD_TABS: { id: LeaderboardType; label: string; icon: React.ReactNode; desc: string }[] = [
+  { id: "alltime",  label: "All Time",   icon: <FaInfinity size={11} />,     desc: "Total points earned since joining" },
+  { id: "weekly",   label: "This Week",  icon: <FaClock size={11} />,        desc: "Points earned in the past 7 days"  },
+  { id: "monthly",  label: "This Month", icon: <FaCalendarAlt size={11} />,  desc: "Points earned this calendar month" },
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const medalLabel = (i: number) =>
@@ -97,9 +105,10 @@ const PersonalRankCard = ({ rankData, myPoints, board }: {
 export default function StudentLeaderboard() {
   const user: any = useUserVerification();
   const [search, setSearch] = useState("");
+  const [period, setPeriod] = useState<LeaderboardType>("alltime");
 
   const isLoggedIn = !!user?.id;
-  const { data: boardData,  isLoading: lbLoading  } = useGetLeaderboardQuery(undefined);
+  const { data: boardData,  isLoading: lbLoading  } = useGetLeaderboardQuery(period);
   const { data: pointsData, isLoading: ptsLoading } = useGetMyPointsQuery(undefined, { skip: !isLoggedIn });
   const { data: rankData                           } = useGetMyRankQuery(undefined,   { skip: !isLoggedIn });
 
@@ -121,6 +130,8 @@ export default function StudentLeaderboard() {
     if (u.rankSnapshot == null) return null;
     return u.rankSnapshot - (currentIdx + 1); // positive = moved up
   };
+
+  const activePeriodTab = PERIOD_TABS.find(t => t.id === period)!;
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto overflow-x-hidden">
@@ -146,6 +157,27 @@ export default function StudentLeaderboard() {
         ))}
       </div>
 
+      {/* ── Period tabs ── */}
+      <div className="bg-gray-900 border border-white/5 rounded-2xl p-1.5 flex gap-1">
+        {PERIOD_TABS.map(tab => {
+          const active = tab.id === period;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => { setPeriod(tab.id); setSearch(""); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all select-none ${
+                active
+                  ? "bg-blue-500/15 text-blue-300 border border-blue-500/25 shadow-sm"
+                  : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.03] border border-transparent"
+              }`}
+            >
+              <span className={active ? "text-blue-400" : "text-gray-600"}>{tab.icon}</span>
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── Personal rank card ── */}
       {!loading && myRank > 0 && (
         <PersonalRankCard rankData={myRankInfo} myPoints={myPoints} board={board} />
@@ -169,7 +201,7 @@ export default function StudentLeaderboard() {
         <div className="relative">
           <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
           <input
-            type="text" placeholder="Search students..." value={search}
+            type="text" placeholder={`Search students — ${activePeriodTab.desc}`} value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-gray-800/80 border border-white/10 rounded-2xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
           />

@@ -1207,31 +1207,102 @@ const PointAbuseTab = () => {
             <p className="text-gray-500 text-sm">No flagged users - All clear!</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
-            {flaggedUsers.map((user: any) => (
-              <div key={user.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-600 to-orange-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                  {user.name?.charAt(0).toUpperCase() || "U"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-white text-xs font-semibold truncate">{user.name || "Unknown"}</p>
-                    <span className="text-[9px] font-mono text-gray-500">{user.schoolId || "N/A"}</span>
-                    <span className="text-[9px] text-gray-600">•</span>
-                    <span className="text-[9px] text-gray-500">{user.totalPoints} pts</span>
+          <div className="overflow-x-auto">
+            {/* Table header */}
+            <div className="grid grid-cols-12 gap-3 px-5 py-2.5 border-b border-white/5 text-[9px] uppercase tracking-widest text-gray-600 font-semibold">
+              <div className="col-span-3">User</div>
+              <div className="col-span-2 text-right">Daily Total</div>
+              <div className="col-span-2 text-right">Campus Avg</div>
+              <div className="col-span-2 text-right">Multiplier</div>
+              <div className="col-span-2">Flagged At</div>
+              <div className="col-span-1 text-right">Action</div>
+            </div>
+            <div className="divide-y divide-white/5">
+              {flaggedUsers.map((user: any) => (
+                <div key={user.id} className="grid grid-cols-12 gap-3 items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+                  {/* User identity */}
+                  <div className="col-span-3 flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-600 to-orange-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {user.name?.charAt(0).toUpperCase() || "U"}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white text-xs font-semibold truncate">{user.name || "Unknown"}</p>
+                      <p className="text-gray-600 text-[10px] font-mono truncate">{user.schoolId || user.email || "N/A"}</p>
+                      {user.flagReason && (
+                        <p className="text-amber-400/70 text-[9px] truncate mt-0.5">{user.flagReason}</p>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-[10px] text-amber-400 mt-0.5 truncate">{user.flagReason || "No reason"}</p>
-                  <p className="text-[10px] text-gray-600 mt-0.5">Flagged: {user.flaggedAt ? format(new Date(user.flaggedAt), "MMM d, HH:mm") : "N/A"}</p>
+
+                  {/* Daily total points */}
+                  <div className="col-span-2 text-right">
+                    {user.dailyTotal != null ? (
+                      <div>
+                        <span className="text-rose-400 font-black text-xs">{user.dailyTotal}</span>
+                        <span className="text-gray-600 text-[10px] ml-0.5">pts</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-600 text-[10px]">—</span>
+                    )}
+                  </div>
+
+                  {/* Campus average */}
+                  <div className="col-span-2 text-right">
+                    {user.campusAverage != null ? (
+                      <div>
+                        <span className="text-cyan-400 font-bold text-xs">{Number(user.campusAverage).toFixed(1)}</span>
+                        <span className="text-gray-600 text-[10px] ml-0.5">pts</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-600 text-[10px]">—</span>
+                    )}
+                  </div>
+
+                  {/* Multiplier badge */}
+                  <div className="col-span-2 text-right">
+                    {user.multiplier != null ? (
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black border ${
+                        user.multiplier >= 5
+                          ? "bg-rose-500/15 border-rose-500/30 text-rose-400"
+                          : user.multiplier >= 3
+                          ? "bg-orange-500/15 border-orange-500/30 text-orange-400"
+                          : "bg-amber-500/15 border-amber-500/30 text-amber-400"
+                      }`}>
+                        {Number(user.multiplier).toFixed(1)}×
+                      </span>
+                    ) : (
+                      <span className="text-gray-600 text-[10px]">—</span>
+                    )}
+                  </div>
+
+                  {/* Flagged at */}
+                  <div className="col-span-2">
+                    <p className="text-gray-500 text-[10px]">
+                      {user.flaggedAt ? format(new Date(user.flaggedAt), "MMM d") : "N/A"}
+                    </p>
+                    <p className="text-gray-700 text-[10px]">
+                      {user.flaggedAt ? format(new Date(user.flaggedAt), "HH:mm") : ""}
+                    </p>
+                  </div>
+
+                  {/* Clear button */}
+                  <div className="col-span-1 flex justify-end">
+                    <button
+                      onClick={() => handleClearFlag(user.id, user.name)}
+                      disabled={processingUserId === user.id}
+                      title="Clear flag"
+                      className="px-2.5 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold rounded-lg transition-all disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {processingUserId === user.id ? "…" : "Clear"}
+                    </button>
+                  </div>
                 </div>
-                <button onClick={() => handleClearFlag(user.id, user.name)} disabled={processingUserId === user.id}
-                  className="px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold rounded-lg transition-all disabled:opacity-50">
-                  {processingUserId === user.id ? "Clearing..." : "Clear"}
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </SectionCard>
+
 
       {/* Recent Daily Cap Hits */}
       <SectionCard title="Recent Daily Cap Hits" subtitle="Users who hit the 10 point awards/day limit">
