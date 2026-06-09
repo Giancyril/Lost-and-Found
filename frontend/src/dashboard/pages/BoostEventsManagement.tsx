@@ -41,9 +41,9 @@ const CustomTimePicker = ({
   return (
     <div ref={ref} className="relative">
       <div onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center gap-2 bg-gray-800/60 border rounded-lg cursor-pointer select-none transition-all duration-200 px-4 py-2.5 text-sm ${open ? "ring-2 ring-yellow-500/60 border-yellow-500/40" : "border-gray-700 hover:border-gray-600"
+        className={`w-full flex items-center gap-2 bg-gray-800/60 border rounded-lg cursor-pointer select-none transition-all duration-200 px-4 py-2.5 text-sm ${open ? "ring-2 ring-blue-500/60 border-blue-500/40" : "border-gray-700 hover:border-gray-600"
           } ${value ? "text-white" : "text-gray-500"}`}>
-        <FaClock size={11} className={value ? "text-yellow-400 shrink-0" : "text-gray-600 shrink-0"} />
+        <FaClock size={11} className={value ? "text-blue-400 shrink-0" : "text-gray-600 shrink-0"} />
         <span className="text-sm flex-1 truncate whitespace-nowrap">{display}</span>
         {value && <span role="button" onClick={e => { e.stopPropagation(); onChange(""); }} className="text-gray-500 hover:text-gray-300 cursor-pointer shrink-0"><FaTimes size={9} /></span>}
       </div>
@@ -56,7 +56,7 @@ const CustomTimePicker = ({
               const label = `${h % 12 || 12}:${String(m).padStart(2, "0")} ${p}`;
               return (
                 <button key={t} data-t={t} type="button" onClick={() => { onChange(t); setOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${t === value ? "bg-yellow-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${t === value ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
                     }`}>
                   {label}
                 </button>
@@ -73,7 +73,7 @@ const CustomTimePicker = ({
 const Modal = ({ onClose, children }: { onClose: () => void; children: React.ReactNode }) => (
   <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col"
-      style={{ borderTop: "2px solid #eab308" }}>
+      style={{ borderTop: "2px solid #3b82f6" }}>
       {children}
     </div>
   </div>
@@ -232,7 +232,7 @@ export default function BoostEventsManagement() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl transition-all text-xs sm:text-sm shrink-0"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-all text-xs sm:text-sm shrink-0"
         >
           <FaPlus size={10} />
           <span className="hidden sm:inline">Create Boost Event</span>
@@ -259,9 +259,9 @@ export default function BoostEventsManagement() {
         <StatCard
           label="Total Events"
           value={totalEvents}
-          color="text-yellow-400"
-          bg="bg-yellow-500/10 border-yellow-500/20"
-          icon={<FaChartBar size={14} className="text-yellow-400" />}
+          color="text-blue-400"
+          bg="bg-blue-500/10 border-blue-500/20"
+          icon={<FaChartBar size={14} className="text-blue-400" />}
         />
         <StatCard
           label="Max Multiplier"
@@ -274,9 +274,9 @@ export default function BoostEventsManagement() {
 
       {/* Active Events Alert */}
       {activeEvents.length > 0 && (
-        <div className="bg-gradient-to-r from-yellow-500/10 via-orange-500/10 to-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4">
+        <div className="bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-blue-500/10 border border-blue-500/20 rounded-2xl p-4">
           <div className="flex items-center gap-3">
-            <FaBolt className="text-yellow-400 text-2xl animate-pulse" />
+            <FaBolt className="text-blue-400 text-2xl animate-pulse" />
             <div className="flex-1">
               <p className="text-white font-bold text-sm">
                 {activeEvents.length} XP Boost Event{activeEvents.length > 1 ? 's' : ''} Currently Active!
@@ -325,7 +325,7 @@ export default function BoostEventsManagement() {
                       <p className="text-gray-500 text-[10px] mt-0.5">by {event.createdBy}</p>
                     </td>
                     <td className="px-4 sm:px-6 py-3 sm:py-4">
-                      <span className="text-yellow-400 font-black text-base sm:text-lg">{event.multiplier}×</span>
+                      <span className="text-blue-400 font-black text-base sm:text-lg">{event.multiplier}×</span>
                     </td>
                     <td className="px-4 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
                       <div className="flex items-center gap-2 text-gray-400 text-xs">
@@ -387,7 +387,7 @@ export default function BoostEventsManagement() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Weekend XP Blitz"
-                className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/30"
+                className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                 required
               />
             </div>
@@ -402,11 +402,11 @@ export default function BoostEventsManagement() {
                 max="10"
                 value={formData.multiplier}
                 onChange={(e) => setFormData({ ...formData, multiplier: e.target.value })}
-                className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/30"
+                className="w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                 required
               />
               <p className="text-gray-600 text-[10px] mt-1.5 flex items-center gap-1.5">
-                <FaBolt size={8} className="text-yellow-500" />
+                <FaBolt size={8} className="text-blue-500" />
                 2.0 = double XP, 3.0 = triple XP, etc.
               </p>
             </div>
@@ -450,13 +450,13 @@ export default function BoostEventsManagement() {
             </div>
 
             {/* Info Box */}
-            <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-4">
+            <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
               <div className="flex items-start gap-3">
 
                 <div>
-                  <p className="text-yellow-400 text-xs font-bold mb-1">How it works</p>
+                  <p className="text-blue-400 text-xs font-bold mb-1">How it works</p>
                   <p className="text-gray-400 text-[11px] leading-relaxed text-justify">
-                    During this event, all XP awards (found items, approved claims, helpful comments) will be multiplied by <span className="text-yellow-400 font-bold">{formData.multiplier || "2.0"}×</span>. Login streak bonuses are excluded from multiplier.
+                    During this event, all XP awards (found items, approved claims, helpful comments) will be multiplied by <span className="text-blue-400 font-bold">{formData.multiplier || "2.0"}×</span>. Login streak bonuses are excluded from multiplier.
                   </p>
                 </div>
               </div>
@@ -474,11 +474,11 @@ export default function BoostEventsManagement() {
               <button
                 type="submit"
                 disabled={isSending}
-                className="flex-1 px-4 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSending ? (
                   <>
-                    <div className="animate-spin rounded-full h-3 w-3 border-2 border-black border-t-transparent" />
+                    <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
                     Creating...
                   </>
                 ) : (
