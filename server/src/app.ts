@@ -15,10 +15,12 @@ app.disable("x-powered-by");
 app.set("trust proxy", 1);
 
 const ALLOWED_ORIGINS = [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
   "https://lost-and-found-liart-seven.vercel.app",
 ];
+
+if (process.env.NODE_ENV !== "production") {
+  ALLOWED_ORIGINS.push("http://localhost:5173", "http://127.0.0.1:5173");
+}
 
 // ✅ SECURITY: CORS Configuration Check
 // WARNING: Remove localhost origins before deploying to production
