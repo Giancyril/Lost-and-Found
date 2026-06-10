@@ -28,9 +28,11 @@ const emailController_1 = require("../utils/emailController");
 const bulletinPost_controller_1 = require("../modules/bulletinPost/bulletinPost.controller");
 const bulletinPost_validate_1 = require("../modules/bulletinPost/bulletinPost.validate");
 const bulletinRateLimit_1 = require("../midddlewares/bulletinRateLimit");
+const authRateLimit_1 = require("../midddlewares/authRateLimit");
 const getMatchNotifications_1 = require("../utils/getMatchNotifications");
 const student_routes_1 = require("../modules/student/student.routes");
 const sheets_routes_1 = __importDefault(require("../modules/sheets/sheets.routes"));
+const reconciliation_route_1 = require("../modules/sheets/reconciliation.route");
 const chat_routes_1 = require("../modules/chat/chat.routes");
 const push_routes_1 = require("../modules/push/push.routes");
 const upload_1 = require("../midddlewares/upload");
@@ -38,14 +40,19 @@ const commentsRouter_1 = require("../comments/commentsRouter");
 const points_controller_1 = require("../modules/points/points.controller");
 const communicationController_1 = require("../utils/communicationController");
 const achievement_controller_1 = require("../modules/achievement/achievement.controller");
+const bounty_routes_1 = require("../modules/bounty/bounty.routes");
+const retention_route_1 = require("../modules/retention/retention.route");
 const securityController_1 = require("../utils/securityController");
 const moderationController_1 = require("../utils/moderationController");
 const router = express_1.default.Router();
 ////////////////////////////////////////////////// user //////////////////////////////////////////////
-router.post("/register", user_controllers_1.userController.registerUser);
+// ✅ SECURITY: Rate limiting applied to prevent brute-force attacks
+router.post("/register", authRateLimit_1.registerRateLimiter, user_controllers_1.userController.registerUser);
 router.get("/users", user_controllers_1.userController.allUsers);
-router.post("/login", (0, validate_1.default)(user_validate_1.UserSchema.userLoginSchema), auth_controller_1.authController.login);
-router.post("/portal-login", auth_controller_1.authController.portalLogin);
+router.post("/login", authRateLimit_1.loginRateLimiter, (0, validate_1.default)(user_validate_1.UserSchema.userLoginSchema), auth_controller_1.authController.login);
+router.post("/portal-login", authRateLimit_1.loginRateLimiter, auth_controller_1.authController.portalLogin);
+router.post("/refresh", auth_controller_1.authController.refresh);
+router.post("/logout", auth_controller_1.authController.logout);
 ////////////////////////////////////////////////// profile //////////////////////////////////////////////
 router.post("/change-password", (0, auth_1.default)(), (0, validate_1.default)(user_validate_1.UserSchema.changePasswordSchema), auth_controller_1.authController.newPasswords);
 router.post("/change-email", (0, auth_1.default)(), (0, validate_1.default)(user_validate_1.UserSchema.changeEmailSchema), auth_controller_1.authController.changeEmail);
@@ -91,6 +98,7 @@ router.get("/claims", (0, auth_1.default)(), claim_controller_1.claimsController
 router.get("/my/claims", (0, auth_1.default)(), claim_controller_1.claimsController.getMyClaim);
 router.put("/claims/:claimId", (0, validate_1.default)(claim_validate_1.ItemClaimSchema.updateClaim), (0, auth_1.default)(), claim_controller_1.claimsController.updateClaimStatus);
 router.delete("/claims/:claimId", (0, auth_1.default)(), claim_controller_1.claimsController.deleteClaim);
+router.post("/claims/track", claim_controller_1.claimsController.trackClaim);
 ////////////////////////////////////////////////// admin //////////////////////////////////////////////
 router.get("/admin/lostItems", (0, auth_1.default)(), lost_controller_1.lostItemController.getAllLostItems);
 router.get("/admin/stats", (0, auth_1.default)(true), adminStats_1.adminStats);
@@ -103,6 +111,7 @@ router.get("/admin/match-notifications", (0, auth_1.default)(), getMatchNotifica
 // ////////////////////////////////////////////////// AI search //////////////////////////////////////////////
 router.post("/ai-search", (0, validate_1.default)(aiSearch_validate_1.aiSearchValidation.aiSearchSchema), aiSearch_controller_1.aiSearchController.aiSearch);
 router.post("/ai-recognize", (0, auth_1.default)(true), upload_1.uploadImages.single("image"), ai_controller_1.aiRecognitionController.recognizeImage);
+router.post("/ai-voice-parse", (0, auth_1.default)(true), upload_1.uploadAudio.single("audio"), ai_controller_1.aiRecognitionController.parseVoice);
 router.use("/ai-chat", aiChat_routes_1.aiChatRoutes);
 // ── Email / Mailer ──
 router.post("/email/lost-item", (0, auth_1.default)(), emailController_1.sendLostItemEmail);
@@ -117,12 +126,21 @@ router.delete("/bulletin-posts/:id/tips/:tipId", (0, auth_1.default)(), bulletin
 router.put("/bulletin-posts/:id/resolve", (0, auth_1.default)(), bulletinPost_controller_1.bulletinPostController.resolvePost);
 router.use("/students", student_routes_1.studentRoutes);
 router.use("/sheets", sheets_routes_1.default);
+router.use("/admin/reconciliation", reconciliation_route_1.reconciliationRoutes);
 router.use("/chat", chat_routes_1.chatRoutes);
 router.use("/notifications", push_routes_1.pushRoutes);
 router.use("/", commentsRouter_1.commentsRouter);
 ////////////////////////////////////////////////// points //////////////////////////////////////////////
 router.get("/points/my", (0, auth_1.default)(), points_controller_1.pointsController.getMyPoints);
+router.get("/points/my-rank", (0, auth_1.default)(), points_controller_1.pointsController.getMyRank);
 router.get("/points/leaderboard", points_controller_1.pointsController.getLeaderboard);
+// Admin boost event management
+router.get("/admin/boost-events", (0, auth_1.default)(), points_controller_1.pointsController.getBoostEvents);
+router.post("/admin/boost-events", (0, auth_1.default)(), points_controller_1.pointsController.createBoostEvent);
+router.put("/admin/boost-events/:id/deactivate", (0, auth_1.default)(), points_controller_1.pointsController.deactivateBoostEvent);
+// Admin flagged users management
+router.get("/admin/flagged-users", (0, auth_1.default)(), points_controller_1.pointsController.getFlaggedUsers);
+router.put("/admin/flagged-users/:userId/clear", (0, auth_1.default)(), points_controller_1.pointsController.clearFlag);
 //////////////////////////////////////////////// achievements //////////////////////////////////////////////
 router.get("/achievements", (0, auth_1.default)(), achievement_controller_1.achievementController.getAchievements);
 router.get("/achievements/my", (0, auth_1.default)(), achievement_controller_1.achievementController.getMyAchievements);
@@ -132,11 +150,16 @@ router.post("/achievements/mark-seen", (0, auth_1.default)(), achievement_contro
 router.post("/achievements/unlock-secret", (0, auth_1.default)(), achievement_controller_1.achievementController.unlockSecretAchievement);
 router.get("/admin/achievements", (0, auth_1.default)(), achievement_controller_1.achievementController.getAllUserAchievements);
 router.post("/admin/backfill-students", (0, auth_1.default)(), user_controllers_1.userController.backfillStudentData);
+//////////////////////////////////////////////// bounties //////////////////////////////////////////////
+router.use("/bounties", bounty_routes_1.bountyRoutes);
+//////////////////////////////////////////////// retention policy //////////////////////////////////////////////
+router.use("/admin/retention", retention_route_1.retentionRoutes);
 // Communication Hub stats
 router.get("/admin/comm-hub/stats", (0, auth_1.default)(), communicationController_1.getCommHubStats);
 // Announcements
-router.post("/admin/announcements", (0, auth_1.default)(), communicationController_1.createAnnouncement);
 router.get("/admin/announcements", (0, auth_1.default)(), communicationController_1.getAnnouncements);
+router.post("/admin/announcements", (0, auth_1.default)(), communicationController_1.createAnnouncement);
+router.post("/admin/send-reminder", (0, auth_1.default)(), communicationController_1.sendMassReminder);
 router.delete("/admin/announcements/:id", (0, auth_1.default)(), communicationController_1.deleteAnnouncement);
 // Support Tickets (public submit, admin manage)
 router.post("/tickets", communicationController_1.createTicket); // public — users submit
@@ -153,6 +176,7 @@ router.delete("/admin/feedback/:id", (0, auth_1.default)(), communicationControl
 router.get("/admin/security/stats", (0, auth_1.default)(), securityController_1.getSecurityStats);
 router.get("/admin/security/logs", (0, auth_1.default)(), securityController_1.getLoginLogs);
 router.delete("/admin/security/logs", (0, auth_1.default)(), securityController_1.clearOldLogs);
+router.delete("/admin/security/logs/clear", (0, auth_1.default)(), securityController_1.clearOldLogs);
 // Access Control
 router.get("/admin/security/access-control", (0, auth_1.default)(), securityController_1.getAccessControlData);
 // Data Privacy

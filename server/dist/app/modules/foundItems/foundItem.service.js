@@ -27,7 +27,7 @@ const createFoundItem = (data, userId) => __awaiter(void 0, void 0, void 0, func
         categoryId: data.categoryId,
         description: data.description,
         date: data.date,
-        claimProcess: data.claimProcess || "Visit the SAS office with valid ID to claim this item.",
+        claimProcess: data.claimProcess || "Visit the SAS office with school ID to claim this item.",
         img: imgUrl,
         foundItemName: data.foundItemName,
         location: data.location,
@@ -146,8 +146,20 @@ const getSingleFoundItem = (id) => __awaiter(void 0, void 0, void 0, function* (
 const getMyFoundItem = (user) => __awaiter(void 0, void 0, void 0, function* () {
     if (!(user === null || user === void 0 ? void 0 : user.id))
         return [];
+    const whereConditions = { isDeleted: false };
+    // Safely match by userId, OR by schoolEmail if the user's JWT includes an email.
+    // This allows items reported while logged out (as guests) to be claimed by the user.
+    if (user.email) {
+        whereConditions.OR = [
+            { userId: user.id },
+            { schoolEmail: user.email }
+        ];
+    }
+    else {
+        whereConditions.userId = user.id;
+    }
     return prisma_1.default.foundItem.findMany({
-        where: { userId: user.id, isDeleted: false },
+        where: whereConditions,
         orderBy: { createdAt: "desc" },
         include: { user: true, category: true },
     });
@@ -212,14 +224,14 @@ const getArchivedFoundItems = () => __awaiter(void 0, void 0, void 0, function* 
     });
 });
 const getStaleFoundItems = () => __awaiter(void 0, void 0, void 0, function* () {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     return prisma_1.default.foundItem.findMany({
         where: {
             isDeleted: false,
             isArchived: false,
             isClaimed: false,
-            createdAt: { lte: thirtyDaysAgo },
+            createdAt: { lte: ninetyDaysAgo },
         },
         include: { category: true },
     });

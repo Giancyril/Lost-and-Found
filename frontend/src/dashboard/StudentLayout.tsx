@@ -6,7 +6,7 @@ import { FaTachometerAlt, FaBoxOpen, FaSearch, FaClipboardList,
   FaChevronLeft, FaChevronRight, FaChevronDown, FaStar,
   FaChartLine, FaArrowRight, FaMedal, FaBullhorn, FaMapMarkerAlt, FaUser
 } from "react-icons/fa";
-import { useGetMyPointsQuery, useGetLeaderboardQuery } from "../redux/api/api";
+import { useGetMyPointsQuery, useGetMyRankQuery } from "../redux/api/api";
 import ChatDropdown from "./components/ChatDropdown";
 import ProximityAlertSystem from "../components/ProximityAlertSystem";
 import { calculateLevel } from "../utils/leveling";
@@ -31,6 +31,7 @@ const NAV_ITEMS = [
     items: [
       { label: "Leaderboard",    href: "/dashboard/student/leaderboard",  icon: <FaTrophy size={14} /> },
       { label: "Achievements",   href: "/dashboard/student/achievements", icon: <FaMedal size={14} /> },
+      { label: "Points History", href: "/dashboard/student/points",       icon: <FaChartLine size={14} /> },
       { label: "Messages",       href: "/dashboard/student/chat",         icon: <FaBullhorn size={14} /> },
     ],
   },
@@ -49,6 +50,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/student/claims":      { title: "My Claims",      subtitle: "Track the status of your item claims." },
   "/dashboard/student/leaderboard": { title: "Leaderboard",    subtitle: "Top students ranked by points earned." },
   "/dashboard/student/achievements": { title: "Achievements", subtitle: "Collection of badges earned through community contribution." },
+  "/dashboard/student/points":      { title: "Points History", subtitle: "Your full XP transaction log — every point earned or deducted." },
   "/dashboard/student/settings":    { title: "Settings",       subtitle: "Manage your account preferences." },
 };
 
@@ -236,13 +238,13 @@ const PointsDropdown = ({ points, history, rank, loginStreak }: {
             {/* Footer */}
             <div className="px-3 pb-3 pt-1 border-t border-white/[0.04] mt-1">
               <Link
-                to="/dashboard/student/leaderboard"
+                to="/dashboard/student/points"
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl bg-yellow-500/[0.07] hover:bg-yellow-500/12 border border-yellow-500/15 text-yellow-300 text-xs font-semibold transition-all group"
               >
                 <div className="flex items-center gap-2">
                   <FaChartLine size={10} />
-                  <span>View leaderboard</span>
+                  <span>View all transactions</span>
                 </div>
                 <FaArrowRight size={9} className="group-hover:translate-x-0.5 transition-transform" />
               </Link>
@@ -365,14 +367,13 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
     skip: !isLoggedIn,
     pollingInterval: 120_000,
   });
-  const { data: boardData  } = useGetLeaderboardQuery(undefined);
+  const { data: rankData } = useGetMyRankQuery(undefined, { skip: !isLoggedIn });
 
   const points      = pointsData?.data?.totalPoints ?? 0;
   const history     = pointsData?.data?.history     ?? [];
   const loginStreak = pointsData?.data?.loginStreak ?? 0;
   const boostEvent  = pointsData?.data?.boostEvent  ?? null;
-  const board       = boardData?.data ?? [];
-  const rank        = board.findIndex((u: any) => u.id === user?.id) + 1;
+  const rank        = rankData?.data?.rank           ?? 0;
 
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 

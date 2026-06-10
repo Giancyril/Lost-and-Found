@@ -67,7 +67,16 @@ const loginUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
         username,
         role,
         userImg,
-        schoolId, // ← ADDED
+        schoolId,
+    });
+    const refreshToken = utils_1.utils.createRefreshToken({
+        id,
+        name,
+        email,
+        username,
+        role,
+        userImg,
+        schoolId,
     });
     return {
         id: user.id,
@@ -77,6 +86,7 @@ const loginUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
         role,
         schoolId, // ← ADDED so frontend also gets it on login
         token: accessToken,
+        refreshToken,
     };
 });
 const portalLoginUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -155,6 +165,15 @@ const portalLoginUser = (data) => __awaiter(void 0, void 0, void 0, function* ()
         userImg,
         schoolId,
     });
+    const refreshToken = utils_1.utils.createRefreshToken({
+        id,
+        name,
+        email,
+        username,
+        role,
+        userImg,
+        schoolId,
+    });
     return {
         id: user.id,
         name: name || "User",
@@ -163,6 +182,7 @@ const portalLoginUser = (data) => __awaiter(void 0, void 0, void 0, function* ()
         role,
         schoolId,
         token: accessToken,
+        refreshToken,
     };
 });
 const newPasswords = (data, user) => __awaiter(void 0, void 0, void 0, function* () {

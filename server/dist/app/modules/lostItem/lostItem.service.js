@@ -142,13 +142,27 @@ const getAllLostItems = (...args_2) => __awaiter(void 0, [...args_2], void 0, fu
 const getSingleLostItem = (singleId) => __awaiter(void 0, void 0, void 0, function* () {
     return prisma_1.default.lostItem.findFirst({
         where: { id: singleId, isDeleted: false },
-        include: { user: true, category: true },
+        include: { user: true, category: true, sightings: { orderBy: { createdAt: "desc" } } },
     });
 });
 const getMyLostItem = (user) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!(user === null || user === void 0 ? void 0 : user.id))
+        return [];
+    const whereConditions = { isDeleted: false };
+    // Safely match by userId, OR by schoolEmail if the user's JWT includes an email.
+    // This allows items reported while logged out (as guests) to be claimed by the user.
+    if (user.email) {
+        whereConditions.OR = [
+            { userId: user.id },
+            { schoolEmail: user.email }
+        ];
+    }
+    else {
+        whereConditions.userId = user.id;
+    }
     return prisma_1.default.lostItem.findMany({
-        where: { userId: user.id, isDeleted: false },
-        include: { user: true, category: true },
+        where: whereConditions,
+        include: { user: true, category: true, sightings: { orderBy: { createdAt: "desc" } } },
     });
 });
 const editMyLostItem = (data, user) => __awaiter(void 0, void 0, void 0, function* () {

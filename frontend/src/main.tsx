@@ -41,6 +41,7 @@ import StudentClaims from "./dashboard/student-pages/StudentClaims.tsx";
 import StudentLeaderboard from "./dashboard/student-pages/StudentLeaderboard.tsx";
 import StudentSettings from "./dashboard/student-pages/StudentSettings.tsx";
 import StudentAchievements from "./dashboard/student-pages/StudentAchievements.tsx";
+import StudentPointsHistory from "./dashboard/student-pages/StudentPointsHistory.tsx";
 import AchievementsManagement from "./dashboard/pages/AchievementsManagement.tsx";
 import StudentRegistry from "./dashboard/pages/StudentRegistry.tsx";
 import LeaderboardPage from "./dashboard/pages/LeaderboardPage.tsx";
@@ -128,6 +129,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/student/claims", element: <StudentLayout><StudentClaims /></StudentLayout> },
   { path: "/dashboard/student/leaderboard", element: <StudentLayout><StudentLeaderboard /></StudentLayout> },
   { path: "/dashboard/student/achievements", element: <StudentLayout><StudentAchievements /></StudentLayout> },
+  { path: "/dashboard/student/points", element: <StudentLayout><StudentPointsHistory /></StudentLayout> },
   { path: "/dashboard/student/settings", element: <StudentLayout><StudentSettings /></StudentLayout> },
   { path: "/dashboard/student/chat", element: <StudentLayout><ChatPage /></StudentLayout> },
 ]);

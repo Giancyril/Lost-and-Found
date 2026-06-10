@@ -21,7 +21,6 @@ const createClaim = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     var _a;
     try {
         const item = req.body;
-        // req.user is undefined for students (no auth) — service handles this gracefully
         const result = yield claim_service_1.claimsService.createClaim(item, req.user);
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.CREATED,
@@ -106,12 +105,37 @@ const updateClaimStatus = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     }
 });
 const deleteClaim = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _e, _f;
     try {
-        const result = yield claim_service_1.claimsService.deleteClaim(req.params.claimId);
+        const userId = ((_e = req.user) === null || _e === void 0 ? void 0 : _e.role) === "ADMIN" ? undefined : (_f = req.user) === null || _f === void 0 ? void 0 : _f.id;
+        const result = yield claim_service_1.claimsService.deleteClaim(req.params.claimId, userId);
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,
             message: "Claim deleted successfully",
+            data: result,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+const trackClaim = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { claimId, email } = req.body;
+        const result = yield claim_service_1.claimsService.trackClaim(claimId, email);
+        if (!result) {
+            return (0, response_1.default)(res, {
+                statusCode: http_status_codes_1.StatusCodes.NOT_FOUND,
+                success: false,
+                message: "Claim not found. Please check your Tracking ID and Email.",
+                data: null,
+            });
+        }
+        (0, response_1.default)(res, {
+            statusCode: http_status_codes_1.StatusCodes.OK,
+            success: true,
+            message: "Claim tracked successfully",
             data: result,
         });
     }
@@ -125,4 +149,5 @@ exports.claimsController = {
     updateClaimStatus,
     deleteClaim,
     getMyClaim,
+    trackClaim,
 };

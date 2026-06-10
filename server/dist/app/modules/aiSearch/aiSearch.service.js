@@ -15,125 +15,141 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.aiSearchService = void 0;
 const generative_ai_1 = require("@google/generative-ai");
 const prisma_1 = __importDefault(require("../../config/prisma"));
+const crypto_1 = __importDefault(require("crypto"));
 const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-// Gemini API calls
-function safeGenerate(model_1, prompt_1) {
-    return __awaiter(this, arguments, void 0, function* (model, prompt, retries = 3) {
-        for (let i = 0; i < retries; i++) {
-            try {
-                const result = yield model.generateContent(prompt);
-                return result;
-            }
-            catch (err) {
-                if (err.status === 503 && i < retries - 1) {
-                    console.warn(`Gemini overloaded. Retrying... attempt ${i + 1}`);
-                    yield new Promise((res) => setTimeout(res, (i + 1) * 1000));
-                }
-                else {
-                    throw err;
-                }
-            }
-        }
-    });
-}
-const aiSearchItems = (searchQuery) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("User search:", searchQuery);
-    try {
-        // Fetch found items
-        const foundItems = yield prisma_1.default.foundItem.findMany({
-            where: { isDeleted: false, isClaimed: false },
-            include: {
-                category: true,
-                user: { select: { id: true, username: true, email: true } },
-            },
-        });
-        // Fetch lost items
-        const lostItems = yield prisma_1.default.lostItem.findMany({
-            where: { isDeleted: false, isFound: false },
-            include: {
-                category: true,
-                user: { select: { id: true, username: true, email: true } },
-            },
-        });
-        // Simplify data
-        const foundItemsData = foundItems.map((item) => {
-            var _a;
-            return ({
-                id: item.id,
-                name: item.foundItemName,
-                description: item.description,
-                category: ((_a = item.category) === null || _a === void 0 ? void 0 : _a.name) || "",
-                location: item.location,
-                date: item.date,
-            });
-        });
-        const lostItemsData = lostItems.map((item) => {
-            var _a;
-            return ({
-                id: item.id,
-                name: item.lostItemName,
-                description: item.description,
-                category: ((_a = item.category) === null || _a === void 0 ? void 0 : _a.name) || "",
-                location: item.location,
-                date: item.date,
-            });
-        });
-        // Gemini model
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const prompt = `
-    You are an AI assistant helping people find lost and found items.
-
-    User search query: "${searchQuery}"
-
-    Found items database:
-    ${JSON.stringify(foundItemsData, null, 2)}
-
-    Lost items database:
-    ${JSON.stringify(lostItemsData, null, 2)}
-
-    Please analyze the search query and return the most relevant items from both databases that match the search query.
-    Consider keywords in the item name, description, category, and location.
-
-    Return your response as a JSON object with this exact structure:
-    {
-      "matches": {
-        "foundItems": [array of matching found item IDs],
-        "lostItems": [array of matching lost item IDs]
-      },
-      "reasoning": "Brief explanation of why these items match"
+const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+// ── Vector Search Configuration ───────────────────────────────────────────────
+const SIMILARITY_THRESHOLD = 0.60;
+const MAX_RESULTS = 5;
+// ── In-Memory Embedding Cache ─────────────────────────────────────────────────
+// Map structure: Item ID -> { hash: "md5_of_content", vector: [0.1, 0.4...] }
+const embeddingCache = new Map();
+// ── Math: Cosine Similarity ───────────────────────────────────────────────────
+function cosineSimilarity(vecA, vecB) {
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    for (let i = 0; i < vecA.length; i++) {
+        dotProduct += vecA[i] * vecB[i];
+        normA += vecA[i] * vecA[i];
+        normB += vecB[i] * vecB[i];
     }
-
-    Only return the JSON object, no additional text.
-    `;
-        const result = yield safeGenerate(model, prompt);
-        const response = yield result.response;
-        let aiResponse = response.text().trim();
-        aiResponse = aiResponse
-            .replace(/```json/g, "")
-            .replace(/```/g, "")
-            .trim();
-        let aiResult;
-        try {
-            aiResult = JSON.parse(aiResponse);
+    if (normA === 0 || normB === 0)
+        return 0;
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+// Helper to generate a text string for an item that captures its semantic meaning
+const createItemString = (item, type) => {
+    var _a;
+    const name = type === "found" ? item.foundItemName : item.lostItemName;
+    const category = ((_a = item.category) === null || _a === void 0 ? void 0 : _a.name) || "Uncategorized";
+    const desc = item.description || "";
+    const loc = item.location || "";
+    return `${category} | ${name} | ${desc} | ${loc}`.toLowerCase().trim();
+};
+const createHash = (content) => {
+    return crypto_1.default.createHash("md5").update(content).digest("hex");
+};
+// Generates an embedding vector using the Gemini API
+const getEmbedding = (text) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield embeddingModel.embedContent(text);
+        const embedding = result.embedding;
+        return embedding.values;
+    }
+    catch (error) {
+        console.error("Failed to generate embedding for text:", text.slice(0, 50), error);
+        return [];
+    }
+});
+const aiSearchItems = (searchQuery) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("[Semantic Search] Query:", searchQuery);
+    try {
+        // 1. Fetch active items from DB
+        const [foundItems, lostItems] = yield Promise.all([
+            prisma_1.default.foundItem.findMany({
+                where: { isDeleted: false, isClaimed: false },
+                include: {
+                    category: true,
+                    user: { select: { id: true, username: true, email: true } },
+                },
+            }),
+            prisma_1.default.lostItem.findMany({
+                where: { isDeleted: false, isFound: false },
+                include: {
+                    category: true,
+                    user: { select: { id: true, username: true, email: true } },
+                },
+            })
+        ]);
+        // 2. Generate embedding for the user's search query
+        const queryEmbedding = yield getEmbedding(searchQuery.toLowerCase().trim());
+        if (queryEmbedding.length === 0) {
+            throw new Error("Failed to generate embedding for the search query.");
         }
-        catch (error) {
-            console.error("Error parsing AI response:", error, aiResponse);
-            return performSimpleSearch(searchQuery, foundItems, lostItems);
+        // 3. Process Found Items
+        const scoredFoundItems = [];
+        for (const item of foundItems) {
+            const content = createItemString(item, "found");
+            const hash = createHash(content);
+            let vector = [];
+            const cached = embeddingCache.get(item.id);
+            if (cached && cached.hash === hash && cached.vector.length > 0) {
+                vector = cached.vector;
+            }
+            else {
+                vector = yield getEmbedding(content);
+                if (vector.length > 0) {
+                    embeddingCache.set(item.id, { hash, vector });
+                }
+            }
+            if (vector.length > 0) {
+                const score = cosineSimilarity(queryEmbedding, vector);
+                if (score >= SIMILARITY_THRESHOLD) {
+                    scoredFoundItems.push({ item, score });
+                }
+            }
         }
-        // Filter matched items
-        const matchedFoundItems = foundItems.filter((item) => aiResult.matches.foundItems.includes(item.id));
-        const matchedLostItems = lostItems.filter((item) => aiResult.matches.lostItems.includes(item.id));
+        // 3. Process Lost Items
+        const scoredLostItems = [];
+        for (const item of lostItems) {
+            const content = createItemString(item, "lost");
+            const hash = createHash(content);
+            let vector = [];
+            const cached = embeddingCache.get(item.id);
+            if (cached && cached.hash === hash && cached.vector.length > 0) {
+                vector = cached.vector;
+            }
+            else {
+                vector = yield getEmbedding(content);
+                if (vector.length > 0) {
+                    embeddingCache.set(item.id, { hash, vector });
+                }
+            }
+            if (vector.length > 0) {
+                const score = cosineSimilarity(queryEmbedding, vector);
+                if (score >= SIMILARITY_THRESHOLD) {
+                    scoredLostItems.push({ item, score });
+                }
+            }
+        }
+        // 4. Sort by score descending and take Top N
+        scoredFoundItems.sort((a, b) => b.score - a.score);
+        scoredLostItems.sort((a, b) => b.score - a.score);
+        const matchedFoundItems = scoredFoundItems.slice(0, MAX_RESULTS).map(s => s.item);
+        const matchedLostItems = scoredLostItems.slice(0, MAX_RESULTS).map(s => s.item);
+        console.log(`[Semantic Search] Found ${matchedFoundItems.length} found items and ${matchedLostItems.length} lost items with similarity >= ${SIMILARITY_THRESHOLD}`);
         return {
             foundItems: matchedFoundItems,
             lostItems: matchedLostItems,
-            reasoning: aiResult.reasoning,
+            reasoning: "Semantic embedding vector similarity search.",
             totalFound: matchedFoundItems.length,
             totalLost: matchedLostItems.length,
         };
     }
     catch (error) {
-        console.error("AI Search Error:", error);
-        // fallback to simple search
+        console.error("AI Semantic Search Error:", error);
+        // Fallback to simple text search if the embedding API fails
         const foundItems = yield prisma_1.default.foundItem.findMany({
             where: { isDeleted: false, isClaimed: false },
             include: {
@@ -151,7 +167,7 @@ const aiSearchItems = (searchQuery) => __awaiter(void 0, void 0, void 0, functio
         return performSimpleSearch(searchQuery, foundItems, lostItems);
     }
 });
-// Fallback simple search function
+// Fallback simple keyword search function
 const performSimpleSearch = (searchQuery, foundItems, lostItems) => {
     const query = searchQuery.toLowerCase();
     const matchedFoundItems = foundItems.filter((item) => {
@@ -171,7 +187,7 @@ const performSimpleSearch = (searchQuery, foundItems, lostItems) => {
     return {
         foundItems: matchedFoundItems,
         lostItems: matchedLostItems,
-        reasoning: "Simple text-based search results",
+        reasoning: "Fallback simple text-based search results",
         totalFound: matchedFoundItems.length,
         totalLost: matchedLostItems.length,
     };

@@ -26,20 +26,24 @@ const sheets_service_1 = require("../sheets/sheets.service");
 const points_service_1 = require("../points/points.service");
 const prisma_1 = __importDefault(require("../../config/prisma"));
 const achievementService_1 = require("../../utils/achievementService");
+const facebookPoster_1 = require("../../../utils/facebookPoster");
 const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a;
     try {
         const requestUserId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
-        const isAdmin = ((_b = req.user) === null || _b === void 0 ? void 0 : _b.role) === "ADMIN";
+        if (!req.user) {
+            return (0, response_1.default)(res, {
+                statusCode: http_status_codes_1.StatusCodes.UNAUTHORIZED,
+                success: false,
+                message: "Authentication required to report found items.",
+                data: null,
+            });
+        }
         // For admin submissions: find the student's User record by their email
         // so the found item is linked to them and points go to them
         let reporterUserId = undefined;
-        if (!isAdmin) {
-            // Student submitting directly — use their own account
-            reporterUserId = requestUserId;
-        }
-        else if (req.body.schoolEmail) {
-            // Admin submitting on behalf of student — look up by schoolEmail
+        if (req.body.schoolEmail) {
+            // Look up student by schoolEmail to award points
             const studentUser = yield prisma_1.default.user.findFirst({
                 where: { email: req.body.schoolEmail, role: "USER", isDeleted: false },
                 select: { id: true },
@@ -47,6 +51,13 @@ const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function
             if (studentUser) {
                 reporterUserId = studentUser.id;
             }
+            else {
+                // Fall back to the requesting user
+                reporterUserId = requestUserId;
+            }
+        }
+        else {
+            reporterUserId = requestUserId;
         }
         const result = yield foundItem_service_1.foundItemService.createFoundItem(req.body, reporterUserId);
         if (result === null || result === void 0 ? void 0 : result.id) {
@@ -110,6 +121,8 @@ const createFoundItem = (req, res) => __awaiter(void 0, void 0, void 0, function
                 (0, achievementService_1.checkFoundItemAchievements)(reporterUserId).catch(err => console.error("[Achievement] Error checking found item badges:", err));
                 (0, achievementService_1.checkPointAchievements)(reporterUserId).catch(err => console.error("[Achievement] Error checking point badges:", err));
             }
+            // ── Facebook Auto-Poster ─────────────────────────────────────────────────────
+            (0, facebookPoster_1.sendFacebookNotification)(result).catch((err) => console.error("[Facebook] Error sending notification:", err));
         }
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.CREATED,
@@ -316,6 +329,15 @@ const uploadFoundItemImages = (req, res) => __awaiter(void 0, void 0, void 0, fu
                 statusCode: http_status_codes_1.StatusCodes.BAD_REQUEST,
                 success: false,
                 message: "No images provided",
+                data: null,
+            });
+        }
+        // ✅ SECURITY: Server-side validation of image count (defense in depth)
+        if (files.length > 5) {
+            return (0, response_1.default)(res, {
+                statusCode: http_status_codes_1.StatusCodes.BAD_REQUEST,
+                success: false,
+                message: "Maximum 5 images allowed per item",
                 data: null,
             });
         }

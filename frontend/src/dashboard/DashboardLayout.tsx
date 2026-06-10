@@ -364,9 +364,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       try {
         if (authPayloadToken) {
           // Exchange the foreign portal token for a valid backend JWT
-          const res: any = await portalLogin({ 
-            portalUser: authPayloadUser, 
-            portalToken: authPayloadToken 
+          const res: any = await portalLogin({
+            portalUser: authPayloadUser,
+            portalToken: authPayloadToken
           });
 
           if (res?.data?.data?.token) {
@@ -374,9 +374,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           } else {
             console.warn("Failed to exchange portal token for backend JWT");
           }
-          
+
           setIsAuthenticating(false);
-          
+
           // Clean up URL
           if (directToken) searchParams.delete("token");
           if (portalToken) searchParams.delete("portalToken");

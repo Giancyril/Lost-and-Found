@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,6 +28,9 @@ const response_1 = __importDefault(require("../global/response"));
 const http_status_codes_1 = require("http-status-codes");
 const auth_service_1 = require("./auth.service");
 const securityController_1 = require("../utils/securityController");
+const utils_1 = require("../utils/utils");
+const points_service_1 = require("../modules/points/points.service");
+const achievementService_1 = require("../utils/achievementService");
 const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
@@ -39,11 +53,21 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
         catch (logErr) {
             console.error("[LoginLog] Failed to log success:", logErr);
         }
+        // Record login streak and award milestones
+        yield points_service_1.pointsService.recordLoginStreak(user.id);
+        yield (0, achievementService_1.checkStreakAndAwardBonus)(user.id);
+        const { refreshToken } = user, userData = __rest(user, ["refreshToken"]);
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,
             message: "Login successful",
-            data: user,
+            data: userData,
         });
     }
     catch (error) {
@@ -91,11 +115,21 @@ const portalLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         catch (logErr) {
             console.error("[LoginLog] Failed to log success for portal login:", logErr);
         }
+        // Record login streak and award milestones for portal login too
+        yield points_service_1.pointsService.recordLoginStreak(user.id);
+        yield (0, achievementService_1.checkStreakAndAwardBonus)(user.id);
+        const { refreshToken } = user, userData = __rest(user, ["refreshToken"]);
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
         (0, response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
             success: true,
             message: "Portal login successful",
-            data: user,
+            data: userData,
         });
     }
     catch (error) {
@@ -175,10 +209,63 @@ const changeUsername = (req, res) => __awaiter(void 0, void 0, void 0, function*
         });
     }
 });
+const refresh = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _d;
+    try {
+        const refreshToken = (_d = req.cookies) === null || _d === void 0 ? void 0 : _d.refreshToken;
+        if (!refreshToken) {
+            return res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ success: false, message: "No refresh token" });
+        }
+        try {
+            const decoded = utils_1.utils.verifyToken(refreshToken);
+            const accessToken = utils_1.utils.createToken({
+                id: decoded.id,
+                name: decoded.name,
+                email: decoded.email,
+                username: decoded.username,
+                role: decoded.role,
+                userImg: decoded.userImg,
+                schoolId: decoded.schoolId,
+            });
+            (0, response_1.default)(res, {
+                statusCode: http_status_codes_1.StatusCodes.OK,
+                success: true,
+                message: "Token refreshed",
+                data: { token: accessToken },
+            });
+        }
+        catch (e) {
+            return res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ success: false, message: "Invalid refresh token" });
+        }
+    }
+    catch (error) {
+        next(error);
+    }
+});
+const logout = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        });
+        (0, response_1.default)(res, {
+            statusCode: http_status_codes_1.StatusCodes.OK,
+            success: true,
+            message: "Logged out successfully",
+            data: null,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 exports.authController = {
     login,
     portalLogin,
     newPasswords,
     changeEmail,
-    changeUsername
+    changeUsername,
+    refresh,
+    logout
 };

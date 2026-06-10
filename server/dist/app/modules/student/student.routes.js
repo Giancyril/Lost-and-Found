@@ -8,7 +8,8 @@ const express_1 = __importDefault(require("express"));
 const student_controller_1 = require("./student.controller");
 const auth_1 = __importDefault(require("../../midddlewares/auth"));
 const router = express_1.default.Router();
-router.get("/debug/masterlist", student_controller_1.studentController.debugMasterlist);
+// ✅ SECURITY: Debug endpoints must be protected - only admins should access raw masterlist
+router.get("/debug/masterlist", (0, auth_1.default)(), student_controller_1.studentController.debugMasterlist);
 router.get("/details", student_controller_1.studentController.getStudentByDetails);
 router.get("/validate-registration", student_controller_1.studentController.validateRegistration);
 // ── Existing ──────────────────────────────────────────────────────────────────

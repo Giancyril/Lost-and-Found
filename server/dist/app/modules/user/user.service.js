@@ -69,6 +69,36 @@ const registerUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
                 yearLevel: user.yearLevel || null,
             },
         });
+        // Auto-Sync Option A: Link any past anonymous records that used this email to the new user
+        yield transactions.claim.updateMany({
+            where: { schoolEmail: email, userId: null },
+            data: {
+                userId: createdUser.id,
+                claimantName: createdUser.name || createdUser.username
+            },
+        });
+        yield transactions.lostItem.updateMany({
+            where: { schoolEmail: email, userId: null },
+            data: {
+                userId: createdUser.id,
+                reporterName: createdUser.name || createdUser.username
+            },
+        });
+        yield transactions.foundItem.updateMany({
+            where: { schoolEmail: email, userId: null },
+            data: {
+                userId: createdUser.id,
+                reporterName: createdUser.name || createdUser.username
+            },
+        });
+        yield transactions.supportTicket.updateMany({
+            where: { senderEmail: email },
+            data: { senderName: createdUser.name || createdUser.username },
+        });
+        yield transactions.feedback.updateMany({
+            where: { senderEmail: email },
+            data: { senderName: createdUser.name || createdUser.username },
+        });
         return {
             id: createdUser.id,
             userImg: createdUser.userImg,

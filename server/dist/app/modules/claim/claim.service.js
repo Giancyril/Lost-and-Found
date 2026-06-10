@@ -38,10 +38,87 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.claimsService = void 0;
 const prisma_1 = __importDefault(require("../../config/prisma"));
 const push_service_1 = require("../push/push.service");
+const ai_service_1 = require("../ai/ai.service");
+const mailer_1 = require("../../utils/mailer");
+const emailTemplates_1 = require("../../utils/emailTemplates");
 const createClaim = (item, user) => __awaiter(void 0, void 0, void 0, function* () {
+    // 0. Duplicate Claim Prevention — check if user already has PENDING or APPROVED claim for this item
+    if ((user === null || user === void 0 ? void 0 : user.id) && item.foundItemId) {
+        const existingClaim = yield prisma_1.default.claim.findFirst({
+            where: {
+                userId: user.id,
+                foundItemId: item.foundItemId,
+                status: { in: ["PENDING", "APPROVED"] },
+                isDeleted: false,
+            },
+        });
+        if (existingClaim) {
+            throw new Error(`You already have a ${existingClaim.status.toLowerCase()} claim for this item. Please wait for the admin to review your existing claim.`);
+        }
+    }
+    // Also check by email for guest claims (when userId is not available)
+    if (!(user === null || user === void 0 ? void 0 : user.id) && item.schoolEmail && item.foundItemId) {
+        const existingClaim = yield prisma_1.default.claim.findFirst({
+            where: {
+                schoolEmail: item.schoolEmail,
+                foundItemId: item.foundItemId,
+                status: { in: ["PENDING", "APPROVED"] },
+                isDeleted: false,
+            },
+        });
+        if (existingClaim) {
+            throw new Error(`A ${existingClaim.status.toLowerCase()} claim for this item already exists with this email. Please wait for the admin to review the existing claim.`);
+        }
+    }
+    let isHighRisk = false;
+    let fraudScore = 0;
+    let fraudReason = "";
+    // 1. Serial Claimant Check
+    if (user === null || user === void 0 ? void 0 : user.id) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recentClaimsCount = yield prisma_1.default.claim.count({
+            where: {
+                userId: user.id,
+                createdAt: { gte: thirtyDaysAgo }
+            }
+        });
+        if (recentClaimsCount >= 3) {
+            isHighRisk = true;
+            fraudReason = `[SERIAL CLAIMANT WARNING] User has submitted ${recentClaimsCount} claims in the last 30 days. `;
+        }
+    }
+    // 2. AI Fraud Detection
+    if (item.distinguishingFeatures && item.foundItemId) {
+        const foundItem = yield prisma_1.default.foundItem.findUnique({ where: { id: item.foundItemId } });
+        if (foundItem) {
+            const aiResult = yield ai_service_1.aiRecognitionService.analyzeClaimFraud(item.distinguishingFeatures, foundItem.description, foundItem.foundItemName);
+            fraudScore = aiResult.fraudScore;
+            if (aiResult.isHighRisk)
+                isHighRisk = true;
+            if (aiResult.fraudReason) {
+                fraudReason += (fraudReason ? " | " : "") + `[AI Assessment] ${aiResult.fraudReason}`;
+            }
+        }
+    }
     const result = yield prisma_1.default.claim.create({
-        data: Object.assign({ foundItemId: item.foundItemId, distinguishingFeatures: item.distinguishingFeatures, lostDate: item.lostDate, claimantName: item.claimantName || "", contactNumber: item.contactNumber || "", schoolEmail: item.schoolEmail || "" }, ((user === null || user === void 0 ? void 0 : user.id) ? { userId: user.id } : {})),
+        data: Object.assign(Object.assign({ foundItemId: item.foundItemId, distinguishingFeatures: item.distinguishingFeatures, lostDate: item.lostDate, claimantName: item.claimantName || "", contactNumber: item.contactNumber || "", schoolEmail: item.schoolEmail || "" }, ((user === null || user === void 0 ? void 0 : user.id) ? { userId: user.id } : {})), { fraudScore,
+            fraudReason,
+            isHighRisk }),
     });
+    if (result.schoolEmail) {
+        const template = (0, emailTemplates_1.claimSubmittedTemplate)({
+            claimantName: result.claimantName,
+            trackingId: result.id,
+        });
+        (0, mailer_1.sendEmail)({
+            fromName: process.env.SMTP_FROM_NAME || "NBSC SAS Lost & Found",
+            fromEmail: process.env.SMTP_FROM_EMAIL || "noreply@nbsc.edu.ph",
+            toEmail: result.schoolEmail,
+            subject: template.subject,
+            html: template.html,
+        }).catch((e) => console.error("Failed to send claim submitted email:", e));
+    }
     return result;
 });
 const getClaim = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -67,11 +144,20 @@ const getClaim = () => __awaiter(void 0, void 0, void 0, function* () {
 const getMyClaim = (user) => __awaiter(void 0, void 0, void 0, function* () {
     if (!user || !user.id)
         return [];
+    const whereConditions = { foundItem: { isDeleted: false } };
+    // Safely match by userId, OR by schoolEmail if the user's JWT includes an email.
+    // This allows items claimed while logged out (as guests) to be seen by the user.
+    if (user.email) {
+        whereConditions.OR = [
+            { userId: user.id },
+            { schoolEmail: user.email }
+        ];
+    }
+    else {
+        whereConditions.userId = user.id;
+    }
     const result = yield prisma_1.default.claim.findMany({
-        where: {
-            userId: user.id,
-            foundItem: { isDeleted: false },
-        },
+        where: whereConditions,
         include: {
             foundItem: {
                 include: {
@@ -84,14 +170,33 @@ const getMyClaim = (user) => __awaiter(void 0, void 0, void 0, function* () {
             user: {
                 select: { id: true, username: true, email: true },
             },
+            auditLogs: {
+                orderBy: { createdAt: "asc" },
+            },
         },
     });
     return result;
 });
 const updateClaimStatus = (claimId, data, performer) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const existing = yield prisma_1.default.claim.findUnique({ where: { id: claimId } });
-    const fromStatus = (_a = existing === null || existing === void 0 ? void 0 : existing.status) !== null && _a !== void 0 ? _a : "PENDING";
+    var _a, _b;
+    const existing = yield prisma_1.default.claim.findUnique({
+        where: { id: claimId },
+        include: { foundItem: true }
+    });
+    if (!existing) {
+        throw new Error("Claim not found");
+    }
+    // ✅ CRITICAL SECURITY: Prevent users from approving their own claims
+    if (data.status === "APPROVED" && (performer === null || performer === void 0 ? void 0 : performer.id)) {
+        if (existing.userId === performer.id) {
+            throw new Error("You cannot approve your own claim. This action has been logged.");
+        }
+        // Also prevent approving claims for items you reported
+        if (((_a = existing.foundItem) === null || _a === void 0 ? void 0 : _a.userId) === performer.id) {
+            throw new Error("You cannot approve a claim for an item you reported. This action has been logged.");
+        }
+    }
+    const fromStatus = (_b = existing === null || existing === void 0 ? void 0 : existing.status) !== null && _b !== void 0 ? _b : "PENDING";
     const result = yield prisma_1.default.claim.update({
         where: { id: claimId },
         data,
@@ -145,13 +250,18 @@ const updateClaimStatus = (claimId, data, performer) => __awaiter(void 0, void 0
     }
     return result;
 });
-const deleteClaim = (claimId) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteClaim = (claimId, requestingUserId) => __awaiter(void 0, void 0, void 0, function* () {
     const existing = yield prisma_1.default.claim.findUnique({
         where: { id: claimId },
         include: { foundItem: true }
     });
     if (!existing) {
         throw new Error("Claim not found");
+    }
+    // ✅ CRITICAL SECURITY: IDOR Protection - Only allow users to delete their own claims
+    // Admins can delete any claim (checked in controller via role)
+    if (requestingUserId && existing.userId && existing.userId !== requestingUserId) {
+        throw new Error("You are not authorized to delete this claim");
     }
     // If claim is approved, we need to handle the foreign key constraint
     if (existing.status === "APPROVED") {
@@ -173,8 +283,8 @@ const deleteClaim = (claimId) => __awaiter(void 0, void 0, void 0, function* () 
             action: "DELETED",
             fromStatus: existing.status,
             toStatus: "DELETED",
-            performedBy: "Admin",
-            note: "Claim deleted by admin",
+            performedBy: requestingUserId ? "User" : "Admin",
+            note: "Claim deleted",
         },
     });
     return result;
@@ -198,6 +308,21 @@ const getAuditLogs = () => __awaiter(void 0, void 0, void 0, function* () {
     });
     return result.filter((log) => log.claim !== null); // cast to any
 });
+const trackClaim = (claimId, email) => __awaiter(void 0, void 0, void 0, function* () {
+    const claim = yield prisma_1.default.claim.findFirst({
+        where: {
+            id: claimId,
+            schoolEmail: email,
+            isDeleted: false,
+        },
+        include: {
+            foundItem: {
+                select: { foundItemName: true, img: true, location: true, category: true },
+            },
+        },
+    });
+    return claim;
+});
 exports.claimsService = {
     createClaim,
     getClaim,
@@ -205,4 +330,5 @@ exports.claimsService = {
     getMyClaim,
     deleteClaim,
     getAuditLogs,
+    trackClaim,
 };

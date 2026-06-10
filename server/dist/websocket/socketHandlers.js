@@ -14,17 +14,23 @@ const commentsService_1 = require("../app/comments/commentsService");
 const chat_service_1 = require("../app/modules/chat/chat.service");
 const push_service_1 = require("../app/modules/push/push.service");
 const socketHandlers = (io, socket) => {
-    // Join item room for real-time updates
+    // ✅ SECURITY: Join item room for real-time updates (authentication required)
     socket.on('join-item', (itemId) => {
+        // Verify user is authenticated
+        if (!socket.userId) {
+            socket.emit('error', { message: 'Authentication required to join item rooms' });
+            console.warn(`Unauthenticated socket attempted to join room: item-${itemId}`);
+            return;
+        }
         const roomName = `item-${itemId}`;
         socket.join(roomName);
         console.log(`User ${socket.userId} joined room: ${roomName}`);
     });
-    // Leave item room
+    // ✅ SECURITY: Leave item room
     socket.on('leave-item', (itemId) => {
         const roomName = `item-${itemId}`;
         socket.leave(roomName);
-        console.log(`User ${socket.userId} left room: ${roomName}`);
+        console.log(`User ${socket.userId || 'anonymous'} left room: ${roomName}`);
     });
     // Handle new comment (Broadcast only, saving is handled by REST API)
     socket.on('new-comment', (data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -104,11 +110,36 @@ const socketHandlers = (io, socket) => {
         });
     });
     // ── CHAT HANDLERS ───────────────────────────────────────────────────────────
-    socket.on('join-chat', (chatRoomId) => {
-        const roomName = `chat-${chatRoomId}`;
-        socket.join(roomName);
-        console.log(`User ${socket.userId} joined chat room: ${roomName}`);
-    });
+    // ✅ SECURITY: Join chat room (authentication required)
+    socket.on('join-chat', (chatRoomId) => __awaiter(void 0, void 0, void 0, function* () {
+        // Verify user is authenticated
+        if (!socket.userId) {
+            socket.emit('error', { message: 'Authentication required to join chat rooms' });
+            console.warn(`Unauthenticated socket attempted to join room: chat-${chatRoomId}`);
+            return;
+        }
+        // ✅ SECURITY: Verify user is a participant in this chat room
+        try {
+            const room = yield chat_service_1.chatService.getChatRoomById(chatRoomId);
+            if (!room) {
+                socket.emit('error', { message: 'Chat room not found' });
+                return;
+            }
+            const isParticipant = room.participants.includes(socket.userId);
+            if (!isParticipant) {
+                socket.emit('error', { message: 'You are not authorized to join this chat room' });
+                console.warn(`User ${socket.userId} attempted to join unauthorized chat room: ${chatRoomId}`);
+                return;
+            }
+            const roomName = `chat-${chatRoomId}`;
+            socket.join(roomName);
+            console.log(`User ${socket.userId} joined chat room: ${roomName}`);
+        }
+        catch (error) {
+            console.error('Error joining chat room:', error);
+            socket.emit('error', { message: 'Failed to join chat room' });
+        }
+    }));
     socket.on('leave-chat', (chatRoomId) => {
         const roomName = `chat-${chatRoomId}`;
         socket.leave(roomName);
@@ -131,10 +162,11 @@ const socketHandlers = (io, socket) => {
         });
     });
     socket.on('send-message', (data) => __awaiter(void 0, void 0, void 0, function* () {
+        var _a;
         try {
             if (!socket.userId)
                 throw new Error('Unauthorized');
-            const message = yield chat_service_1.chatService.saveMessage(data.chatRoomId, socket.userId, data.content);
+            const message = yield chat_service_1.chatService.saveMessage(data.chatRoomId, socket.userId, data.content, (_a = data.replyTo) === null || _a === void 0 ? void 0 : _a.id);
             const roomName = `chat-${data.chatRoomId}`;
             // Emit to everyone in the room INCLUDING the sender (for confirmation)
             io.to(roomName).emit('message-received', message);
@@ -158,6 +190,37 @@ const socketHandlers = (io, socket) => {
         catch (error) {
             console.error('Error sending message:', error);
             socket.emit('error', { message: 'Failed to send message' });
+        }
+    }));
+    socket.on('delete-message', (data) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            if (!socket.userId)
+                throw new Error('Unauthorized');
+            yield chat_service_1.chatService.deleteMessage(data.messageId, socket.userId);
+            const roomName = `chat-${data.chatRoomId}`;
+            io.to(roomName).emit('message-deleted', { messageId: data.messageId });
+            console.log(`Message ${data.messageId} deleted by ${socket.userId}`);
+        }
+        catch (error) {
+            console.error('Error deleting message:', error);
+            socket.emit('error', { message: 'Failed to delete message' });
+        }
+    }));
+    socket.on('add-reaction', (data) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            if (!socket.userId)
+                throw new Error('Unauthorized');
+            const updatedMessage = yield chat_service_1.chatService.addReaction(data.messageId, socket.userId, data.emoji);
+            const roomName = `chat-${data.chatRoomId}`;
+            io.to(roomName).emit('reaction-updated', {
+                messageId: data.messageId,
+                reactions: updatedMessage.reactions
+            });
+            console.log(`Reaction ${data.emoji} added to message ${data.messageId} by ${socket.userId}`);
+        }
+        catch (error) {
+            console.error('Error adding reaction:', error);
+            socket.emit('error', { message: 'Failed to add reaction' });
         }
     }));
 };

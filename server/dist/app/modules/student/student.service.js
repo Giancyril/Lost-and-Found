@@ -3,6 +3,10 @@
 // Fix: return `department` as alias for `course` so all consumers
 // (ReportLostItem, BarcodeScannerModal, handleFetchDetails) get the
 // field they expect without any frontend changes.
+//
+// Cache upgrade: fetchMasterlist() now checks Redis first (< 5 ms).
+// Gviz is only hit on a cache miss (cold start or expired TTL).
+// The background sync job (masterlist.sync.ts) keeps Redis warm every 6 h.
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -21,6 +25,7 @@ const http_status_codes_1 = require("http-status-codes");
 const error_1 = __importDefault(require("../../global/error"));
 const prisma_1 = __importDefault(require("../../config/prisma"));
 const axios_1 = __importDefault(require("axios"));
+const masterlist_cache_1 = require("./masterlist.cache");
 const SHEET_ID = "1-uxgLmMS13UbC_BvcVjxeGjlJUgykvRIbb4D0y7zrPI";
 const MASTERLIST_SHEET = "Copy of Master List";
 const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(MASTERLIST_SHEET)}`;
@@ -70,14 +75,39 @@ const parseGvizResponse = (data) => {
         throw err;
     }
 };
+// ── Masterlist fetcher (cache-first) ─────────────────────────────────────────
+/**
+ * Returns the full student masterlist.
+ *
+ * Priority:
+ *   1. Redis cache  → sub-5 ms, works during Sheets outages
+ *   2. Gviz (live)  → fallback on cache miss or Redis unavailability
+ *
+ * All existing Gviz logic (axios, User-Agent header, 10s timeout,
+ * parseGvizResponse error handling) is preserved unchanged.
+ */
 const fetchMasterlist = () => __awaiter(void 0, void 0, void 0, function* () {
+    // ── 1. Try Redis cache ──────────────────────────────────────────────────────
+    try {
+        const cached = yield (0, masterlist_cache_1.getMasterlistCache)();
+        if (cached && cached.length > 0) {
+            console.log(`[Masterlist] Cache hit – ${cached.length} students`);
+            return cached;
+        }
+        console.log("[Masterlist] Cache miss – falling back to Gviz");
+    }
+    catch (cacheErr) {
+        // Redis is down / unreachable — degrade gracefully to Gviz
+        console.warn("[Masterlist] Redis unavailable, falling back to Gviz:", cacheErr);
+    }
+    // ── 2. Fallback: Gviz (Google Sheets) ───────────────────────────────────────
     try {
         console.log("[Masterlist] Fetching from:", GVIZ_URL);
         const response = yield axios_1.default.get(GVIZ_URL, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             },
-            timeout: 10000 // 10s timeout
+            timeout: 10000, // 10s timeout
         });
         if (response.status !== 200) {
             console.error("[Masterlist] Google Sheets HTTP Error:", response.status, response.statusText);
@@ -88,7 +118,7 @@ const fetchMasterlist = () => __awaiter(void 0, void 0, void 0, function* () {
     catch (err) {
         console.error("[Masterlist] Pipeline Failure:", {
             message: err.message,
-            url: GVIZ_URL
+            url: GVIZ_URL,
         });
         if (err instanceof error_1.default)
             throw err;
@@ -107,8 +137,18 @@ const getStudentById = (id) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const getStudentByDetails = (name, email) => __awaiter(void 0, void 0, void 0, function* () {
     const masterlist = yield fetchMasterlist();
-    const searchName = (name || "").toLowerCase().trim();
-    const searchEmail = (email || "").toLowerCase().trim();
+    let searchName = (name || "").toLowerCase().trim();
+    let searchEmail = (email || "").toLowerCase().trim();
+    // Robust check: If name looks like an email or student ID, and searchEmail is empty, swap/fix them!
+    // This gracefully handles browser auto-fill/user-input mixups where the email/ID is pasted into the "Your Name" input.
+    if (searchName && !searchEmail) {
+        const isEmail = searchName.includes("@");
+        const isId = /^\d{6,12}$|^\d{4}-\d{2}-\d{2}$/.test(searchName.replace(/[-\s]/g, ""));
+        if (isEmail || isId) {
+            searchEmail = searchName;
+            searchName = "";
+        }
+    }
     // Extract numeric ID from email like "20221270@nbsc.edu.ph" → "20221270"
     const emailLocalPart = searchEmail.split("@")[0];
     const searchId = normalizeId(emailLocalPart);

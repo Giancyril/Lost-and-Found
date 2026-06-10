@@ -29,7 +29,13 @@ const comparePasswords = (plainTextPassword, hashedPassword) => __awaiter(void 0
 const createToken = (data) => {
     return jsonwebtoken_1.default.sign(data, config_1.default.jwt_secrets, {
         algorithm: "HS256",
-        expiresIn: config_1.default.jwt_expires_in,
+        expiresIn: "15m",
+    });
+};
+const createRefreshToken = (data) => {
+    return jsonwebtoken_1.default.sign(data, config_1.default.jwt_secrets, {
+        algorithm: "HS256",
+        expiresIn: "7d",
     });
 };
 const verifyToken = (token) => {
@@ -49,7 +55,7 @@ const calculateMeta = (data) => __awaiter(void 0, void 0, void 0, function* () {
             }
             else {
                 total = yield prisma_1.default.foundItem.count({
-                    where: { isDeleted: false }
+                    where: { isDeleted: false, isArchived: false }
                 });
             }
             break; // Success, exit retry loop
@@ -77,6 +83,7 @@ exports.utils = {
     passwordHash,
     comparePasswords,
     createToken,
+    createRefreshToken,
     verifyToken,
     calculateMeta,
 };

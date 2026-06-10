@@ -137,7 +137,7 @@ const createOrUpdateStudent = (_data) => __awaiter(void 0, void 0, void 0, funct
     throw new error_1.default(http_status_codes_1.StatusCodes.METHOD_NOT_ALLOWED, "Manage the student masterlist directly in Google Sheets.");
 });
 // Google Sheets logging functionality
-const SHEETS_WEBHOOK_URL = process.env.SHEETS_WEBHOOK_URL;
+const SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
 const logToSheet = (data) => __awaiter(void 0, void 0, void 0, function* () {
     if (!SHEETS_WEBHOOK_URL) {
         console.warn("[Sheets] SHEETS_WEBHOOK_URL not configured, skipping logging");

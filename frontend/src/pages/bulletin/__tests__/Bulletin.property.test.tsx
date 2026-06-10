@@ -45,10 +45,10 @@ const nonEmptyStr = (min = 1, max = 60) =>
 
 // Safe date string — constrained range avoids JS Date boundary crashes
 const safeDateStr = () =>
-  fc.date({
-    min: new Date("2000-01-01T00:00:00.000Z"),
-    max: new Date("2025-12-31T23:59:59.000Z"),
-  }).map((d) => d.toISOString());
+  fc.integer({
+    min: 946684800000,
+    max: 1767225599000,
+  }).map((t) => new Date(t).toISOString());
 
 const bulletinPostArb: fc.Arbitrary<BulletinPost> = fc.record({
   id:           fc.uuid(),
@@ -121,11 +121,11 @@ describe("Property 7: Card rendering completeness", () => {
         const { unmount } = render(<BulletinBoard />);
 
         // Item name must appear
-        const nameEls = screen.getAllByText(new RegExp(post.itemName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "i"));
+        const nameEls = screen.getAllByText(new RegExp(post.itemName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "i"));
         expect(nameEls.length).toBeGreaterThan(0);
 
         // Location must appear somewhere in the document
-        const locEls = screen.getAllByText(new RegExp(post.location.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "i"));
+        const locEls = screen.getAllByText(new RegExp(post.location.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "i"));
         expect(locEls.length).toBeGreaterThan(0);
 
         // Tip count badge — matches "X tip" or "X tips"

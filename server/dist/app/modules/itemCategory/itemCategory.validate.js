@@ -7,6 +7,7 @@ const createFoundItemCategory = zod_1.z.object({
         name: zod_1.z.string({
             required_error: "Category name field is required",
         }),
+        icon: zod_1.z.string().optional(),
     }),
 });
 exports.FoundItemCategorySchema = {
