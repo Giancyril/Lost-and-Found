@@ -171,22 +171,24 @@ export default function StudentPointsHistory() {
       {/* ── Transaction history ── */}
       <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-white/5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <FaChartLine size={12} className="text-blue-400" />
-            <h2 className="text-[11px] font-black text-white uppercase tracking-widest">
-              Points History
-            </h2>
-            <span className="text-[10px] text-gray-600 font-bold">{filtered.length} entries</span>
+        <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2">
+              <FaChartLine size={12} className="text-blue-400 shrink-0" />
+              <h2 className="text-[11px] font-black text-white uppercase tracking-widest whitespace-nowrap">
+                Points History
+              </h2>
+            </div>
+            <span className="text-[10px] text-gray-600 font-bold whitespace-nowrap">{filtered.length} entries</span>
           </div>
 
           {/* Filter tabs */}
-          <div className="flex gap-1 bg-gray-800/60 rounded-xl p-1">
+          <div className="flex gap-1 bg-gray-800/60 rounded-xl p-1 w-full sm:w-auto">
             {FILTERS.map(f => (
               <button
                 key={f.id}
                 onClick={() => { setFilter(f.id); setPage(1); }}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider focus:outline-none focus:ring-0 select-none ${
+                className={`flex-1 sm:flex-none text-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider focus:outline-none focus:ring-0 select-none ${
                   filter === f.id
                     ? "bg-blue-500/20 text-blue-300 border border-blue-500/20"
                     : "text-gray-500 hover:text-gray-300"

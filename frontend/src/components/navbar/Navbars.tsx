@@ -65,11 +65,10 @@ const PointsDropdown = ({ points, history, rank }: { points: number; history: an
       <button
         type="button"
         onClick={() => setOpen(p => !p)}
-        className={`relative w-9 h-9 flex flex-col items-center justify-center rounded-full transition-all border group ${
-          open 
-            ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400" 
+        className={`relative w-9 h-9 flex flex-col items-center justify-center rounded-full transition-all border group ${open
+            ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400"
             : "bg-transparent border-white/5 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/10"
-        }`}
+          }`}
       >
         <span className="text-[7px] font-bold text-yellow-500 leading-none mb-[1px] uppercase group-hover:text-yellow-400 transition-colors">LVL</span>
         <span className="text-[13px] font-black leading-none">{level}</span>
@@ -96,7 +95,7 @@ const PointsDropdown = ({ points, history, rank }: { points: number; history: an
                   </div>
                 </div>
               </div>
-              
+
               {level < 100 ? (
                 <div className="mt-2">
                   <div className="flex justify-between text-[10px] text-gray-400 mb-1.5 font-medium">
@@ -356,7 +355,7 @@ export function Navbars() {
         </NavbarBrand>
 
         {/* Right side */}
-        <div className="flex md:order-2 items-center gap-4 !overflow-visible">
+        <div className="flex md:order-2 items-center gap-2 !overflow-visible">
           <ChatbotConcierge />
           <NotificationBell />
 
