@@ -628,6 +628,7 @@ model VirtueSpotlight {
   imageUrl    String?
   students    String[] // array of recognized student names
   isActive    Boolean  @default(true)
+  likes       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

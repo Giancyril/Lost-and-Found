@@ -117,6 +117,36 @@ router.delete("/virtue-spotlights/:id", auth(), async (req: Request, res: Respon
   }
 });
 
+// ── POST /virtue-spotlights/:id/like  (public) ───────────────────────────────
+router.post("/virtue-spotlights/:id/like", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { action } = req.body;
+
+    if (action !== "like" && action !== "unlike") {
+      return res.status(400).json({ success: false, message: "Invalid action. Must be 'like' or 'unlike'" });
+    }
+
+    const increment = action === "like" ? 1 : -1;
+
+    const existing = await prisma.virtueSpotlight.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: "Spotlight not found" });
+    }
+
+    const newLikes = Math.max(0, existing.likes + increment);
+
+    const updated = await prisma.virtueSpotlight.update({
+      where: { id },
+      data: { likes: newLikes },
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to update like count" });
+  }
+});
+
 // ── POST /virtue-spotlights/ai-write  (admin only) ───────────────────────────
 router.post("/virtue-spotlights/ai-write", auth(), async (req: Request, res: Response) => {
   try {

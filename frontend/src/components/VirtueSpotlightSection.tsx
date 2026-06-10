@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import { FaStar, FaHeart, FaTimes } from "react-icons/fa";
 import { useTransition, animated } from "@react-spring/web";
 import useMeasure from "react-use-measure";
-import { useGetVirtueSpotlightsQuery } from "../redux/api/api";
+import { useGetVirtueSpotlightsQuery, useLikeVirtueSpotlightMutation } from "../redux/api/api";
 
 type Spotlight = {
   id: string;
@@ -11,7 +11,7 @@ type Spotlight = {
   imageUrl?: string;
   students: string[];
   createdAt?: string;
-  likeCount?: number;
+  likes?: number;
 };
 
 type SortTab = "all" | "recent" | "liked";
@@ -38,29 +38,36 @@ const useLikes = () => {
     try { return JSON.parse(localStorage.getItem("virtue_liked_posts") || "[]"); }
     catch { return []; }
   });
-  const [counts, setCounts] = useState<Record<string, number>>(() => {
-    try { return JSON.parse(localStorage.getItem("virtue_like_counts") || "{}"); }
-    catch { return {}; }
-  });
+
+  const [likeSpotlight] = useLikeVirtueSpotlightMutation();
 
   const likedIdsRef = useRef(likedIds);
   likedIdsRef.current = likedIds;
 
-  const toggle = useCallback((id: string) => {
+  const toggle = useCallback(async (id: string) => {
     const isLiked = likedIdsRef.current.includes(id);
+
+    // Toggle locally first
     setLikedIds(prev => {
       const next = isLiked ? prev.filter(x => x !== id) : [...prev, id];
       localStorage.setItem("virtue_liked_posts", JSON.stringify(next));
       return next;
     });
-    setCounts(prev => {
-      const next = { ...prev, [id]: Math.max(0, (prev[id] ?? 0) + (isLiked ? -1 : 1)) };
-      localStorage.setItem("virtue_like_counts", JSON.stringify(next));
-      return next;
-    });
-  }, []);
 
-  return { likedIds, counts, toggle };
+    try {
+      await likeSpotlight({ id, action: isLiked ? "unlike" : "like" }).unwrap();
+    } catch (err) {
+      console.error("Failed to update like count on server:", err);
+      // Rollback local state on error
+      setLikedIds(prev => {
+        const next = isLiked ? [...prev, id] : prev.filter(x => x !== id);
+        localStorage.setItem("virtue_liked_posts", JSON.stringify(next));
+        return next;
+      });
+    }
+  }, [likeSpotlight]);
+
+  return { likedIds, toggle };
 };
 
 // ── Avatar stack ─────────────────────────────────────────────────────────────
@@ -157,9 +164,9 @@ const SpotlightCard = ({
 type GridItem = Spotlight & { x: number; y: number; w: number; h: number };
 
 const CSSMasonryGrid = ({
-  spotlights, likedIds, counts, onLike, onOpen, columns,
+  spotlights, likedIds, onLike, onOpen, columns,
 }: {
-  spotlights: Spotlight[]; likedIds: string[]; counts: Record<string, number>;
+  spotlights: Spotlight[]; likedIds: string[];
   onLike: (id: string) => void; onOpen: (s: Spotlight) => void; columns: number;
 }) => (
   <div style={{ columnCount: columns, columnGap: "12px" }}>
@@ -168,7 +175,7 @@ const CSSMasonryGrid = ({
         <SpotlightCard
           spotlight={s}
           isLiked={likedIds.includes(s.id)}
-          likeCount={counts[s.id] ?? 0}
+          likeCount={s.likes ?? 0}
           onLike={() => onLike(s.id)}
           onOpen={() => onOpen(s)}
         />
@@ -178,9 +185,9 @@ const CSSMasonryGrid = ({
 );
 
 const SpringMasonryGrid = ({
-  spotlights, likedIds, counts, onLike, onOpen,
+  spotlights, likedIds, onLike, onOpen,
 }: {
-  spotlights: Spotlight[]; likedIds: string[]; counts: Record<string, number>;
+  spotlights: Spotlight[]; likedIds: string[];
   onLike: (id: string) => void; onOpen: (s: Spotlight) => void;
 }) => {
   const [containerRef, { width }] = useMeasure();
@@ -247,7 +254,7 @@ const SpringMasonryGrid = ({
           <SpotlightCard
             spotlight={item}
             isLiked={likedIds.includes(item.id)}
-            likeCount={counts[item.id] ?? 0}
+            likeCount={item.likes ?? 0}
             onLike={() => onLike(item.id)}
             onOpen={() => onOpen(item)}
           />
@@ -258,7 +265,7 @@ const SpringMasonryGrid = ({
 };
 
 const MasonryGrid = (props: {
-  spotlights: Spotlight[]; likedIds: string[]; counts: Record<string, number>;
+  spotlights: Spotlight[]; likedIds: string[];
   onLike: (id: string) => void; onOpen: (s: Spotlight) => void;
 }) => {
   const columns = useColumns();
@@ -506,16 +513,18 @@ const VirtueSpotlightSection: React.FC = () => {
   const { data, isLoading } = useGetVirtueSpotlightsQuery({});
   const spotlights: Spotlight[] = (data?.data ?? []).filter((s: any) => s.isActive !== false);
 
-  const { likedIds, counts, toggle } = useLikes();
+  const { likedIds, toggle } = useLikes();
   const [tab, setTab] = useState<SortTab>("all");
   const [selected, setSelected] = useState<Spotlight | null>(null);
 
   if (isLoading || !spotlights.length) return null;
 
+  const currentSelected = selected ? spotlights.find(s => s.id === selected.id) : null;
+
   const sorted = [...spotlights].sort((a, b) => {
     if (tab === "liked") {
-      const aLikes = (counts[a.id] ?? 0) + (a.likeCount ?? 0);
-      const bLikes = (counts[b.id] ?? 0) + (b.likeCount ?? 0);
+      const aLikes = a.likes ?? 0;
+      const bLikes = b.likes ?? 0;
       return bLikes - aLikes;
     }
     if (tab === "recent") {
@@ -571,7 +580,6 @@ const VirtueSpotlightSection: React.FC = () => {
         <MasonryGrid
           spotlights={sorted}
           likedIds={likedIds}
-          counts={counts}
           onLike={toggle}
           onOpen={setSelected}
         />
@@ -581,12 +589,12 @@ const VirtueSpotlightSection: React.FC = () => {
         </p>
       </div>
 
-      {selected && (
+      {currentSelected && (
         <SpotlightModal
-          spotlight={selected}
-          isLiked={likedIds.includes(selected.id)}
-          likeCount={counts[selected.id] ?? 0}
-          onLike={() => toggle(selected.id)}
+          spotlight={currentSelected}
+          isLiked={likedIds.includes(currentSelected.id)}
+          likeCount={currentSelected.likes ?? 0}
+          onLike={() => toggle(currentSelected.id)}
           onClose={() => setSelected(null)}
         />
       )}

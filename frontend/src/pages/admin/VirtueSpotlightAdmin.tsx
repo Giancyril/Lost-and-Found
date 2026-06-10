@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import {
   FaPlus, FaStar, FaTimes, FaTrash, FaToggleOn, FaToggleOff,
-  FaImage, FaSpinner, FaEdit, FaUserCheck, FaMagic,
+  FaImage, FaSpinner, FaEdit, FaUserCheck, FaMagic, FaHeart,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -399,7 +399,7 @@ const VirtueSpotlightAdmin: React.FC = () => {
       </div>
 
       {/* ── Stats strip ── */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         {[
           {
             label: "Total Posts",
@@ -415,6 +415,11 @@ const VirtueSpotlightAdmin: React.FC = () => {
             label: "Hidden",
             value: spotlights.filter((s) => !s.isActive).length,
             color: "text-gray-400",
+          },
+          {
+            label: "Total Likes",
+            value: spotlights.reduce((sum, s) => sum + (s.likes ?? 0), 0),
+            color: "text-red-400",
           },
         ].map((stat) => (
           <div
@@ -502,12 +507,20 @@ const VirtueSpotlightAdmin: React.FC = () => {
                     </p>
                   )}
 
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <FaUserCheck size={9} className="text-cyan-400" />
-                    <span className="text-gray-500 text-xs">
-                      {item.students?.length || 0} student
-                      {item.students?.length !== 1 ? "s" : ""} recognized
-                    </span>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <FaUserCheck size={9} className="text-cyan-400" />
+                      <span className="text-gray-500 text-xs">
+                        {item.students?.length || 0} student
+                        {item.students?.length !== 1 ? "s" : ""} recognized
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <FaHeart size={9} className="text-red-400" />
+                      <span className="text-gray-500 text-xs">
+                        {item.likes ?? 0} likes
+                      </span>
+                    </div>
                   </div>
 
                   {item.students?.length > 0 && (

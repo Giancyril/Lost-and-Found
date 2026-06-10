@@ -714,6 +714,14 @@ const api = baseApi.injectEndpoints({
         body: { bulletPoints },
       }),
     }),
+    likeVirtueSpotlight: builder.mutation({
+      query: ({ id, action }: { id: string; action: "like" | "unlike" }) => ({
+        url: `/virtue-spotlights/${id}/like`,
+        method: "POST",
+        body: { action },
+      }),
+      invalidatesTags: ["virtueSpotlights"] as any,
+    }),
   }),
 });
 
@@ -818,4 +826,5 @@ export const {
   useUpdateVirtueSpotlightMutation,
   useDeleteVirtueSpotlightMutation,
   useAiWriteVirtueSpotlightMutation,
+  useLikeVirtueSpotlightMutation,
 } = api;
