@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useUserVerification, signOut } from "../auth/auth";
-import { FaTachometerAlt, FaBoxOpen, FaSearch, FaClipboardList,
+import {
+  FaTachometerAlt, FaBoxOpen, FaSearch, FaClipboardList,
   FaTrophy, FaCog, FaBars, FaTimes, FaHome, FaSignOutAlt,
   FaChevronLeft, FaChevronRight, FaChevronDown, FaStar,
   FaChartLine, FaArrowRight, FaMedal, FaBullhorn, FaMapMarkerAlt, FaUser
@@ -15,43 +16,43 @@ const NAV_ITEMS = [
   {
     section: "MENU",
     items: [
-      { label: "Overview",       href: "/dashboard/student",              icon: <FaTachometerAlt size={14} /> },
+      { label: "Overview", href: "/dashboard/student", icon: <FaTachometerAlt size={14} /> },
     ],
   },
   {
     section: "MY ITEMS",
     items: [
-      { label: "My Found Items", href: "/dashboard/student/found-items",  icon: <FaBoxOpen size={14} /> },
-      { label: "My Lost Items",  href: "/dashboard/student/lost-items",   icon: <FaSearch size={14} /> },
-      { label: "My Claims",      href: "/dashboard/student/claims",       icon: <FaClipboardList size={14} /> },
+      { label: "My Found Items", href: "/dashboard/student/found-items", icon: <FaBoxOpen size={14} /> },
+      { label: "My Lost Items", href: "/dashboard/student/lost-items", icon: <FaSearch size={14} /> },
+      { label: "My Claims", href: "/dashboard/student/claims", icon: <FaClipboardList size={14} /> },
     ],
   },
   {
     section: "COMMUNITY",
     items: [
-      { label: "Leaderboard",    href: "/dashboard/student/leaderboard",  icon: <FaTrophy size={14} /> },
-      { label: "Achievements",   href: "/dashboard/student/achievements", icon: <FaMedal size={14} /> },
-      { label: "Points History", href: "/dashboard/student/points",       icon: <FaChartLine size={14} /> },
-      { label: "Messages",       href: "/dashboard/student/chat",         icon: <FaBullhorn size={14} /> },
+      { label: "Leaderboard", href: "/dashboard/student/leaderboard", icon: <FaTrophy size={14} /> },
+      { label: "Achievements", href: "/dashboard/student/achievements", icon: <FaMedal size={14} /> },
+      { label: "Points History", href: "/dashboard/student/points", icon: <FaChartLine size={14} /> },
+      { label: "Messages", href: "/dashboard/student/chat", icon: <FaBullhorn size={14} /> },
     ],
   },
   {
     section: "ACCOUNT",
     items: [
-      { label: "Settings",       href: "/dashboard/student/settings",     icon: <FaCog size={14} /> },
+      { label: "Settings", href: "/dashboard/student/settings", icon: <FaCog size={14} /> },
     ],
   },
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
-  "/dashboard/student":             { title: "Overview",       subtitle: "Welcome back! Here's a summary of your activity." },
+  "/dashboard/student": { title: "Overview", subtitle: "Welcome back! Here's a summary of your activity." },
   "/dashboard/student/found-items": { title: "My Found Items", subtitle: "Items you reported as found on campus." },
-  "/dashboard/student/lost-items":  { title: "My Lost Items",  subtitle: "Items you reported as lost on campus." },
-  "/dashboard/student/claims":      { title: "My Claims",      subtitle: "Track the status of your item claims." },
-  "/dashboard/student/leaderboard": { title: "Leaderboard",    subtitle: "Top students ranked by points earned." },
+  "/dashboard/student/lost-items": { title: "My Lost Items", subtitle: "Items you reported as lost on campus." },
+  "/dashboard/student/claims": { title: "My Claims", subtitle: "Track the status of your item claims." },
+  "/dashboard/student/leaderboard": { title: "Leaderboard", subtitle: "Top students ranked by points earned." },
   "/dashboard/student/achievements": { title: "Achievements", subtitle: "Collection of badges earned through community contribution." },
-  "/dashboard/student/points":      { title: "Points History", subtitle: "Your full XP transaction log — every point earned or deducted." },
-  "/dashboard/student/settings":    { title: "Settings",       subtitle: "Manage your account preferences." },
+  "/dashboard/student/points": { title: "Points History", subtitle: "Your full XP transaction log every point earned or deducted." },
+  "/dashboard/student/settings": { title: "Settings", subtitle: "Manage your account preferences." },
 };
 
 interface StudentLayoutProps {
@@ -60,21 +61,21 @@ interface StudentLayoutProps {
 
 // ── Tier helper ───────────────────────────────────────────────────────────────
 const getTier = (pts: number) => {
-  if (pts >= 500) return { label: "Gold",    color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20",  glow: "shadow-yellow-500/20"  };
-  if (pts >= 200) return { label: "Silver",  color: "text-gray-300",   bg: "bg-gray-400/10 border-gray-400/20",      glow: "shadow-gray-400/20"    };
-  if (pts >= 50)  return { label: "Bronze",  color: "text-amber-500",  bg: "bg-amber-500/10 border-amber-500/20",    glow: "shadow-amber-500/20"   };
-  return                  { label: "Starter",color: "text-cyan-400",   bg: "bg-cyan-500/10 border-cyan-500/20",      glow: "shadow-cyan-500/20"    };
+  if (pts >= 500) return { label: "Gold", color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20", glow: "shadow-yellow-500/20" };
+  if (pts >= 200) return { label: "Silver", color: "text-gray-300", bg: "bg-gray-400/10 border-gray-400/20", glow: "shadow-gray-400/20" };
+  if (pts >= 50) return { label: "Bronze", color: "text-amber-500", bg: "bg-amber-500/10 border-amber-500/20", glow: "shadow-amber-500/20" };
+  return { label: "Starter", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20", glow: "shadow-cyan-500/20" };
 };
 
 const REASON_LABEL: Record<string, string> = {
   FOUND_ITEM_REPORTED: "Reported found item",
-  CLAIM_APPROVED:      "Claim approved",
-  HELPFUL_COMMENT:     "Helpful comment",
+  CLAIM_APPROVED: "Claim approved",
+  HELPFUL_COMMENT: "Helpful comment",
 };
 const REASON_COLOR: Record<string, string> = {
   FOUND_ITEM_REPORTED: "text-emerald-400",
-  CLAIM_APPROVED:      "text-cyan-400",
-  HELPFUL_COMMENT:     "text-violet-400",
+  CLAIM_APPROVED: "text-cyan-400",
+  HELPFUL_COMMENT: "text-violet-400",
 };
 
 // ── Avatar ───────────────────────────────────────────────────────────────────
@@ -112,9 +113,9 @@ const BoostBanner = ({ boostEvent }: { boostEvent: any }) => {
 };
 
 // ── Points Pill ───────────────────────────────────────────────────────────────
-const PointsDropdown = ({ points, history, rank, loginStreak }: { 
-  points: number; 
-  history: any[]; 
+const PointsDropdown = ({ points, history, rank, loginStreak }: {
+  points: number;
+  history: any[];
   rank: number;
   loginStreak: number;
 }) => {
@@ -144,11 +145,10 @@ const PointsDropdown = ({ points, history, rank, loginStreak }: {
       <button
         type="button"
         onClick={() => setOpen(p => !p)}
-        className={`relative w-9 h-9 flex flex-col items-center justify-center rounded-full transition-all border group ${
-          open 
-            ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400" 
+        className={`relative w-9 h-9 flex flex-col items-center justify-center rounded-full transition-all border group ${open
+            ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400"
             : "bg-transparent border-white/5 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/10"
-        }`}
+          }`}
       >
         <span className="text-[7px] font-bold text-yellow-500 leading-none mb-[1px] uppercase group-hover:text-yellow-400 transition-colors">LVL</span>
         <span className="text-[13px] font-black leading-none">{level}</span>
@@ -173,7 +173,7 @@ const PointsDropdown = ({ points, history, rank, loginStreak }: {
                   </div>
                 </div>
               </div>
-              
+
               {level < 100 ? (
                 <div className="mt-2">
                   <div className="flex justify-between text-[10px] text-gray-400 mb-1.5 font-medium">
@@ -354,7 +354,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   const navigate = useNavigate();
   const user: any = useUserVerification();
   const isLoggedIn = !!user?.id;
-  const [collapsed,  setCollapsed]  = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -369,11 +369,11 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   });
   const { data: rankData } = useGetMyRankQuery(undefined, { skip: !isLoggedIn });
 
-  const points      = pointsData?.data?.totalPoints ?? 0;
-  const history     = pointsData?.data?.history     ?? [];
+  const points = pointsData?.data?.totalPoints ?? 0;
+  const history = pointsData?.data?.history ?? [];
   const loginStreak = pointsData?.data?.loginStreak ?? 0;
-  const boostEvent  = pointsData?.data?.boostEvent  ?? null;
-  const rank        = rankData?.data?.rank           ?? 0;
+  const boostEvent = pointsData?.data?.boostEvent ?? null;
+  const rank = rankData?.data?.rank ?? 0;
 
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 

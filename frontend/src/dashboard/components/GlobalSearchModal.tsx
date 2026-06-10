@@ -43,7 +43,45 @@ interface SearchResult {
   iconColor: string;
   badge?: string;
   badgeColor?: string;
+  imageUrl?: string; // real item photo when available
 }
+
+// ── Item thumbnail: real photo or icon fallback ───────────────────────────────
+const ItemThumb = ({
+  imageUrl,
+  icon: Icon,
+  iconColor,
+  isSelected,
+  alt,
+}: {
+  imageUrl?: string;
+  icon: React.ComponentType<any>;
+  iconColor: string;
+  isSelected: boolean;
+  alt: string;
+}) => {
+  const [imgErr, setImgErr] = useState(false);
+  const showImage = imageUrl && !imgErr;
+
+  return (
+    <div
+      className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 overflow-hidden transition-all border ${
+        isSelected ? "border-white/10" : "border-transparent"
+      } ${showImage ? "" : isSelected ? "bg-white/10" : "bg-white/5"}`}
+    >
+      {showImage ? (
+        <img
+          src={imageUrl}
+          alt={alt}
+          onError={() => setImgErr(true)}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <Icon size={13} className={iconColor} />
+      )}
+    </div>
+  );
+};
 
 // ── Highlight matching text ───────────────────────────────────────────────────
 const Highlight = ({ text, query }: { text: string; query: string }) => {
@@ -145,6 +183,7 @@ const GlobalSearchModal = ({ open, onClose }: GlobalSearchModalProps) => {
         iconColor: "text-cyan-400",
         badge: i.isClaimed ? "Claimed" : "Available",
         badgeColor: i.isClaimed ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20" : "bg-blue-500/15 text-blue-400 border-blue-500/20",
+        imageUrl: i.img || undefined,
       });
     });
 
@@ -165,6 +204,7 @@ const GlobalSearchModal = ({ open, onClose }: GlobalSearchModalProps) => {
         iconColor: "text-orange-400",
         badge: i.isFound ? "Found" : "Missing",
         badgeColor: i.isFound ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20" : "bg-red-500/15 text-red-400 border-red-500/20",
+        imageUrl: i.img || undefined,
       });
     });
 
@@ -418,7 +458,6 @@ const GlobalSearchModal = ({ open, onClose }: GlobalSearchModalProps) => {
                   {group.items.map((result, i) => {
                     const absIdx = globalOffset + i;
                     const isSelected = absIdx === selectedIdx;
-                    const Icon = result.icon;
                     return (
                       <button
                         key={result.id}
@@ -427,10 +466,14 @@ const GlobalSearchModal = ({ open, onClose }: GlobalSearchModalProps) => {
                         onMouseEnter={() => setSelectedIdx(absIdx)}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all ${isSelected ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"}`}
                       >
-                        {/* Icon */}
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${isSelected ? "bg-white/10 border border-white/10" : "bg-white/5"}`}>
-                          <Icon size={13} className={result.iconColor} />
-                        </div>
+                        {/* Thumbnail: real photo or icon */}
+                        <ItemThumb
+                          imageUrl={result.imageUrl}
+                          icon={result.icon}
+                          iconColor={result.iconColor}
+                          isSelected={isSelected}
+                          alt={result.title}
+                        />
 
                         {/* Text */}
                         <div className="flex-1 min-w-0">
