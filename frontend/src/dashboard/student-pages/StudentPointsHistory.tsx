@@ -1,21 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useGetMyPointsQuery, useGetMyRankQuery } from "../../redux/api/api";
 import { useUserVerification } from "../../auth/auth";
 import { calculateLevel } from "../../utils/leveling";
 import {
   FaStar, FaTrophy, FaArrowUp, FaArrowDown, FaBolt,
-  FaChartLine, FaCalendarAlt, FaMedal,
+  FaChartLine, FaCalendarAlt, FaMedal, FaFire,
 } from "react-icons/fa";
 
 // ── Reason display map ────────────────────────────────────────────────────────
 const REASON_META: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  FOUND_ITEM_REPORTED:    { label: "Reported found item",    color: "text-emerald-400", bg: "bg-emerald-500/10", icon: <FaStar size={10} className="text-emerald-400" /> },
-  CLAIM_APPROVED:         { label: "Claim approved",         color: "text-cyan-400",    bg: "bg-cyan-500/10",    icon: <FaTrophy size={10} className="text-cyan-400" /> },
-  HELPFUL_COMMENT:        { label: "Helpful comment",        color: "text-violet-400",  bg: "bg-violet-500/10",  icon: <FaStar size={10} className="text-violet-400" /> },
-  ACHIEVEMENT_BONUS:      { label: "Achievement bonus",      color: "text-yellow-400",  bg: "bg-yellow-500/10",  icon: <FaMedal size={10} className="text-yellow-400" /> },
-  LOGIN_STREAK_BONUS:     { label: "Login streak bonus",     color: "text-orange-400",  bg: "bg-orange-500/10",  icon: <FaBolt size={10} className="text-orange-400" /> },
-  BOUNTY_COMPLETED:       { label: "Bounty completed",       color: "text-pink-400",    bg: "bg-pink-500/10",    icon: <FaTrophy size={10} className="text-pink-400" /> },
+  FOUND_ITEM_REPORTED: { label: "Reported found item", color: "text-emerald-400", bg: "bg-emerald-500/10", icon: <FaStar size={10} className="text-emerald-400" /> },
+  CLAIM_APPROVED: { label: "Claim approved", color: "text-cyan-400", bg: "bg-cyan-500/10", icon: <FaTrophy size={10} className="text-cyan-400" /> },
+  HELPFUL_COMMENT: { label: "Helpful comment", color: "text-violet-400", bg: "bg-violet-500/10", icon: <FaStar size={10} className="text-violet-400" /> },
+  ACHIEVEMENT_BONUS: { label: "Achievement bonus", color: "text-yellow-400", bg: "bg-yellow-500/10", icon: <FaMedal size={10} className="text-yellow-400" /> },
+  LOGIN_STREAK_BONUS: { label: "Login streak bonus", color: "text-orange-400", bg: "bg-orange-500/10", icon: <FaBolt size={10} className="text-orange-400" /> },
+  BOUNTY_COMPLETED: { label: "Bounty completed", color: "text-pink-400", bg: "bg-pink-500/10", icon: <FaTrophy size={10} className="text-pink-400" /> },
 };
 
 const getReasonMeta = (reason: string) =>
@@ -43,42 +43,384 @@ const StatCard = ({
 
 // ── Filter tabs ───────────────────────────────────────────────────────────────
 const FILTERS = [
-  { id: "all",      label: "All"       },
-  { id: "earned",   label: "Earned"    },
-  { id: "deducted", label: "Deducted"  },
+  { id: "all", label: "All" },
+  { id: "earned", label: "Earned" },
+  { id: "deducted", label: "Deducted" },
 ];
 
+// ── XP Chart ─────────────────────────────────────────────────────────────────
+interface DayBucket {
+  label: string;    // "Jun 5"
+  dateStr: string;  // ISO date key
+  xp: number;       // total XP earned (positive)
+  loss: number;     // total XP lost (positive number)
+}
+
+function buildBuckets(history: any[], days: number): DayBucket[] {
+  const buckets: DayBucket[] = [];
+  const now = new Date();
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    buckets.push({ label, dateStr, xp: 0, loss: 0 });
+  }
+
+  for (const h of history) {
+    if (!h.createdAt) continue;
+    const key = new Date(h.createdAt).toISOString().slice(0, 10);
+    const bucket = buckets.find(b => b.dateStr === key);
+    if (!bucket) continue;
+    if (h.amount > 0) bucket.xp += h.amount;
+    else bucket.loss += Math.abs(h.amount);
+  }
+
+  return buckets;
+}
+
+function XpChart({ history }: { history: any[] }) {
+  const [range, setRange] = useState<7 | 30>(7);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; bucket: DayBucket } | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const buckets = buildBuckets(history, range);
+  const maxXp = Math.max(...buckets.map(b => b.xp), 1);
+
+  // Chart dimensions
+  const W = 800, H = 180;
+  const PAD_L = 40, PAD_R = 16, PAD_T = 16, PAD_B = 36;
+  const chartW = W - PAD_L - PAD_R;
+  const chartH = H - PAD_T - PAD_B;
+
+  const n = buckets.length;
+  const step = chartW / Math.max(n - 1, 1);
+
+  const pts = buckets.map((b, i) => ({
+    x: PAD_L + i * step,
+    y: PAD_T + chartH - (b.xp / maxXp) * chartH,
+    bucket: b,
+  }));
+
+  // Smooth bezier path
+  const toPath = (points: { x: number; y: number }[]) => {
+    if (points.length === 0) return "";
+    let d = `M ${points[0].x},${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      const cp1x = points[i - 1].x + step * 0.4;
+      const cp1y = points[i - 1].y;
+      const cp2x = points[i].x - step * 0.4;
+      const cp2y = points[i].y;
+      d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${points[i].x},${points[i].y}`;
+    }
+    return d;
+  };
+
+  const linePath = toPath(pts);
+  const areaPath = pts.length
+    ? `${linePath} L ${pts[pts.length - 1].x},${PAD_T + chartH} L ${pts[0].x},${PAD_T + chartH} Z`
+    : "";
+
+  const totalPeriodXp = buckets.reduce((s, b) => s + b.xp, 0);
+  const activeDays = buckets.filter(b => b.xp > 0 || b.loss > 0).length;
+
+  const findNearest = useCallback((clientX: number, rect: DOMRect) => {
+    const scaleX = W / rect.width;
+    const mx = (clientX - rect.left) * scaleX;
+    let nearest = pts[0];
+    let minDist = Infinity;
+    for (const p of pts) {
+      const d = Math.abs(p.x - mx);
+      if (d < minDist) { minDist = d; nearest = p; }
+    }
+    setTooltip({ x: nearest.x, y: nearest.y, bucket: nearest.bucket });
+  }, [pts]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (!svgRef.current) return;
+    findNearest(e.clientX, svgRef.current.getBoundingClientRect());
+  }, [findNearest]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<SVGSVGElement>) => {
+    if (!svgRef.current || !e.touches[0]) return;
+    e.preventDefault();
+    findNearest(e.touches[0].clientX, svgRef.current.getBoundingClientRect());
+  }, [findNearest]);
+
+  // Y-axis labels
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map(f => ({
+    y: PAD_T + chartH - f * chartH,
+    label: Math.round(f * maxXp).toLocaleString(),
+  }));
+
+  return (
+    <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+      {/* Header */}
+      <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <FaChartLine size={11} className="text-blue-400" />
+          <div>
+            <h2 className="text-[11px] font-black text-white uppercase tracking-widest">XP Activity Chart</h2>
+            <p className="text-gray-500 text-[10px] mt-0.5">
+              +{totalPeriodXp.toLocaleString()} XP over {range} days · {activeDays} active days
+            </p>
+          </div>
+        </div>
+
+        {/* Range toggle */}
+        <div className="flex gap-1 bg-gray-800/60 rounded-xl p-1 self-start sm:self-auto">
+          {([7, 30] as const).map(d => (
+            <button
+              key={d}
+              onClick={() => setRange(d)}
+              className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors focus:outline-none focus-visible:outline-none active:scale-[1] select-none outline-none ${range === d
+                  ? "bg-blue-500/20 text-blue-300 border border-blue-500/20"
+                  : "text-gray-500 hover:text-gray-300"
+                }`}
+            >
+              {d}D
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* SVG chart */}
+      <div className="relative px-2 pt-3 pb-1">
+        {totalPeriodXp === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
+            <FaChartLine size={22} className="text-gray-700 mb-2" />
+            <p className="text-gray-600 text-xs font-medium">No XP earned in this period</p>
+          </div>
+        )}
+
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full touch-none"
+          style={{ minHeight: 140 }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setTooltip(null)}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={() => setTooltip(null)}
+        >
+          <defs>
+            {/* Area gradient */}
+            <linearGradient id="xpAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02" />
+            </linearGradient>
+            {/* Line gradient */}
+            <linearGradient id="xpLineGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#38bdf8" />
+            </linearGradient>
+            {/* Glow filter */}
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Grid lines + Y labels */}
+          {yTicks.map((t, i) => (
+            <g key={i}>
+              <line
+                x1={PAD_L} y1={t.y} x2={W - PAD_R} y2={t.y}
+                stroke="#ffffff" strokeOpacity="0.04" strokeWidth="1"
+              />
+              <text x={PAD_L - 6} y={t.y + 4} textAnchor="end" fill="#6b7280" fontSize="9">
+                {t.label}
+              </text>
+            </g>
+          ))}
+
+          {/* Zero baseline */}
+          <line
+            x1={PAD_L} y1={PAD_T + chartH} x2={W - PAD_R} y2={PAD_T + chartH}
+            stroke="#ffffff" strokeOpacity="0.08" strokeWidth="1"
+          />
+
+          {/* Area fill */}
+          {areaPath && (
+            <path d={areaPath} fill="url(#xpAreaGrad)" />
+          )}
+
+          {/* Line */}
+          {linePath && (
+            <path
+              d={linePath}
+              fill="none"
+              stroke="url(#xpLineGrad)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#glow)"
+            />
+          )}
+
+          {/* Bar columns (hover zone + deduction) */}
+          {pts.map((p, i) => {
+            const barW = Math.max(step * 0.6, 8);
+            const lossH = (buckets[i].loss / maxXp) * chartH;
+            return (
+              <g key={i}>
+                {/* Deduction mini bar at baseline */}
+                {buckets[i].loss > 0 && (
+                  <rect
+                    x={p.x - barW / 2}
+                    y={PAD_T + chartH}
+                    width={barW}
+                    height={Math.min(lossH, 10)}
+                    rx="2"
+                    fill="#ef4444"
+                    fillOpacity="0.5"
+                    transform={`translate(0, ${-Math.min(lossH, 10)})`}
+                  />
+                )}
+                {/* Invisible hover zone */}
+                <rect
+                  x={p.x - step / 2}
+                  y={PAD_T}
+                  width={step}
+                  height={chartH}
+                  fill="transparent"
+                />
+              </g>
+            );
+          })}
+
+          {/* Data point dots */}
+          {pts.map((p, i) => (
+            buckets[i].xp > 0 ? (
+              <circle
+                key={i}
+                cx={p.x} cy={p.y} r="3.5"
+                fill="#1d1d1d"
+                stroke="url(#xpLineGrad)"
+                strokeWidth="2"
+              />
+            ) : null
+          ))}
+
+          {/* Tooltip vertical line + dot */}
+          {tooltip && (
+            <>
+              <line
+                x1={tooltip.x} y1={PAD_T}
+                x2={tooltip.x} y2={PAD_T + chartH}
+                stroke="#ffffff" strokeOpacity="0.15" strokeWidth="1" strokeDasharray="4 3"
+              />
+              <circle
+                cx={tooltip.x} cy={tooltip.y} r="5"
+                fill="#3b82f6" stroke="#111827" strokeWidth="2"
+              />
+            </>
+          )}
+
+          {/* X-axis labels — show every Nth to avoid crowding */}
+          {pts.map((p, i) => {
+            const skip = range === 30 ? 4 : 1;
+            if (i % skip !== 0 && i !== pts.length - 1) return null;
+            return (
+              <text
+                key={i}
+                x={p.x} y={H - 6}
+                textAnchor="middle"
+                fill="#6b7280"
+                fontSize="9"
+              >
+                {buckets[i].label}
+              </text>
+            );
+          })}
+        </svg>
+
+        {/* Floating tooltip card */}
+        {tooltip && (
+          <div
+            className="absolute pointer-events-none z-20 bg-gray-800 border border-white/10 rounded-xl px-3 py-2 shadow-2xl text-xs min-w-[130px]"
+            style={{
+              left: `clamp(8px, ${(tooltip.x / W) * 100}%, calc(100% - 148px))`,
+              top: 8,
+            }}
+          >
+            <p className="text-gray-400 font-semibold mb-1.5 flex items-center gap-1.5">
+              <FaCalendarAlt size={9} className="text-gray-500" />
+              {tooltip.bucket.label}
+            </p>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-gray-500">Earned</span>
+                <span className="text-yellow-400 font-black">+{tooltip.bucket.xp} XP</span>
+              </div>
+              {tooltip.bucket.loss > 0 && (
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-gray-500">Deducted</span>
+                  <span className="text-red-400 font-black">-{tooltip.bucket.loss} XP</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-4 pt-1 border-t border-white/5">
+                <span className="text-gray-500">Net</span>
+                <span className={`font-black ${tooltip.bucket.xp - tooltip.bucket.loss >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  {tooltip.bucket.xp - tooltip.bucket.loss >= 0 ? "+" : ""}{tooltip.bucket.xp - tooltip.bucket.loss} XP
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 px-4 pb-3">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-0.5 rounded bg-gradient-to-r from-indigo-400 to-sky-400" />
+          <span className="text-gray-500 text-[10px]">XP Earned</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-1.5 rounded bg-red-500/50" />
+          <span className="text-gray-500 text-[10px]">XP Lost</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function StudentPointsHistory() {
   const user: any = useUserVerification();
   const isLoggedIn = !!user?.id;
   const [filter, setFilter] = useState("all");
-  const [page,   setPage]   = useState(1);
+  const [page, setPage] = useState(1);
   const PER_PAGE = 20;
 
   const { data: pointsData, isLoading } = useGetMyPointsQuery(undefined, { skip: !isLoggedIn });
   const { data: rankData } = useGetMyRankQuery(undefined, { skip: !isLoggedIn });
 
-  const totalPoints: number   = pointsData?.data?.totalPoints ?? 0;
-  const history: any[]        = pointsData?.data?.history     ?? [];
-  const loginStreak: number   = pointsData?.data?.loginStreak ?? 0;
-  const myRank: number        = rankData?.data?.rank          ?? 0;
-  const myDelta: number | null = rankData?.data?.delta        ?? null;
+  const totalPoints: number = pointsData?.data?.totalPoints ?? 0;
+  const history: any[] = pointsData?.data?.history ?? [];
+  const loginStreak: number = pointsData?.data?.loginStreak ?? 0;
+  const myRank: number = rankData?.data?.rank ?? 0;
+  const myDelta: number | null = rankData?.data?.delta ?? null;
 
   const { level, rankTitle, progressPercent, nextLevelTotalXp } = calculateLevel(totalPoints);
 
   // Apply filter
   const filtered = history.filter((h: any) => {
-    if (filter === "earned")   return h.amount > 0;
+    if (filter === "earned") return h.amount > 0;
     if (filter === "deducted") return h.amount < 0;
     return true;
   });
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   // Aggregate stats
-  const earned   = history.filter((h: any) => h.amount > 0).reduce((s: number, h: any) => s + h.amount, 0);
+  const earned = history.filter((h: any) => h.amount > 0).reduce((s: number, h: any) => s + h.amount, 0);
   const deducted = Math.abs(history.filter((h: any) => h.amount < 0).reduce((s: number, h: any) => s + h.amount, 0));
 
   if (isLoading) {
@@ -87,6 +429,7 @@ export default function StudentPointsHistory() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-gray-900 border border-white/5 rounded-2xl" />)}
         </div>
+        <div className="h-64 bg-gray-900 border border-white/5 rounded-2xl" />
         <div className="h-96 bg-gray-900 border border-white/5 rounded-2xl" />
       </div>
     );
@@ -148,7 +491,7 @@ export default function StudentPointsHistory() {
           </div>
           {loginStreak >= 3 && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 border border-orange-500/20">
-              <span className="text-sm">🔥</span>
+              <FaFire size={10} className="text-orange-400" />
               <span className="text-xs font-black text-orange-400">{loginStreak} day streak</span>
             </div>
           )}
@@ -188,11 +531,10 @@ export default function StudentPointsHistory() {
               <button
                 key={f.id}
                 onClick={() => { setFilter(f.id); setPage(1); }}
-                className={`flex-1 sm:flex-none text-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider focus:outline-none focus:ring-0 select-none ${
-                  filter === f.id
+                className={`flex-1 sm:flex-none text-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider focus:outline-none focus:ring-0 select-none ${filter === f.id
                     ? "bg-blue-500/20 text-blue-300 border border-blue-500/20"
                     : "text-gray-500 hover:text-gray-300"
-                }`}
+                  }`}
               >
                 {f.label}
               </button>
@@ -308,11 +650,10 @@ export default function StudentPointsHistory() {
                         )}
                         <button
                           onClick={() => setPage(p)}
-                          className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors ${
-                            p === page
+                          className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors ${p === page
                               ? "bg-blue-500/20 text-blue-300 border border-blue-500/20"
                               : "bg-gray-800 hover:bg-gray-700 text-gray-400"
-                          }`}
+                            }`}
                         >
                           {p}
                         </button>
@@ -331,6 +672,9 @@ export default function StudentPointsHistory() {
           </>
         )}
       </div>
+
+      {/* ── XP Chart ── */}
+      <XpChart history={history} />
 
       {/* ── Back to leaderboard ── */}
       <div className="flex justify-center">
