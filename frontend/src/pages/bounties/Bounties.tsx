@@ -68,7 +68,7 @@ const Bounties = () => {
 
   if (isDashboard) {
     return (
-      <div className="max-w-5xl mx-auto space-y-5">
+      <div className="space-y-3 sm:space-y-5 max-w-7xl mx-auto pb-10 px-2 sm:px-0">
         {/* Timer Card */}
         <div className="bg-gradient-to-r from-blue-500/10 to-violet-500/10 border border-blue-500/20 rounded-2xl p-4 sm:p-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
