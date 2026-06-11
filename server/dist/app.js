@@ -8,7 +8,6 @@ const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const routes_1 = __importDefault(require("./app/routes/routes"));
-const virtueSpotlight_routes_1 = __importDefault(require("./routes/virtueSpotlight.routes"));
 const errorHandler_1 = __importDefault(require("./app/midddlewares/errorHandler"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -94,7 +93,6 @@ app.use((req, res, next) => {
     return doubleCsrfProtection(req, res, next);
 });
 app.use("/api", routes_1.default);
-app.use("/api", virtueSpotlight_routes_1.default);
 app.use(errorHandler_1.default);
 app.use((req, res) => {
     res.status(404).send({

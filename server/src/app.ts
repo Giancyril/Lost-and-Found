@@ -3,7 +3,6 @@ import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import router from "./app/routes/routes";
-import virtueRoutes from "./routes/virtueSpotlight.routes";
 import errorHandler from "./app/midddlewares/errorHandler";
 
 dotenv.config();
@@ -106,7 +105,6 @@ app.use((req, res, next) => {
 });
 
 app.use("/api", router);
-app.use("/api", virtueRoutes);
 app.use(errorHandler);
 
 app.use((req: Request, res: Response) => {

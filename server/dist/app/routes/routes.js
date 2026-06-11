@@ -42,6 +42,7 @@ const communicationController_1 = require("../utils/communicationController");
 const achievement_controller_1 = require("../modules/achievement/achievement.controller");
 const bounty_routes_1 = require("../modules/bounty/bounty.routes");
 const retention_route_1 = require("../modules/retention/retention.route");
+const virtueSpotlight_routes_1 = __importDefault(require("../../routes/virtueSpotlight.routes"));
 const securityController_1 = require("../utils/securityController");
 const moderationController_1 = require("../utils/moderationController");
 const router = express_1.default.Router();
@@ -130,6 +131,7 @@ router.use("/admin/reconciliation", reconciliation_route_1.reconciliationRoutes)
 router.use("/chat", chat_routes_1.chatRoutes);
 router.use("/notifications", push_routes_1.pushRoutes);
 router.use("/", commentsRouter_1.commentsRouter);
+router.use("/", virtueSpotlight_routes_1.default);
 ////////////////////////////////////////////////// points //////////////////////////////////////////////
 router.get("/points/my", (0, auth_1.default)(), points_controller_1.pointsController.getMyPoints);
 router.get("/points/my-rank", (0, auth_1.default)(), points_controller_1.pointsController.getMyRank);

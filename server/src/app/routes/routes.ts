@@ -42,6 +42,7 @@ import {
 import { achievementController } from "../modules/achievement/achievement.controller";
 import { bountyRoutes } from "../modules/bounty/bounty.routes";
 import { retentionRoutes } from "../modules/retention/retention.route";
+import virtueRoutes from "../../routes/virtueSpotlight.routes";
 
 import {
   getSecurityStats,
@@ -165,6 +166,7 @@ router.use("/admin/reconciliation", reconciliationRoutes);
  router.use("/chat", chatRoutes);
 router.use("/notifications", pushRoutes);
 router.use("/", commentsRouter);
+router.use("/", virtueRoutes);
 
 ////////////////////////////////////////////////// points //////////////////////////////////////////////
 router.get("/points/my", auth(), pointsController.getMyPoints);
