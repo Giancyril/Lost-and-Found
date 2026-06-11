@@ -130,6 +130,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/student/lost-items", element: <StudentLayout><StudentLostItems /></StudentLayout> },
   { path: "/dashboard/student/claims", element: <StudentLayout><StudentClaims /></StudentLayout> },
   { path: "/dashboard/student/leaderboard", element: <StudentLayout><StudentLeaderboard /></StudentLayout> },
+  { path: "/dashboard/student/bounties", element: <StudentLayout><Bounties /></StudentLayout> },
   { path: "/dashboard/student/achievements", element: <StudentLayout><StudentAchievements /></StudentLayout> },
   { path: "/dashboard/student/points", element: <StudentLayout><StudentPointsHistory /></StudentLayout> },
   { path: "/dashboard/student/settings", element: <StudentLayout><StudentSettings /></StudentLayout> },

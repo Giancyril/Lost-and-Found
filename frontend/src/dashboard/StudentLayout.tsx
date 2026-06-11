@@ -31,6 +31,7 @@ const NAV_ITEMS = [
     section: "COMMUNITY",
     items: [
       { label: "Leaderboard", href: "/dashboard/student/leaderboard", icon: <FaTrophy size={14} /> },
+      { label: "Active Bounties", href: "/dashboard/student/bounties", icon: <FaStar size={14} /> },
       { label: "Achievements", href: "/dashboard/student/achievements", icon: <FaMedal size={14} /> },
       { label: "Points History", href: "/dashboard/student/points", icon: <FaChartLine size={14} /> },
       { label: "Messages", href: "/dashboard/student/chat", icon: <FaBullhorn size={14} /> },
@@ -50,6 +51,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/student/lost-items": { title: "My Lost Items", subtitle: "Items you reported as lost on campus." },
   "/dashboard/student/claims": { title: "My Claims", subtitle: "Track the status of your item claims." },
   "/dashboard/student/leaderboard": { title: "Leaderboard", subtitle: "Top students ranked by points earned." },
+  "/dashboard/student/bounties": { title: "Active Bounties", subtitle: "Complete weekly challenges to earn extra XP and climb the leaderboard." },
   "/dashboard/student/achievements": { title: "Achievements", subtitle: "Collection of badges earned through community contribution." },
   "/dashboard/student/points": { title: "Points History", subtitle: "Your full XP transaction log every point earned or deducted." },
   "/dashboard/student/settings": { title: "Settings", subtitle: "Manage your account preferences." },
