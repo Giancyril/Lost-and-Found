@@ -590,3 +590,63 @@ export const checkCommunityAchievements = async (userId: string) => {
   if (count >= 50) await awardAchievement(userId, "COMMUNITY_PILLAR");
   if (count >= 100) await awardAchievement(userId, "COMMENT_100");
 };
+
+export const checkProfileAchievements = async (userId: string) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        username: true,
+        email: true,
+        userImg: true,
+        schoolId: true,
+        course: true,
+        yearLevel: true,
+      },
+    });
+
+    if (user) {
+      const isComplete = !!(
+        user.name && user.name.trim() !== "" &&
+        user.username && user.username.trim() !== "" &&
+        user.email && user.email.trim() !== "" &&
+        user.userImg && user.userImg.trim() !== "" &&
+        user.schoolId && user.schoolId.trim() !== "" &&
+        user.course && user.course.trim() !== "" &&
+        user.yearLevel && user.yearLevel.trim() !== ""
+      );
+
+      if (isComplete) {
+        await awardAchievement(userId, "COMPLETIONIST");
+      }
+    }
+  } catch (error) {
+    console.error("Error in checkProfileAchievements:", error);
+  }
+};
+
+export const checkProfileWarriorAchievement = async (userId: string) => {
+  try {
+    await awardAchievement(userId, "PROFILE_WARRIOR");
+  } catch (error) {
+    console.error("Error in checkProfileWarriorAchievement:", error);
+  }
+};
+
+export const checkModelCitizenAchievement = async (userId: string) => {
+  try {
+    await awardAchievement(userId, "MODEL_CITIZEN");
+  } catch (error) {
+    console.error("Error in checkModelCitizenAchievement:", error);
+  }
+};
+
+export const checkSecurityFirstAchievement = async (userId: string) => {
+  try {
+    await awardAchievement(userId, "SECURITY_FIRST");
+  } catch (error) {
+    console.error("Error in checkSecurityFirstAchievement:", error);
+  }
+};
+

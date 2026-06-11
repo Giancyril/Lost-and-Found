@@ -6,7 +6,7 @@ import {
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt, FaMapMarkerAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate,
-  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy, FaAward, FaBolt
+  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy, FaAward, FaBolt, FaUserSlash
 } from "react-icons/fa";
 import { useUserVerification, signOut, setUserLocalStorage } from "../auth/auth";
 
@@ -64,6 +64,7 @@ const menuItems = [
   { title: "Security", icon: FaShieldAlt, path: "/dashboard/security" },
   { title: "Audit Logs", icon: FaClipboardList, path: "/dashboard/audit-logs" },
   { title: "Accounts", icon: FaUserShield, path: "/dashboard/users" },
+  { title: "Flagged Users", icon: FaUserSlash, path: "/dashboard/flagged-users" },
   { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
   { title: "Settings", icon: FaCog, path: "/dashboard/settings" },
 ];
@@ -85,6 +86,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/moderation": { title: "Content Moderation", subtitle: "Review flagged content, manage reports, and moderate community posts." },
   "/dashboard/students": { title: "Students", subtitle: "View and manage all registered student accounts." },
   "/dashboard/users": { title: "Accounts", subtitle: "View and manage all registered system users." },
+  "/dashboard/flagged-users": { title: "Flagged Accounts", subtitle: "Review and manage student accounts flagged for suspicious point activity or violations." },
   "/dashboard/categories": { title: "Categories", subtitle: "Create and organize item categories for better sorting." },
   "/dashboard/settings": { title: "Settings", subtitle: "Configure system preferences and account settings." },
   "/dashboard/security": { title: "Security", subtitle: "Monitor login activity, access control, compliance reports, and point abuse detection." },

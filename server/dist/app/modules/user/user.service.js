@@ -204,12 +204,29 @@ const backfillCourseAndYearLevel = () => __awaiter(void 0, void 0, void 0, funct
     return results;
 });
 const updateUser = (id, data) => __awaiter(void 0, void 0, void 0, function* () {
+    const oldUser = yield prisma_1.default.user.findUnique({
+        where: { id },
+    });
     const result = yield prisma_1.default.user.update({
         where: {
             id,
         },
         data,
     });
+    if (oldUser) {
+        const nameChanged = data.name !== undefined && data.name !== oldUser.name;
+        const usernameChanged = data.username !== undefined && data.username !== oldUser.username;
+        const imgAdded = data.userImg !== undefined && data.userImg !== "" && oldUser.userImg === "";
+        // Import achievement checkers dynamically to avoid potential circular reference issues
+        const { checkProfileAchievements, checkProfileWarriorAchievement, checkModelCitizenAchievement, } = yield Promise.resolve().then(() => __importStar(require("../../utils/achievementService")));
+        if (nameChanged || usernameChanged) {
+            yield checkProfileWarriorAchievement(id);
+        }
+        if (imgAdded) {
+            yield checkModelCitizenAchievement(id);
+        }
+        yield checkProfileAchievements(id);
+    }
     return result;
 });
 exports.userService = {

@@ -179,10 +179,13 @@ const newPasswords = async (data: any, user: JwtPayload) => {
   }
 
   const newHashPassword = await utils.passwordHash(data.newPassword);
-  await prisma.user.update({
+  const updated = await prisma.user.update({
     where: { email: existedUser?.email },
     data:  { password: newHashPassword },
   });
+
+  const { checkSecurityFirstAchievement } = await import("../utils/achievementService");
+  await checkSecurityFirstAchievement(updated.id);
 };
 
 const changeEmail = async (email: any, user: JwtPayload) => {
@@ -190,10 +193,13 @@ const changeEmail = async (email: any, user: JwtPayload) => {
   if (existedUser) {
     throw new AppError(StatusCodes.CONFLICT, "Email already exists. Try new one!");
   }
-  await prisma.user.update({
+  const updated = await prisma.user.update({
     where: { username: user?.username },
     data:  email,
   });
+
+  const { checkProfileAchievements } = await import("../utils/achievementService");
+  await checkProfileAchievements(updated.id);
 };
 
 const changeUsername = async (username: object, user: JwtPayload) => {
@@ -201,10 +207,14 @@ const changeUsername = async (username: object, user: JwtPayload) => {
   if (existedUser) {
     throw new AppError(StatusCodes.CONFLICT, "Username already exists. Try new one!");
   }
-  await prisma.user.update({
+  const updated = await prisma.user.update({
     where: { email: user.email },
     data:  username,
   });
+
+  const { checkProfileAchievements, checkProfileWarriorAchievement } = await import("../utils/achievementService");
+  await checkProfileWarriorAchievement(updated.id);
+  await checkProfileAchievements(updated.id);
 };
 
 export const authServices = {

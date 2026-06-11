@@ -186,12 +186,38 @@ const backfillCourseAndYearLevel = async () => {
 };
 
 const updateUser = async (id: string, data: Partial<User>) => {
+  const oldUser = await prisma.user.findUnique({
+    where: { id },
+  });
+
   const result = await prisma.user.update({
     where: {
       id,
     },
     data,
   });
+
+  if (oldUser) {
+    const nameChanged = data.name !== undefined && data.name !== oldUser.name;
+    const usernameChanged = data.username !== undefined && data.username !== oldUser.username;
+    const imgAdded = data.userImg !== undefined && data.userImg !== "" && oldUser.userImg === "";
+
+    // Import achievement checkers dynamically to avoid potential circular reference issues
+    const {
+      checkProfileAchievements,
+      checkProfileWarriorAchievement,
+      checkModelCitizenAchievement,
+    } = await import("../../utils/achievementService");
+
+    if (nameChanged || usernameChanged) {
+      await checkProfileWarriorAchievement(id);
+    }
+    if (imgAdded) {
+      await checkModelCitizenAchievement(id);
+    }
+    await checkProfileAchievements(id);
+  }
+
   return result;
 };
 

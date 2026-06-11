@@ -198,30 +198,37 @@ const newPasswords = (data, user) => __awaiter(void 0, void 0, void 0, function*
         throw new error_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Password is incorrect");
     }
     const newHashPassword = yield utils_1.utils.passwordHash(data.newPassword);
-    yield prisma_1.default.user.update({
+    const updated = yield prisma_1.default.user.update({
         where: { email: existedUser === null || existedUser === void 0 ? void 0 : existedUser.email },
         data: { password: newHashPassword },
     });
+    const { checkSecurityFirstAchievement } = yield Promise.resolve().then(() => __importStar(require("../utils/achievementService")));
+    yield checkSecurityFirstAchievement(updated.id);
 });
 const changeEmail = (email, user) => __awaiter(void 0, void 0, void 0, function* () {
     const existedUser = yield prisma_1.default.user.findFirst({ where: email });
     if (existedUser) {
         throw new error_1.default(http_status_codes_1.StatusCodes.CONFLICT, "Email already exists. Try new one!");
     }
-    yield prisma_1.default.user.update({
+    const updated = yield prisma_1.default.user.update({
         where: { username: user === null || user === void 0 ? void 0 : user.username },
         data: email,
     });
+    const { checkProfileAchievements } = yield Promise.resolve().then(() => __importStar(require("../utils/achievementService")));
+    yield checkProfileAchievements(updated.id);
 });
 const changeUsername = (username, user) => __awaiter(void 0, void 0, void 0, function* () {
     const existedUser = yield prisma_1.default.user.findFirst({ where: username });
     if (existedUser) {
         throw new error_1.default(http_status_codes_1.StatusCodes.CONFLICT, "Username already exists. Try new one!");
     }
-    yield prisma_1.default.user.update({
+    const updated = yield prisma_1.default.user.update({
         where: { email: user.email },
         data: username,
     });
+    const { checkProfileAchievements, checkProfileWarriorAchievement } = yield Promise.resolve().then(() => __importStar(require("../utils/achievementService")));
+    yield checkProfileWarriorAchievement(updated.id);
+    yield checkProfileAchievements(updated.id);
 });
 exports.authServices = {
     loginUser,
