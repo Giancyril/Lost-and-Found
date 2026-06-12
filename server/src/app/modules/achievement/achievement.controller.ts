@@ -10,9 +10,10 @@ const getAchievements = async (req: Request, res: Response) => {
     const eggExists = await (prisma as any).achievement.findFirst({ where: { key: "EASTER_EGG" } });
     const dbCount = await (prisma as any).achievement.count();
     const defCount = Object.keys(ACHIEVEMENTS).length;
+    const sampleHint = await (prisma as any).achievement.findFirst({ where: { key: "LOOT_ENTHUSIAST" }, select: { hint: true } });
     
-    // Force re-seed if egg is missing, count is off, OR if the egg is not yet LEGEND
-    if (!eggExists || dbCount < defCount || eggExists.tier !== "LEGEND") {
+    // Force re-seed if egg is missing, count is off, OR if the egg is not yet LEGEND, OR if hints are not populated
+    if (!eggExists || dbCount < defCount || eggExists.tier !== "LEGEND" || (sampleHint && !sampleHint.hint)) {
       console.log("🌱 Achievements out of sync, missing badges, or requiring tier updates. Re-seeding...");
       // Explicitly update the Egg Hunter if it exists but is wrong
       if (eggExists && eggExists.tier !== "LEGEND") {

@@ -167,12 +167,12 @@ const AchievementModal = ({ ach, onClose, onViewAll }: { ach: any, onClose: () =
     if (ach?.tier) {
       playTierSound(ach.tier);
     }
-    
+
     // Auto-dismiss after 5 seconds
     const timer = setTimeout(() => {
       onClose();
     }, 5000);
-    
+
     return () => clearTimeout(timer);
   }, [ach, onClose]);
 
@@ -333,17 +333,6 @@ const StudentAchievements: React.FC = () => {
         }
       `}</style>
 
-      {/* Interactive Helper Banner */}
-      <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-start gap-3 text-left animate-in fade-in slide-in-from-top-4 duration-300">
-        <span className="text-blue-400 text-sm sm:text-base mt-0.5">💡</span>
-        <div>
-          <h4 className="text-white text-xs sm:text-sm font-black uppercase tracking-wider">How to unlock achievements</h4>
-          <p className="text-gray-400 text-[10px] sm:text-xs leading-relaxed mt-1 font-medium">
-            Click on any badge below to view its description, unlock criteria, and track your real-time progress. Locked secret badges <span className="text-gray-500">🔒</span> will reveal clues to help you discover their unlock conditions!
-          </p>
-        </div>
-      </div>
-
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
         {[
@@ -488,7 +477,7 @@ const StudentAchievements: React.FC = () => {
           const progressPercent = hasProgress ? Math.min(100, Math.round((currentProgress / targetValue) * 100)) : 0;
           // Binary achievements (target === 1): show "Not yet" vs "Done"
           const isBinary = hasProgress && targetValue === 1;
-          
+
           // Chain indicator
           const hasParent = !!ach.parentKey;
           const isUpgraded = isUnlocked && hasParent;
@@ -519,10 +508,10 @@ const StudentAchievements: React.FC = () => {
                       />
                     </div>
                   )}
-                  
+
                   {/* Chain Indicator - Shows if upgraded from previous tier */}
                   {isUpgraded && (
-                    <div className="absolute top-1 left-1 text-[8px] opacity-70">⬆️</div>
+                    <div className="absolute top-1 left-1 text-[8px] opacity-70"> </div>
                   )}
 
                   {/* Rarity Indicator */}
@@ -576,23 +565,16 @@ const StudentAchievements: React.FC = () => {
                     </button>
                   )}
 
-                  {isSecret ? (
-                    <div className="space-y-2 text-center w-full">
-                      <p className="text-[7.5px] sm:text-[10px] text-gray-300 font-bold leading-tight sm:leading-relaxed max-w-[85%] mx-auto">
-                        Unlock this secret achievement to reveal its details.
-                      </p>
-                      {ach.hint && (
-                        <p className="text-[7px] sm:text-[9px] text-yellow-400 font-bold italic border border-yellow-500/25 bg-yellow-500/5 px-2 py-1.5 rounded-lg max-w-[90%] mx-auto animate-pulse">
-                          💡 Clue: {ach.hint}
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-[7.5px] sm:text-[10px] text-gray-300 font-bold leading-tight sm:leading-relaxed max-w-[85%] mx-auto">
-                      {ach.description}
+                  <p className="text-[7.5px] sm:text-[10px] text-gray-300 font-bold leading-tight sm:leading-relaxed max-w-[85%] mx-auto">
+                    {isSecret ? "Unlock this secret achievement to reveal its details." : ach.description}
+                  </p>
+
+                  {!isUnlocked && ach.hint && (
+                    <p className="mt-1 text-[6.5px] sm:text-[8.5px] text-yellow-400/90 font-semibold italic border border-yellow-500/15 bg-yellow-500/5 px-1.5 py-0.5 sm:py-1 rounded-md max-w-[90%] mx-auto animate-pulse">
+                      💡 Clue: {ach.hint}
                     </p>
                   )}
-                  
+
                   {/* Progress Counter for incomplete progressive achievements */}
                   {!isUnlocked && !isSecret && hasProgress && (
                     <div className="mt-2 space-y-1">
@@ -607,17 +589,16 @@ const StudentAchievements: React.FC = () => {
                       )}
                       <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
                         <div
-                          className={`h-full transition-all duration-500 ${
-                            isBinary
-                              ? currentProgress >= 1 ? "bg-emerald-500/60" : "bg-white/10"
-                              : "bg-blue-500/60"
-                          }`}
+                          className={`h-full transition-all duration-500 ${isBinary
+                            ? currentProgress >= 1 ? "bg-emerald-500/60" : "bg-white/10"
+                            : "bg-blue-500/60"
+                            }`}
                           style={{ width: `${Math.max(progressPercent, 4)}%` }}
                         />
                       </div>
                     </div>
                   )}
-                  
+
                   {isUnlocked && (
                     <div className="mt-2 sm:mt-3 space-y-0.5 sm:space-y-1">
                       <p className="text-[6px] sm:text-[8px] text-emerald-400 font-black uppercase">+{ach.xp} XP</p>
@@ -628,7 +609,7 @@ const StudentAchievements: React.FC = () => {
                       )}
                       {isUpgraded && (
                         <p className="text-[6px] text-indigo-400 font-bold uppercase flex items-center gap-1 justify-center">
-                          <span>⬆️</span> Upgraded Badge
+                          Upgraded Badge
                         </p>
                       )}
                     </div>

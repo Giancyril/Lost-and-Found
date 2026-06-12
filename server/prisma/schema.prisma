@@ -526,12 +526,12 @@ model Achievement {
   key         String          @unique // e.g. "FIRST_FOUND_ITEM"
   name        String // e.g. "First Responder"
   description String
-  hint        String?
   icon        String // emoji or icon name
   tier        AchievementTier
   category    String
   xp          Int             @default(0) // bonus XP on unlock
   secret      Boolean         @default(false)
+  hint        String?         // How to unlock this achievement (shown on locked badges)
   parentKey   String?         // For achievement chains (e.g., Bronze → Silver → Gold)
   createdAt   DateTime        @default(now())
 
