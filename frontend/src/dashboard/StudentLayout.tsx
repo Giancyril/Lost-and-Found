@@ -142,8 +142,8 @@ const PointsDropdown = ({ points, history, rank, loginStreak }: {
         type="button"
         onClick={() => setOpen(p => !p)}
         className={`relative w-9 h-9 flex flex-col items-center justify-center rounded-full transition-all border group ${open
-            ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400"
-            : "bg-transparent border-white/5 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/10"
+          ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400"
+          : "bg-transparent border-white/5 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/10"
           }`}
       >
         <span className="text-[7px] font-bold text-yellow-500 leading-none mb-[1px] uppercase group-hover:text-yellow-400 transition-colors">LVL</span>
@@ -434,18 +434,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         ))}
       </nav>
 
-      {/* Bottom: sign out */}
-      <div className="px-2 pb-4 shrink-0 border-t border-white/5 pt-3">
-        <button
-          type="button"
-          onClick={handleSignOut}
-          title={collapsed ? "Sign out" : undefined}
-          className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-sm text-gray-500 hover:text-red-400 hover:bg-red-500/[0.06] transition-all group ${collapsed ? "justify-center" : ""}`}
-        >
-          <FaSignOutAlt size={14} className="shrink-0" />
-          {!collapsed && <span>Sign out</span>}
-        </button>
-      </div>
+
     </div>
   );
 

@@ -357,7 +357,7 @@ export const ACHIEVEMENTS = {
   MONTHLY_DEVOTEE: { key: "MONTHLY_DEVOTEE", name: "No Life Status", description: "Active for 30 consecutive days", icon: "🖥️", tier: "GOLD", category: "streak", xp: 500 },
   SEMESTER_CHAMPION: { key: "SEMESTER_CHAMPION", name: "Ultimate Grinder", description: "Active for a full semester", icon: "🎮", tier: "PLATINUM", category: "streak", xp: 1000 },
   EARLY_BIRD: { key: "EARLY_BIRD", name: "Morning Grind", description: "Submit an item before 8AM", icon: "🐦", tier: "BRONZE", category: "streak", xp: 50 },
-  NIGHT_OWL: { key: "NIGHT_OWL", name: "Bravo Six, Going Dark", description: "Submit an item after 9PM", icon: "🦉", tier: "BRONZE", category: "streak", xp: 50 },
+  NIGHT_OWL: { key: "NIGHT_OWL", name: "Night Owl", description: "Submit an item after 9PM", icon: "🦉", tier: "BRONZE", category: "streak", xp: 50 },
   CAMPUS_VETERAN: { key: "CAMPUS_VETERAN", name: "The Elder", description: "Keep your account active for 6 months", icon: "🎖️", tier: "GOLD", category: "streak", xp: 750 },
   WEEKEND_WARRIOR: { key: "WEEKEND_WARRIOR", name: "Weekend Quest", description: "Submit a report on a Saturday or Sunday", icon: "⛺", tier: "SILVER", category: "streak", xp: 100 },
 
@@ -392,7 +392,7 @@ export const ACHIEVEMENTS = {
   GLITCH_MATRIX: { key: "GLITCH_MATRIX", name: "Matrix Break", description: "Found a hidden developer credit", icon: "👾", tier: "PLATINUM", category: "special", xp: 2000, secret: true },
   THE_ARCHITECT: { key: "THE_ARCHITECT", name: "World Builder", description: "View the system documentation or help guide", icon: "📐", tier: "BRONZE", category: "special", xp: 100, secret: true },
   SECRET_CODE: { key: "SECRET_CODE", name: "Konami Code", description: "Entered a secret sequence in the dashboard", icon: "🎮", tier: "GOLD", category: "special", xp: 500, secret: true },
-  DARK_MODE_LOVER: { key: "DARK_MODE_LOVER", name: "System Specialist", description: "Explore all core features of the Lost and Found system", icon: "🛠️", tier: "SILVER", category: "special", xp: 100 },
+  SYSTEM_SPECIALIST: { key: "SYSTEM_SPECIALIST", name: "System Specialist", description: "Explore all core features of the Lost and Found system", icon: "🛠️", tier: "SILVER", category: "special", xp: 100 },
   HELP_GUIDE_READER: { key: "HELP_GUIDE_READER", name: "Student Handbook", description: "Read the entire help guide", icon: "📖", tier: "BRONZE", category: "special", xp: 50 },
   TICKET_MASTER: { key: "TICKET_MASTER", name: "Support Hero", description: "Resolve your first support ticket", icon: "🎫", tier: "GOLD", category: "special", xp: 300 },
   PROFILE_WARRIOR: { key: "PROFILE_WARRIOR", name: "Identity Shift", description: "Change your profile name or username once", icon: "🎭", tier: "BRONZE", category: "special", xp: 50 },
@@ -409,6 +409,17 @@ export const ACHIEVEMENTS = {
 // ──────────────────────────────────────────────────────────────────────────────
 export const seedAchievements = async () => {
   console.log("🌱 Seeding achievements...");
+  
+  // Clean up any deprecated or removed achievements
+  const validKeys = Object.keys(ACHIEVEMENTS);
+  await prisma.achievement.deleteMany({
+    where: {
+      key: {
+        notIn: validKeys
+      }
+    }
+  });
+
   for (const [key, data] of Object.entries(ACHIEVEMENTS)) {
     const parentKey = CHAIN_PARENTS[key] || null;
     await prisma.achievement.upsert({

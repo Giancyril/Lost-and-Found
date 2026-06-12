@@ -264,7 +264,7 @@ const unlockSecretAchievement = async (req: Request, res: Response) => {
     const { secretKey } = req.body;
     const userId = (req as any).user.id;
 
-    const VALID_SECRETS = ["EASTER_EGG", "CREATURE_OF_NIGHT"];
+    const VALID_SECRETS = ["EASTER_EGG"];
 
     if (!secretKey || !VALID_SECRETS.includes(secretKey)) {
       return res.status(400).json({ success: false, message: "Invalid secret key" });
