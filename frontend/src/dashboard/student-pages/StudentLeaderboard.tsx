@@ -198,12 +198,6 @@ export default function StudentLeaderboard() {
         ))}
       </div>
 
-      {/* ── Period label ── */}
-      {period !== "alltime" && (
-        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-          Showing <span className="text-indigo-400">{period === "weekly" ? "This Week's" : "This Month's"}</span> points
-        </p>
-      )}
 
       {/* ── Period tabs ── */}
       <div className="flex gap-1.5 bg-slate-900 border border-slate-800 rounded-2xl p-1.5">
