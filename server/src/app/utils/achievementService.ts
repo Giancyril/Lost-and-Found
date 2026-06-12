@@ -301,7 +301,7 @@ export const ACHIEVEMENTS = {
   TRUSTED_SOURCE: { key: "TRUSTED_SOURCE", name: "Trusted Source", description: "Have 10 approved reports with zero deletions", icon: "🛡️", tier: "GOLD", category: "found", xp: 500 },
   BORN_TO_FIND: { key: "BORN_TO_FIND", name: "Born to Find", description: "Turn in an item within 24 hours of account creation", icon: "👶", tier: "BRONZE", category: "found", xp: 100 },
   CAMPUS_WALKER: { key: "CAMPUS_WALKER", name: "Campus Walker", description: "Turned in found items from 5 different campus areas", icon: "🚶", tier: "GOLD", category: "found", xp: 500 },
-  LUCKY_FIND: { key: "LUCKY_FIND", name: "Lucky Find", description: "Won the random 5% drop chance badge!", icon: "🍀", tier: "GOLD", category: "found", xp: 500, secret: true },
+  LUCKY_FIND: { key: "LUCKY_FIND", name: "Lucky Find", description: "Won the random 5% drop chance badge!", hint: "A random 5% drop chance when turning in found items", icon: "🍀", tier: "GOLD", category: "found", xp: 500, secret: true },
 
   // 🟥 Lost Item Badges
   FIRST_LOST_REPORT: { key: "FIRST_LOST_REPORT", name: "Inventory Empty", description: "Submit your first lost item report", icon: "📦", tier: "BRONZE", category: "lost", xp: 25 },
@@ -362,13 +362,13 @@ export const ACHIEVEMENTS = {
   WEEKEND_WARRIOR: { key: "WEEKEND_WARRIOR", name: "Weekend Quest", description: "Submit a report on a Saturday or Sunday", icon: "⛺", tier: "SILVER", category: "streak", xp: 100 },
 
   // ⚫ Special & Secret Badges
-  THE_CHOSEN_ONE: { key: "THE_CHOSEN_ONE", name: "The Chosen One", description: "Be the very first user to register", icon: "✨", tier: "LEGEND", category: "special", xp: 5000, secret: true },
+  THE_CHOSEN_ONE: { key: "THE_CHOSEN_ONE", name: "The Chosen One", description: "Be the very first user to register", hint: "First come, first served", icon: "✨", tier: "LEGEND", category: "special", xp: 5000, secret: true },
   DETECTIVE_MODE: { key: "DETECTIVE_MODE", name: "Sherlock", description: "Use AI Search 10 times", icon: "🕶️", tier: "SILVER", category: "special", xp: 150 },
   MAP_EXPLORER: { key: "MAP_EXPLORER", name: "Gotta Map 'Em All", description: "Use Indoor Map 5 times", icon: "🌍", tier: "BRONZE", category: "special", xp: 50 },
   SPEEDRUNNER: { key: "SPEEDRUNNER", name: "Any% Glitchless", description: "Submit found item in under 2 minutes", icon: "🏃", tier: "GOLD", category: "special", xp: 200 },
   COMPLETIONIST: { key: "COMPLETIONIST", name: "Full Sync", description: "Fill all profile fields", icon: "📑", tier: "SILVER", category: "special", xp: 100 },
   OLD_RELIABLE: { key: "OLD_RELIABLE", name: "Long Term Commitment", description: "Use the system for 6 months", icon: "🕰️", tier: "PLATINUM", category: "special", xp: 500 },
-  LUCKY_7: { key: "LUCKY_7", name: "Jackpot", description: "Earn exactly 777 points", icon: "🎰", tier: "GOLD", category: "special", xp: 777, secret: true },
+  LUCKY_7: { key: "LUCKY_7", name: "Jackpot", description: "Earn exactly 777 points", hint: "Three of a kind is a lucky points score", icon: "🎰", tier: "GOLD", category: "special", xp: 777, secret: true },
   HAT_TRICK: { key: "HAT_TRICK", name: "Triple Kill", description: "Turn in 3 items in one day", icon: "🎩", tier: "GOLD", category: "special", xp: 300 },
   QR_HUNTER: { key: "QR_HUNTER", name: "Scanner Pro", description: "Use barcode scanner 10 times", icon: "🔍", tier: "SILVER", category: "special", xp: 150 },
   AI_WHISPERER: { key: "AI_WHISPERER", name: "Artificial Intelligence", description: "Get a successful match from AI Search", icon: "🤖", tier: "GOLD", category: "special", xp: 200 },
@@ -376,22 +376,22 @@ export const ACHIEVEMENTS = {
   COMEBACK_KID: { key: "COMEBACK_KID", name: "Respawned", description: "Return after 30 days of inactivity", icon: "🔙", tier: "BRONZE", category: "special", xp: 100 },
   WHALE_DONOR: { key: "WHALE_DONOR", name: "Generous Soul", description: "Report an item worth 500+ pts", icon: "💖", tier: "PLATINUM", category: "special", xp: 500 },
   MVP_STATUS: { key: "MVP_STATUS", name: "Department MVP", description: "Be top scorer in your department", icon: "🎖️", tier: "LEGEND", category: "special", xp: 1000 },
-  CAKE_IS_A_LIE: { key: "CAKE_IS_A_LIE", name: "The Cake is a Lie", description: "Try to claim an item that was already claimed", icon: "🍰", tier: "GOLD", category: "special", xp: 500, secret: true },
-  FUS_RO_DAH: { key: "FUS_RO_DAH", name: "Unstoppable Force", description: "Submit reports from 3 different campus locations", icon: "🐲", tier: "PLATINUM", category: "special", xp: 750, secret: true },
-  WRECK_IT: { key: "WRECK_IT", name: "Wreck-It Ralph", description: "Have 3 claims rejected in a row", icon: "🧱", tier: "SILVER", category: "special", xp: 10, secret: true },
-  EASTER_EGG: { key: "EASTER_EGG", name: "Egg Hunter", description: "Click a hidden UI element", icon: "🥚", tier: "LEGEND", category: "special", xp: 100, secret: true },
-  PACIFIST_RUN: { key: "PACIFIST_RUN", name: "Pacifist", description: "Turn in 10 items without ever losing one", icon: "🕊️", tier: "PLATINUM", category: "special", xp: 1000, secret: true },
+  CAKE_IS_A_LIE: { key: "CAKE_IS_A_LIE", name: "The Cake is a Lie", description: "Try to claim an item that was already claimed", hint: "The cake is a lie. Try claiming what belongs to another", icon: "🍰", tier: "GOLD", category: "special", xp: 500, secret: true },
+  FUS_RO_DAH: { key: "FUS_RO_DAH", name: "Unstoppable Force", description: "Submit reports from 3 different campus locations", hint: "Report items from multiple different areas on campus", icon: "🐲", tier: "PLATINUM", category: "special", xp: 750, secret: true },
+  WRECK_IT: { key: "WRECK_IT", name: "Wreck-It Ralph", description: "Have 3 claims rejected in a row", hint: "Persistence in wrong claims might build something", icon: "🧱", tier: "SILVER", category: "special", xp: 10, secret: true },
+  EASTER_EGG: { key: "EASTER_EGG", name: "Egg Hunter", description: "Click a hidden UI element", hint: "Click around where you showcase your badges", icon: "🥚", tier: "LEGEND", category: "special", xp: 100, secret: true },
+  PACIFIST_RUN: { key: "PACIFIST_RUN", name: "Pacifist", description: "Turn in 10 items without ever losing one", hint: "Be a perfect finder, never lose a thing", icon: "🕊️", tier: "PLATINUM", category: "special", xp: 1000, secret: true },
   MODEL_CITIZEN: { key: "MODEL_CITIZEN", name: "Fashion Souls", description: "Upload your first profile picture", icon: "📸", tier: "BRONZE", category: "special", xp: 50 },
   QR_APPRENTICE: { key: "QR_APPRENTICE", name: "Cyberpunk", description: "Use the QR scanner for the first time", icon: "📱", tier: "BRONZE", category: "special", xp: 50 },
   SECURITY_FIRST: { key: "SECURITY_FIRST", name: "Cyber Secure", description: "Update your account password", icon: "🔐", tier: "BRONZE", category: "special", xp: 50 },
   SILENT_OBSERVER: { key: "SILENT_OBSERVER", name: "Lurker", description: "View 20 different items", icon: "👁️", tier: "BRONZE", category: "special", xp: 50 },
   TECH_SAVVY: { key: "TECH_SAVVY", name: "Cross-Platform", description: "Login from 2 different devices", icon: "💻", tier: "SILVER", category: "special", xp: 100 },
   WINDOW_SHOPPER: { key: "WINDOW_SHOPPER", name: "Explorer", description: "View items in 5 different categories", icon: "🛒", tier: "SILVER", category: "special", xp: 100 },
-  ACCESS_DENIED: { key: "ACCESS_DENIED", name: "403 Forbidden", description: "Try to enter a restricted portal area", icon: "🚫", tier: "SILVER", category: "special", xp: 200, secret: true },
-  WITCHING_HOUR: { key: "WITCHING_HOUR", name: "Midnight Quest", description: "Submit a report at exactly 12:00 AM", icon: "🕛", tier: "GOLD", category: "special", xp: 1000, secret: true },
-  GLITCH_MATRIX: { key: "GLITCH_MATRIX", name: "Matrix Break", description: "Found a hidden developer credit", icon: "👾", tier: "PLATINUM", category: "special", xp: 2000, secret: true },
-  THE_ARCHITECT: { key: "THE_ARCHITECT", name: "World Builder", description: "View the system documentation or help guide", icon: "📐", tier: "BRONZE", category: "special", xp: 100, secret: true },
-  SECRET_CODE: { key: "SECRET_CODE", name: "Konami Code", description: "Entered a secret sequence in the dashboard", icon: "🎮", tier: "GOLD", category: "special", xp: 500, secret: true },
+  ACCESS_DENIED: { key: "ACCESS_DENIED", name: "403 Forbidden", description: "Try to enter a restricted portal area", hint: "Curiosity killed the cat. Try visiting admin pages", icon: "🚫", tier: "SILVER", category: "special", xp: 200, secret: true },
+  WITCHING_HOUR: { key: "WITCHING_HOUR", name: "Midnight Quest", description: "Submit a report at exactly 12:00 AM", hint: "Submit a report when the clock strikes midnight", icon: "🕛", tier: "GOLD", category: "special", xp: 1000, secret: true },
+  GLITCH_MATRIX: { key: "GLITCH_MATRIX", name: "Matrix Break", description: "Found a hidden developer credit", hint: "Look behind the scenes on the 3D map", icon: "👾", tier: "PLATINUM", category: "special", xp: 2000, secret: true },
+  THE_ARCHITECT: { key: "THE_ARCHITECT", name: "World Builder", description: "View the system documentation or help guide", hint: "Read the guidelines or rules first", icon: "📐", tier: "BRONZE", category: "special", xp: 100, secret: true },
+  SECRET_CODE: { key: "SECRET_CODE", name: "Konami Code", description: "Entered a secret sequence in the dashboard", hint: "Use standard gaming retro codes on the dashboard", icon: "🎮", tier: "GOLD", category: "special", xp: 500, secret: true },
   SYSTEM_SPECIALIST: { key: "SYSTEM_SPECIALIST", name: "System Specialist", description: "Explore all core features of the Lost and Found system", icon: "🛠️", tier: "SILVER", category: "special", xp: 100 },
   HELP_GUIDE_READER: { key: "HELP_GUIDE_READER", name: "Student Handbook", description: "Read the entire help guide", icon: "📖", tier: "BRONZE", category: "special", xp: 50 },
   TICKET_MASTER: { key: "TICKET_MASTER", name: "Support Hero", description: "Resolve your first support ticket", icon: "🎫", tier: "GOLD", category: "special", xp: 300 },
@@ -401,7 +401,7 @@ export const ACHIEVEMENTS = {
   TRUE_HERO: { key: "TRUE_HERO", name: "True Hero", description: "Complete a full year of honesty on campus", icon: "🎖️", tier: "LEGEND", category: "streak", xp: 5000 },
 
   // 🎯 THE FINAL 100th BADGE
-  PLATINUM_GOD: { key: "PLATINUM_GOD", name: "Platinum God", description: "Unlock 100% of all other achievements", icon: "🧿", tier: "LEGEND", category: "special", xp: 10000, secret: true },
+  PLATINUM_GOD: { key: "PLATINUM_GOD", name: "Platinum God", description: "Unlock 100% of all other achievements", hint: "Achieve ultimate completion of all badges", icon: "🧿", tier: "LEGEND", category: "special", xp: 10000, secret: true },
 } as const;
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -427,6 +427,7 @@ export const seedAchievements = async () => {
       update: {
         name: data.name,
         description: data.description,
+        hint: (data as any).hint || null,
         icon: data.icon,
         tier: data.tier as any,
         category: data.category,
@@ -438,6 +439,7 @@ export const seedAchievements = async () => {
         key: data.key,
         name: data.name,
         description: data.description,
+        hint: (data as any).hint || null,
         icon: data.icon,
         tier: data.tier as any,
         category: data.category,

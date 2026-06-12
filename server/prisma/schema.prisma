@@ -526,6 +526,7 @@ model Achievement {
   key         String          @unique // e.g. "FIRST_FOUND_ITEM"
   name        String // e.g. "First Responder"
   description String
+  hint        String?
   icon        String // emoji or icon name
   tier        AchievementTier
   category    String

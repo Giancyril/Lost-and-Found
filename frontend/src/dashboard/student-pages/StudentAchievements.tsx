@@ -333,6 +333,17 @@ const StudentAchievements: React.FC = () => {
         }
       `}</style>
 
+      {/* Interactive Helper Banner */}
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-start gap-3 text-left animate-in fade-in slide-in-from-top-4 duration-300">
+        <span className="text-blue-400 text-sm sm:text-base mt-0.5">💡</span>
+        <div>
+          <h4 className="text-white text-xs sm:text-sm font-black uppercase tracking-wider">How to unlock achievements</h4>
+          <p className="text-gray-400 text-[10px] sm:text-xs leading-relaxed mt-1 font-medium">
+            Click on any badge below to view its description, unlock criteria, and track your real-time progress. Locked secret badges <span className="text-gray-500">🔒</span> will reveal clues to help you discover their unlock conditions!
+          </p>
+        </div>
+      </div>
+
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
         {[
@@ -565,9 +576,22 @@ const StudentAchievements: React.FC = () => {
                     </button>
                   )}
 
-                  <p className="text-[7.5px] sm:text-[10px] text-gray-300 font-bold leading-tight sm:leading-relaxed max-w-[85%] mx-auto">
-                    {isSecret ? "Unlock this secret achievement to reveal its details." : ach.description}
-                  </p>
+                  {isSecret ? (
+                    <div className="space-y-2 text-center w-full">
+                      <p className="text-[7.5px] sm:text-[10px] text-gray-300 font-bold leading-tight sm:leading-relaxed max-w-[85%] mx-auto">
+                        Unlock this secret achievement to reveal its details.
+                      </p>
+                      {ach.hint && (
+                        <p className="text-[7px] sm:text-[9px] text-yellow-400 font-bold italic border border-yellow-500/25 bg-yellow-500/5 px-2 py-1.5 rounded-lg max-w-[90%] mx-auto animate-pulse">
+                          💡 Clue: {ach.hint}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-[7.5px] sm:text-[10px] text-gray-300 font-bold leading-tight sm:leading-relaxed max-w-[85%] mx-auto">
+                      {ach.description}
+                    </p>
+                  )}
                   
                   {/* Progress Counter for incomplete progressive achievements */}
                   {!isUnlocked && !isSecret && hasProgress && (
