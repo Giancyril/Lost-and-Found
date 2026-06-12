@@ -307,7 +307,7 @@ const StudentAchievements: React.FC = () => {
   };
 
   return (
-    <div className="space-y-3 sm:space-y-5 max-w-7xl mx-auto pb-10 px-2 sm:px-0">
+    <div className="space-y-5 max-w-7xl mx-auto">
       {unlockedAchievement && (
         <AchievementModal
           ach={unlockedAchievement}

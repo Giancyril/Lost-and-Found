@@ -42,12 +42,13 @@ const DeltaBadge = ({ delta }: { delta: number | null }) => {
 };
 
 // ── Top 3 podium card ─────────────────────────────────────────────────────────
-const PodiumCard = ({ user, index, isMe }: { user: any; index: number; isMe: boolean }) => {
+const PodiumCard = ({ user, index, isMe, period }: { user: any; index: number; isMe: boolean; period: LeaderboardType }) => {
   const style = getRankStyle(index);
   const medals = ["🥇", "🥈", "🥉"];
   const heights = ["h-28", "h-20", "h-16"];
   const order = [1, 0, 2]; // visual order: 2nd, 1st, 3rd
   const visualPos = order.indexOf(index);
+  const displayPoints = period !== "alltime" && user.periodPoints != null ? user.periodPoints : user.totalPoints;
 
   return (
     <div className={`flex flex-col items-center gap-2 ${visualPos === 1 ? "mb-0" : "mt-8"}`}>
@@ -61,7 +62,7 @@ const PodiumCard = ({ user, index, isMe }: { user: any; index: number; isMe: boo
         <p className={`text-xs font-bold truncate ${isMe ? "text-indigo-300" : "text-slate-200"}`}>
           {user.name || "Student"}
         </p>
-        <p className={`text-sm font-black ${style.text}`}>{user.totalPoints.toLocaleString()}</p>
+        <p className={`text-sm font-black ${style.text}`}>{displayPoints.toLocaleString()}</p>
         <p className="text-[9px] text-slate-600 font-medium">pts</p>
       </div>
       {/* Podium bar */}
@@ -158,30 +159,51 @@ export default function StudentLeaderboard() {
     <div className="space-y-5 max-w-7xl mx-auto overflow-x-hidden">
 
       {/* ── Stats row ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {[
           {
-            label: "Your Points", value: myPoints.toLocaleString(),
-            icon: <FaStar size={13} className="text-amber-400" />,
-            valueColor: "text-amber-400", bg: "bg-amber-500/5 border-amber-500/10"
+            label: "Your Points",
+            value: myPoints.toLocaleString(),
+            icon: <FaStar size={11} className="text-amber-400" />,
+            bg: "bg-amber-500/10",
+            accent: "text-amber-400",
           },
           {
-            label: "Your Rank", value: myRank > 0 ? `#${myRank}` : "—",
-            icon: <FaTrophy size={13} className="text-indigo-400" />,
-            valueColor: "text-indigo-400", bg: "bg-indigo-500/5 border-indigo-500/10"
+            label: "Your Rank",
+            value: myRank > 0 ? `#${myRank}` : "—",
+            icon: <FaTrophy size={11} className="text-indigo-400" />,
+            bg: "bg-indigo-500/10",
+            accent: "text-indigo-400",
           },
           {
-            label: "Ranked Students", value: board.length,
-            icon: <FaMedal size={13} className="text-violet-400" />,
-            valueColor: "text-violet-400", bg: "bg-violet-500/5 border-violet-500/10"
+            label: "Total Ranked",
+            value: board.length,
+            icon: <FaMedal size={11} className="text-violet-400" />,
+            bg: "bg-violet-500/10",
+            accent: "text-violet-400",
           },
-        ].map(({ label, value, icon, valueColor, bg }) => (
-          <div key={label} className={`rounded-2xl border p-3.5 ${bg} bg-slate-900`}>
-            <div className="flex items-center gap-1.5 mb-2">{icon}<span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">{label}</span></div>
-            <p className={`text-2xl font-black tracking-tight ${valueColor}`}>{value}</p>
+        ].map(({ label, value, icon, bg, accent }) => (
+          <div
+            key={label}
+            className="bg-gray-900 border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex items-center justify-between transition-all relative overflow-hidden"
+          >
+            <div>
+              <div className="flex items-center gap-1.5">
+                <p className={`text-lg sm:text-2xl font-bold tracking-tight ${accent}`}>{value}</p>
+              </div>
+              <p className="text-gray-500 text-[8px] sm:text-[10px] uppercase tracking-widest mt-0.5 font-bold">{label}</p>
+            </div>
+            <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${bg}`}>{icon}</div>
           </div>
         ))}
       </div>
+
+      {/* ── Period label ── */}
+      {period !== "alltime" && (
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          Showing <span className="text-indigo-400">{period === "weekly" ? "This Week's" : "This Month's"}</span> points
+        </p>
+      )}
 
       {/* ── Period tabs ── */}
       <div className="flex gap-1.5 bg-slate-900 border border-slate-800 rounded-2xl p-1.5">
@@ -235,6 +257,7 @@ export default function StudentLeaderboard() {
                   user={u}
                   index={realIdx}
                   isMe={u.id === myId}
+                  period={period}
                 />
               );
             })}
@@ -339,7 +362,7 @@ export default function StudentLeaderboard() {
 
                     <div className="col-span-2 flex items-center justify-end gap-1.5">
                       <FaStar size={10} className="text-amber-400" />
-                      <span className="text-amber-400 font-black text-sm">{u.totalPoints.toLocaleString()}</span>
+                      <span className="text-amber-400 font-black text-sm">{(period !== "alltime" && u.periodPoints != null ? u.periodPoints : u.totalPoints).toLocaleString()}</span>
                       <span className="text-slate-600 text-xs">pts</span>
                     </div>
                   </div>
@@ -368,7 +391,7 @@ export default function StudentLeaderboard() {
 
                     <div className="flex items-center gap-1 shrink-0">
                       <FaStar size={10} className="text-amber-400" />
-                      <span className="text-amber-400 font-black text-sm">{u.totalPoints.toLocaleString()}</span>
+                      <span className="text-amber-400 font-black text-sm">{(period !== "alltime" && u.periodPoints != null ? u.periodPoints : u.totalPoints).toLocaleString()}</span>
                       <span className="text-slate-600 text-[10px]">pts</span>
                     </div>
                   </div>
