@@ -321,7 +321,7 @@ const getLeaderboard = async (type: "alltime" | "weighted" | "weekly" | "monthly
       orderBy: { totalPoints: "desc" },
       take:    50,
       select:  {
-        id: true, name: true, totalPoints: true,
+        id: true, name: true, totalPoints: true, role: true,
         userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true,
       },
     });
@@ -333,7 +333,7 @@ const getLeaderboard = async (type: "alltime" | "weighted" | "weekly" | "monthly
 
   const rows = await prisma.points.groupBy({
     by:      ["userId"],
-    where:   { amount: { gt: 0 }, createdAt: { gte: since } },
+    where:   { amount: { gt: 0 }, createdAt: { gte: since }, user: { role: "USER", isDeleted: false } },
     _sum:    { amount: true },
     orderBy: { _sum: { amount: "desc" } },
     take:    50,
@@ -343,8 +343,8 @@ const getLeaderboard = async (type: "alltime" | "weighted" | "weekly" | "monthly
 
   const userIds = rows.map((r: any) => r.userId);
   const users   = await prisma.user.findMany({
-    where:  { id: { in: userIds }, isDeleted: false },
-    select: { id: true, name: true, totalPoints: true, userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true },
+    where:  { id: { in: userIds }, role: "USER", isDeleted: false },
+    select: { id: true, name: true, totalPoints: true, role: true, userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true },
   });
   const userMap = Object.fromEntries(users.map(u => [u.id, u]));
 
@@ -357,7 +357,7 @@ const getLeaderboard = async (type: "alltime" | "weighted" | "weekly" | "monthly
 const getWeightedLeaderboard = async () => {
   const users = await prisma.user.findMany({
     where:   { role: "USER", isDeleted: false, totalPoints: { gt: 0 } },
-    select:  { id: true, name: true, totalPoints: true, userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true },
+    select:  { id: true, name: true, totalPoints: true, role: true, userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true },
     take:    100,
     orderBy: { totalPoints: "desc" },
   });
