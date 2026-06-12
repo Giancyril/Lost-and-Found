@@ -266,15 +266,17 @@ export default function StudentLeaderboard() {
       )}
 
       {/* ── Search ── */}
-      <div className="relative">
-        <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={11} />
-        <input
-          type="text"
-          placeholder={`Search students…`}
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-2xl text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 transition-all"
-        />
+      <div className="bg-gray-900 border border-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4">
+        <div className="relative w-full">
+          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={10} />
+          <input
+            type="text"
+            placeholder="Search students…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 sm:py-2.5 bg-gray-800/80 border border-white/10 rounded-xl sm:rounded-2xl text-white text-xs sm:text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+          />
+        </div>
       </div>
 
       {/* ── List ── */}

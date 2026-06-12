@@ -188,43 +188,40 @@ const Bounties = () => {
           {
             label: "Completed",
             value: `${completedCount}/${bounties.length}`,
-            icon: <FaCheckCircle size={14} className="text-emerald-400" />,
+            icon: <FaCheckCircle size={11} className="text-emerald-400" />,
             accent: "text-emerald-400",
-            bg: "bg-emerald-500/5",
+            bg: "bg-emerald-500/10",
           },
           {
             label: "XP Earned",
             value: `+${earnedXp}`,
-            icon: <FaStar size={14} className="text-yellow-400" />,
+            icon: <FaStar size={11} className="text-yellow-400" />,
             accent: "text-yellow-400",
-            bg: "bg-yellow-500/5",
+            bg: "bg-yellow-500/10",
           },
           {
             label: "XP Remaining",
             value: totalXpAvailable - earnedXp > 0 ? `+${totalXpAvailable - earnedXp}` : "All Done!",
-            icon: <FaBolt size={14} className="text-cyan-400" />,
+            icon: <FaBolt size={11} className="text-cyan-400" />,
             accent: totalXpAvailable - earnedXp > 0 ? "text-cyan-400" : "text-emerald-400",
-            bg: "bg-cyan-500/5",
+            bg: "bg-cyan-500/10",
           },
           {
             label: "Resets In",
             value: `${countdown.d}d ${countdown.h}h`,
-            icon: <FaClock size={14} className="text-violet-400" />,
+            icon: <FaClock size={11} className="text-violet-400" />,
             accent: "text-violet-400",
-            bg: "bg-violet-500/5",
+            bg: "bg-violet-500/10",
           },
         ].map(({ label, value, icon, accent, bg }) => (
-          <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
-            <div className={`absolute inset-0 opacity-25 ${bg} blur-3xl scale-150 pointer-events-none`} />
-            <div className="relative">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${bg}`}>
-                {icon}
+          <div key={label} className="bg-gray-900 border border-white/5 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex items-center justify-between transition-all relative overflow-hidden">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <p className={`text-lg sm:text-2xl font-bold tracking-tight ${accent}`}>{value}</p>
               </div>
+              <p className="text-gray-500 text-[8px] sm:text-[10px] uppercase tracking-widest mt-0.5 font-bold">{label}</p>
             </div>
-            <div className="relative">
-              <p className={`text-xl font-bold tracking-tight ${accent}`}>{value}</p>
-              <p className="text-gray-500 text-[11px] mt-0.5 font-medium">{label}</p>
-            </div>
+            <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${bg}`}>{icon}</div>
           </div>
         ))}
       </div>
