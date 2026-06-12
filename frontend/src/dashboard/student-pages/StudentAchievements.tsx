@@ -475,6 +475,8 @@ const StudentAchievements: React.FC = () => {
           const currentProgress = hasProgress ? ach.progress.currentProgress : 0;
           const targetValue = hasProgress ? ach.progress.targetValue : 100;
           const progressPercent = hasProgress ? Math.min(100, Math.round((currentProgress / targetValue) * 100)) : 0;
+          // Binary achievements (target === 1): show "Not yet" vs "Done"
+          const isBinary = hasProgress && targetValue === 1;
           
           // Chain indicator
           const hasParent = !!ach.parentKey;
@@ -498,11 +500,11 @@ const StudentAchievements: React.FC = () => {
                   ${isSelected ? "opacity-0" : "group-hover:opacity-0"}`}>
 
                   {/* Progressive Bar - Real Progress */}
-                  {!isUnlocked && !isSecret && hasProgress && progressPercent > 0 && (
+                  {!isUnlocked && !isSecret && hasProgress && (
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-white/5 overflow-hidden">
                       <div
                         className="h-full bg-blue-500/40 transition-all duration-1000"
-                        style={{ width: `${progressPercent}%` }}
+                        style={{ width: `${Math.max(progressPercent, 4)}%` }}
                       />
                     </div>
                   )}
@@ -570,13 +572,23 @@ const StudentAchievements: React.FC = () => {
                   {/* Progress Counter for incomplete progressive achievements */}
                   {!isUnlocked && !isSecret && hasProgress && (
                     <div className="mt-2 space-y-1">
-                      <p className="text-[8px] text-blue-400 font-black uppercase">
-                        Progress: {currentProgress}/{targetValue}
-                      </p>
+                      {isBinary ? (
+                        <p className={`text-[8px] font-black uppercase ${currentProgress >= 1 ? "text-emerald-400" : "text-gray-500"}`}>
+                          {currentProgress >= 1 ? "✓ Condition met" : "Not yet achieved"}
+                        </p>
+                      ) : (
+                        <p className="text-[8px] text-blue-400 font-black uppercase">
+                          Progress: {currentProgress}/{targetValue}
+                        </p>
+                      )}
                       <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
                         <div
-                          className="h-full bg-blue-500/60 transition-all duration-500"
-                          style={{ width: `${progressPercent}%` }}
+                          className={`h-full transition-all duration-500 ${
+                            isBinary
+                              ? currentProgress >= 1 ? "bg-emerald-500/60" : "bg-white/10"
+                              : "bg-blue-500/60"
+                          }`}
+                          style={{ width: `${Math.max(progressPercent, 4)}%` }}
                         />
                       </div>
                     </div>

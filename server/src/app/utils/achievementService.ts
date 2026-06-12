@@ -40,6 +40,16 @@ export const PROGRESS_MAP: Record<string, { type: string; target: number }> = {
   WEEK_WARRIOR: { type: "loginStreak", target: 7 },
   STREAK_14: { type: "loginStreak", target: 14 },
   MONTHLY_DEVOTEE: { type: "loginStreak", target: 30 },
+
+  // Special achievements — binary (0 or 1) or counted progress
+  COMPLETIONIST:   { type: "profileFields",   target: 7 },
+  HAT_TRICK:       { type: "foundItemsToday", target: 3 },
+  POINT_HUSTLER:   { type: "pointsToday",     target: 100 },
+  EARLY_BIRD:      { type: "earlyBird",       target: 1 },
+  NIGHT_OWL:       { type: "nightOwl",        target: 1 },
+  WEEKEND_WARRIOR: { type: "weekendWarrior",  target: 1 },
+  BORN_TO_FIND:    { type: "bornToFind",      target: 1 },
+  SPEEDRUNNER:     { type: "speedrunner",     target: 1 },
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -123,6 +133,118 @@ export const computeProgress = async (userId: string, achievementKey: string) =>
         const userData = await prisma.user.findUnique({ where: { id: userId }, select: { loginStreak: true } });
         currentProgress = userData?.loginStreak || 0;
         break;
+
+      // ── Special achievements ──────────────────────────────────────────────
+      case "profileFields": {
+        // Count how many of 7 real profile fields are filled (matching actual User schema)
+        const profileUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { name: true, username: true, email: true, userImg: true, schoolId: true, course: true, yearLevel: true },
+        });
+        if (profileUser) {
+          const fields = [
+            profileUser.name,
+            profileUser.username,
+            profileUser.email,
+            profileUser.userImg,
+            profileUser.schoolId,
+            profileUser.course,
+            profileUser.yearLevel,
+          ];
+          currentProgress = fields.filter(f => f != null && String(f).trim() !== "").length;
+        }
+        break;
+      }
+
+      case "foundItemsToday": {
+        // Count found items submitted today (local midnight to now)
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        currentProgress = await prisma.foundItem.count({
+          where: { userId, createdAt: { gte: startOfDay }, isDeleted: false },
+        });
+        break;
+      }
+
+      case "pointsToday": {
+        // Sum of positive point transactions today
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const todayHistory = await (prisma as any).pointsHistory.findMany({
+          where: { userId, amount: { gt: 0 }, createdAt: { gte: startOfToday } },
+          select: { amount: true },
+        });
+        currentProgress = todayHistory.reduce((s: number, h: any) => s + h.amount, 0);
+        break;
+      }
+
+      case "earlyBird": {
+        // 1 if user has ever submitted a found item before 8AM, else 0
+        const earlyItem = await prisma.foundItem.findFirst({
+          where: { userId, isDeleted: false },
+          select: { createdAt: true },
+          orderBy: { createdAt: "asc" },
+        });
+        if (earlyItem) {
+          const h = new Date(earlyItem.createdAt).getHours();
+          // Check all items for any that were submitted before 8AM
+          const allItems = await prisma.foundItem.findMany({
+            where: { userId, isDeleted: false },
+            select: { createdAt: true },
+          });
+          currentProgress = allItems.some(item => new Date(item.createdAt).getHours() < 8) ? 1 : 0;
+        }
+        break;
+      }
+
+      case "nightOwl": {
+        // 1 if user has ever submitted a found item after 9PM (21:00)
+        const allFoundItems = await prisma.foundItem.findMany({
+          where: { userId, isDeleted: false },
+          select: { createdAt: true },
+        });
+        currentProgress = allFoundItems.some(item => new Date(item.createdAt).getHours() >= 21) ? 1 : 0;
+        break;
+      }
+
+      case "weekendWarrior": {
+        // 1 if user has ever submitted a found item on Saturday (6) or Sunday (0)
+        const weekendItems = await prisma.foundItem.findMany({
+          where: { userId, isDeleted: false },
+          select: { createdAt: true },
+        });
+        currentProgress = weekendItems.some(item => {
+          const day = new Date(item.createdAt).getDay();
+          return day === 0 || day === 6;
+        }) ? 1 : 0;
+        break;
+      }
+
+      case "bornToFind": {
+        // 1 if user submitted a found item within 24h of account creation
+        const newUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { createdAt: true },
+        });
+        if (newUser) {
+          const cutoff = new Date(newUser.createdAt.getTime() + 24 * 60 * 60 * 1000);
+          const earlyFound = await prisma.foundItem.findFirst({
+            where: { userId, isDeleted: false, createdAt: { lte: cutoff } },
+          });
+          currentProgress = earlyFound ? 1 : 0;
+        }
+        break;
+      }
+
+      case "speedrunner": {
+        // 1 if any found item was created within 2 minutes of the previous found item by same user
+        // (approximation: submitted very quickly — use updatedAt vs createdAt within 120s)
+        // Since we can't track form-open time, we check if user has the achievement flag via items.
+        // Show 0 progress until unlocked (binary unlock-only achievement).
+        currentProgress = 0;
+        break;
+      }
+
       default:
         currentProgress = 0;
     }
