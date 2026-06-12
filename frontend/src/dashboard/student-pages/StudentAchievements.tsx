@@ -307,14 +307,7 @@ const StudentAchievements: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
-      {unlockedAchievement && (
-        <AchievementModal
-          ach={unlockedAchievement}
-          onClose={() => setUnlockedAchievement(null)}
-          onViewAll={() => { setUnlockedAchievement(null); setFilter('all'); }}
-        />
-      )}
+    <>
       <style>{`
         @keyframes gradient-x {
           0% { background-position: 0% 50%; }
@@ -332,6 +325,16 @@ const StudentAchievements: React.FC = () => {
           animation: pulse-slow 4s ease-in-out infinite;
         }
       `}</style>
+
+      {unlockedAchievement && (
+        <AchievementModal
+          ach={unlockedAchievement}
+          onClose={() => setUnlockedAchievement(null)}
+          onViewAll={() => { setUnlockedAchievement(null); setFilter('all'); }}
+        />
+      )}
+
+      <div className="space-y-5 max-w-7xl mx-auto">
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
@@ -628,6 +631,7 @@ const StudentAchievements: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
