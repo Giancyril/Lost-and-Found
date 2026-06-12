@@ -6,9 +6,9 @@ import { useGetLeaderboardQuery, useGetMyPointsQuery, useGetMyRankQuery } from "
 // ── Leaderboard period tabs ───────────────────────────────────────────────────
 type LeaderboardType = "alltime" | "weekly" | "monthly";
 const PERIOD_TABS: { id: LeaderboardType; label: string; icon: React.ReactNode; desc: string }[] = [
-  { id: "alltime",  label: "All Time",   icon: <FaInfinity size={11} />,     desc: "Total points earned since joining" },
-  { id: "weekly",   label: "This Week",  icon: <FaClock size={11} />,        desc: "Points earned in the past 7 days"  },
-  { id: "monthly",  label: "This Month", icon: <FaCalendarAlt size={11} />,  desc: "Points earned this calendar month" },
+  { id: "alltime", label: "All Time", icon: <FaInfinity size={11} />, desc: "Total points earned since joining" },
+  { id: "weekly", label: "This Week", icon: <FaClock size={11} />, desc: "Points earned in the past 7 days" },
+  { id: "monthly", label: "This Month", icon: <FaCalendarAlt size={11} />, desc: "Points earned this calendar month" },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ const rankColor = (i: number) =>
 
 const rankBg = (i: number, isMe: boolean) => {
   if (isMe) return "bg-blue-500/10 border-blue-500/25";
-  if (i < 3)  return "bg-gray-900 border-white/[0.06]";
+  if (i < 3) return "bg-gray-900 border-white/[0.06]";
   return "bg-gray-900 border-white/[0.05]";
 };
 
@@ -35,11 +35,10 @@ const DeltaBadge = ({ delta }: { delta: number | null }) => {
   const up = delta > 0;
   return (
     <span
-      className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border flex items-center gap-0.5 ${
-        up
+      className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border flex items-center gap-0.5 ${up
           ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
           : "text-red-400 bg-red-500/10 border-red-500/20"
-      }`}
+        }`}
     >
       {up ? "▲" : "▼"}
       {Math.abs(delta)}
@@ -92,8 +91,8 @@ const PersonalRankCard = ({ rankData, myPoints, board }: {
           <div className="text-right shrink-0">
             <p className="text-[10px] text-gray-600 font-medium">since yesterday</p>
             {delta === 0 && <p className="text-gray-500 text-xs font-bold">No change</p>}
-            {delta > 0  && <p className="text-emerald-400 text-xs font-black">↑ {delta} places</p>}
-            {delta < 0  && <p className="text-red-400 text-xs font-black">↓ {Math.abs(delta)} places</p>}
+            {delta > 0 && <p className="text-emerald-400 text-xs font-black">↑ {delta} places</p>}
+            {delta < 0 && <p className="text-red-400 text-xs font-black">↓ {Math.abs(delta)} places</p>}
           </div>
         )}
       </div>
@@ -108,14 +107,14 @@ export default function StudentLeaderboard() {
   const [period, setPeriod] = useState<LeaderboardType>("alltime");
 
   const isLoggedIn = !!user?.id;
-  const { data: boardData,  isLoading: lbLoading  } = useGetLeaderboardQuery(period);
+  const { data: boardData, isLoading: lbLoading } = useGetLeaderboardQuery(period);
   const { data: pointsData, isLoading: ptsLoading } = useGetMyPointsQuery(undefined, { skip: !isLoggedIn });
-  const { data: rankData                           } = useGetMyRankQuery(undefined,   { skip: !isLoggedIn });
+  const { data: rankData } = useGetMyRankQuery(undefined, { skip: !isLoggedIn });
 
   const loading = lbLoading || ptsLoading;
-  const board: any[]        = boardData?.data  ?? [];
-  const myPoints: number    = pointsData?.data?.totalPoints ?? 0;
-  const myRankInfo: any     = rankData?.data ?? null;
+  const board: any[] = boardData?.data ?? [];
+  const myPoints: number = pointsData?.data?.totalPoints ?? 0;
+  const myRankInfo: any = rankData?.data ?? null;
   const myId: string | undefined = user?.id ?? user?.userId ?? user?.sub;
 
   // Use the accurate server-side rank instead of a findIndex that caps at 50
@@ -138,9 +137,9 @@ export default function StudentLeaderboard() {
       {/* ── Stats row ── */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Your Points",  value: myPoints.toLocaleString(),          icon: <FaStar size={14} className="text-yellow-400" />,  accent: "bg-yellow-500/5",  color: "text-yellow-400"  },
-          { label: "Your Rank",    value: myRank > 0 ? `#${myRank}` : "—",   icon: <FaTrophy size={14} className="text-cyan-400" />,  accent: "bg-cyan-500/5",    color: "text-cyan-400"    },
-          { label: "Total Ranked", value: board.length,                        icon: <FaMedal size={14} className="text-violet-400" />, accent: "bg-violet-500/5",  color: "text-violet-400"  },
+          { label: "Your Points", value: myPoints.toLocaleString(), icon: <FaStar size={14} className="text-yellow-400" />, accent: "bg-yellow-500/5", color: "text-yellow-400" },
+          { label: "Your Rank", value: myRank > 0 ? `#${myRank}` : "—", icon: <FaTrophy size={14} className="text-cyan-400" />, accent: "bg-cyan-500/5", color: "text-cyan-400" },
+          { label: "Total Ranked", value: board.length, icon: <FaMedal size={14} className="text-violet-400" />, accent: "bg-violet-500/5", color: "text-violet-400" },
         ].map(({ label, value, icon, accent, color }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
             <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
@@ -165,11 +164,10 @@ export default function StudentLeaderboard() {
             <button
               key={tab.id}
               onClick={() => { setPeriod(tab.id); setSearch(""); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all select-none ${
-                active
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all select-none ${active
                   ? "bg-blue-500/15 text-blue-300 border border-blue-500/25 shadow-sm"
                   : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.03] border border-transparent"
-              }`}
+                }`}
             >
               <span className={active ? "text-blue-400" : "text-gray-600"}>{tab.icon}</span>
               {tab.label}
@@ -210,7 +208,7 @@ export default function StudentLeaderboard() {
 
       {loading ? (
         <div className="space-y-2 animate-pulse">
-          {[1,2,3,4,5].map(i => <div key={i} className="h-14 bg-gray-900 border border-white/5 rounded-2xl" />)}
+          {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-14 bg-gray-900 border border-white/5 rounded-2xl" />)}
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-gray-900 border border-white/5 rounded-2xl py-20 text-center">
@@ -234,15 +232,14 @@ export default function StudentLeaderboard() {
             <div className="divide-y divide-white/[0.04]">
               {filtered.map((u: any, i: number) => {
                 const realIdx = board.findIndex((b: any) => b.id === u.id);
-                const isMe    = u.id === myId;
-                const delta   = getDelta(u, realIdx);
+                const isMe = u.id === myId;
+                const delta = getDelta(u, realIdx);
 
                 return (
                   <div
                     key={u.id ?? i}
-                    className={`grid grid-cols-12 gap-4 items-center px-5 py-3.5 transition-colors ${
-                      isMe ? "bg-blue-500/5" : "hover:bg-white/[0.02]"
-                    }`}
+                    className={`grid grid-cols-12 gap-4 items-center px-5 py-3.5 transition-colors ${isMe ? "bg-blue-500/5" : "hover:bg-white/[0.02]"
+                      }`}
                   >
                     {/* Rank number */}
                     <div className="col-span-1 flex items-center gap-1.5">
@@ -305,8 +302,8 @@ export default function StudentLeaderboard() {
           <div className="md:hidden space-y-2">
             {filtered.map((u: any) => {
               const realIdx = board.findIndex((b: any) => b.id === u.id);
-              const isMe    = u.id === myId;
-              const delta   = getDelta(u, realIdx);
+              const isMe = u.id === myId;
+              const delta = getDelta(u, realIdx);
 
               return (
                 <div
