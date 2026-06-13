@@ -4,12 +4,7 @@ import { Link } from "react-router-dom";
 import { useUserVerification } from "../../auth/auth";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { notify } from "../../utils/notify";
-
-const API = "/api";
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`,
-  "Content-Type": "application/json",
-});
+import { useChangePasswordMutation } from "../../redux/api/api";
 
 const UserIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className={`${className} opacity-90`}>
@@ -20,11 +15,11 @@ const UserIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 export default function StudentSettings() {
   const user: any = useUserVerification();
   const { permission, subscribe, isSupported } = usePushNotifications();
+  const [changePassword, { isLoading: pwLoading }] = useChangePasswordMutation();
 
   const [pwForm, setPwForm]       = useState({ currentPassword: "", newPassword: "", confirm: "" });
   const [showPw, setShowPw]       = useState<Record<string, boolean>>({});
   const [pwMsg, setPwMsg]         = useState<{ ok: boolean; text: string } | null>(null);
-  const [pwLoading, setPwLoading] = useState(false);
 
   const toggleShow = (key: string) =>
     setShowPw(p => ({ ...p, [key]: !p[key] }));
@@ -35,34 +30,26 @@ export default function StudentSettings() {
       setPwMsg({ ok: false, text: "New passwords do not match." });
       return;
     }
-    setPwLoading(true);
     setPwMsg(null);
     try {
-      const res = await fetch(`${API}/change-password`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({
-          currentPassword: pwForm.currentPassword,
-          newPassword: pwForm.newPassword,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
+      const res = await changePassword({
+        currentPassword: pwForm.currentPassword,
+        newPassword: pwForm.newPassword,
+      }).unwrap();
+      if (res.success) {
         const msg = "Password changed successfully.";
         setPwMsg({ ok: true, text: msg });
         notify.success(msg);
         setPwForm({ currentPassword: "", newPassword: "", confirm: "" });
       } else {
-        const msg = data.message ?? "Failed to change password.";
+        const msg = res.message ?? "Failed to change password.";
         setPwMsg({ ok: false, text: msg });
         notify.error(msg);
       }
-    } catch {
-      const msg = "Could not reach the server.";
+    } catch (err: any) {
+      const msg = err?.data?.message ?? "Failed to change password.";
       setPwMsg({ ok: false, text: msg });
       notify.error(msg);
-    } finally {
-      setPwLoading(false);
     }
   };
 
