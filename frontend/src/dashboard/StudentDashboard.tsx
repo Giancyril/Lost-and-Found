@@ -19,9 +19,11 @@ import {
   useGetMyLostItemQuery,
   useMyClaimsQuery,
   useGetLeaderboardQuery,
+  useGetMyRankQuery,
 } from "../redux/api/api";
 import { baseApi } from "../redux/api/baseApi";
 import WeeklyBountiesWidget from "../components/gamification/WeeklyBountiesWidget";
+import GamificationWidget from "../components/gamification/GamificationWidget";
 
 const achievementApi = baseApi.injectEndpoints({
   endpoints: (b) => ({
@@ -204,6 +206,7 @@ export default function StudentDashboard() {
     achievementApi as any
   ).useGetMyAchievementsQuery(undefined, { skip: !isLoggedIn });
   const [markSeen] = (achievementApi as any).useMarkAchievementsSeenMutation();
+  const { data: myRankData } = useGetMyRankQuery(undefined, { skip: !isLoggedIn });
 
   const loading = p1 || p2 || p3 || p4 || p5 || p6;
   const totalPoints = pointsData?.data?.totalPoints ?? 0;
@@ -218,6 +221,9 @@ export default function StudentDashboard() {
     currentStreak: 0,
     isOnARoll: false,
   };
+  const loginStreak: number = pointsData?.data?.loginStreak ?? 0;
+  const boostEvent: any = pointsData?.data?.boostEvent ?? null;
+  const rankDelta: number | null = myRankData?.data?.delta ?? null;
 
   const { level: xpLevel, rankTitle, progressPercent } = calculateLevel(totalPoints);
 
@@ -824,6 +830,17 @@ export default function StudentDashboard() {
           </div>
         ))}
       </div>
+
+      {/* ── Gamification Widget ── */}
+      <GamificationWidget
+        streak={streak}
+        loginStreak={loginStreak}
+        boostEvent={boostEvent}
+        rankDelta={rankDelta}
+        myRank={myRank}
+        myAchievements={myAchievements}
+        allAchievements={[]}
+      />
 
       {/* ── Weekly Bounties Widget ── */}
       <WeeklyBountiesWidget />
