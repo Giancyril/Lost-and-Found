@@ -514,7 +514,7 @@ const StudentAchievements: React.FC = () => {
 
                   {/* Chain Indicator - Shows if upgraded from previous tier */}
                   {isUpgraded && (
-                    <div className="absolute top-1 left-1 text-[8px] opacity-70"> </div>
+                    <div className="absolute top-1 left-1 text-[8px] opacity-70">⬆️</div>
                   )}
 
                   {/* Rarity Indicator */}
