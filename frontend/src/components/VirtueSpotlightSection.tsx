@@ -510,7 +510,7 @@ const SpotlightModal = ({
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 const VirtueSpotlightSection: React.FC = () => {
-  const { data, isLoading } = useGetVirtueSpotlightsQuery({});
+  const { data, isLoading } = useGetVirtueSpotlightsQuery(undefined);
   const spotlights: Spotlight[] = (data?.data ?? []).filter((s: any) => s.isActive !== false);
 
   const { likedIds, toggle } = useLikes();

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   FaIdCard, FaLock, FaEye, FaEyeSlash,
-  FaCheckCircle, FaUser, FaGraduationCap,
+  FaCheckCircle, FaExclamationTriangle, FaTimesCircle,
 } from 'react-icons/fa';
 import { MdVerified } from 'react-icons/md';
 import { Spinner } from 'flowbite-react';
-import { useLoginMutation, useRegistersMutation } from "../../redux/api/api";
+import { useLoginMutation, useRegistersMutation, useLazyValidateRegistrationQuery } from "../../redux/api/api";
 import { setUserLocalStorage } from "../../auth/auth";
 
 type Step = 1 | 2 | 3;
@@ -18,6 +18,8 @@ interface MasterlistData {
   course: string;
   yearLevel: string;
 }
+
+type ValidationStatus = 'idle' | 'checking' | 'eligible' | 'not_found' | 'already_registered' | 'error';
 
 const StepIndicator: React.FC<{ current: Step }> = ({ current }) => (
   <div className="flex items-center gap-2 mb-6">
@@ -36,24 +38,18 @@ const StudentAuth: React.FC = () => {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
 
-  // Internal state for the mode
   const [isLogin, setIsLogin] = useState(pathname === '/login');
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   const justRegistered = new URLSearchParams(search).get('registered') === 'true';
 
-  // Trigger entrance animation on mount
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Sync state with URL but with animation control
   useEffect(() => {
-    // Determine if we should be in login mode based on the URL
     const targetIsLogin = pathname === '/login';
-
-    // If the URL mode doesn't match our state, and we aren't already animating, start a transition
     if (targetIsLogin !== isLogin && !isAnimating) {
       setIsAnimating(true);
       const timer = setTimeout(() => {
@@ -79,9 +75,59 @@ const StudentAuth: React.FC = () => {
   const [regConfirmPass, setRegConfirmPass] = useState('');
   const [showRegPass, setShowRegPass] = useState(false);
   const [showRegConfirmPass, setShowRegConfirmPass] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
   const [regError, setRegError] = useState('');
   const [registers, { isLoading: isRegistering }] = useRegistersMutation();
+
+  // ── Inline validation with lazy RTK Query + debounce ──────────────────────
+  const [validationStatus, setValidationStatus] = useState<ValidationStatus>('idle');
+  const [validationMsg, setValidationMsg] = useState('');
+  const [validateRegistration] = useLazyValidateRegistrationQuery();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const id = regSchoolId.trim();
+    if (!id) {
+      setValidationStatus('idle');
+      setValidationMsg('');
+      setMasterlistData(null);
+      return;
+    }
+    setValidationStatus('checking');
+    setValidationMsg('');
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await validateRegistration(id, false).unwrap() as any;
+        const payload = res?.data ?? res;
+        if (payload?.alreadyRegistered) {
+          setValidationStatus('already_registered');
+          setValidationMsg('An account with this School ID already exists. Please sign in.');
+          setMasterlistData(null);
+        } else {
+          setValidationStatus('eligible');
+          setValidationMsg(`Eligible for registration`);
+          setMasterlistData({
+            schoolId: payload.schoolId,
+            name: payload.name,
+            email: payload.email,
+            course: payload.course || payload.department || '—',
+            yearLevel: payload.yearLevel || '—',
+          });
+        }
+      } catch (err: any) {
+        const msg: string = err?.data?.message ?? err?.message ?? 'Validation failed.';
+        if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('masterlist')) {
+          setValidationStatus('not_found');
+          setValidationMsg('School ID not found in masterlist.');
+        } else {
+          setValidationStatus('error');
+          setValidationMsg(msg);
+        }
+        setMasterlistData(null);
+      }
+    }, 600);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [regSchoolId]);
 
   const handleModeSwitch = (target: 'login' | 'register') => {
     if (isAnimating) return;
@@ -106,28 +152,12 @@ const StudentAuth: React.FC = () => {
     } catch (err: any) { setLoginError(err?.data?.message || 'Invalid School ID or password.'); }
   };
 
-  const handleValidate = async (e: React.FormEvent) => {
+  const handleValidate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!regSchoolId.trim()) return;
-    setIsValidating(true);
-    setRegError('');
-    try {
-      const res = await fetch(`/api/students/${encodeURIComponent(regSchoolId.trim())}`);
-      const json = await res.json();
-      if (!res.ok) { setRegError(json.message || 'ID not found.'); return; }
-      const student = json.data;
-      const checkRes = await fetch(`/api/students/validate-registration?schoolId=${encodeURIComponent(regSchoolId.trim())}`);
-      const checkJson = await checkRes.json();
-      if (checkJson?.data?.alreadyRegistered) { setRegError('Already registered.'); return; }
-      setMasterlistData({
-        schoolId: student.id,
-        name: student.name,
-        email: student.email,
-        course: student.course || student.department || '—',
-        yearLevel: student.yearLevel || '—',
-      });
+    if (validationStatus === 'eligible' && masterlistData) {
       setRegStep(2);
-    } catch { setRegError('Connection failed.'); } finally { setIsValidating(false); }
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -151,7 +181,7 @@ const StudentAuth: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-4 overflow-hidden">
 
-      {/* Logo & Header Section (Original Design) */}
+      {/* Logo & Header Section */}
       <div className={`mb-10 text-center px-4 transition-all duration-1000 ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
         <div className="flex flex-col items-center">
           <div className="space-y-1 mb-4">
@@ -216,13 +246,93 @@ const StudentAuth: React.FC = () => {
               <div className="space-y-3">
                 {regStep === 1 && (
                   <form onSubmit={handleValidate} className="space-y-3">
-                    <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden focus-within:border-blue-500/30 transition-colors">
-                      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.05]"><FaIdCard size={9} className="text-blue-400" /><p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">School ID</p></div>
-                      <input type="text" value={regSchoolId} onChange={e => setRegSchoolId(e.target.value)} placeholder=" " className="w-full bg-transparent text-white text-sm px-3 py-2.5 focus:outline-none" />
+                    {/* School ID input */}
+                    <div className={`bg-white/[0.03] border rounded-xl overflow-hidden transition-colors ${validationStatus === 'eligible' ? 'border-blue-500/35 focus-within:border-blue-500/50' :
+                      validationStatus === 'not_found' ? 'border-red-500/35 focus-within:border-red-500/50' :
+                        validationStatus === 'already_registered' ? 'border-blue-500/35 focus-within:border-blue-500/50' :
+                          validationStatus === 'error' ? 'border-red-500/35 focus-within:border-red-500/50' :
+                            'border-white/[0.07] focus-within:border-blue-500/30'
+                      }`}>
+                      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.05]">
+                        <FaIdCard size={9} className="text-blue-400" />
+                        <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">School ID</p>
+                        {/* Inline status indicator */}
+                        {validationStatus === 'checking' && (
+                          <span className="ml-auto flex items-center gap-1 text-[9px] text-gray-500 font-semibold">
+                            <Spinner size="xs" />
+                            Checking…
+                          </span>
+                        )}
+                        {validationStatus === 'eligible' && (
+                          <span className="ml-auto flex items-center gap-1 text-[9px] text-blue-400 font-bold">
+                            <FaCheckCircle size={8} />
+                            Eligible
+                          </span>
+                        )}
+                        {(validationStatus === 'not_found' || validationStatus === 'error') && (
+                          <span className="ml-auto flex items-center gap-1 text-[9px] text-red-400 font-bold">
+                            <FaTimesCircle size={8} />
+                            Not found
+                          </span>
+                        )}
+                        {validationStatus === 'already_registered' && (
+                          <span className="ml-auto flex items-center gap-1 text-[9px] text-blue-400 font-bold">
+                            <FaExclamationTriangle size={8} />
+                            Already registered
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={regSchoolId}
+                        onChange={e => setRegSchoolId(e.target.value)}
+                        placeholder=" "
+                        className="w-full bg-transparent text-white text-sm px-3 py-2.5 focus:outline-none"
+                      />
                     </div>
+
+                    {/* Status message banner */}
+                    {validationStatus === 'eligible' && masterlistData && (
+                      <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl px-3 py-2.5">
+                        <p className="text-blue-300 text-[10px] font-bold">{masterlistData.name}</p>
+                        <p className="text-blue-300/60 text-[9px] mt-0.5">{masterlistData.course} · {masterlistData.yearLevel}</p>
+                      </div>
+                    )}
+                    {(validationStatus === 'not_found' || validationStatus === 'error') && (
+                      <div className="bg-red-500/5 border border-red-500/15 rounded-xl px-3 py-2.5 text-red-300/80 text-[10px] leading-relaxed">
+                        {validationMsg}
+                      </div>
+                    )}
+
+                    {/* ── Already registered — improved card with CTA button ── */}
+                    {validationStatus === 'already_registered' && (
+                      <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl px-3 py-3 space-y-2.5">
+                        <div className="flex items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-blue-300 text-[11px] font-bold leading-snug">Account already exists</p>
+                            <p className="text-blue-300/60 text-[10px] leading-relaxed mt-0.5">
+                              This School ID is already registered. Sign in with your existing account instead.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleModeSwitch('login')}
+                          className="w-full py-2.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 active:bg-blue-500/25 border border-blue-500/25 text-blue-300 text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 group"
+                        >
+                          Sign in instead
+                        </button>
+                      </div>
+                    )}
+
                     {regError && <div className="bg-red-500/5 border border-red-500/15 rounded-xl px-3 py-2.5 text-red-300/80 text-xs">{regError}</div>}
-                    <button type="submit" disabled={isValidating || !regSchoolId.trim()} className="w-full py-2.5 rounded-xl text-xs font-semibold bg-blue-500/10 text-blue-300 border border-blue-500/25 hover:bg-blue-500/20 disabled:opacity-40 transition-all flex items-center justify-center gap-2">
-                      {isValidating ? <Spinner size="sm" /> : 'Continue'}
+
+                    <button
+                      type="submit"
+                      disabled={validationStatus !== 'eligible' || !masterlistData}
+                      className="w-full py-2.5 rounded-xl text-xs font-semibold bg-blue-500/10 text-blue-300 border border-blue-500/25 hover:bg-blue-500/20 disabled:opacity-40 transition-all flex items-center justify-center gap-2"
+                    >
+                      Continue
                     </button>
                   </form>
                 )}

@@ -113,10 +113,16 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
     }
   }
 
-  if (result.error && result.error.status === 403 && (result.error.data as any)?.message === "invalid csrf token") {
-    await fetchCsrfToken();
-    if (csrfToken) {
-       result = await baseQuery(args, api, extraOptions);
+  if (result.error && result.error.status === 403) {
+    const errMsg: string = (result.error.data as any)?.message ?? "";
+    // Handle both explicit CSRF errors and implicit ones (e.g. after server restart
+    // where the stored CSRF token is stale/mismatched).
+    if (errMsg.toLowerCase().includes("csrf") || errMsg.toLowerCase().includes("forbidden") || errMsg === "") {
+      csrfToken = null; // Invalidate stale token
+      await fetchCsrfToken();
+      if (csrfToken) {
+        result = await baseQuery(args, api, extraOptions);
+      }
     }
   }
 

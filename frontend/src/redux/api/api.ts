@@ -819,6 +819,8 @@ export const {
   useGetComplianceReportQuery,
   useClearOldLogsMutation,
   useLazyExportUsersQuery,
+  useValidateRegistrationQuery,
+  useLazyValidateRegistrationQuery,
   useGetActiveBountiesQuery,
   useGetVirtueSpotlightsQuery,
   useGetAllVirtueSpotlightsQuery,
