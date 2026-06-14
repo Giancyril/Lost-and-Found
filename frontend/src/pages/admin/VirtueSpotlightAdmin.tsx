@@ -355,6 +355,66 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "students_desc", label: "Most Students" },
 ];
 
+interface CustomSortSelectProps {
+  options: { value: SortKey; label: string }[];
+  value: SortKey;
+  onChange: (v: SortKey) => void;
+}
+
+const CustomSortSelect: React.FC<CustomSortSelectProps> = ({ options, value, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative select-none">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-2 px-4 py-2.5 bg-gray-800/80 border border-white/10 rounded-xl text-white text-xs font-semibold hover:border-white/20 transition-all focus:outline-none ${
+          open ? "ring-2 ring-blue-500/20 border-blue-500/50" : ""
+        }`}
+      >
+        <FaSortAmountDown className="text-gray-400" size={11} />
+        <span>{selected?.label}</span>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 z-50 mt-1.5 w-44 bg-[#1e293b] border border-white/10 rounded-xl shadow-2xl overflow-hidden py-1">
+          {options.map(opt => {
+            const isActive = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors duration-100 ${
+                  isActive
+                    ? "bg-[#60a5fa] text-[#0f172a]"
+                    : "text-gray-300 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const VirtueSpotlightAdmin: React.FC = () => {
   const { data, isLoading } = useGetAllVirtueSpotlightsQuery({});
   const [deleteSpotlight] = useDeleteVirtueSpotlightMutation();
@@ -470,16 +530,11 @@ const VirtueSpotlightAdmin: React.FC = () => {
 
             {/* Sort dropdown */}
             <div className="relative shrink-0">
-              <FaSortAmountDown className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={11} />
-              <select
+              <CustomSortSelect
+                options={SORT_OPTIONS}
                 value={sortBy}
-                onChange={e => setSortBy(e.target.value as SortKey)}
-                className="pl-8 pr-4 py-2 bg-gray-800/80 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none cursor-pointer"
-              >
-                {SORT_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
+                onChange={setSortBy}
+              />
             </div>
           </div>
 
