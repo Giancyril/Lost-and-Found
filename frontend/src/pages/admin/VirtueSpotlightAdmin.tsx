@@ -1,7 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   FaPlus, FaStar, FaTimes, FaTrash, FaToggleOn, FaToggleOff,
   FaImage, FaSpinner, FaEdit, FaUserCheck, FaMagic, FaHeart,
+  FaSearch, FaSortAmountDown,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -338,6 +339,22 @@ const SpotlightModal = ({
 };
 
 // ── Admin Page ────────────────────────────────────────────────────────────────
+type SortKey = "date_desc" | "date_asc" | "likes_desc" | "students_desc";
+type StatusFilter = "all" | "published" | "hidden";
+
+const STATUS_TABS: { id: StatusFilter; label: string }[] = [
+  { id: "all",       label: "All" },
+  { id: "published", label: "Published" },
+  { id: "hidden",    label: "Hidden" },
+];
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "date_desc",     label: "Newest First" },
+  { value: "date_asc",      label: "Oldest First" },
+  { value: "likes_desc",    label: "Most Liked" },
+  { value: "students_desc", label: "Most Students" },
+];
+
 const VirtueSpotlightAdmin: React.FC = () => {
   const { data, isLoading } = useGetAllVirtueSpotlightsQuery({});
   const [deleteSpotlight] = useDeleteVirtueSpotlightMutation();
@@ -345,6 +362,11 @@ const VirtueSpotlightAdmin: React.FC = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+
+  // ── Filter / sort state ───────────────────────────────────────────────────
+  const [search,  setSearch]  = useState("");
+  const [sortBy,  setSortBy]  = useState<SortKey>("date_desc");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const spotlights: any[] = data?.data || [];
 
@@ -369,6 +391,35 @@ const VirtueSpotlightAdmin: React.FC = () => {
     }
   };
 
+  // ── Derived: filtered + sorted list ──────────────────────────────────────
+  const processed = useMemo(() => {
+    let list = [...spotlights];
+
+    // Status filter
+    if (statusFilter === "published") list = list.filter(s => s.isActive);
+    if (statusFilter === "hidden")    list = list.filter(s => !s.isActive);
+
+    // Search (title or student names)
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter(s =>
+        (s.title || "").toLowerCase().includes(q) ||
+        (s.students || []).some((n: string) => n.toLowerCase().includes(q))
+      );
+    }
+
+    // Sort
+    list.sort((a, b) => {
+      if (sortBy === "date_asc")      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      if (sortBy === "date_desc")     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (sortBy === "likes_desc")    return (b.likes ?? 0) - (a.likes ?? 0);
+      if (sortBy === "students_desc") return (b.students?.length ?? 0) - (a.students?.length ?? 0);
+      return 0;
+    });
+
+    return list;
+  }, [spotlights, statusFilter, search, sortBy]);
+
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (isLoading)
     return (
@@ -389,14 +440,87 @@ const VirtueSpotlightAdmin: React.FC = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* ── Header row ── */}
-      <div className="flex justify-end">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h2 className="text-white font-bold text-base tracking-tight">Virtue Spotlights</h2>
         <button
           onClick={() => { setEditing(null); setShowModal(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shrink-0 self-end sm:self-auto"
         >
           <FaPlus size={10} /> New Post
         </button>
       </div>
+
+      {/* ── Filter / sort toolbar ── */}
+      {spotlights.length > 0 && (
+        <div className="bg-gray-900 border border-white/[0.06] rounded-2xl p-3 space-y-3">
+
+          {/* Search + Sort row */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            {/* Search */}
+            <div className="relative flex-1">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search by title or student name…"
+                className="w-full pl-9 pr-4 py-2 bg-gray-800/80 border border-white/10 rounded-xl text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+              />
+            </div>
+
+            {/* Sort dropdown */}
+            <div className="relative shrink-0">
+              <FaSortAmountDown className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={11} />
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as SortKey)}
+                className="pl-8 pr-4 py-2 bg-gray-800/80 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none cursor-pointer"
+              >
+                {SORT_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Status filter tabs */}
+          <div className="flex gap-1">
+            {STATUS_TABS.map(tab => {
+              const active = tab.id === statusFilter;
+              const count =
+                tab.id === "all"       ? spotlights.length :
+                tab.id === "published" ? spotlights.filter(s => s.isActive).length :
+                                         spotlights.filter(s => !s.isActive).length;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setStatusFilter(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all focus:outline-none ${
+                    active
+                      ? "bg-blue-500/15 text-blue-300 border border-blue-500/25"
+                      : "text-gray-500 hover:text-gray-300 border border-transparent"
+                  }`}
+                >
+                  {tab.label}
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                    active ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-gray-600"
+                  }`}>{count}</span>
+                </button>
+              );
+            })}
+
+            {/* Clear filters hint */}
+            {(search || statusFilter !== "all" || sortBy !== "date_desc") && (
+              <button
+                onClick={() => { setSearch(""); setStatusFilter("all"); setSortBy("date_desc"); }}
+                className="ml-auto text-[10px] text-gray-600 hover:text-gray-400 transition-colors px-2"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Stats strip ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -454,10 +578,15 @@ const VirtueSpotlightAdmin: React.FC = () => {
             Create First Post
           </button>
         </div>
+      ) : processed.length === 0 ? (
+        <div className="py-14 bg-gray-900/30 rounded-2xl border border-dashed border-gray-800 flex flex-col items-center text-center px-4">
+          <p className="text-white font-semibold mb-1">No results found</p>
+          <p className="text-gray-500 text-sm">Try adjusting your search or filter.</p>
+        </div>
       ) : (
         /* ── Spotlight list ── */
         <div className="space-y-3">
-          {spotlights.map((item: any) => (
+          {processed.map((item: any) => (
             <div
               key={item.id}
               className={`bg-gray-900 border rounded-2xl overflow-hidden transition-all ${
