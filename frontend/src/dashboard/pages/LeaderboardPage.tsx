@@ -1,6 +1,18 @@
 import { useState } from "react";
-import { FaTrophy, FaMedal, FaStar, FaSearch } from "react-icons/fa";
+import {
+  FaTrophy, FaMedal, FaStar, FaSearch,
+  FaInfinity, FaClock, FaCalendarAlt, FaBolt, FaUsers, FaChartBar, FaFire
+} from "react-icons/fa";
 import { useGetLeaderboardQuery } from "../../redux/api/api";
+
+type LeaderboardType = "alltime" | "weekly" | "monthly" | "weighted";
+
+const PERIOD_TABS: { id: LeaderboardType; label: string; icon: React.ReactNode; desc: string }[] = [
+  { id: "alltime", label: "All Time", icon: <FaInfinity size={10} />, desc: "Total points earned since joining" },
+  { id: "weekly", label: "This Week", icon: <FaClock size={10} />, desc: "Points earned in the past 7 days" },
+  { id: "monthly", label: "This Month", icon: <FaCalendarAlt size={10} />, desc: "Points earned this calendar month" },
+  { id: "weighted", label: "Freshness", icon: <FaBolt size={10} />, desc: "Activity weight based on recency" },
+];
 
 const medalLabel = (i: number) =>
   i === 0 ? "🥇 1st Place" : i === 1 ? "🥈 2nd Place" : i === 2 ? "🥉 3rd Place" : null;
@@ -17,28 +29,115 @@ const rankBg = (i: number) => {
 
 export default function LeaderboardPage() {
   const [search, setSearch] = useState("");
+  const [period, setPeriod] = useState<LeaderboardType>("alltime");
 
-  const { data: boardData, isLoading: loading } = useGetLeaderboardQuery(undefined);
+  const { data: boardData, isLoading: loading } = useGetLeaderboardQuery(period);
 
-  const board: any[] = boardData?.data ?? [];
+  const board: any[] = (boardData?.data ?? []).filter(
+    (u: any) => u.role !== "ADMIN" && u.role !== "SUB_ADMIN"
+  );
+
+  const getDisplayPoints = (u: any) => {
+    if (period === "weighted") return u.weightedScore ?? 0;
+    if (period !== "alltime" && u.periodPoints !== undefined) return u.periodPoints;
+    return u.totalPoints ?? 0;
+  };
+
+  const ptsLabel = period === "weighted" ? "score" : "pts";
 
   const filtered = board.filter((u: any) =>
     (u.name || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  const topScore = board.length > 0 ? Math.max(...board.map((u: any) => getDisplayPoints(u))) : 0;
+  const avgPoints = board.length > 0
+    ? Math.round(board.reduce((sum: number, u: any) => sum + getDisplayPoints(u), 0) / board.length)
+    : 0;
+  const activeStudents = board.filter((u: any) => getDisplayPoints(u) > 0).length;
+
   return (
     <div className="space-y-5 max-w-7xl mx-auto overflow-x-hidden">
       {/* Stats row */}
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Total Ranked Students */}
         <div className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
-          <div className={`absolute inset-0 opacity-30 bg-violet-500/5 blur-3xl scale-150 pointer-events-none`} />
+          <div className="absolute inset-0 opacity-30 bg-violet-500/5 blur-3xl scale-150 pointer-events-none" />
           <div className="relative">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center bg-violet-500/5`}><FaMedal size={14} className="text-violet-400" /></div>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-violet-500/10">
+              <FaUsers size={13} className="text-violet-400" />
+            </div>
           </div>
           <div className="relative">
-            <p className={`text-xl font-bold tracking-tight text-violet-400`}>{board.length}</p>
-            <p className="text-gray-500 text-[11px] mt-0.5 font-medium">Total Ranked Students</p>
+            <p className="text-xl font-bold tracking-tight text-violet-400">{board.length}</p>
+            <p className="text-gray-500 text-[11px] mt-0.5 font-medium">Total Ranked</p>
           </div>
+        </div>
+
+        {/* Top Score */}
+        <div className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
+          <div className="absolute inset-0 opacity-30 bg-yellow-500/5 blur-3xl scale-150 pointer-events-none" />
+          <div className="relative">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-yellow-500/10">
+              <FaTrophy size={13} className="text-yellow-400" />
+            </div>
+          </div>
+          <div className="relative">
+            <p className="text-xl font-bold tracking-tight text-yellow-400">{topScore.toLocaleString()}</p>
+            <p className="text-gray-500 text-[11px] mt-0.5 font-medium">Top Score</p>
+          </div>
+        </div>
+
+        {/* Avg Points */}
+        <div className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
+          <div className="absolute inset-0 opacity-30 bg-blue-500/5 blur-3xl scale-150 pointer-events-none" />
+          <div className="relative">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-blue-500/10">
+              <FaChartBar size={13} className="text-blue-400" />
+            </div>
+          </div>
+          <div className="relative">
+            <p className="text-xl font-bold tracking-tight text-blue-400">{avgPoints.toLocaleString()}</p>
+            <p className="text-gray-500 text-[11px] mt-0.5 font-medium">Avg Points</p>
+          </div>
+        </div>
+
+        {/* Active Students */}
+        <div className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
+          <div className="absolute inset-0 opacity-30 bg-orange-500/5 blur-3xl scale-150 pointer-events-none" />
+          <div className="relative">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-orange-500/10">
+              <FaFire size={13} className="text-orange-400" />
+            </div>
+          </div>
+          <div className="relative">
+            <p className="text-xl font-bold tracking-tight text-orange-400">{activeStudents}</p>
+            <p className="text-gray-500 text-[11px] mt-0.5 font-medium">Active Students</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Period Tabs */}
+      <div className="flex justify-start">
+        <div className="inline-flex gap-1 bg-gray-800/40 border border-white/10 rounded-2xl p-1 w-full sm:w-auto">
+          {PERIOD_TABS.map(tab => {
+            const active = tab.id === period;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => { setPeriod(tab.id); setSearch(""); }}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 focus:outline-none select-none ${
+                  active
+                    ? "bg-violet-500/10 text-violet-300"
+                    : "text-gray-400 hover:text-white"
+                }`}
+                title={tab.desc}
+              >
+                <span className={active ? "text-violet-400" : "text-gray-500"}>{tab.icon}</span>
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -74,7 +173,7 @@ export default function LeaderboardPage() {
               <div className="col-span-1">Rank</div>
               <div className="col-span-6">Student</div>
               <div className="col-span-3">Achievement</div>
-              <div className="col-span-2 text-right">Points</div>
+              <div className="col-span-2 text-right">{period === "weighted" ? "Score" : "Points"}</div>
             </div>
             <div className="divide-y divide-white/[0.04]">
               {filtered.map((u: any, i: number) => {
@@ -107,8 +206,8 @@ export default function LeaderboardPage() {
                     </div>
                     <div className="col-span-2 flex items-center justify-end gap-1.5">
                       <FaStar size={11} className="text-blue-400" />
-                      <span className="text-blue-400 font-black text-sm">{u.totalPoints}</span>
-                      <span className="text-gray-600 text-xs">pts</span>
+                      <span className="text-blue-400 font-black text-sm">{getDisplayPoints(u)}</span>
+                      <span className="text-gray-600 text-xs">{ptsLabel}</span>
                     </div>
                   </div>
                 );
@@ -144,8 +243,8 @@ export default function LeaderboardPage() {
 
                   <div className="flex items-center gap-1 shrink-0">
                     <FaStar size={10} className="text-blue-400" />
-                    <span className="text-blue-400 font-black text-xs">{u.totalPoints}</span>
-                    <span className="text-gray-600 text-[10px]">pts</span>
+                    <span className="text-blue-400 font-black text-xs">{getDisplayPoints(u)}</span>
+                    <span className="text-gray-600 text-[10px]">{ptsLabel}</span>
                   </div>
                 </div>
               );
