@@ -106,7 +106,9 @@ const BulkScanner = () => {
       });
 
       const formData = new FormData();
-      formData.append("image", compressed);
+      const hasSupportedExt = /\.(jpg|jpeg|png|gif|webp)$/i.test(item.file.name);
+      const filename = hasSupportedExt ? item.file.name : `${item.file.name.replace(/\.[^/.]+$/, "") || "image"}.jpg`;
+      formData.append("image", compressed, filename);
       const aiRes = await aiRecognize(formData).unwrap();
       if (!aiRes.success || !aiRes.data) throw new Error("AI could not extract tags.");
 

@@ -683,7 +683,9 @@ const ReportLostItem = () => {
 
       // Prepare FormData (Not using base64 for the API call anymore)
       const formData = new FormData();
-      formData.append("image", compressedFile);
+      const hasSupportedExt = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
+      const filename = hasSupportedExt ? file.name : `${file.name.replace(/\.[^/.]+$/, "") || "image"}.jpg`;
+      formData.append("image", compressedFile, filename);
 
       const res = await aiRecognize(formData).unwrap();
 
