@@ -235,7 +235,6 @@ const analyzeUrgency = async (name: string, description: string) => {
 const analyzeClaimFraud = async (claimantFeatures: string, itemDescription: string, itemName: string) => {
   try {
     const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
     You are a Fraud Detection AI for a campus Lost and Found system called "Lost & Found NBSC".
@@ -256,7 +255,12 @@ const analyzeClaimFraud = async (claimantFeatures: string, itemDescription: stri
     {
       "fraudScore": 0-100 (Integer, where 100 means obvious fraud/guessing and 0 means verified owner),
       "isHighRisk": true/false (Set true if fraudScore >= 70),
-      "fraudReason": "A brief, 1-2 sentence explanation of why this score was assigned."
+      "fraudReason": "A brief, 1-2 sentence explanation of why this score was assigned.",
+      "auditReport": {
+        "matchingDetails": ["list of details that match between claimant features and actual item details"],
+        "contradictoryDetails": ["list of details that contradict between claimant features and actual item details"],
+        "missingDetails": ["list of prominent details from the actual description that the claimant failed to mention, which a real owner would likely know (e.g. specific stickers, scratches, colors, brands)"]
+      }
     }
 
     Rules:
@@ -266,10 +270,12 @@ const analyzeClaimFraud = async (claimantFeatures: string, itemDescription: stri
 
     let result;
     try {
-      result = await generateContentWithRetry(genAI, prompt);
+      result = await generateContentWithRetry(genAI, prompt, {
+        generationConfig: { responseMimeType: "application/json" }
+      });
     } catch (genError: any) {
       console.error("[AI] Gemini Claim Fraud Analysis Error:", genError.message);
-      return { fraudScore: 0, isHighRisk: false, fraudReason: "AI Service unavailable" };
+      return { fraudScore: 0, isHighRisk: false, fraudReason: "AI Service unavailable", auditReport: { matchingDetails: [], contradictoryDetails: [], missingDetails: [] } };
     }
 
     const response = await result.response;
@@ -280,7 +286,7 @@ const analyzeClaimFraud = async (claimantFeatures: string, itemDescription: stri
       return JSON.parse(text);
     } catch (parseError) {
       console.error("[AI] Failed to parse Fraud AI response:", text);
-      return { fraudScore: 0, isHighRisk: false, fraudReason: "AI format error" };
+      return { fraudScore: 0, isHighRisk: false, fraudReason: "AI format error", auditReport: { matchingDetails: [], contradictoryDetails: [], missingDetails: [] } };
     }
   } catch (error) {
     console.error("[AI] Fraud Analysis Pipeline Failure:", error);

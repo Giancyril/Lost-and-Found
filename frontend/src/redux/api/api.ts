@@ -204,6 +204,13 @@ const api = baseApi.injectEndpoints({
         }
       },
     }),
+    analyzeClaimFraud: builder.mutation({
+      query: (claimId: string) => ({
+        url: `/claims/${claimId}/analyze-fraud`,
+        method: "POST",
+      }),
+      invalidatesTags: ["adminData", "claims"],
+    }),
 
     // admin stats
     adminStats: builder.query({
@@ -765,6 +772,7 @@ export const {
   useUpdateClaimStatusMutation,
   useUpdateClaimStatusWithNoteMutation,
   useDeleteClaimMutation,
+  useAnalyzeClaimFraudMutation,
   useUploadItemImagesMutation,
   useMarkLostItemAsFoundMutation,
   useGetTestimonialsQuery,

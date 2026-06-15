@@ -141,6 +141,20 @@ const trackClaim = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const analyzeClaimFraud = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await claimsService.analyzeClaimFraud(req.params.claimId);
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "AI Fraud analysis completed successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const claimsController = {
   createClaim,
   getClaim,
@@ -148,4 +162,5 @@ export const claimsController = {
   deleteClaim,
   getMyClaim,
   trackClaim,
+  analyzeClaimFraud,
 };

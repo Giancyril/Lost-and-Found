@@ -16,6 +16,7 @@ import {
   useGetAllLostItemsQuery,
   useGetFoundItemsQuery,
   useSendLostItemEmailMutation,
+  useAnalyzeClaimFraudMutation,
 } from "../../redux/api/api";
 import ExportButton from "../../components/export/ExportButton";
 import { getCoordinates } from "../../utils/campusLocations";
@@ -120,6 +121,73 @@ const CustomDropdown = ({ options, value, onChange, allLabel = "All" }: {
   );
 };
 
+const parseFraudReason = (rawReason: string | null) => {
+  if (!rawReason) return null;
+  try {
+    const trimmed = rawReason.trim();
+    if (trimmed.startsWith("{")) {
+      return JSON.parse(trimmed);
+    }
+  } catch (e) {
+    // Fail silently, fallback
+  }
+
+  const result: any = {
+    serialWarning: null,
+    aiAssessment: null
+  };
+
+  if (rawReason.includes("[SERIAL CLAIMANT WARNING]")) {
+    const part = rawReason.split("|").find(p => p.includes("[SERIAL CLAIMANT WARNING]"));
+    if (part) {
+      result.serialWarning = part.replace("[SERIAL CLAIMANT WARNING]", "").trim();
+    }
+  }
+  
+  if (rawReason.includes("[AI Assessment]")) {
+    const part = rawReason.split("|").find(p => p.includes("[AI Assessment]"));
+    if (part) {
+      result.aiAssessment = {
+        fraudReason: part.replace("[AI Assessment]", "").trim()
+      };
+    }
+  }
+
+  if (!result.serialWarning && !result.aiAssessment) {
+    result.aiAssessment = {
+      fraudReason: rawReason
+    };
+  }
+
+  return result;
+};
+
+const getRiskBadge = (score: number, isHighRisk: boolean) => {
+  const parsedScore = score || 0;
+  if (parsedScore >= 70 || isHighRisk) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full font-bold">
+        <span className="w-1 h-1 rounded-full bg-red-400 animate-pulse" />
+        High Risk ({parsedScore}%)
+      </span>
+    );
+  }
+  if (parsedScore >= 40) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full font-bold">
+        <span className="w-1 h-1 rounded-full bg-amber-400" />
+        Medium Risk ({parsedScore}%)
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-bold">
+      <span className="w-1 h-1 rounded-full bg-emerald-400" />
+      Low Risk ({parsedScore}%)
+    </span>
+  );
+};
+
 const ClaimsManagement = () => {
   const [activeTab, setActiveTab] = useState<Tab>("claims");
   const [claimView, setClaimView] = useState<ClaimView>("table");
@@ -170,6 +238,7 @@ const ClaimsManagement = () => {
   const [sendClaimApprovedEmail] = useSendClaimApprovedEmailMutation();
   const [deleteClaim] = useDeleteClaimMutation();
   const [sendLostItemEmail] = useSendLostItemEmailMutation();
+  const [analyzeClaimFraud, { isLoading: isAnalyzing }] = useAnalyzeClaimFraudMutation();
 
   const [recommenderThreshold, setRecommenderThreshold] = useState<number>(50);
   const [recommenderSearch, setRecommenderSearch] = useState("");
@@ -459,6 +528,17 @@ const ClaimsManagement = () => {
     } catch { toast.error("Failed to update"); }
     finally { setIsStatusLoading(false); }
   };
+  const handleAnalyzeFraud = async (claimId: string) => {
+    try {
+      const result = await analyzeClaimFraud(claimId).unwrap();
+      toast.success("AI Fraud analysis refreshed!");
+      if (selectedClaim && selectedClaim.id === claimId) {
+        setSelectedClaim(result.data); // Update modal data
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to analyze fraud");
+    }
+  };
   const handleSendClaimEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailClaim) return;
@@ -704,11 +784,9 @@ const ClaimsManagement = () => {
                                 <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full mt-0.5 inline-block">
                                   {claim.foundItem?.category?.name}
                                 </span>
-                                {claim.isHighRisk && (
-                                  <span className="ml-2 text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full mt-0.5 inline-block">
-                                    <FaExclamationTriangle className="inline mr-1 mb-0.5" size={8} /> FRAUD ALERT
-                                  </span>
-                                )}
+                                <span className="ml-2 mt-0.5 inline-block align-middle">
+                                  {getRiskBadge(claim.fraudScore, claim.isHighRisk)}
+                                </span>
                               </div>
                             </div>
                           </td>
@@ -801,11 +879,9 @@ const ClaimsManagement = () => {
                           <div className="flex items-start justify-between gap-2">
                             <p className="text-white text-sm font-semibold leading-tight truncate">
                               {claim.foundItem?.foundItemName}
-                              {claim.isHighRisk && (
-                                <span className="ml-2 inline-flex items-center text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full align-middle">
-                                  <FaExclamationTriangle className="mr-1" size={8} /> FRAUD ALERT
-                                </span>
-                              )}
+                              <span className="ml-2 inline-block align-middle">
+                                {getRiskBadge(claim.fraudScore, claim.isHighRisk)}
+                              </span>
                             </p>
                             <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(claim.status)}`}>
                               {claim.status}
@@ -922,11 +998,9 @@ const ClaimsManagement = () => {
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-white text-xs font-semibold truncate">{claim.foundItem?.foundItemName}</p>
                           <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(claim.status)}`}>{claim.status}</span>
-                          {claim.isHighRisk && (
-                            <span className="text-[9px] px-1.5 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full">
-                              <FaExclamationTriangle className="inline mr-1" size={7} />FRAUD
-                            </span>
-                          )}
+                          <span className="inline-block align-middle">
+                            {getRiskBadge(claim.fraudScore, claim.isHighRisk)}
+                          </span>
                         </div>
                         <p className="text-gray-500 text-[10px] mt-0.5">{claim.claimantName} · {formatDate(claim.lostDate)}</p>
                       </div>
@@ -1796,31 +1870,156 @@ const ClaimsManagement = () => {
                   </div>
 
                   {/* Security Assessment */}
-                  <div className={`border rounded-xl p-3 ${selectedClaim.isHighRisk ? "bg-red-500/10 border-red-500/20" : "bg-gray-800/60 border-white/5"}`}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <FaBolt size={10} className={selectedClaim.isHighRisk ? "text-red-400" : "text-cyan-400"} />
-                      <p className={`text-[10px] font-bold uppercase tracking-widest ${selectedClaim.isHighRisk ? "text-red-400" : "text-cyan-400"}`}>AI Security Assessment</p>
-                    </div>
+                  {(() => {
+                    const parsed = parseFraudReason(selectedClaim.fraudReason);
+                    const serialWarning = parsed?.serialWarning;
+                    const aiAssessment = parsed?.aiAssessment;
+                    
+                    const score = selectedClaim.fraudScore || 0;
+                    const isHigh = selectedClaim.isHighRisk || !!aiAssessment?.isHighRisk;
+                    
+                    let riskText = "Low Risk";
+                    let riskColor = "text-emerald-400 border-emerald-500/20 bg-emerald-500/10";
+                    let glowColor = "bg-emerald-500";
+                    if (score >= 70 || isHigh) {
+                      riskText = "High Risk";
+                      riskColor = "text-red-400 border-red-500/20 bg-red-500/10";
+                      glowColor = "bg-red-500";
+                    } else if (score >= 40) {
+                      riskText = "Medium Risk";
+                      riskColor = "text-amber-400 border-amber-500/20 bg-amber-500/10";
+                      glowColor = "bg-amber-500";
+                    }
 
-                    <div className="mb-3">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs font-semibold text-gray-300">Fraud Risk Score</span>
-                        <span className={`text-xs font-bold ${selectedClaim.fraudScore >= 70 ? 'text-red-400' : selectedClaim.fraudScore >= 40 ? 'text-amber-400' : 'text-emerald-400'}`}>{selectedClaim.fraudScore || 0}%</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-gray-900 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-1000 ${selectedClaim.fraudScore >= 70 ? 'bg-red-500' : selectedClaim.fraudScore >= 40 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                          style={{ width: `${selectedClaim.fraudScore || 0}%` }}
-                        />
-                      </div>
-                    </div>
+                    return (
+                      <div className="space-y-4">
+                        {/* Serial Warning if present */}
+                        {serialWarning && (
+                          <div className="flex items-start gap-2.5 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+                            <FaExclamationTriangle className="shrink-0 mt-0.5" size={14} />
+                            <div>
+                              <strong className="font-bold block uppercase tracking-wider text-[10px] mb-0.5">Serial Claimant Warning</strong>
+                              <p className="text-red-300/95 leading-relaxed">{serialWarning}</p>
+                            </div>
+                          </div>
+                        )}
 
-                    {selectedClaim.fraudReason && (
-                      <p className={`text-xs leading-relaxed italic border-l-2 pl-2 ${selectedClaim.isHighRisk ? "text-red-300 border-red-500/30" : "text-gray-300 border-white/10"}`}>
-                        {selectedClaim.fraudReason}
-                      </p>
-                    )}
-                  </div>
+                        <div className="bg-gray-800/60 border border-white/5 rounded-xl p-4 space-y-4 relative overflow-hidden">
+                          {/* Top row: Header, Badge, Re-run button */}
+                          <div className="flex items-center justify-between flex-wrap gap-2.5 border-b border-white/5 pb-3">
+                            <div className="flex items-center gap-2">
+                              <FaBolt className={score >= 70 || isHigh ? "text-red-400" : score >= 40 ? "text-amber-400" : "text-emerald-400"} size={13} />
+                              <h3 className="text-xs font-bold text-white uppercase tracking-wider">AI Fraud Detection</h3>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${riskColor}`}>
+                                {riskText}
+                              </span>
+                              <button
+                                type="button"
+                                disabled={isAnalyzing}
+                                onClick={() => handleAnalyzeFraud(selectedClaim.id)}
+                                className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 hover:bg-white/10 disabled:opacity-50 border border-white/10 text-gray-300 hover:text-white text-[10px] font-bold rounded-lg transition-all"
+                              >
+                                {isAnalyzing ? (
+                                  <>
+                                    <svg className="animate-spin h-3 w-3 text-cyan-400" viewBox="0 0 24 24" fill="none">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    Analyzing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <FaBolt size={8} /> Run AI Check
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Gauge and Summary description */}
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                            <div className="sm:col-span-4 flex flex-col items-center justify-center p-3.5 bg-gray-900/60 border border-white/5 rounded-xl">
+                              <div className={`relative w-20 h-20 flex items-center justify-center rounded-full border-4 border-white/5`}>
+                                <div className={`absolute inset-0 rounded-full opacity-10 ${glowColor}`} />
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xl font-extrabold text-white leading-none">{score}%</span>
+                                  <span className="text-[9px] text-gray-500 font-bold mt-1 uppercase">Score</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="sm:col-span-8 space-y-2">
+                              <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">AI Assessment Explanation</h4>
+                              <p className="text-gray-300 text-xs leading-relaxed italic border-l-2 border-white/10 pl-2.5">
+                                {aiAssessment?.fraudReason || "No AI explanation available. Please run the AI Fraud Check."}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Structured report details cards */}
+                          {aiAssessment?.auditReport && (
+                            <div className="space-y-3 pt-3 border-t border-white/5">
+                              <h4 className="text-[10px] font-bold text-gray-450 uppercase tracking-wider">Gemini Audit Report</h4>
+                              
+                              <div className="grid grid-cols-1 gap-2.5">
+                                {/* Matching Details */}
+                                <div className="p-3 bg-emerald-500/[0.02] border border-emerald-500/10 rounded-xl space-y-1.5">
+                                  <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
+                                    <FaCheckCircle size={11} />
+                                    <span>Matching Details</span>
+                                  </div>
+                                  {aiAssessment.auditReport.matchingDetails?.length > 0 ? (
+                                    <ul className="list-disc list-inside text-gray-300 text-[11px] space-y-1">
+                                      {aiAssessment.auditReport.matchingDetails.map((detail: string, i: number) => (
+                                        <li key={i}>{detail}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-gray-500 text-[11px] italic">No clear matching details identified.</p>
+                                  )}
+                                </div>
+
+                                {/* Contradictory Details */}
+                                <div className="p-3 bg-red-500/[0.02] border border-red-500/10 rounded-xl space-y-1.5">
+                                  <div className="flex items-center gap-1.5 text-red-400 text-xs font-bold">
+                                    <FaTimes size={11} className="bg-red-400/10 rounded-full p-0.5 w-4 h-4 flex items-center justify-center" />
+                                    <span>Contradictory Details</span>
+                                  </div>
+                                  {aiAssessment.auditReport.contradictoryDetails?.length > 0 ? (
+                                    <ul className="list-disc list-inside text-red-350/90 text-[11px] space-y-1">
+                                      {aiAssessment.auditReport.contradictoryDetails.map((detail: string, i: number) => (
+                                        <li key={i}>{detail}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-gray-500 text-[11px] italic">No contradictions identified.</p>
+                                  )}
+                                </div>
+
+                                {/* Missing details / Warnings */}
+                                <div className="p-3 bg-amber-500/[0.02] border border-amber-500/10 rounded-xl space-y-1.5">
+                                  <div className="flex items-center gap-1.5 text-amber-400 text-xs font-bold">
+                                    <FaExclamationTriangle size={11} />
+                                    <span>Missing Prominent Details</span>
+                                  </div>
+                                  {aiAssessment.auditReport.missingDetails?.length > 0 ? (
+                                    <ul className="list-disc list-inside text-amber-305/90 text-[11px] space-y-1">
+                                      {aiAssessment.auditReport.missingDetails.map((detail: string, i: number) => (
+                                        <li key={i}>{detail}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-gray-500 text-[11px] italic">No prominent missing details identified.</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {selectedClaim.status === "PENDING" && (
                     <div className="flex items-center justify-end gap-2">

@@ -186,7 +186,7 @@ A dedicated security and governance layer for administrators.
   - IP-based flagging and blocking
   - Session management and forced logout
   - Audit trail of all security events
-- **AI Fraud & 'Serial Claimant' Prevention Engine**: Dual-layer security mechanism that heuristic flags users with multiple rapid claims and uses Gemini AI to cross-reference proof of ownership against hidden item details to detect fraud, emitting instant Risk Scores and alerts.
+- **AI Fraud & 'Serial Claimant' Prevention Engine**: Dual-layer security mechanism that flags users with multiple claims and uses Gemini AI to cross-reference proof of ownership against hidden item details to detect fraud. Surfaced as a color-coded **AI Fraud Risk Score Badge** (Low / Medium / High Risk) and a comprehensive **Gemini Audit Report** card highlighting matching details, contradictions, and missing details in the Claim Verification Panel, with support for manual on-demand re-analysis.
 - **Data Privacy**: Built-in tools to support GDPR and local data-privacy compliance
   - User data export on request
   - Account and data deletion workflows
