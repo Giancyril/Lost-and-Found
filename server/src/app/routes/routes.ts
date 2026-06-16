@@ -26,9 +26,9 @@ import { postCreationLimiter, tipSubmissionLimiter } from "../midddlewares/bulle
 import { loginRateLimiter, registerRateLimiter } from "../midddlewares/authRateLimit";
 import { getMatchNotifications } from "../utils/getMatchNotifications";
 import { studentRoutes } from "../modules/student/student.routes";
- import sheetsRoutes from "../modules/sheets/sheets.routes";
- import { reconciliationRoutes } from "../modules/sheets/reconciliation.route";
- import { chatRoutes } from "../modules/chat/chat.routes";
+import sheetsRoutes from "../modules/sheets/sheets.routes";
+import { reconciliationRoutes } from "../modules/sheets/reconciliation.route";
+import { chatRoutes } from "../modules/chat/chat.routes";
 import { pushRoutes } from "../modules/push/push.routes";
 import { uploadImages, uploadAudio } from "../midddlewares/upload";
 import { commentsRouter } from "../comments/commentsRouter";
@@ -63,6 +63,7 @@ import {
   getKeywords, addKeyword, removeKeyword, testContent,
   getAppeals, submitAppeal, resolveAppeal,
 } from "../utils/moderationController";
+import { getApiHealth } from "../utils/HealthController";
 
 const router = express.Router();
 
@@ -161,10 +162,10 @@ router.delete("/bulletin-posts/:id", auth(), bulletinPostController.deletePost);
 router.delete("/bulletin-posts/:id/tips/:tipId", auth(), bulletinPostController.deleteTip);
 router.put("/bulletin-posts/:id/resolve", auth(), bulletinPostController.resolvePost);
 
- router.use("/students", studentRoutes);
+router.use("/students", studentRoutes);
 router.use("/sheets", sheetsRoutes);
 router.use("/admin/reconciliation", reconciliationRoutes);
- router.use("/chat", chatRoutes);
+router.use("/chat", chatRoutes);
 router.use("/notifications", pushRoutes);
 router.use("/", commentsRouter);
 router.use("/", virtueRoutes);
@@ -238,6 +239,9 @@ router.get("/admin/security/purge-check", auth(), purgeDeletedUsers);
 
 // Compliance
 router.get("/admin/security/compliance", auth(), getComplianceReport);
+
+//API Status
+router.get("/admin/health", auth(), getApiHealth);
 
 // Moderation stats
 router.get("/admin/moderation/stats", auth(), getModerationStats);

@@ -6,7 +6,8 @@ import {
   FaChevronRight, FaHome, FaSignOutAlt, FaMapMarkedAlt, FaMapMarkerAlt,
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate,
-  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy, FaAward, FaBolt, FaUserSlash
+  FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy, FaAward, FaBolt,
+  FaUserSlash, FaHeartbeat
 } from "react-icons/fa";
 import { useUserVerification, signOut, setUserLocalStorage } from "../auth/auth";
 
@@ -63,6 +64,7 @@ const menuItems = [
   { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
   { title: "Security", icon: FaShieldAlt, path: "/dashboard/security" },
   { title: "Audit Logs", icon: FaClipboardList, path: "/dashboard/audit-logs" },
+  { title: "API Status", icon: FaHeartbeat, path: "/dashboard/api-status" },
   { title: "Accounts", icon: FaUserShield, path: "/dashboard/users" },
   { title: "Flagged Users", icon: FaUserSlash, path: "/dashboard/flagged-users" },
   { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
@@ -93,6 +95,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/audit-logs": { title: "Audit Logs", subtitle: "Strict, un-deletable record of all administrative and system actions." },
   "/dashboard/chat": { title: "Messenger", subtitle: "Real-time communication hub for claims and support." },
   "/dashboard/leaderboard": { title: "Leaderboard", subtitle: "View top community contributors ranked by points." },
+  "/dashboard/api-status": { title: "API Status", subtitle: "Real-time monitoring of system services." },
 };
 
 const timeAgo = (dateStr: string) => {

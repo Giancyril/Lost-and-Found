@@ -661,7 +661,11 @@ const api = baseApi.injectEndpoints({
       query: () => ({ url: "/bounties/active", method: "GET" }),
       providesTags: ["bounties"] as any,
     }),
-    
+
+    getApiHealth: builder.query({
+      query: () => ({ url: "/admin/health", method: "GET" }),
+    }),
+
     // ── VIRTUE Spotlights ────────────────────────────────────────────────────────
     getVirtueSpotlights: builder.query({
       query: () => ({ url: "/virtue-spotlights", method: "GET" }),
@@ -837,4 +841,5 @@ export const {
   useDeleteVirtueSpotlightMutation,
   useAiWriteVirtueSpotlightMutation,
   useLikeVirtueSpotlightMutation,
+  useGetApiHealthQuery,
 } = api;

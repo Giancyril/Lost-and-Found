@@ -57,6 +57,7 @@ import Bounties from "./pages/bounties/Bounties.tsx";
 import VirtueSpotlightAdmin from "./pages/admin/VirtueSpotlightAdmin.tsx";
 import BoostEventsManagement from "./dashboard/pages/BoostEventsManagement.tsx";
 import FlaggedUsersManagement from "./dashboard/pages/FlaggedUsersManagement.tsx";
+import ApiStatus from "./dashboard/pages/ApiStatus.tsx";
 
 const rawAdminPath = import.meta.env.VITE_ADMIN_PATH || "/nbsc-secure-portal";
 const ADMIN_PATH = rawAdminPath.startsWith("/") ? rawAdminPath : `/${rawAdminPath}`;
@@ -123,6 +124,7 @@ const router = createBrowserRouter([
   { path: "/dashboard/audit-logs", element: <DashboardLayout><AuditLogsPage /></DashboardLayout> },
   { path: "/dashboard/moderation", element: <DashboardLayout><ContentModeration /></DashboardLayout> },
   { path: "/dashboard/chat", element: <DashboardLayout><ChatPage /></DashboardLayout> },
+  { path: "/dashboard/api-status", element: <DashboardLayout><ApiStatus /></DashboardLayout> },
 
   // ── Student Dashboard routes ──────────────────────────────────────────────
   { path: "/dashboard/student", element: <StudentLayout><StudentDashboard /></StudentLayout> },
