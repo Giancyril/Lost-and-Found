@@ -83,12 +83,7 @@ export default function FlaggedUsersManagement() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div>
-        <h1 className="text-white text-xl font-bold tracking-tight">Flagged Accounts</h1>
-        <p className="text-gray-500 text-xs mt-0.5">
-          Review and clear accounts automatically flagged for suspicious point acquisition or rules violation
-        </p>
-      </div>
+
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
