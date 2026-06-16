@@ -143,7 +143,7 @@ const parseFraudReason = (rawReason: string | null) => {
       result.serialWarning = part.replace("[SERIAL CLAIMANT WARNING]", "").trim();
     }
   }
-  
+
   if (rawReason.includes("[AI Assessment]")) {
     const part = rawReason.split("|").find(p => p.includes("[AI Assessment]"));
     if (part) {
@@ -613,7 +613,7 @@ const ClaimsManagement = () => {
       <div className="flex w-full sm:w-fit gap-0.5 sm:gap-1 p-1 bg-gray-900 border border-white/5 rounded-xl max-w-full overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("claims")}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${activeTab === "claims"
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap focus:outline-none ${activeTab === "claims"
             ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
             : "text-gray-400 hover:text-white"
             }`}
@@ -623,7 +623,7 @@ const ClaimsManagement = () => {
         </button>
         <button
           onClick={() => { setActiveTab("audit"); setAuditPage(1); }}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${activeTab === "audit"
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap focus:outline-none ${activeTab === "audit"
             ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
             : "text-gray-400 hover:text-white"
             }`}
@@ -633,7 +633,7 @@ const ClaimsManagement = () => {
         </button>
         <button
           onClick={() => { setActiveTab("matches"); setMatchPage(1); }}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${activeTab === "matches"
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap focus:outline-none ${activeTab === "matches"
             ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
             : "text-gray-400 hover:text-white"
             }`}
@@ -643,7 +643,7 @@ const ClaimsManagement = () => {
         </button>
         <button
           onClick={() => { setActiveTab("recommender"); setRecommenderPage(1); }}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap ${activeTab === "recommender"
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[9px] xs:text-[10px] sm:text-xs font-semibold whitespace-nowrap focus:outline-none ${activeTab === "recommender"
             ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
             : "text-gray-400 hover:text-white"
             }`}
@@ -1190,7 +1190,7 @@ const ClaimsManagement = () => {
                   type="button"
                   onClick={() => setAuditPage(p => Math.max(1, p - 1))}
                   disabled={auditPage === 1}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 disabled:opacity-30 outline-none"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-transparent rounded-lg text-xs text-gray-400 disabled:opacity-30 focus:outline-none focus:ring-0 focus:border-transparent active:border-transparent transition-all"
                 >
                   <FaChevronLeft size={9} /> Prev
                 </button>
@@ -1199,7 +1199,7 @@ const ClaimsManagement = () => {
                     key={page}
                     type="button"
                     onClick={() => setAuditPage(page)}
-                    className={`w-7 h-7 rounded-lg text-xs font-semibold outline-none ${page === auditPage ? "text-gray-200 bg-gray-800" : "text-gray-500"
+                    className={`w-7 h-7 rounded-lg text-xs font-semibold focus:outline-none focus:ring-0 focus:border-transparent active:border-transparent border border-transparent ${page === auditPage ? "text-gray-200 bg-gray-800" : "text-gray-500 hover:text-white hover:bg-white/5"
                       }`}
                   >
                     {page}
@@ -1209,7 +1209,7 @@ const ClaimsManagement = () => {
                   type="button"
                   onClick={() => setAuditPage(p => Math.min(totalAuditPages, p + 1))}
                   disabled={auditPage === totalAuditPages}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 disabled:opacity-30 outline-none"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-transparent rounded-lg text-xs text-gray-400 disabled:opacity-30 focus:outline-none focus:ring-0 focus:border-transparent active:border-transparent transition-all"
                 >
                   Next <FaChevronRight size={9} />
                 </button>
@@ -1384,17 +1384,17 @@ const ClaimsManagement = () => {
               </p>
               <div className="flex items-center gap-2">
                 <button onClick={() => setMatchPage(p => Math.max(1, p - 1))} disabled={matchPage === 1}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all">
+                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-transparent rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all focus:outline-none focus:ring-0 focus:border-transparent active:border-transparent">
                   <FaChevronLeft size={9} /> Prev
                 </button>
                 {Array.from({ length: totalMatchPages }, (_, i) => i + 1).map(page => (
                   <button key={page} onClick={() => setMatchPage(page)}
-                    className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${page === matchPage ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "text-gray-500 hover:text-white hover:bg-white/5"}`}>
+                    className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all focus:outline-none focus:ring-0 focus:border-transparent active:border-transparent border border-transparent ${page === matchPage ? "bg-emerald-500/10 text-emerald-400" : "text-gray-500 hover:text-white hover:bg-white/5"}`}>
                     {page}
                   </button>
                 ))}
                 <button onClick={() => setMatchPage(p => Math.min(totalMatchPages, p + 1))} disabled={matchPage === totalMatchPages}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all">
+                  className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-transparent rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all focus:outline-none focus:ring-0 focus:border-transparent active:border-transparent">
                   Next <FaChevronRight size={9} />
                 </button>
               </div>
@@ -1575,7 +1575,7 @@ const ClaimsManagement = () => {
                             disabled={isSending}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${isSending
                               ? "bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5"
-                              : "bg-blue-500 text-white hover:bg-blue-400 font-black active:scale-95"
+                              : "bg-blue-500 text-white hover:bg-blue-400 font-black"
                               }`}
                           >
                             {isSending ? (
@@ -1748,7 +1748,7 @@ const ClaimsManagement = () => {
                       <button
                         onClick={() => setRecommenderPage(p => Math.max(1, p - 1))}
                         disabled={recommenderPage === 1}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-transparent rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all focus:outline-none focus:ring-0 focus:border-transparent active:border-transparent"
                       >
                         <FaChevronLeft size={9} /> Prev
                       </button>
@@ -1756,8 +1756,8 @@ const ClaimsManagement = () => {
                         <button
                           key={page}
                           onClick={() => setRecommenderPage(page)}
-                          className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${page === recommenderPage
-                            ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                          className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all focus:outline-none focus:ring-0 focus:border-transparent active:border-transparent border border-transparent ${page === recommenderPage
+                            ? "bg-cyan-500/10 text-cyan-400"
                             : "text-gray-500 hover:text-white hover:bg-white/5"
                             }`}
                         >
@@ -1767,7 +1767,7 @@ const ClaimsManagement = () => {
                       <button
                         onClick={() => setRecommenderPage(p => Math.min(totalRecPages, p + 1))}
                         disabled={recommenderPage === totalRecPages}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-white/5 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-900 border border-transparent rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 transition-all focus:outline-none focus:ring-0 focus:border-transparent active:border-transparent"
                       >
                         Next <FaChevronRight size={9} />
                       </button>
@@ -1786,9 +1786,6 @@ const ClaimsManagement = () => {
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 sticky top-0 bg-gray-900 z-10">
               <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
-                  <FaClipboardList size={11} className="text-cyan-400" />
-                </div>
                 <div>
                   <h2 className="text-sm font-bold text-white">Claim Verification</h2>
                   <p className="text-gray-500 text-[11px]">Review claimant proof against item details</p>
@@ -1874,10 +1871,10 @@ const ClaimsManagement = () => {
                     const parsed = parseFraudReason(selectedClaim.fraudReason);
                     const serialWarning = parsed?.serialWarning;
                     const aiAssessment = parsed?.aiAssessment;
-                    
+
                     const score = selectedClaim.fraudScore || 0;
                     const isHigh = selectedClaim.isHighRisk || !!aiAssessment?.isHighRisk;
-                    
+
                     let riskText = "Low Risk";
                     let riskColor = "text-emerald-400 border-emerald-500/20 bg-emerald-500/10";
                     let glowColor = "bg-emerald-500";
@@ -1961,7 +1958,7 @@ const ClaimsManagement = () => {
                           {aiAssessment?.auditReport && (
                             <div className="space-y-3 pt-3 border-t border-white/5">
                               <h4 className="text-[10px] font-bold text-gray-450 uppercase tracking-wider">Gemini Audit Report</h4>
-                              
+
                               <div className="grid grid-cols-1 gap-2.5">
                                 {/* Matching Details */}
                                 <div className="p-3 bg-emerald-500/[0.02] border border-emerald-500/10 rounded-xl space-y-1.5">
