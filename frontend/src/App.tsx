@@ -24,7 +24,7 @@ function App() {
         // Silent fail - will retry when needed
       });
     }, 2000);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -42,4 +42,3 @@ function App() {
 
 
 export default App;
-

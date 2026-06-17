@@ -7,7 +7,7 @@ import {
   FaBell, FaCheckCircle, FaChartLine, FaArchive, FaFileAlt,
   FaChevronDown, FaChartBar, FaBullhorn, FaShieldAlt, FaUserGraduate,
   FaUserShield, FaFlag, FaComments, FaMedal, FaQrcode, FaTrophy, FaAward, FaBolt,
-  FaUserSlash, FaHeartbeat
+  FaUserSlash, FaServer, FaMagic, FaMicrochip
 } from "react-icons/fa";
 import { useUserVerification, signOut, setUserLocalStorage } from "../auth/auth";
 
@@ -42,7 +42,7 @@ const menuItems = [
   { title: "Recognition Feed", icon: FaAward, path: "/dashboard/virtue-spotlight" },
 
   // Item Management
-  { title: "Batch Entry", icon: FaQrcode, path: "/dashboard/bulk-scanner" },
+  { title: "AI Item Entry", icon: FaMicrochip, path: "/dashboard/bulk-scanner" },
   { title: "Lost Items", icon: FaExclamationTriangle, path: "/dashboard/lost-items" },
   { title: "Found Items", icon: FaSearch, path: "/dashboard/found-items" },
   { title: "Claims", icon: FaClipboardList, path: "/dashboard/claims" },
@@ -64,7 +64,7 @@ const menuItems = [
   { title: "Report", icon: FaFileAlt, path: "/dashboard/report" },
   { title: "Security", icon: FaShieldAlt, path: "/dashboard/security" },
   { title: "Audit Logs", icon: FaClipboardList, path: "/dashboard/audit-logs" },
-  { title: "API Status", icon: FaHeartbeat, path: "/dashboard/api-status" },
+  { title: "API Status", icon: FaServer, path: "/dashboard/api-status" },
   { title: "Accounts", icon: FaUserShield, path: "/dashboard/users" },
   { title: "Flagged Users", icon: FaUserSlash, path: "/dashboard/flagged-users" },
   { title: "Categories", icon: FaBoxOpen, path: "/dashboard/categories" },
@@ -73,7 +73,7 @@ const menuItems = [
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard": { title: "Overview", subtitle: "Welcome back! Here's an overview of today's activity." },
-  "/dashboard/bulk-scanner": { title: "AI Item Entry", subtitle: "Process multiple found items at once using AI-powered recognition." },
+  "/dashboard/bulk-scanner": { title: "AI Item Entry", subtitle: "Smart Entry: upload one image and let AI auto-fill the form. Batch Entry: process many images at once." },
   "/dashboard/lost-items": { title: "Lost Items", subtitle: "Track and manage items reported as lost on campus." },
   "/dashboard/found-items": { title: "Found Items", subtitle: "Review and manage all recovered items awaiting claim." },
   "/dashboard/claims": { title: "Claims", subtitle: "Review, verify and process submitted ownership claims." },
