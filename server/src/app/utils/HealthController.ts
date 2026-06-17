@@ -95,6 +95,13 @@ export const getApiHealth = async (req: Request, res: Response) => {
         if (!client) throw new Error("Failed to instantiate Gemini client");
     });
 
+    // 6. Mail Delivery (SendGrid) — verifies SendGrid API configuration
+    const mailCheck = await timeCheck(async () => {
+        const apiKey = process.env.SENDGRID_API_KEY;
+        if (!apiKey) throw new Error("SENDGRID_API_KEY is not configured");
+        if (!apiKey.startsWith("SG.")) throw new Error("Invalid SendGrid API key format");
+    });
+
     const services: CheckResult[] = [
         {
             name: "API Server",
@@ -130,6 +137,13 @@ export const getApiHealth = async (req: Request, res: Response) => {
             responseTime: aiCheck.ms,
             endpoint: "Google Gemini API",
             description: "AI-powered search, recognition & fraud detection",
+        },
+        {
+            name: "Mail Delivery",
+            status: mailCheck.ok ? "HEALTHY" : "DOWN",
+            responseTime: mailCheck.ms,
+            endpoint: "SendGrid API",
+            description: "Email notifications for claims & lost reports",
         },
     ];
 

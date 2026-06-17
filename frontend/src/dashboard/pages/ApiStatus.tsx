@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
     FaServer, FaDatabase, FaShieldAlt, FaWifi, FaArchive,
     FaSync, FaCheckCircle, FaExclamationTriangle, FaTimesCircle,
-    FaBolt, FaClock, FaHeartbeat,
+    FaBolt, FaClock, FaHeartbeat, FaEnvelope,
 } from "react-icons/fa";
 import { baseApi } from "../../redux/api/baseApi";
 
@@ -24,6 +24,7 @@ const SERVICE_ICON: Record<string, React.ReactNode> = {
     "File Uploads": <FaArchive size={16} className="text-violet-400" />,
     Authentication: <FaWifi size={16} className="text-orange-400" />,
     "AI (Gemini)": <FaShieldAlt size={16} className="text-cyan-400" />,
+    "Mail Delivery": <FaEnvelope size={16} className="text-pink-400" />,
 };
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
@@ -153,9 +154,6 @@ export default function ApiStatus() {
             {/* Overall status banner */}
             <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 sm:p-5">
                 <div className="flex items-center gap-2.5 mb-4 sm:mb-5">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                        <FaHeartbeat size={14} className="text-blue-400" />
-                    </div>
                     <div>
                         <p className="text-white text-sm font-semibold">Overall System Status</p>
                         <p className="text-gray-600 text-[11px] mt-0.5">
