@@ -702,7 +702,9 @@ const BulkScanner = () => {
                     )}
                     {items.length > 0 && !isProcessing && (
                       <button onClick={clearAll}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
+                        className={`flex items-center justify-center gap-1.5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all ${
+                          items.some(i => i.status === "success") ? "" : "col-span-2"
+                        }`}>
                         <FaTimesCircle size={10} /> Clear All
                       </button>
                     )}
