@@ -13,6 +13,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Role-Based Access**: Admin and user roles with different permission levels
 
 ### Advanced Features
+- **Intelligent OCR & ID Card Auto-Extractor**: Uses computer vision to analyze uploaded item images (student IDs, wallets, books, etc.) in real time. Automatically extracts key information (names, IDs, serial numbers), displays interactive highlighted bounding boxes over the image, and auto-populates the registration form fields dynamically with typewriter animation effects.
 - **Magic AI Scan**: Instantly identify items from a single photo — automatically populates item name, detailed description, color, and condition using computer vision
 - **AI-Powered Search**: Integration with Google Gemini AI for intelligent item search and matching
 - **AI-Powered Story Writer**: Integrated spotlight drafting utility inside the Recognition Feed dashboard. Staff enter brief bullet points, and Google Gemini instantly generates heartwarming, inspiring, and professional student recognition titles and complete narrative stories.
@@ -833,6 +834,7 @@ model XPBoostEvent {
 - **AI Chatbot Concierge ("Smart Assistant")**: A floating AI chat widget integrated into the Student Dashboard. Powered by native **Gemini Function Calling** to autonomously execute database tools, **Semantic Vector Embeddings** for high-accuracy semantic matching, **Structured JSON Responses** that render responsive horizontal e-commerce product cards directly in the chat with click-to-claim routing, and **Few-Shot Injections** in system prompts to guarantee conversational empathy and rule compliance.
 
 ### Phase 10: Gamification, Data Governance, Performance & UI Optimization (Completed)
+- **Intelligent OCR & ID Card Auto-Extractor (Item Entry Upgrade)**: Integrated computer vision/OCR functionality directly into the single-item registration tab (replacing/upgrading the original batch entry form). Scans uploaded found item images, displays bounding boxes over detected fields, and automatically fills the corresponding item registration fields with typewriter animation effects.
 - **Weekly Bounties & Time-Limited Events**: Dynamic gamification engine powered by Prisma models and cron-jobs. Features rotating weekly missions (e.g., "Report 3 Found Items") to drive student engagement and boost item recovery rates.
 - **Leveling & Rank System**: RPG-style progression system capping at Level 100 with dynamic rank titles and progress bars based on community points.
 - **Daily Login Streak Rewards**: Comprehensive daily login tracking system with consecutive day streak bonuses and milestone rewards:
