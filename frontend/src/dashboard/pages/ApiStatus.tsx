@@ -84,7 +84,7 @@ const ServiceCard = ({ service }: { service: any }) => {
 
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function ApiStatus() {
-    const { data, isLoading, isFetching, refetch } = useGetApiHealthStandaloneQuery(undefined, {
+    const { data, isLoading, isError, error, isFetching, refetch } = useGetApiHealthStandaloneQuery(undefined, {
         pollingInterval: 30000,
     });
     const [lastManualRefresh, setLastManualRefresh] = useState<Date | null>(null);
@@ -105,6 +105,32 @@ export default function ApiStatus() {
                 <div className="h-24 bg-gray-800/60 rounded-2xl" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-44 bg-gray-800/60 rounded-2xl" />)}
+                </div>
+            </div>
+        );
+    }
+
+    if (isError) {
+        const errorMsg = (error as any)?.data?.message || (error as any)?.error || "Failed to fetch system health data.";
+        return (
+            <div className="space-y-4 max-w-7xl mx-auto animate-fadeIn">
+                <div className="flex items-center justify-end gap-3">
+                    <button
+                        onClick={handleRefresh}
+                        disabled={isFetching}
+                        className="flex items-center gap-2 px-3.5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-50 text-gray-300 hover:text-white text-xs font-semibold rounded-xl transition-all"
+                    >
+                        <FaSync size={11} className={isFetching ? "animate-spin" : ""} /> Retry Refresh
+                    </button>
+                </div>
+                <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+                        <FaTimesCircle size={24} />
+                    </div>
+                    <div>
+                        <h3 className="text-white font-bold text-sm">Failed to Load System Status</h3>
+                        <p className="text-gray-400 text-xs mt-1.5 max-w-md leading-relaxed">{errorMsg}</p>
+                    </div>
                 </div>
             </div>
         );

@@ -71,8 +71,9 @@ export const getApiHealth = async (req: Request, res: Response) => {
     // 3. File Uploads — multer memoryStorage, in-process module check
     //    (no external provider exists to ping; memory storage has no network call)
     const uploadCheck = await timeCheck(async () => {
-        const multer = await import("multer");
-        if (typeof multer.default !== "function") {
+        const multerModule = await import("multer");
+        const multer = multerModule.default || (multerModule as any);
+        if (typeof multer !== "function") {
             throw new Error("multer module failed to load");
         }
     });
