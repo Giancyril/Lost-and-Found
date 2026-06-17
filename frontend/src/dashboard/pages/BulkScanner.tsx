@@ -422,7 +422,7 @@ const BulkScanner = () => {
           <button
             onClick={() => setActiveTab("batch")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === "batch"
-              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/30"
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-900/30"
               : "text-gray-400 hover:text-white"
               }`}
           >
@@ -677,7 +677,7 @@ const BulkScanner = () => {
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Batch Location</label>
                 <LocationAutocomplete value={batchLocation} onChange={updateLocation} disabled={isProcessing}
                   placeholder="e.g. Library, SAS Office..."
-                  className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-xl text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-50" />
+                  className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-xl text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:opacity-50" />
               </div>
               <div className="flex justify-end flex-wrap gap-2 w-full sm:w-auto">
                 {items.some(i => i.status === "success") && (
@@ -699,7 +699,7 @@ const BulkScanner = () => {
                   </button>
                 )}
                 <button onClick={processAll} disabled={isProcessing || items.length === 0}
-                  className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-900/30 active:scale-95">
+                  className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-900/30 active:scale-95">
                   {isProcessing ? <><FaSpinner className="animate-spin" size={12} /> Processing...</> : <><FaBolt size={12} /> Start Processing</>}
                 </button>
               </div>
@@ -712,7 +712,7 @@ const BulkScanner = () => {
                   { label: "Total", value: total, color: "text-white", bg: "bg-gray-800 border-white/5", icon: <FaBoxOpen size={12} className="text-gray-400" /> },
                   { label: "Queued", value: pending, color: "text-blue-400", bg: "bg-blue-500/5 border-blue-500/10", icon: <FaUpload size={12} className="text-blue-400" /> },
                   { label: "Done", value: done, color: "text-emerald-400", bg: "bg-emerald-500/5 border-emerald-500/10", icon: <FaCheckCircle size={12} className="text-emerald-400" /> },
-                  { label: "Errors", value: errored, color: "text-red-400", bg: "bg-red-500/5 border-red-500/10", icon: <FaTimesCircle size={12} className="text-red-400" /> },
+                  { label: "Errors", value: errored, color: "text-red-400", bg: "bg-blue-500/5 border-blue-500/10", icon: <FaTimesCircle size={12} className="text-red-400" /> },
                 ].map(s => (
                   <div key={s.label} className={`bg-gray-900 border rounded-2xl p-3 sm:p-4 flex flex-col gap-2 ${s.bg}`}>
                     <div className="flex items-start justify-between gap-1">
@@ -727,16 +727,16 @@ const BulkScanner = () => {
 
             {/* Drop zone */}
             <div {...bGetRoot()}
-              className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all duration-200 ${bDrag ? "border-indigo-400 bg-indigo-500/10 scale-[1.01]" : "border-white/10 bg-gray-900 hover:border-indigo-500/40 hover:bg-gray-800/60"
+              className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all duration-200 ${bDrag ? "border-blue-400 bg-blue-500/10 scale-[1.01]" : "border-white/10 bg-gray-900 hover:border-blue-500/40 hover:bg-gray-800/60"
                 } ${isProcessing ? "opacity-40 pointer-events-none" : ""}`}>
               <input {...bGetInput()} />
               <div className="flex flex-col items-center gap-4">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 ${bDrag ? "bg-indigo-500 text-white scale-110" : "bg-indigo-500/10 border border-indigo-500/20 text-indigo-400"}`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 ${bDrag ? "bg-blue-500 text-white scale-110" : "bg-blue-500/10 border border-blue-500/20 text-blue-400"}`}>
                   <FaUpload size={22} />
                 </div>
                 <div>
                   <p className="text-white font-semibold text-sm sm:text-base">{bDrag ? "Release to add images" : "Drag & drop multiple images here"}</p>
-                  <p className="text-gray-500 text-xs mt-1">or <span className="text-indigo-400 font-semibold">click to select files</span> from your computer or camera</p>
+                  <p className="text-gray-500 text-xs mt-1">or <span className="text-blue-400 font-semibold">click to select files</span> from your computer or camera</p>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap justify-center text-[10px] text-gray-600 font-medium">
                   {["JPG", "PNG", "WEBP", "HEIC"].map(f => (
@@ -750,11 +750,11 @@ const BulkScanner = () => {
             {isProcessing && total > 0 && (
               <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-indigo-400 font-semibold"><FaSpinner className="animate-spin" size={11} /> Processing images...</div>
+                  <div className="flex items-center gap-2 text-blue-400 font-semibold"><FaSpinner className="animate-spin" size={11} /> Processing images...</div>
                   <span className="text-gray-500 tabular-nums">{done} / {total} complete</span>
                 </div>
                 <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
+                  <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500"
                     style={{ width: `${total > 0 ? Math.round((done / total) * 100) : 0}%` }} />
                 </div>
               </div>

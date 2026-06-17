@@ -1,7 +1,7 @@
 import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import { toast } from "react-toastify";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   useCategoryQuery,
   useCreateFoundItemMutation,
@@ -184,17 +184,32 @@ const CustomSelect = ({
   );
 };
 
+// Typewriter hook (same pattern as Smart Entry / BulkScanner)
+const useTypewriter = () =>
+  useCallback(
+    (setter: (v: string) => void, text: string, onDone?: () => void, speed = 18) => {
+      let i = 0;
+      setter("");
+      const id = setInterval(() => {
+        setter(text.slice(0, ++i));
+        if (i >= text.length) { clearInterval(id); onDone?.(); }
+      }, speed);
+      return () => clearInterval(id);
+    }, []
+  );
+
 // ── Field wrapper ─────────────────────────────────────────────────────────────
 const Field = ({
-  label, required, error, icon, children, infoButton,
+  label, required, error, icon, children, infoButton, typing,
 }: {
-  label: string; required?: boolean; error?: string; icon: React.ReactNode; children: React.ReactNode; infoButton?: React.ReactNode;
+  label: string; required?: boolean; error?: string; icon: React.ReactNode; children: React.ReactNode; infoButton?: React.ReactNode; typing?: boolean;
 }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-widest">
+    <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest transition-colors duration-300 ${typing ? "text-amber-400" : "text-gray-400"}`}>
       {icon}{label}
       {required && <span className="text-red-500 normal-case tracking-normal font-normal">*</span>}
       {infoButton}
+      {typing && <span className="ml-auto text-[9px] text-amber-400 animate-pulse font-bold normal-case tracking-normal">typing…</span>}
     </label>
     {children}
     {error && (
@@ -496,6 +511,8 @@ const ReportFoundItem = () => {
 
   const [createFoundItem, { isLoading }] = useCreateFoundItemMutation();
   const [aiRecognize, { isLoading: isAiRecognizing }] = useAiRecognizeMutation();
+  const typewriter = useTypewriter();
+  const [aiHighlight, setAiHighlight] = useState<string | null>(null);
   const { data: Category, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery(undefined);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
 
@@ -603,7 +620,7 @@ const ReportFoundItem = () => {
     try {
       // Compress for AI
       const compressedFile = await imageCompression(file, { maxSizeMB: 0.2, maxWidthOrHeight: 800, useWebWorker: true });
-      
+
       // Create preview for UI
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve) => {
@@ -612,7 +629,7 @@ const ReportFoundItem = () => {
       });
       const base64Image = await base64Promise;
 
-      // Prepare FormData (Not using base64 for the API call anymore)
+      // Prepare FormData
       const formData = new FormData();
       const hasSupportedExt = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
       const filename = hasSupportedExt ? file.name : `${file.name.replace(/\.[^/.]+$/, "") || "image"}.jpg`;
@@ -622,17 +639,49 @@ const ReportFoundItem = () => {
 
       if (res.success && res.data) {
         const aiData = res.data;
-        setValue("foundItemName", aiData.itemName);
-        setValue("description", aiData.description);
+
+        // 1. Set category first
         if (aiData.categoryId) handleMenuChange(aiData.categoryName, aiData.categoryId);
+
+        // 2. Instant-set color & condition (no typewriter for dropdowns)
         if (aiData.color) { setValue("color", aiData.color); setSelectedColor(aiData.color); }
         if (aiData.condition) setValue("condition", aiData.condition);
 
-        // Also prepare the image preview
+        // 3. Prepare image preview
         setSelectedFile(file);
         setPreview(base64Image);
 
-        toast.update(toastId, { render: "Magic Scan successful! Fields auto-filled.", type: "success", isLoading: false, autoClose: 3000 });
+        toast.update(toastId, { render: "AI scan complete! Auto-filling fields…", type: "success", isLoading: false, autoClose: 2500 });
+
+        // 4. Typewriter: Item Name → then Description
+        setAiHighlight("itemName");
+        typewriter(
+          (v) => setValue("foundItemName", v, { shouldDirty: true, shouldValidate: false }),
+          aiData.itemName || "",
+          () => {
+            setAiHighlight(null);
+            const fullDesc = [
+              aiData.description,
+              aiData.color ? `Color: ${aiData.color}.` : "",
+              aiData.condition ? `Condition: ${aiData.condition}.` : "",
+            ].filter(Boolean).join(" ");
+            setTimeout(() => {
+              setAiHighlight("description");
+              typewriter(
+                (v) => setValue("description", v, { shouldDirty: true, shouldValidate: false }),
+                fullDesc,
+                () => {
+                  setAiHighlight(null);
+                  // Final validate after all typing is done
+                  setValue("foundItemName", aiData.itemName, { shouldDirty: true, shouldValidate: true });
+                  setValue("description", fullDesc, { shouldDirty: true, shouldValidate: true });
+                  toast.success("✨ AI auto-filled the form! Review and submit.");
+                },
+                12
+              );
+            }, 350);
+          }
+        );
       } else {
         toast.update(toastId, { render: "AI could not recognize the item clearly.", type: "warning", isLoading: false, autoClose: 3000 });
       }
@@ -996,9 +1045,12 @@ const ReportFoundItem = () => {
                     </div>
 
                     <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
-                      <Field label="Item Name" required error={errors.foundItemName?.message as string} icon={<IconTag />}>
-                        <input {...register("foundItemName", { required: "Item name is required" })}
-                          type="text" className={inputCls} placeholder=" " />
+                      <Field label="Item Name" required error={errors.foundItemName?.message as string} icon={<IconTag />} typing={aiHighlight === "itemName"}>
+                        <div className={`relative flex items-center transition-all duration-300 ${aiHighlight === "itemName" ? "ring-2 ring-amber-400/40 rounded-lg" : ""}`}>
+                          <input {...register("foundItemName", { required: "Item name is required" })}
+                            type="text" className={`${inputCls} pr-6`} placeholder=" " />
+                          {aiHighlight === "itemName" && <span className="absolute right-3 inline-block w-[2px] h-4 bg-amber-400 animate-pulse" />}
+                        </div>
                       </Field>
                       <Field label="Found Location" required error={errors.location?.message as string} icon={<IconPin />}>
                         <Controller
@@ -1052,10 +1104,13 @@ const ReportFoundItem = () => {
                       </Field>
                     </div>
 
-                    <Field label="Description" required error={errors.description?.message as string} icon={<IconText />}>
-                      <textarea {...register("description", { required: "Description is required" })}
-                        rows={2} className={`${inputCls} resize-none custom-scrollbar`}
-                        placeholder="Describe the item color, brand, size, etc." />
+                    <Field label="Description" required error={errors.description?.message as string} icon={<IconText />} typing={aiHighlight === "description"}>
+                      <div className={`relative transition-all duration-300 ${aiHighlight === "description" ? "ring-2 ring-amber-400/40 rounded-lg" : ""}`}>
+                        <textarea {...register("description", { required: "Description is required" })}
+                          rows={2} className={`${inputCls} resize-none custom-scrollbar pr-6`}
+                          placeholder="Describe the item color, brand, size, etc." />
+                        {aiHighlight === "description" && <span className="absolute right-3 top-3 inline-block w-[2px] h-4 bg-amber-400 animate-pulse" />}
+                      </div>
                     </Field>
 
                     {/* Color dropdown for specific categories */}

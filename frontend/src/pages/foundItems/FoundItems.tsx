@@ -1,5 +1,20 @@
 import imageCompression from "browser-image-compression";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+
+// Typewriter hook (same pattern as Smart Entry / BulkScanner)
+const useTypewriter = () =>
+  useCallback(
+    (setter: (v: string) => void, text: string, onDone?: () => void, speed = 18) => {
+      let i = 0;
+      setter("");
+      const id = setInterval(() => {
+        setter(text.slice(0, ++i));
+        if (i >= text.length) { clearInterval(id); onDone?.(); }
+      }, speed);
+      return () => clearInterval(id);
+    }, []
+  );
+
 import { Link, useNavigate } from "react-router-dom";
 import { useInitiateChatMutation } from "../../redux/api/chatApi";
 import {
@@ -144,11 +159,11 @@ const CATEGORY_CONFIG = {
 // ── Category icon resolver ────────────────────────────────────────────────────
 const getCategoryIcon = (name: string) => {
   const n = name?.toLowerCase() ?? "";
-  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch")) return <FaWallet size={9} className="text-amber-400" />;
+  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch")) return <FaWallet size={9} className="text-blue-400" />;
   if (n.includes("phone") || n.includes("mobile") || n.includes("celphone")) return <FaMobileAlt size={9} className="text-cyan-400" />;
   if (n.includes("laptop") || n.includes("computer") || n.includes("electronic") || n.includes("device") || n.includes("gadget")) return <FaLaptop size={9} className="text-indigo-400" />;
   if (n.includes("key")) return <FaKey size={9} className="text-orange-400" />;
-  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage")) return <FaBriefcase size={9} className="text-amber-400" />;
+  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage")) return <FaBriefcase size={9} className="text-blue-400" />;
   if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod")) return <FaHeadphones size={9} className="text-green-400" />;
   if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass")) return <FaGlasses size={9} className="text-teal-400" />;
   if (n.includes("book") || n.includes("stationery") || n.includes("notebook")) return <FaBook size={9} className="text-yellow-400" />;
@@ -713,6 +728,8 @@ const FoundItemsPage = () => {
   const addFileInputRef = useRef<HTMLInputElement>(null);
   const aiFileInputRef = useRef<HTMLInputElement>(null);
   const MAX_SIZE_MB = 5;
+  const typewriter = useTypewriter();
+  const [aiHighlight, setAiHighlight] = useState<string | null>(null);
 
   // Track previous email value to prevent auto-fill loops
   const [prevAddEmailValue, setPrevAddEmailValue] = useState("");
@@ -977,27 +994,47 @@ const FoundItemsPage = () => {
       if (res.success && res.data) {
         const aiData = res.data;
 
-        // 1. Set category first (this usually triggers generic auto-fills)
-        if (aiData.categoryId) {
-          handleCategoryChange(aiData.categoryId);
-        }
+        // 1. Set category first
+        if (aiData.categoryId) handleCategoryChange(aiData.categoryId);
 
-        // 2. Apply AI-specific overrides AFTER category change to prevent overwriting
-        addSetValue("foundItemName", aiData.itemName, { shouldDirty: true, shouldValidate: true });
-        addSetValue("description", aiData.description, { shouldDirty: true, shouldValidate: true });
+        // 2. Instant-set color & condition (no typewriter for dropdowns)
+        if (aiData.color) setAddSelectedColor(aiData.color);
+        if (aiData.condition) setAddSelectedCondition(aiData.condition);
 
-        if (aiData.color) {
-          setAddSelectedColor(aiData.color);
-        }
-        if (aiData.condition) {
-          setAddSelectedCondition(aiData.condition);
-        }
-
-        // Set the image preview and file
+        // 3. Set image preview
         setAddSelectedFile(file);
         setAddPreview(base64Image);
 
-        toast.update(toastId, { render: "Magic Scan successful! Fields auto-filled.", type: "success", isLoading: false, autoClose: 3000 });
+        toast.update(toastId, { render: "AI scan complete! Auto-filling fields…", type: "success", isLoading: false, autoClose: 2500 });
+
+        // 4. Typewriter: Item Name → then Description
+        setAiHighlight("itemName");
+        typewriter(
+          (v) => addSetValue("foundItemName", v, { shouldDirty: true, shouldValidate: false }),
+          aiData.itemName || "",
+          () => {
+            setAiHighlight(null);
+            const fullDesc = [
+              aiData.description,
+              aiData.color ? `Color: ${aiData.color}.` : "",
+              aiData.condition ? `Condition: ${aiData.condition}.` : "",
+            ].filter(Boolean).join(" ");
+            setTimeout(() => {
+              setAiHighlight("description");
+              typewriter(
+                (v) => addSetValue("description", v, { shouldDirty: true, shouldValidate: false }),
+                fullDesc,
+                () => {
+                  setAiHighlight(null);
+                  addSetValue("foundItemName", aiData.itemName, { shouldDirty: true, shouldValidate: true });
+                  addSetValue("description", fullDesc, { shouldDirty: true, shouldValidate: true });
+                  toast.success("AI auto-filled the form.");
+                },
+                12
+              );
+            }, 350);
+          }
+        );
       } else {
         toast.update(toastId, { render: "AI could not recognize the item clearly.", type: "warning", isLoading: false, autoClose: 3000 });
       }
@@ -1729,11 +1766,15 @@ const FoundItemsPage = () => {
                 {/* ── Item Name + Category ── */}
                 <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    <label className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest transition-colors duration-300 ${aiHighlight === "itemName" ? "text-blue-400" : "text-gray-400"}`}>
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z" /><path d="M7 7h.01" /></svg>
                       Item Name <span className="text-red-400">*</span>
+                      {aiHighlight === "itemName" && <span className="ml-auto text-[9px] text-blue-400 animate-pulse font-bold normal-case tracking-normal">typing…</span>}
                     </label>
-                    <input {...addRegister("foundItemName", { required: "Item name is required" })} type="text" placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/40 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm" />
+                    <div className={`relative flex items-center transition-all duration-300 ${aiHighlight === "itemName" ? "ring-2 ring-blue-400/40 rounded-lg" : ""}`}>
+                      <input {...addRegister("foundItemName", { required: "Item name is required" })} type="text" placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/40 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm pr-6" />
+                      {aiHighlight === "itemName" && <span className="absolute right-3 inline-block w-[2px] h-4 bg-blue-400 animate-pulse" />}
+                    </div>
                     {addErrors.foundItemName && <p className="text-red-400 text-xs">{addErrors.foundItemName?.message as string}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -1827,11 +1868,15 @@ const FoundItemsPage = () => {
 
                 {/* ── Description ── */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                  <label className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest transition-colors duration-300 ${aiHighlight === "description" ? "text-blue-400" : "text-gray-400"}`}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                     Description <span className="text-red-400">*</span>
+                    {aiHighlight === "description" && <span className="ml-auto text-[9px] text-blue-400 animate-pulse font-bold normal-case tracking-normal">typing…</span>}
                   </label>
-                  <textarea {...addRegister("description", { required: "Description is required" })} rows={4} placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none custom-scrollbar" />
+                  <div className={`relative transition-all duration-300 ${aiHighlight === "description" ? "ring-2 ring-blue-400/40 rounded-lg" : ""}`}>
+                    <textarea {...addRegister("description", { required: "Description is required" })} rows={4} placeholder=" " className="w-full px-4 py-2.5 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-sm resize-none custom-scrollbar pr-6" />
+                    {aiHighlight === "description" && <span className="absolute right-3 top-3 inline-block w-[2px] h-4 bg-blue-400 animate-pulse" />}
+                  </div>
                   {addErrors.description && <p className="text-red-400 text-xs">{addErrors.description?.message as string}</p>}
                 </div>
 

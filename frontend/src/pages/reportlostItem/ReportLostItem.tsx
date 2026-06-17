@@ -1,7 +1,7 @@
 import { useForm, Controller } from "react-hook-form";
 import { Spinner } from "flowbite-react";
 import { toast } from "react-toastify";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   useCategoryQuery,
   useCreateLostItemMutation,
@@ -126,11 +126,11 @@ const CATEGORY_CONFIG = {
 // ── Category icon resolver ────────────────────────────────────────────────────
 const getCategoryIcon = (name: string) => {
   const n = name?.toLowerCase() ?? "";
-  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch")) return <FaWallet size={10} className="text-amber-400" />;
+  if (n.includes("wallet") || n.includes("purse") || n.includes("pouch")) return <FaWallet size={10} className="text-blue-400" />;
   if (n.includes("phone") || n.includes("mobile") || n.includes("celphone")) return <FaMobileAlt size={10} className="text-cyan-400" />;
   if (n.includes("laptop") || n.includes("computer") || n.includes("electronic") || n.includes("device") || n.includes("gadget")) return <FaLaptop size={10} className="text-indigo-400" />;
   if (n.includes("key")) return <FaKey size={10} className="text-orange-400" />;
-  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage")) return <FaBriefcase size={10} className="text-amber-400" />;
+  if (n.includes("bag") || n.includes("backpack") || n.includes("luggage")) return <FaBriefcase size={10} className="text-blue-400" />;
   if (n.includes("headphone") || n.includes("earphone") || n.includes("audio") || n.includes("airpod")) return <FaHeadphones size={10} className="text-green-400" />;
   if (n.includes("glass") || n.includes("spectacle") || n.includes("eyewear") || n.includes("sunglass")) return <FaGlasses size={10} className="text-teal-400" />;
   if (n.includes("book") || n.includes("stationery") || n.includes("notebook")) return <FaBook size={10} className="text-yellow-400" />;
@@ -233,16 +233,31 @@ const CustomSelect = ({
 };
 
 // ── Field wrapper ─────────────────────────────────────────────────────────────
+// Typewriter hook (same pattern as Smart Entry / BulkScanner)
+const useTypewriter = () =>
+  useCallback(
+    (setter: (v: string) => void, text: string, onDone?: () => void, speed = 18) => {
+      let i = 0;
+      setter("");
+      const id = setInterval(() => {
+        setter(text.slice(0, ++i));
+        if (i >= text.length) { clearInterval(id); onDone?.(); }
+      }, speed);
+      return () => clearInterval(id);
+    }, []
+  );
+
 const Field = ({
-  label, required, error, icon, children, infoButton,
+  label, required, error, icon, children, infoButton, typing,
 }: {
-  label: string; required?: boolean; error?: string; icon: React.ReactNode; children: React.ReactNode; infoButton?: React.ReactNode;
+  label: string; required?: boolean; error?: string; icon: React.ReactNode; children: React.ReactNode; infoButton?: React.ReactNode; typing?: boolean;
 }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-widest">
+    <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest transition-colors duration-300 ${typing ? "text-blue-400" : "text-gray-400"}`}>
       {icon}{label}
       {required && <span className="text-red-500 normal-case tracking-normal font-normal">*</span>}
       {infoButton}
+      {typing && <span className="ml-auto text-[9px] text-blue-400 animate-pulse font-bold normal-case tracking-normal">typing…</span>}
     </label>
     {children}
     {error && (
@@ -503,7 +518,7 @@ const ReportLostItem = () => {
       if (draft.startDate) {
         setStartDate(draft.startDate);
       }
-      
+
       Object.entries(draft).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           setValue(key as any, value, { shouldValidate: true, shouldDirty: true });
@@ -566,6 +581,8 @@ const ReportLostItem = () => {
 
   const [createLostItem, { isLoading }] = useCreateLostItemMutation();
   const [aiRecognize, { isLoading: isAiRecognizing }] = useAiRecognizeMutation();
+  const typewriter = useTypewriter();
+  const [aiHighlight, setAiHighlight] = useState<string | null>(null);
   const { data: Category, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery(undefined);
 
   const [showScanner, setShowScanner] = useState(false);
@@ -681,7 +698,7 @@ const ReportLostItem = () => {
       });
       const base64Image = await base64Promise;
 
-      // Prepare FormData (Not using base64 for the API call anymore)
+      // Prepare FormData
       const formData = new FormData();
       const hasSupportedExt = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
       const filename = hasSupportedExt ? file.name : `${file.name.replace(/\.[^/.]+$/, "") || "image"}.jpg`;
@@ -692,15 +709,12 @@ const ReportLostItem = () => {
       if (res.success && res.data) {
         const aiData = res.data;
 
-        // 1. Set category first (this usually triggers generic auto-fills)
+        // 1. Set category first
         if (aiData.categoryId) {
           handleMenuChange(aiData.categoryName, aiData.categoryId);
         }
 
-        // 2. Apply AI-specific overrides AFTER category change to prevent overwriting
-        setValue("lostItemName", aiData.itemName, { shouldDirty: true, shouldValidate: true });
-        setValue("description", aiData.description, { shouldDirty: true, shouldValidate: true });
-
+        // 2. Instant-set color & condition (no typewriter for dropdowns)
         if (aiData.color) {
           setValue("color", aiData.color, { shouldDirty: true });
           setSelectedColor(aiData.color);
@@ -709,11 +723,41 @@ const ReportLostItem = () => {
           setValue("condition", aiData.condition, { shouldDirty: true });
         }
 
-        // Also prepare the image preview
+        // 3. Prepare image preview
         setSelectedFile(file);
         setPreview(base64Image);
 
-        toast.update(toastId, { render: "Magic Scan successful! Fields auto-filled.", type: "success", isLoading: false, autoClose: 3000 });
+        toast.update(toastId, { render: "AI scan complete! Auto-filling fields…", type: "success", isLoading: false, autoClose: 2500 });
+
+        // 4. Typewriter: Item Name → then Description
+        setAiHighlight("itemName");
+        typewriter(
+          (v) => setValue("lostItemName", v, { shouldDirty: true, shouldValidate: false }),
+          aiData.itemName || "",
+          () => {
+            setAiHighlight(null);
+            const fullDesc = [
+              aiData.description,
+              aiData.color ? `Color: ${aiData.color}.` : "",
+              aiData.condition ? `Condition: ${aiData.condition}.` : "",
+            ].filter(Boolean).join(" ");
+            setTimeout(() => {
+              setAiHighlight("description");
+              typewriter(
+                (v) => setValue("description", v, { shouldDirty: true, shouldValidate: false }),
+                fullDesc,
+                () => {
+                  setAiHighlight(null);
+                  // Final validate after all typing is done
+                  setValue("lostItemName", aiData.itemName, { shouldDirty: true, shouldValidate: true });
+                  setValue("description", fullDesc, { shouldDirty: true, shouldValidate: true });
+                  toast.success("AI auto-filled the form.");
+                },
+                12
+              );
+            }, 350);
+          }
+        );
       } else {
         toast.update(toastId, { render: "AI could not recognize the item clearly.", type: "warning", isLoading: false, autoClose: 3000 });
       }
@@ -826,10 +870,10 @@ const ReportLostItem = () => {
       if (createdId) {
         // Capture match data before form resets so the modal can show suggestions
         setSubmittedMatchData({
-          categoryId:   selectedMenucategoryId,
+          categoryId: selectedMenucategoryId,
           categoryName: selectedMenu,
-          itemName:     data.lostItemName || "",
-          location:     data.location || "",
+          itemName: data.lostItemName || "",
+          location: data.location || "",
         });
         setTrackingCode(createdId);
       } else {
@@ -863,7 +907,7 @@ const ReportLostItem = () => {
             {hasExistingDraftOnMount && !dismissedDraft && (
               <div className="bg-blue-500/10 border-b border-blue-500/20 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  
+
                   <div>
                     <p className="text-white text-sm font-bold">Unsaved Draft Found</p>
                     <p className="text-blue-400/70 text-[10px] font-medium leading-relaxed">
@@ -1112,12 +1156,11 @@ const ReportLostItem = () => {
                             <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 select-none leading-relaxed">Snap a photo to auto-fill details.</p>
                           )}
                         </div>
-                        
-                        <label className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer shrink-0 ${
-                          isAiRecognizing 
-                            ? "bg-blue-600/30 text-blue-300 border border-blue-500/20" 
-                            : "border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white"
-                        }`}>
+
+                        <label className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all active:scale-95 whitespace-nowrap cursor-pointer shrink-0 ${isAiRecognizing
+                          ? "bg-blue-600/30 text-blue-300 border border-blue-500/20"
+                          : "border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white"
+                          }`}>
                           {isAiRecognizing ? (
                             <><FaSpinner className="animate-spin" size={10} /> Analyzing</>
                           ) : (
@@ -1129,9 +1172,12 @@ const ReportLostItem = () => {
                     </div>
 
                     <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
-                      <Field label="Item Name" required error={errors.lostItemName?.message as string} icon={<IconTag />}>
-                        <input {...register("lostItemName", { required: "Item name is required" })}
-                          type="text" className={inputCls} placeholder=" " />
+                      <Field label="Item Name" required error={errors.lostItemName?.message as string} icon={<IconTag />} typing={aiHighlight === "itemName"}>
+                        <div className={`relative flex items-center transition-all duration-300 ${aiHighlight === "itemName" ? "ring-2 ring-blue-400/40 rounded-lg" : ""}`}>
+                          <input {...register("lostItemName", { required: "Item name is required" })}
+                            type="text" className={`${inputCls} pr-6`} placeholder=" " />
+                          {aiHighlight === "itemName" && <span className="absolute right-3 inline-block w-[2px] h-4 bg-blue-400 animate-pulse" />}
+                        </div>
                       </Field>
                       <Field label="Last Seen Location" required error={errors.location?.message as string} icon={<IconPin />}>
                         <Controller
@@ -1185,10 +1231,13 @@ const ReportLostItem = () => {
                       </Field>
                     </div>
 
-                    <Field label="Description" required error={errors.description?.message as string} icon={<IconText />}>
-                      <textarea {...register("description", { required: "Description is required" })}
-                        rows={4} className={`${inputCls} resize-none custom-scrollbar`}
-                        placeholder=" " />
+                    <Field label="Description" required error={errors.description?.message as string} icon={<IconText />} typing={aiHighlight === "description"}>
+                      <div className={`relative transition-all duration-300 ${aiHighlight === "description" ? "ring-2 ring-blue-400/40 rounded-lg" : ""}`}>
+                        <textarea {...register("description", { required: "Description is required" })}
+                          rows={4} className={`${inputCls} resize-none custom-scrollbar pr-6`}
+                          placeholder=" " />
+                        {aiHighlight === "description" && <span className="absolute right-3 top-3 inline-block w-[2px] h-4 bg-blue-400 animate-pulse" />}
+                      </div>
                     </Field>
 
                     {/* Color dropdown for specific categories */}
