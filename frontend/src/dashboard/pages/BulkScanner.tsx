@@ -247,7 +247,7 @@ const BulkScanner = () => {
                 .filter(Boolean).join(" ");
               setTimeout(() => {
                 setSHighlight("desc");
-                typewriter(setSDesc, fullDesc, () => { setSHighlight(null); toast.success(" AI auto-filled the form! Review and submit."); }, 12);
+                typewriter(setSDesc, fullDesc, () => { setSHighlight(null); toast.success(" AI auto-filled the form."); }, 12);
               }, 300);
             }, 700);
           }, 400);
@@ -284,7 +284,7 @@ const BulkScanner = () => {
   };
 
   const sGlow = (field: string) =>
-    sHighlight === field ? "ring-2 ring-amber-400/50 bg-amber-500/5 border-amber-400/40" : "";
+    sHighlight === field ? "ring-2 ring-blue-500/50 bg-blue-500/5 border-blue-500/40" : "";
 
   // ══════════════════════════════════════════════════════════════════════════
   // BATCH ENTRY STATE  (original logic, unchanged)
@@ -549,13 +549,13 @@ const BulkScanner = () => {
                   <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
                     <FaBoxOpen size={9} className="text-blue-400" />
                     <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Item Name</p>
-                    {sHighlight === "name" && <span className="ml-auto text-[9px] text-amber-400 animate-pulse font-bold">typing…</span>}
+                    {sHighlight === "name" && <span className="ml-auto text-[9px] text-blue-400 animate-pulse font-bold">typing…</span>}
                   </div>
                   <div className="p-3 flex items-center gap-1">
                     <input type="text" value={sName} onChange={e => setSName(e.target.value)}
                       placeholder="e.g. Blue Nike Backpack"
                       className="flex-1 bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none" required />
-                    {sHighlight === "name" && <span className="inline-block w-[2px] h-4 bg-amber-400 animate-pulse" />}
+                    {sHighlight === "name" && <span className="inline-block w-[2px] h-4 bg-blue-400 animate-pulse" />}
                   </div>
                 </div>
 
@@ -564,7 +564,7 @@ const BulkScanner = () => {
                   <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
                     <FaTag size={9} className="text-blue-400" />
                     <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Category</p>
-                    {sHighlight === "cat" && <span className="ml-auto text-[9px] text-amber-400 animate-pulse font-bold">selecting…</span>}
+                    {sHighlight === "cat" && <span className="ml-auto text-[9px] text-blue-400 animate-pulse font-bold">selecting…</span>}
                   </div>
                   <CategoryDropdown
                     value={sCatId}
@@ -579,13 +579,13 @@ const BulkScanner = () => {
                   <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
                     <FaClipboardList size={9} className="text-blue-400" />
                     <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Description</p>
-                    {sHighlight === "desc" && <span className="ml-auto text-[9px] text-amber-400 animate-pulse font-bold">typing…</span>}
+                    {sHighlight === "desc" && <span className="ml-auto text-[9px] text-blue-400 animate-pulse font-bold">typing…</span>}
                   </div>
                   <div className="p-3 flex gap-1">
                     <textarea value={sDesc} onChange={e => setSDesc(e.target.value)} rows={3}
                       placeholder="Describe the item…"
                       className="flex-1 bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none resize-none" />
-                    {sHighlight === "desc" && <span className="inline-block w-[2px] h-4 mt-0.5 bg-amber-400 animate-pulse self-start" />}
+                    {sHighlight === "desc" && <span className="inline-block w-[2px] h-4 mt-0.5 bg-blue-400 animate-pulse self-start" />}
                   </div>
                 </div>
 
@@ -666,233 +666,237 @@ const BulkScanner = () => {
         )}
 
         {/* ════════════════════════════════════════════════════════════════════
-            BATCH ENTRY TAB  (original UI, preserved exactly)
+            BATCH ENTRY TAB
         ════════════════════════════════════════════════════════════════════ */}
         {activeTab === "batch" && (
-          <div className="space-y-4 sm:space-y-5">
-
-            {/* Header controls */}
-            <div className="border-b border-white/5 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-              <div className="flex-1 w-full sm:max-w-xs">
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Batch Location</label>
-                <LocationAutocomplete value={batchLocation} onChange={updateLocation} disabled={isProcessing}
-                  placeholder="e.g. Library, SAS Office..."
-                  className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-xl text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:opacity-50" />
-              </div>
-              <div className="flex justify-end flex-wrap gap-2 w-full sm:w-auto">
-                {items.some(i => i.status === "success") && (
-                  <button onClick={clearCompleted}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
-                    <FaTrash size={10} /> Clear Done
-                  </button>
-                )}
-                {items.length > 0 && !isProcessing && (
-                  <button onClick={clearAll}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
-                    <FaTimesCircle size={10} /> Clear All
-                  </button>
-                )}
-                {errored > 0 && !isProcessing && (
-                  <button onClick={retryFailed}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400 hover:text-amber-300 text-xs font-bold rounded-xl transition-all">
-                    <FaRedo size={10} /> Retry Failed ({errored})
-                  </button>
-                )}
-                <button onClick={processAll} disabled={isProcessing || items.length === 0}
-                  className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-900/30 active:scale-95">
-                  {isProcessing ? <><FaSpinner className="animate-spin" size={12} /> Processing...</> : <><FaBolt size={12} /> Start Processing</>}
-                </button>
-              </div>
-            </div>
-
-            {/* Stats */}
-            {items.length > 0 && (
-              <div className="grid grid-cols-4 gap-2 sm:gap-3">
-                {[
-                  { label: "Total", value: total, color: "text-white", bg: "bg-gray-800 border-white/5", icon: <FaBoxOpen size={12} className="text-gray-400" /> },
-                  { label: "Queued", value: pending, color: "text-blue-400", bg: "bg-blue-500/5 border-blue-500/10", icon: <FaUpload size={12} className="text-blue-400" /> },
-                  { label: "Done", value: done, color: "text-emerald-400", bg: "bg-emerald-500/5 border-emerald-500/10", icon: <FaCheckCircle size={12} className="text-emerald-400" /> },
-                  { label: "Errors", value: errored, color: "text-red-400", bg: "bg-blue-500/5 border-blue-500/10", icon: <FaTimesCircle size={12} className="text-red-400" /> },
-                ].map(s => (
-                  <div key={s.label} className={`bg-gray-900 border rounded-2xl p-3 sm:p-4 flex flex-col gap-2 ${s.bg}`}>
-                    <div className="flex items-start justify-between gap-1">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-800 border border-white/5 shrink-0">{s.icon}</div>
-                      <span className={`text-xl sm:text-3xl font-black leading-none tabular-nums ${s.color}`}>{s.value}</span>
-                    </div>
-                    <p className="text-[9px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Drop zone */}
-            <div {...bGetRoot()}
-              className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all duration-200 ${bDrag ? "border-blue-400 bg-blue-500/10 scale-[1.01]" : "border-white/10 bg-gray-900 hover:border-blue-500/40 hover:bg-gray-800/60"
-                } ${isProcessing ? "opacity-40 pointer-events-none" : ""}`}>
-              <input {...bGetInput()} />
-              <div className="flex flex-col items-center gap-4">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 ${bDrag ? "bg-blue-500 text-white scale-110" : "bg-blue-500/10 border border-blue-500/20 text-blue-400"}`}>
-                  <FaUpload size={22} />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch animate-fadeIn">
+            {/* Left: Setup, Stats & Upload (5 cols) */}
+            <div className="lg:col-span-5 flex flex-col gap-4">
+              
+              {/* Batch Settings Panel */}
+              <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 flex flex-col gap-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  <span className="text-[11px] font-bold text-blue-400 uppercase tracking-widest">Batch Settings</span>
                 </div>
+                
                 <div>
-                  <p className="text-white font-semibold text-sm sm:text-base">{bDrag ? "Release to add images" : "Drag & drop multiple images here"}</p>
-                  <p className="text-gray-500 text-xs mt-1">or <span className="text-blue-400 font-semibold">click to select files</span> from your computer or camera</p>
+                  <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Batch Location</label>
+                  <LocationAutocomplete value={batchLocation} onChange={updateLocation} disabled={isProcessing}
+                    placeholder="e.g. Library, SAS Office..."
+                    className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-xl text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:opacity-50" />
                 </div>
-                <div className="flex items-center gap-2 flex-wrap justify-center text-[10px] text-gray-600 font-medium">
-                  {["JPG", "PNG", "WEBP", "HEIC"].map(f => (
-                    <span key={f} className="px-2 py-0.5 bg-gray-800 border border-white/5 rounded-full">{f}</span>
+
+                <div className="flex flex-col gap-2 pt-2">
+                  <button onClick={processAll} disabled={isProcessing || items.length === 0}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-900/30 active:scale-95">
+                    {isProcessing ? <><FaSpinner className="animate-spin" size={12} /> Processing...</> : <><FaBolt size={12} /> Start Processing</>}
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {items.some(i => i.status === "success") && (
+                      <button onClick={clearCompleted}
+                        className="flex items-center justify-center gap-1.5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
+                        <FaTrash size={10} /> Clear Done
+                      </button>
+                    )}
+                    {items.length > 0 && !isProcessing && (
+                      <button onClick={clearAll}
+                        className="flex items-center justify-center gap-1.5 py-2 bg-gray-800 hover:bg-gray-700 border border-white/5 hover:border-white/10 text-gray-400 hover:text-white text-xs font-medium rounded-xl transition-all">
+                        <FaTimesCircle size={10} /> Clear All
+                      </button>
+                    )}
+                  </div>
+
+                  {errored > 0 && !isProcessing && (
+                    <button onClick={retryFailed}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 hover:text-blue-300 text-xs font-bold rounded-xl transition-all">
+                      <FaRedo size={10} /> Retry Failed ({errored})
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              {items.length > 0 && (
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Total", value: total, color: "text-white", bg: "bg-gray-900 border-white/5", icon: <FaBoxOpen size={12} className="text-gray-400" /> },
+                    { label: "Queued", value: pending, color: "text-blue-400", bg: "bg-gray-900 border-blue-500/10", icon: <FaUpload size={12} className="text-blue-400" /> },
+                    { label: "Done", value: done, color: "text-emerald-400", bg: "bg-gray-900 border-emerald-500/10", icon: <FaCheckCircle size={12} className="text-emerald-400" /> },
+                    { label: "Errors", value: errored, color: "text-red-400", bg: "bg-gray-900 border-red-500/10", icon: <FaTimesCircle size={12} className="text-red-400" /> },
+                  ].map(s => (
+                    <div key={s.label} className={`border rounded-2xl p-3 flex flex-col gap-2 ${s.bg}`}>
+                      <div className="flex items-start justify-between gap-1">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-800 border border-white/5 shrink-0">{s.icon}</div>
+                        <span className={`text-xl sm:text-2xl font-black leading-none tabular-nums ${s.color}`}>{s.value}</span>
+                      </div>
+                      <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider">{s.label}</p>
+                    </div>
                   ))}
                 </div>
-              </div>
-            </div>
+              )}
 
-            {/* Progress */}
-            {isProcessing && total > 0 && (
-              <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-blue-400 font-semibold"><FaSpinner className="animate-spin" size={11} /> Processing images...</div>
-                  <span className="text-gray-500 tabular-nums">{done} / {total} complete</span>
-                </div>
-                <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500"
-                    style={{ width: `${total > 0 ? Math.round((done / total) * 100) : 0}%` }} />
-                </div>
-              </div>
-            )}
-
-            {/* Batch summary */}
-            {!isProcessing && batchSummary && (
-              <div className={`relative rounded-2xl border px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${batchSummary.failed === 0 ? "bg-blue-500/5 border-blue-500/20" : batchSummary.success === 0 ? "bg-red-500/5 border-red-500/20" : "bg-amber-500/5 border-amber-500/20"
-                }`}>
-                <div className="flex items-center gap-3">
-                  {batchSummary.failed === 0 ? <FaCheckCircle size={16} className="text-blue-400 shrink-0" /> : <FaExclamationTriangle size={16} className="text-amber-400 shrink-0" />}
+              {/* Drop Zone */}
+              <div {...bGetRoot()}
+                className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 ${bDrag ? "border-blue-400 bg-blue-500/10 scale-[1.01]" : "border-white/10 bg-gray-900 hover:border-blue-500/40 hover:bg-gray-800/60"
+                  } ${isProcessing ? "opacity-40 pointer-events-none" : ""}`}>
+                <input {...bGetInput()} />
+                <div className="flex flex-col items-center gap-3">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 ${bDrag ? "bg-blue-500 text-white scale-110" : "bg-blue-500/10 border border-blue-500/20 text-blue-400"}`}>
+                    <FaUpload size={18} />
+                  </div>
                   <div>
-                    <p className={`text-xs font-bold ${batchSummary.failed === 0 ? "text-blue-400" : batchSummary.success === 0 ? "text-red-400" : "text-amber-400"}`}>
-                      {batchSummary.failed === 0 ? "All batch items were saved successfully." : batchSummary.success === 0 ? "Batch failed — no items were saved" : "Batch finished with errors"}
-                    </p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">
-                      <span className="text-blue-400 font-semibold">{batchSummary.success} succeeded</span>
-                      {batchSummary.failed > 0 && <> · <span className="text-red-400 font-semibold">{batchSummary.failed} failed</span></>}
-                    </p>
+                    <p className="text-white font-semibold text-xs sm:text-sm">{bDrag ? "Release to add images" : "Drag & drop multiple images here"}</p>
+                    <p className="text-gray-500 text-[10px] mt-1">or <span className="text-blue-400 font-semibold">click to select files</span></p>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap justify-center text-[9px] text-gray-600 font-medium">
+                    {["JPG", "PNG", "WEBP"].map(f => (
+                      <span key={f} className="px-1.5 py-0.5 bg-gray-800 border border-white/5 rounded-full">{f}</span>
+                    ))}
                   </div>
                 </div>
-                {batchSummary.failed > 0 && (
-                  <button onClick={retryFailed} className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 text-xs font-bold rounded-xl transition-all shrink-0">
-                    <FaRedo size={10} /> Retry {batchSummary.failed} Failed
+              </div>
+
+              {/* Progress Bar */}
+              {isProcessing && total > 0 && (
+                <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 text-blue-400 font-semibold"><FaSpinner className="animate-spin" size={11} /> Processing images...</div>
+                    <span className="text-gray-500 tabular-nums">{done} / {total} complete</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500"
+                      style={{ width: `${total > 0 ? Math.round((done / total) * 100) : 0}%` }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Batch Summary banner */}
+              {!isProcessing && batchSummary && (
+                <div className={`relative rounded-2xl border px-4 py-3 flex flex-col gap-2 ${batchSummary.failed === 0 ? "bg-blue-500/5 border-blue-500/20" : batchSummary.success === 0 ? "bg-red-500/5 border-red-500/20" : "bg-blue-500/5 border-blue-500/20"
+                  }`}>
+                  <div className="flex items-start gap-3 pr-6">
+                    {batchSummary.failed === 0 ? <FaCheckCircle size={16} className="text-blue-400 shrink-0 mt-0.5" /> : <FaExclamationTriangle size={16} className="text-blue-400 shrink-0 mt-0.5" />}
+                    <div>
+                      <p className={`text-xs font-bold ${batchSummary.failed === 0 ? "text-blue-400" : batchSummary.success === 0 ? "text-red-400" : "text-blue-400"}`}>
+                        {batchSummary.failed === 0 ? "All batch items saved successfully!" : batchSummary.success === 0 ? "Batch failed — no items saved" : "Batch finished with errors"}
+                      </p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">
+                        <span className="text-blue-400 font-semibold">{batchSummary.success} succeeded</span>
+                        {batchSummary.failed > 0 && <> · <span className="text-red-400 font-semibold">{batchSummary.failed} failed</span></>}
+                      </p>
+                    </div>
+                  </div>
+                  {batchSummary.failed > 0 && (
+                    <button onClick={retryFailed} className="w-full mt-1 flex items-center justify-center gap-1.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-bold rounded-xl transition-all">
+                      <FaRedo size={10} /> Retry {batchSummary.failed} Failed
+                    </button>
+                  )}
+                  <button onClick={() => setBatchSummary(null)} className="absolute top-2 right-2 text-gray-600 hover:text-gray-400 transition-colors" aria-label="Dismiss">
+                    <FaTimes size={12} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Right: Items Queue (7 cols) */}
+            <div className="lg:col-span-7 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col min-h-[400px] lg:h-auto">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  <span className="text-[11px] font-bold text-blue-400 uppercase tracking-widest">Queue Status ({total})</span>
+                </div>
+                {done > 0 && (
+                  <button onClick={clearCompleted} className="text-[10px] font-semibold text-gray-500 hover:text-white transition-colors underline underline-offset-2">
+                    Clear Completed ({done})
                   </button>
                 )}
-                <button onClick={() => setBatchSummary(null)} className="absolute top-2 right-2 sm:static text-gray-600 hover:text-gray-400 transition-colors" aria-label="Dismiss">
-                  <FaTimesCircle size={12} />
-                </button>
               </div>
-            )}
 
-            {/* Item list */}
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-gray-900 border border-dashed border-white/5 rounded-2xl text-gray-600">
-                <FaSearch size={28} className="mb-3 opacity-40" />
-                <p className="text-sm font-medium text-gray-500">No images queued</p>
-                <p className="text-xs mt-1 opacity-60">Drop images above to get started</p>
-              </div>
-            ) : (
-              <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-                <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 border-b border-white/5 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">
-                  <div className="col-span-1">Preview</div>
-                  <div className="col-span-3">File Name</div>
-                  <div className="col-span-3">AI Result</div>
-                  <div className="col-span-2">Category</div>
-                  <div className="col-span-2">Status</div>
-                  <div className="col-span-1 text-right">Action</div>
+              {items.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center py-20 text-gray-600">
+                  <FaSearch size={28} className="mb-3 opacity-40 text-blue-400 animate-pulse" />
+                  <p className="text-sm font-medium text-gray-500">No images queued</p>
+                  <p className="text-xs mt-1 opacity-60">Drop images on the left to get started</p>
                 </div>
-                <div className="divide-y divide-white/[0.04]">
+              ) : (
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 lg:max-h-[500px]">
                   {items.map(item => (
-                    <div key={item.id}>
-                      {/* Desktop row */}
-                      <div className="hidden sm:grid grid-cols-12 gap-4 items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
-                        <div className="col-span-1">
-                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-800 border border-white/5">
-                            <img src={item.previewUrl} alt="preview" className="w-full h-full object-cover" />
-                          </div>
+                    <div key={item.id} className="bg-gray-800/60 border border-white/5 rounded-xl p-3 flex gap-3 hover:border-white/10 transition-colors items-center">
+                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-950 border border-white/5 shrink-0 relative">
+                        <img src={item.previewUrl} alt="preview" className="w-full h-full object-cover" />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-white text-xs font-bold truncate">
+                            {item.resultDetails?.itemName || item.file.name}
+                          </p>
+                          <StatusBadge status={item.status} />
                         </div>
-                        <div className="col-span-3 min-w-0">
-                          <p className="text-white text-xs font-medium truncate">{item.file.name}</p>
-                          <p className="text-gray-600 text-[10px] mt-0.5">{(item.file.size / 1024).toFixed(0)} KB</p>
-                        </div>
-                        <div className="col-span-3 min-w-0">
-                          {item.resultDetails ? (
+                        
+                        {item.resultDetails?.description ? (
+                          <p className="text-gray-400 text-[10px] line-clamp-1 leading-normal">
+                            {item.resultDetails.description}
+                          </p>
+                        ) : item.status === "error" ? (
+                          <p className="text-red-400 text-[10px] line-clamp-1 leading-normal font-medium">
+                            {item.errorMessage || "Failed to process image."}
+                          </p>
+                        ) : item.status === "pending" ? (
+                          <p className="text-gray-500 text-[10px] line-clamp-1 leading-normal">
+                            Waiting to process...
+                          </p>
+                        ) : (
+                          <p className="text-blue-400/80 text-[10px] flex items-center gap-1 leading-normal">
+                            <FaSpinner className="animate-spin" size={8} /> Processing item details...
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center gap-2 flex-wrap text-[9px] text-gray-500">
+                          <span>{(item.file.size / 1024).toFixed(0)} KB</span>
+                          {item.resultDetails?.categoryName && (
                             <>
-                              <p className="text-white text-xs font-semibold truncate">{item.resultDetails.itemName}</p>
-                              <p className="text-gray-500 text-[10px] truncate mt-0.5">{item.resultDetails.description}</p>
-                            </>
-                          ) : item.status === "error" ? (
-                            <p className="text-red-400 text-[10px] line-clamp-2">{item.errorMessage}</p>
-                          ) : item.status === "pending" ? (
-                            <p className="text-gray-600 text-[10px]">Waiting for processing...</p>
-                          ) : (
-                            <p className="text-blue-400 text-[10px] flex items-center gap-1"><FaSpinner className="animate-spin" size={8} /> Analyzing with AI...</p>
-                          )}
-                        </div>
-                        <div className="col-span-2">
-                          {item.resultDetails?.categoryName ? (
-                            <span className="text-[10px] px-2 py-0.5 bg-white/5 border border-white/5 text-gray-300 rounded-lg">{item.resultDetails.categoryName}</span>
-                          ) : <span className="text-gray-700 text-[10px]">—</span>}
-                        </div>
-                        <div className="col-span-2"><StatusBadge status={item.status} /></div>
-                        <div className="col-span-1 flex justify-end gap-1">
-                          {!isProcessing && item.status === "error" && (
-                            <>
-                              <button onClick={() => retrySingle(item.id)} title="Retry" className="w-6 h-6 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-400 transition-colors"><FaRedo size={9} /></button>
-                              <button onClick={() => removeFile(item.id)} title="Remove" className="w-6 h-6 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"><FaTimesCircle size={10} /></button>
+                              <span>•</span>
+                              <span className="px-1.5 py-0.2 bg-white/5 border border-white/5 text-gray-400 rounded-md">
+                                {item.resultDetails.categoryName}
+                              </span>
                             </>
                           )}
-                          {!isProcessing && item.status === "pending" && (
-                            <button onClick={() => removeFile(item.id)} className="w-6 h-6 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"><FaTimesCircle size={10} /></button>
-                          )}
-                          {item.status === "success" && <FaCheckCircle size={14} className="text-emerald-400" />}
                         </div>
                       </div>
 
-                      {/* Mobile card */}
-                      <div className="sm:hidden flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors">
-                        <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-800 border border-white/5 shrink-0">
-                          <img src={item.previewUrl} alt="preview" className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex-1 min-w-0 space-y-1">
-                          <p className="text-white text-xs font-semibold truncate">{item.resultDetails?.itemName || item.file.name}</p>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-gray-600 text-[10px]">{(item.file.size / 1024).toFixed(0)} KB</span>
-                            {item.resultDetails?.categoryName && <span className="text-[10px] px-1.5 py-0.5 bg-white/5 border border-white/5 text-gray-400 rounded-md">{item.resultDetails.categoryName}</span>}
+                      <div className="shrink-0 flex items-center gap-1.5 ml-2">
+                        {!isProcessing && item.status === "error" && (
+                          <>
+                            <button onClick={() => retrySingle(item.id)} title="Retry"
+                              className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center text-blue-400 transition-colors">
+                              <FaRedo size={9} />
+                            </button>
+                            <button onClick={() => removeFile(item.id)} title="Remove"
+                              className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors">
+                              <FaTimesCircle size={10} />
+                            </button>
+                          </>
+                        )}
+                        {!isProcessing && item.status === "pending" && (
+                          <button onClick={() => removeFile(item.id)} title="Remove"
+                            className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors">
+                            <FaTimesCircle size={10} />
+                          </button>
+                        )}
+                        {item.status === "success" && (
+                          <div className="w-7 h-7 flex items-center justify-center">
+                            <FaCheckCircle size={14} className="text-emerald-400" />
                           </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <StatusBadge status={item.status} />
-                            {item.status === "error" && <p className="text-red-400 text-[10px] truncate">{item.errorMessage}</p>}
-                          </div>
-                        </div>
-                        <div className="shrink-0 flex flex-col gap-1 items-center">
-                          {!isProcessing && item.status === "error" && (
-                            <>
-                              <button onClick={() => retrySingle(item.id)} className="w-7 h-7 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-400 transition-colors"><FaRedo size={10} /></button>
-                              <button onClick={() => removeFile(item.id)} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"><FaTimesCircle size={11} /></button>
-                            </>
-                          )}
-                          {!isProcessing && item.status === "pending" && (
-                            <button onClick={() => removeFile(item.id)} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center text-red-400 transition-colors"><FaTimesCircle size={11} /></button>
-                          )}
-                          {item.status === "success" && <FaCheckCircle size={16} className="text-emerald-400" />}
-                        </div>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
-
-                {done > 0 && (
-                  <div className="px-4 sm:px-5 py-3 border-t border-white/5 flex items-center justify-between">
-                    <p className="text-gray-500 text-xs"><span className="text-emerald-400 font-bold">{done}</span> of {total} items saved</p>
-                    <button onClick={clearCompleted} className="text-xs text-gray-500 hover:text-white transition-colors underline underline-offset-2">Clear completed</button>
-                  </div>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
