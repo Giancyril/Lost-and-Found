@@ -459,7 +459,7 @@ const CustomSortSelect: React.FC<CustomSortSelectProps> = ({ options, value, onC
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-2 px-4 py-2.5 bg-gray-800/80 border border-white/10 rounded-xl text-white text-xs font-semibold hover:border-white/20 transition-all focus:outline-none ${open ? "ring-2 ring-blue-500/20 border-blue-500/50" : ""
+        className={`flex items-center gap-2 px-4 py-2 bg-gray-800/80 border border-white/10 rounded-xl text-white text-xs font-semibold hover:border-white/20 transition-all focus:outline-none ${open ? "ring-2 ring-blue-500/20 border-blue-500/50" : ""
           }`}
       >
         <FaSortAmountDown className="text-gray-400" size={11} />
@@ -577,43 +577,40 @@ const VirtueSpotlightAdmin: React.FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
-      {/* ── Header row ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-3">
-        <button
-          onClick={() => { setEditing(null); setShowModal(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shrink-0 self-end sm:self-auto"
-        >
-          <FaPlus size={10} /> New Post
-        </button>
-      </div>
+      {/* ── Filter / sort toolbar (with New Post button inline) ── */}
+      <div className="bg-gray-900 border border-white/[0.06] rounded-2xl p-3 space-y-3">
 
-      {/* ── Filter / sort toolbar ── */}
-      {spotlights.length > 0 && (
-        <div className="bg-gray-900 border border-white/[0.06] rounded-2xl p-3 space-y-3">
-
-          {/* Search + Sort row */}
-          <div className="flex flex-col sm:flex-row gap-2">
-            {/* Search */}
-            <div className="relative flex-1">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search by title or student name…"
-                className="w-full pl-9 pr-4 py-2 bg-gray-800/80 border border-white/10 rounded-xl text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-              />
-            </div>
-
-            {/* Sort dropdown */}
-            <div className="relative shrink-0">
-              <CustomSortSelect
-                options={SORT_OPTIONS}
-                value={sortBy}
-                onChange={setSortBy}
-              />
-            </div>
+        {/* Search + Sort + New Post row */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          {/* Search */}
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={11} />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by title or student name…"
+              className="w-full pl-9 pr-4 py-2 bg-gray-800/80 border border-white/10 rounded-xl text-white text-xs placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+            />
           </div>
+
+          {/* Sort dropdown */}
+          <div className="relative shrink-0">
+            <CustomSortSelect
+              options={SORT_OPTIONS}
+              value={sortBy}
+              onChange={setSortBy}
+            />
+          </div>
+
+          {/* New Post button — same height as search bar */}
+          <button
+            onClick={() => { setEditing(null); setShowModal(true); }}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 border border-transparent text-white text-xs font-bold rounded-xl transition-all shrink-0"
+          >
+            <FaPlus size={10} /> New Post
+          </button>
+        </div>
 
           {/* Status filter tabs */}
           <div className="flex gap-1">
@@ -650,7 +647,6 @@ const VirtueSpotlightAdmin: React.FC = () => {
             )}
           </div>
         </div>
-      )}
 
       {/* ── Stats strip ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
