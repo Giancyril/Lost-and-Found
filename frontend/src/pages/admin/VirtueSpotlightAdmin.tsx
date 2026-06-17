@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import {
   FaPlus, FaStar, FaTimes, FaTrash, FaToggleOn, FaToggleOff,
   FaImage, FaSpinner, FaEdit, FaUserCheck, FaMagic, FaHeart,
@@ -12,6 +12,38 @@ import {
   useDeleteVirtueSpotlightMutation,
   useAiWriteVirtueSpotlightMutation,
 } from "../../redux/api/api";
+
+// ── TypeScript Interfaces ─────────────────────────────────────────────────────
+interface VirtueSpotlight {
+  id: string;
+  title: string;
+  description: string;
+  students: string[];
+  imageUrl?: string | null;
+  isActive: boolean;
+  likes: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+interface AiWriteSpotlightResponse {
+  title?: string;
+  description?: string;
+}
+
+// Typewriter hook
+const useTypewriter = () =>
+  useCallback(
+    (setter: (v: string) => void, text: string, onDone?: () => void, speed = 18) => {
+      let i = 0;
+      setter("");
+      const id = setInterval(() => {
+        setter(text.slice(0, ++i));
+        if (i >= text.length) { clearInterval(id); onDone?.(); }
+      }, speed);
+      return () => clearInterval(id);
+    }, []
+  );
 
 // ── Student name tag input ────────────────────────────────────────────────────
 const StudentTagInput = ({
@@ -94,7 +126,7 @@ const SpotlightModal = ({
   existing,
 }: {
   onClose: () => void;
-  existing?: any;
+  existing?: VirtueSpotlight | null;
 }) => {
   const [title, setTitle] = useState(existing?.title || "");
   const [description, setDescription] = useState(existing?.description || "");
@@ -113,6 +145,9 @@ const SpotlightModal = ({
     useAiWriteVirtueSpotlightMutation();
   const isLoading = creating || updating;
 
+  const typewriter = useTypewriter();
+  const [aiHighlight, setAiHighlight] = useState<string | null>(null);
+
   const [aiBulletPoints, setAiBulletPoints] = useState("");
   const [showAiAssist, setShowAiAssist] = useState(false);
 
@@ -121,14 +156,37 @@ const SpotlightModal = ({
       return toast.error("Please enter some notes or bullet points first.");
     }
     try {
-      const res = await aiWriteStory(aiBulletPoints.trim()).unwrap();
-      if (res.title) setTitle(res.title);
-      if (res.description) setDescription(res.description);
-      toast.success("AI drafted your spotlight story successfully!");
+      const res = await aiWriteStory(aiBulletPoints.trim()).unwrap() as AiWriteSpotlightResponse;
       setShowAiAssist(false);
       setAiBulletPoints("");
-    } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to draft story with AI.");
+
+      // Typewriter: Title first → then Description (same pattern as ReportFoundItem)
+      if (res.title) {
+        setAiHighlight("title");
+        typewriter(setTitle, res.title, () => {
+          setAiHighlight(null);
+          if (res.description) {
+            setTimeout(() => {
+              setAiHighlight("description");
+              typewriter(setDescription, res.description!, () => {
+                setAiHighlight(null);
+                toast.success("AI drafted your spotlight story!");
+              }, 14);
+            }, 200);
+          } else {
+            toast.success("AI drafted your spotlight story successfully!");
+          }
+        }, 20);
+      } else if (res.description) {
+        setAiHighlight("description");
+        typewriter(setDescription, res.description, () => {
+          setAiHighlight(null);
+          toast.success(" AI drafted your spotlight story! ");
+        }, 14);
+      }
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
+      toast.error(error?.data?.message || "Failed to draft story with AI.");
     }
   };
 
@@ -277,31 +335,53 @@ const SpotlightModal = ({
 
           {/* Title */}
           <div>
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
+            <label className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider mb-2 transition-colors duration-300 ${aiHighlight === "title" ? "text-blue-400" : "text-gray-400"}`}>
               Title <span className="text-red-400">*</span>
+              {aiHighlight === "title" && (
+                <span className="ml-auto text-[9px] text-blue-400 animate-pulse font-bold normal-case tracking-normal">typing…</span>
+              )}
             </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. VIRTUE Role Model Spotlight — May 2026"
-              className="w-full bg-gray-800 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-cyan-500/50 placeholder-gray-600"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. VIRTUE Role Model Spotlight — May 2026"
+                className={`w-full bg-gray-800 border text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none placeholder-gray-600 transition-all duration-300 ${aiHighlight === "title"
+                    ? "border-blue-500/60 ring-2 ring-blue-500/20"
+                    : "border-white/10 focus:border-cyan-500/50"
+                  }`}
+              />
+              {aiHighlight === "title" && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-blue-400 animate-pulse rounded" />
+              )}
+            </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
+            <label className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider mb-2 transition-colors duration-300 ${aiHighlight === "description" ? "text-blue-400" : "text-gray-400"}`}>
               Description <span className="text-red-400">*</span>
+              {aiHighlight === "description" && (
+                <span className="ml-auto text-[9px] text-blue-400 animate-pulse font-bold normal-case tracking-normal">typing…</span>
+              )}
             </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              required
-              placeholder="e.g. The SASDD VIRTUE program aims to celebrate and honor students who demonstrate exceptional moral character..."
-              className="w-full bg-gray-800 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-cyan-500/50 placeholder-gray-600 resize-none"
-            />
+            <div className="relative">
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                required
+                placeholder="e.g. The SASDD VIRTUE program aims to celebrate and honor students who demonstrate exceptional moral character…"
+                className={`w-full bg-gray-800 border text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none placeholder-gray-600 resize-none transition-all duration-300 ${aiHighlight === "description"
+                    ? "border-blue-500/60 ring-2 ring-blue-500/20"
+                    : "border-white/10 focus:border-cyan-500/50"
+                  }`}
+              />
+              {aiHighlight === "description" && (
+                <span className="absolute right-3 bottom-3 w-0.5 h-4 bg-blue-400 animate-pulse rounded" />
+              )}
+            </div>
           </div>
 
           {/* Student names */}
@@ -343,15 +423,15 @@ type SortKey = "date_desc" | "date_asc" | "likes_desc" | "students_desc";
 type StatusFilter = "all" | "published" | "hidden";
 
 const STATUS_TABS: { id: StatusFilter; label: string }[] = [
-  { id: "all",       label: "All" },
+  { id: "all", label: "All" },
   { id: "published", label: "Published" },
-  { id: "hidden",    label: "Hidden" },
+  { id: "hidden", label: "Hidden" },
 ];
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "date_desc",     label: "Newest First" },
-  { value: "date_asc",      label: "Oldest First" },
-  { value: "likes_desc",    label: "Most Liked" },
+  { value: "date_desc", label: "Newest First" },
+  { value: "date_asc", label: "Oldest First" },
+  { value: "likes_desc", label: "Most Liked" },
   { value: "students_desc", label: "Most Students" },
 ];
 
@@ -379,9 +459,8 @@ const CustomSortSelect: React.FC<CustomSortSelectProps> = ({ options, value, onC
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-2 px-4 py-2.5 bg-gray-800/80 border border-white/10 rounded-xl text-white text-xs font-semibold hover:border-white/20 transition-all focus:outline-none ${
-          open ? "ring-2 ring-blue-500/20 border-blue-500/50" : ""
-        }`}
+        className={`flex items-center gap-2 px-4 py-2.5 bg-gray-800/80 border border-white/10 rounded-xl text-white text-xs font-semibold hover:border-white/20 transition-all focus:outline-none ${open ? "ring-2 ring-blue-500/20 border-blue-500/50" : ""
+          }`}
       >
         <FaSortAmountDown className="text-gray-400" size={11} />
         <span>{selected?.label}</span>
@@ -399,11 +478,10 @@ const CustomSortSelect: React.FC<CustomSortSelectProps> = ({ options, value, onC
                   onChange(opt.value);
                   setOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors duration-100 ${
-                  isActive
-                    ? "bg-[#60a5fa] text-[#0f172a]"
-                    : "text-gray-300 hover:bg-white/5 hover:text-white"
-                }`}
+                className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors duration-100 ${isActive
+                  ? "bg-[#60a5fa] text-[#0f172a]"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white"
+                  }`}
               >
                 {opt.label}
               </button>
@@ -421,14 +499,14 @@ const VirtueSpotlightAdmin: React.FC = () => {
   const [updateSpotlight] = useUpdateVirtueSpotlightMutation();
 
   const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
+  const [editing, setEditing] = useState<VirtueSpotlight | null>(null);
 
   // ── Filter / sort state ───────────────────────────────────────────────────
-  const [search,  setSearch]  = useState("");
-  const [sortBy,  setSortBy]  = useState<SortKey>("date_desc");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortKey>("date_desc");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  const spotlights: any[] = data?.data || [];
+  const spotlights: VirtueSpotlight[] = (data?.data as VirtueSpotlight[]) || [];
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this spotlight? This cannot be undone.")) return;
@@ -440,7 +518,7 @@ const VirtueSpotlightAdmin: React.FC = () => {
     }
   };
 
-  const handleToggle = async (item: any) => {
+  const handleToggle = async (item: VirtueSpotlight) => {
     const fd = new FormData();
     fd.append("isActive", String(!item.isActive));
     try {
@@ -457,7 +535,7 @@ const VirtueSpotlightAdmin: React.FC = () => {
 
     // Status filter
     if (statusFilter === "published") list = list.filter(s => s.isActive);
-    if (statusFilter === "hidden")    list = list.filter(s => !s.isActive);
+    if (statusFilter === "hidden") list = list.filter(s => !s.isActive);
 
     // Search (title or student names)
     if (search.trim()) {
@@ -470,9 +548,9 @@ const VirtueSpotlightAdmin: React.FC = () => {
 
     // Sort
     list.sort((a, b) => {
-      if (sortBy === "date_asc")      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      if (sortBy === "date_desc")     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      if (sortBy === "likes_desc")    return (b.likes ?? 0) - (a.likes ?? 0);
+      if (sortBy === "date_asc") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      if (sortBy === "date_desc") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (sortBy === "likes_desc") return (b.likes ?? 0) - (a.likes ?? 0);
       if (sortBy === "students_desc") return (b.students?.length ?? 0) - (a.students?.length ?? 0);
       return 0;
     });
@@ -500,8 +578,7 @@ const VirtueSpotlightAdmin: React.FC = () => {
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
 
       {/* ── Header row ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h2 className="text-white font-bold text-base tracking-tight">Virtue Spotlights</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-3">
         <button
           onClick={() => { setEditing(null); setShowModal(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shrink-0 self-end sm:self-auto"
@@ -543,23 +620,21 @@ const VirtueSpotlightAdmin: React.FC = () => {
             {STATUS_TABS.map(tab => {
               const active = tab.id === statusFilter;
               const count =
-                tab.id === "all"       ? spotlights.length :
-                tab.id === "published" ? spotlights.filter(s => s.isActive).length :
-                                         spotlights.filter(s => !s.isActive).length;
+                tab.id === "all" ? spotlights.length :
+                  tab.id === "published" ? spotlights.filter(s => s.isActive).length :
+                    spotlights.filter(s => !s.isActive).length;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setStatusFilter(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all focus:outline-none ${
-                    active
-                      ? "bg-blue-500/15 text-blue-300 border border-blue-500/25"
-                      : "text-gray-500 hover:text-gray-300 border border-transparent"
-                  }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all focus:outline-none ${active
+                    ? "bg-blue-500/15 text-blue-300 border border-blue-500/25"
+                    : "text-gray-500 hover:text-gray-300 border border-transparent"
+                    }`}
                 >
                   {tab.label}
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                    active ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-gray-600"
-                  }`}>{count}</span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${active ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-gray-600"
+                    }`}>{count}</span>
                 </button>
               );
             })}
@@ -641,14 +716,13 @@ const VirtueSpotlightAdmin: React.FC = () => {
       ) : (
         /* ── Spotlight list ── */
         <div className="space-y-3">
-          {processed.map((item: any) => (
+          {processed.map((item: VirtueSpotlight) => (
             <div
               key={item.id}
-              className={`bg-gray-900 border rounded-2xl overflow-hidden transition-all ${
-                item.isActive
-                  ? "border-white/[0.06]"
-                  : "border-white/[0.03] opacity-60"
-              }`}
+              className={`bg-gray-900 border rounded-2xl overflow-hidden transition-all ${item.isActive
+                ? "border-white/[0.06]"
+                : "border-white/[0.03] opacity-60"
+                }`}
             >
               {/* Body */}
               <div className="flex flex-col sm:flex-row items-start gap-4 p-4 sm:p-5">
@@ -675,11 +749,10 @@ const VirtueSpotlightAdmin: React.FC = () => {
                       {item.title}
                     </h3>
                     <span
-                      className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
-                        item.isActive
-                          ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                          : "text-gray-500 bg-gray-800 border-gray-700"
-                      }`}
+                      className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${item.isActive
+                        ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                        : "text-gray-500 bg-gray-800 border-gray-700"
+                        }`}
                     >
                       {item.isActive ? "Published" : "Hidden"}
                     </span>
@@ -746,11 +819,10 @@ const VirtueSpotlightAdmin: React.FC = () => {
                         ? "Hide from homepage"
                         : "Publish to homepage"
                     }
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                      item.isActive
-                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400"
-                        : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-emerald-500/10 hover:border-emerald-500/20 hover:text-emerald-400"
-                    }`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${item.isActive
+                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400"
+                      : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-emerald-500/10 hover:border-emerald-500/20 hover:text-emerald-400"
+                      }`}
                   >
                     {item.isActive ? (
                       <FaToggleOn size={12} />
