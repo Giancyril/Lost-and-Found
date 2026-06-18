@@ -30,6 +30,56 @@ const AiSearch: React.FC = () => {
   const [aiSearch, { isLoading }] = useAiSearchMutation();
   const navigate = useNavigate();
 
+  const [placeholder, setPlaceholder] = useState("");
+
+  useEffect(() => {
+    const words = [
+      "Black iPhone with cracked screen near the library...",
+      "Gray Lenovo laptop with sticker on the cover...",
+      "Wallet with student ID inside Room 205...",
+      "Describe what you lost or found...",
+    ];
+    let wordIdx = 0;
+    let charIdx = 0;
+    let isDeleting = false;
+    let currentWord = words[0];
+    let timer: NodeJS.Timeout;
+
+    const tick = () => {
+      currentWord = words[wordIdx];
+      const text = isDeleting
+        ? currentWord.substring(0, charIdx - 1)
+        : currentWord.substring(0, charIdx + 1);
+
+      setPlaceholder(text + "|");
+
+      if (isDeleting) {
+        charIdx--;
+      } else {
+        charIdx++;
+      }
+
+      let delta = 90 - Math.random() * 30;
+      if (isDeleting) {
+        delta /= 1.8;
+      }
+
+      if (!isDeleting && charIdx === currentWord.length) {
+        delta = 1600;
+        isDeleting = true;
+      } else if (isDeleting && charIdx === 0) {
+        isDeleting = false;
+        wordIdx = (wordIdx + 1) % words.length;
+        delta = 400;
+      }
+
+      timer = setTimeout(tick, delta);
+    };
+
+    timer = setTimeout(tick, 200);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleSearch = async (e: React.FormEvent, overrideQuery?: string) => {
     e.preventDefault();
     const q = overrideQuery ?? searchQuery;
@@ -86,7 +136,7 @@ const AiSearch: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
-                placeholder="Describe what you lost or found..."
+                placeholder={placeholder}
                 className="w-full pl-9 pr-2 py-2.5 sm:py-3.5 bg-transparent text-white placeholder-gray-600 text-xs sm:text-base focus:outline-none"
                 disabled={isLoading}
                 maxLength={200}
