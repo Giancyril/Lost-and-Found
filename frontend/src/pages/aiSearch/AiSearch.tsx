@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaSearch, FaRobot, FaBrain, FaSpinner, FaEye,
   FaMapMarkerAlt, FaCalendarAlt, FaTags, FaCheckCircle,
