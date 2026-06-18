@@ -634,32 +634,31 @@ const HeatmapPage = () => {
       {viewMode === "map" && (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 items-start">
 
-          {/* Map */}
-          <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden" style={{ height: 520 }}>
-            <MapContainer
-              center={CAMPUS_CENTER}
-              zoom={CAMPUS_ZOOM}
-              style={{ height: "100%", width: "100%" }}
-              zoomControl={false}
-              attributionControl={false}
-            >
-              <ZoomControl position="bottomright" />
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                maxZoom={20}
-              />
-              <HeatLayer points={mappable} filter={filter} max={maxFilter} />
-              {showCorridors && <CorridorLayer corridors={CORRIDORS} />}
-              {focusPoint && <FlyTo lat={focusPoint.lat} lng={focusPoint.lng} />}
-            </MapContainer>
-          </div>
-
-          {/* Sidebar — Locations on top, AI Predictor below, Corridor legend at bottom */}
+          {/* Left Column: Map & Locations */}
           <div className="space-y-3">
+            {/* Map */}
+            <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden" style={{ height: 520 }}>
+              <MapContainer
+                center={CAMPUS_CENTER}
+                zoom={CAMPUS_ZOOM}
+                style={{ height: "100%", width: "100%" }}
+                zoomControl={false}
+                attributionControl={false}
+              >
+                <ZoomControl position="bottomright" />
+                <TileLayer
+                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                  maxZoom={20}
+                />
+                <HeatLayer points={mappable} filter={filter} max={maxFilter} />
+                {showCorridors && <CorridorLayer corridors={CORRIDORS} />}
+                {focusPoint && <FlyTo lat={focusPoint.lat} lng={focusPoint.lng} />}
+              </MapContainer>
+            </div>
 
-            {/* Location list */}
-            <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col">
+            {/* Location list — placed below the map, same width */}
+            <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col" style={{ height: 250 }}>
               <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
                   <FaLayerGroup size={11} className="text-cyan-400" />
@@ -667,69 +666,82 @@ const HeatmapPage = () => {
                 </div>
                 <span className="text-[10px] text-gray-600">{mappable.length} mapped</span>
               </div>
-              <div className="overflow-y-auto" style={{ maxHeight: 240 }}>
+              <div className="overflow-y-auto flex-1 min-h-0 p-4">
                 {mappable.length === 0 ? (
                   <div className="py-10 text-center text-gray-600 text-sm">No locations found</div>
-                ) : mappable.map(r => {
-                  const heat  = getHeatColor(r.total, maxTotal);
-                  const value = filter === "found" ? r.found : filter === "lost" ? r.lost : r.total;
-                  const pct   = Math.round((value / maxFilter) * 100);
-                  return (
-                    <button key={r.location} onClick={() => setFocusPoint({ lat: r.lat!, lng: r.lng! })}
-                      className="w-full text-left px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors group">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-white text-xs font-semibold truncate group-hover:text-cyan-400 transition-colors">{r.location}</p>
-                        <span className={`shrink-0 ml-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${heat.badge}`}>{heat.label}</span>
-                      </div>
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <div className="flex-1 bg-gray-800 rounded-full h-1 overflow-hidden">
-                          <div className={`h-1 rounded-full ${heat.bar} transition-all duration-500`} style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className="text-gray-600 text-[10px] shrink-0 w-7 text-right">{pct}%</span>
-                      </div>
-                      <div className="flex gap-3 text-[10px]">
-                        <span className="text-cyan-400">F: {r.found}</span>
-                        <span className="text-red-400">L: {r.lost}</span>
-                        <span className="text-gray-500">Total: {r.total}</span>
-                      </div>
-                    </button>
-                  );
-                })}
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {mappable.map(r => {
+                      const heat  = getHeatColor(r.total, maxTotal);
+                      const value = filter === "found" ? r.found : filter === "lost" ? r.lost : r.total;
+                      const pct   = Math.round((value / maxFilter) * 100);
+                      return (
+                        <button key={r.location} onClick={() => setFocusPoint({ lat: r.lat!, lng: r.lng! })}
+                          className="text-left p-3.5 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:bg-white/[0.05] hover:border-white/[0.08] transition-all duration-200 group">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-white text-xs font-bold truncate group-hover:text-cyan-400 transition-colors">{r.location}</p>
+                            <span className={`shrink-0 ml-2 px-1.5 py-0.5 rounded-full text-[8px] font-bold border ${heat.badge}`}>{heat.label}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="flex-1 bg-gray-800 rounded-full h-1 overflow-hidden">
+                              <div className={`h-1 rounded-full ${heat.bar} transition-all duration-500`} style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="text-gray-600 text-[9px] shrink-0">{pct}%</span>
+                          </div>
+                          <div className="flex gap-3 text-[9px]">
+                            <span className="text-cyan-400 font-medium">F: {r.found}</span>
+                            <span className="text-red-400 font-medium">L: {r.lost}</span>
+                            <span className="text-gray-500 font-medium">Total: {r.total}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                 {unmapped.length > 0 && (
-                  <div className="px-4 py-3 border-t border-white/5">
-                    <p className="text-gray-600 text-[10px] uppercase tracking-widest mb-2">Unmapped ({unmapped.length})</p>
-                    {unmapped.map(r => (
-                      <div key={r.location} className="flex items-center justify-between py-1.5">
-                        <p className="text-gray-500 text-xs truncate">{r.location}</p>
-                        <span className="text-gray-600 text-[10px] ml-2">{r.total}</span>
-                      </div>
-                    ))}
+                  <div className="mt-4 pt-4 border-t border-white/5">
+                    <p className="text-gray-600 text-[10px] uppercase tracking-widest mb-2 font-semibold">Unmapped ({unmapped.length})</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {unmapped.map(r => (
+                        <div key={r.location} className="flex items-center justify-between p-3.5 bg-white/[0.01] border border-white/[0.02] rounded-xl">
+                          <p className="text-gray-500 text-xs font-semibold truncate">{r.location}</p>
+                          <span className="text-gray-600 text-[10px] ml-2 font-mono font-bold bg-white/5 px-2 py-0.5 rounded-md">{r.total}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-3">
+            {/* Corridor legend — placed where Locations used to be, same height as Locations card under map */}
+            {showCorridors && (
+              <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col" style={{ height: 250 }}>
+                <div className="px-4 py-3 border-b border-white/5 flex items-center shrink-0">
+                  <div className="flex items-center gap-2">
+                    <FaRoute size={11} className="text-orange-400" />
+                    <p className="text-xs font-bold text-gray-300 uppercase tracking-widest">High-Risk Corridors</p>
+                  </div>
+                </div>
+                <div className="p-4 flex-1 min-h-0 overflow-y-auto flex flex-col justify-between">
+                  <div className="space-y-2.5">
+                    {CORRIDORS.map((c, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="w-6 h-0.5 bg-orange-400 rounded-full shrink-0" style={{ backgroundImage: "repeating-linear-gradient(90deg, #f97316 0, #f97316 4px, transparent 4px, transparent 8px)" }} />
+                        <span className="text-gray-400 text-xs font-medium">{c.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-gray-600 text-[9px] mt-4 leading-relaxed">Transit paths with historically high item loss rates</p>
+                </div>
+              </div>
+            )}
 
             {/* AI Predictor */}
             <AiPredictorCard locationStats={allLocations} />
-
-            {/* Corridor legend */}
-            {showCorridors && (
-              <div className="bg-gray-900 border border-white/5 rounded-2xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <FaRoute size={11} className="text-orange-400" />
-                  <p className="text-xs font-bold text-gray-300 uppercase tracking-widest">High-Risk Corridors</p>
-                </div>
-                <div className="space-y-1.5">
-                  {CORRIDORS.map((c, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="w-6 h-0.5 bg-orange-400 rounded-full shrink-0" style={{ backgroundImage: "repeating-linear-gradient(90deg, #f97316 0, #f97316 4px, transparent 4px, transparent 8px)" }} />
-                      <span className="text-gray-500 text-[10px]">{c.name}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-gray-600 text-[9px] mt-2">Transit paths with historically high item loss rates</p>
-              </div>
-            )}
           </div>
         </div>
       )}
