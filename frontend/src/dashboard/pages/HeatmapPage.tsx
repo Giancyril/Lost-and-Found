@@ -11,6 +11,52 @@ import { getCoordinates, CAMPUS_COORDINATES, CAMPUS_CENTER, CAMPUS_ZOOM } from "
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+// ── CustomSelect (matches project standard) ───────────────────────────────────
+const CustomSelect = ({
+  options, value, onChange, placeholder = "Select…",
+}: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <div onClick={() => setOpen(o => !o)}
+        className={`w-full flex items-center gap-2 bg-gray-800/60 border rounded-lg cursor-pointer select-none transition-all duration-200 px-3 py-2 ${
+          open ? "ring-2 ring-cyan-500/30 border-cyan-500/40" : "border-gray-700 hover:border-gray-600"
+        } ${value ? "text-white" : "text-gray-500"}`}>
+        <span className="flex-1 text-xs truncate">{selected ? selected.label : placeholder}</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" className={`text-gray-500 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
+          <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        </svg>
+      </div>
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 right-0 bg-gray-900 border border-white/10 rounded-xl overflow-hidden z-50 shadow-2xl shadow-black/40 max-h-48 overflow-y-auto">
+          {options.map((opt, i) => (
+            <div key={opt.value} onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`px-3 py-2 cursor-pointer text-xs font-medium transition-colors select-none ${
+                i < options.length - 1 ? "border-b border-white/[0.04]" : ""
+              } ${opt.value === value ? "bg-cyan-500/10 text-cyan-300" : "text-gray-400 hover:bg-white/[0.04] hover:text-white"}`}>
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Fix Leaflet default icon issue with bundlers
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: string })._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -251,15 +297,12 @@ function AiPredictorCard({ locationStats }: { locationStats: LocationStat[] }) {
           {/* Location selector */}
           <div>
             <label className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1 block">Location</label>
-            <select
+            <CustomSelect
+              options={locationNames.map(loc => ({ value: loc, label: loc }))}
               value={selLoc}
-              onChange={e => setSelLoc(e.target.value)}
-              className="w-full bg-gray-800 border border-white/10 rounded-xl text-white text-xs px-3 py-2 focus:outline-none focus:border-violet-500/40 cursor-pointer"
-            >
-              {locationNames.map(loc => (
-                <option key={loc} value={loc}>{loc}</option>
-              ))}
-            </select>
+              onChange={setSelLoc}
+              placeholder="Select location…"
+            />
           </div>
 
           {/* Time selector */}
@@ -285,15 +328,12 @@ function AiPredictorCard({ locationStats }: { locationStats: LocationStat[] }) {
           {/* Category selector */}
           <div>
             <label className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1 block">Category</label>
-            <select
+            <CustomSelect
+              options={categories.map(c => ({ value: c, label: c }))}
               value={selCat}
-              onChange={e => setSelCat(e.target.value)}
-              className="w-full bg-gray-800 border border-white/10 rounded-xl text-white text-xs px-3 py-2 focus:outline-none focus:border-violet-500/40 cursor-pointer"
-            >
-              {categories.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+              onChange={setSelCat}
+              placeholder="Select category…"
+            />
           </div>
 
           {/* Result */}
@@ -526,11 +566,6 @@ const HeatmapPage = () => {
                   {TIME_SLOTS[timeSlot].label}
                 </span>
               )}
-              {timeSlot === null && (
-                <span className="text-[10px] bg-white/5 border border-white/10 text-gray-400 px-2 py-0.5 rounded-full font-semibold">
-                  All Day
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-2">
               {/* Corridor toggle */}
@@ -597,7 +632,7 @@ const HeatmapPage = () => {
 
       {/* ── Map View ── */}
       {viewMode === "map" && (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 items-stretch">
 
           {/* Map */}
           <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden" style={{ height: 520 }}>
@@ -620,21 +655,19 @@ const HeatmapPage = () => {
             </MapContainer>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-3">
-            {/* AI Predictor */}
-            <AiPredictorCard locationStats={allLocations} />
+          {/* Sidebar — fixed height matching the map, Locations on top, AI Predictor pinned at bottom */}
+          <div className="flex flex-col gap-3" style={{ height: 520 }}>
 
-            {/* Location list */}
-            <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+            {/* Location list — grows to fill available space */}
+            <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col flex-1 min-h-0">
+              <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
                   <FaLayerGroup size={11} className="text-cyan-400" />
                   <p className="text-xs font-bold text-gray-300 uppercase tracking-widest">Locations</p>
                 </div>
                 <span className="text-[10px] text-gray-600">{mappable.length} mapped</span>
               </div>
-              <div className="overflow-y-auto" style={{ maxHeight: 340 }}>
+              <div className="overflow-y-auto flex-1 min-h-0">
                 {mappable.length === 0 ? (
                   <div className="py-10 text-center text-gray-600 text-sm">No locations found</div>
                 ) : mappable.map(r => {
@@ -676,9 +709,14 @@ const HeatmapPage = () => {
               </div>
             </div>
 
+            {/* AI Predictor — pinned at bottom, shrinks to its content */}
+            <div className="shrink-0">
+              <AiPredictorCard locationStats={allLocations} />
+            </div>
+
             {/* Corridor legend */}
             {showCorridors && (
-              <div className="bg-gray-900 border border-white/5 rounded-2xl p-4">
+              <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 shrink-0">
                 <div className="flex items-center gap-2 mb-3">
                   <FaRoute size={11} className="text-orange-400" />
                   <p className="text-xs font-bold text-gray-300 uppercase tracking-widest">High-Risk Corridors</p>
@@ -700,7 +738,7 @@ const HeatmapPage = () => {
 
       {/* ── List View ── */}
       {viewMode === "list" && (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 items-stretch">
           <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
             <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 border-b border-white/5 text-[11px] uppercase tracking-widest text-gray-600 font-medium">
               <div className="col-span-1 text-center">#</div>
@@ -777,7 +815,7 @@ const HeatmapPage = () => {
           </div>
 
           {/* AI Predictor in list mode */}
-          <div className="space-y-3">
+          <div>
             <AiPredictorCard locationStats={allLocations} />
           </div>
         </div>
