@@ -632,7 +632,7 @@ const HeatmapPage = () => {
 
       {/* ── Map View ── */}
       {viewMode === "map" && (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 items-start">
 
           {/* Map */}
           <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden" style={{ height: 520 }}>
@@ -655,11 +655,11 @@ const HeatmapPage = () => {
             </MapContainer>
           </div>
 
-          {/* Sidebar — fixed height matching the map, Locations on top, AI Predictor pinned at bottom */}
-          <div className="flex flex-col gap-3" style={{ height: 520 }}>
+          {/* Sidebar — Locations on top, AI Predictor below, Corridor legend at bottom */}
+          <div className="space-y-3">
 
-            {/* Location list — grows to fill available space */}
-            <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col flex-1 min-h-0">
+            {/* Location list */}
+            <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col">
               <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
                   <FaLayerGroup size={11} className="text-cyan-400" />
@@ -667,7 +667,7 @@ const HeatmapPage = () => {
                 </div>
                 <span className="text-[10px] text-gray-600">{mappable.length} mapped</span>
               </div>
-              <div className="overflow-y-auto flex-1 min-h-0">
+              <div className="overflow-y-auto" style={{ maxHeight: 240 }}>
                 {mappable.length === 0 ? (
                   <div className="py-10 text-center text-gray-600 text-sm">No locations found</div>
                 ) : mappable.map(r => {
@@ -709,14 +709,12 @@ const HeatmapPage = () => {
               </div>
             </div>
 
-            {/* AI Predictor — pinned at bottom, shrinks to its content */}
-            <div className="shrink-0">
-              <AiPredictorCard locationStats={allLocations} />
-            </div>
+            {/* AI Predictor */}
+            <AiPredictorCard locationStats={allLocations} />
 
             {/* Corridor legend */}
             {showCorridors && (
-              <div className="bg-gray-900 border border-white/5 rounded-2xl p-4 shrink-0">
+              <div className="bg-gray-900 border border-white/5 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <FaRoute size={11} className="text-orange-400" />
                   <p className="text-xs font-bold text-gray-300 uppercase tracking-widest">High-Risk Corridors</p>
