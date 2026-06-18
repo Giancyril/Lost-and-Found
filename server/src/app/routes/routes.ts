@@ -13,7 +13,7 @@ import { ItemClaimSchema } from "../modules/claim/claim.validate";
 import { lostItemController } from "../modules/lostItem/lost.controller";
 import { sightingController } from "../modules/sighting/sighting.controller";
 import { adminStats } from "../utils/adminStats";
-import { locationStats } from "../utils/locationStats";
+import { locationStats, heatmapStats } from "../utils/locationStats";
 import { getAuditLogs, getSystemAuditLogs } from "../utils/auditLog";
 import { aiSearchController } from "../modules/aiSearch/aiSearch.controller";
 import { aiSearchValidation } from "../modules/aiSearch/aiSearch.validate";
@@ -137,6 +137,7 @@ router.post("/claims/:claimId/analyze-fraud", auth(), claimsController.analyzeCl
 router.get("/admin/lostItems", auth(), lostItemController.getAllLostItems);
 router.get("/admin/stats", auth(true), adminStats);
 router.get("/admin/location-stats", auth(true), locationStats);
+ router.get("/admin/heatmap-stats", auth(true), heatmapStats);
 router.get("/admin/audit-logs", auth(), getAuditLogs);
 router.get("/admin/system-audit-logs", auth(), getSystemAuditLogs);
 router.put("/block/user/:id", auth(), userController.blockUser);

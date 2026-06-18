@@ -225,11 +225,10 @@ const Login = () => {
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] pl-0.5">
                     Email or Username
                   </label>
-                  <div className={`relative rounded-xl transition-all duration-200 ${
-                    activeField === "username"
+                  <div className={`relative rounded-xl transition-all duration-200 ${activeField === "username"
                       ? "ring-1 ring-blue-500/60]"
                       : "ring-1 ring-white/[0.06]"
-                  }`}>
+                    }`}>
                     <input
                       type="text"
                       {...register("username", { required: "Required" })}
@@ -253,11 +252,10 @@ const Login = () => {
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] pl-0.5">
                     Password
                   </label>
-                  <div className={`relative rounded-xl transition-all duration-200 ${
-                    activeField === "password"
+                  <div className={`relative rounded-xl transition-all duration-200 ${activeField === "password"
                       ? "ring-1 ring-blue-500/60]"
                       : "ring-1 ring-white/[0.06]"
-                  }`}>
+                    }`}>
                     <input
                       type={showPassword ? "text" : "password"}
                       {...register("password", { required: "Required" })}
@@ -290,15 +288,14 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setRememberMe(!rememberMe)}
-                    className={`w-4 h-4 rounded flex items-center justify-center transition-all border ${
-                      rememberMe
+                    className={`w-4 h-4 rounded flex items-center justify-center transition-all border ${rememberMe
                         ? "bg-blue-600 border-blue-500"
                         : "bg-transparent border-white/20 hover:border-white/40"
-                    }`}
+                      }`}
                   >
                     {rememberMe && (
                       <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                        <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
                   </button>

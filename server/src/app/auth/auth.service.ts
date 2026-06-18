@@ -22,7 +22,7 @@ const loginUser = async (data: any) => {
   }
 
   if (password && !(await utils.comparePasswords(password, user.password))) {
-    throw new AppError(StatusCodes.FORBIDDEN, "Password is incorrect");
+    throw new AppError(StatusCodes.UNAUTHORIZED, "Password is incorrect");
   }
 
   const { id, name, email, role, userImg, username, schoolId } = user;

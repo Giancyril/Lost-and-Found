@@ -102,7 +102,7 @@ const StudentTagInput = ({
               add();
             }
           }}
-          placeholder="Type name and press Enter or Add..."
+          placeholder=""
           className="flex-1 bg-gray-800 border border-white/10 text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-blue-500/50 placeholder-gray-600"
         />
         <button
@@ -346,10 +346,10 @@ const SpotlightModal = ({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. VIRTUE Role Model Spotlight — May 2026"
+                placeholder=" "
                 className={`w-full bg-gray-800 border text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none placeholder-gray-600 transition-all duration-300 ${aiHighlight === "title"
-                    ? "border-blue-500/60 ring-2 ring-blue-500/20"
-                    : "border-white/10 focus:border-cyan-500/50"
+                  ? "border-blue-500/60 ring-2 ring-blue-500/20"
+                  : "border-white/10 focus:border-cyan-500/50"
                   }`}
               />
               {aiHighlight === "title" && (
@@ -372,10 +372,10 @@ const SpotlightModal = ({
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 required
-                placeholder="e.g. The SASDD VIRTUE program aims to celebrate and honor students who demonstrate exceptional moral character…"
+                placeholder=""
                 className={`w-full bg-gray-800 border text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none placeholder-gray-600 resize-none transition-all duration-300 ${aiHighlight === "description"
-                    ? "border-blue-500/60 ring-2 ring-blue-500/20"
-                    : "border-white/10 focus:border-cyan-500/50"
+                  ? "border-blue-500/60 ring-2 ring-blue-500/20"
+                  : "border-white/10 focus:border-cyan-500/50"
                   }`}
               />
               {aiHighlight === "description" && (
@@ -612,41 +612,41 @@ const VirtueSpotlightAdmin: React.FC = () => {
           </button>
         </div>
 
-          {/* Status filter tabs */}
-          <div className="flex gap-1">
-            {STATUS_TABS.map(tab => {
-              const active = tab.id === statusFilter;
-              const count =
-                tab.id === "all" ? spotlights.length :
-                  tab.id === "published" ? spotlights.filter(s => s.isActive).length :
-                    spotlights.filter(s => !s.isActive).length;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setStatusFilter(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all focus:outline-none ${active
-                    ? "bg-blue-500/15 text-blue-300 border border-blue-500/25"
-                    : "text-gray-500 hover:text-gray-300 border border-transparent"
-                    }`}
-                >
-                  {tab.label}
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${active ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-gray-600"
-                    }`}>{count}</span>
-                </button>
-              );
-            })}
-
-            {/* Clear filters hint */}
-            {(search || statusFilter !== "all" || sortBy !== "date_desc") && (
+        {/* Status filter tabs */}
+        <div className="flex gap-1">
+          {STATUS_TABS.map(tab => {
+            const active = tab.id === statusFilter;
+            const count =
+              tab.id === "all" ? spotlights.length :
+                tab.id === "published" ? spotlights.filter(s => s.isActive).length :
+                  spotlights.filter(s => !s.isActive).length;
+            return (
               <button
-                onClick={() => { setSearch(""); setStatusFilter("all"); setSortBy("date_desc"); }}
-                className="ml-auto text-[10px] text-gray-600 hover:text-gray-400 transition-colors px-2"
+                key={tab.id}
+                onClick={() => setStatusFilter(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all focus:outline-none ${active
+                  ? "bg-blue-500/15 text-blue-300 border border-blue-500/25"
+                  : "text-gray-500 hover:text-gray-300 border border-transparent"
+                  }`}
               >
-                Reset
+                {tab.label}
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${active ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-gray-600"
+                  }`}>{count}</span>
               </button>
-            )}
-          </div>
+            );
+          })}
+
+          {/* Clear filters hint */}
+          {(search || statusFilter !== "all" || sortBy !== "date_desc") && (
+            <button
+              onClick={() => { setSearch(""); setStatusFilter("all"); setSortBy("date_desc"); }}
+              className="ml-auto text-[10px] text-gray-600 hover:text-gray-400 transition-colors px-2"
+            >
+              Reset
+            </button>
+          )}
         </div>
+      </div>
 
       {/* ── Stats strip ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">

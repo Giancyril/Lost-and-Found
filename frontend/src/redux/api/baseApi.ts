@@ -115,9 +115,10 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 
   if (result.error && result.error.status === 403) {
     const errMsg: string = (result.error.data as any)?.message ?? "";
-    // Handle both explicit CSRF errors and implicit ones (e.g. after server restart
-    // where the stored CSRF token is stale/mismatched).
-    if (errMsg.toLowerCase().includes("csrf") || errMsg.toLowerCase().includes("forbidden") || errMsg === "") {
+    // Only retry for actual CSRF errors, NOT for application-level 403s
+    // (e.g. wrong password, blocked user) which have descriptive messages.
+    const isCsrfError = errMsg.toLowerCase().includes("csrf") || errMsg === "";
+    if (isCsrfError) {
       csrfToken = null; // Invalidate stale token
       await fetchCsrfToken();
       if (csrfToken) {

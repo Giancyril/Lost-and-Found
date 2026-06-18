@@ -222,6 +222,11 @@ const api = baseApi.injectEndpoints({
       query: (params?: { startDate?: string; endDate?: string }) => ({ url: "/admin/location-stats", method: "GET", params }),
     }),
 
+    // rich heatmap stats (interactive timeline + AI predictor)
+    getHeatmapStats: builder.query({
+      query: () => ({ url: "/admin/heatmap-stats", method: "GET" }),
+    }),
+
     // audit logs
     getAuditLogs: builder.query({
       query: () => ({ url: "/admin/audit-logs", method: "GET" }),
@@ -842,4 +847,5 @@ export const {
   useAiWriteVirtueSpotlightMutation,
   useLikeVirtueSpotlightMutation,
   useGetApiHealthQuery,
+  useGetHeatmapStatsQuery,
 } = api;
