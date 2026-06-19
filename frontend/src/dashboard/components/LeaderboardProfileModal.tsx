@@ -153,11 +153,7 @@ export default function LeaderboardProfileModal({ userId, rank, onClose }: Props
               <div className="flex-1 space-y-2 pt-1">
                 <div className="h-3.5 bg-white/[0.06] rounded-lg w-2/3" />
                 <div className="h-2.5 bg-white/[0.04] rounded-lg w-1/3" />
-                <div className="flex gap-1.5 mt-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-5 w-16 bg-white/[0.04] rounded-lg" />
-                  ))}
-                </div>
+
               </div>
             </div>
             <div className="h-1.5 bg-white/[0.06] rounded-full" />
@@ -210,23 +206,7 @@ export default function LeaderboardProfileModal({ userId, rank, onClose }: Props
                 <p className="text-violet-400 text-[10px] font-semibold uppercase tracking-widest mt-0.5">
                   {rankTitle}
                 </p>
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {profile.schoolId && (
-                    <span className="font-mono text-[10px] text-gray-500 bg-white/[0.04] border border-white/[0.05] px-2 py-0.5 rounded-md">
-                      {profile.schoolId}
-                    </span>
-                  )}
-                  {profile.course && (
-                    <span className="text-[10px] text-gray-400 bg-white/[0.04] border border-white/[0.05] px-2 py-0.5 rounded-md max-w-[120px] truncate">
-                      {profile.course}
-                    </span>
-                  )}
-                  {profile.yearLevel && (
-                    <span className="text-[10px] text-gray-400 bg-white/[0.04] border border-white/[0.05] px-2 py-0.5 rounded-md">
-                      {profile.yearLevel}
-                    </span>
-                  )}
-                </div>
+
               </div>
 
               {/* Rank badge */}
