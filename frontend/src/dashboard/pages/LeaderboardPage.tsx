@@ -204,23 +204,27 @@ export default function LeaderboardPage() {
                         {u.schoolId && <p className="text-gray-600 text-[10px] font-mono">{u.schoolId}</p>}
                       </div>
                     </div>
-                    <div className="col-span-3 flex items-center gap-1.5 min-h-[24px]">
-                      {u.userAchievements && u.userAchievements.length > 0 ? (
-                        u.userAchievements.map((ua: any) => (
-                          <span
-                            key={ua.id}
-                            title={`${ua.achievement?.name}: ${ua.achievement?.description}`}
-                            className="text-base cursor-help"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {ua.achievement?.icon}
-                          </span>
-                        ))
-                      ) : medalLabel(realIdx) ? (
+                    <div className="col-span-3 flex items-center gap-2 min-h-[24px] flex-wrap">
+                      {medalLabel(realIdx) && (
                         <span className={`text-xs font-semibold ${rankColor(realIdx)}`}>
                           {medalLabel(realIdx)}
                         </span>
-                      ) : (
+                      )}
+                      {u.userAchievements && u.userAchievements.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          {u.userAchievements.map((ua: any) => (
+                            <span
+                              key={ua.id}
+                              title={`${ua.achievement?.name}: ${ua.achievement?.description}`}
+                              className="text-base cursor-help"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {ua.achievement?.icon}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {!medalLabel(realIdx) && (!u.userAchievements || u.userAchievements.length === 0) && (
                         <span className="text-gray-600 text-xs">—</span>
                       )}
                     </div>
