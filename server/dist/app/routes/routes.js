@@ -45,6 +45,7 @@ const retention_route_1 = require("../modules/retention/retention.route");
 const virtueSpotlight_routes_1 = __importDefault(require("../../routes/virtueSpotlight.routes"));
 const securityController_1 = require("../utils/securityController");
 const moderationController_1 = require("../utils/moderationController");
+const HealthController_1 = require("../utils/HealthController");
 const router = express_1.default.Router();
 ////////////////////////////////////////////////// user //////////////////////////////////////////////
 // ✅ SECURITY: Rate limiting applied to prevent brute-force attacks
@@ -100,10 +101,12 @@ router.get("/my/claims", (0, auth_1.default)(), claim_controller_1.claimsControl
 router.put("/claims/:claimId", (0, validate_1.default)(claim_validate_1.ItemClaimSchema.updateClaim), (0, auth_1.default)(), claim_controller_1.claimsController.updateClaimStatus);
 router.delete("/claims/:claimId", (0, auth_1.default)(), claim_controller_1.claimsController.deleteClaim);
 router.post("/claims/track", claim_controller_1.claimsController.trackClaim);
+router.post("/claims/:claimId/analyze-fraud", (0, auth_1.default)(), claim_controller_1.claimsController.analyzeClaimFraud);
 ////////////////////////////////////////////////// admin //////////////////////////////////////////////
 router.get("/admin/lostItems", (0, auth_1.default)(), lost_controller_1.lostItemController.getAllLostItems);
 router.get("/admin/stats", (0, auth_1.default)(true), adminStats_1.adminStats);
 router.get("/admin/location-stats", (0, auth_1.default)(true), locationStats_1.locationStats);
+router.get("/admin/heatmap-stats", (0, auth_1.default)(true), locationStats_1.heatmapStats);
 router.get("/admin/audit-logs", (0, auth_1.default)(), auditLog_1.getAuditLogs);
 router.get("/admin/system-audit-logs", (0, auth_1.default)(), auditLog_1.getSystemAuditLogs);
 router.put("/block/user/:id", (0, auth_1.default)(), user_controllers_1.userController.blockUser);
@@ -136,6 +139,7 @@ router.use("/", virtueSpotlight_routes_1.default);
 router.get("/points/my", (0, auth_1.default)(), points_controller_1.pointsController.getMyPoints);
 router.get("/points/my-rank", (0, auth_1.default)(), points_controller_1.pointsController.getMyRank);
 router.get("/points/leaderboard", points_controller_1.pointsController.getLeaderboard);
+router.get("/points/leaderboard/profile/:userId", points_controller_1.pointsController.getLeaderboardUserProfile);
 // Admin boost event management
 router.get("/admin/boost-events", (0, auth_1.default)(), points_controller_1.pointsController.getBoostEvents);
 router.post("/admin/boost-events", (0, auth_1.default)(), points_controller_1.pointsController.createBoostEvent);
@@ -187,6 +191,8 @@ router.get("/admin/security/export", (0, auth_1.default)(), securityController_1
 router.get("/admin/security/purge-check", (0, auth_1.default)(), securityController_1.purgeDeletedUsers);
 // Compliance
 router.get("/admin/security/compliance", (0, auth_1.default)(), securityController_1.getComplianceReport);
+//API Status
+router.get("/admin/health", (0, auth_1.default)(), HealthController_1.getApiHealth);
 // Moderation stats
 router.get("/admin/moderation/stats", (0, auth_1.default)(), moderationController_1.getModerationStats);
 // Reported content

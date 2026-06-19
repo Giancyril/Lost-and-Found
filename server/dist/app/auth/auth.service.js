@@ -55,7 +55,7 @@ const loginUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
         throw new error_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, "User does not exist");
     }
     if (password && !(yield utils_1.utils.comparePasswords(password, user.password))) {
-        throw new error_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Password is incorrect");
+        throw new error_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, "Password is incorrect");
     }
     const { id, name, email, role, userImg, username, schoolId } = user;
     // FIX: schoolId is now included in the token payload so req.user.schoolId

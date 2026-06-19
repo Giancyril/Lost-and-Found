@@ -4,6 +4,7 @@ import {
   FaInfinity, FaClock, FaCalendarAlt, FaBolt, FaUsers, FaChartBar, FaFire
 } from "react-icons/fa";
 import { useGetLeaderboardQuery } from "../../redux/api/api";
+import LeaderboardProfileModal from "../components/LeaderboardProfileModal";
 
 type LeaderboardType = "alltime" | "weekly" | "monthly" | "weighted";
 
@@ -30,6 +31,8 @@ const rankBg = (i: number) => {
 export default function LeaderboardPage() {
   const [search, setSearch] = useState("");
   const [period, setPeriod] = useState<LeaderboardType>("alltime");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserRank, setSelectedUserRank] = useState<number>(0);
 
   const { data: boardData, isLoading: loading } = useGetLeaderboardQuery(period);
 
@@ -180,7 +183,12 @@ export default function LeaderboardPage() {
                 const realIdx = board.findIndex((b: any) => b.id === u.id);
                 return (
                   <div key={u.id ?? i}
-                    className="grid grid-cols-12 gap-4 items-center px-5 py-3.5 transition-colors hover:bg-white/[0.02]">
+                    onClick={() => {
+                      setSelectedUserId(u.id);
+                      setSelectedUserRank(realIdx + 1);
+                    }}
+                    className="grid grid-cols-12 gap-4 items-center px-5 py-3.5 transition-colors hover:bg-white/[0.04] cursor-pointer"
+                  >
                     <div className="col-span-1">
                       <div className={`font-black text-sm ${rankColor(realIdx)}`}>
                         {realIdx < 3
@@ -197,11 +205,24 @@ export default function LeaderboardPage() {
                         {u.schoolId && <p className="text-gray-600 text-[10px] font-mono">{u.schoolId}</p>}
                       </div>
                     </div>
-                    <div className="col-span-3">
-                      {medalLabel(realIdx) && (
+                    <div className="col-span-3 flex items-center gap-1.5 min-h-[24px]">
+                      {u.userAchievements && u.userAchievements.length > 0 ? (
+                        u.userAchievements.map((ua: any) => (
+                          <span
+                            key={ua.id}
+                            title={`${ua.achievement?.name}: ${ua.achievement?.description}`}
+                            className="text-base cursor-help"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {ua.achievement?.icon}
+                          </span>
+                        ))
+                      ) : medalLabel(realIdx) ? (
                         <span className={`text-xs font-semibold ${rankColor(realIdx)}`}>
                           {medalLabel(realIdx)}
                         </span>
+                      ) : (
+                        <span className="text-gray-600 text-xs">—</span>
                       )}
                     </div>
                     <div className="col-span-2 flex items-center justify-end gap-1.5">
@@ -221,7 +242,12 @@ export default function LeaderboardPage() {
               const realIdx = board.findIndex((b: any) => b.id === u.id);
               return (
                 <div key={u.id ?? realIdx}
-                  className={`flex items-center gap-2.5 rounded-2xl px-3 py-2.5 border transition-colors ${rankBg(realIdx)}`}>
+                  onClick={() => {
+                    setSelectedUserId(u.id);
+                    setSelectedUserRank(realIdx + 1);
+                  }}
+                  className={`flex items-center gap-2.5 rounded-2xl px-3 py-2.5 border transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99] ${rankBg(realIdx)}`}
+                >
 
                   <div className={`w-6 text-center font-black shrink-0 ${rankColor(realIdx)}`}>
                     {realIdx < 3
@@ -231,11 +257,24 @@ export default function LeaderboardPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold truncate leading-tight text-white">
-                      {u.name || "Student"}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-xs font-bold truncate leading-tight text-white">
+                        {u.name || "Student"}
+                      </p>
+                      <div className="flex items-center gap-0.5">
+                        {u.userAchievements?.map((ua: any) => (
+                          <span
+                            key={ua.id}
+                            title={`${ua.achievement?.name}: ${ua.achievement?.description}`}
+                            className="text-xs"
+                          >
+                            {ua.achievement?.icon}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                     {medalLabel(realIdx) && (
-                      <p className={`text-[10px] font-semibold leading-tight ${rankColor(realIdx)}`}>
+                      <p className={`text-[10px] font-semibold leading-tight ${rankColor(realIdx)} mt-0.5`}>
                         {medalLabel(realIdx)}
                       </p>
                     )}
@@ -251,6 +290,17 @@ export default function LeaderboardPage() {
             })}
           </div>
         </>
+      )}
+
+      {selectedUserId && (
+        <LeaderboardProfileModal
+          userId={selectedUserId}
+          rank={selectedUserRank}
+          onClose={() => {
+            setSelectedUserId(null);
+            setSelectedUserRank(0);
+          }}
+        />
       )}
     </div>
   );

@@ -175,6 +175,7 @@ router.use("/", virtueRoutes);
 router.get("/points/my", auth(), pointsController.getMyPoints);
 router.get("/points/my-rank", auth(), pointsController.getMyRank);
 router.get("/points/leaderboard", pointsController.getLeaderboard);
+router.get("/points/leaderboard/profile/:userId", pointsController.getLeaderboardUserProfile);
 
 // Admin boost event management
 router.get("/admin/boost-events", auth(), pointsController.getBoostEvents);

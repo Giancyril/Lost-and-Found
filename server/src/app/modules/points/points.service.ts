@@ -323,6 +323,12 @@ const getLeaderboard = async (type: "alltime" | "weighted" | "weekly" | "monthly
       select:  {
         id: true, name: true, totalPoints: true, role: true,
         userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true,
+        userAchievements: {
+          where:   { isPinned: true },
+          include: { achievement: true },
+          orderBy: { unlockedAt: "desc" },
+          take:    3,
+        },
       },
     });
   }
@@ -344,7 +350,15 @@ const getLeaderboard = async (type: "alltime" | "weighted" | "weekly" | "monthly
   const userIds = rows.map((r: any) => r.userId);
   const users   = await prisma.user.findMany({
     where:  { id: { in: userIds }, role: "USER", isDeleted: false },
-    select: { id: true, name: true, totalPoints: true, role: true, userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true },
+    select: {
+      id: true, name: true, totalPoints: true, role: true, userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true,
+      userAchievements: {
+        where:   { isPinned: true },
+        include: { achievement: true },
+        orderBy: { unlockedAt: "desc" },
+        take:    3,
+      },
+    },
   });
   const userMap = Object.fromEntries(users.map(u => [u.id, u]));
 
@@ -357,7 +371,15 @@ const getLeaderboard = async (type: "alltime" | "weighted" | "weekly" | "monthly
 const getWeightedLeaderboard = async () => {
   const users = await prisma.user.findMany({
     where:   { role: "USER", isDeleted: false, totalPoints: { gt: 0 } },
-    select:  { id: true, name: true, totalPoints: true, role: true, userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true },
+    select:  {
+      id: true, name: true, totalPoints: true, role: true, userImg: true, schoolId: true, loginStreak: true, rankSnapshot: true,
+      userAchievements: {
+        where:   { isPinned: true },
+        include: { achievement: true },
+        orderBy: { unlockedAt: "desc" },
+        take:    3,
+      },
+    },
     take:    100,
     orderBy: { totalPoints: "desc" },
   });
@@ -438,6 +460,49 @@ const clearFlag = async (userId: string) => {
   });
 };
 
+// ── Public leaderboard user profile (for the profile card modal) ──────────────
+const getLeaderboardUserProfile = async (targetUserId: string) => {
+  const user = await prisma.user.findUnique({
+    where:  { id: targetUserId, isDeleted: false, role: "USER" },
+    select: {
+      id:          true,
+      name:        true,
+      userImg:     true,
+      schoolId:    true,
+      course:      true,
+      yearLevel:   true,
+      totalPoints: true,
+      loginStreak: true,
+      userAchievements: {
+        where:   { isPinned: true },
+        include: { achievement: true },
+        orderBy: { unlockedAt: "desc" },
+        take:    6,
+      },
+      _count: {
+        select: { userAchievements: true, foundItem: true, LostItem: true },
+      },
+    },
+  });
+
+  if (!user) return null;
+
+  // Compute all-time rank
+  const rank = await prisma.user.count({
+    where: { totalPoints: { gt: user.totalPoints }, role: "USER", isDeleted: false },
+  }) + 1;
+
+  // Compute period points (last 30 days)
+  const since30 = new Date(Date.now() - 30 * 86_400_000);
+  const monthlyResult = await prisma.points.aggregate({
+    where: { userId: targetUserId, amount: { gt: 0 }, createdAt: { gte: since30 } },
+    _sum:  { amount: true },
+  });
+  const monthlyPoints = (monthlyResult._sum as any)?.amount ?? 0;
+
+  return { ...user, rank, monthlyPoints };
+};
+
 export const pointsService = {
   award,
   revoke,
@@ -453,4 +518,5 @@ export const pointsService = {
   snapshotRanks,
   getFlaggedUsers,
   clearFlag,
+  getLeaderboardUserProfile,
 };

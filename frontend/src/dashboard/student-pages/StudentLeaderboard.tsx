@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useUserVerification } from "../../auth/auth";
 import { FaTrophy, FaMedal, FaStar, FaSearch, FaFire, FaClock, FaCalendarAlt, FaInfinity, FaChevronUp, FaChevronDown, FaMinus } from "react-icons/fa";
 import { useGetLeaderboardQuery, useGetMyPointsQuery, useGetMyRankQuery } from "../../redux/api/api";
+import LeaderboardProfileModal from "../components/LeaderboardProfileModal";
 
 type LeaderboardType = "alltime" | "weekly" | "monthly";
 
@@ -42,7 +43,7 @@ const DeltaBadge = ({ delta }: { delta: number | null }) => {
 };
 
 // ── Top 3 podium card ─────────────────────────────────────────────────────────
-const PodiumCard = ({ user, index, isMe, period }: { user: any; index: number; isMe: boolean; period: LeaderboardType }) => {
+const PodiumCard = ({ user, index, isMe, period, onClick }: { user: any; index: number; isMe: boolean; period: LeaderboardType; onClick?: () => void }) => {
   const style = getRankStyle(index);
   const medals = ["🥇", "🥈", "🥉"];
   const heights = ["h-28", "h-20", "h-16"];
@@ -51,7 +52,10 @@ const PodiumCard = ({ user, index, isMe, period }: { user: any; index: number; i
   const displayPoints = period !== "alltime" && user.periodPoints != null ? user.periodPoints : user.totalPoints;
 
   return (
-    <div className={`flex flex-col items-center gap-2 ${visualPos === 1 ? "mb-0" : "mt-8"}`}>
+    <div
+      onClick={onClick}
+      className={`flex flex-col items-center gap-2 cursor-pointer transition-all hover:scale-105 active:scale-95 ${visualPos === 1 ? "mb-0" : "mt-8"}`}
+    >
       {/* Avatar */}
       <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center text-2xl border-2 shadow-lg ${style.border} ${style.bg} ${style.glow} ${isMe ? "ring-2 ring-indigo-400/40 ring-offset-1 ring-offset-slate-900" : ""}`}>
         {medals[index]}
@@ -128,6 +132,8 @@ export default function StudentLeaderboard() {
   const user: any = useUserVerification();
   const [search, setSearch] = useState("");
   const [period, setPeriod] = useState<LeaderboardType>("alltime");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserRank, setSelectedUserRank] = useState<number>(0);
 
   const isLoggedIn = !!user?.id;
   const { data: boardData, isLoading: lbLoading } = useGetLeaderboardQuery(period);
@@ -252,6 +258,10 @@ export default function StudentLeaderboard() {
                   index={realIdx}
                   isMe={u.id === myId}
                   period={period}
+                  onClick={() => {
+                    setSelectedUserId(u.id);
+                    setSelectedUserRank(realIdx + 1);
+                  }}
                 />
               );
             })}
@@ -311,8 +321,12 @@ export default function StudentLeaderboard() {
               return (
                 <div
                   key={u.id ?? i}
-                  className={`transition-colors ${isMe
-                    ? "bg-indigo-950/30 border-l-2 border-l-indigo-500"
+                  onClick={() => {
+                    setSelectedUserId(u.id);
+                    setSelectedUserRank(realIdx + 1);
+                  }}
+                  className={`transition-colors cursor-pointer ${isMe
+                    ? "bg-indigo-950/30 border-l-2 border-l-indigo-500 hover:bg-indigo-950/40"
                     : isTop3
                       ? "bg-slate-800/20 hover:bg-slate-800/40"
                       : "hover:bg-slate-800/30"}`}
@@ -330,11 +344,23 @@ export default function StudentLeaderboard() {
                     </div>
 
                     <div className="col-span-5 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className={`font-semibold text-sm truncate ${isMe ? "text-indigo-300" : "text-slate-200"}`}>
                           {u.name || "Student"}
                           {isMe && <span className="ml-1.5 text-[10px] font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-1.5 py-0.5 rounded-md">You</span>}
                         </p>
+                        <div className="flex items-center gap-1">
+                          {u.userAchievements?.map((ua: any) => (
+                            <span
+                              key={ua.id}
+                              title={`${ua.achievement?.name}: ${ua.achievement?.description}`}
+                              className="text-base cursor-help"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {ua.achievement?.icon}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         {u.schoolId && <p className="text-slate-600 text-[10px] font-mono">{u.schoolId}</p>}
@@ -375,6 +401,17 @@ export default function StudentLeaderboard() {
                           {u.name || "Student"}
                           {isMe && <span className="text-indigo-400 ml-1 text-xs">(You)</span>}
                         </p>
+                        <div className="flex items-center gap-0.5">
+                          {u.userAchievements?.map((ua: any) => (
+                            <span
+                              key={ua.id}
+                              title={`${ua.achievement?.name}: ${ua.achievement?.description}`}
+                              className="text-xs"
+                            >
+                              {ua.achievement?.icon}
+                            </span>
+                          ))}
+                        </div>
                         <DeltaBadge delta={delta} />
                       </div>
                       {u.loginStreak >= 3 && (
@@ -420,6 +457,17 @@ export default function StudentLeaderboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedUserId && (
+        <LeaderboardProfileModal
+          userId={selectedUserId}
+          rank={selectedUserRank}
+          onClose={() => {
+            setSelectedUserId(null);
+            setSelectedUserRank(0);
+          }}
+        />
       )}
     </div>
   );

@@ -72,7 +72,8 @@ const createClaim = (item, user) => __awaiter(void 0, void 0, void 0, function* 
     }
     let isHighRisk = false;
     let fraudScore = 0;
-    let fraudReason = "";
+    let serialWarning = null;
+    let aiAssessment = null;
     // 1. Serial Claimant Check
     if (user === null || user === void 0 ? void 0 : user.id) {
         const thirtyDaysAgo = new Date();
@@ -85,7 +86,7 @@ const createClaim = (item, user) => __awaiter(void 0, void 0, void 0, function* 
         });
         if (recentClaimsCount >= 3) {
             isHighRisk = true;
-            fraudReason = `[SERIAL CLAIMANT WARNING] User has submitted ${recentClaimsCount} claims in the last 30 days. `;
+            serialWarning = `User has submitted ${recentClaimsCount} claims in the last 30 days.`;
         }
     }
     // 2. AI Fraud Detection
@@ -96,11 +97,14 @@ const createClaim = (item, user) => __awaiter(void 0, void 0, void 0, function* 
             fraudScore = aiResult.fraudScore;
             if (aiResult.isHighRisk)
                 isHighRisk = true;
-            if (aiResult.fraudReason) {
-                fraudReason += (fraudReason ? " | " : "") + `[AI Assessment] ${aiResult.fraudReason}`;
-            }
+            aiAssessment = aiResult;
         }
     }
+    const fraudReasonObj = {
+        serialWarning,
+        aiAssessment
+    };
+    const fraudReason = JSON.stringify(fraudReasonObj);
     const result = yield prisma_1.default.claim.create({
         data: Object.assign(Object.assign({ foundItemId: item.foundItemId, distinguishingFeatures: item.distinguishingFeatures, lostDate: item.lostDate, claimantName: item.claimantName || "", contactNumber: item.contactNumber || "", schoolEmail: item.schoolEmail || "" }, ((user === null || user === void 0 ? void 0 : user.id) ? { userId: user.id } : {})), { fraudScore,
             fraudReason,
@@ -323,6 +327,57 @@ const trackClaim = (claimId, email) => __awaiter(void 0, void 0, void 0, functio
     });
     return claim;
 });
+const analyzeClaimFraud = (claimId) => __awaiter(void 0, void 0, void 0, function* () {
+    const claim = yield prisma_1.default.claim.findUnique({
+        where: { id: claimId },
+        include: { foundItem: true }
+    });
+    if (!claim) {
+        throw new Error("Claim not found");
+    }
+    if (!claim.foundItem) {
+        throw new Error("Found item details not found for this claim");
+    }
+    const aiResult = yield ai_service_1.aiRecognitionService.analyzeClaimFraud(claim.distinguishingFeatures || "", claim.foundItem.description, claim.foundItem.foundItemName);
+    let serialWarning = null;
+    if (claim.userId) {
+        const thirtyDaysAgo = new Date(claim.createdAt);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recentClaimsCount = yield prisma_1.default.claim.count({
+            where: {
+                userId: claim.userId,
+                createdAt: { gte: thirtyDaysAgo, lte: claim.createdAt },
+                id: { not: claimId }
+            }
+        });
+        if (recentClaimsCount >= 3) {
+            serialWarning = `User had submitted ${recentClaimsCount} claims in the last 30 days.`;
+        }
+    }
+    const fraudReasonObj = {
+        serialWarning,
+        aiAssessment: aiResult
+    };
+    const updatedClaim = yield prisma_1.default.claim.update({
+        where: { id: claimId },
+        data: {
+            fraudScore: aiResult.fraudScore,
+            isHighRisk: aiResult.isHighRisk || !!serialWarning,
+            fraudReason: JSON.stringify(fraudReasonObj)
+        },
+        include: {
+            foundItem: {
+                include: {
+                    category: true,
+                    user: {
+                        select: { id: true, username: true, email: true, createdAt: true, updatedAt: true },
+                    },
+                },
+            },
+        }
+    });
+    return updatedClaim;
+});
 exports.claimsService = {
     createClaim,
     getClaim,
@@ -331,4 +386,5 @@ exports.claimsService = {
     deleteClaim,
     getAuditLogs,
     trackClaim,
+    analyzeClaimFraud,
 };

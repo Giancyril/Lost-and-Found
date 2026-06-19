@@ -66,8 +66,8 @@ const PointsDropdown = ({ points, history, rank }: { points: number; history: an
         type="button"
         onClick={() => setOpen(p => !p)}
         className={`relative w-9 h-9 flex flex-col items-center justify-center rounded-full transition-all border group ${open
-            ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400"
-            : "bg-transparent border-white/5 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/10"
+          ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400"
+          : "bg-transparent border-white/5 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/10"
           }`}
       >
         <span className="text-[7px] font-bold text-yellow-500 leading-none mb-[1px] uppercase group-hover:text-yellow-400 transition-colors">LVL</span>

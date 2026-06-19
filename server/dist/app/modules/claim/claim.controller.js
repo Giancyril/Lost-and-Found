@@ -143,6 +143,20 @@ const trackClaim = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         next(error);
     }
 });
+const analyzeClaimFraud = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield claim_service_1.claimsService.analyzeClaimFraud(req.params.claimId);
+        (0, response_1.default)(res, {
+            statusCode: http_status_codes_1.StatusCodes.OK,
+            success: true,
+            message: "AI Fraud analysis completed successfully",
+            data: result,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 exports.claimsController = {
     createClaim,
     getClaim,
@@ -150,4 +164,5 @@ exports.claimsController = {
     deleteClaim,
     getMyClaim,
     trackClaim,
+    analyzeClaimFraud,
 };

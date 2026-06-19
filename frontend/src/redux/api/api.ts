@@ -730,6 +730,12 @@ const api = baseApi.injectEndpoints({
         body: { bulletPoints },
       }),
     }),
+
+    // ── Leaderboard user profile card ────────────────────────────────────────
+    getLeaderboardUserProfile: builder.query({
+      query: (userId: string) => ({ url: `/points/leaderboard/profile/${userId}`, method: "GET" }),
+      providesTags: ["points"],
+    }),
     likeVirtueSpotlight: builder.mutation({
       query: ({ id, action }: { id: string; action: "like" | "unlike" }) => ({
         url: `/virtue-spotlights/${id}/like`,
@@ -848,4 +854,6 @@ export const {
   useLikeVirtueSpotlightMutation,
   useGetApiHealthQuery,
   useGetHeatmapStatsQuery,
+  useGetLeaderboardUserProfileQuery,
+  useLazyGetLeaderboardUserProfileQuery,
 } = api;

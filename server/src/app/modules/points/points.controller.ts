@@ -220,6 +220,35 @@ const clearFlag = async (req: Request, res: Response) => {
   }
 };
 
+// GET /points/leaderboard/profile/:userId  — public (no auth required)
+const getLeaderboardUserProfile = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const data = await pointsService.getLeaderboardUserProfile(userId);
+    if (!data) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.NOT_FOUND,
+        success:    false,
+        message:    "User not found",
+        data:       null,
+      });
+    }
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success:    true,
+      message:    "Profile retrieved",
+      data,
+    });
+  } catch (error: any) {
+    sendResponse(res, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      success:    false,
+      message:    error?.message ?? "Failed to retrieve profile",
+      data:       null,
+    });
+  }
+};
+
 export const pointsController = {
   getMyPoints,
   getLeaderboard,
@@ -229,4 +258,5 @@ export const pointsController = {
   getMyRank,
   getFlaggedUsers,
   clearFlag,
+  getLeaderboardUserProfile,
 };
