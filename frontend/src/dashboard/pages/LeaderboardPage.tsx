@@ -121,7 +121,7 @@ export default function LeaderboardPage() {
 
       {/* Period Tabs */}
       <div className="flex justify-start">
-        <div className="inline-flex gap-1 bg-gray-800/40 border border-white/10 rounded-2xl p-1 w-full sm:w-auto">
+        <div className="inline-flex gap-0.5 bg-gray-800/40 border border-white/10 rounded-xl p-1 w-full">
           {PERIOD_TABS.map(tab => {
             const active = tab.id === period;
             return (
@@ -129,11 +129,10 @@ export default function LeaderboardPage() {
                 key={tab.id}
                 type="button"
                 onClick={() => { setPeriod(tab.id); setSearch(""); }}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 focus:outline-none select-none ${
-                  active
+                className={`flex-1 whitespace-nowrap px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-center gap-1 focus:outline-none select-none ${active
                     ? "bg-violet-500/10 text-violet-300"
                     : "text-gray-400 hover:text-white"
-                }`}
+                  }`}
                 title={tab.desc}
               >
                 <span className={active ? "text-violet-400" : "text-gray-500"}>{tab.icon}</span>
