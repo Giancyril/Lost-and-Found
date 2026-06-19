@@ -121,7 +121,7 @@ export default function LeaderboardProfileModal({ userId, rank, onClose }: Props
           <div className="p-6 space-y-5">
 
             {/* ── Header: Avatar + Name + Rank badge ── */}
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 pr-8">
               {/* Avatar */}
               <div className="relative shrink-0">
                 {profile.userImg ? (
