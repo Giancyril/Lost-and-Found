@@ -6,39 +6,78 @@ import {
   FaUser, FaChartBar, FaSearch, FaBoxOpen,
 } from "react-icons/fa";
 
-// ── Tier helpers ──────────────────────────────────────────────────────────────
-const TIER_CONFIG: Record<string, { ring: string; glow: string; badge: string; label: string }> = {
-  LEGEND:   { ring: "ring-purple-400",  glow: "shadow-purple-500/40",  badge: "bg-purple-500/15 text-purple-300 border-purple-500/30",  label: "✦ Legend"   },
-  PLATINUM: { ring: "ring-sky-300",     glow: "shadow-sky-400/40",     badge: "bg-sky-500/15 text-sky-300 border-sky-500/30",           label: "◈ Platinum" },
-  GOLD:     { ring: "ring-yellow-400",  glow: "shadow-yellow-500/40",  badge: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",  label: "◆ Gold"     },
-  SILVER:   { ring: "ring-gray-300",    glow: "shadow-gray-400/30",    badge: "bg-gray-500/15 text-gray-300 border-gray-500/30",        label: "◇ Silver"   },
-  BRONZE:   { ring: "ring-orange-400",  glow: "shadow-orange-500/30",  badge: "bg-orange-500/15 text-orange-300 border-orange-500/30", label: "○ Bronze"   },
+// ── Tier config ───────────────────────────────────────────────────────────────
+const TIER_CONFIG: Record<string, {
+  badge: string;
+  dot: string;
+  label: string;
+}> = {
+  LEGEND: { badge: "bg-purple-500/10 text-purple-400 border-purple-500/20", dot: "bg-purple-400", label: "Legend" },
+  PLATINUM: { badge: "bg-sky-500/10 text-sky-400 border-sky-500/20", dot: "bg-sky-400", label: "Platinum" },
+  GOLD: { badge: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", dot: "bg-yellow-400", label: "Gold" },
+  SILVER: { badge: "bg-gray-500/10 text-gray-400 border-gray-500/20", dot: "bg-gray-400", label: "Silver" },
+  BRONZE: { badge: "bg-orange-500/10 text-orange-400 border-orange-500/20", dot: "bg-orange-400", label: "Bronze" },
 };
 
 const tierOf = (t: string) => TIER_CONFIG[t] ?? TIER_CONFIG.BRONZE;
 
+// ── Rank accent helpers ───────────────────────────────────────────────────────
 const rankAccent = (rank: number) => {
-  if (rank === 1) return { text: "text-yellow-400",  bg: "bg-yellow-500/10",  border: "border-yellow-500/20" };
-  if (rank === 2) return { text: "text-slate-300",   bg: "bg-slate-500/10",   border: "border-slate-400/20"  };
-  if (rank === 3) return { text: "text-orange-400",  bg: "bg-orange-500/10",  border: "border-orange-500/20" };
-  return               { text: "text-violet-400",   bg: "bg-violet-500/10",  border: "border-violet-500/20" };
+  if (rank === 1) return { icon: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/20" };
+  if (rank === 2) return { icon: "text-slate-300", bg: "bg-slate-500/10", border: "border-slate-400/20" };
+  if (rank === 3) return { icon: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20" };
+  return { icon: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/20" };
 };
 
-// ── Mini stat pill ────────────────────────────────────────────────────────────
-const Stat = ({ icon, label, value, accent }: {
-  icon: React.ReactNode; label: string; value: string | number; accent: string;
+// ── Divider stat cell ─────────────────────────────────────────────────────────
+const StatCell = ({
+  icon,
+  label,
+  value,
+  accent,
+  noBorder,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  accent: string;
+  noBorder?: boolean;
 }) => (
-  <div className="flex flex-col items-center gap-1 bg-white/[0.03] border border-white/[0.06] rounded-2xl px-4 py-3 flex-1">
-    <div className={`text-base ${accent}`}>{icon}</div>
-    <p className={`text-sm font-black ${accent}`}>{value}</p>
-    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">{label}</p>
+  <div
+    className={`flex flex-col items-center gap-1 py-3 flex-1 ${!noBorder ? "border-r border-white/[0.06]" : ""
+      }`}
+  >
+    <div className={`text-sm ${accent}`}>{icon}</div>
+    <p className={`text-sm font-semibold ${accent}`}>{value}</p>
+    <p className="text-[10px] text-gray-500 uppercase tracking-widest">{label}</p>
+  </div>
+);
+
+// ── Activity pill ─────────────────────────────────────────────────────────────
+const ActivityPill = ({
+  icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  accent: string;
+}) => (
+  <div className="flex items-center gap-2 flex-1 min-w-0 bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2.5">
+    <div className={`shrink-0 ${accent}`}>{icon}</div>
+    <div className="min-w-0">
+      <p className={`text-sm font-semibold ${accent}`}>{value}</p>
+      <p className="text-[9px] text-gray-500 uppercase tracking-wider truncate">{label}</p>
+    </div>
   </div>
 );
 
 // ── Main modal ────────────────────────────────────────────────────────────────
 interface Props {
   userId: string | null;
-  rank:   number;
+  rank: number;
   onClose: () => void;
 }
 
@@ -48,14 +87,14 @@ export default function LeaderboardProfileModal({ userId, rank, onClose }: Props
 
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Fetch when userId changes
   useEffect(() => {
     if (userId) fetchProfile(userId);
   }, [userId, fetchProfile]);
 
-  // Close on Escape
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
@@ -65,100 +104,125 @@ export default function LeaderboardProfileModal({ userId, rank, onClose }: Props
   const profile = raw?.data;
   const isLoading = isFetching || isUninitialized || !profile;
 
-  const { level, rankTitle, progressPercent, nextLevelTotalXp } =
-    profile ? calculateLevel(profile.totalPoints ?? 0) : { level: 1, rankTitle: "Novice Finder", progressPercent: 0, nextLevelTotalXp: 25 };
+  const { level, rankTitle, progressPercent, nextLevelTotalXp } = profile
+    ? calculateLevel(profile.totalPoints ?? 0)
+    : { level: 1, rankTitle: "Novice Finder", progressPercent: 0, nextLevelTotalXp: 25 };
 
   const ra = rankAccent(rank);
   const initials = (profile?.name ?? "?")
-    .split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+    .split(" ")
+    .map((w: string) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const xpToNext = nextLevelTotalXp - (profile?.totalPoints ?? 0);
 
   return (
-    /* Overlay */
     <div
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
+      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
     >
       {/* Card */}
       <div
-        className="relative w-full max-w-md bg-[#0f1117] border border-white/[0.08] rounded-3xl shadow-2xl overflow-hidden"
-        style={{ animation: "profileSlideUp 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}
+        className="relative w-full max-w-sm bg-[#0d0f14] border border-white/[0.07] rounded-3xl shadow-2xl overflow-hidden overflow-y-auto"
+        style={{ animation: "modalIn 0.28s cubic-bezier(0.34,1.4,0.64,1)", maxHeight: "90vh" }}
       >
-        {/* ── Top gradient strip ── */}
+        {/* Top accent bar */}
         <div
-          className="absolute top-0 left-0 right-0 h-32 pointer-events-none"
-          style={{ background: "linear-gradient(180deg, rgba(139,92,246,0.18) 0%, transparent 100%)" }}
+          className="h-[3px] w-full"
+          style={{ background: "linear-gradient(90deg,#6d28d9,#8b5cf6,#38bdf8)" }}
         />
 
-        {/* ── Close button ── */}
+        {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-xl bg-white/[0.06] hover:bg-white/10 text-gray-400 hover:text-white transition-all"
+          className="absolute top-3.5 right-3.5 z-10 w-7 h-7 flex items-center justify-center rounded-xl bg-white/[0.05] hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+          aria-label="Close"
         >
-          <FaTimes size={12} />
+          <FaTimes size={11} />
         </button>
 
+        {/* ── Loading skeleton ── */}
         {isLoading ? (
-          /* Skeleton */
-          <div className="p-6 space-y-4 animate-pulse">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-white/[0.06]" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-white/[0.06] rounded-lg w-3/4" />
-                <div className="h-3 bg-white/[0.04] rounded-lg w-1/2" />
+          <div className="p-5 space-y-4 animate-pulse">
+            <div className="flex gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-white/[0.06] shrink-0" />
+              <div className="flex-1 space-y-2 pt-1">
+                <div className="h-3.5 bg-white/[0.06] rounded-lg w-2/3" />
+                <div className="h-2.5 bg-white/[0.04] rounded-lg w-1/3" />
+                <div className="flex gap-1.5 mt-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-5 w-16 bg-white/[0.04] rounded-lg" />
+                  ))}
+                </div>
               </div>
             </div>
-            <div className="h-2 bg-white/[0.06] rounded-full" />
-            <div className="grid grid-cols-3 gap-2">
-              {[1,2,3].map(i => <div key={i} className="h-16 bg-white/[0.04] rounded-2xl" />)}
+            <div className="h-1.5 bg-white/[0.06] rounded-full" />
+            <div className="grid grid-cols-3 gap-0 border border-white/[0.06] rounded-2xl overflow-hidden">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-white/[0.04]" />
+              ))}
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {[1,2,3].map(i => <div key={i} className="h-20 bg-white/[0.04] rounded-2xl" />)}
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-14 bg-white/[0.04] rounded-xl" />
+              ))}
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 bg-white/[0.04] rounded-2xl" />
+              ))}
             </div>
           </div>
         ) : (
-          <div className="p-6 space-y-5">
+          <div className="p-5 space-y-4 pb-6">
 
-            {/* ── Header: Avatar + Name + Rank badge ── */}
-            <div className="flex items-start gap-4 pr-8">
+            {/* ── Header ── */}
+            <div className="flex items-start gap-3 pr-8">
               {/* Avatar */}
               <div className="relative shrink-0">
                 {profile.userImg ? (
                   <img
                     src={profile.userImg}
                     alt={profile.name}
-                    className="w-16 h-16 rounded-2xl object-cover ring-2 ring-violet-500/30"
+                    className="w-14 h-14 rounded-2xl object-cover ring-1 ring-white/10"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600/40 to-indigo-700/40 ring-2 ring-violet-500/30 flex items-center justify-center">
-                    <span className="text-xl font-black text-violet-200">{initials}</span>
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-700/30 to-indigo-800/30 ring-1 ring-white/10 flex items-center justify-center">
+                    <span className="text-lg font-semibold text-violet-200">{initials}</span>
                   </div>
                 )}
-                {/* Level badge overlay */}
-                <div className="absolute -bottom-1.5 -right-1.5 bg-[#0f1117] border border-violet-500/30 rounded-lg px-1.5 py-0.5 flex items-center gap-0.5">
-                  <span className="text-[9px] font-black text-violet-400 leading-none">LVL</span>
-                  <span className="text-[11px] font-black text-violet-300 leading-none">{level}</span>
+                {/* Level chip */}
+                <div className="absolute -bottom-1.5 -right-1.5 bg-[#0d0f14] border border-white/10 rounded-md px-1.5 py-0.5 flex items-center gap-0.5">
+                  <span className="text-[9px] text-violet-500 font-semibold leading-none">LV</span>
+                  <span className="text-[10px] text-violet-300 font-semibold leading-none">{level}</span>
                 </div>
               </div>
 
-              {/* Name + meta */}
+              {/* Name + metadata */}
               <div className="flex-1 min-w-0 pt-0.5">
-                <h2 className="text-white font-black text-base leading-tight truncate">{profile.name || "Student"}</h2>
-                <p className="text-violet-300 text-[11px] font-bold uppercase tracking-wider mt-0.5">{rankTitle}</p>
+                <h2 className="text-white font-semibold text-sm leading-tight truncate">
+                  {profile.name || "Student"}
+                </h2>
+                <p className="text-violet-400 text-[10px] font-semibold uppercase tracking-widest mt-0.5">
+                  {rankTitle}
+                </p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {profile.schoolId && (
-                    <span className="text-[10px] font-mono text-gray-500 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-lg">
+                    <span className="font-mono text-[10px] text-gray-500 bg-white/[0.04] border border-white/[0.05] px-2 py-0.5 rounded-md">
                       {profile.schoolId}
                     </span>
                   )}
                   {profile.course && (
-                    <span className="text-[10px] text-gray-400 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-lg truncate max-w-[130px]">
+                    <span className="text-[10px] text-gray-400 bg-white/[0.04] border border-white/[0.05] px-2 py-0.5 rounded-md max-w-[120px] truncate">
                       {profile.course}
                     </span>
                   )}
                   {profile.yearLevel && (
-                    <span className="text-[10px] text-gray-400 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-lg">
+                    <span className="text-[10px] text-gray-400 bg-white/[0.04] border border-white/[0.05] px-2 py-0.5 rounded-md">
                       {profile.yearLevel}
                     </span>
                   )}
@@ -166,89 +230,98 @@ export default function LeaderboardProfileModal({ userId, rank, onClose }: Props
               </div>
 
               {/* Rank badge */}
-              <div className={`shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-2xl border ${ra.bg} ${ra.border} mt-0.5`}>
-                {rank <= 3
-                  ? <FaMedal size={18} className={ra.text} />
-                  : <span className={`text-xs font-black ${ra.text}`}>#{rank}</span>
-                }
-                {rank <= 3 && <span className={`text-[9px] font-black ${ra.text} mt-0.5`}>#{rank}</span>}
+              <div
+                className={`shrink-0 flex flex-col items-center justify-center w-11 h-11 rounded-xl border ${ra.bg} ${ra.border}`}
+              >
+                {rank <= 3 ? (
+                  <>
+                    <FaMedal size={16} className={ra.icon} />
+                    <span className={`text-[9px] font-semibold ${ra.icon} mt-0.5`}>
+                      #{rank}
+                    </span>
+                  </>
+                ) : (
+                  <span className={`text-xs font-semibold ${ra.icon}`}>#{rank}</span>
+                )}
               </div>
             </div>
 
-            {/* ── XP Progress bar ── */}
+            {/* ── XP bar ── */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">XP Progress to Lv.{level + 1}</span>
-                <span className="text-[11px] font-black text-yellow-400">{(profile.totalPoints ?? 0).toLocaleString()} XP</span>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+                  Progress to Lv.{level + 1}
+                </span>
+                <span className="text-xs font-semibold text-gray-200">
+                  {(profile.totalPoints ?? 0).toLocaleString()} XP
+                </span>
               </div>
-              <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
+              <div className="h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${progressPercent}%`,
-                    background: "linear-gradient(90deg, #7c3aed, #a78bfa, #38bdf8)"
+                    background: "linear-gradient(90deg,#6d28d9,#8b5cf6 60%,#38bdf8)",
                   }}
                 />
               </div>
               {level < 100 && (
                 <p className="text-[10px] text-gray-600 text-right">
-                  {(nextLevelTotalXp - (profile.totalPoints ?? 0)).toLocaleString()} XP to Level {level + 1}
+                  {xpToNext.toLocaleString()} XP to go
                 </p>
               )}
             </div>
 
-            {/* ── Stats row ── */}
-            <div className="flex gap-2">
-              <Stat
+            {/* ── Stats row (divider style) ── */}
+            <div className="flex border border-white/[0.06] rounded-2xl overflow-hidden">
+              <StatCell
                 icon={<FaTrophy />}
-                label="Campus Rank"
+                label="Rank"
                 value={`#${rank}`}
-                accent={ra.text}
+                accent={ra.icon}
               />
-              <Stat
+              <StatCell
                 icon={<FaChartBar />}
-                label="30-Day XP"
+                label="30-day XP"
                 value={(profile.monthlyPoints ?? 0).toLocaleString()}
-                accent="text-blue-400"
+                accent="text-sky-400"
               />
-              <Stat
+              <StatCell
                 icon={<FaFire />}
                 label="Streak"
                 value={`${profile.loginStreak ?? 0}d`}
-                accent={(profile.loginStreak ?? 0) >= 7 ? "text-orange-400" : "text-gray-400"}
+                accent={(profile.loginStreak ?? 0) >= 7 ? "text-orange-400" : "text-gray-500"}
+                noBorder
               />
             </div>
 
-            {/* ── Activity counters ── */}
+            {/* ── Activity pills ── */}
             <div className="flex gap-2">
-              <div className="flex items-center gap-2 flex-1 bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2">
-                <FaBoxOpen size={11} className="text-emerald-400 shrink-0" />
-                <div>
-                  <p className="text-xs font-black text-emerald-400">{profile._count?.foundItem ?? 0}</p>
-                  <p className="text-[9px] text-gray-600 uppercase tracking-wider font-semibold">Items Found</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-1 bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2">
-                <FaSearch size={11} className="text-amber-400 shrink-0" />
-                <div>
-                  <p className="text-xs font-black text-amber-400">{profile._count?.LostItem ?? 0}</p>
-                  <p className="text-[9px] text-gray-600 uppercase tracking-wider font-semibold">Items Reported</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-1 bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2">
-                <FaStar size={11} className="text-violet-400 shrink-0" />
-                <div>
-                  <p className="text-xs font-black text-violet-400">{profile._count?.userAchievements ?? 0}</p>
-                  <p className="text-[9px] text-gray-600 uppercase tracking-wider font-semibold">Achievements</p>
-                </div>
-              </div>
+              <ActivityPill
+                icon={<FaBoxOpen size={11} />}
+                label="Items found"
+                value={profile._count?.foundItem ?? 0}
+                accent="text-emerald-400"
+              />
+              <ActivityPill
+                icon={<FaSearch size={11} />}
+                label="Reported"
+                value={profile._count?.LostItem ?? 0}
+                accent="text-amber-400"
+              />
+              <ActivityPill
+                icon={<FaStar size={11} />}
+                label="Badges"
+                value={profile._count?.userAchievements ?? 0}
+                accent="text-violet-400"
+              />
             </div>
 
-            {/* ── Pinned Achievements ── */}
+            {/* ── Achievements ── */}
             {profile.userAchievements?.length > 0 ? (
               <div>
-                <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-2">
-                  📌 Showcased Achievements
+                <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2.5">
+                  Achievements
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                   {profile.userAchievements.map((ua: any) => {
@@ -256,35 +329,37 @@ export default function LeaderboardProfileModal({ userId, rank, onClose }: Props
                     return (
                       <div
                         key={ua.id}
-                        className={`flex flex-col items-center gap-1 rounded-2xl px-2 py-2.5 border ${t.badge} ring-1 ${t.ring} shadow-lg ${t.glow}`}
                         title={ua.achievement?.description}
+                        className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 border ${t.badge}`}
                       >
                         <span className="text-xl leading-none">{ua.achievement?.icon}</span>
-                        <p className="text-[9px] font-bold text-center leading-tight line-clamp-2">
+                        <p className="text-[9px] font-semibold text-center leading-snug line-clamp-2">
                           {ua.achievement?.name}
                         </p>
-                        <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-black/20`}>
-                          {t.label}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className={`w-1.5 h-1.5 rounded-full ${t.dot}`} />
+                          <span className="text-[8px] uppercase tracking-wider font-semibold opacity-70">
+                            {t.label}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-1 py-3 opacity-40">
-                <FaUser size={18} className="text-gray-600" />
-                <p className="text-[10px] text-gray-600">No pinned achievements yet</p>
+              <div className="flex flex-col items-center gap-1.5 py-4 opacity-30">
+                <FaUser size={16} className="text-gray-500" />
+                <p className="text-[10px] text-gray-500">No achievements yet</p>
               </div>
             )}
-
           </div>
         )}
       </div>
 
       <style>{`
-        @keyframes profileSlideUp {
-          from { opacity: 0; transform: scale(0.92) translateY(16px); }
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.95) translateY(10px); }
           to   { opacity: 1; transform: scale(1)    translateY(0);     }
         }
       `}</style>
