@@ -69,7 +69,54 @@ const parseVoice = async (req: Request, res: Response) => {
   }
 };
 
+const checkDuplicate = async (req: Request, res: Response) => {
+  try {
+    const { name, description, categoryId, itemType } = req.body;
+
+    if (!name || !categoryId || !itemType) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.BAD_REQUEST,
+        success: false,
+        message: "name, categoryId, and itemType are required",
+        data: null,
+      });
+    }
+
+    if (itemType !== "lost" && itemType !== "found") {
+      return sendResponse(res, {
+        statusCode: StatusCodes.BAD_REQUEST,
+        success: false,
+        message: "itemType must be either 'lost' or 'found'",
+        data: null,
+      });
+    }
+
+    const duplicates = await aiRecognitionService.findDuplicates(
+      name,
+      description || "",
+      categoryId,
+      itemType
+    );
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Duplicate check completed",
+      data: duplicates,
+    });
+  } catch (error: any) {
+    console.error("[AI] Duplicate Check Controller Error:", error);
+    sendResponse(res, {
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      success: false,
+      message: error?.message || "Failed to check duplicates",
+      data: null,
+    });
+  }
+};
+
 export const aiRecognitionController = {
   recognizeImage,
   parseVoice,
+  checkDuplicate,
 };

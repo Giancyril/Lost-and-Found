@@ -148,6 +148,7 @@ router.get("/admin/match-notifications", auth(), getMatchNotifications);
 router.post("/ai-search", validateRequest(aiSearchValidation.aiSearchSchema), aiSearchController.aiSearch);
 router.post("/ai-recognize", auth(true), uploadImages.single("image"), aiRecognitionController.recognizeImage);
 router.post("/ai-voice-parse", auth(true), uploadAudio.single("audio"), aiRecognitionController.parseVoice);
+router.post("/ai/check-duplicate", auth(true), aiRecognitionController.checkDuplicate);
 router.use("/ai-chat", aiChatRoutes);
 
 // ── Email / Mailer ──

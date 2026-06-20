@@ -8,6 +8,7 @@ import {
   useGetStudentByIdQuery,
   useLazyGetStudentByDetailsQuery,
   useAiRecognizeMutation,
+  useCheckDuplicateMutation,
 } from "../../redux/api/api";
 import { CustomDatePicker } from "../../components/ui/CustomDatePicker";
 import ItemMatchSuggestions from "../../components/itemMatch/ItemMatchSuggestions";
@@ -581,6 +582,10 @@ const ReportLostItem = () => {
 
   const [createLostItem, { isLoading }] = useCreateLostItemMutation();
   const [aiRecognize, { isLoading: isAiRecognizing }] = useAiRecognizeMutation();
+  const [checkDuplicate, { isLoading: isCheckingDuplicate }] = useCheckDuplicateMutation();
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+  const [detectedDuplicates, setDetectedDuplicates] = useState<any[]>([]);
+  const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
   const typewriter = useTypewriter();
   const [aiHighlight, setAiHighlight] = useState<string | null>(null);
   const { data: Category, isLoading: categoriesLoading, error: categoriesError } = useCategoryQuery(undefined);
@@ -840,6 +845,34 @@ const ReportLostItem = () => {
     setStep(0); setScannedStudent(null); scannedAtRef.current = "";
   };
 
+  const handleActualSubmit = async (submitData: any) => {
+    try {
+      const res: any = await createLostItem({
+        lostItemName: submitData.lostItemName, description: submitData.description,
+        categoryId: selectedMenucategoryId, img: preview || "",
+        location: submitData.location, date: new Date(startDate + "T00:00:00"),
+        reporterName: submitData.reporterName || "", schoolEmail: submitData.schoolEmail || "",
+      });
+      if (res.error || res?.data?.success === false) { toast.error("Failed to report lost item"); return; }
+
+      clearDraft(); // Clear draft on successful submission
+      const createdId = res.data?.data?.id || res.data?.id;
+      toast.success("Lost item reported successfully");
+      if (createdId) {
+        // Capture match data before form resets so the modal can show suggestions
+        setSubmittedMatchData({
+          categoryId: selectedMenucategoryId,
+          categoryName: selectedMenu,
+          itemName: submitData.lostItemName || "",
+          location: submitData.location || "",
+        });
+        setTrackingCode(createdId);
+      } else {
+        handleCloseTrackingModal();
+      }
+    } catch { toast.error("Failed to report lost item"); }
+  };
+
   const onSubmit = async () => {
     const rawData = getValues();
     const data = sanitizeObject(rawData);
@@ -856,30 +889,30 @@ const ReportLostItem = () => {
     }
 
     try {
-      const res: any = await createLostItem({
-        lostItemName: data.lostItemName, description: data.description,
-        categoryId: selectedMenucategoryId, img: preview || "",
-        location: data.location, date: new Date(startDate + "T00:00:00"),
-        reporterName: data.reporterName || "", schoolEmail: data.schoolEmail || "",
-      });
-      if (res.error || res?.data?.success === false) { toast.error("Failed to report lost item"); return; }
+      // Perform pre-submission duplicate check
+      const dupRes = await checkDuplicate({
+        name: data.lostItemName,
+        description: data.description,
+        categoryId: selectedMenucategoryId,
+        itemType: "lost",
+      }).unwrap();
 
-      clearDraft(); // Clear draft on successful submission
-      const createdId = res.data?.data?.id || res.data?.id;
-      toast.success("Lost item reported successfully");
-      if (createdId) {
-        // Capture match data before form resets so the modal can show suggestions
-        setSubmittedMatchData({
-          categoryId: selectedMenucategoryId,
-          categoryName: selectedMenu,
-          itemName: data.lostItemName || "",
-          location: data.location || "",
-        });
-        setTrackingCode(createdId);
-      } else {
-        handleCloseTrackingModal();
+      if (dupRes.success && dupRes.data && dupRes.data.length > 0) {
+        // Find if there is any candidate with confidence >= 85
+        const highConfidenceDups = dupRes.data.filter((d: any) => d.confidence >= 85);
+        if (highConfidenceDups.length > 0) {
+          setDetectedDuplicates(dupRes.data);
+          setPendingSubmitData(data);
+          setShowDuplicateWarning(true);
+          return;
+        }
       }
-    } catch { toast.error("Failed to report lost item"); }
+    } catch (err) {
+      console.error("Duplicate check failed:", err);
+      // If the duplicate check fails, we proceed with normal submission so the user is not blocked
+    }
+
+    await handleActualSubmit(data);
   };
 
   // ── Build category options for CustomSelect ──
@@ -1659,6 +1692,111 @@ const ReportLostItem = () => {
             </div>
             <div className="px-5 py-4 border-t border-gray-800 shrink-0 flex items-center justify-center">
               <button onClick={() => setShowAiHelp(false)} className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-indigo-900/20 active:scale-95">Got it</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showDuplicateWarning && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+            <div className="h-[3px] bg-amber-500" />
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                <h3 className="text-sm font-bold text-white tracking-tight uppercase">
+                  ⚠️ Possible Duplicate Report Detected
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDuplicateWarning(false);
+                  setDetectedDuplicates([]);
+                  setPendingSubmitData(null);
+                }}
+                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+              >
+                <FaTimes size={12} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar">
+              <p className="text-gray-400 text-xs leading-relaxed">
+                Our AI scanned the database and found a similar item reported in the last 7 days. Please check if this is the item you meant:
+              </p>
+
+              <div className="space-y-3">
+                {detectedDuplicates.map((dup) => (
+                  <div
+                    key={dup.id}
+                    className="p-4 rounded-xl bg-gray-800/40 border border-gray-800 space-y-3"
+                  >
+                    <div className="flex gap-4">
+                      {dup.img && (
+                        <img
+                          src={dup.img}
+                          alt={dup.name}
+                          className="w-16 h-16 rounded-lg object-cover bg-gray-900 border border-gray-700 shrink-0"
+                        />
+                      )}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-white leading-tight">
+                            {dup.name}
+                          </h4>
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[9px] font-bold">
+                            {dup.confidence}% Match
+                          </span>
+                        </div>
+                        <p className="text-gray-500 text-[11px] line-clamp-2">
+                          {dup.description}
+                        </p>
+                        <div className="flex items-center gap-4 text-[10px] text-gray-600 font-medium">
+                          <span>📍 {dup.location}</span>
+                          <span>📅 {new Date(dup.date).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {dup.reason && (
+                      <div className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                        <p className="text-[10px] text-amber-300 italic leading-normal">
+                          <strong>AI Match Details:</strong> {dup.reason}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-blue-500/5 border border-blue-500/10 p-3 rounded-xl">
+                <p className="text-[10px] text-blue-400 leading-normal">
+                  <strong>💡 Tip:</strong> If the item is already reported, you do not need to submit another report.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-800 shrink-0 flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={() => {
+                  setShowDuplicateWarning(false);
+                  setDetectedDuplicates([]);
+                  setPendingSubmitData(null);
+                }}
+                className="w-full sm:w-auto flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all"
+              >
+                Yes, that is my item
+              </button>
+              <button
+                onClick={async () => {
+                  setShowDuplicateWarning(false);
+                  setDetectedDuplicates([]);
+                  if (pendingSubmitData) {
+                    await handleActualSubmit(pendingSubmitData);
+                  }
+                }}
+                className="w-full sm:w-auto flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all shadow-lg active:scale-95 animate-pulse"
+              >
+                No, submit anyway
+              </button>
             </div>
           </div>
         </div>

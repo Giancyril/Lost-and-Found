@@ -420,6 +420,13 @@ const api = baseApi.injectEndpoints({
     aiRecognize: builder.mutation({
       query: (data: any) => ({ url: "/ai-recognize", method: "POST", body: data }),
     }),
+    checkDuplicate: builder.mutation({
+      query: (data: { name: string; description: string; categoryId: string; itemType: "lost" | "found" }) => ({
+        url: "/ai/check-duplicate",
+        method: "POST",
+        body: data,
+      }),
+    }),
 
     // bulletin posts
     getBulletinPosts: builder.query({
@@ -828,6 +835,7 @@ export const {
   useAiSearchMutation,
   useAiChatMutation,
   useAiRecognizeMutation,
+  useCheckDuplicateMutation,
   useSendLostItemEmailMutation,
   useSendClaimApprovedEmailMutation,
   useGetArchivedFoundItemsQuery,

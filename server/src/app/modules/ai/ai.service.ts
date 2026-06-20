@@ -503,10 +503,148 @@ const writeSpotlightStory = async (bulletPoints: string) => {
   }
 };
 
+/**
+ * Detects potential duplicate reports by comparing a new report against reports from the last 7 days.
+ */
+const findDuplicates = async (name: string, description: string, categoryId: string, itemType: "lost" | "found") => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    let candidates: any[] = [];
+    if (itemType === "found") {
+      candidates = await prisma.foundItem.findMany({
+        where: {
+          categoryId,
+          isClaimed: false,
+          isDeleted: false,
+          isArchived: false,
+          createdAt: { gte: sevenDaysAgo },
+        },
+        select: {
+          id: true,
+          foundItemName: true,
+          description: true,
+          location: true,
+          date: true,
+          img: true,
+        },
+      });
+    } else {
+      candidates = await prisma.lostItem.findMany({
+        where: {
+          categoryId,
+          isFound: false,
+          isDeleted: false,
+          createdAt: { gte: sevenDaysAgo },
+        },
+        select: {
+          id: true,
+          lostItemName: true,
+          description: true,
+          location: true,
+          date: true,
+          img: true,
+        },
+      });
+    }
+
+    if (candidates.length === 0) {
+      return [];
+    }
+
+    const formattedCandidates = candidates.map(c => ({
+      id: c.id,
+      name: "foundItemName" in c ? c.foundItemName : c.lostItemName,
+      description: c.description,
+      location: c.location,
+      date: c.date,
+      img: c.img,
+    }));
+
+    const genAI = getGenAI();
+    const prompt = `
+    You are a Duplicate Detection AI for a campus Lost and Found system called "Lost & Found NBSC".
+    Identify if a newly reported item is a duplicate of any recently reported items.
+
+    New Item to Report:
+    - Name: "${name}"
+    - Description: "${description}"
+
+    Recently Reported Items (Candidates):
+    ${JSON.stringify(formattedCandidates)}
+
+    Compare the new item with each candidate item. Determine if they are likely the exact same physical item (reported multiple times by mistake or by different users).
+    Evaluate their similarity. Pay close attention to details like brand, color, specific stickers, scratches, case, model, or distinct features. Location and date might vary slightly.
+
+    Assign a similarity/confidence score between 0 and 100 for each candidate:
+    - 0-50: Completely different item.
+    - 51-84: Similar category/description, but not clearly the same item (e.g. general "black umbrella" vs another general "black umbrella" with no unique identifiers).
+    - 85-100: Highly likely the exact same physical item (e.g. matching brands, specific stickers, specific colors, and distinct details).
+
+    Output format (JSON only):
+    {
+      "duplicates": [
+        {
+          "id": "candidate-id",
+          "confidence": 95,
+          "reason": "Explain why they are likely duplicates (e.g. both are blue Nike backpacks with a key ring attached)."
+        }
+      ]
+    }
+
+    Only return candidates where confidence is 70 or higher.
+    Return ONLY valid JSON.
+    `;
+
+    let result;
+    try {
+      result = await generateContentWithRetry(genAI, prompt, {
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      });
+    } catch (genError: any) {
+      console.error("[AI] Gemini Duplicate Detection Error:", genError.message);
+      return [];
+    }
+
+    const response = await result.response;
+    let text = response.text().trim();
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+
+    try {
+      const parsed = JSON.parse(text);
+      const duplicates = parsed.duplicates || [];
+
+      const resultList = duplicates
+        .map((dup: any) => {
+          const candidate = formattedCandidates.find(c => c.id === dup.id);
+          if (!candidate) return null;
+          return {
+            ...candidate,
+            confidence: dup.confidence,
+            reason: dup.reason,
+          };
+        })
+        .filter(Boolean);
+
+      return resultList;
+    } catch (parseError) {
+      console.error("[AI] Failed to parse duplicate detection response:", text);
+      return [];
+    }
+  } catch (error) {
+    console.error("[AI] Duplicate Detection Pipeline Failure:", error);
+    return [];
+  }
+};
+
 export const aiRecognitionService = {
   recognizeImage,
   analyzeUrgency,
   analyzeClaimFraud,
   parseVoice,
   writeSpotlightStory,
+  findDuplicates,
 };
