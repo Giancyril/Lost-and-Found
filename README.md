@@ -16,6 +16,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Intelligent OCR & ID Card Auto-Extractor**: Uses computer vision to analyze uploaded item images (student IDs, wallets, books, etc.) in real time. Automatically extracts key information (names, IDs, serial numbers), displays interactive highlighted bounding boxes over the image, and auto-populates the registration form fields dynamically with typewriter animation effects.
 - **Magic AI Scan**: Instantly identify items from a single photo — automatically populates item name, detailed description, color, and condition using computer vision
 - **AI-Powered Search**: Integration with Google Gemini AI for intelligent item search and matching
+- **AI Duplicate Report Detection**: Real-time duplicate detection that flags similar lost/found reports and warns users before submitting duplicate reports.
 - **AI-Powered Story Writer**: Integrated spotlight drafting utility inside the Recognition Feed dashboard. Staff enter brief bullet points, and Google Gemini instantly generates heartwarming, inspiring, and professional student recognition titles and complete narrative stories.
 - **High-Performance Web Scanner**: Next-generation hybrid barcode scanner using jsQR + QuaggaJS + native fallback for 1-2 second scan performance — 3-5x faster than previous implementation
 - **Continuous Bulk Scanner**: Seamlessly scan multiple IDs or items in rapid succession without closing the scanner interface. Maintains persistent state and automatically fills location data, supercharging mass-processing workflows for security and admin staff.
@@ -23,6 +24,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Real-Time Notifications**: Email notifications for potential matches and claim status updates
 - **Interactive Maps**: Location-based visualization using Leaflet maps with heat mapping
 - **Indoor 3D Map**: Interactive, multi-level 3D campus building maps for precise room-level item localization with integrated heat mapping to visualize item-density patterns across floors (Desktop use only)
+- **Indoor Map + Sightings Integration**: Plots real-time student sighting pins directly on the indoor 3D/2D campus maps to visualize active lost items cross-building.
 - **Archive System**: Automated archiving of stale items to keep the database clean
 - **Audit Logging**: Comprehensive audit trail for all administrative actions
 - **Sheets Activity Logger**: Every lost and found report submission is logged to a Google Sheet in real time for offline recordkeeping and audit trails
@@ -80,11 +82,13 @@ A comprehensive lost and found management system built with modern web technolog
     - Natural re-engagement cycles through periodic resets
   - **Points for Actions**: Earn points for reporting items, successful claims, helpful comments, and community contributions
   - **Leaderboard**: Real-time multi-type leaderboard showing top contributors with customizable time frames
+    - **Leaderboard Profile Cards**: Clicking a student's row opens a detailed modal showing their achievements, rank title, level progress, and total XP.
   - **Points Badge**: Visual point display in navigation and user profiles
   - **Point History**: Track point earnings and spending over time
 - **Student Dashboard**: Dedicated dashboard for student users with personalized features
   - **Student Profile Management**: View and manage student information, school ID, and academic details
   - **Student-Specific Analytics**: Track personal activity, reported items, and community contributions
+    - **XP Chart Breakdown**: Displays an interactive chart breaking down XP gains by reason and a 90-day range on the dashboard profile page.
   - **Student Points Tracking**: Monitor point earnings and leaderboard position
   - **Quick Actions**: Fast access to report items, view claims, and check notifications
 - **Enhanced Analytics Dashboard**: Comprehensive analytics with new metrics and insights
@@ -120,6 +124,7 @@ A comprehensive lost and found management system built with modern web technolog
   - Integration with points system for reward multipliers
 - **Trust Indicators**: Visual trust levels based on user reputation and activity
 - **Recognition Feed (VIRTUE Spotlight)**: A dedicated homepage section and comprehensive, mobile-responsive administrator management dashboard that allows staff to highlight and celebrate students who exhibit outstanding civic values, like returning lost property. Features seamless sidebar positioning, dynamic stats cards, clean tagging systems, and real-time custom recognition feeds.
+  - **Identified Likes**: Secure like system that prevents spam, tracking and persisting likes per user.
 
 ### Real-Time Comment System
 - **Modern-Style Interface**: Modern card-based comment layout with visual hierarchy and smooth animations
@@ -580,6 +585,7 @@ Preconfigured report templates cover data access logs, item lifecycle audits, an
 - **Precise Localization**: Allows users to pin items to exact room coordinates rather than just general building names.
 - **Floor-level Filtering**: Isolate specific floors to view item data and heatmap intensity for targeted building analysis.
 - **Real-Time Data Integration**: Heatmap colors and intensities update automatically as new items are reported and pinned to rooms.
+- **Sightings Integration (Cross-Item Map Sightings)**: Plots violet pulsing pins representing all active student-submitted sightings on the building map. Includes room, timestamp, item details, and an interactive sidebar displaying recent sightings by room location.
 
 ### Student Masterlist Integration
 - **Google Sheets backend**: Reads directly from a shared Google Sheet via the Gviz JSON API — no manual data entry required
@@ -935,3 +941,37 @@ model XPBoostEvent {
   | **Google outage** | ❌ Scanner breaks | ✅ Scanner keeps working |
   | **Rate limits** | ❌ Can get blocked | ✅ Only syncs every 6hrs |
   | **Reliability** | Fragile | Resilient |
+
+### Phase 11: Real-Time Sightings, AI Duplicate Detection, & Engagement Upgrades (Completed)
+- **Leaderboard Profile Cards**: Allows students to view detailed profile cards directly from the leaderboard by clicking any student's row, displaying their achievements, rank title, and total XP.
+- **XP Chart Breakdown**: Displays an interactive chart breaking down XP gains by reason (e.g., login streaks, found items, comments) over a customizable 90-day range on the user's dashboard profile page.
+- **VirtueSpotlight Likes with Identity**: Implements a secure like system for spotlight posts that stores user identities, preventing spam and ensuring likes persist across sessions per user.
+- **AI Duplicate Report Detection**: Integrates Gemini-powered real-time duplicate detection that flags similar lost/found reports and warns users with a comparison panel before submitting duplicate entries.
+- **Indoor Map + Sightings Integration**: Plots real-time student sighting pins directly on the indoor 3D/2D campus map, enabling quick tracking and filtering of all active lost items.
+
+  ---
+
+  ## Existing vs New Sighting Pins
+
+  ### 🔵 **Existing** — Per-Item Sighting Pins (on SingleLostItem page)
+  *(What you see in your screenshot)*
+
+  | | |
+  |---|---|
+  | **Where** | `/lostItems/:id` — only on one specific lost item's detail page |
+  | **Scope** | Shows sightings **for that one item only** |
+  | **Color** | Blue pulsing dots |
+  | **Purpose** | Let viewers see where *that specific backpack/phone/etc.* was spotted |
+  | **Action** | "+ Sighting" button or (new) **"Mark as Sighted"** button |
+
+  ---
+
+  ### 🟣 **New** — Cross-Item Map Sightings (on `/map` / Indoor Map page)
+
+  | | |
+  |---|---|
+  | **Where** | `/map` — The main Campus Map page |
+  | **Scope** | Shows **all active items' sightings** at once across the building floors |
+  | **Color** | Violet pulsing dots (with popup showing which item was sighted, room, and time) |
+  | **Purpose** | Help search parties or staff visualize ALL active lost item sightings in one view |
+  | **Action** | Filter by "Sighting Pins" toggle, click marker to see item details, or browse recent room sightings in the sidebar |

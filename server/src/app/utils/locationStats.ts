@@ -101,7 +101,7 @@ export const heatmapStats = async (req: Request, res: Response) => {
         type: "lost",
         location: loc,
         date: item.date ? new Date(item.date).toISOString() : new Date(item.createdAt).toISOString(),
-        category: item.category?.name ?? "Unknown",
+        category: (item as any).category?.name ?? "Unknown",
         name: item.lostItemName ?? "",
       });
     }
