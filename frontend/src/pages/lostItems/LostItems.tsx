@@ -147,7 +147,7 @@ const CommunityStatsBanner = ({ activeReports }: { activeReports: number }) => {
   ];
 
   return (
-    <div className="px-6 sm:px-10 lg:px-16 mb-2 mt-5 reveal reveal-delay-1">
+    <div className="px-6 sm:px-10 lg:px-16 mb-2 mt-5">
       <div className="grid grid-cols-3 gap-3">
         {cards.map((card, i) => (
           <div key={i}
@@ -259,7 +259,7 @@ const ItemCard = ({
     : "") || item?.img || "/bgimg.png";
 
   return (
-    <div className={`reveal reveal-delay-${(Math.floor(Math.random() * 3) + 1)} group bg-gray-900 border border-white/5 hover:border-white/15 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-black/20 flex flex-col`}>
+    <div className="group bg-gray-900 border border-white/5 hover:border-white/15 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-black/20 flex flex-col">
 
       {/* Image */}
       <div className="relative h-44 sm:h-48 overflow-hidden bg-gray-800 shrink-0 flex items-center justify-center">
@@ -349,7 +349,7 @@ const ItemRow = ({
     : "") || item?.img || "/bgimg.png";
 
   return (
-    <div className="reveal group bg-gray-900 border border-white/5 hover:border-white/10 rounded-xl transition-all duration-150">
+    <div className="group bg-gray-900 border border-white/5 hover:border-white/10 rounded-xl transition-all duration-150">
 
       {/* Mobile */}
       <div className="sm:hidden flex flex-col gap-2.5 p-3">
@@ -566,7 +566,7 @@ const LostItemsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-16 reveal">
+    <div className="min-h-screen bg-gray-950 pb-16">
 
       {/* ── Page header ── */}
       <div className="border-b border-white/5 bg-gray-900/50">

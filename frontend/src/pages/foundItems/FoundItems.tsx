@@ -353,7 +353,7 @@ const FoundItemRow = ({ item, setClaimItem, onOpenComments, isAdmin, currentUser
   const hasMyClaim = item?.claim?.some((c: any) => c.userId === currentUser?.id);
 
   return (
-    <div className="reveal group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl transition-all duration-200 p-3 sm:p-4">
+    <div className="group bg-gray-900 border border-white/5 hover:border-blue-500/40 rounded-xl transition-all duration-200 p-3 sm:p-4">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         {/* Top Section: Image & Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -1369,7 +1369,7 @@ const FoundItemsPage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-950 pb-16 reveal">
+      <div className="min-h-screen bg-gray-950 pb-16">
         {/* Offline Sync Banner */}
         {pendingReports.length > 0 && (
           <div className="bg-blue-600/20 border-b border-blue-500/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-0 z-[60] backdrop-blur-md">
@@ -1422,7 +1422,7 @@ const FoundItemsPage = () => {
 
         {/* ── Points Teaser Banner ── */}
         {!isAdmin && (
-          <div className="px-6 sm:px-10 lg:px-16 pt-5 reveal reveal-delay-1">
+          <div className="px-6 sm:px-10 lg:px-16 pt-5">
             <PointsTeaserBanner />
           </div>
         )}
