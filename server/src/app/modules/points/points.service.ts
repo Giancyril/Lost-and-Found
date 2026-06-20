@@ -296,7 +296,7 @@ const getMyPoints = async (userId: string) => {
   const history = await prisma.points.findMany({
     where:   { userId },
     orderBy: { createdAt: "desc" },
-    take:    50,
+    take:    300,
   });
 
   const streak = await calculateStreak(userId);

@@ -81,7 +81,7 @@ function buildBuckets(history: any[], days: number): DayBucket[] {
 }
 
 function XpChart({ history }: { history: any[] }) {
-  const [range, setRange] = useState<7 | 30>(7);
+  const [range, setRange] = useState<7 | 30 | 90>(7);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; bucket: DayBucket } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -154,6 +154,67 @@ function XpChart({ history }: { history: any[] }) {
     label: Math.round(f * maxXp).toLocaleString(),
   }));
 
+  // Best Earning Day calculation
+  const bestDay = buckets.reduce((max, b) => b.xp > max.xp ? b : max, { label: "N/A", xp: 0 });
+  const bestDayDisplay = bestDay.xp > 0 ? `${bestDay.label} (+${bestDay.xp} XP)` : "None";
+
+  // Best Earning Week calculation (7-day window)
+  let bestWeekSum = 0;
+  let bestWeekStart = "";
+  let bestWeekEnd = "";
+  if (buckets.length >= 7) {
+    for (let i = 0; i <= buckets.length - 7; i++) {
+      let sum = 0;
+      for (let j = 0; j < 7; j++) {
+        sum += buckets[i + j].xp;
+      }
+      if (sum > bestWeekSum) {
+        bestWeekSum = sum;
+        bestWeekStart = buckets[i].label;
+        bestWeekEnd = buckets[i + 6].label;
+      }
+    }
+  } else {
+    bestWeekSum = buckets.reduce((s, b) => s + b.xp, 0);
+    bestWeekStart = buckets[0]?.label ?? "";
+    bestWeekEnd = buckets[buckets.length - 1]?.label ?? "";
+  }
+  const bestWeekDisplay = bestWeekSum > 0 ? `${bestWeekStart} - ${bestWeekEnd} (+${bestWeekSum} XP)` : "None";
+
+  // Reason breakdown calculation in selected range
+  const rangeStartDate = new Date();
+  rangeStartDate.setDate(rangeStartDate.getDate() - range);
+
+  const rangeHistory = history.filter(h => {
+    if (!h.createdAt || h.amount <= 0) return false;
+    return new Date(h.createdAt) >= rangeStartDate;
+  });
+
+  const breakdown: Record<string, number> = {};
+  let totalEarnedInRange = 0;
+  for (const h of rangeHistory) {
+    breakdown[h.reason] = (breakdown[h.reason] ?? 0) + h.amount;
+    totalEarnedInRange += h.amount;
+  }
+
+  const sortedBreakdown = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
+
+  // Donut chart math
+  let accumulatedPercent = 0;
+  const donutSegments = sortedBreakdown.map(([reason, amount]) => {
+    const percent = amount / totalEarnedInRange;
+    const strokeLength = percent * 251.327;
+    const strokeOffset = -accumulatedPercent * 251.327;
+    accumulatedPercent += percent;
+    return {
+      reason,
+      amount,
+      percent,
+      strokeLength,
+      strokeOffset,
+    };
+  });
+
   return (
     <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
       {/* Header */}
@@ -170,7 +231,7 @@ function XpChart({ history }: { history: any[] }) {
 
         {/* Range toggle */}
         <div className="flex gap-1 bg-gray-800/60 rounded-xl p-1 self-start sm:self-auto">
-          {([7, 30] as const).map(d => (
+          {([7, 30, 90] as const).map(d => (
             <button
               key={d}
               onClick={() => setRange(d)}
@@ -185,204 +246,324 @@ function XpChart({ history }: { history: any[] }) {
         </div>
       </div>
 
-      {/* SVG chart */}
-      <div className="relative px-2 pt-3 pb-1">
-        {totalPeriodXp === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-            <FaChartLine size={22} className="text-gray-700 mb-2" />
-            <p className="text-gray-600 text-xs font-medium">No XP earned in this period</p>
+      {/* Callouts Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 sm:p-5 border-b border-white/5 bg-white/[0.01]">
+        <div className="flex items-center gap-3 bg-white/[0.02] border border-white/[0.05] rounded-2xl p-3">
+          <div className="w-8 h-8 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
+            <FaStar size={12} className="text-yellow-400" />
           </div>
-        )}
-
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${W} ${H}`}
-          className="w-full touch-none"
-          style={{ minHeight: 140 }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setTooltip(null)}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={() => setTooltip(null)}
-        >
-          <defs>
-            {/* Area gradient */}
-            <linearGradient id="xpAreaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02" />
-            </linearGradient>
-            {/* Line gradient */}
-            <linearGradient id="xpLineGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#38bdf8" />
-            </linearGradient>
-            {/* Glow filter */}
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Grid lines + Y labels */}
-          {yTicks.map((t, i) => (
-            <g key={i}>
-              <line
-                x1={PAD_L} y1={t.y} x2={W - PAD_R} y2={t.y}
-                stroke="#ffffff" strokeOpacity="0.04" strokeWidth="1"
-              />
-              <text x={PAD_L - 6} y={t.y + 4} textAnchor="end" fill="#6b7280" fontSize="9">
-                {t.label}
-              </text>
-            </g>
-          ))}
-
-          {/* Zero baseline */}
-          <line
-            x1={PAD_L} y1={PAD_T + chartH} x2={W - PAD_R} y2={PAD_T + chartH}
-            stroke="#ffffff" strokeOpacity="0.08" strokeWidth="1"
-          />
-
-          {/* Area fill */}
-          {areaPath && (
-            <path d={areaPath} fill="url(#xpAreaGrad)" />
-          )}
-
-          {/* Line */}
-          {linePath && (
-            <path
-              d={linePath}
-              fill="none"
-              stroke="url(#xpLineGrad)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#glow)"
-            />
-          )}
-
-          {/* Bar columns (hover zone + deduction) */}
-          {pts.map((p, i) => {
-            const barW = Math.max(step * 0.6, 8);
-            const lossH = (buckets[i].loss / maxXp) * chartH;
-            return (
-              <g key={i}>
-                {/* Deduction mini bar at baseline */}
-                {buckets[i].loss > 0 && (
-                  <rect
-                    x={p.x - barW / 2}
-                    y={PAD_T + chartH}
-                    width={barW}
-                    height={Math.min(lossH, 10)}
-                    rx="2"
-                    fill="#ef4444"
-                    fillOpacity="0.5"
-                    transform={`translate(0, ${-Math.min(lossH, 10)})`}
-                  />
-                )}
-                {/* Invisible hover zone */}
-                <rect
-                  x={p.x - step / 2}
-                  y={PAD_T}
-                  width={step}
-                  height={chartH}
-                  fill="transparent"
-                />
-              </g>
-            );
-          })}
-
-          {/* Data point dots */}
-          {pts.map((p, i) => (
-            buckets[i].xp > 0 ? (
-              <circle
-                key={i}
-                cx={p.x} cy={p.y} r="3.5"
-                fill="#1d1d1d"
-                stroke="url(#xpLineGrad)"
-                strokeWidth="2"
-              />
-            ) : null
-          ))}
-
-          {/* Tooltip vertical line + dot */}
-          {tooltip && (
-            <>
-              <line
-                x1={tooltip.x} y1={PAD_T}
-                x2={tooltip.x} y2={PAD_T + chartH}
-                stroke="#ffffff" strokeOpacity="0.15" strokeWidth="1" strokeDasharray="4 3"
-              />
-              <circle
-                cx={tooltip.x} cy={tooltip.y} r="5"
-                fill="#3b82f6" stroke="#111827" strokeWidth="2"
-              />
-            </>
-          )}
-
-          {/* X-axis labels — show every Nth to avoid crowding */}
-          {pts.map((p, i) => {
-            const skip = range === 30 ? 4 : 1;
-            if (i % skip !== 0 && i !== pts.length - 1) return null;
-            return (
-              <text
-                key={i}
-                x={p.x} y={H - 6}
-                textAnchor="middle"
-                fill="#6b7280"
-                fontSize="9"
-              >
-                {buckets[i].label}
-              </text>
-            );
-          })}
-        </svg>
-
-        {/* Floating tooltip card */}
-        {tooltip && (
-          <div
-            className="absolute pointer-events-none z-20 bg-gray-800 border border-white/10 rounded-xl px-3 py-2 shadow-2xl text-xs min-w-[130px]"
-            style={{
-              left: `clamp(8px, ${(tooltip.x / W) * 100}%, calc(100% - 148px))`,
-              top: 8,
-            }}
-          >
-            <p className="text-gray-400 font-semibold mb-1.5 flex items-center gap-1.5">
-              <FaCalendarAlt size={9} className="text-gray-500" />
-              {tooltip.bucket.label}
-            </p>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-gray-500">Earned</span>
-                <span className="text-yellow-400 font-black">+{tooltip.bucket.xp} XP</span>
-              </div>
-              {tooltip.bucket.loss > 0 && (
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-gray-500">Deducted</span>
-                  <span className="text-red-400 font-black">-{tooltip.bucket.loss} XP</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between gap-4 pt-1 border-t border-white/5">
-                <span className="text-gray-500">Net</span>
-                <span className={`font-black ${tooltip.bucket.xp - tooltip.bucket.loss >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                  {tooltip.bucket.xp - tooltip.bucket.loss >= 0 ? "+" : ""}{tooltip.bucket.xp - tooltip.bucket.loss} XP
-                </span>
-              </div>
-            </div>
+          <div>
+            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Best Earning Day</p>
+            <p className="text-xs font-black text-white mt-0.5">{bestDayDisplay}</p>
           </div>
-        )}
+        </div>
+        <div className="flex items-center gap-3 bg-white/[0.02] border border-white/[0.05] rounded-2xl p-3">
+          <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+            <FaCalendarAlt size={12} className="text-indigo-400" />
+          </div>
+          <div>
+            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Most Active Week</p>
+            <p className="text-xs font-black text-white mt-0.5">{bestWeekDisplay}</p>
+          </div>
+        </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 px-4 pb-3">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-0.5 rounded bg-gradient-to-r from-indigo-400 to-sky-400" />
-          <span className="text-gray-500 text-[10px]">XP Earned</span>
+      {/* Grid Layout: Line Chart + Donut Chart */}
+      <div className="grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-white/5">
+        {/* Left Column: Line Chart */}
+        <div className="md:col-span-7 lg:col-span-8 p-4 sm:p-5 relative">
+          {totalPeriodXp === 0 && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
+              <FaChartLine size={22} className="text-gray-700 mb-2" />
+              <p className="text-gray-600 text-xs font-medium">No XP earned in this period</p>
+            </div>
+          )}
+
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 ${W} ${H}`}
+            className="w-full touch-none"
+            style={{ minHeight: 140 }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => setTooltip(null)}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={() => setTooltip(null)}
+          >
+            <defs>
+              <linearGradient id="xpAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02" />
+              </linearGradient>
+              <linearGradient id="xpLineGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#6366f1" />
+                <stop offset="100%" stopColor="#38bdf8" />
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Grid lines + Y labels */}
+            {yTicks.map((t, i) => (
+              <g key={i}>
+                <line
+                  x1={PAD_L} y1={t.y} x2={W - PAD_R} y2={t.y}
+                  stroke="#ffffff" strokeOpacity="0.04" strokeWidth="1"
+                />
+                <text x={PAD_L - 6} y={t.y + 4} textAnchor="end" fill="#6b7280" fontSize="9">
+                  {t.label}
+                </text>
+              </g>
+            ))}
+
+            {/* Zero baseline */}
+            <line
+              x1={PAD_L} y1={PAD_T + chartH} x2={W - PAD_R} y2={PAD_T + chartH}
+              stroke="#ffffff" strokeOpacity="0.08" strokeWidth="1"
+            />
+
+            {/* Area fill */}
+            {areaPath && (
+              <path d={areaPath} fill="url(#xpAreaGrad)" />
+            )}
+
+            {/* Line */}
+            {linePath && (
+              <path
+                d={linePath}
+                fill="none"
+                stroke="url(#xpLineGrad)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#glow)"
+              />
+            )}
+
+            {/* Bar columns (hover zone + deduction) */}
+            {pts.map((p, i) => {
+              const barW = Math.max(step * 0.6, 8);
+              const lossH = (buckets[i].loss / maxXp) * chartH;
+              return (
+                <g key={i}>
+                  {buckets[i].loss > 0 && (
+                    <rect
+                      x={p.x - barW / 2}
+                      y={PAD_T + chartH}
+                      width={barW}
+                      height={Math.min(lossH, 10)}
+                      rx="2"
+                      fill="#ef4444"
+                      fillOpacity="0.5"
+                      transform={`translate(0, ${-Math.min(lossH, 10)})`}
+                    />
+                  )}
+                  <rect
+                    x={p.x - step / 2}
+                    y={PAD_T}
+                    width={step}
+                    height={chartH}
+                    fill="transparent"
+                  />
+                </g>
+              );
+            })}
+
+            {/* Data point dots */}
+            {pts.map((p, i) => (
+              buckets[i].xp > 0 ? (
+                <circle
+                  key={i}
+                  cx={p.x} cy={p.y} r="3.5"
+                  fill="#1d1d1d"
+                  stroke="url(#xpLineGrad)"
+                  strokeWidth="2"
+                />
+              ) : null
+            ))}
+
+            {/* Tooltip line + dot */}
+            {tooltip && (
+              <>
+                <line
+                  x1={tooltip.x} y1={PAD_T}
+                  x2={tooltip.x} y2={PAD_T + chartH}
+                  stroke="#ffffff" strokeOpacity="0.15" strokeWidth="1" strokeDasharray="4 3"
+                />
+                <circle
+                  cx={tooltip.x} cy={tooltip.y} r="5"
+                  fill="#3b82f6" stroke="#111827" strokeWidth="2"
+                />
+              </>
+            )}
+
+            {/* X-axis labels */}
+            {pts.map((p, i) => {
+              const skip = range === 90 ? 12 : range === 30 ? 4 : 1;
+              if (i % skip !== 0 && i !== pts.length - 1) return null;
+              return (
+                <text
+                  key={i}
+                  x={p.x} y={H - 6}
+                  textAnchor="middle"
+                  fill="#6b7280"
+                  fontSize="9"
+                >
+                  {buckets[i].label}
+                </text>
+              );
+            })}
+          </svg>
+
+          {/* Tooltip Card */}
+          {tooltip && (
+            <div
+              className="absolute pointer-events-none z-20 bg-gray-800 border border-white/10 rounded-xl px-3 py-2 shadow-2xl text-xs min-w-[130px]"
+              style={{
+                left: `clamp(8px, ${(tooltip.x / W) * 100}%, calc(100% - 148px))`,
+                top: 75,
+              }}
+            >
+              <p className="text-gray-400 font-semibold mb-1.5 flex items-center gap-1.5">
+                <FaCalendarAlt size={9} className="text-gray-500" />
+                {tooltip.bucket.label}
+              </p>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-gray-500">Earned</span>
+                  <span className="text-yellow-400 font-black">+{tooltip.bucket.xp} XP</span>
+                </div>
+                {tooltip.bucket.loss > 0 && (
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-gray-500">Deducted</span>
+                    <span className="text-red-400 font-black">-{tooltip.bucket.loss} XP</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between gap-4 pt-1 border-t border-white/5">
+                  <span className="text-gray-500">Net</span>
+                  <span className={`font-black ${tooltip.bucket.xp - tooltip.bucket.loss >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {tooltip.bucket.xp - tooltip.bucket.loss >= 0 ? "+" : ""}{tooltip.bucket.xp - tooltip.bucket.loss} XP
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Line Chart Legend */}
+          <div className="flex items-center gap-4 mt-3">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-0.5 rounded bg-gradient-to-r from-indigo-400 to-sky-400" />
+              <span className="text-gray-500 text-[10px]">XP Earned</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-1.5 rounded bg-red-500/50" />
+              <span className="text-gray-500 text-[10px]">XP Lost</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-1.5 rounded bg-red-500/50" />
-          <span className="text-gray-500 text-[10px]">XP Lost</span>
+
+        {/* Right Column: Donut Chart + Breakdown */}
+        <div className="md:col-span-5 lg:col-span-4 p-4 sm:p-5 flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <FaTrophy size={11} className="text-indigo-400" />
+            <h3 className="text-[11px] font-black text-white uppercase tracking-widest">XP Breakdown</h3>
+          </div>
+
+          <div className="flex flex-col sm:flex-row md:flex-col gap-5 items-center justify-center sm:justify-start md:justify-center">
+            {/* SVG Donut */}
+            <div className="relative w-28 h-28 shrink-0">
+              <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                {totalEarnedInRange === 0 ? (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="transparent"
+                    stroke="#1f2937"
+                    strokeWidth="10"
+                  />
+                ) : (
+                  donutSegments.map((seg, idx) => {
+                    const colorMap: Record<string, string> = {
+                      FOUND_ITEM_REPORTED: "#10b981",
+                      CLAIM_APPROVED: "#06b6d4",
+                      HELPFUL_COMMENT: "#8b5cf6",
+                      ACHIEVEMENT_BONUS: "#eab308",
+                      LOGIN_STREAK_BONUS: "#f97316",
+                      BOUNTY_COMPLETED: "#ec4899",
+                    };
+                    const strokeColor = colorMap[seg.reason] ?? "#9ca3af";
+                    return (
+                      <circle
+                        key={idx}
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="transparent"
+                        stroke={strokeColor}
+                        strokeWidth="10"
+                        strokeDasharray={`${seg.strokeLength} 251.327`}
+                        strokeDashoffset={seg.strokeOffset}
+                        className="transition-all duration-300 hover:stroke-[12px]"
+                      />
+                    );
+                  })
+                )}
+              </svg>
+              {/* Central text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none">Total</span>
+                <span className="text-sm font-black text-white mt-0.5 leading-none">+{totalEarnedInRange}</span>
+                <span className="text-[8px] text-gray-600 font-semibold uppercase mt-0.5 leading-none">XP</span>
+              </div>
+            </div>
+
+            {/* List with Progress Bars */}
+            <div className="flex-1 w-full space-y-2.5">
+              {totalEarnedInRange === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-600 text-xs font-semibold">No XP distribution data</p>
+                </div>
+              ) : (
+                sortedBreakdown.map(([reason, amount]) => {
+                  const meta = getReasonMeta(reason);
+                  const percent = (amount / totalEarnedInRange) * 100;
+                  const colorMap: Record<string, string> = {
+                    FOUND_ITEM_REPORTED: "bg-emerald-500",
+                    CLAIM_APPROVED: "bg-cyan-500",
+                    HELPFUL_COMMENT: "bg-violet-500",
+                    ACHIEVEMENT_BONUS: "bg-yellow-500",
+                    LOGIN_STREAK_BONUS: "bg-orange-500",
+                    BOUNTY_COMPLETED: "bg-pink-500",
+                  };
+                  const progressColor = colorMap[reason] ?? "bg-gray-500";
+                  return (
+                    <div key={reason} className="space-y-1">
+                      <div className="flex items-center justify-between text-[10px] font-semibold">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${progressColor}`} />
+                          <span className="text-gray-400 truncate">{meta.label}</span>
+                        </div>
+                        <span className="text-white font-bold ml-2 shrink-0">
+                          {amount} XP <span className="text-gray-500 text-[9px] font-normal">({Math.round(percent)}%)</span>
+                        </span>
+                      </div>
+                      <div className="h-1 bg-white/[0.04] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${progressColor}`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
