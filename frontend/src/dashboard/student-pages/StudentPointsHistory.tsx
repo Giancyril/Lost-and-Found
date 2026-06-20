@@ -90,7 +90,7 @@ function XpChart({ history }: { history: any[] }) {
 
   // Chart dimensions
   const W = 800, H = 180;
-  const PAD_L = 40, PAD_R = 16, PAD_T = 16, PAD_B = 36;
+  const PAD_L = 52, PAD_R = 16, PAD_T = 16, PAD_B = 36;
   const chartW = W - PAD_L - PAD_R;
   const chartH = H - PAD_T - PAD_B;
 
@@ -230,12 +230,12 @@ function XpChart({ history }: { history: any[] }) {
         </div>
 
         {/* Range toggle */}
-        <div className="flex gap-1 bg-gray-800/60 rounded-xl p-1 self-start sm:self-auto">
+        <div className="flex gap-1 bg-gray-800/60 rounded-xl p-1 w-full sm:w-auto">
           {([7, 30, 90] as const).map(d => (
             <button
               key={d}
               onClick={() => setRange(d)}
-              className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors focus:outline-none focus-visible:outline-none active:scale-[1] select-none outline-none ${range === d
+              className={`flex-1 sm:flex-none text-center px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors focus:outline-none focus-visible:outline-none active:scale-[1] select-none outline-none ${range === d
                   ? "bg-blue-500/20 text-blue-300 border border-blue-500/20"
                   : "text-gray-500 hover:text-gray-300"
                 }`}
@@ -314,7 +314,7 @@ function XpChart({ history }: { history: any[] }) {
                   x1={PAD_L} y1={t.y} x2={W - PAD_R} y2={t.y}
                   stroke="#ffffff" strokeOpacity="0.04" strokeWidth="1"
                 />
-                <text x={PAD_L - 6} y={t.y + 4} textAnchor="end" fill="#6b7280" fontSize="9">
+                <text x={PAD_L - 8} y={t.y + 4} textAnchor="end" fill="#9ca3af" fontSize="12" className="font-semibold">
                   {t.label}
                 </text>
               </g>
@@ -408,10 +408,11 @@ function XpChart({ history }: { history: any[] }) {
               return (
                 <text
                   key={i}
-                  x={p.x} y={H - 6}
+                  x={p.x} y={H - 8}
                   textAnchor="middle"
-                  fill="#6b7280"
-                  fontSize="9"
+                  fill="#9ca3af"
+                  fontSize="12"
+                  className="font-semibold"
                 >
                   {buckets[i].label}
                 </text>
