@@ -110,6 +110,7 @@ const getLostItem = async (query: any = {}) => {
         include: {
           user:     { select: { id: true, username: true, email: true, role: true } },
           category: true,
+          sightings: { orderBy: { createdAt: "desc" } },
         },
       });
       return result;

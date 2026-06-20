@@ -6,11 +6,10 @@ import "leaflet/dist/leaflet.css";
 import {
   FaInfoCircle,
   FaBuilding,
-  FaTimes,
   FaMap,
-  FaLayerGroup
+  FaEye,
 } from "react-icons/fa";
-import { useGetFoundItemsQuery, useGetLostItemsQuery, useGetLocationStatsQuery } from "../redux/api/api";
+import { useGetFoundItemsQuery, useGetLostItemsQuery } from "../redux/api/api";
 import { getCoordinates, CAMPUS_CENTER, CAMPUS_ZOOM } from "../utils/campusLocations";
 import IndoorMap3D from "./IndoorMap3D";
 
@@ -155,6 +154,68 @@ function HeatLayer({ points, filter, max }: {
   return null;
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Sighting Pin Layer — violet markers for active sightings on the heatmap
+// ──────────────────────────────────────────────────────────────────────────────
+interface SightingPin {
+  lat: number;
+  lng: number;
+  location: string;
+  details: string;
+  reporterName: string;
+  remainingMinutes: number;
+  img: string;
+  itemId: string;
+  itemName: string;
+}
+
+function SightingPinLayer({ pins }: { pins: SightingPin[] }) {
+  const map = useMap();
+  const layerRef = useRef<L.LayerGroup | null>(null);
+
+  useEffect(() => {
+    if (layerRef.current) map.removeLayer(layerRef.current);
+    const layer = L.layerGroup();
+
+    pins.forEach(pin => {
+      const icon = L.divIcon({
+        html: `<div style="position:relative;display:flex;align-items:center;justify-content:center;">
+                 <div style="position:absolute;width:24px;height:24px;border-radius:50%;background:rgba(139,92,246,0.25);animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
+                 <div style="width:12px;height:12px;border-radius:50%;background:#8b5cf6;border:2.5px solid white;box-shadow:0 0 8px rgba(139,92,246,0.7);"></div>
+               </div>`,
+        className: "sighting-pin-icon",
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      });
+
+      const marker = L.marker([pin.lat, pin.lng], { icon });
+      marker.bindPopup(`
+        <div style="font-family:'Inter',sans-serif;min-width:200px;padding:12px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#8b5cf6;display:inline-block;flex-shrink:0;"></span>
+            <span style="font-size:10px;font-weight:900;color:#8b5cf6;text-transform:uppercase;letter-spacing:0.05em;">Sighting Pin</span>
+          </div>
+          <p style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:2px;">${pin.itemName}</p>
+          <p style="font-size:11px;color:#64748b;margin-bottom:6px;">Spotted at: ${pin.location}</p>
+          ${pin.details ? `<p style="font-size:11px;color:#475569;margin-bottom:6px;">${pin.details}</p>` : ''}
+          ${pin.img ? `<img src="${pin.img}" style="width:100%;height:60px;object-fit:cover;border-radius:6px;margin-bottom:6px;border:1px solid #e2e8f0;" />` : ''}
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid #f1f5f9;">
+            <span style="font-size:10px;color:#8b5cf6;font-weight:700;">⏱ Fades in ${pin.remainingMinutes}m</span>
+            <span style="font-size:10px;color:#94a3b8;">by ${pin.reporterName}</span>
+          </div>
+        </div>
+      `, { className: "sighting-tooltip" });
+      marker.addTo(layer);
+    });
+
+    layer.addTo(map);
+    layerRef.current = layer;
+    return () => { map.removeLayer(layer); };
+  }, [pins, map]);
+
+  return null;
+}
+
 const BUILDINGS = [
   {
     id: "SWDC",
@@ -183,6 +244,7 @@ const IndoorMapPage = () => {
   const [bottomSheetHeight, setBottomSheetHeight] = useState<"peek" | "half" | "full">("peek");
   const [mapMode, setMapMode] = useState<"indoor" | "heatmap">("indoor");
   const [heatmapFilter, setHeatmapFilter] = useState<Filter>("all");
+  const [showSightingPins, setShowSightingPins] = useState(true);
   const { data: foundData } = useGetFoundItemsQuery({ limit: 1000 });
   const { data: lostData } = useGetLostItemsQuery({ limit: 1000 });
 
@@ -229,6 +291,76 @@ const IndoorMapPage = () => {
       return loc.includes(targetId) || loc.includes(targetName) || targetId.includes(loc) || targetName.includes(loc);
     });
   }, [selectedRoom, allItems]);
+
+  // Extract active sightings for the heatmap pin layer
+  const activeSightingPins = useMemo((): SightingPin[] => {
+    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+    const now = Date.now();
+    const pins: SightingPin[] = [];
+
+    const lostItems = ((lostData as any)?.data || []).filter((i: any) => !i.isFound && !i.isDeleted);
+    lostItems.forEach((item: any) => {
+      if (!Array.isArray(item.sightings)) return;
+      item.sightings.forEach((sig: any) => {
+        if (!sig?.location) return;
+        const createdMs = new Date(sig.createdAt).getTime();
+        const verifiedBonus = (sig.verifiedUserIds?.length || 0) * 30 * 60 * 1000;
+        const isActive = (now - createdMs) < (TWO_HOURS_MS + verifiedBonus);
+        if (!isActive) return;
+        const remainingMinutes = Math.max(0, Math.round(((TWO_HOURS_MS + verifiedBonus) - (now - createdMs)) / 60000));
+
+        let lat: number | undefined, lng: number | undefined;
+        if (sig.coordinates && sig.coordinates.includes(",")) {
+          const parts = sig.coordinates.split(",").map(Number);
+          if (!isNaN(parts[0]) && !isNaN(parts[1])) { lat = parts[0]; lng = parts[1]; }
+        }
+        if (!lat || !lng) {
+          const coords = getCoordinates(sig.location);
+          if (coords) { lat = coords[0]; lng = coords[1]; }
+        }
+        if (!lat || !lng) return;
+
+        pins.push({
+          lat, lng,
+          location: sig.location,
+          details: sig.details || "",
+          reporterName: sig.reporterName || "Anonymous",
+          remainingMinutes,
+          img: sig.img || "",
+          itemId: item.id,
+          itemName: item.lostItemName || "Unknown Item",
+        });
+      });
+    });
+    return pins;
+  }, [lostData]);
+
+  // Extract sightings for selected room (sidebar)
+  const roomSightings = useMemo(() => {
+    if (!selectedRoom) return [];
+    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+    const now = Date.now();
+    const rid = selectedRoom.id.toLowerCase().replace("sc-", "");
+    const regex = new RegExp(`(^|\\W)${rid}(\\W|$)`, 'i');
+    const result: any[] = [];
+
+    const lostItems = ((lostData as any)?.data || []).filter((i: any) => !i.isFound && !i.isDeleted);
+    lostItems.forEach((item: any) => {
+      if (!Array.isArray(item.sightings)) return;
+      item.sightings.forEach((sig: any) => {
+        if (!sig?.location) return;
+        const sigLoc = sig.location.toLowerCase().trim();
+        if (!(sigLoc === rid || regex.test(sigLoc))) return;
+        const createdMs = new Date(sig.createdAt).getTime();
+        const verifiedBonus = (sig.verifiedUserIds?.length || 0) * 30 * 60 * 1000;
+        const isActive = (now - createdMs) < (TWO_HOURS_MS + verifiedBonus);
+        if (!isActive) return;
+        const remainingMinutes = Math.max(0, Math.round(((TWO_HOURS_MS + verifiedBonus) - (now - createdMs)) / 60000));
+        result.push({ ...sig, itemId: item.id, itemName: item.lostItemName, remainingMinutes });
+      });
+    });
+    return result;
+  }, [selectedRoom, lostData]);
 
   const handleRoomSelect = (id: string | null) => {
     if (!id) {
@@ -317,25 +449,48 @@ const IndoorMapPage = () => {
                 {!selectedRoom || (selectedBuilding as any).isComingSoon ? (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-500"><FaInfoCircle size={22} className="mb-3" /><p className="text-sm">Select a room</p></div>
                 ) : (
-                  <DesktopRoomDetails selectedRoom={selectedRoom} roomItems={roomItems} navigate={navigate} />
+                  <DesktopRoomDetails selectedRoom={selectedRoom} roomItems={roomItems} roomSightings={roomSightings} navigate={navigate} />
                 )}
               </div>
             </>
           ) : (
             <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-              <style>{`.custom-tooltip { background: white !important; border: none !important; box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important; border-radius: 14px !important; }`}</style>
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 flex-1 overflow-hidden">
                 <div className="flex flex-col gap-4">
-                  <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1 w-fit">
-                    {(["all", "found", "lost"] as Filter[]).map(f => (
-                      <button key={f} onClick={() => setHeatmapFilter(f)} className={`px-4 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-all ${heatmapFilter === f ? "bg-indigo-600 text-white" : "text-gray-500"}`}>{f}</button>
-                    ))}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
+                      {(["all", "found", "lost"] as Filter[]).map(f => (
+                        <button key={f} onClick={() => setHeatmapFilter(f)} className={`px-4 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-all ${heatmapFilter === f ? "bg-indigo-600 text-white" : "text-gray-500"}`}>{f}</button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setShowSightingPins(v => !v)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${
+                        showSightingPins
+                          ? "bg-violet-600/20 text-violet-300 border-violet-500/30"
+                          : "bg-gray-900 text-gray-500 border-white/5"
+                      }`}
+                    >
+                      <FaEye size={9} />
+                      Sighting Pins {activeSightingPins.length > 0 && `(${activeSightingPins.length})`}
+                    </button>
                   </div>
                   <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden relative">
+                    <style>{`
+                      .custom-tooltip { background: white !important; border: none !important; box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important; border-radius: 14px !important; }
+                      .sighting-tooltip .leaflet-popup-content-wrapper { background: white; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-radius: 14px; padding: 0; }
+                      .sighting-tooltip .leaflet-popup-tip { background: white; }
+                      .sighting-tooltip .leaflet-popup-content { margin: 0; }
+                      @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+                      .sighting-pin-icon { background: transparent !important; border: none !important; }
+                    `}</style>
                     <MapContainer center={CAMPUS_CENTER} zoom={CAMPUS_ZOOM} style={{ height: "100%", width: "100%" }} zoomControl={false} attributionControl={false}>
                       <ZoomControl position="bottomright" />
                       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" maxZoom={20} />
                       <HeatLayer points={mappableStats} filter={heatmapFilter} max={maxFilter} />
+                      {showSightingPins && activeSightingPins.length > 0 && (
+                        <SightingPinLayer pins={activeSightingPins} />
+                      )}
                     </MapContainer>
                     <div className="absolute bottom-6 left-6 p-4 bg-gray-900/90 backdrop-blur-md border border-white/10 rounded-2xl z-[1000] pointer-events-none">
                        <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Intensity</p>
@@ -356,6 +511,23 @@ const IndoorMapPage = () => {
                     <span className="text-[10px] text-gray-500 font-bold">{mappableStats.length}</span>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                    {activeSightingPins.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-[9px] font-black text-violet-400 uppercase tracking-widest mb-2">Active Sightings</p>
+                        <div className="space-y-1.5">
+                          {activeSightingPins.slice(0, 4).map((pin, idx) => (
+                            <div key={idx} className="p-2.5 bg-violet-500/5 border border-violet-500/15 rounded-xl">
+                              <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse shrink-0" />
+                                <p className="text-gray-200 text-[11px] font-bold truncate flex-1">{pin.itemName}</p>
+                                <span className="text-violet-400 text-[9px] font-bold shrink-0">⏱ {pin.remainingMinutes}m</span>
+                              </div>
+                              <p className="text-gray-500 text-[10px] mt-0.5 ml-3.5">{pin.location}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {mappableStats.sort((a, b) => b.total - a.total).map(loc => {
                       const heat = getHeatColor(loc.total, maxTotal);
                       const val = heatmapFilter === "found" ? loc.found : heatmapFilter === "lost" ? loc.lost : loc.total;
@@ -404,7 +576,7 @@ const IndoorMapPage = () => {
                     <p className="text-sm">Select a room</p>
                   </div>
                 ) : (
-                  <DesktopRoomDetails selectedRoom={selectedRoom} roomItems={roomItems} navigate={navigate} />
+                  <DesktopRoomDetails selectedRoom={selectedRoom} roomItems={roomItems} roomSightings={roomSightings} navigate={navigate} />
                 )}
               </div>
             </>
@@ -422,15 +594,47 @@ const IndoorMapPage = () => {
   );
 };
 
-const DesktopRoomDetails = ({ selectedRoom, roomItems, navigate }: any) => (
-  <div className="p-5 space-y-4">
+const DesktopRoomDetails = ({ selectedRoom, roomItems, roomSightings = [], navigate }: any) => (
+  <div className="p-5 space-y-4 overflow-y-auto max-h-full">
     <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/5 rounded-xl">
       <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"><FaBuilding size={13} className="text-blue-400" /></div>
       <div><p className="text-white text-sm font-semibold">{selectedRoom.name}</p><p className="text-gray-500 text-[11px] capitalize">Floor {selectedRoom.floor}</p></div>
     </div>
+
+    {/* Room Sightings */}
+    {roomSightings.length > 0 && (
+      <div className="space-y-2">
+        <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest mb-2">Recent Sightings</p>
+        {roomSightings.map((sig: any) => (
+          <button
+            key={sig.id}
+            onClick={() => navigate(`/lostItems/${sig.itemId}`)}
+            className="w-full bg-violet-500/5 border border-violet-500/15 hover:border-violet-500/40 rounded-xl p-2.5 text-left transition-all"
+          >
+            <div className="flex items-center gap-2">
+              {sig.img ? (
+                <img src={sig.img} alt="sighting" className="w-8 h-8 rounded-lg object-cover shrink-0 border border-white/5" />
+              ) : (
+                <div className="w-8 h-8 rounded-lg shrink-0 bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                  <FaEye size={10} className="text-violet-400" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-white font-bold text-[12px] truncate">{sig.itemName}</p>
+                <p className="text-gray-500 text-[10px] truncate">{sig.details || "No details"}</p>
+              </div>
+              <span className="shrink-0 text-violet-400 text-[9px] font-bold">⏱ {sig.remainingMinutes}m</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    )}
+
     <div className="space-y-2">
       <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-3">Active Reports</p>
-      {roomItems.map((item: any) => {
+      {roomItems.length === 0 && roomSightings.length === 0 ? (
+        <div className="text-center py-4 text-gray-600 text-xs">No active reports</div>
+      ) : roomItems.length === 0 ? null : roomItems.map((item: any) => {
         const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
           ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
           : "") || item?.img || "/bgimg.png";
@@ -457,4 +661,4 @@ const DesktopRoomDetails = ({ selectedRoom, roomItems, navigate }: any) => (
   </div>
 );
 
-export default IndoorMapPage;
+export default IndoorMapPage;

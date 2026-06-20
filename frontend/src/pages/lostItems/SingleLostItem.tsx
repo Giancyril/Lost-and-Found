@@ -407,6 +407,11 @@ const SingleLostItem = () => {
                         className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-2 rounded-lg transition-all text-[11px] uppercase tracking-widest">
                         <FaBoxOpen size={9} /> I Found This Item
                       </button>
+                      <button
+                        onClick={() => openModal(setIsSightingModalOpen)}
+                        className="w-full mt-2 flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-bold py-2 rounded-lg transition-all text-[11px] uppercase tracking-widest">
+                        <FaEye size={10} /> Mark as Sighted
+                      </button>
                     </>
                   )}
                 </div>

@@ -456,13 +456,14 @@ interface RoomTileProps {
   itemCount: number;
   foundCount?: number;
   lostCount?: number;
+  sightingCount?: number;
   onHover: (id: string | null) => void;
   onClick: (id: string) => void;
 }
 
 const RoomTile = ({
   layout, isActiveFloor, isSelected, isHovered, hasItems, itemCount,
-  foundCount = 0, lostCount = 0, onHover, onClick,
+  foundCount = 0, lostCount = 0, sightingCount = 0, onHover, onClick,
 }: RoomTileProps) => {
   const { palette } = useTheme();
   const y = layout.floorIdx * FLOOR_HEIGHT + SLAB_T + ROOM_H / 2;
@@ -489,6 +490,26 @@ const RoomTile = ({
     if (dist < 5) onClick(id); // 5px threshold
   };
 
+  const orbColor = foundCount > 0 ? "#10b981" : lostCount > 0 ? "#ef4444" : "#8b5cf6";
+  const orbInnerColor = foundCount > 0 ? "#34d399" : lostCount > 0 ? "#fca5a5" : "#a78bfa";
+
+  const activePins: string[] = [];
+  if (lostCount > 0) activePins.push("lost");
+  if (foundCount > 0) activePins.push("found");
+  if (sightingCount > 0) activePins.push("sighting");
+
+  const getPinOffset = (type: string) => {
+    const idx = activePins.indexOf(type);
+    if (idx === -1) return 0;
+    if (activePins.length === 1) return 0;
+    if (activePins.length === 2) {
+      return idx === 0 ? -0.22 : 0.22;
+    }
+    if (idx === 0) return -0.35;
+    if (idx === 1) return 0;
+    return 0.35;
+  };
+
   return (
     <group>
       <mesh
@@ -508,15 +529,15 @@ const RoomTile = ({
       )}
 
       {/* Floating Item Orb inside room - with X-ray effect */}
-      {isSelected && hasItems && (
+      {isSelected && (hasItems || sightingCount > 0) && (
         <Float speed={5} rotationIntensity={2} floatIntensity={0.5}>
           <group position={[layout.x, baseY + ROOM_H * 0.45, roomZ]}>
             {/* Outer soft glow */}
             <mesh>
               <sphereGeometry args={[0.2, 32, 32]} />
               <meshStandardMaterial
-                color={foundCount > 0 ? "#10b981" : "#ef4444"}
-                emissive={foundCount > 0 ? "#10b981" : "#ef4444"}
+                color={orbColor}
+                emissive={orbColor}
                 emissiveIntensity={2}
                 transparent
                 opacity={0.4}
@@ -526,8 +547,8 @@ const RoomTile = ({
             <mesh>
               <sphereGeometry args={[0.08, 32, 32]} />
               <meshStandardMaterial
-                color={foundCount > 0 ? "#34d399" : "#fca5a5"}
-                emissive={foundCount > 0 ? "#34d399" : "#fca5a5"}
+                color={orbInnerColor}
+                emissive={orbInnerColor}
                 emissiveIntensity={6}
               />
             </mesh>
@@ -535,7 +556,7 @@ const RoomTile = ({
             <pointLight
               intensity={2.5}
               distance={3}
-              color={foundCount > 0 ? "#10b981" : "#ef4444"}
+              color={orbColor}
               decay={1.5}
             />
           </group>
@@ -571,12 +592,12 @@ const RoomTile = ({
         {layout.id.replace("SC-", "")}
       </Text>
 
-      {hasItems && isActiveFloor && (
+      {(hasItems || sightingCount > 0) && isActiveFloor && (
         <group position={[layout.x, baseY + ROOM_H + 0.55, roomZ]}>
           {lostCount > 0 && (
             <Float speed={4} rotationIntensity={1.5} floatIntensity={1.5}>
               <group
-                position={[foundCount > 0 ? -0.22 : 0, 0, 0]}
+                position={[getPinOffset("lost"), 0, 0]}
                 onPointerDown={handlePointerDown}
                 onClick={(e) => handleSafeClick(e, layout.id)}
                 onPointerOver={() => (document.body.style.cursor = "pointer")}
@@ -597,7 +618,7 @@ const RoomTile = ({
           {foundCount > 0 && (
             <Float speed={3.5} rotationIntensity={1.5} floatIntensity={1.4}>
               <group
-                position={[lostCount > 0 ? 0.22 : 0, 0, 0]}
+                position={[getPinOffset("found"), 0, 0]}
                 onPointerDown={handlePointerDown}
                 onClick={(e) => handleSafeClick(e, layout.id)}
                 onPointerOver={() => (document.body.style.cursor = "pointer")}
@@ -611,6 +632,27 @@ const RoomTile = ({
                 <mesh position={[0, -0.18, 0]}>
                   <coneGeometry args={[0.04, 0.18, 12]} />
                   <meshStandardMaterial color="#10b981" emissive="#10b981" emissiveIntensity={1.2} />
+                </mesh>
+              </group>
+            </Float>
+          )}
+          {sightingCount > 0 && (
+            <Float speed={3.8} rotationIntensity={1.5} floatIntensity={1.3}>
+              <group
+                position={[getPinOffset("sighting"), 0, 0]}
+                onPointerDown={handlePointerDown}
+                onClick={(e) => handleSafeClick(e, layout.id)}
+                onPointerOver={() => (document.body.style.cursor = "pointer")}
+                onPointerOut={() => (document.body.style.cursor = "auto")}
+              >
+                <mesh castShadow>
+                  <sphereGeometry args={[0.13, 18, 18]} />
+                  <meshStandardMaterial color="#8b5cf6" emissive="#a78bfa" emissiveIntensity={2.8} />
+                </mesh>
+                <Text position={[0, 0, 0.18]} fontSize={0.12} color="#ffffff" anchorX="center" anchorY="middle" fontWeight="bold">{sightingCount}</Text>
+                <mesh position={[0, -0.18, 0]}>
+                  <coneGeometry args={[0.04, 0.18, 12]} />
+                  <meshStandardMaterial color="#8b5cf6" emissive="#8b5cf6" emissiveIntensity={1.2} />
                 </mesh>
               </group>
             </Float>
@@ -1153,14 +1195,34 @@ const IndoorMap3D = ({
   const getRoomItemStats = (roomId: string) => {
     const rid = roomId.toLowerCase();
     const ridShort = roomId.replace("SC-", "").toLowerCase();
+    const regex = new RegExp(`(^|\\W)${ridShort}(\\W|$)`, 'i');
     const roomItems = items.filter((item) => {
       const loc = (item.foundLocation || item.location || "").toLowerCase().trim();
-      const regex = new RegExp(`(^|\\W)${ridShort}(\\W|$)`, 'i');
       return loc === rid || regex.test(loc);
     });
+
+    // Count active sightings (within 2 hours) across all lost items for this room
+    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+    const now = Date.now();
+    let sightingCount = 0;
+    items.forEach((item) => {
+      if (item.type !== "lost" || !Array.isArray(item.sightings)) return;
+      item.sightings.forEach((sig: any) => {
+        if (!sig?.location) return;
+        const sigLoc = sig.location.toLowerCase().trim();
+        const sigMatches = sigLoc === rid || regex.test(sigLoc);
+        if (!sigMatches) return;
+        const createdMs = new Date(sig.createdAt).getTime();
+        const verifiedBonus = (sig.verifiedUserIds?.length || 0) * 30 * 60 * 1000;
+        const isActive = (now - createdMs) < (TWO_HOURS_MS + verifiedBonus);
+        if (isActive) sightingCount++;
+      });
+    });
+
     return {
       foundCount: roomItems.filter((i) => i.type === "found").length,
       lostCount: roomItems.filter((i) => i.type === "lost").length,
+      sightingCount,
     };
   };
 
@@ -1233,7 +1295,7 @@ const IndoorMap3D = ({
             ))}
 
             {layout.map((room) => {
-              const { foundCount, lostCount } = getRoomItemStats(room.id);
+              const { foundCount, lostCount, sightingCount } = getRoomItemStats(room.id);
               return (
                 <RoomTile
                   key={room.id}
@@ -1245,6 +1307,7 @@ const IndoorMap3D = ({
                   itemCount={foundCount + lostCount}
                   foundCount={foundCount}
                   lostCount={lostCount}
+                  sightingCount={sightingCount}
                   onHover={setHoveredRoom}
                   onClick={onRoomSelect}
                 />
