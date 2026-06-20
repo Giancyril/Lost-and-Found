@@ -13,65 +13,65 @@ const Banner = () => {
   const { data: stats } = useAdminStatsQuery(undefined);
 
   const slides = [
-  {
-    badge: "Lost something?",
-    title: "Report a lost item in",
-    subtitle: "under 60 seconds",
-    description:
-      "Snap a photo, describe what was lost, and drop a pin. Your report goes live instantly and our AI matches it against found items in the database.",
-    descShort:
-      "Snap a photo, describe what was lost, and drop a pin. Matches found items instantly.",
-    primaryButton: {
-      text: "Report a Lost Item",
-      href: "/reportlostItem",
+    {
+      badge: "Lost something?",
+      title: "Report a lost item in",
+      subtitle: "under 60 seconds",
+      description:
+        "Snap a photo, describe what was lost, and drop a pin. Your report goes live instantly and our AI matches it against found items in the database.",
+      descShort:
+        "Snap a photo, describe what was lost, and drop a pin. Matches found items instantly.",
+      primaryButton: {
+        text: "Report a Lost Item",
+        href: "/reportlostItem",
+      },
+      secondaryButton: {
+        text: "How AI matching works",
+        href: "/ai-search",
+      },
     },
-    secondaryButton: {
-      text: "How AI matching works",
-      href: "/ai-search",
+    {
+      badge: "Found something on campus?",
+      title: "Please Return It to",
+      subtitle: "the SAS Office",
+      description:
+        "If you've found something on school grounds, please bring it to the Student Affairs Office. Our staff will log it securely and notify the owner right away your act of honesty strengthens our school community.",
+      descShort:
+        "Bring found items to the Student Affairs Office. Staff will log it and notify the owner.",
+      // Office info shown instead of a form action
+      officeInfo: {
+        name: "Student Affairs Office — SWDC",
+        location: "Ground floor, main building",
+        hours: "Mon – Fri, 8:00 AM – 5:00 PM",
+        note: "Bring the item in person. No drop-off boxes.",
+      },
+      primaryButton: {
+        text: "View Recovered Items",
+        href: "/FoundItems",
+      },
+      secondaryButton: {
+        text: "Where is the office?",
+        href: "/about#office-location",
+      },
     },
-  },
-  {
-    badge: "Found something on campus?",
-    title: "Please Return It to",
-    subtitle: "the SAS Office",
-    description:
-      "If you've found something on school grounds, please bring it to the Student Affairs Office. Our staff will log it securely and notify the owner right away your act of honesty strengthens our school community.",
-    descShort:
-      "Bring found items to the Student Affairs Office. Staff will log it and notify the owner.",
-    // Office info shown instead of a form action
-    officeInfo: {
-      name: "Student Affairs Office — SWDC",
-      location: "Ground floor, main building",
-      hours: "Mon – Fri, 8:00 AM – 5:00 PM",
-      note: "Bring the item in person. No drop-off boxes.",
+    {
+      badge: "Track your reports anytime",
+      title: "Stay Updated on",
+      subtitle: "Your Reports",
+      description:
+        "Monitor the status of your lost item reports and claim requests in real time. Our system ensures you're notified the moment your item is located.",
+      descShort:
+        "Monitor your lost item reports and claims in real time. Get notified the moment your item is located.",
+      primaryButton: {
+        text: "My Lost Reports",
+        href: "/itemStatus",
+      },
+      secondaryButton: {
+        text: "Check Recovered Items",
+        href: "/FoundItems",
+      },
     },
-    primaryButton: {
-      text: "View Recovered Items",
-      href: "/FoundItems",
-    },
-    secondaryButton: {
-      text: "Where is the office?",
-      href: "/about#office-location",
-    },
-  },
-  {
-    badge: "Track your reports anytime",
-    title: "Stay Updated on",
-    subtitle: "Your Reports",
-    description:
-      "Monitor the status of your lost item reports and claim requests in real time. Our system ensures you're notified the moment your item is located.",
-    descShort:
-      "Monitor your lost item reports and claims in real time. Get notified the moment your item is located.",
-    primaryButton: {
-      text: "My Lost Reports",
-      href: "/itemStatus",
-    },
-    secondaryButton: {
-      text: "Check Recovered Items",
-      href: "/FoundItems",
-    },
-  },
-];
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => {

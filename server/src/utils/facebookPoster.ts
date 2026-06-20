@@ -29,7 +29,7 @@ export const sendFacebookNotification = async (item: any) => {
     }
 
     await axios.post(url, payload);
-    
+
     console.log("[Facebook] Page post published successfully.");
   } catch (error: any) {
     console.error("[Facebook] Failed to publish post:", error?.response?.data || error.message);

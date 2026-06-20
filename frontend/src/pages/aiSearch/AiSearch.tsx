@@ -6,7 +6,6 @@ import {
 import { useAiSearchMutation } from "../../redux/api/api";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 interface SearchResult {
   foundItems: any[];
@@ -23,7 +22,6 @@ const exampleQueries = [
 ];
 
 const AiSearch: React.FC = () => {
-  useScrollReveal();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
   const [lastQuery, setLastQuery] = useState("");
@@ -101,7 +99,7 @@ const AiSearch: React.FC = () => {
   const totalResults = (searchResults?.totalFound ?? 0) + (searchResults?.totalLost ?? 0);
 
   return (
-    <div className="min-h-screen bg-gray-950 relative overflow-x-hidden reveal">
+    <div className="min-h-screen bg-gray-950 relative overflow-x-hidden">
 
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -320,7 +318,7 @@ interface ItemCardProps {
 }
 
 const ItemCard = ({ img, name, description, category, location, date, badge, accentHover, onView, btnColor }: ItemCardProps) => (
-  <div className={`reveal reveal-delay-${(Math.floor(Math.random() * 3) + 1)} group bg-gray-900 border border-white/5 ${accentHover} rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:shadow-xl hover:shadow-black/40`}>
+  <div className={`group bg-gray-900 border border-white/5 ${accentHover} rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:shadow-xl hover:shadow-black/40`}>
     {img && (
       <div className="relative h-44 overflow-hidden shrink-0">
         <img src={img} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
