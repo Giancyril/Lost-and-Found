@@ -17,19 +17,19 @@ import IndoorMap3D from "./IndoorMap3D";
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: string })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl:       "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl:     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
 type Filter = "all" | "found" | "lost";
 
 interface LocationStat {
   location: string;
-  found:    number;
-  lost:     number;
-  total:    number;
-  lat?:     number;
-  lng?:     number;
+  found: number;
+  lost: number;
+  total: number;
+  lat?: number;
+  lng?: number;
 }
 
 interface AggregatedLocation {
@@ -46,16 +46,16 @@ interface AggregatedLocation {
 }
 
 const HEAT_SCALE = [
-  { label: "High",    hex: "#1d4ed8", badge: "bg-blue-500/10 text-blue-300 border-blue-500/20", bar: "bg-blue-500", dot: "bg-blue-500" },
-  { label: "Medium",  hex: "#3b82f6", badge: "bg-sky-500/10 text-sky-300 border-sky-500/20", bar: "bg-sky-500", dot: "bg-sky-500" },
-  { label: "Low",     hex: "#60a5fa", badge: "bg-sky-400/10 text-sky-200 border-sky-400/20", bar: "bg-sky-400", dot: "bg-sky-400" },
+  { label: "High", hex: "#1d4ed8", badge: "bg-blue-500/10 text-blue-300 border-blue-500/20", bar: "bg-blue-500", dot: "bg-blue-500" },
+  { label: "Medium", hex: "#3b82f6", badge: "bg-sky-500/10 text-sky-300 border-sky-500/20", bar: "bg-sky-500", dot: "bg-sky-500" },
+  { label: "Low", hex: "#60a5fa", badge: "bg-sky-400/10 text-sky-200 border-sky-400/20", bar: "bg-sky-400", dot: "bg-sky-400" },
   { label: "Minimal", hex: "#dbeafe", badge: "bg-sky-200/10 text-sky-200 border-sky-200/20", bar: "bg-sky-200", dot: "bg-sky-200" },
 ];
 
 const getHeatColor = (val: number, max: number) => {
   const pct = val / max;
   if (pct >= 0.75) return HEAT_SCALE[0];
-  if (pct >= 0.5)  return HEAT_SCALE[1];
+  if (pct >= 0.5) return HEAT_SCALE[1];
   if (pct >= 0.25) return HEAT_SCALE[2];
   return HEAT_SCALE[3];
 };
@@ -63,7 +63,7 @@ const getHeatColor = (val: number, max: number) => {
 function HeatLayer({ points, filter, max }: {
   points: LocationStat[];
   filter: Filter;
-  max:    number;
+  max: number;
 }) {
   const map = useMap();
   const layerRef = useRef<L.LayerGroup | null>(null);
@@ -92,24 +92,24 @@ function HeatLayer({ points, filter, max }: {
       const value = filter === "found" ? group.totalFound : filter === "lost" ? group.totalLost : group.totalItems;
       if (value === 0) return;
 
-      const pct    = value / max;
-      const color  = getHeatColor(value, max);
+      const pct = value / max;
+      const color = getHeatColor(value, max);
       const radius = 12 + pct * 25;
 
       L.circleMarker([group.lat, group.lng], {
-        radius:      radius + 10,
-        color:       "transparent",
-        fillColor:   color.hex,
+        radius: radius + 10,
+        color: "transparent",
+        fillColor: color.hex,
         fillOpacity: 0.1,
-        weight:      0,
+        weight: 0,
       }).addTo(layer);
 
       const marker = L.circleMarker([group.lat, group.lng], {
         radius,
-        color:       "#ffffff",
-        fillColor:   color.hex,
+        color: "#ffffff",
+        fillColor: color.hex,
         fillOpacity: 0.85,
-        weight:      2.5,
+        weight: 2.5,
       }).addTo(layer);
 
       const roomsHtml = group.rooms.map(r => `
@@ -259,7 +259,7 @@ const IndoorMapPage = () => {
 
   const rawStats: LocationStat[] = useMemo(() => {
     const statsMap: { [key: string]: LocationStat } = {};
-    
+
     allItems.forEach(item => {
       const loc = item.location || item.foundLocation || "Unknown";
       if (!statsMap[loc]) {
@@ -403,26 +403,7 @@ const IndoorMapPage = () => {
             </div>
           </div>
 
-          {mapMode === "indoor" && (
-            <div className="mt-6 flex items-center gap-1.5 sm:gap-2 pb-1 overflow-x-hidden">
-              {BUILDINGS.map((b: any) => (
-                <button
-                  key={b.id}
-                  onClick={() => {
-                    setSelectedBuilding(b);
-                    setSelectedRoom(null);
-                  }}
-                  className={`px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 ${
-                    selectedBuilding.id === b.id
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20 border border-blue-500"
-                      : "bg-gray-900 border border-white/5 text-gray-500 hover:text-white hover:bg-gray-800"
-                  }`}
-                >
-                  {b.name}
-                </button>
-              ))}
-            </div>
-          )}
+
         </div>
       </div>
 
@@ -430,18 +411,40 @@ const IndoorMapPage = () => {
         <div className="hidden lg:flex flex-1 gap-6 p-6 overflow-hidden">
           {mapMode === "indoor" ? (
             <>
-              {(selectedBuilding as any).isComingSoon ? (
-                <div className="flex-1 bg-[#0f1522] border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center flex-col p-12">
-                   <FaBuilding className="text-gray-800/50 text-6xl mb-6" />
-                   <h2 className="text-2xl font-bold text-white mb-2">{selectedBuilding.name}</h2>
-                   <p className="text-gray-500 text-center max-w-md mb-6">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
-                   <span className="px-4 py-1.5 bg-white/5 border border-white/10 text-gray-400 text-xs font-black rounded-lg uppercase tracking-widest">Coming Soon</span>
+              <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
+                    {BUILDINGS.map((b: any) => (
+                      <button
+                        key={b.id}
+                        onClick={() => {
+                          setSelectedBuilding(b);
+                          setSelectedRoom(null);
+                        }}
+                        className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${selectedBuilding.id === b.id
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-500 hover:text-white"
+                          }`}
+                      >
+                        {b.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              ) : (
-                <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
-                  <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
-                </div>
-              )}
+
+                {(selectedBuilding as any).isComingSoon ? (
+                  <div className="flex-1 bg-[#0f1522] border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center flex-col p-12">
+                    <FaBuilding className="text-gray-800/50 text-6xl mb-6" />
+                    <h2 className="text-2xl font-bold text-white mb-2">{selectedBuilding.name}</h2>
+                    <p className="text-gray-500 text-center max-w-md mb-6">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
+                    <span className="px-4 py-1.5 bg-white/5 border border-white/10 text-gray-400 text-xs font-black rounded-lg uppercase tracking-widest">Coming Soon</span>
+                  </div>
+                ) : (
+                  <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden">
+                    <IndoorMap3D onRoomSelect={handleRoomSelect} selectedRoomId={selectedRoom?.id || `Floor-${currentFloor}`} items={allItems} currentFloor={currentFloor} />
+                  </div>
+                )}
+              </div>
               <div className="w-80 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col shrink-0">
                 <div className="p-4 border-b border-white/5 flex items-center gap-2">
                   <h3 className="text-white text-[11px] font-bold uppercase tracking-widest">Room Details</h3>
@@ -463,17 +466,17 @@ const IndoorMapPage = () => {
                         <button key={f} onClick={() => setHeatmapFilter(f)} className={`px-4 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-all ${heatmapFilter === f ? "bg-indigo-600 text-white" : "text-gray-500"}`}>{f}</button>
                       ))}
                     </div>
-                    <button
-                      onClick={() => setShowSightingPins(v => !v)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${
-                        showSightingPins
-                          ? "bg-violet-600/20 text-violet-300 border-violet-500/30"
-                          : "bg-gray-900 text-gray-500 border-white/5"
-                      }`}
-                    >
-                      <FaEye size={9} />
-                      Sighting Pins {activeSightingPins.length > 0 && `(${activeSightingPins.length})`}
-                    </button>
+                    <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
+                      <button
+                        onClick={() => setShowSightingPins(v => !v)}
+                        className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all ${showSightingPins
+                          ? "bg-violet-600/20 text-violet-300"
+                          : "text-gray-500 hover:text-white"
+                          }`}
+                      >
+                        Sighting Pins {activeSightingPins.length > 0 && `(${activeSightingPins.length})`}
+                      </button>
+                    </div>
                   </div>
                   <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden relative">
                     <style>{`
@@ -493,15 +496,15 @@ const IndoorMapPage = () => {
                       )}
                     </MapContainer>
                     <div className="absolute bottom-6 left-6 p-4 bg-gray-900/90 backdrop-blur-md border border-white/10 rounded-2xl z-[1000] pointer-events-none">
-                       <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Intensity</p>
-                       <div className="flex gap-3">
-                         {HEAT_SCALE.map((level) => (
-                           <div key={level.label} className="flex items-center gap-2">
-                             <div className={`w-2 h-2 rounded-full ${level.dot}`} />
-                             <span className="text-[10px] font-bold text-gray-300">{level.label}</span>
-                           </div>
-                         ))}
-                       </div>
+                      <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Intensity</p>
+                      <div className="flex gap-3">
+                        {HEAT_SCALE.map((level) => (
+                          <div key={level.label} className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${level.dot}`} />
+                            <span className="text-[10px] font-bold text-gray-300">{level.label}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -549,14 +552,34 @@ const IndoorMapPage = () => {
         <div className="lg:hidden flex-1 flex flex-col p-4 gap-3 overflow-y-auto">
           {mapMode === "indoor" ? (
             <>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
+                  {BUILDINGS.map((b: any) => (
+                    <button
+                      key={b.id}
+                      onClick={() => {
+                        setSelectedBuilding(b);
+                        setSelectedRoom(null);
+                      }}
+                      className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${selectedBuilding.id === b.id
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-500 hover:text-white"
+                        }`}
+                    >
+                      {b.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* 3D Map — expanded height for mobile gesture and 2D view space */}
               <div className="relative rounded-2xl overflow-visible shrink-0 animate-fade-in" style={{ height: "70vw", minHeight: "360px", maxHeight: "500px" }}>
                 {(selectedBuilding as any).isComingSoon ? (
                   <div className="w-full h-full bg-[#0f1522] border border-white/5 rounded-2xl overflow-hidden flex items-center justify-center flex-col p-6 text-center">
-                     <FaBuilding className="text-gray-800/50 text-4xl mb-4" />
-                     <h2 className="text-xl font-bold text-white mb-2">{selectedBuilding.name}</h2>
-                     <p className="text-gray-500 text-xs mb-5">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
-                     <span className="px-3 py-1 bg-white/5 border border-white/10 text-gray-400 text-[10px] font-black rounded-md uppercase tracking-widest">Coming Soon</span>
+                    <FaBuilding className="text-gray-800/50 text-4xl mb-4" />
+                    <h2 className="text-xl font-bold text-white mb-2">{selectedBuilding.name}</h2>
+                    <p className="text-gray-500 text-xs mb-5">We are currently mapping the {selectedBuilding.name}. Check back later for its full 3D interactive layout!</p>
+                    <span className="px-3 py-1 bg-white/5 border border-white/10 text-gray-400 text-[10px] font-black rounded-md uppercase tracking-widest">Coming Soon</span>
                   </div>
                 ) : (
                   <div className="w-full h-full rounded-2xl overflow-hidden border border-white/5">
@@ -581,12 +604,36 @@ const IndoorMapPage = () => {
               </div>
             </>
           ) : (
-            <div className="flex-1 bg-gray-900 border border-white/5 rounded-2xl overflow-hidden relative" style={{ minHeight: "400px" }}>
-              <MapContainer center={CAMPUS_CENTER} zoom={CAMPUS_ZOOM - 1} style={{ height: "100%", width: "100%" }} zoomControl={false} attributionControl={false}>
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-                <HeatLayer points={mappableStats} filter={heatmapFilter} max={maxFilter} />
-              </MapContainer>
-            </div>
+            <>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
+                  {(["all", "found", "lost"] as Filter[]).map(f => (
+                    <button key={f} onClick={() => setHeatmapFilter(f)} className={`px-4 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-all ${heatmapFilter === f ? "bg-indigo-600 text-white" : "text-gray-500"}`}>{f}</button>
+                  ))}
+                </div>
+                <div className="flex gap-1 bg-gray-900 border border-white/5 rounded-xl p-1">
+                  <button
+                    onClick={() => setShowSightingPins(v => !v)}
+                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all ${showSightingPins
+                        ? "bg-violet-600/20 text-violet-300"
+                        : "text-gray-500 hover:text-white"
+                      }`}
+                  >
+                    Sighting Pins {activeSightingPins.length > 0 && `(${activeSightingPins.length})`}
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-gray-900 border border-white/5 rounded-2xl overflow-hidden relative shrink-0 animate-fade-in" style={{ height: "70vw", minHeight: "360px", maxHeight: "500px" }}>
+                <MapContainer center={CAMPUS_CENTER} zoom={CAMPUS_ZOOM - 1} style={{ height: "100%", width: "100%" }} zoomControl={false} attributionControl={false}>
+                  <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+                  <HeatLayer points={mappableStats} filter={heatmapFilter} max={maxFilter} />
+                  {showSightingPins && activeSightingPins.length > 0 && (
+                    <SightingPinLayer pins={activeSightingPins} />
+                  )}
+                </MapContainer>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -661,4 +708,4 @@ const DesktopRoomDetails = ({ selectedRoom, roomItems, roomSightings = [], navig
   </div>
 );
 
-export default IndoorMapPage;
+export default IndoorMapPage;
