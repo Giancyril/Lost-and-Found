@@ -16,7 +16,7 @@ A comprehensive lost and found management system built with modern web technolog
 - **Intelligent OCR & ID Card Auto-Extractor**: Uses computer vision to analyze uploaded item images (student IDs, wallets, books, etc.) in real time. Automatically extracts key information (names, IDs, serial numbers), displays interactive highlighted bounding boxes over the image, and auto-populates the registration form fields dynamically with typewriter animation effects.
 - **Magic AI Scan**: Instantly identify items from a single photo — automatically populates item name, detailed description, color, and condition using computer vision
 - **AI-Powered Search**: Integration with Google Gemini AI for intelligent item search and matching
-- **AI Duplicate Report Detection**: Real-time duplicate detection that flags similar lost/found reports and warns users before submitting duplicate reports.
+- **AI Duplicate Report Detection**: Real-time duplicate detection that flags similar lost/found reports (submitted within the last 7 days) and warns users before submitting duplicate reports.
 - **AI-Powered Story Writer**: Integrated spotlight drafting utility inside the Recognition Feed dashboard. Staff enter brief bullet points, and Google Gemini instantly generates heartwarming, inspiring, and professional student recognition titles and complete narrative stories.
 - **High-Performance Web Scanner**: Next-generation hybrid barcode scanner using jsQR + QuaggaJS + native fallback for 1-2 second scan performance — 3-5x faster than previous implementation
 - **Continuous Bulk Scanner**: Seamlessly scan multiple IDs or items in rapid succession without closing the scanner interface. Maintains persistent state and automatically fills location data, supercharging mass-processing workflows for security and admin staff.
@@ -946,7 +946,7 @@ model XPBoostEvent {
 - **Leaderboard Profile Cards**: Allows students to view detailed profile cards directly from the leaderboard by clicking any student's row, displaying their achievements, rank title, and total XP.
 - **XP Chart Breakdown**: Displays an interactive chart breaking down XP gains by reason (e.g., login streaks, found items, comments) over a customizable 90-day range on the user's dashboard profile page.
 - **VirtueSpotlight Likes with Identity**: Implements a secure like system for spotlight posts that stores user identities, preventing spam and ensuring likes persist across sessions per user.
-- **AI Duplicate Report Detection**: Integrates Gemini-powered real-time duplicate detection that flags similar lost/found reports and warns users with a comparison panel before submitting duplicate entries.
+- **AI Duplicate Report Detection**: Integrates Gemini-powered real-time duplicate detection that flags similar lost/found reports (submitted within the last 7 days) and warns users with a comparison panel before submitting duplicate entries.
 - **Indoor Map + Sightings Integration**: Plots real-time student sighting pins directly on the indoor 3D/2D campus map, enabling quick tracking and filtering of all active lost items.
 
   ---
