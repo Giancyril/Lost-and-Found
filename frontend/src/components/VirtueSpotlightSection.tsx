@@ -12,6 +12,7 @@ type Spotlight = {
   students: string[];
   createdAt?: string;
   likes?: number;
+  likedByMe?: boolean; // server-driven — no localStorage
 };
 
 type SortTab = "all" | "recent" | "liked";
@@ -30,44 +31,6 @@ const useColumns = (): number => {
     return () => window.removeEventListener("resize", handler);
   }, []);
   return cols;
-};
-
-// ── Like state ───────────────────────────────────────────────────────────────
-const useLikes = () => {
-  const [likedIds, setLikedIds] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("virtue_liked_posts") || "[]"); }
-    catch { return []; }
-  });
-
-  const [likeSpotlight] = useLikeVirtueSpotlightMutation();
-
-  const likedIdsRef = useRef(likedIds);
-  likedIdsRef.current = likedIds;
-
-  const toggle = useCallback(async (id: string) => {
-    const isLiked = likedIdsRef.current.includes(id);
-
-    // Toggle locally first
-    setLikedIds(prev => {
-      const next = isLiked ? prev.filter(x => x !== id) : [...prev, id];
-      localStorage.setItem("virtue_liked_posts", JSON.stringify(next));
-      return next;
-    });
-
-    try {
-      await likeSpotlight({ id, action: isLiked ? "unlike" : "like" }).unwrap();
-    } catch (err) {
-      console.error("Failed to update like count on server:", err);
-      // Rollback local state on error
-      setLikedIds(prev => {
-        const next = isLiked ? [...prev, id] : prev.filter(x => x !== id);
-        localStorage.setItem("virtue_liked_posts", JSON.stringify(next));
-        return next;
-      });
-    }
-  }, [likeSpotlight]);
-
-  return { likedIds, toggle };
 };
 
 // ── Avatar stack ─────────────────────────────────────────────────────────────
@@ -99,9 +62,9 @@ const AvatarStack = ({ students }: { students: string[] }) => {
 
 // ── Card ─────────────────────────────────────────────────────────────────────
 const SpotlightCard = ({
-  spotlight, isLiked, likeCount, onLike, onOpen,
+  spotlight, onLike, onOpen,
 }: {
-  spotlight: Spotlight; isLiked: boolean; likeCount: number;
+  spotlight: Spotlight;
   onLike: () => void; onOpen: () => void;
 }) => (
   <div
@@ -148,13 +111,13 @@ const SpotlightCard = ({
         type="button"
         onClick={e => { e.stopPropagation(); onLike(); }}
         className={`flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[11px] font-bold transition-all duration-200 ${
-          isLiked ? "text-red-400 scale-110" : "text-gray-300 hover:text-white hover:scale-110"
+          spotlight.likedByMe ? "text-red-400 scale-110" : "text-gray-300 hover:text-white hover:scale-110"
         }`}
-        aria-label={isLiked ? "Unlike" : "Congratulate"}
+        aria-label={spotlight.likedByMe ? "Unlike" : "Congratulate"}
       >
         <FaHeart size={9} className="sm:hidden" />
         <FaHeart size={11} className="hidden sm:block" />
-        <span>{likeCount}</span>
+        <span>{spotlight.likes ?? 0}</span>
       </button>
     </div>
   </div>
@@ -164,9 +127,9 @@ const SpotlightCard = ({
 type GridItem = Spotlight & { x: number; y: number; w: number; h: number };
 
 const CSSMasonryGrid = ({
-  spotlights, likedIds, onLike, onOpen, columns,
+  spotlights, onLike, onOpen, columns,
 }: {
-  spotlights: Spotlight[]; likedIds: string[];
+  spotlights: Spotlight[];
   onLike: (id: string) => void; onOpen: (s: Spotlight) => void; columns: number;
 }) => (
   <div style={{ columnCount: columns, columnGap: "12px" }}>
@@ -174,8 +137,6 @@ const CSSMasonryGrid = ({
       <div key={s.id} style={{ breakInside: "avoid", marginBottom: "12px" }}>
         <SpotlightCard
           spotlight={s}
-          isLiked={likedIds.includes(s.id)}
-          likeCount={s.likes ?? 0}
           onLike={() => onLike(s.id)}
           onOpen={() => onOpen(s)}
         />
@@ -185,9 +146,9 @@ const CSSMasonryGrid = ({
 );
 
 const SpringMasonryGrid = ({
-  spotlights, likedIds, onLike, onOpen,
+  spotlights, onLike, onOpen,
 }: {
-  spotlights: Spotlight[]; likedIds: string[];
+  spotlights: Spotlight[];
   onLike: (id: string) => void; onOpen: (s: Spotlight) => void;
 }) => {
   const [containerRef, { width }] = useMeasure();
@@ -253,8 +214,6 @@ const SpringMasonryGrid = ({
           )}
           <SpotlightCard
             spotlight={item}
-            isLiked={likedIds.includes(item.id)}
-            likeCount={item.likes ?? 0}
             onLike={() => onLike(item.id)}
             onOpen={() => onOpen(item)}
           />
@@ -265,7 +224,7 @@ const SpringMasonryGrid = ({
 };
 
 const MasonryGrid = (props: {
-  spotlights: Spotlight[]; likedIds: string[];
+  spotlights: Spotlight[];
   onLike: (id: string) => void; onOpen: (s: Spotlight) => void;
 }) => {
   const columns = useColumns();
@@ -276,9 +235,9 @@ const MasonryGrid = (props: {
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 const SpotlightModal = ({
-  spotlight, isLiked, likeCount, onLike, onClose,
+  spotlight, onLike, onClose,
 }: {
-  spotlight: Spotlight; isLiked: boolean; likeCount: number;
+  spotlight: Spotlight;
   onLike: () => void; onClose: () => void;
 }) => {
   const [showAll, setShowAll] = useState(false);
@@ -491,14 +450,14 @@ const SpotlightModal = ({
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "7px 14px", borderRadius: 10,
-                  background: isLiked ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.05)",
-                  border: isLiked ? "1px solid rgba(239,68,68,0.25)" : "1px solid rgba(255,255,255,0.08)",
-                  color: isLiked ? "#f87171" : "#9ca3af",
+                  background: spotlight.likedByMe ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.05)",
+                  border: spotlight.likedByMe ? "1px solid rgba(239,68,68,0.25)" : "1px solid rgba(255,255,255,0.08)",
+                  color: spotlight.likedByMe ? "#f87171" : "#9ca3af",
                   fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all .15s",
                 }}
               >
-                <FaHeart size={11} style={{ color: isLiked ? "#f87171" : "inherit" }} />
-                {likeCount} Congratulate
+                <FaHeart size={11} style={{ color: spotlight.likedByMe ? "#f87171" : "inherit" }} />
+                {spotlight.likes ?? 0} Congratulate
               </button>
             </div>
           </div>
@@ -513,7 +472,7 @@ const VirtueSpotlightSection: React.FC = () => {
   const { data, isLoading } = useGetVirtueSpotlightsQuery(undefined);
   const spotlights: Spotlight[] = (data?.data ?? []).filter((s: any) => s.isActive !== false);
 
-  const { likedIds, toggle } = useLikes();
+  const [likeSpotlight] = useLikeVirtueSpotlightMutation();
   const [tab, setTab] = useState<SortTab>("all");
   const [selected, setSelected] = useState<Spotlight | null>(null);
 
@@ -579,8 +538,7 @@ const VirtueSpotlightSection: React.FC = () => {
 
         <MasonryGrid
           spotlights={sorted}
-          likedIds={likedIds}
-          onLike={toggle}
+          onLike={(id) => likeSpotlight(id)}
           onOpen={setSelected}
         />
 
@@ -592,9 +550,7 @@ const VirtueSpotlightSection: React.FC = () => {
       {currentSelected && (
         <SpotlightModal
           spotlight={currentSelected}
-          isLiked={likedIds.includes(currentSelected.id)}
-          likeCount={currentSelected.likes ?? 0}
-          onLike={() => toggle(currentSelected.id)}
+          onLike={() => likeSpotlight(currentSelected.id)}
           onClose={() => setSelected(null)}
         />
       )}

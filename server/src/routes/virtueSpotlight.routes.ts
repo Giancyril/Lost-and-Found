@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { randomUUID } from "crypto";
 import auth from "../app/midddlewares/auth";
 import { uploadImages } from "../app/midddlewares/upload";
 import { uploadFileToStorage } from "../app/utils/storage";
@@ -8,14 +9,49 @@ import { aiRecognitionService } from "../app/modules/ai/ai.service";
 const router = Router();
 const prisma = new PrismaClient();
 
+const VISITOR_COOKIE = "vs_visitor_id";
+const COOKIE_MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
+
+/** Resolve the caller's identity: userId (if logged in) or visitorId cookie (anonymous). */
+function resolveIdentity(req: Request, res: Response): { userId?: string; visitorId?: string } {
+  // Prefer authenticated userId
+  if (req.user?.id) {
+    return { userId: req.user.id };
+  }
+
+  // Anonymous: read or create a persistent visitorId cookie
+  let visitorId: string = req.cookies?.[VISITOR_COOKIE];
+  if (!visitorId) {
+    visitorId = randomUUID();
+    res.cookie(VISITOR_COOKIE, visitorId, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: COOKIE_MAX_AGE,
+      // secure: true, // uncomment in production HTTPS
+    });
+  }
+  return { visitorId };
+}
+
 // ── GET /virtue-spotlights  (public — homepage display) ──────────────────────
-router.get("/virtue-spotlights", async (req: Request, res: Response) => {
+router.get("/virtue-spotlights", auth(true), async (req: Request, res: Response) => {
   try {
+    const { userId, visitorId } = resolveIdentity(req, res);
+
     const spotlights = await prisma.virtueSpotlight.findMany({
       where: { isActive: true },
       orderBy: { createdAt: "desc" },
+      include: { likeRecords: { select: { userId: true, visitorId: true } } },
     });
-    res.json({ success: true, data: spotlights });
+
+    const data = spotlights.map(({ likeRecords, ...s }) => ({
+      ...s,
+      likedByMe: likeRecords.some(r =>
+        userId ? r.userId === userId : (visitorId ? r.visitorId === visitorId : false)
+      ),
+    }));
+
+    res.json({ success: true, data });
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to fetch spotlights" });
   }
@@ -117,33 +153,55 @@ router.delete("/virtue-spotlights/:id", auth(), async (req: Request, res: Respon
   }
 });
 
-// ── POST /virtue-spotlights/:id/like  (public) ───────────────────────────────
-router.post("/virtue-spotlights/:id/like", async (req: Request, res: Response) => {
+// ── POST /virtue-spotlights/:id/like  (optional auth — toggles like) ─────────
+router.post("/virtue-spotlights/:id/like", auth(true), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { action } = req.body;
+    const { userId, visitorId } = resolveIdentity(req, res);
 
-    if (action !== "like" && action !== "unlike") {
-      return res.status(400).json({ success: false, message: "Invalid action. Must be 'like' or 'unlike'" });
-    }
-
-    const increment = action === "like" ? 1 : -1;
-
+    // Ensure the spotlight exists
     const existing = await prisma.virtueSpotlight.findUnique({ where: { id } });
     if (!existing) {
       return res.status(404).json({ success: false, message: "Spotlight not found" });
     }
 
-    const newLikes = Math.max(0, existing.likes + increment);
+    // Build the unique where clause based on identity
+    const whereClause = userId
+      ? { spotlightId_userId: { spotlightId: id, userId } }
+      : { spotlightId_visitorId: { spotlightId: id, visitorId: visitorId! } };
 
-    const updated = await prisma.virtueSpotlight.update({
-      where: { id },
-      data: { likes: newLikes },
-    });
+    const existingLike = await prisma.virtueSpotlightLike.findUnique({ where: whereClause });
 
-    res.json({ success: true, data: updated });
+    let liked: boolean;
+    let updatedSpotlight: typeof existing;
+
+    if (existingLike) {
+      // Already liked → unlike: delete the record and decrement
+      await prisma.virtueSpotlightLike.delete({ where: { id: existingLike.id } });
+      updatedSpotlight = await prisma.virtueSpotlight.update({
+        where: { id },
+        data: { likes: { decrement: 1 } },
+      });
+      liked = false;
+    } else {
+      // Not yet liked → like: create the record and increment
+      await prisma.virtueSpotlightLike.create({
+        data: {
+          spotlightId: id,
+          ...(userId ? { userId } : { visitorId }),
+        },
+      });
+      updatedSpotlight = await prisma.virtueSpotlight.update({
+        where: { id },
+        data: { likes: { increment: 1 } },
+      });
+      liked = true;
+    }
+
+    res.json({ success: true, liked, likes: Math.max(0, updatedSpotlight.likes) });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to update like count" });
+    console.error("[like] error:", err);
+    res.status(500).json({ success: false, message: "Failed to toggle like" });
   }
 });
 

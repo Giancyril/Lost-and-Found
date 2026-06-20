@@ -736,13 +736,42 @@ const api = baseApi.injectEndpoints({
       query: (userId: string) => ({ url: `/points/leaderboard/profile/${userId}`, method: "GET" }),
       providesTags: ["points"],
     }),
-    likeVirtueSpotlight: builder.mutation({
-      query: ({ id, action }: { id: string; action: "like" | "unlike" }) => ({
+    likeVirtueSpotlight: builder.mutation<
+      { success: boolean; liked: boolean; likes: number },
+      string // spotlight id
+    >({
+      query: (id) => ({
         url: `/virtue-spotlights/${id}/like`,
         method: "POST",
-        body: { action },
+        body: {},
       }),
-      invalidatesTags: ["virtueSpotlights"] as any,
+      // Optimistic update: flip likedByMe + ±1 likes without waiting for server
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          api.util.updateQueryData('getVirtueSpotlights', undefined, (draft: any) => {
+            if (!draft?.data) return;
+            const s = draft.data.find((s: any) => s.id === id);
+            if (!s) return;
+            s.likedByMe = !s.likedByMe;
+            s.likes = Math.max(0, (s.likes ?? 0) + (s.likedByMe ? 1 : -1));
+          })
+        );
+        try {
+          const { data } = await queryFulfilled;
+          // Reconcile with server truth
+          dispatch(
+            api.util.updateQueryData('getVirtueSpotlights', undefined, (draft: any) => {
+              if (!draft?.data) return;
+              const s = draft.data.find((s: any) => s.id === id);
+              if (!s) return;
+              s.likedByMe = data.liked;
+              s.likes = data.likes;
+            })
+          );
+        } catch {
+          patch.undo();
+        }
+      },
     }),
   }),
 });

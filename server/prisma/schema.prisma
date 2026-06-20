@@ -43,10 +43,11 @@ model User {
   chatMessages      ChatMessage[]
   pushSubscriptions PushSubscription[]
   chatReadStatuses  ChatReadStatus[]
-  userAchievements  UserAchievement[]
-  sightings         Sighting[]
-  systemAuditLogs   SystemAuditLog[]
-  bountyProgress    UserBountyProgress[]
+  userAchievements       UserAchievement[]
+  sightings              Sighting[]
+  systemAuditLogs        SystemAuditLog[]
+  bountyProgress         UserBountyProgress[]
+  virtueSpotlightLikes   VirtueSpotlightLike[]
 
   @@map("users")
 }
@@ -623,17 +624,36 @@ model Sighting {
 }
 
 model VirtueSpotlight {
-  id          String   @id @default(cuid())
+  id          String                 @id @default(cuid())
   title       String
   description String?
   imageUrl    String?
-  students    String[] // array of recognized student names
-  isActive    Boolean  @default(true)
-  likes       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  students    String[]               // array of recognized student names
+  isActive    Boolean                @default(true)
+  likes       Int                    @default(0)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  likeRecords VirtueSpotlightLike[]
 
   @@map("virtue_spotlights")
+}
+
+model VirtueSpotlightLike {
+  id          String          @id @default(cuid())
+  spotlightId String
+  userId      String?         // null for anonymous visitors
+  visitorId   String?         // UUID cookie for anonymous visitors
+  createdAt   DateTime        @default(now())
+
+  spotlight   VirtueSpotlight @relation(fields: [spotlightId], references: [id], onDelete: Cascade)
+  user        User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // One like per (spotlight, logged-in user)
+  @@unique([spotlightId, userId])
+  // One like per (spotlight, anonymous visitor cookie)
+  @@unique([spotlightId, visitorId])
+
+  @@map("virtue_spotlight_likes")
 }
 
 model XPBoostEvent {
