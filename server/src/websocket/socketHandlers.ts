@@ -169,6 +169,23 @@ export const socketHandlers = (io: Server, socket: ExtendedSocket) => {
     console.log(`User ${socket.userId} left chat room: ${roomName}`);
   });
 
+  socket.on('chat-mark-read', async (data: { chatRoomId: string }) => {
+    try {
+      if (!socket.userId) throw new Error('Unauthorized');
+      const readStatus = await chatService.markRoomAsRead(data.chatRoomId, socket.userId);
+      const roomName = `chat-${data.chatRoomId}`;
+      socket.to(roomName).emit('chat-room-read', {
+        chatRoomId: data.chatRoomId,
+        userId: socket.userId,
+        lastReadAt: readStatus.lastReadAt,
+      });
+      console.log(`[WS] chat-mark-read for room ${data.chatRoomId} by user ${socket.userId}`);
+    } catch (error) {
+      console.error('Error marking room as read via socket:', error);
+      socket.emit('error', { message: 'Failed to mark room as read' });
+    }
+  });
+
   socket.on('chat-typing-start', (data: { chatRoomId: string }) => {
     console.log(`[WS] chat-typing-start received for room: ${data.chatRoomId} from user ${socket.userId}`);
     const roomName = `chat-${data.chatRoomId}`;

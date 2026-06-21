@@ -14,7 +14,8 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [showSidebar, setShowSidebar] = useState(!activeRoomId);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
+  const [typingUserId, setTypingUserId] = useState<string | null>(null);
+  const [roomReadStatuses, setRoomReadStatuses] = useState<Record<string, string>>({});
   const typingTimeoutRef = useRef<any>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -149,8 +150,25 @@ const ChatPage = () => {
     return lastMsg && (!lastReadAt || new Date(lastMsg.createdAt) > new Date(lastReadAt));
   }).length;
 
+  // Sync read statuses from currentRoom data
+  useEffect(() => {
+    if (currentRoom?.readStatuses) {
+      const statuses: Record<string, string> = {};
+      currentRoom.readStatuses.forEach((status: any) => {
+        statuses[status.userId] = status.lastReadAt;
+      });
+      setRoomReadStatuses(statuses);
+    } else {
+      setRoomReadStatuses({});
+    }
+  }, [currentRoom]);
+
+  // Mark room as read on room entry and emit socket read event
   useEffect(() => {
     if (activeRoomId && !skipAutoRead) {
+      if (socket && isConnected) {
+        socket.emit("chat-mark-read", { chatRoomId: activeRoomId });
+      }
       markAsRead(activeRoomId).catch((err) => {
         if (err?.status !== 403) console.error('[Chat] Failed to auto-mark as read:', err);
       });
@@ -159,19 +177,29 @@ const ChatPage = () => {
       const timer = setTimeout(() => setSkipAutoRead(false), 100);
       return () => clearTimeout(timer);
     }
-  }, [activeRoomId, markAsRead, skipAutoRead]);
+  }, [activeRoomId, socket, isConnected, markAsRead, skipAutoRead]);
 
+  // Handle typing listener and clear typing on unmount/room change
   useEffect(() => {
     if (!socket) return;
     socket.on("chat-user-typing", (data: { userId: string; isTyping: boolean }) => {
-      if (data.userId !== currentUser.id) setIsOtherUserTyping(data.isTyping);
+      if (data.userId !== currentUser.id) {
+        setTypingUserId(data.isTyping ? data.userId : null);
+      }
     });
-    return () => { socket.off("chat-user-typing"); };
-  }, [socket, currentUser.id]);
+    return () => {
+      socket.off("chat-user-typing");
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (socket && activeRoomId) {
+        socket.emit("chat-typing-stop", { chatRoomId: activeRoomId });
+      }
+    };
+  }, [socket, currentUser.id, activeRoomId]);
 
   useEffect(() => {
     if (!socket) return;
     socket.on("message-received", (newMessage: any) => {
+      refetchRooms();
       if (newMessage.chatRoomId === activeRoomId) {
         setMessages((prev) => {
           // Transform DB replyTo format to frontend format
@@ -208,9 +236,23 @@ const ChatPage = () => {
           // Other user's message
           return [...prev, finalMessage];
         });
+
+        if (socket && isConnected) {
+          socket.emit("chat-mark-read", { chatRoomId: activeRoomId });
+        }
+
         markAsRead(activeRoomId).catch((err) => {
           if (err?.status !== 403) console.error('[Chat] Failed to mark as read on new message:', err);
         });
+      }
+    });
+
+    socket.on("chat-room-read", (data: { chatRoomId: string; userId: string; lastReadAt: string }) => {
+      if (data.chatRoomId === activeRoomId) {
+        setRoomReadStatuses((prev) => ({
+          ...prev,
+          [data.userId]: data.lastReadAt,
+        }));
       }
     });
 
@@ -232,10 +274,11 @@ const ChatPage = () => {
 
     return () => { 
       socket.off("message-received");
+      socket.off("chat-room-read");
       socket.off("message-deleted");
       socket.off("reaction-updated");
     };
-  }, [socket, activeRoomId, markAsRead]);
+  }, [socket, activeRoomId, isConnected, markAsRead, refetchRooms]);
 
   useEffect(() => {
     if (socket && activeRoomId && isConnected) socket.emit("join-chat", activeRoomId);
@@ -552,6 +595,20 @@ const ChatPage = () => {
                   const isDeleted = msg.isDeleted || false;
                   const reactions = msg.reactions || [];
 
+                  // Calculate read receipt status
+                  let isRead = false;
+                  if (isMe && !isDeleted && currentRoom) {
+                    const otherParticipants = (currentRoom.participants || []).filter(
+                      (pId: string) => pId !== currentUser.id
+                    );
+                    if (otherParticipants.length > 0) {
+                      isRead = otherParticipants.every((pId: string) => {
+                        const lastRead = roomReadStatuses[pId];
+                        return lastRead && new Date(lastRead) >= new Date(msg.createdAt);
+                      });
+                    }
+                  }
+
                   return (
                     <div key={msg.id || idx} className={`flex ${isMe ? "justify-end" : "justify-start"} items-end gap-1.5 group`}>
 
@@ -598,24 +655,58 @@ const ChatPage = () => {
                                 acc[r.emoji] = (acc[r.emoji] || 0) + 1;
                                 return acc;
                               }, {})
-                            ).map(([emoji, count]) => (
-                              <div
-                                key={emoji}
-                                className="flex items-center gap-0.5 bg-gray-800/80 border border-white/10 rounded-full px-1.5 py-0.5 text-xs"
-                              >
-                                <span className="text-xs">{emoji}</span>
-                                {(count as number) > 1 && (
-                                  <span className="text-[9px] text-gray-400 font-medium">{count as number}</span>
-                                )}
-                              </div>
-                            ))}
+                            ).map(([emoji, count]) => {
+                              const hasMyReaction = reactions.some(
+                                (r: any) => r.emoji === emoji && r.userId === currentUser.id
+                              );
+                              const reactionUsers = reactions
+                                .filter((r: any) => r.emoji === emoji)
+                                .map((r: any) => {
+                                  if (r.userId === currentUser.id) return "You";
+                                  const user = currentRoom?.participantUsers?.find((u: any) => u.id === r.userId);
+                                  return user ? (user.name || user.username) : "User";
+                                })
+                                .join(", ");
+
+                              return (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleReactToMessage(msg.id, emoji)}
+                                  title={reactionUsers}
+                                  className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs transition-all border ${
+                                    hasMyReaction
+                                      ? "bg-blue-500/20 border-blue-500/40 text-blue-300 hover:bg-blue-500/30"
+                                      : "bg-gray-800/80 border-white/10 text-gray-300 hover:bg-white/10"
+                                  }`}
+                                >
+                                  <span className="text-xs">{emoji}</span>
+                                  <span className="text-[10px] font-semibold">{count as number}</span>
+                                </button>
+                              );
+                            })}
                           </div>
                         )}
 
-                        {/* Timestamp */}
-                        <p className="text-[10px] text-gray-600 px-0.5">
-                          {format(new Date(msg.createdAt), "p")}
-                        </p>
+                        {/* Timestamp & Read Receipt */}
+                        <div className="flex items-center gap-1.5 px-0.5 mt-0.5">
+                          <span className="text-[10px] text-gray-600">
+                            {format(new Date(msg.createdAt), "p")}
+                          </span>
+                          {isMe && !isDeleted && (
+                            <span>
+                              {isRead ? (
+                                <svg className="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M2 12l5.25 5L11 13" />
+                                  <path d="M8 12l5.25 5L22 7" />
+                                </svg>
+                              ) : (
+                                <svg className="w-3.5 h-3.5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M5 12l5 5L20 7" />
+                                </svg>
+                              )}
+                            </span>
+                          )}
+                        </div>
 
                         {/* FIX: Message menu dropdown — positioned relative to bubble */}
                         {openMessageMenuId === msg.id && !isDeleted && (
@@ -690,15 +781,23 @@ const ChatPage = () => {
                 })
               )}
 
-              {isOtherUserTyping && (
-                <div className="flex justify-start items-end gap-2 mt-2 animate-pulse">
-                  <div className="w-6 h-6 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0">
+              {typingUserId && (
+                <div className="flex justify-start items-end gap-2 mt-2">
+                  <div className="w-6 h-6 rounded-full bg-gray-800 border border-white/5 flex items-center justify-center shrink-0 mb-1">
                     <FaUserCircle className="text-gray-500" size={14} />
                   </div>
-                  <div className="bg-gray-800 text-gray-400 border border-white/5 rounded-2xl rounded-bl-sm px-4 py-2 flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <div className="flex flex-col gap-0.5 max-w-[72%] sm:max-w-[60%]">
+                    <span className="text-[9px] text-gray-500 font-semibold px-1">
+                      {(() => {
+                        const typingUser = currentRoom?.participantUsers?.find((u: any) => u.id === typingUserId);
+                        return typingUser ? (typingUser.role === "ADMIN" ? "Admin" : (typingUser.name || typingUser.username)) : "Someone";
+                      })()}
+                    </span>
+                    <div className="bg-gray-800/80 text-gray-400 border border-white/5 rounded-2xl rounded-bl-sm px-3.5 py-1.5 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
                   </div>
                 </div>
               )}

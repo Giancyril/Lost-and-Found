@@ -117,11 +117,7 @@ const getChatRoomsForUser = async (userId: string) => {
         orderBy: { createdAt: "desc" },
         take: 1,
       },
-      readStatuses: {
-        where: {
-          userId,
-        },
-      },
+      readStatuses: true,
     },
     orderBy: { updatedAt: "desc" },
   });
