@@ -65,6 +65,10 @@ export default function WeeklyBountiesWidget() {
                     <span className="text-emerald-400 flex items-center gap-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-emerald-400/10 px-2 py-0.5 sm:py-1 rounded-md">
                       <FaCheckCircle size={10} /> Done
                     </span>
+                  ) : bounty.currentCount / bounty.targetCount >= 0.8 ? (
+                    <span className="text-orange-400 flex items-center gap-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-orange-400/10 px-2 py-0.5 sm:py-1 rounded-md animate-pulse">
+                      Nearly There
+                    </span>
                   ) : (
                     <span className="text-yellow-300 flex items-center gap-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-yellow-300/10 px-2 py-0.5 sm:py-1 rounded-md">
                       <FaStar size={10} /> {bounty.xpReward} XP

@@ -9,7 +9,8 @@ import {
   FaMap,
   FaEye,
 } from "react-icons/fa";
-import { useGetFoundItemsQuery, useGetLostItemsQuery } from "../redux/api/api";
+import { useGetFoundItemsQuery, useGetLostItemsQuery, useRecordMapViewMutation } from "../redux/api/api";
+import { getUserLocalStorage } from "../auth/auth";
 import { getCoordinates, CAMPUS_CENTER, CAMPUS_ZOOM } from "../utils/campusLocations";
 import IndoorMap3D from "./IndoorMap3D";
 
@@ -247,6 +248,17 @@ const IndoorMapPage = () => {
   const [showSightingPins, setShowSightingPins] = useState(true);
   const { data: foundData } = useGetFoundItemsQuery({ limit: 1000 });
   const { data: lostData } = useGetLostItemsQuery({ limit: 1000 });
+
+  const [recordMapView] = useRecordMapViewMutation();
+
+  useEffect(() => {
+    const token = getUserLocalStorage();
+    if (token) {
+      recordMapView()
+        .unwrap()
+        .catch(err => console.error("Failed to record map view bounty:", err));
+    }
+  }, [recordMapView]);
 
   const allItems = useMemo(() => {
     const found = ((foundData as any)?.data || []).filter((i: any) => !i.isClaimed && !i.isDeleted && !i.isArchived);

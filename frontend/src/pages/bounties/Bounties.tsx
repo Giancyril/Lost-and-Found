@@ -60,6 +60,7 @@ const CountUnit = ({ value, label }: { value: number; label: string }) => (
 const BountyCard = ({ bounty }: { bounty: Bounty }) => {
   const { isCompleted, currentCount, targetCount, xpReward, icon, title, description } = bounty;
   const pct = Math.min((currentCount / targetCount) * 100, 100);
+  const isNearCompleted = !isCompleted && (currentCount / targetCount >= 0.8);
 
   return (
     <div
@@ -77,11 +78,19 @@ const BountyCard = ({ bounty }: { bounty: Bounty }) => {
             {icon}
           </div>
 
-          {/* XP reward pill */}
-          <div
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[13px] font-black border shrink-0 text-amber-400 border-amber-500/25 bg-amber-600/10"
-          >
-            +{xpReward} XP
+          {/* XP reward pill + Near Complete badge */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {isNearCompleted && (
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider text-orange-400 border-orange-500/25 bg-orange-600/10 animate-pulse">
+                <FaFire size={9} />
+                Nearly There
+              </span>
+            )}
+            <div
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[13px] font-black border shrink-0 text-amber-400 border-amber-500/25 bg-amber-600/10"
+            >
+              +{xpReward} XP
+            </div>
           </div>
         </div>
 

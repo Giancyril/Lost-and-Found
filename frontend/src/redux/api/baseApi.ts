@@ -140,7 +140,7 @@ export const baseApi = createApi({
     "testimonials", "services", "faqs", "recentActivity",
     "foundItems", "claims", "categories", "auditLogs",
     "bulletinPosts", "matchNotifications", "comments",
-    "analytics", "points", "commHub", "security", "loginLogs", "moderation", "chat", "push", "achievements", "virtueSpotlights", "boostEvents", "flaggedUsers"
+    "analytics", "points", "commHub", "security", "loginLogs", "moderation", "chat", "push", "achievements", "virtueSpotlights", "boostEvents", "flaggedUsers", "bounties"
   ],
   endpoints: () => ({}),
 });

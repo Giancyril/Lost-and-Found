@@ -145,7 +145,7 @@ router.delete("/delete-user/:id", auth(), userController.softDeleteUser);
 router.get("/admin/match-notifications", auth(), getMatchNotifications);
 
 // ////////////////////////////////////////////////// AI search //////////////////////////////////////////////
-router.post("/ai-search", validateRequest(aiSearchValidation.aiSearchSchema), aiSearchController.aiSearch);
+router.post("/ai-search", auth(true), validateRequest(aiSearchValidation.aiSearchSchema), aiSearchController.aiSearch);
 router.post("/ai-recognize", auth(true), uploadImages.single("image"), aiRecognitionController.recognizeImage);
 router.post("/ai-voice-parse", auth(true), uploadAudio.single("audio"), aiRecognitionController.parseVoice);
 router.post("/ai/check-duplicate", auth(true), aiRecognitionController.checkDuplicate);

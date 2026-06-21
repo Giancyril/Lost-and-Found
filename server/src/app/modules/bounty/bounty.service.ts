@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import prisma from "../../config/prisma";
+import { pushService } from "../push/push.service";
 
 const BOUNTY_TEMPLATES = [
   { title: "Lost & Found Hero", description: "Report 2 found items to the SAS office", targetCount: 2, actionType: "REPORT_FOUND_ITEM", xpReward: 300, icon: "🎒" },
@@ -89,6 +90,38 @@ export const incrementBountyProgress = async (userId: string, actionType: string
           data: { totalPoints: { increment: bounty.xpReward } }
         });
         console.log(`🏆 User ${userId} completed bounty: ${bounty.title} for ${bounty.xpReward} XP!`);
+        
+        // Send completion push notification
+        try {
+          await pushService.sendNotificationToUser(userId, {
+            title: `🎯 Bounty Completed: ${bounty.title}!`,
+            body: `You've earned ${bounty.xpReward} XP. Great job!`,
+            data: {
+              type: "BOUNTY_COMPLETED",
+              bountyId: bounty.id
+            }
+          });
+        } catch (err) {
+          console.error("Failed to send bounty completion push:", err);
+        }
+      } else {
+        const oldRatio = progress.currentCount / bounty.targetCount;
+        const newRatio = newCount / bounty.targetCount;
+        if (oldRatio < 0.8 && newRatio >= 0.8) {
+          // Send near-complete push notification
+          try {
+            await pushService.sendNotificationToUser(userId, {
+              title: `🔥 Bounty Almost Done: ${bounty.title}!`,
+              body: `You're at ${newCount}/${bounty.targetCount} (${Math.round(newRatio * 100)}%). Just a little more to earn ${bounty.xpReward} XP!`,
+              data: {
+                type: "BOUNTY_NEAR_COMPLETE",
+                bountyId: bounty.id
+              }
+            });
+          } catch (err) {
+            console.error("Failed to send bounty progress push:", err);
+          }
+        }
       }
     }
   } catch (error) {

@@ -671,7 +671,11 @@ const api = baseApi.injectEndpoints({
     // bounties
     getActiveBounties: builder.query({
       query: () => ({ url: "/bounties/active", method: "GET" }),
-      providesTags: ["bounties"] as any,
+      providesTags: ["bounties"],
+    }),
+    recordMapView: builder.mutation({
+      query: () => ({ url: "/bounties/view-map", method: "POST" }),
+      invalidatesTags: ["bounties"],
     }),
 
     getApiHealth: builder.query({
@@ -882,6 +886,7 @@ export const {
   useValidateRegistrationQuery,
   useLazyValidateRegistrationQuery,
   useGetActiveBountiesQuery,
+  useRecordMapViewMutation,
   useGetVirtueSpotlightsQuery,
   useGetAllVirtueSpotlightsQuery,
   useCreateVirtueSpotlightMutation,

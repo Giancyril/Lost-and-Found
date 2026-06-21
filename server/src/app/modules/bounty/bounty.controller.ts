@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prisma";
-import { generateWeeklyBounties } from "./bounty.service";
+import { generateWeeklyBounties, incrementBountyProgress } from "./bounty.service";
 
 const getActiveBounties = async (req: Request, res: Response) => {
   try {
@@ -50,6 +50,21 @@ const getActiveBounties = async (req: Request, res: Response) => {
   }
 };
 
+const recordMapVirtualView = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    await incrementBountyProgress(userId, "VIEW_MAP");
+    res.status(200).json({
+      success: true,
+      message: "Map view recorded and bounty progress updated",
+    });
+  } catch (error) {
+    console.error("Error recording map view:", error);
+    res.status(500).json({ success: false, message: "Failed to record map view", error });
+  }
+};
+
 export const bountyController = {
-  getActiveBounties
+  getActiveBounties,
+  recordMapVirtualView
 };
