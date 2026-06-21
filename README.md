@@ -948,6 +948,8 @@ model XPBoostEvent {
 - **VirtueSpotlight Likes with Identity**: Implements a secure like system for spotlight posts that stores user identities, preventing spam and ensuring likes persist across sessions per user.
 - **AI Duplicate Report Detection**: Integrates Gemini-powered real-time duplicate detection that flags similar lost/found reports (submitted within the last 7 days) and warns users with a comparison panel before submitting duplicate entries.
 - **Indoor Map + Sightings Integration**: Plots real-time student sighting pins directly on the indoor 3D/2D campus map, enabling quick tracking and filtering of all active lost items.
+- **Chat Read Receipts, Typing Indicators, & Message Reactions**: Real-time read status updates using `ChatReadStatus` and WebSockets, rendering single checkmark for sent/unread and double blue checkmarks for read messages. Displays identity-aware typing indicators (e.g., *"Admin is typing"*) and supports interactive, clickable reaction badges with hovered tooltips listing who reacted.
+- **Bounty Progress & Near-Complete Push Notifications**: Sends automated push alerts via `PushSubscription` when a student's active weekly bounty progress reaches 80% (Near-Complete) or is fully finished (Completion). Displays pulsing orange *"Nearly There"* badges on the student dashboard bounties cards.
 
   ---
 
