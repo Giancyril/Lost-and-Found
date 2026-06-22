@@ -11,13 +11,13 @@ const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 
 const STATUS_BADGE: Record<string, string> = {
-  PENDING:  "bg-yellow-400/10 text-yellow-400 border-yellow-400/20",
+  PENDING: "bg-yellow-400/10 text-yellow-400 border-yellow-400/20",
   APPROVED: "bg-emerald-400/10 text-emerald-400 border-emerald-400/20",
   REJECTED: "bg-red-400/10 text-red-400 border-red-400/20",
 };
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
-  PENDING:  <FaClock size={9} />,
+  PENDING: <FaClock size={9} />,
   APPROVED: <FaCheckCircle size={9} />,
   REJECTED: <FaTimesCircle size={9} />,
 };
@@ -32,7 +32,7 @@ export default function StudentClaims() {
   // ✅ fix: data?.data ?? []
   const claims: any[] = data?.data ?? [];
 
-  const [search, setSearch]     = useState("");
+  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<any>(null);
 
   const filtered = claims.filter((c: any) => {
@@ -40,8 +40,8 @@ export default function StudentClaims() {
     return name.toLowerCase().includes(search.toLowerCase());
   });
 
-  const total    = claims.length;
-  const pending  = claims.filter((c: any) => c.status === "PENDING").length;
+  const total = claims.length;
+  const pending = claims.filter((c: any) => c.status === "PENDING").length;
   const approved = claims.filter((c: any) => c.status === "APPROVED").length;
   const rejected = claims.filter((c: any) => c.status === "REJECTED").length;
 
@@ -50,10 +50,10 @@ export default function StudentClaims() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total",    value: total,    icon: <FaClipboardList size={13} className="text-blue-400" />,   bg: "bg-blue-500/10",    accent: "text-white"       },
-          { label: "Pending",  value: pending,  icon: <FaClock size={13} className="text-yellow-400" />,          bg: "bg-yellow-500/10",  accent: "text-yellow-400"  },
-          { label: "Approved", value: approved, icon: <FaCheckCircle size={13} className="text-emerald-400" />,   bg: "bg-emerald-500/10", accent: "text-emerald-400" },
-          { label: "Rejected", value: rejected, icon: <FaTimesCircle size={13} className="text-red-400" />,       bg: "bg-red-500/10",     accent: "text-red-400"     },
+          { label: "Total", value: total, icon: <FaClipboardList size={13} className="text-blue-400" />, bg: "bg-blue-500/10", accent: "text-white" },
+          { label: "Pending", value: pending, icon: <FaClock size={13} className="text-yellow-400" />, bg: "bg-yellow-500/10", accent: "text-yellow-400" },
+          { label: "Approved", value: approved, icon: <FaCheckCircle size={13} className="text-emerald-400" />, bg: "bg-emerald-500/10", accent: "text-emerald-400" },
+          { label: "Rejected", value: rejected, icon: <FaTimesCircle size={13} className="text-red-400" />, bg: "bg-red-500/10", accent: "text-red-400" },
         ].map(({ label, value, icon, bg, accent }) => (
           <div key={label} className="bg-gray-900 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
             <div>
@@ -104,8 +104,8 @@ export default function StudentClaims() {
               <div className="divide-y divide-white/[0.04]">
                 {filtered.map((claim: any, i: number) => {
                   const itemName = claim.foundItem?.foundItemName ?? claim.lostItem?.lostItemName ?? "Item";
-                  const status   = claim.status ?? "PENDING";
-                  const imgSrc   = (Array.isArray(claim.foundItem?.images) && claim.foundItem.images.length > 0
+                  const status = claim.status ?? "PENDING";
+                  const imgSrc = (Array.isArray(claim.foundItem?.images) && claim.foundItem.images.length > 0
                     ? (typeof claim.foundItem.images[0] === "string" ? claim.foundItem.images[0] : claim.foundItem.images[0]?.url ?? "")
                     : "") || claim.foundItem?.img || "/default-item.png";
 
@@ -133,7 +133,7 @@ export default function StudentClaims() {
                       </div>
                       <div className="col-span-1 flex items-center justify-end gap-2">
                         <button onClick={() => setSelected(claim)}
-                          className="w-7 h-7 rounded-lg bg-gray-800 hover:bg-gray-700 border border-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
+                          className="flex items-center justify-center text-gray-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
                           <FaEye size={11} />
                         </button>
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${STATUS_BADGE[status] ?? STATUS_BADGE.PENDING}`}>
@@ -158,8 +158,8 @@ export default function StudentClaims() {
               </div>
             ) : filtered.map((claim: any, i: number) => {
               const itemName = claim.foundItem?.foundItemName ?? claim.lostItem?.lostItemName ?? "Item";
-              const status   = claim.status ?? "PENDING";
-              const imgSrc   = (Array.isArray(claim.foundItem?.images) && claim.foundItem.images.length > 0
+              const status = claim.status ?? "PENDING";
+              const imgSrc = (Array.isArray(claim.foundItem?.images) && claim.foundItem.images.length > 0
                 ? (typeof claim.foundItem.images[0] === "string" ? claim.foundItem.images[0] : claim.foundItem.images[0]?.url ?? "")
                 : "") || claim.foundItem?.img || "/default-item.png";
 
@@ -207,9 +207,6 @@ export default function StudentClaims() {
           <div className="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.05]">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <FaClipboardList size={11} className="text-blue-400" />
-                </div>
                 <div>
                   <p className="text-sm font-bold text-white">Claim Details</p>
                   <p className="text-[10px] text-gray-500 mt-0.5">Your submitted claim</p>

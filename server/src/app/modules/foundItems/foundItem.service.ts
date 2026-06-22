@@ -173,7 +173,19 @@ const getMyFoundItem = async (user: JwtPayload) => {
   return prisma.foundItem.findMany({
     where: whereConditions,
     orderBy: { createdAt: "desc" },
-    include: { user: true, category: true },
+    include: {
+      user: true,
+      category: true,
+      claim: {
+        where: { isDeleted: false },
+        include: {
+          auditLogs: {
+            orderBy: { createdAt: "asc" }
+          }
+        }
+      },
+      matchNotifications: true,
+    },
   });
 };
 

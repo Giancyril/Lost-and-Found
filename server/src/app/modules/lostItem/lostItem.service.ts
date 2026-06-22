@@ -186,7 +186,27 @@ const getMyLostItem = async (user: JwtPayload) => {
 
   return prisma.lostItem.findMany({
     where:   whereConditions,
-    include: { user: true, category: true, sightings: { orderBy: { createdAt: "desc" } } },
+    include: {
+      user: true,
+      category: true,
+      sightings: { orderBy: { createdAt: "desc" } },
+      matchNotifications: {
+        include: {
+          foundItem: {
+            include: {
+              claim: {
+                where: { isDeleted: false },
+                include: {
+                  auditLogs: {
+                    orderBy: { createdAt: "asc" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
   });
 };
 
