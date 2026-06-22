@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   FaSearch, FaMapMarkerAlt,
@@ -20,19 +20,27 @@ export default function StudentLostItems() {
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [trackingItem, setTrackingItem]: any = useState(null);
 
+  const scrollEl = () => document.querySelector("main") as HTMLElement | null;
+
   const openTrackingModal = (item: any) => {
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.documentElement.style.paddingRight = `${scrollbarWidth}px`;
-    document.body.style.overflow = "hidden";
+    const el = scrollEl();
+    if (el) el.style.overflow = "hidden";
     setTrackingItem(item);
     setIsTrackingOpen(true);
   };
 
   const closeTrackingModal = () => {
+    const el = scrollEl();
+    if (el) el.style.overflow = "";
     setIsTrackingOpen(false);
-    document.documentElement.style.paddingRight = "";
-    document.body.style.overflow = "";
   };
+
+  useEffect(() => {
+    return () => {
+      const el = scrollEl();
+      if (el) el.style.overflow = "";
+    };
+  }, []);
 
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
@@ -60,8 +68,8 @@ export default function StudentLostItems() {
     item.description?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const total    = items.length;
-  const active   = items.filter((i: any) => !i.isFound).length;
+  const total = items.length;
+  const active = items.filter((i: any) => !i.isFound).length;
   const resolved = items.filter((i: any) => i.isFound).length;
 
   return (
@@ -69,9 +77,9 @@ export default function StudentLostItems() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total Reports", value: total,    icon: <FaSearch size={14} className="text-red-400" />,             accent: "bg-red-500/5",    sub: "all time",        subColor: "text-gray-500"    },
-          { label: "Active",        value: active,   icon: <IoMdRadioButtonOn size={14} className="text-orange-400" />, accent: "bg-orange-500/5", sub: "still missing",   subColor: "text-orange-400"  },
-          { label: "Resolved",      value: resolved, icon: <FaCheckCircle size={14} className="text-emerald-400" />,    accent: "bg-emerald-500/5",sub: "marked as found", subColor: "text-emerald-400" },
+          { label: "Total Reports", value: total, icon: <FaSearch size={14} className="text-red-400" />, accent: "bg-red-500/5", sub: "all time", subColor: "text-gray-500" },
+          { label: "Active", value: active, icon: <IoMdRadioButtonOn size={14} className="text-orange-400" />, accent: "bg-orange-500/5", sub: "still missing", subColor: "text-orange-400" },
+          { label: "Resolved", value: resolved, icon: <FaCheckCircle size={14} className="text-emerald-400" />, accent: "bg-emerald-500/5", sub: "marked as found", subColor: "text-emerald-400" },
         ].map(({ label, value, icon, accent, sub, subColor }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
             <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />

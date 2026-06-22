@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   FaBoxOpen, FaMapMarkerAlt,
@@ -14,26 +14,34 @@ const fmt = (d: string) =>
 
 export default function StudentFoundItems() {
   console.log("[DEBUG] StudentFoundItems component is rendering!");
-  
+
   const user = useUserVerification();
   const isLoggedIn = !!user?.id;
   const [search, setSearch] = useState("");
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [trackingItem, setTrackingItem]: any = useState(null);
 
+  const scrollEl = () => document.querySelector("main") as HTMLElement | null;
+
   const openTrackingModal = (item: any) => {
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.documentElement.style.paddingRight = `${scrollbarWidth}px`;
-    document.body.style.overflow = "hidden";
+    const el = scrollEl();
+    if (el) el.style.overflow = "hidden";
     setTrackingItem(item);
     setIsTrackingOpen(true);
   };
 
   const closeTrackingModal = () => {
+    const el = scrollEl();
+    if (el) el.style.overflow = "";
     setIsTrackingOpen(false);
-    document.documentElement.style.paddingRight = "";
-    document.body.style.overflow = "";
   };
+
+  useEffect(() => {
+    return () => {
+      const el = scrollEl();
+      if (el) el.style.overflow = "";
+    };
+  }, []);
 
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
@@ -69,8 +77,8 @@ export default function StudentFoundItems() {
     item.description?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const total     = items.length;
-  const claimed   = items.filter(i => i.isClaimed).length;
+  const total = items.length;
+  const claimed = items.filter(i => i.isClaimed).length;
   const unclaimed = items.filter(i => !i.isClaimed).length;
 
   return (
@@ -79,9 +87,9 @@ export default function StudentFoundItems() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total Reported", value: total,     icon: <FaBoxOpen size={14} className="text-cyan-400" />,         accent: "bg-cyan-500/5",    sub: "all time",             subColor: "text-gray-500"    },
-          { label: "Unclaimed",      value: unclaimed,  icon: <FaClock size={14} className="text-yellow-400" />,         accent: "bg-yellow-500/5",  sub: "awaiting claim",       subColor: "text-yellow-400"  },
-          { label: "Claimed",        value: claimed,    icon: <FaCheckCircle size={14} className="text-emerald-400" />,  accent: "bg-emerald-500/5", sub: "successfully claimed", subColor: "text-emerald-400" },
+          { label: "Total Reported", value: total, icon: <FaBoxOpen size={14} className="text-cyan-400" />, accent: "bg-cyan-500/5", sub: "all time", subColor: "text-gray-500" },
+          { label: "Unclaimed", value: unclaimed, icon: <FaClock size={14} className="text-yellow-400" />, accent: "bg-yellow-500/5", sub: "awaiting claim", subColor: "text-yellow-400" },
+          { label: "Claimed", value: claimed, icon: <FaCheckCircle size={14} className="text-emerald-400" />, accent: "bg-emerald-500/5", sub: "successfully claimed", subColor: "text-emerald-400" },
         ].map(({ label, value, icon, accent, sub, subColor }) => (
           <div key={label} className="relative bg-gray-900 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 overflow-hidden">
             <div className={`absolute inset-0 opacity-30 ${accent} blur-3xl scale-150 pointer-events-none`} />
@@ -286,7 +294,7 @@ export default function StudentFoundItems() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <StatusTimeline item={trackingItem} type="found" />
                 </div>
               )}
