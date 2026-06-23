@@ -955,7 +955,7 @@ model XPBoostEvent {
 
   ## Existing vs New Sighting Pins
 
-  ### 🔵 **Existing** — Per-Item Sighting Pins (on SingleLostItem page)
+  ### **Existing** — Per-Item Sighting Pins (on SingleLostItem page)
   *(What you see in your screenshot)*
 
   | | |
@@ -968,7 +968,7 @@ model XPBoostEvent {
 
   ---
 
-  ### 🟣 **New** — Cross-Item Map Sightings (on `/map` / Indoor Map page)
+  ### **New** — Cross-Item Map Sightings (on `/map` / Indoor Map page)
 
   | | |
   |---|---|
