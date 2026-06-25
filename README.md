@@ -7,7 +7,7 @@ A production-grade, AI-augmented Lost & Found platform designed for academic ins
 ### Core Functionality
 - **Item Reporting**: Users can report lost and found items with detailed descriptions, images, and location information
 - **Smart Matching**: Automatic matching algorithm that connects lost items with found items based on location, category, and timeline
-- **Claim Management**: Advanced claim review system with bulk approve/reject, AI-powered claimant identity verification scoring, and a dual-view (Table + Timeline) interface for managing the full lifecycle of every claim
+- **Claim Management**: Advanced claim review system with bulk approve/reject, AI-powered claimant identity verification scoring, AI photo comparison with Gemini Vision, and a dual-view (Table + Timeline) interface for managing the full lifecycle of every claim
 - **Interactive Journey Tracking**: Visual, data-driven timeline tracing the complete lifecycle of a claim or lost report, dynamically aggregating sightings and verification milestones
 - **User Authentication**: Secure user registration and login with JWT tokens
 - **Role-Based Access**: Admin and user roles with different permission levels
@@ -48,6 +48,8 @@ A production-grade, AI-augmented Lost & Found platform designed for academic ins
 - **Offline Sync**: Staff members can scan barcodes or submit "Found Items" while offline. The app saves the data securely in the browser and automatically uploads it in the background as soon as they walk back into a WiFi zone.
 - **Strict Audit Trail**: A dedicated, un-deletable "Audit Log" page for Administrators that shows exactly who performed which action and when. This ensures complete accountability and makes the system virtually bulletproof for school audits.
 - **AI Chatbot Concierge ("Smart Assistant")**: A floating AI chat widget integrated into the Student Dashboard. Built with native **Gemini Function Calling**, **Semantic Search (Vector Embeddings)** for high-accuracy concept matching (e.g. searching "knapsack" matches "backpack"), **Structured JSON Responses**, beautiful horizontal **UI product cards** with click-to-claim routing, and advanced **Few-Shot Injections** for consistent, empathetic, and platform-compliant conversations.
+- **Student Report Status Timeline**: Visual step-by-step progress timeline on the Student Dashboard (My Found Items / My Lost Items) showing the full progression of each report — Submitted → Under Review → Matched → Claim Approved → Resolved — with timestamps for each milestone and sighting events as inline nodes on lost item timelines.
+- **AI Photo Comparison (Gemini Vision)**: When an admin reviews a claim, a side-by-side panel displays the found item photo alongside the claimant's written description. A single "AI Compare" click calls Gemini Vision to assess visual-to-text similarity, returning an animated confidence ring, color-coded verdict (Definite Match → Definite Mismatch), a natural-language reasoning summary, and itemized similarities/differences lists.
 ### Campus Features
 - **Points System**: Comprehensive gamification system with point rewards for various activities
   - **Leveling & Rank System**: An RPG-style progression system that automatically translates earned points into Account Levels (1-100). Students unlock prestigious Rank Titles (e.g., Novice Finder -> Grandmaster of Lost Items) as they level up, displayed proudly on their profile.
@@ -942,7 +944,7 @@ model XPBoostEvent {
   | **Rate limits** | ❌ Can get blocked | ✅ Only syncs every 6hrs |
   | **Reliability** | Fragile | Resilient |
 
-### Phase 11: Real-Time Sightings, AI Duplicate Detection, & Engagement Upgrades (Completed)
+### Phase 11: Real-Time Sightings, AI Duplicate Detection, Engagement Upgrades & AI Claim Tools (Completed)
 - **Leaderboard Profile Cards**: Allows students to view detailed profile cards directly from the leaderboard by clicking any student's row, displaying their achievements, rank title, and total XP.
 - **XP Chart Breakdown**: Displays an interactive chart breaking down XP gains by reason (e.g., login streaks, found items, comments) over a customizable 90-day range on the user's dashboard profile page.
 - **VirtueSpotlight Likes with Identity**: Implements a secure like system for spotlight posts that stores user identities, preventing spam and ensuring likes persist across sessions per user.
@@ -950,6 +952,8 @@ model XPBoostEvent {
 - **Indoor Map + Sightings Integration**: Plots real-time student sighting pins directly on the indoor 3D/2D campus map, enabling quick tracking and filtering of all active lost items.
 - **Chat Read Receipts, Typing Indicators, & Message Reactions**: Real-time read status updates using `ChatReadStatus` and WebSockets, rendering single checkmark for sent/unread and double blue checkmarks for read messages. Displays identity-aware typing indicators (e.g., *"Admin is typing"*) and supports interactive, clickable reaction badges with hovered tooltips listing who reacted.
 - **Bounty Progress & Near-Complete Push Notifications**: Sends automated push alerts via `PushSubscription` when a student's active weekly bounty progress reaches 80% (Near-Complete) or is fully finished (Completion). Displays pulsing orange *"Nearly There"* badges on the student dashboard bounties cards.
+- **Student Report Status Timeline**: Replaced simple status badges on the Student Dashboard (My Found Items / My Lost Items) with a clickable visual timeline showing the full progression — Submitted → Under Review → Matched → Claim Approved → Resolved — with dates for each milestone. Lost item timelines include sighting events as inline nodes. Uses a custom `createPortal` modal (replacing Flowbite) with precise scroll-lock scroll-bar compensation to eliminate page layout shift.
+- **AI Photo Comparison for Claim Verification** *(AI-Enhanced)*: When an admin opens a claim in Claims Management, a new **AI Photo Comparison** panel displays the found item photo alongside the claimant's text description side-by-side. Clicking **"AI Compare"** sends the image and description to Google Gemini Vision, which returns: an animated SVG confidence ring (0–100%), a color-coded verdict badge (*Definite Match*, *Likely Match*, *Uncertain*, *Likely Different*, *Definite Mismatch*), a natural-language reasoning summary, and itemized similarity/difference lists — giving admins an objective, AI-backed visual verification tool for every claim review.
 
   ---
 
