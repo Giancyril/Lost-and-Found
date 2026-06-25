@@ -1,6 +1,6 @@
 # Lost & Found System
 
-A comprehensive lost and found management system built with modern web technologies, featuring AI-powered search, smart matching, real-time notifications, high-performance Redis caching, optimistic UI updates, automated data governance, and a full admin communication, compliance, and content moderation suite.
+A production-grade, AI-augmented Lost & Found platform designed for academic institutions. Features intelligent item-to-report matching via Google Gemini, Magic AI Scan for instant item identification from photos, OCR-powered ID card extraction with bounding-box overlays, real-time anonymized community chat, Web Push notifications, an RPG-style gamification engine (XP, streaks, leaderboards, bounties), predictive hotspot analytics, indoor 3D campus maps, Redis-cached student masterlist lookups, optimistic UI updates, automated data retention & compliance reporting, and a full admin communication, moderation, and security suite.
 
 ## Features
 
