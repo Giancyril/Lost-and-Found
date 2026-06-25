@@ -149,7 +149,9 @@ router.post("/ai-search", auth(true), validateRequest(aiSearchValidation.aiSearc
 router.post("/ai-recognize", auth(true), uploadImages.single("image"), aiRecognitionController.recognizeImage);
 router.post("/ai-voice-parse", auth(true), uploadAudio.single("audio"), aiRecognitionController.parseVoice);
 router.post("/ai/check-duplicate", auth(true), aiRecognitionController.checkDuplicate);
+router.post("/ai/compare-photos", auth(), aiRecognitionController.comparePhotos);
 router.use("/ai-chat", aiChatRoutes);
+
 
 // ── Email / Mailer ──
 router.post("/email/lost-item", auth(), sendLostItemEmail);

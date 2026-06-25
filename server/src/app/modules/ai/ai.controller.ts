@@ -115,8 +115,45 @@ const checkDuplicate = async (req: Request, res: Response) => {
   }
 };
 
+const comparePhotos = async (req: Request, res: Response) => {
+  try {
+    const { foundImageUrl, claimImageUrl, claimDescription } = req.body;
+
+    if (!foundImageUrl) {
+      return sendResponse(res, {
+        statusCode: StatusCodes.BAD_REQUEST,
+        success: false,
+        message: "foundImageUrl is required",
+        data: null,
+      });
+    }
+
+    const result = await aiRecognitionService.comparePhotos(
+      foundImageUrl,
+      claimImageUrl || null,
+      claimDescription || null
+    );
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Photo comparison completed",
+      data: result,
+    });
+  } catch (error: any) {
+    console.error("[AI] Photo Comparison Controller Error:", error);
+    sendResponse(res, {
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      success: false,
+      message: error?.message || "Photo comparison failed",
+      data: null,
+    });
+  }
+};
+
 export const aiRecognitionController = {
   recognizeImage,
   parseVoice,
   checkDuplicate,
+  comparePhotos,
 };

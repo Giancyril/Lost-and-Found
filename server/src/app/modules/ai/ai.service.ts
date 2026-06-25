@@ -640,6 +640,105 @@ const findDuplicates = async (name: string, description: string, categoryId: str
   }
 };
 
+/**
+ * Compares two item photos using Gemini vision to assess visual similarity.
+ * Used by admins when reviewing claims to verify the claimant's item matches the found item.
+ */
+const comparePhotos = async (
+  foundImageUrl: string,
+  claimImageUrl: string | null,
+  claimDescription: string | null
+) => {
+  try {
+    const genAI = getGenAI();
+
+    // Fetch and encode the found item image
+    const fetchImageAsBase64 = async (url: string): Promise<{ data: string; mimeType: string }> => {
+      const response = await axios.get(url, { responseType: "arraybuffer", timeout: 10000 });
+      const data = Buffer.from(response.data, "binary").toString("base64");
+      const contentType = (response.headers["content-type"] as string) || "image/jpeg";
+      return { data, mimeType: contentType.split(";")[0] };
+    };
+
+    const foundImg = await fetchImageAsBase64(foundImageUrl);
+
+    const promptParts: any[] = [];
+
+    if (claimImageUrl) {
+      // Two-image visual comparison
+      const claimImg = await fetchImageAsBase64(claimImageUrl);
+      promptParts.push(
+        `You are an AI assistant for a campus Lost and Found system called "Lost & Found NBSC".
+You are given TWO item photos submitted by two different parties.
+Image 1: The FOUND ITEM photo (uploaded by the finder).
+Image 2: The CLAIMANT'S photo (uploaded by the person claiming ownership).
+
+Task: Assess how visually similar these two items are and determine if they are likely the same item.
+
+Additional claimant description: "${claimDescription || "Not provided"}"
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "confidence": <integer 0-100>,
+  "verdict": "<Definite Match | Likely Match | Uncertain | Likely Different | Definite Mismatch>",
+  "reasoning": "<1-3 sentence summary explaining the verdict>",
+  "similarities": ["<detail1>", "<detail2>"],
+  "differences": ["<detail1>", "<detail2>"]
+}
+
+Rules:
+- confidence 85-100 = Definite Match
+- confidence 65-84 = Likely Match
+- confidence 40-64 = Uncertain
+- confidence 20-39 = Likely Different
+- confidence 0-19 = Definite Mismatch
+- Return ONLY valid JSON with no extra text.`,
+        { inlineData: { data: foundImg.data, mimeType: foundImg.mimeType } },
+        { inlineData: { data: claimImg.data, mimeType: claimImg.mimeType } }
+      );
+    } else {
+      // Single image + text description comparison
+      promptParts.push(
+        `You are an AI assistant for a campus Lost and Found system called "Lost & Found NBSC".
+You are given the FOUND ITEM photo and a CLAIMANT'S TEXT DESCRIPTION of their lost item.
+Image 1: The FOUND ITEM photo (uploaded by the finder).
+
+Claimant's description: "${claimDescription || "Not provided"}"
+
+Task: Assess whether the found item in the photo matches the claimant's description.
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "confidence": <integer 0-100>,
+  "verdict": "<Definite Match | Likely Match | Uncertain | Likely Different | Definite Mismatch>",
+  "reasoning": "<1-3 sentence summary explaining the verdict>",
+  "similarities": ["<detail1>", "<detail2>"],
+  "differences": ["<detail1>", "<detail2>"]
+}
+
+Rules:
+- confidence 85-100 = Definite Match
+- confidence 65-84 = Likely Match
+- confidence 40-64 = Uncertain
+- confidence 20-39 = Likely Different
+- confidence 0-19 = Definite Mismatch
+- Return ONLY valid JSON with no extra text.`,
+        { inlineData: { data: foundImg.data, mimeType: foundImg.mimeType } }
+      );
+    }
+
+    const result = await generateContentWithRetry(genAI, promptParts);
+    const response = await result.response;
+    let text = response.text().trim().replace(/```json/g, "").replace(/```/g, "").trim();
+
+    const parsed = JSON.parse(text);
+    return parsed;
+  } catch (error: any) {
+    console.error("[AI] Photo Comparison Pipeline Failure:", error?.message);
+    throw new Error(error?.message || "Photo comparison failed");
+  }
+};
+
 export const aiRecognitionService = {
   recognizeImage,
   analyzeUrgency,
@@ -647,4 +746,5 @@ export const aiRecognitionService = {
   parseVoice,
   writeSpotlightStory,
   findDuplicates,
+  comparePhotos,
 };

@@ -4,6 +4,7 @@ import {
   FaHistory, FaClipboardList, FaChevronLeft, FaChevronRight,
   FaEnvelope, FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt,
   FaTag, FaBolt, FaTrash, FaChevronDown, FaExclamationTriangle,
+  FaCamera, FaSyncAlt,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
@@ -17,6 +18,7 @@ import {
   useGetFoundItemsQuery,
   useSendLostItemEmailMutation,
   useAnalyzeClaimFraudMutation,
+  useComparePhotosMutation,
 } from "../../redux/api/api";
 import ExportButton from "../../components/export/ExportButton";
 import { getCoordinates } from "../../utils/campusLocations";
@@ -239,6 +241,8 @@ const ClaimsManagement = () => {
   const [deleteClaim] = useDeleteClaimMutation();
   const [sendLostItemEmail] = useSendLostItemEmailMutation();
   const [analyzeClaimFraud, { isLoading: isAnalyzing }] = useAnalyzeClaimFraudMutation();
+  const [comparePhotos, { isLoading: isComparing }] = useComparePhotosMutation();
+  const [photoCompareResult, setPhotoCompareResult] = useState<any>(null);
 
   const [recommenderThreshold, setRecommenderThreshold] = useState<number>(50);
   const [recommenderSearch, setRecommenderSearch] = useState("");
@@ -513,7 +517,8 @@ const ClaimsManagement = () => {
   const totalMatchPages = Math.max(1, Math.ceil(filteredMatches.length / AUDIT_PAGE_SIZE));
   const paginatedMatches = filteredMatches.slice((matchPage - 1) * AUDIT_PAGE_SIZE, matchPage * AUDIT_PAGE_SIZE);
 
-  const handleViewDetails = (claim: any) => { setSelectedClaim(claim); setModalTab("details"); setIsDetailModalOpen(true); };
+  const handleViewDetails = (claim: any) => { setSelectedClaim(claim); setModalTab("details"); setPhotoCompareResult(null); setIsDetailModalOpen(true); };
+
   const handleStatusChange = (claimId: string, status: string) => {
     const claim = claims.find((c: any) => c.id === claimId);
     setSelectedClaim(claim); setNewStatus(status); setIsStatusModalOpen(true);
@@ -1866,7 +1871,192 @@ const ClaimsManagement = () => {
                     <p className="text-gray-200 text-sm leading-relaxed">{selectedClaim.distinguishingFeatures || <span className="text-gray-500 italic text-xs">No details provided</span>}</p>
                   </div>
 
-                  {/* Security Assessment */}
+                  {/* ── Photo Comparison Panel ── */}
+                  {(() => {
+                    const foundImgSrc = (() => {
+                      const fi = selectedClaim.foundItem;
+                      if (!fi) return null;
+                      if (Array.isArray(fi.images) && fi.images.length > 0) {
+                        const first = fi.images[0];
+                        return typeof first === "string" ? first : first?.url ?? null;
+                      }
+                      return fi.img || null;
+                    })();
+
+                    const handleCompare = async () => {
+                      if (!foundImgSrc) return;
+                      try {
+                        const result = await comparePhotos({
+                          foundImageUrl: foundImgSrc,
+                          claimImageUrl: null,
+                          claimDescription: selectedClaim.distinguishingFeatures || null,
+                        }).unwrap();
+                        setPhotoCompareResult(result);
+                      } catch (err: any) {
+                        toast.error(err?.data?.message || "AI comparison failed. Please try again.");
+                      }
+                    };
+
+                    const verdictColor = (v: string) => {
+                      if (v?.includes("Definite Match")) return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
+                      if (v?.includes("Likely Match")) return "text-cyan-400 border-cyan-500/30 bg-cyan-500/10";
+                      if (v?.includes("Uncertain")) return "text-amber-400 border-amber-500/30 bg-amber-500/10";
+                      if (v?.includes("Likely Different")) return "text-orange-400 border-orange-500/30 bg-orange-500/10";
+                      return "text-red-400 border-red-500/30 bg-red-500/10";
+                    };
+
+                    const confidenceRingColor = (c: number) => {
+                      if (c >= 85) return "#34d399"; // emerald
+                      if (c >= 65) return "#22d3ee"; // cyan
+                      if (c >= 40) return "#fbbf24"; // amber
+                      if (c >= 20) return "#fb923c"; // orange
+                      return "#f87171"; // red
+                    };
+
+                    return (
+                      <div className="bg-gray-800/60 border border-white/5 rounded-xl overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-3 py-2.5 border-b border-white/5">
+                          <div className="flex items-center gap-2">
+                            <FaCamera size={10} className="text-violet-400" />
+                            <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">AI Photo Comparison</p>
+                          </div>
+                          <button
+                            onClick={handleCompare}
+                            disabled={isComparing || !foundImgSrc}
+                            title={!foundImgSrc ? "No found item photo available" : "Run AI visual comparison"}
+                            className="flex items-center gap-1.5 px-2.5 py-1 bg-violet-500/10 hover:bg-violet-500/20 disabled:opacity-40 disabled:cursor-not-allowed border border-violet-500/20 text-violet-300 hover:text-violet-200 text-[10px] font-bold rounded-lg transition-all"
+                          >
+                            {isComparing ? (
+                              <>
+                                <svg className="animate-spin h-3 w-3 text-violet-400" viewBox="0 0 24 24" fill="none">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                Comparing...
+                              </>
+                            ) : (
+                              <>
+                                <FaSyncAlt size={8} />
+                                {photoCompareResult ? "Re-run" : "AI Compare"}
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Side-by-side photos */}
+                        <div className="grid grid-cols-2 gap-0 divide-x divide-white/5">
+                          {/* Found Item Photo */}
+                          <div className="p-3 flex flex-col gap-2">
+                            <p className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest">Found Item Photo</p>
+                            {foundImgSrc ? (
+                              <img
+                                src={foundImgSrc}
+                                alt="Found item"
+                                className="w-full aspect-square object-cover rounded-xl border border-white/5"
+                              />
+                            ) : (
+                              <div className="w-full aspect-square rounded-xl bg-white/[0.03] border border-dashed border-white/10 flex flex-col items-center justify-center gap-2">
+                                <FaCamera size={20} className="text-gray-600" />
+                                <p className="text-[10px] text-gray-600">No photo</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Claimant Description */}
+                          <div className="p-3 flex flex-col gap-2">
+                            <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">Claimant Description</p>
+                            <div className="w-full aspect-square rounded-xl bg-white/[0.03] border border-dashed border-white/10 flex flex-col items-center justify-center gap-2 p-4">
+                              <FaUser size={18} className="text-gray-600 shrink-0" />
+                              <p className="text-[11px] text-gray-400 text-center leading-relaxed line-clamp-5">
+                                {selectedClaim.distinguishingFeatures || <span className="text-gray-600 italic">No description provided</span>}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* AI Result */}
+                        {photoCompareResult && (
+                          <div className="border-t border-white/5 p-3 space-y-3">
+                            {/* Confidence + Verdict */}
+                            <div className="flex items-center gap-3">
+                              {/* Circular confidence gauge */}
+                              <div className="relative shrink-0" style={{ width: 64, height: 64 }}>
+                                <svg viewBox="0 0 64 64" className="w-16 h-16 -rotate-90">
+                                  <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
+                                  <circle
+                                    cx="32" cy="32" r="26" fill="none"
+                                    stroke={confidenceRingColor(photoCompareResult.confidence)}
+                                    strokeWidth="6"
+                                    strokeDasharray={`${2 * Math.PI * 26}`}
+                                    strokeDashoffset={`${2 * Math.PI * 26 * (1 - photoCompareResult.confidence / 100)}`}
+                                    strokeLinecap="round"
+                                    className="transition-all duration-700"
+                                  />
+                                </svg>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                  <span className="text-sm font-extrabold text-white leading-none">{photoCompareResult.confidence}%</span>
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${verdictColor(photoCompareResult.verdict)}`}>
+                                  {photoCompareResult.verdict}
+                                </span>
+                                <p className="text-gray-300 text-[11px] leading-relaxed italic">
+                                  {photoCompareResult.reasoning}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Similarities / Differences */}
+                            <div className="grid grid-cols-2 gap-2">
+                              {/* Similarities */}
+                              {photoCompareResult.similarities?.length > 0 && (
+                                <div className="bg-emerald-500/[0.04] border border-emerald-500/10 rounded-xl p-2.5 space-y-1.5">
+                                  <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Similarities</p>
+                                  <ul className="space-y-1">
+                                    {photoCompareResult.similarities.map((s: string, i: number) => (
+                                      <li key={i} className="flex items-start gap-1.5 text-[11px] text-gray-300">
+                                        <FaCheckCircle size={9} className="text-emerald-400 shrink-0 mt-0.5" />
+                                        {s}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              {/* Differences */}
+                              {photoCompareResult.differences?.length > 0 && (
+                                <div className="bg-red-500/[0.04] border border-red-500/10 rounded-xl p-2.5 space-y-1.5">
+                                  <p className="text-[9px] font-bold text-red-400 uppercase tracking-wider">Differences</p>
+                                  <ul className="space-y-1">
+                                    {photoCompareResult.differences.map((d: string, i: number) => (
+                                      <li key={i} className="flex items-start gap-1.5 text-[11px] text-gray-300">
+                                        <FaTimes size={9} className="text-red-400 shrink-0 mt-0.5" />
+                                        {d}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Placeholder when not yet run */}
+                        {!photoCompareResult && !isComparing && (
+                          <div className="border-t border-white/5 px-3 py-4 text-center">
+                            <p className="text-gray-600 text-[11px]">
+                              {foundImgSrc
+                                ? "Click \"AI Compare\" to analyze the found item photo against the claimant's description using Gemini Vision."
+                                : "No photo was uploaded for this found item — AI comparison unavailable."}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+
                   {(() => {
                     const parsed = parseFraudReason(selectedClaim.fraudReason);
                     const serialWarning = parsed?.serialWarning;

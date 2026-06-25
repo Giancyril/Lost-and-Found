@@ -211,6 +211,13 @@ const api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["adminData", "claims"],
     }),
+    comparePhotos: builder.mutation({
+      query: (body: { foundImageUrl: string; claimImageUrl?: string | null; claimDescription?: string | null }) => ({
+        url: "/ai/compare-photos",
+        method: "POST",
+        body,
+      }),
+    }),
 
     // admin stats
     adminStats: builder.query({
@@ -828,6 +835,7 @@ export const {
   useUpdateClaimStatusWithNoteMutation,
   useDeleteClaimMutation,
   useAnalyzeClaimFraudMutation,
+  useComparePhotosMutation,
   useUploadItemImagesMutation,
   useMarkLostItemAsFoundMutation,
   useGetTestimonialsQuery,
