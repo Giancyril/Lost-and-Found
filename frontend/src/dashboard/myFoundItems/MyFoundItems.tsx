@@ -7,7 +7,8 @@ import {
   ModalHeader,
   ModalBody,
 } from "flowbite-react";
-import img from "../../assets/3576506_65968.jpg";
+// Inline SVG placeholder — replaces the 3.2MB JPG asset (zero bundle cost)
+const img = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%231e293b'/%3E%3Cpath d='M80 70h40v40H80z' fill='none' stroke='%2364748b' stroke-width='3' stroke-linejoin='round'/%3E%3Ccircle cx='93' cy='83' r='4' fill='%2364748b'/%3E%3Cpath d='M80 100l18-14 12 10 10-8 10 12' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E`;
 import {
   useDeleteMyFoundItemMutation,
   useEditMyFoundItemMutation,
