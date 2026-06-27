@@ -11,7 +11,8 @@ import Modals from "../modal/Modal";
 import {
   FaCog, FaSignOutAlt, FaTachometerAlt, FaChevronDown,
   FaTv, FaStar, FaTrophy, FaBoxOpen, FaChartLine, FaArrowRight,
-  FaExclamationTriangle, FaSearch, FaMap, FaClipboardList
+  FaExclamationTriangle, FaSearch, FaMap, FaClipboardList,
+  FaHome, FaBars, FaTimes, FaFileAlt, FaMagic, FaSatelliteDish, FaChevronRight
 } from "react-icons/fa";
 import { useState, useRef, useEffect } from "react";
 import NotificationBell from "../notifications/NotificationBell";
@@ -501,7 +502,7 @@ export function Navbars() {
             onClick={() => setMobileMenuOpen(p => !p)}
             className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors md:hidden"
           >
-            <i className={`ti ${mobileMenuOpen ? "ti-x" : "ti-menu-2"} text-[17px]`} aria-hidden="true" />
+            {mobileMenuOpen ? <FaTimes className="text-[17px]" /> : <FaBars className="text-[17px]" />}
           </button>
         </div>
 
@@ -566,23 +567,23 @@ export function Navbars() {
               <Link to={isAdmin ? "/dashboard" : "/dashboard/student"} onClick={closeMobileMenu}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] transition-all duration-150 mb-4 group border border-white/[0.05]">
                 <span className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                  <i className="ti ti-layout-dashboard text-[15px] text-blue-400" aria-hidden="true" />
+                  <FaTachometerAlt className="text-[15px] text-blue-400" />
                 </span>
                 <span className="flex-1 text-sm font-medium text-white group-hover:text-blue-300 transition-colors duration-150">Go to Dashboard</span>
-                <i className="ti ti-chevron-right text-[13px] text-white/20 group-hover:text-white transition-colors duration-150" aria-hidden="true" />
+                <FaChevronRight className="text-[13px] text-white/20 group-hover:text-white transition-colors duration-150" />
               </Link>
             )}
 
             <p className={`text-[10px] text-white/25 uppercase tracking-widest px-3 mb-1.5 ${!isLoggedIn ? "mt-2" : ""}`}>Navigation</p>
 
             {[
-              { label: "Home", href: "/", icon: "ti-home", iconColor: "text-blue-400", iconBg: "bg-blue-500/10" },
-              { label: "Found Items", href: "/foundItems", icon: "ti-package", iconColor: "text-emerald-400", iconBg: "bg-emerald-500/10" },
-              { label: "Lost Items", href: "/lostItems", icon: "ti-alert-triangle", iconColor: "text-red-400", iconBg: "bg-red-500/10" },
-              { label: "Report Lost Item", href: "/reportLostItem", icon: "ti-file-description", iconColor: "text-orange-400", iconBg: "bg-orange-500/10" },
-              { label: "Smart Search", href: "/ai-search", icon: "ti-sparkles", iconColor: "text-violet-400", iconBg: "bg-violet-500/10" },
-              { label: "Item Status", href: "/track", icon: "ti-radar", iconColor: "text-blue-400", iconBg: "bg-blue-500/10" },
-            ].map(({ label, href, icon, iconColor, iconBg }) => (
+              { label: "Home", href: "/", Icon: FaHome, iconColor: "text-blue-400", iconBg: "bg-blue-500/10" },
+              { label: "Found Items", href: "/foundItems", Icon: FaBoxOpen, iconColor: "text-emerald-400", iconBg: "bg-emerald-500/10" },
+              { label: "Lost Items", href: "/lostItems", Icon: FaExclamationTriangle, iconColor: "text-red-400", iconBg: "bg-red-500/10" },
+              { label: "Report Lost Item", href: "/reportLostItem", Icon: FaFileAlt, iconColor: "text-orange-400", iconBg: "bg-orange-500/10" },
+              { label: "Smart Search", href: "/ai-search", Icon: FaMagic, iconColor: "text-violet-400", iconBg: "bg-violet-500/10" },
+              { label: "Item Status", href: "/track", Icon: FaSatelliteDish, iconColor: "text-blue-400", iconBg: "bg-blue-500/10" },
+            ].map(({ label, href, Icon, iconColor, iconBg }) => (
               <Link
                 key={href}
                 to={href}
@@ -590,10 +591,10 @@ export function Navbars() {
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-all duration-150 mb-0.5 group"
               >
                 <span className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}>
-                  <i className={`ti ${icon} text-[15px] ${iconColor}`} aria-hidden="true" />
+                  <Icon className={`text-[15px] ${iconColor}`} />
                 </span>
                 <span className="flex-1 text-sm text-white/70 group-hover:text-white transition-colors duration-150">{label}</span>
-                <i className="ti ti-chevron-right text-[13px] text-white/10 group-hover:text-white/25 transition-colors duration-150" aria-hidden="true" />
+                <FaChevronRight className="text-[13px] text-white/10 group-hover:text-white/25 transition-colors duration-150" />
               </Link>
             ))}
 
@@ -608,7 +609,7 @@ export function Navbars() {
                   onClick={() => { closeMobileMenu(); handleSignOut(); }}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-500/[0.06] transition-all duration-150 w-full group">
                   <span className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
-                    <i className="ti ti-logout text-[15px] text-red-400" aria-hidden="true" />
+                    <FaSignOutAlt className="text-[15px] text-red-400" />
                   </span>
                   <span className="flex-1 text-sm text-red-400/80 group-hover:text-red-400 text-left transition-colors duration-150">Sign Out</span>
                 </button>
