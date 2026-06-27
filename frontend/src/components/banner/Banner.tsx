@@ -248,7 +248,7 @@ const Banner = () => {
               {/* Slide dots */}
               <div className="flex items-center gap-2.5 mb-2">
                 {slides.map((_, i) => (
-                  <button key={i} onClick={() => setCurrentSlide(i)}
+                  <button key={i} onClick={() => setCurrentSlide(i)} aria-label={`Go to slide ${i + 1}`}
                     className={`transition-all duration-300 rounded-full ${i === currentSlide ? "w-7 h-1.5 bg-blue-400" : "w-1.5 h-1.5 bg-gray-600 hover:bg-gray-400"
                       }`}
                   />

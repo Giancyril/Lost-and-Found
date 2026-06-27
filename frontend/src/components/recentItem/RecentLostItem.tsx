@@ -5,6 +5,7 @@ import { useGetLostItemsQuery } from "../../redux/api/api";
 import { FaCalendarAlt, FaMapMarkerAlt, FaClock, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useUserVerification } from "../../auth/auth";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
+import { optimizeImage, PLACEHOLDER_SVG } from "../../utils/imageUtils";
 
 const timeAgo = (d: string) => {
   const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
@@ -57,6 +58,10 @@ const RecentLostItem = () => {
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {visibleItems.map((item: any) => {
             const isFound = item?.isFound;
+            const imgSrc = (Array.isArray(item?.images) && item.images.length > 0
+              ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
+              : "") || item?.img || "/bgimg.png";
+
             return (
               <React.Fragment key={item?.id}>
                 {/* Mobile Card - Compact Horizontal List Item */}
@@ -66,11 +71,11 @@ const RecentLostItem = () => {
                 >
                   <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-850 shrink-0 border border-white/5 relative">
                     <img
-                      src={(Array.isArray(item?.images) && item.images.length > 0
-                        ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
-                        : "") || item?.img || "/bgimg.png"}
+                      src={optimizeImage(imgSrc, 150)}
                       alt={item?.lostItemName}
-                      onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                      width="56"
+                      height="56"
+                      onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_SVG; }}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -102,12 +107,13 @@ const RecentLostItem = () => {
                   <div className="relative h-44 overflow-hidden bg-gray-800">
                     <img
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      src={(Array.isArray(item?.images) && item.images.length > 0
-                        ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.url ?? item.images[0]?.src ?? "")
-                        : "") || item?.img || "/bgimg.png"}
+                      src={optimizeImage(imgSrc, 400)}
                       alt={item?.lostItemName}
-                      onError={(e) => { (e.target as HTMLImageElement).src = "/bgimg.png"; }}
+                      width="320"
+                      height="176"
+                      onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_SVG; }}
                     />
+
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
                     {/* Status */}
                     <div className="absolute top-2.5 left-2.5">
@@ -153,12 +159,12 @@ const RecentLostItem = () => {
       {/* Footer: pagination only */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-1 bg-gray-800/60 border border-white/5 rounded-xl p-1 w-fit mx-auto mt-2 mb-10">
-          <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
+          <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} aria-label="Previous page"
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
             <FaChevronLeft size={11} />
           </button>
           <span className="text-gray-500 text-xs px-2">{page + 1} / {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1}
+          <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} aria-label="Next page"
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
             <FaChevronRight size={11} />
           </button>

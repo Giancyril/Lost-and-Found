@@ -3,6 +3,7 @@ import { FaStar, FaHeart, FaTimes } from "react-icons/fa";
 import { useTransition, animated } from "@react-spring/web";
 import useMeasure from "react-use-measure";
 import { useGetVirtueSpotlightsQuery, useLikeVirtueSpotlightMutation } from "../redux/api/api";
+import { optimizeImage } from "../utils/imageUtils";
 
 type Spotlight = {
   id: string;
@@ -73,8 +74,10 @@ const SpotlightCard = ({
   >
     {spotlight.imageUrl ? (
       <img
-        src={spotlight.imageUrl}
+        src={optimizeImage(spotlight.imageUrl, 400)}
         alt={spotlight.title}
+        width="300"
+        height="225"
         className="w-full block transition-transform duration-500 ease-out group-hover:scale-105"
         loading="lazy"
       />
@@ -259,6 +262,7 @@ const SpotlightModal = ({
     <button
       onClick={onClose}
       className={className}
+      aria-label="Close modal"
       style={{
         width: 28, height: 28, borderRadius: 8,
         background: "rgba(255,255,255,0.05)",
@@ -348,9 +352,11 @@ const SpotlightModal = ({
             {spotlight.imageUrl ? (
               <img
                 ref={imgRef}
-                src={spotlight.imageUrl}
+                src={optimizeImage(spotlight.imageUrl, 800)}
                 alt={spotlight.title}
                 onLoad={measure}
+                width="800"
+                height="600"
                 style={{ display: "block", width: "100%", height: "auto", objectFit: "fill" }}
               />
             ) : (
