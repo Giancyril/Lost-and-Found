@@ -66,6 +66,7 @@ const PointsDropdown = ({ points, history, rank }: { points: number; history: an
       <button
         type="button"
         onClick={() => setOpen(p => !p)}
+        aria-label="View levels and points progress"
         className={`relative w-9 h-9 flex flex-col items-center justify-center rounded-full transition-all border group ${open
           ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400"
           : "bg-transparent border-white/5 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/10"
@@ -500,6 +501,7 @@ export function Navbars() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(p => !p)}
+            aria-label="Toggle navigation menu"
             className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors md:hidden"
           >
             {mobileMenuOpen ? <FaTimes className="text-[17px]" /> : <FaBars className="text-[17px]" />}

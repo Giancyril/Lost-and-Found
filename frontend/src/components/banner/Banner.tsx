@@ -82,25 +82,6 @@ const Banner = () => {
 
   const s = slides[currentSlide];
 
-  const [typedSubtitle, setTypedSubtitle] = useState("");
-
-  useEffect(() => {
-    setTypedSubtitle("");
-    let charIdx = 0;
-    const target = s.subtitle;
-    let timer: NodeJS.Timeout;
-
-    const type = () => {
-      if (charIdx < target.length) {
-        setTypedSubtitle(target.substring(0, charIdx + 1));
-        charIdx++;
-        timer = setTimeout(type, 60);
-      }
-    };
-
-    timer = setTimeout(type, 100);
-    return () => clearTimeout(timer);
-  }, [currentSlide, s.subtitle]);
 
   const RecentLostPanel = () => (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-sm">
@@ -180,12 +161,6 @@ const Banner = () => {
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-        @keyframes blink {
-          50% { opacity: 0; }
-        }
-        .typewriter-cursor {
-          animation: blink 0.8s step-end infinite;
-        }
       `}</style>
 
       <section className="relative overflow-hidden bg-gray-950 reveal">
@@ -215,8 +190,7 @@ const Banner = () => {
                 {s.title}
                 <br />
                 <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
-                  {typedSubtitle}
-                  <span className="typewriter-cursor text-cyan-400 font-normal ml-0.5">|</span>
+                  {s.subtitle}
                 </span>
               </h1>
 

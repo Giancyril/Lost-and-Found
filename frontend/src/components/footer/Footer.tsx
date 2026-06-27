@@ -21,7 +21,7 @@ const Footers = () => {
               {/* Using Link ensures this works from ANY page in your app */}
               <Link
                 to="/about"
-                className="text-gray-500 hover:text-blue-400 text-[9px] min-[375px]:text-[10px] sm:text-sm text-left leading-none transition-colors duration-200"
+                className="text-gray-400 hover:text-blue-400 text-[9px] min-[375px]:text-[10px] sm:text-sm text-left leading-none transition-colors duration-200"
               >
                 <span className="sm:hidden">Lost &amp; Found</span>
                 <span className="hidden sm:inline">SAS Lost &amp; Found Management System</span>
@@ -38,7 +38,7 @@ const Footers = () => {
               <div className="w-5 h-5 sm:w-7 sm:h-7 rounded sm:rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
                 <FaEnvelope className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               </div>
-              <p className="text-gray-500 text-[9px] min-[375px]:text-[10px] sm:text-sm leading-none break-all sm:break-normal">
+              <p className="text-gray-400 text-[9px] min-[375px]:text-[10px] sm:text-sm leading-none break-all sm:break-normal">
                 sas@nbsc.edu.ph
               </p>
             </div>
@@ -57,7 +57,7 @@ const Footers = () => {
                 href="https://www.facebook.com/nbscstudentaffairsandservices"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-blue-400 text-[9px] min-[375px]:text-[10px] sm:text-sm leading-none transition-colors duration-200"
+                className="text-gray-400 hover:text-blue-400 text-[9px] min-[375px]:text-[10px] sm:text-sm leading-none transition-colors duration-200"
               >
                 <span className="sm:hidden">Facebook</span>
                 <span className="hidden sm:inline">SAS Official Facebook Page</span>
@@ -74,19 +74,19 @@ const Footers = () => {
         <div className="flex flex-col items-center gap-1 text-center sm:flex-row sm:justify-between sm:text-left sm:gap-0">
 
           {/* Copyright */}
-          <p className="text-gray-500 text-[9px] sm:text-xs">
+          <p className="text-gray-400 text-[9px] sm:text-xs">
             {/* Mobile */}
             <span className="sm:hidden">
-              © 2026 <span className="font-semibold text-gray-400">NBSC SAS.</span> All Rights Reserved.
+              © 2026 <span className="font-semibold text-gray-300">NBSC SAS.</span> All Rights Reserved.
             </span>
             {/* Desktop */}
             <span className="hidden sm:inline">
-              © 2026 <span className="font-semibold text-gray-400">SAS Lost &amp; Found Management System.</span> All Rights Reserved.
+              © 2026 <span className="font-semibold text-gray-300">SAS Lost &amp; Found Management System.</span> All Rights Reserved.
             </span>
           </p>
 
           {/* Note */}
-          <p className="text-gray-600 text-[9px] sm:text-xs">
+          <p className="text-gray-400 text-[9px] sm:text-xs">
             {/* Mobile */}
             <span className="sm:hidden">Visit the SAS Office for item concerns.</span>
             {/* Desktop */}

@@ -151,6 +151,7 @@ export default function ChatbotConcierge() {
       {/* ── Trigger Button ─────────────────────────────────────────────────── */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Open AI assistant"
         className={isDashboard
           ? `relative w-9 h-9 flex items-center justify-center rounded-full transition-all border duration-200 ${isOpen
               ? 'bg-indigo-500/10 border-indigo-500/30'

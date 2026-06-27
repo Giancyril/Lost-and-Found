@@ -534,7 +534,7 @@ const VirtueSpotlightSection: React.FC = () => {
               className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
                 tab === t
                   ? "bg-blue-500/10 border-blue-500/25 text-blue-400"
-                  : "bg-transparent border-white/5 text-gray-500 hover:text-gray-300 hover:border-white/10"
+                  : "bg-transparent border-white/5 text-gray-400 hover:text-gray-300 hover:border-white/10"
               }`}
             >
               {t === "all" ? "All posts" : t === "recent" ? "Most recent" : "Most liked"}
@@ -548,7 +548,7 @@ const VirtueSpotlightSection: React.FC = () => {
           onOpen={setSelected}
         />
 
-        <p className="text-center text-gray-700 text-[10px] mt-8 uppercase tracking-widest font-semibold">
+        <p className="text-center text-gray-400 text-[10px] mt-8 uppercase tracking-widest font-semibold">
           We proudly recognize acts of incredible honesty and integrity
         </p>
       </div>
